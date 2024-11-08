@@ -14,19 +14,20 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-import org.eclipse.jdt.internal.compiler.env.*;
-import org.eclipse.jdt.internal.compiler.impl.*;
-import org.eclipse.jdt.core.compiler.*;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.*;
-import org.eclipse.jdt.internal.compiler.lookup.*;
-import org.eclipse.jdt.internal.compiler.problem.*;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
+import org.eclipse.jdt.internal.compiler.lookup.Binding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
+import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.core.util.CommentRecorderParser;
 import org.eclipse.jdt.internal.core.util.Messages;
@@ -968,77 +969,7 @@ protected QualifiedNameReference newQualifiedNameReference(char[][] tokens, long
 protected SingleNameReference newSingleNameReference(char[] source, long positions) {
 	return new SingleNameReference(source, positions);
 }
-private static class DummyTypeReference extends TypeReference {
-	char[] token;
-	DummyTypeReference(char[] name) {
-		this.token = name;
-	}
-	@Override
-	public TypeReference augmentTypeWithAdditionalDimensions(int additionalDimensions,
-			Annotation[][] additionalAnnotations, boolean isVarargs) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	@Override
-	public char[] getLastToken() {
-		return this.token;
-	}
-	@Override
-	protected TypeBinding getTypeBinding(Scope scope) {
-		return null;
-	}
-	@Override
-	public char[][] getTypeName() {
-		return new char[][] {this.token};
-	}
-	@Override
-	public void traverse(ASTVisitor visitor, BlockScope scope) {
-		// TODO Auto-generated method stub
-	}
 
-	@Override
-	public void traverse(ASTVisitor visitor, ClassScope scope) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public StringBuilder printExpression(int indent, StringBuilder output) {
-		return output.append(this.token);
-	}
-	@Override
-	public String toString() {
-		return new String(this.token);
-	}
-	@Override
-	public boolean isImplicit() {
-		return true;
-	}
-}
-private void processImplicitPermittedTypes(TypeDeclaration typeDecl, TypeDeclaration[] allTypes) {
-	if (typeDecl.permittedTypes == null &&
-			(typeDecl.modifiers & ExtraCompilerModifiers.AccSealed) != 0) {
-		List<TypeReference> list = new ArrayList();
-		for (TypeDeclaration type : allTypes) {
-			if (type != typeDecl) {
-				char[][] qName = type.superclass == null ? null : type.superclass.getTypeName();
-				if (qName != null &&
-						CharOperation.equals(qName[qName.length -1], typeDecl.name)) {
-					list.add(new DummyTypeReference(type.name));
-				}
-				if (type.superInterfaces != null) {
-					for (TypeReference ref : type.superInterfaces) {
-						qName = ref.getTypeName();
-						if (CharOperation.equals(qName[qName.length -1], typeDecl.name)) {
-							list.add(new DummyTypeReference(type.name));
-							break;
-						}
-					}
-				}
-			}
-		}
-		typeDecl.permittedTypes = list.toArray(new TypeReference[list.size()]);
-	}
-}
 public CompilationUnitDeclaration parseCompilationUnit(
 	ICompilationUnit unit,
 	boolean fullParse,
@@ -1053,12 +984,7 @@ public CompilationUnitDeclaration parseCompilationUnit(
 		this.reportReferenceInfo = fullParse;
 		CompilationResult compilationUnitResult = new CompilationResult(unit, 0, 0, this.options.maxProblemsPerUnit);
 		parsedUnit = parse(unit, compilationUnitResult);
-		TypeDeclaration[] types = parsedUnit.types;
-		if (types != null) {
-			for (TypeDeclaration typeDecl : types) {
-				processImplicitPermittedTypes(typeDecl, types);
-			}
-		}
+
 		if (pm != null && pm.isCanceled())
 			throw new OperationCanceledException(Messages.operation_cancelled);
 		if (this.scanner.recordLineSeparator) {

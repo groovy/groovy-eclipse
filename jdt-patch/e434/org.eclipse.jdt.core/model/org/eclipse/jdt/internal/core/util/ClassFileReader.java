@@ -19,20 +19,7 @@ package org.eclipse.jdt.internal.core.util;
  * Default implementation of IClassFileReader.
  */
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.core.util.ClassFormatException;
-import org.eclipse.jdt.core.util.IAttributeNamesConstants;
-import org.eclipse.jdt.core.util.IClassFileAttribute;
-import org.eclipse.jdt.core.util.IClassFileReader;
-import org.eclipse.jdt.core.util.IConstantPool;
-import org.eclipse.jdt.core.util.IConstantPoolConstant;
-import org.eclipse.jdt.core.util.IFieldInfo;
-import org.eclipse.jdt.core.util.IInnerClassesAttribute;
-import org.eclipse.jdt.core.util.IMethodInfo;
-import org.eclipse.jdt.core.util.IModifierConstants;
-import org.eclipse.jdt.core.util.INestMembersAttribute;
-import org.eclipse.jdt.core.util.IPermittedSubclassesAttribute;
-import org.eclipse.jdt.core.util.IRecordAttribute;
-import org.eclipse.jdt.core.util.ISourceAttribute;
+import org.eclipse.jdt.core.util.*;
 import org.eclipse.jdt.internal.compiler.util.Util;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 

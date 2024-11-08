@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core.search.indexing;
 
 import java.util.stream.Stream;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 /**

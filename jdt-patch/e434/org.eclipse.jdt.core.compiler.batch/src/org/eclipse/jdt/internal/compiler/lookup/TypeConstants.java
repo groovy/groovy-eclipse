@@ -130,6 +130,7 @@ public interface TypeConstants {
 	// JEP 360 Sealed
 	char[] PERMITS = "permits".toCharArray(); //$NON-NLS-1$
 	char[] SEALED = "sealed".toCharArray(); //$NON-NLS-1$
+	char[] NON_SEALED = "non-sealed".toCharArray(); //$NON-NLS-1$
 	String KEYWORD_EXTENDS = "extends"; //$NON-NLS-1$
 	String IMPLEMENTS = "implements"; //$NON-NLS-1$
 
@@ -157,7 +158,7 @@ public interface TypeConstants {
     char[] SPRING = "springframework".toCharArray(); //$NON-NLS-1$
 
 	// Constant compound names
-	char[][] JAVA_BASE = {JAVA, BASE};
+    char[][] JAVA_BASE = {JAVA, BASE};
 	char[][] JAVA_LANG = {JAVA, LANG};
 	char[][] JAVA_IO = {JAVA, IO};
 	char[][] JAVA_LANG_ANNOTATION = {JAVA, LANG, ANNOTATION};
@@ -224,6 +225,7 @@ public interface TypeConstants {
 	char[][] JAVA_IO_IOEXCEPTION = new char[][] { JAVA, IO, "IOException".toCharArray()};//$NON-NLS-1$
 	char[][] JAVA_IO_OBJECTOUTPUTSTREAM = new char[][] { JAVA, IO, "ObjectOutputStream".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_IO_OBJECTINPUTSTREAM = new char[][] { JAVA, IO, "ObjectInputStream".toCharArray()}; //$NON-NLS-1$
+	char[][] JAVA_IO_IO = new char[][] {JAVA, IO, "IO".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_NIO_FILE_FILES = new char[][] { JAVA, "nio".toCharArray(), "file".toCharArray(), "Files".toCharArray() };   //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
 	// javax.rmi.CORBA.Stub
 	char[][] JAVAX_RMI_CORBA_STUB = new char[][] {

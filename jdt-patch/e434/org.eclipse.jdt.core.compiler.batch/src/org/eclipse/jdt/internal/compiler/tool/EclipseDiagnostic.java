@@ -15,10 +15,8 @@ package org.eclipse.jdt.internal.compiler.tool;
 
 import java.io.File;
 import java.util.Locale;
-
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
-
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblem;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;

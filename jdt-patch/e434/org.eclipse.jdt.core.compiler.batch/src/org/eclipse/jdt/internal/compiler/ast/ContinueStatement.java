@@ -16,8 +16,10 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.flow.*;
-import org.eclipse.jdt.internal.compiler.lookup.*;
+import org.eclipse.jdt.internal.compiler.flow.FlowContext;
+import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
+import org.eclipse.jdt.internal.compiler.flow.InsideStatementWithFinallyBlockFlowContext;
+import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 
 public class ContinueStatement extends BranchStatement {
 
@@ -44,7 +46,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		}
 		return flowInfo; // pretend it did not continue since no actual target
 	} else if (targetContext == FlowContext.NonLocalGotoThroughSwitchContext) {
-		currentScope.problemReporter().switchExpressionsContinueOutOfSwitchExpression(this);
+		currentScope.problemReporter().continueOutOfSwitchExpression(this);
 		return flowInfo; // pretend it did not continue since no actual target
 	}
 
@@ -60,38 +62,37 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 
 	this.targetLabel = targetContext.continueLabel();
 	FlowContext traversedContext = flowContext;
-	int subCount = 0;
-	this.subroutines = new SubRoutineStatement[5];
+	int stmtCount = 0;
+	this.statementsWithFinallyBlock = new StatementWithFinallyBlock[5];
 
 	do {
-		SubRoutineStatement sub;
-		if ((sub = traversedContext.subroutine()) != null) {
-			if (subCount == this.subroutines.length) {
-				System.arraycopy(this.subroutines, 0, this.subroutines = new SubRoutineStatement[subCount*2], 0, subCount); // grow
+		StatementWithFinallyBlock stmt;
+		if ((stmt = traversedContext.statementWithFinallyBlock()) != null) {
+			if (stmtCount == this.statementsWithFinallyBlock.length) {
+				System.arraycopy(this.statementsWithFinallyBlock, 0, this.statementsWithFinallyBlock = new StatementWithFinallyBlock[stmtCount*2], 0, stmtCount); // grow
 			}
-			this.subroutines[subCount++] = sub;
-			if (sub.isSubRoutineEscaping()) {
+			this.statementsWithFinallyBlock[stmtCount++] = stmt;
+			if (stmt.isFinallyBlockEscaping()) {
 				break;
 			}
 		}
 		traversedContext.recordReturnFrom(flowInfo.unconditionalInits());
 
-		if (traversedContext instanceof InsideSubRoutineFlowContext) {
+		if (traversedContext instanceof InsideStatementWithFinallyBlockFlowContext) {
 			ASTNode node = traversedContext.associatedNode;
 			if (node instanceof TryStatement) {
 				TryStatement tryStatement = (TryStatement) node;
-				flowInfo.addInitializationsFrom(tryStatement.subRoutineInits); // collect inits
+				flowInfo.addInitializationsFrom(tryStatement.finallyBlockInits); // collect inits
 			}
 		} else if (traversedContext == targetContext) {
-			// only record continue info once accumulated through subroutines, and only against target context
+			// only record continue info once accumulated and only against target context
 			targetContext.recordContinueFrom(flowContext, flowInfo);
 			break;
 		}
 	} while ((traversedContext = traversedContext.getLocalParent()) != null);
 
-	// resize subroutines
-	if (subCount != this.subroutines.length) {
-		System.arraycopy(this.subroutines, 0, this.subroutines = new SubRoutineStatement[subCount], 0, subCount);
+	if (stmtCount != this.statementsWithFinallyBlock.length) {
+		System.arraycopy(this.statementsWithFinallyBlock, 0, this.statementsWithFinallyBlock = new StatementWithFinallyBlock[stmtCount], 0, stmtCount);
 	}
 	return FlowInfo.DEAD_END;
 }

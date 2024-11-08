@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.compiler.tool;
 
 import java.util.Locale;
-
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 

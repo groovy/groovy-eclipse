@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.compiler.classfmt;
 
 import java.net.URI;
 import java.util.Arrays;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryModule;

@@ -67,7 +67,7 @@ public class FinallyFlowContext extends TryFlowContext {
 
 /**
  * Given some contextual initialization info (derived from a try block or a catch block), this
- * code will check that the subroutine context does not also initialize a final variable potentially set
+ * code will check that the finally context does not also initialize a final variable potentially set
  * redundantly.
  */
 public void complainOnDeferredChecks(FlowInfo flowInfo, BlockScope scope) {
@@ -101,9 +101,7 @@ public void complainOnDeferredChecks(FlowInfo flowInfo, BlockScope scope) {
 		if (complained) {
 			FlowContext currentContext = this.getLocalParent();
 			while (currentContext != null) {
-				//if (currentContext.isSubRoutine()) {
 				currentContext.removeFinalAssignmentIfAny(this.finalAssignments[i]);
-				//}
 				currentContext = currentContext.getLocalParent();
 			}
 		}
@@ -240,11 +238,6 @@ public void complainOnDeferredChecks(FlowInfo flowInfo, BlockScope scope) {
 		buffer.append("[finalAssignments count - ").append(this.assignCount).append(']'); //$NON-NLS-1$
 		buffer.append("[nullReferences count - ").append(this.nullCount).append(']'); //$NON-NLS-1$
 		return buffer.toString();
-	}
-
-	@Override
-	public boolean isSubRoutine() {
-		return true;
 	}
 
 	@Override

@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.compiler;
 
 import java.util.Locale;
-
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 
 /*

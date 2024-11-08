@@ -289,7 +289,7 @@ public class AnnotatableTypeSystem extends TypeSystem {
 		return annotatedType;
 	}
 
-	/* Private subroutine for public APIs. Create an annotated version of the type. To materialize the annotated version, we can't use new since
+	/* Private method for public APIs. Create an annotated version of the type. To materialize the annotated version, we can't use new since
 	   this is a general purpose method designed to deal type bindings of all types. "Clone" the incoming type, specializing for any enclosing type
 	   that may itself be possibly be annotated. This is so the binding for @Outer Outer.Inner != Outer.@Inner Inner != @Outer Outer.@Inner Inner.
 	   Likewise so the bindings for @Readonly List<@NonNull String> != @Readonly List<@Nullable String> != @Readonly List<@Interned String>

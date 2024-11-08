@@ -25,7 +25,6 @@ package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.HashSet;
 import java.util.Set;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
@@ -311,6 +310,11 @@ public class LocalVariableBinding extends VariableBinding {
 	public boolean isCatchParameter() {
 		return false;
 	}
+
+	public boolean isResourceVariable() {
+		return (this.tagBits & TagBits.IsResource) != 0;
+	}
+
 	@Override
 	public boolean isPatternVariable() {
 		return (this.tagBits & TagBits.IsPatternBinding) != 0;

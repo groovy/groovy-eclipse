@@ -20,7 +20,6 @@ package org.eclipse.jdt.core.compiler;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.Optional;
-
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.jdt.core.IJavaProject;
 

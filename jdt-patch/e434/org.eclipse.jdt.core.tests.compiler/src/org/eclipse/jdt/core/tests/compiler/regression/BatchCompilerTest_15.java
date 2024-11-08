@@ -15,12 +15,10 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
 import java.io.IOException;
-
+import junit.framework.Test;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
-import junit.framework.Test;
 
 @SuppressWarnings({ "rawtypes" })
 public class BatchCompilerTest_15 extends AbstractBatchCompilerTest {
@@ -91,12 +89,12 @@ public class BatchCompilerTest_15 extends AbstractBatchCompilerTest {
 			        "1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/src/p/X.java (at line 2)\n" +
 			        "	public class X extends Y {\n" +
 			        "	                       ^\n" +
-			        "The class X with a sealed direct superclass or a sealed direct superinterface Y should be declared either final, sealed, or non-sealed\n" +
+			        "The class X with a sealed direct supertype Y should be declared either final, sealed, or non-sealed\n" +
 			        "----------\n" +
 			        "2. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/src/p/X.java (at line 2)\n" +
 			        "	public class X extends Y {\n" +
 			        "	                       ^\n" +
-			        "The type X extending a sealed class Y should be a permitted subtype of Y\n" +
+			        "The class X cannot extend the class Y as it is not a permitted subtype of Y\n" +
 			        "----------\n" +
 			        "2 problems (2 errors)\n",
 			        true);

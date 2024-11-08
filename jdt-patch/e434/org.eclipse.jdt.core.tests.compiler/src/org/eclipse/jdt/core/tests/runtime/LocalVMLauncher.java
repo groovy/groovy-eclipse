@@ -15,9 +15,12 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.runtime;
 
-import java.io.*;
-import java.util.*;
-
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;

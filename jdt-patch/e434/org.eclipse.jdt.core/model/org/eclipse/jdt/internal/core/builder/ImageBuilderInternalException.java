@@ -13,7 +13,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
 
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.CoreException;
 
 /**
  * Exception thrown when there is an internal error in the image builder.

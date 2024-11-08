@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.core.search.matching;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.SearchPattern;
-
 import org.eclipse.jdt.internal.core.util.Util;
 
 public class FieldPattern extends VariablePattern {

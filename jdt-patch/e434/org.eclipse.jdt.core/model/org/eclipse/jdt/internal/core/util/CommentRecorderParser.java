@@ -15,7 +15,6 @@
 package org.eclipse.jdt.internal.core.util;
 
 import java.util.Arrays;
-
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -194,6 +193,12 @@ public class CommentRecorderParser extends Parser {
 		}
 		this.scanner.commentPtr = validCount - 1;
 		return position;
+	}
+
+	@Override
+	protected void consumeExitTryBlock() {
+		flushCommentsDefinedPriorTo(this.scanner.currentPosition);
+		super.consumeExitTryBlock();
 	}
 
 	protected int getCommentPtr() {

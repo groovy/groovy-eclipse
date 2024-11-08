@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.compiler.util;
 
 import java.util.Arrays;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 /**

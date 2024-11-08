@@ -45,16 +45,26 @@ package org.eclipse.jdt.internal.compiler.ast;
 import static org.eclipse.jdt.internal.compiler.ast.ExpressionContext.ASSIGNMENT_CONTEXT;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.codegen.*;
-import org.eclipse.jdt.internal.compiler.flow.*;
+import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
+import org.eclipse.jdt.internal.compiler.flow.FlowContext;
+import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
+import org.eclipse.jdt.internal.compiler.flow.InitializationFlowContext;
+import org.eclipse.jdt.internal.compiler.flow.InsideStatementWithFinallyBlockFlowContext;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
-import org.eclipse.jdt.internal.compiler.lookup.*;
+import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
+import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
+import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
+import org.eclipse.jdt.internal.compiler.lookup.Scope;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
+import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 
 public class ReturnStatement extends Statement {
 
 	public Expression expression;
-	public SubRoutineStatement[] subroutines;
+	public StatementWithFinallyBlock[] statementsWithFinallyBlock;
 	public LocalVariableBinding saveValueVariable;
 	public int initStateIndex = -1;
 	private final boolean implicitReturn;
@@ -104,42 +114,42 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		methodScope.recordInitializationStates(flowInfo);
 	// compute the return sequence (running the finally blocks)
 	FlowContext traversedContext = flowContext;
-	int subCount = 0;
+	int stmtCount = 0;
 	boolean saveValueNeeded = false;
 	boolean hasValueToSave = needValueStore();
 	boolean noAutoCloseables = true;
 	do {
-		SubRoutineStatement sub;
-		if ((sub = traversedContext.subroutine()) != null) {
-			if (this.subroutines == null){
-				this.subroutines = new SubRoutineStatement[5];
+		StatementWithFinallyBlock stmt;
+		if ((stmt = traversedContext.statementWithFinallyBlock()) != null) {
+			if (this.statementsWithFinallyBlock == null){
+				this.statementsWithFinallyBlock = new StatementWithFinallyBlock[5];
 			}
-			if (subCount == this.subroutines.length) {
-				System.arraycopy(this.subroutines, 0, (this.subroutines = new SubRoutineStatement[subCount*2]), 0, subCount); // grow
+			if (stmtCount == this.statementsWithFinallyBlock.length) {
+				System.arraycopy(this.statementsWithFinallyBlock, 0, (this.statementsWithFinallyBlock = new StatementWithFinallyBlock[stmtCount*2]), 0, stmtCount); // grow
 			}
-			this.subroutines[subCount++] = sub;
-			if (sub.isSubRoutineEscaping()) {
+			this.statementsWithFinallyBlock[stmtCount++] = stmt;
+			if (stmt.isFinallyBlockEscaping()) {
 				saveValueNeeded = false;
-				this.bits |= ASTNode.IsAnySubRoutineEscaping;
+				this.bits |= ASTNode.IsAnyFinallyBlockEscaping;
 				break;
 			}
-			if (sub instanceof TryStatement) {
-				if (((TryStatement) sub).resources.length > 0) {
+			if (stmt instanceof TryStatement) {
+				if (((TryStatement) stmt).resources.length > 0) {
 					noAutoCloseables = false;
 				}
 			}
 		}
 		traversedContext.recordReturnFrom(flowInfo.unconditionalInits());
 
-		if (traversedContext instanceof InsideSubRoutineFlowContext) {
+		if (traversedContext instanceof InsideStatementWithFinallyBlockFlowContext) {
 			ASTNode node = traversedContext.associatedNode;
 			if (node instanceof SynchronizedStatement) {
 				this.bits |= ASTNode.IsSynchronized;
 			} else if (node instanceof TryStatement) {
 				TryStatement tryStatement = (TryStatement) node;
-				flowInfo.addInitializationsFrom(tryStatement.subRoutineInits); // collect inits
+				flowInfo.addInitializationsFrom(tryStatement.finallyBlockInits); // collect inits
 				if (hasValueToSave) {
-					if (this.saveValueVariable == null){ // closest subroutine secret variable is used
+					if (this.saveValueVariable == null){ // closest try statememt's secret variable is used
 						prepareSaveValueLocation(tryStatement);
 					}
 					saveValueNeeded = true;
@@ -151,14 +161,13 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				currentScope.problemReporter().cannotReturnInInitializer(this);
 				return FlowInfo.DEAD_END;
 		} else if (traversedContext.associatedNode instanceof SwitchExpression) {
-				currentScope.problemReporter().switchExpressionsReturnWithinSwitchExpression(this);
+				currentScope.problemReporter().returnOutOfSwitchExpression(this);
 				return FlowInfo.DEAD_END;
 		}
 	} while ((traversedContext = traversedContext.getLocalParent()) != null);
 
-	// resize subroutines
-	if ((this.subroutines != null) && (subCount != this.subroutines.length)) {
-		System.arraycopy(this.subroutines, 0, (this.subroutines = new SubRoutineStatement[subCount]), 0, subCount);
+	if ((this.statementsWithFinallyBlock != null) && (stmtCount != this.statementsWithFinallyBlock.length)) {
+		System.arraycopy(this.statementsWithFinallyBlock, 0, (this.statementsWithFinallyBlock = new StatementWithFinallyBlock[stmtCount]), 0, stmtCount);
 	}
 
 	// secret local variable for return value (note that this can only occur in a real method)
@@ -231,19 +240,19 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	// generate the expression
 	if (needValueStore()) {
 		alreadyGeneratedExpression = true;
-		this.expression.generateCode(currentScope, codeStream, needValue()); // no value needed if non-returning subroutine
+		this.expression.generateCode(currentScope, codeStream, needValue()); // no value needed if non-returning method
 		generateStoreSaveValueIfNecessary(currentScope, codeStream);
 	}
 
 	// generation of code responsible for invoking the finally blocks in sequence
-	if (this.subroutines != null) {
+	if (this.statementsWithFinallyBlock != null) {
 		Object reusableJSRTarget = this.expression == null ? (Object)TypeBinding.VOID : this.expression.reusableJSRTarget();
-		for (int i = 0, max = this.subroutines.length; i < max; i++) {
-			SubRoutineStatement sub = this.subroutines[i];
-			boolean didEscape = sub.generateSubRoutineInvocation(currentScope, codeStream, reusableJSRTarget, this.initStateIndex, this.saveValueVariable);
+		for (int i = 0, max = this.statementsWithFinallyBlock.length; i < max; i++) {
+			StatementWithFinallyBlock stmt = this.statementsWithFinallyBlock[i];
+			boolean didEscape = stmt.generateFinallyBlock(currentScope, codeStream, reusableJSRTarget, this.initStateIndex);
 			if (didEscape) {
 					codeStream.recordPositionsFrom(pc, this.sourceStart);
-					SubRoutineStatement.reenterAllExceptionHandlers(this.subroutines, i, codeStream);
+					StatementWithFinallyBlock.reenterAllExceptionHandlers(this.statementsWithFinallyBlock, i, codeStream);
 					return;
 			}
 		}
@@ -266,7 +275,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 		codeStream.addDefinitelyAssignedVariables(currentScope, this.initStateIndex);
 	}
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
-	SubRoutineStatement.reenterAllExceptionHandlers(this.subroutines, -1, codeStream);
+	StatementWithFinallyBlock.reenterAllExceptionHandlers(this.statementsWithFinallyBlock, -1, codeStream);
 }
 
 /**
@@ -293,7 +302,7 @@ private boolean needValueStore() {
 public boolean needValue() {
 	return this.saveValueVariable != null
 					|| (this.bits & ASTNode.IsSynchronized) != 0
-					|| ((this.bits & ASTNode.IsAnySubRoutineEscaping) == 0);
+					|| ((this.bits & ASTNode.IsAnyFinallyBlockEscaping) == 0);
 }
 
 public void prepareSaveValueLocation(TryStatement targetTryStatement){

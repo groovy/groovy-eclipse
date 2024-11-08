@@ -13,7 +13,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.runtime;
 
-import java.io.*;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * A <code>ProxyConsoleReader</code> reads the ouput from the proxy and

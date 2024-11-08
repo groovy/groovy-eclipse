@@ -15,13 +15,21 @@ package org.eclipse.jdt.internal.core.search.indexing;
 
 import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.MethodReference;
 import org.eclipse.jdt.core.search.SearchDocument;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
@@ -54,6 +62,7 @@ import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
 import org.eclipse.jdt.internal.core.jdom.CompilationUnit;
+import org.eclipse.jdt.internal.core.search.JavaSearchDocument;
 import org.eclipse.jdt.internal.core.search.matching.JavaSearchNameEnvironment;
 import org.eclipse.jdt.internal.core.search.matching.MethodPattern;
 import org.eclipse.jdt.internal.core.search.processing.JobManager;
@@ -88,6 +97,10 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 	}
 	@Override
 	public void indexDocument() {
+		if (Boolean.getBoolean(getClass().getSimpleName() + ".DOM_BASED_INDEXER")) { //$NON-NLS-1$
+			indexDocumentFromDOM();
+			return;
+		}
 		// Create a new Parser
 		String documentPath = this.document.getPath();
 		SourceElementParser parser = this.document.getParser();
@@ -213,6 +226,12 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 
 	@Override
 	public void indexResolvedDocument() {
+		if (Boolean.getBoolean(getClass().getSimpleName() + ".DOM_BASED_INDEXER")) { //$NON-NLS-1$
+			// just re-run indexing, but with the resolved document (and its bindings)
+			indexDocumentFromDOM();
+			return;
+		}
+
 		try {
 			if (DEBUG) {
 				trace(new String(this.cud.compilationResult.fileName) + ':');
@@ -270,5 +289,54 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 				trace("", e); //$NON-NLS-1$
 			}
 		}
+	}
+
+	/**
+	 * @return whether the operation was successful
+	 */
+	boolean indexDocumentFromDOM() {
+		if (this.document instanceof JavaSearchDocument javaSearchDoc) {
+			IFile file = javaSearchDoc.getFile();
+			try {
+				if (JavaProject.hasJavaNature(file.getProject())) {
+					IJavaProject javaProject = JavaCore.create(file.getProject());
+					// Do NOT call javaProject.getElement(pathToJavaFile) as it can loop inside index
+					// when there are multiple package root/source folders, and then cause deadlock
+					// so we go finer grain by picking the right fragment first (so index call shouldn't happen)
+					IPackageFragment fragment = javaProject.findPackageFragment(file.getFullPath().removeLastSegments(1));
+					if (fragment.getCompilationUnit(file.getName()) instanceof org.eclipse.jdt.internal.core.CompilationUnit modelUnit) {
+						// TODO check element info: if has AST and flags are set sufficiently, just reuse instead of rebuilding
+						ASTParser astParser = ASTParser.newParser(AST.getJLSLatest()); // we don't seek exact compilation the more tolerant the better here
+						astParser.setSource(modelUnit);
+						astParser.setStatementsRecovery(true);
+						astParser.setResolveBindings(this.document.shouldIndexResolvedDocument());
+						astParser.setProject(javaProject);
+						org.eclipse.jdt.core.dom.ASTNode dom = astParser.createAST(null);
+						if (dom != null) {
+							dom.accept(new DOMToIndexVisitor(this));
+							dom.accept(
+									new ASTVisitor() {
+										@Override
+										public boolean preVisit2(org.eclipse.jdt.core.dom.ASTNode node) {
+											if (SourceIndexer.this.document.shouldIndexResolvedDocument()) {
+												return false; // interrupt
+											}
+											if (node instanceof MethodReference || node instanceof org.eclipse.jdt.core.dom.LambdaExpression) {
+												SourceIndexer.this.document.requireIndexingResolvedDocument();
+												return false;
+											}
+											return true;
+										}
+									});
+							return true;
+						}
+					}
+				}
+			} catch (Exception ex) {
+				ILog.get().error("Failed to index document from DOM for " + this.document.getPath(), ex); //$NON-NLS-1$
+			}
+		}
+		ILog.get().warn("Could not convert DOM to Index for " + this.document.getPath()); //$NON-NLS-1$
+		return false;
 	}
 }

@@ -16,8 +16,8 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import org.eclipse.jdt.core.tests.util.CompilerTestSetup;
 import org.eclipse.jdt.core.tests.util.TestVerifier;
 import org.eclipse.jdt.core.tests.util.Util;
-import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
+import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 
 public class RegressionTestSetup extends CompilerTestSetup {
 

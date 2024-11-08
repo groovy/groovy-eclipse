@@ -15,7 +15,6 @@
 package org.eclipse.jdt.internal.compiler.env;
 
 import java.util.Arrays;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 /**
  * Represents a reference to a enum constant in the class file.

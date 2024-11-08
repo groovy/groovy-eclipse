@@ -30,9 +30,9 @@ package org.eclipse.jdt.internal.codeassist.select;
  *         }
  *       }
  */
-
-import org.eclipse.jdt.internal.compiler.ast.*;
-import org.eclipse.jdt.internal.compiler.lookup.*;
+import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
+import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 
 public class SelectionOnExplicitConstructorCall extends ExplicitConstructorCall {
 

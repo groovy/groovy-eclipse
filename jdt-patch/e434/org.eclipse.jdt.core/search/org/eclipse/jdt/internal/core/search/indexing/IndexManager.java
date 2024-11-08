@@ -14,8 +14,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
 
-import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 import static org.eclipse.jdt.internal.compiler.util.Util.isJrt;
+import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -24,21 +24,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.CRC32;
-
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;

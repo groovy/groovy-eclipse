@@ -16,7 +16,6 @@ package org.eclipse.jdt.internal.core;
 
 import java.util.Iterator;
 import java.util.Set;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;

@@ -16,7 +16,6 @@ package org.eclipse.jdt.core.tests.builder.mockcompiler;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
-
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.Compiler;

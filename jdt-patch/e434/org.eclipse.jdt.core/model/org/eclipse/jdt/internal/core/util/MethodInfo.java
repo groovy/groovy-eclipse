@@ -17,17 +17,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.util;
 
-import org.eclipse.jdt.core.util.ClassFormatException;
-import org.eclipse.jdt.core.util.IAttributeNamesConstants;
-import org.eclipse.jdt.core.util.IClassFileAttribute;
-import org.eclipse.jdt.core.util.IClassFileReader;
-import org.eclipse.jdt.core.util.ICodeAttribute;
-import org.eclipse.jdt.core.util.IConstantPool;
-import org.eclipse.jdt.core.util.IConstantPoolConstant;
-import org.eclipse.jdt.core.util.IConstantPoolEntry;
-import org.eclipse.jdt.core.util.IExceptionAttribute;
-import org.eclipse.jdt.core.util.IMethodInfo;
-import org.eclipse.jdt.core.util.IModifierConstants;
+import org.eclipse.jdt.core.util.*;
 
 /**
  * Default implementation of IMethodInfo.

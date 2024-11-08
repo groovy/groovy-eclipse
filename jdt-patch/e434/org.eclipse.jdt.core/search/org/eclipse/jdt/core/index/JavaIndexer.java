@@ -14,7 +14,6 @@
 package org.eclipse.jdt.core.index;
 
 import java.io.IOException;
-
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.internal.core.search.indexing.DefaultJavaIndexer;
 

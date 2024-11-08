@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core.util;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 /**

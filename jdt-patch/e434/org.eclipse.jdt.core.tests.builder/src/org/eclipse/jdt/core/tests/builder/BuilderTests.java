@@ -13,7 +13,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.builder;
 
-import static org.eclipse.jdt.core.tests.util.AbstractCompilerTest.*;
+import static org.eclipse.jdt.core.tests.util.AbstractCompilerTest.F_12;
+import static org.eclipse.jdt.core.tests.util.AbstractCompilerTest.F_9;
+import static org.eclipse.jdt.core.tests.util.AbstractCompilerTest.getPossibleComplianceLevels;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -25,6 +27,8 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import junit.framework.Test;
+import junit.framework.TestSuite;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -36,9 +40,6 @@ import org.eclipse.jdt.core.tests.util.TestVerifier;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * Base class for Java image builder tests

@@ -108,7 +108,7 @@
 				<repository>
 					<id>milestone</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.34-I-builds/I20240926-1800</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.34-I-builds/I20241107-0510</url>
 				</repository>
 			</repositories>
 			<modules>

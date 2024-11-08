@@ -14,12 +14,11 @@
 package org.eclipse.jdt.core.tests.builder;
 
 import java.util.HashMap;
-
+import junit.framework.Test;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.tests.util.Util;
-import junit.framework.Test;
 
 public class TestAttributeBuilderTests extends BuilderTests {
 	static {

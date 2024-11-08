@@ -14,14 +14,13 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.builder;
 
+import junit.framework.Test;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
-import junit.framework.Test;
 
 public class Bug562420Test extends BuilderTests {
 	public Bug562420Test(String name) {

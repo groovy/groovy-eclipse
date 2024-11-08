@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core;
 
 import java.util.zip.ZipFile;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;

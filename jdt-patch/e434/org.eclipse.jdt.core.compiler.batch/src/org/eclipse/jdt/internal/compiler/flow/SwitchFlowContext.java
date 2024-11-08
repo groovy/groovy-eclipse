@@ -16,6 +16,7 @@
 package org.eclipse.jdt.internal.compiler.flow;
 
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.SwitchExpression;
 import org.eclipse.jdt.internal.compiler.codegen.BranchLabel;
 
 /**
@@ -26,7 +27,6 @@ public class SwitchFlowContext extends FlowContext {
 
 	public BranchLabel breakLabel;
 	public UnconditionalFlowInfo initsOnBreak = FlowInfo.DEAD_END;
-	public boolean isExpression = false;
 
 public SwitchFlowContext(FlowContext parent, ASTNode associatedNode, BranchLabel breakLabel, boolean isPreTest, boolean inheritNullFieldChecks) {
 	super(parent, associatedNode, inheritNullFieldChecks);
@@ -51,6 +51,11 @@ public String individualToString() {
 @Override
 public boolean isBreakable() {
 	return true;
+}
+
+@Override
+public boolean isExplicitYieldable() {
+	return this.associatedNode instanceof SwitchExpression;
 }
 
 @Override

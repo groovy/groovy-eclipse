@@ -87,7 +87,7 @@ public class JavaSearchDocument extends SearchDocument {
 		}
 		return null;
 	}
-	private IFile getFile() {
+	public IFile getFile() {
 		if (this.file == null)
 			this.file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(getPath()));
 		return this.file;

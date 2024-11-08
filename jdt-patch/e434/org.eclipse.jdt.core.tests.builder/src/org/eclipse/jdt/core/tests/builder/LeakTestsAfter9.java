@@ -13,9 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.builder;
 
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
 import junit.framework.Test;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class LeakTestsAfter9 extends AbstractLeakTest {
 

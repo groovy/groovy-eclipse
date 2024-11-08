@@ -16,18 +16,16 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
 import java.util.Map;
-
 import junit.framework.Test;
-
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
-import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class SwitchTest extends AbstractRegressionTest {
@@ -2571,17 +2569,12 @@ public void test383643() {
 			"	        ^\n" +
 			"p cannot be resolved to a variable\n" +
 			"----------\n" +
-			"2. WARNING in X.java (at line 4)\n" +
-			"	switch (p) {\n" +
-			"	        ^\n" +
-			"The switch statement should have a default case\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 5)\n" +
+			"2. ERROR in X.java (at line 5)\n" +
 			"	case ONE:\n" +
 			"	     ^^^\n" +
 			"ONE cannot be resolved to a variable\n" +
 			"----------\n" +
-			"4. ERROR in X.java (at line 8)\n" +
+			"3. ERROR in X.java (at line 8)\n" +
 			"	case TWO:\n" +
 			"	     ^^^\n" +
 			"TWO cannot be resolved to a variable\n" +

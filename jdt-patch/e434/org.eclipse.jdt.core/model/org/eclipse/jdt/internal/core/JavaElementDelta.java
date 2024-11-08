@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.jdt.core.IClasspathAttributeDelta;
 import org.eclipse.jdt.core.IJavaElement;

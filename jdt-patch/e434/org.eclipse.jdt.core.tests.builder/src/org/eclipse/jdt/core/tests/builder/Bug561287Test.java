@@ -13,13 +13,12 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.builder;
 
+import junit.framework.Test;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
-
-import junit.framework.Test;
 
 public class Bug561287Test extends BuilderTests {
 	public Bug561287Test(String name) {

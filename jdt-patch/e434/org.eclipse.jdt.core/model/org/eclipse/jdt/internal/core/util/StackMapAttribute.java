@@ -15,8 +15,8 @@ package org.eclipse.jdt.internal.core.util;
 
 import org.eclipse.jdt.core.util.ClassFormatException;
 import org.eclipse.jdt.core.util.IConstantPool;
-import org.eclipse.jdt.core.util.IStackMapFrame;
 import org.eclipse.jdt.core.util.IStackMapAttribute;
+import org.eclipse.jdt.core.util.IStackMapFrame;
 /**
  * Default implementation of IStackMapAttribute.
  * @see IStackMapAttribute

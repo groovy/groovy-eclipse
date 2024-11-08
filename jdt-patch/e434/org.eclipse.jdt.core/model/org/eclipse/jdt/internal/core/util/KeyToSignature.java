@@ -17,7 +17,6 @@
 package org.eclipse.jdt.internal.core.util;
 
 import java.util.ArrayList;
-
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;

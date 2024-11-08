@@ -14,9 +14,7 @@
 package org.eclipse.jdt.core.tests.compiler.parser;
 
 import java.util.Locale;
-
 import junit.framework.Test;
-
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionParser;

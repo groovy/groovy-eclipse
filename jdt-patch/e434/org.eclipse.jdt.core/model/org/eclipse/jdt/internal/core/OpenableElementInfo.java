@@ -15,7 +15,6 @@
 package org.eclipse.jdt.internal.core;
 
 import java.util.Arrays;
-
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IModuleDescription;
 

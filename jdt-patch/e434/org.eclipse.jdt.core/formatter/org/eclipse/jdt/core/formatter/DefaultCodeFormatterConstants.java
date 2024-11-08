@@ -18,7 +18,6 @@
 package org.eclipse.jdt.core.formatter;
 
 import java.util.Map;
-
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.internal.formatter.DefaultCodeFormatterOptions;

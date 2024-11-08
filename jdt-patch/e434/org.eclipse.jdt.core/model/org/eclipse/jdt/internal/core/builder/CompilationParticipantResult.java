@@ -16,7 +16,10 @@
 package org.eclipse.jdt.internal.core.builder;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.jdt.core.compiler.*;
+import org.eclipse.jdt.core.compiler.BuildContext;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.compiler.CompilationParticipant;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 

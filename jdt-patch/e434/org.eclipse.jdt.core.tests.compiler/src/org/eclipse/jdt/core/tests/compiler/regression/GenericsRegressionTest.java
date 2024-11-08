@@ -40,9 +40,7 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
 import java.util.Map;
-
 import junit.framework.Test;
-
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -6976,6 +6974,48 @@ public void testBugGH656_2() {
 			"	            ^^^^^^^^^^^^^^^^^^^^\n" +
 			"The method JavacWillAlsoError.someAbstractMethod() does not override the inherited method from MyAbstract since it is private to a different package\n" +
 			"----------\n");
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1802
+// Unchecked casts go unreported with ECJ
+public void testIssue1802() {
+	Runner runner = new Runner();
+	runner.testFiles =
+		new String[] {
+			"X.java",
+			"""
+			class X {
+					void foo(I<X> ix) {
+						A<Y> ay = (A<Y>) ix;
+						B<X> bx = (B<X>) ix;
+					}
+			}
+			class Y extends X {}
+			class Z extends X {}
+
+			interface I<T>  {
+			}
+
+			final class B<T> implements I<X> {
+			}
+
+
+			final class A<T> implements I<X> {
+			}
+			"""
+		};
+	runner.expectedCompilerLog =
+			"----------\n" +
+			"1. WARNING in X.java (at line 3)\n" +
+			"	A<Y> ay = (A<Y>) ix;\n" +
+			"	          ^^^^^^^^^\n" +
+			"Type safety: Unchecked cast from I<X> to A<Y>\n" +
+			"----------\n" +
+			"2. WARNING in X.java (at line 4)\n" +
+			"	B<X> bx = (B<X>) ix;\n" +
+			"	          ^^^^^^^^^\n" +
+			"Type safety: Unchecked cast from I<X> to B<X>\n" +
+			"----------\n";
+	runner.runWarningTest();
 }
 }
 

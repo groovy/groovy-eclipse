@@ -13,12 +13,11 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
-
+import junit.framework.Test;
+import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.JavacHasABug;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
-import junit.framework.Test;
 
 public class PrimitiveInPatternsTestSH extends AbstractRegressionTest9 {
 
@@ -83,6 +82,20 @@ public class PrimitiveInPatternsTestSH extends AbstractRegressionTest9 {
 	public PrimitiveInPatternsTestSH(String testName) {
 		super(testName);
 	}
+
+	// ========= OPT-IN to run.javac mode: ===========
+	@Override
+	protected void setUp() throws Exception {
+		this.runJavacOptIn = true;
+		super.setUp();
+	}
+	@Override
+	protected void tearDown() throws Exception {
+		super.tearDown();
+		this.runJavacOptIn = false; // do it last, so super can still clean up
+	}
+	// =================================================
+
 	// Enables the tests to run individually
 	protected Map<String, String> getCompilerOptions(boolean preview) {
 		Map<String, String> defaultOptions = super.getCompilerOptions();
@@ -1512,29 +1525,93 @@ public class PrimitiveInPatternsTestSH extends AbstractRegressionTest9 {
 			},
 			"12");
 	}
-	public void testInstanceof_widenUnbox() {
-		runConformTest(new String[] {
-				"X.java",
-				"""
+	void testInstanceof_widenUnbox(String fromBox, int idx, String expectedOuts) {
+		// for all numerical types challenge route WIDENING_REFERENCE_AND_UNBOXING_COVERSION_AND_WIDENING_PRIMITIVE_CONVERSION
+		//
+		// example (from="Integer", idx=4, ...):
+		// class X {
+		// 		// alternating for type variable (m1*) and wildcard (m2*):
+		//		static <T extends Integer> long m1long(T in) {
+		//			if (in instanceof long v) return v;
+		//			return -1L;
+		//		}
+		//		static long m2Long(Optional<? extends Integer> in) {
+		//			if (in.get() instanceof long v) return v;
+		//			return -1L;
+		//		}
+		//		static <T extends Integer> float m1float(T in) {
+		//			if (in instanceof float v) return v;
+		//			return -1.0f;
+		//		}
+		// 		...
+		//		public static void main(String... args) {
+		//				Integer v = Integer.valueOf((int) 49);
+		//				System.out.print(m1long(v));
+		//				System.out.print('+');
+		//				System.out.print(Optional.of(m2long(v));
+		//				System.out.print('|');
+		//				System.out.print(m1float(v));
+		//				System.out.print('|');
+		//				...
+		//		}
+		// }
+		String m1 = """
+				static <T extends FROM> PRIM m1PRIM(T in) {
+					if (in instanceof PRIM v) return v;
+					return NEGVAL;
+				}
+				""".replace("FROM", fromBox);
+		String m2 = """
+				static PRIM m2PRIM(Optional<? extends FROM> in) {
+					if (in.get() instanceof PRIM v) return v;
+					return NEGVAL;
+				}
+				""".replace("FROM", fromBox);
+		StringBuilder clazz = new StringBuilder();
+		clazz.append("""
 				import java.util.Optional;
 				public class X {
-					static <T extends Integer> int mInteger(T in) {
-						if (in instanceof int v) return v;
-						return -1;
-					}
-					static int mShort(Optional<? extends Short> in) {
-						if (in.get() instanceof int v) return v;
-						return -1;
-					}
-					public static void main(String... args) {
-						System.out.print(mInteger(Integer.valueOf(1)));
-						System.out.print(mShort(Optional.of(Short.valueOf((short) 2))));
+				""");
+		StringBuilder main = new StringBuilder();
+		main.append("public static void main(String... args) {\n");
+		main.append("\tFROM v = FROM.valueOf((CAST) VAL);\n"
+				.replace("FROM", fromBox)
+				.replace("CAST", PRIMITIVES[idx])
+				.replace("VAL", GOODVALUES[idx]));
+		String call1Tmpl = "\tSystem.out.print(m1PRIM(v));\n".replace("FROM", fromBox);
+		String call2Tmpl = "\tSystem.out.print(m2PRIM(Optional.of(v)));\n".replace("FROM", fromBox);
+		for (int i=idx+1; i<8; i++) {
+			if (!IS_NUMERICAL[i]) continue;
+			clazz.append(fillIn(m1, i));
+			clazz.append(fillIn(m2, i));
+			main.append(fillIn(call1Tmpl, i));
+			main.append("\tSystem.out.print('+');\n");
+			main.append(fillIn(call2Tmpl, i));
+			main.append("\tSystem.out.print('|');\n");
+		}
+		clazz.append(main);
+		clazz.append("""
 					}
 				}
-				"""
-			},
-			"12");
+				""");
+		runConformTest(new String[] {"X.java", clazz.toString()}, expectedOuts, getCompilerOptions(true), VMARGS, JavacHasABug.JavacBug8341408);
 	}
+	public void testInstanceof_widenUnbox_Byte() {
+		testInstanceof_widenUnbox("Byte", 1, "49+49|49+49|49+49|49.0+49.0|49.0+49.0|");
+	}
+	public void testInstanceof_widenUnbox_Short() {
+		testInstanceof_widenUnbox("Short", 3, "49+49|49+49|49.0+49.0|49.0+49.0|");
+	}
+	public void testInstanceof_widenUnbox_Integer() {
+		testInstanceof_widenUnbox("Integer", 4, "49+49|49.0+49.0|49.0+49.0|");
+	}
+	public void testInstanceof_widenUnbox_Long() {
+		testInstanceof_widenUnbox("Long", 5, "49.0+49.0|49.0+49.0|");
+	}
+	public void testInstanceof_widenUnbox_Float() {
+		testInstanceof_widenUnbox("Float", 6, "49.0+49.0|");
+	}
+
 	public void testInstanceof_genericExpression() { // regression test for a checkCast which we failed to generate earlier
 		runConformTest(new String[] {
 				"X.java",
@@ -1921,7 +1998,7 @@ public class PrimitiveInPatternsTestSH extends AbstractRegressionTest9 {
 			1. ERROR in X.java (at line 3)
 				return switch (b) {
 				               ^
-			An enhanced switch statement should be exhaustive; a default label expected
+			A switch expression should have a default case
 			----------
 			""");
 	}
@@ -2118,12 +2195,12 @@ public class PrimitiveInPatternsTestSH extends AbstractRegressionTest9 {
 			1. ERROR in X.java (at line 3)
 				return switch(l) {
 				              ^
-			An enhanced switch statement should be exhaustive; a default label expected
+			A switch expression should have a default case
 			----------
 			2. ERROR in X.java (at line 9)
 				return switch(l) {
 				              ^
-			An enhanced switch statement should be exhaustive; a default label expected
+			A switch expression should have a default case
 			----------
 			""");
 	}
@@ -2302,6 +2379,51 @@ public class PrimitiveInPatternsTestSH extends AbstractRegressionTest9 {
 				This case label is dominated by one of the preceding case labels
 				----------
 				""");
+	}
+
+	public void testIncompatiblePrimitiveInInstanceof() {
+		runNegativeTest(new String[] {
+				"X.java",
+				"""
+				public class X  {
+					void foo() {
+						if (this instanceof int i)
+							return;
+					}
+				}
+				"""
+				},
+				"""
+				----------
+				1. ERROR in X.java (at line 3)
+					if (this instanceof int i)
+					    ^^^^^^^^^^^^^^^^^^^^^
+				Incompatible conditional operand types X and int
+				----------
+				""");
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3113
+	// [Switch][Record patterns] Unexpected operand error with switch pattern and widening unboxing conversion
+	public void testGH3113_ok() {
+		runConformTest(new String[] {
+				"X.java",
+				"""
+				record Record<T extends Integer>(T t) {}
+				public class X {
+					public static <T extends Integer> double convert(Record<T> r) {
+						return switch (r) {
+						case Record(double d) -> d;
+						default -> 2;
+						};
+					}
+					public static void main(String[] args) {
+						System.out.print(convert(new Record(2)));
+					}
+				}
+				"""
+			},
+			"2.0");
 	}
 
 	// test from spec

@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core.dom;
 
 import java.util.List;
-
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;

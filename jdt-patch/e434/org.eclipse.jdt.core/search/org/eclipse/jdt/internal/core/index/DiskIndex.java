@@ -13,21 +13,29 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.index;
 
-import java.io.*;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.io.UTFDataFormatException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.regex.Pattern;
-
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.core.search.*;
-import org.eclipse.jdt.internal.core.util.*;
-import org.eclipse.osgi.util.NLS;
+import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfIntValues;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.compiler.util.SimpleSetOfCharArray;
+import org.eclipse.jdt.internal.core.util.Messages;
+import org.eclipse.jdt.internal.core.util.SimpleWordSet;
+import org.eclipse.jdt.internal.core.util.Util;
+import org.eclipse.osgi.util.NLS;
 
 public class DiskIndex {
 

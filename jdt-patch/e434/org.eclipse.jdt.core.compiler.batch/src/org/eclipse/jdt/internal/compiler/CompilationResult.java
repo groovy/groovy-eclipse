@@ -15,6 +15,20 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler;
 
+import java.lang.ref.SoftReference;
+import java.util.*;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
+import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
+import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
+import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
+import org.eclipse.jdt.internal.compiler.parser.RecoveryScannerData;
+import org.eclipse.jdt.internal.compiler.util.Util;
+
 /**
  * A compilation result consists of all information returned by the compiler for
  * a single compiled compilation source unit.  This includes:
@@ -35,29 +49,6 @@ package org.eclipse.jdt.internal.compiler;
  * specific fields and methods which were referenced, but does contain their
  * declaring types and any other types used to locate such fields or methods.
  */
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.eclipse.jdt.core.compiler.CategorizedProblem;
-import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
-import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
-import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
-import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
-import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
-import org.eclipse.jdt.internal.compiler.parser.RecoveryScannerData;
-import org.eclipse.jdt.internal.compiler.util.Util;
-
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class CompilationResult {
 
@@ -88,6 +79,8 @@ public class CompilationResult {
 	private boolean hasMandatoryErrors;
 	public List<AnnotationBinding[]> annotations = new ArrayList<>(1);
 	private List<Runnable> scheduledProblems;
+	private volatile boolean cacheSource;
+	private volatile SoftReference<char[]> contentRef;
 
 	private static final int[] EMPTY_LINE_ENDS = Util.EMPTY_INT_ARRAY;
 	private static final Comparator PROBLEM_COMPARATOR = new Comparator() {
@@ -494,5 +487,30 @@ public void materializeProblems() {
 			task.run();
 		}
 	}
+}
+
+public void cacheSource() {
+	this.cacheSource = true;
+}
+
+public char[] getContents() {
+	SoftReference<char[]> cr = this.contentRef;
+	if (cr != null) {
+		char[] cachedContents = cr.get();
+		if (cachedContents != null) {
+			return cachedContents;
+		}
+	}
+	return this.compilationUnit.getContents();
+}
+
+public void cacheContents(char[] contents) {
+	if (this.cacheSource) {
+		this.contentRef = new SoftReference<>(contents);
+	}
+}
+
+public void releaseContent() {
+	this.contentRef = null;
 }
 }

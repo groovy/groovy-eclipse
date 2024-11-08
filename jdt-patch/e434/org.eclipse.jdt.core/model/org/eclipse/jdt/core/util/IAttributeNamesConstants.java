@@ -208,7 +208,7 @@ public interface IAttributeNamesConstants {
 	 */
 	char[] RECORD = "Record".toCharArray(); //$NON-NLS-1$
 	/**
-	 * "PermittedSubclasses" attribute (JVMS 15).
+	 * "PermittedSubclasses" attribute (JVMS 17).
 	 * @since 3.24
 	 */
 	char[] PERMITTED_SUBCLASSES = "PermittedSubclasses".toCharArray(); //$NON-NLS-1$

@@ -14,9 +14,7 @@
 package org.eclipse.jdt.core.tests.builder;
 
 import java.util.Hashtable;
-
 import junit.framework.Test;
-
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
@@ -1663,6 +1661,67 @@ public class IncrementalTests extends BuilderTests {
 		incrementalBuild(projectPath);
 		expectingNoProblems();
 
+		env.removeProject(projectPath);
+	}
+
+	public void testExhaustiveness() throws JavaModelException {
+		String javaVersion = System.getProperty("java.version");
+		if (javaVersion != null && JavaCore.compareJavaVersions(javaVersion, "18") < 0)
+			return;
+
+		IPath projectPath = env.addProject("Project", "18");
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, "");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		IPath pathToX = env.addClass(root, "", "X",
+				"""
+				public class X {
+
+					public static void main(String[] args) {
+						E e = E.getE();
+
+						String s = switch (e) {
+							case A -> "A";
+							case B -> "B";
+							case C -> "C";
+						};
+						System.out.println(s);
+					}
+				}
+				""");
+
+		env.addClass(root, "", "E",
+				"""
+				public enum E {
+					A, B, C;
+					static E getE() {
+						return C;
+					}
+				}
+				""");
+
+		fullBuild(projectPath);
+		expectingNoProblems();
+		executeClass(projectPath, "X", "C", "");
+
+		env.addClass(root, "", "E",
+				"""
+				public enum E {
+					A, B, C, D;
+					static E getE() {
+						return D;
+					}
+				}
+				""");
+
+
+		incrementalBuild(projectPath);
+		expectingSpecificProblemFor(pathToX, new Problem("E", "A Switch expression should cover all possible values", pathToX, 100, 101, CategorizedProblem.CAT_SYNTAX, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 		env.removeProject(projectPath);
 	}
 

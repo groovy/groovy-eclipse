@@ -13,8 +13,12 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.junit.extension;
 
-import java.util.*;
-import junit.framework.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import junit.framework.AssertionFailedError;
+import junit.framework.Test;
+import junit.framework.TestFailure;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class TestResult extends junit.framework.TestResult {

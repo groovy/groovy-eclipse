@@ -13,9 +13,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import static org.eclipse.jdt.internal.core.ExternalJavadocSupport.*;
+
 import java.util.HashMap;
 import java.util.Map;
-
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
@@ -26,8 +27,6 @@ import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryMethod;
 import org.eclipse.jdt.internal.core.util.Util;
-
-import static org.eclipse.jdt.internal.core.ExternalJavadocSupport.*;
 
 /**
  * Javadoc tool format compatible with Java 11 and earlier versions

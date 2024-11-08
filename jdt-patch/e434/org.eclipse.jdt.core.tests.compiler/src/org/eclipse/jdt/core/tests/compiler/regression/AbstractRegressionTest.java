@@ -23,34 +23,16 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import junit.framework.Test;
+import junit.framework.TestSuite;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -559,18 +541,24 @@ static class JavacCompiler {
 		}
 		if (version == JavaCore.VERSION_21) {
 			switch (rawVersion) {
-				case "21": return 0;
+				case "21": return 0000;
+				case "21.0.1": return 0100;
+				case "21.0.2": return 0200;
 			}
 		}
 		if (version == JavaCore.VERSION_22) {
-			if ("22".equals(rawVersion)) {
-				return 0000;
+			switch (rawVersion) {
+				case "22": return 0000;
+				case "22.0.1": return 0100;
+				case "22.0.2": return 0200;
 			}
 		}
 		if (version == JavaCore.VERSION_23) {
 			switch(rawVersion) {
 				case "23-ea", "23":
 					return 0000;
+				case "23.0.1": return 0100;
+				case "23.0.2": return 0200;
 			}
 		}
 		throw new RuntimeException("unknown raw javac version: " + rawVersion);
@@ -802,28 +790,28 @@ protected static class JavacTestOptions {
 			return this.mismatchType == 0 || (this.mismatchType & mismatch) == mismatch; // one excuse can clear multiple mismatches
 		}
 		public static Excuse
-			EclipseHasSomeMoreWarnings = RUN_JAVAC ?
-				new Excuse(MismatchType.EclipseWarningsJavacNone) : null,
-			EclipseWarningConfiguredAsError = RUN_JAVAC ?
-				new Excuse(MismatchType.EclipseErrorsJavacWarnings | MismatchType.EclipseErrorsJavacNone) : null,
-			JavacCompilesBogusReferencedFileAgain = RUN_JAVAC ?
-				new Excuse(MismatchType.EclipseErrorsJavacNone) : null,
+			EclipseHasSomeMoreWarnings =
+				new Excuse(MismatchType.EclipseWarningsJavacNone),
+			EclipseWarningConfiguredAsError =
+				new Excuse(MismatchType.EclipseErrorsJavacWarnings | MismatchType.EclipseErrorsJavacNone),
+			JavacCompilesBogusReferencedFileAgain =
+				new Excuse(MismatchType.EclipseErrorsJavacNone),
 				// bugs not found on javac bug site, but points to a javac bug.
-			JavacDoesNotCompileCorrectSource = RUN_JAVAC ?
-				new JavacHasABug(MismatchType.JavacErrorsEclipseNone) : null,
+			JavacDoesNotCompileCorrectSource =
+				new JavacHasABug(MismatchType.JavacErrorsEclipseNone),
 			/* A General Excuse - Revisit periodically */
-			JavacCompilesIncorrectSource = RUN_JAVAC ?
+			JavacCompilesIncorrectSource =
 				new JavacHasABug(MismatchType.EclipseErrorsJavacNone |
 						MismatchType.EclipseErrorsJavacWarnings |
-						MismatchType.EclipseWarningsJavacNone) : null,
-			JavacGeneratesIncorrectCode = RUN_JAVAC ?
-					new JavacHasABug(MismatchType.StandardOutputMismatch) : null,
-			JavacHasWarningsEclipseNotConfigured = RUN_JAVAC ?
-					new JavacHasABug(MismatchType.JavacWarningsEclipseNone) : null,
-			JavacHasErrorsEclipseHasWarnings = RUN_JAVAC ?
-					new JavacHasABug(MismatchType.JavacErrorsEclipseWarnings) : null,
-			JavacHasErrorsEclipseHasNone = RUN_JAVAC ?
-					new JavacHasABug(MismatchType.JavacErrorsEclipseNone) : null;
+						MismatchType.EclipseWarningsJavacNone),
+			JavacGeneratesIncorrectCode =
+					new JavacHasABug(MismatchType.StandardOutputMismatch),
+			JavacHasWarningsEclipseNotConfigured =
+					new JavacHasABug(MismatchType.JavacWarningsEclipseNone),
+			JavacHasErrorsEclipseHasWarnings =
+					new JavacHasABug(MismatchType.JavacErrorsEclipseWarnings),
+			JavacHasErrorsEclipseHasNone =
+					new JavacHasABug(MismatchType.JavacErrorsEclipseNone);
 	}
 	Excuse excuseFor(JavacCompiler compiler) {
 		return null;
@@ -834,88 +822,88 @@ protected static class JavacTestOptions {
 			super(mismatchType);
 		}
 		public static DubiousOutcome
-		EclipseErrorsJavacNone = RUN_JAVAC ?
-				new DubiousOutcome(MismatchType.EclipseErrorsJavacNone) : null,
-		JavacErrorsEclipseNone = RUN_JAVAC ?
-				new DubiousOutcome(MismatchType.JavacErrorsEclipseNone) : null,
-		JDK8319461 = RUN_JAVAC ? // https://bugs.openjdk.org/browse/JDK-8319461
-				new DubiousOutcome(MismatchType.JavacErrorsEclipseNone) : null;
+		EclipseErrorsJavacNone =
+				new DubiousOutcome(MismatchType.EclipseErrorsJavacNone),
+		JavacErrorsEclipseNone =
+				new DubiousOutcome(MismatchType.JavacErrorsEclipseNone),
+		JDK8319461 = // https://bugs.openjdk.org/browse/JDK-8319461
+				new DubiousOutcome(MismatchType.JavacErrorsEclipseNone);
 	}
 	public static class EclipseHasABug extends Excuse {
 		EclipseHasABug(int mismatchType) {
 			super(mismatchType);
 		}
 		public static EclipseHasABug
-			EclipseBug159851 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=159851
+			EclipseBug159851 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=159851
 				new EclipseHasABug(MismatchType.JavacErrorsEclipseNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance < ClassFileConstants.JDK1_7 ? this : null;
 					}
-				} : null,
-			EclipseBug177715 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=177715
+				},
+			EclipseBug177715 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=177715
 				new EclipseHasABug(MismatchType.JavacErrorsEclipseNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance < ClassFileConstants.JDK1_8 ? this : null; // in 1.8 rejected by both compilers
 					}
-				} : null,
-			EclipseBug207935 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=207935
-				new EclipseHasABug(MismatchType.EclipseErrorsJavacNone | MismatchType.EclipseWarningsJavacNone) : null,
-			EclipseBug216558 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=216558
-				new EclipseHasABug(MismatchType.JavacErrorsEclipseNone) : null,
-			EclipseBug235550 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=235550
-				new EclipseHasABug(MismatchType.JavacErrorsEclipseNone) : null,
-			EclipseBug235809 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=235809
-				new EclipseHasABug(MismatchType.StandardOutputMismatch) : null,
-			EclipseBug236217 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=236217
+				},
+			EclipseBug207935 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=207935
+				new EclipseHasABug(MismatchType.EclipseErrorsJavacNone | MismatchType.EclipseWarningsJavacNone),
+			EclipseBug216558 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=216558
+				new EclipseHasABug(MismatchType.JavacErrorsEclipseNone),
+			EclipseBug235550 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=235550
+				new EclipseHasABug(MismatchType.JavacErrorsEclipseNone),
+			EclipseBug235809 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=235809
+				new EclipseHasABug(MismatchType.StandardOutputMismatch),
+			EclipseBug236217 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=236217
 				new EclipseHasABug(MismatchType.JavacErrorsEclipseNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance < ClassFileConstants.JDK1_8 ? this : null; // in 1.8 accepted by both compilers
 					}
-				} : null,
-			EclipseBug236236 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=236236
+				},
+			EclipseBug236236 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=236236
 				new EclipseHasABug(MismatchType.EclipseErrorsJavacNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance > ClassFileConstants.JDK1_5 ? this : null;
 					}
-				}: null,
-			EclipseBug236242 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=236242
+				},
+			EclipseBug236242 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=236242
 				new EclipseHasABug(MismatchType.EclipseErrorsJavacWarnings) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance == ClassFileConstants.JDK1_7 ? this : null;
 					}
-				}: null,
-			EclipseBug236243 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=236243
+				},
+			EclipseBug236243 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=236243
 				new EclipseHasABug(MismatchType.EclipseErrorsJavacNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance > ClassFileConstants.JDK1_6 ? this : null;
 					}
-				}: null,
-			EclipseBug236379 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=236379
+				},
+			EclipseBug236379 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=236379
 				new EclipseHasABug(MismatchType.EclipseWarningsJavacNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance > ClassFileConstants.JDK1_5 ? null : this;
 					}
-				}: null,
-			EclipseBug424410 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=424410
-				new EclipseHasABug(MismatchType.JavacErrorsEclipseNone) : null,
-			EclipseBug427719 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=427719
-				new EclipseHasABug(MismatchType.JavacErrorsEclipseWarnings) : null,
-			EclipseBug421922 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=421922
-						new EclipseHasABug(MismatchType.EclipseErrorsJavacNone) : null,
-			EclipseBug428061 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428061
+				},
+			EclipseBug424410 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=424410
+				new EclipseHasABug(MismatchType.JavacErrorsEclipseNone),
+			EclipseBug427719 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=427719
+				new EclipseHasABug(MismatchType.JavacErrorsEclipseWarnings),
+			EclipseBug421922 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=421922
+						new EclipseHasABug(MismatchType.EclipseErrorsJavacNone),
+			EclipseBug428061 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428061
 								new EclipseHasABug(MismatchType.JavacErrorsEclipseNone |
-										MismatchType.JavacErrorsEclipseWarnings) : null,
-			EclipseBug510528 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=510528
-				new EclipseHasABug(MismatchType.JavacErrorsEclipseNone) : null,
-			EclipseBug531531 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=531531
-					new EclipseHasABug(MismatchType.EclipseErrorsJavacNone) : null;
+										MismatchType.JavacErrorsEclipseWarnings),
+			EclipseBug510528 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=510528
+				new EclipseHasABug(MismatchType.JavacErrorsEclipseNone),
+			EclipseBug531531 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=531531
+					new EclipseHasABug(MismatchType.EclipseErrorsJavacNone);
 	}
 	// Justification based upon:
 	// - Eclipse bugs opened to investigate differences and closed as INVALID
@@ -929,96 +917,96 @@ protected static class JavacTestOptions {
 			super(mismatchType);
 		}
 		public static final EclipseJustification
-			EclipseBug72704 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=72704
-				new EclipseJustification(MismatchType.EclipseErrorsJavacNone) : null,
-			EclipseBug83902 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=83902
+			EclipseBug72704 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=72704
+				new EclipseJustification(MismatchType.EclipseErrorsJavacNone),
+			EclipseBug83902 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=83902
 				new EclipseJustification(MismatchType.EclipseWarningsJavacNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance > ClassFileConstants.JDK1_5 ? this : null;
 					}
-				} : null,
-			EclipseBug83902b = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=83902
-				new EclipseJustification(MismatchType.JavacErrorsEclipseWarnings) : null,
-			EclipseBug95021 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=95021
+				},
+			EclipseBug83902b = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=83902
+				new EclipseJustification(MismatchType.JavacErrorsEclipseWarnings),
+			EclipseBug95021 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=95021
 				new EclipseJustification(MismatchType.JavacErrorsEclipseNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance == ClassFileConstants.JDK1_7 ? this : null;
 					}
 					// WORK consider adding reversed pivots
-				} : null,
-			EclipseBug126712 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=126712 & http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6342411
+				},
+			EclipseBug126712 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=126712 & http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6342411
 				new EclipseJustification(MismatchType.StandardOutputMismatch) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance > ClassFileConstants.JDK1_5 ? this : null;
 					}
 					// WORK consider adding reversed pivots
-				} : null,
-			EclipseBug126744 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=126744
-				new EclipseJustification(MismatchType.JavacErrorsEclipseNone) : null,
-			EclipseBug151275 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=151275
+				},
+			EclipseBug126744 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=126744
+				new EclipseJustification(MismatchType.JavacErrorsEclipseNone),
+			EclipseBug151275 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=151275
 				new EclipseJustification(MismatchType.JavacErrorsEclipseNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance < ClassFileConstants.JDK1_7 ? this : null;
 					}
-				} : null,
-			EclipseBug159214 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=159214
+				},
+			EclipseBug159214 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=159214
 				new EclipseJustification(MismatchType.EclipseErrorsJavacNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance == ClassFileConstants.JDK1_6 ? this : null;
 					}
 					// WORK consider adding reversed pivots
-				} : null,
-			EclipseBug169017 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=169017
+				},
+			EclipseBug169017 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=169017
 				new EclipseJustification(MismatchType.JavacErrorsEclipseNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance > ClassFileConstants.JDK1_5 ? this : null;
 					}
 					// WORK consider adding reversed pivots
-				} : null,
-			EclipseBug180789 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=180789
-				new EclipseJustification(MismatchType.EclipseErrorsJavacWarnings) : null,
-			EclipseBug218677 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=218677
+				},
+			EclipseBug180789 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=180789
+				new EclipseJustification(MismatchType.EclipseErrorsJavacWarnings),
+			EclipseBug218677 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=218677
 				new EclipseJustification(MismatchType.EclipseErrorsJavacNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance > ClassFileConstants.JDK1_6 ? this : null;
 					}
 					// WORK consider adding reversed pivots
-				} : null,
-			EclipseBug234815 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=234815
+				},
+			EclipseBug234815 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=234815
 				new EclipseJustification(MismatchType.JavacErrorsEclipseNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance < ClassFileConstants.JDK1_7 ? this : null;
 					}
-				}: null,
-			EclipseBug235543 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=235543
-				new EclipseJustification(MismatchType.EclipseErrorsJavacNone) : null,
-			EclipseBug235546 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=235546
-				new EclipseJustification(MismatchType.JavacErrorsEclipseNone) : null,
-			EclipseBug449063 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=449063
-					 new EclipseJustification(MismatchType.StandardOutputMismatch) : null,
-			EclipseBug561549 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=561549
+				},
+			EclipseBug235543 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=235543
+				new EclipseJustification(MismatchType.EclipseErrorsJavacNone),
+			EclipseBug235546 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=235546
+				new EclipseJustification(MismatchType.JavacErrorsEclipseNone),
+			EclipseBug449063 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=449063
+					 new EclipseJustification(MismatchType.StandardOutputMismatch),
+			EclipseBug561549 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=561549
 					 new EclipseJustification(MismatchType.EclipseErrorsJavacNone) {
 						@Override
 						Excuse excuseFor(JavacCompiler compiler) {
 							return compiler.compliance > ClassFileConstants.JDK9 ? this : null;
 						}
-					 } : null;
+					 };
 		public static final EclipseJustification
-			EclipseJustification0001 = RUN_JAVAC ?
+			EclipseJustification0001 =
 					new EclipseJustification(MismatchType.EclipseErrorsJavacNone) {
 						@Override
 						Excuse excuseFor(JavacCompiler compiler) {
 							return compiler.compliance < ClassFileConstants.JDK1_7 ? this : null;
 						}
-					} : null;
+					};
 			/* javac 1.6- properly detects duplicate attributes in annotations in the
 			 * simplest case (AnnotationTest#18b) but fails on a slightly more
 			 * complex one where the duplicate is within an embedded annotation;
@@ -1091,39 +1079,39 @@ protected static class JavacTestOptions {
 		}
 		// bugs that we know precisely of
 		public static JavacHasABug
-			JavacBug4094180 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4094180
-				new JavacHasABug(MismatchType.EclipseErrorsJavacNone) : null,
-			JavacBug4660984 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4660984 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=235555
-				new JavacHasABug(MismatchType.JavacErrorsEclipseNone) : null,
-			JavacBug5042462 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5042462 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=208873
+			JavacBug4094180 = // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4094180
+				new JavacHasABug(MismatchType.EclipseErrorsJavacNone),
+			JavacBug4660984 = // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4660984 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=235555
+				new JavacHasABug(MismatchType.JavacErrorsEclipseNone),
+			JavacBug5042462 = // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5042462 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=208873
 				new JavacHasABug(
 					MismatchType.JavacErrorsEclipseNone,
-					ClassFileConstants.JDK1_7, 0 /* 1.7.0 b17 */) : null,
-			JavacBug5061359 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5061359
+					ClassFileConstants.JDK1_7, 0 /* 1.7.0 b17 */),
+			JavacBug5061359 = // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5061359
 				new JavacHasABug(
 					MismatchType.EclipseErrorsJavacNone,
-					ClassFileConstants.JDK1_7, 0 /* 1.7.0 b03 */) : null,
-			JavacBug6302954 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6302954 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=98379
+					ClassFileConstants.JDK1_7, 0 /* 1.7.0 b03 */),
+			JavacBug6302954 = // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6302954 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=98379
 				new JavacHasABug(
 					MismatchType.JavacErrorsEclipseNone,
-					ClassFileConstants.JDK1_7, 0 /* 1.7.0 b03 */) : null,
-			JavacBug6400189 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6400189 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=106744 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=167952
+					ClassFileConstants.JDK1_7, 0 /* 1.7.0 b03 */),
+			JavacBug6400189 = // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6400189 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=106744 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=167952
 				new JavacHasABug(
 					MismatchType.EclipseErrorsJavacNone) {
 						@Override
 						Excuse excuseFor(JavacCompiler compiler) {
 							return compiler.compliance == ClassFileConstants.JDK1_6 ? this : null;
 						}
-					} : null,
-			JavacBug6500701 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6500701 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=209779
+					},
+			JavacBug6500701 = // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6500701 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=209779
 				new JavacHasABug(
 					MismatchType.StandardOutputMismatch,
-					ClassFileConstants.JDK1_7, 0) : null,
-			JavacBug6531075 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6531075
+					ClassFileConstants.JDK1_7, 0),
+			JavacBug6531075 = // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6531075
 				new JavacHasABug(
 					MismatchType.StandardOutputMismatch,
-					ClassFileConstants.JDK1_7, 0) : null, // fixed in jdk7 b27; unfortunately, we do not have a distinct minor for this, hence former jdk7s will report an unused excuse
-			JavacBug6569404 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6569404
+					ClassFileConstants.JDK1_7, 0), // fixed in jdk7 b27; unfortunately, we do not have a distinct minor for this, hence former jdk7s will report an unused excuse
+			JavacBug6569404 = // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6569404
 				new JavacHasABug(
 					MismatchType.JavacErrorsEclipseNone) {
 						@Override
@@ -1131,68 +1119,72 @@ protected static class JavacTestOptions {
 							// present only in javac6 between 1.6.0_10_b08 and EOL
 							return (compiler.compliance == ClassFileConstants.JDK1_6 && compiler.minor >= 10) ? this : null;
 						}
-					} : null,
-			JavacBug6557661 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6557661 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=129261
+					},
+			JavacBug6557661 = // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6557661 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=129261
 				new JavacHasABug(
-					MismatchType.EclipseErrorsJavacNone) : null,
-			JavacBug6573446 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6573446 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=190945
+					MismatchType.EclipseErrorsJavacNone),
+			JavacBug6573446 = // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6573446 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=190945
 				new JavacHasABug(
-					MismatchType.EclipseErrorsJavacNone) : null,
-			JavacBug6575821 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6575821
+					MismatchType.EclipseErrorsJavacNone),
+			JavacBug6575821 = // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6575821
 				new JavacHasABug(
 					MismatchType.JavacErrorsEclipseNone,
-					ClassFileConstants.JDK1_6, 10 /* 1.6.0_10_b08 or better - maybe before */) : null,
-			JavacBug8033810 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8033810
-				new JavacHasABug(MismatchType.EclipseErrorsJavacNone) : null,
-			JavacBug8144673 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8144673
-				new JavacHasABug(MismatchType.JavacErrorsEclipseNone, ClassFileConstants.JDK9, 0100) : null,
-			JavacBug8204534 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8204534
-				new JavacHasABug(MismatchType.EclipseErrorsJavacNone, ClassFileConstants.JDK11, 0000) : null,
-			JavacBug8207032 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8207032
-				new JavacHasABug(MismatchType.EclipseErrorsJavacNone, ClassFileConstants.JDK11, 0000) : null,
-			JavacBug8044196 = RUN_JAVAC ? // likely https://bugs.openjdk.java.net/browse/JDK-8044196, intermittently masked by https://bugs.openjdk.java.net/browse/JDK-8029161
-				new JavacHasABug(MismatchType.EclipseErrorsJavacNone, ClassFileConstants.JDK9, 0000, true) : null,
-			JavacBug6337964 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=112433
-					new JavacHasABug(MismatchType.JavacErrorsEclipseNone, ClassFileConstants.JDK1_6, 1045/*guessed*/, true) : null,
-			JavacBug8144832 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8144832
-					new JavacHasABug(MismatchType.JavacErrorsEclipseNone, ClassFileConstants.JDK9, 0000) : null,
-			JavacBug8179483_switchExpression = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8179483
-					new JavacBug8179483(" --release 13 --enable-preview -Xlint:-preview") : null,
-			JavacBug8221413_switchExpression = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8221413
-					new JavacBug8221413(" --release 12 --enable-preview -Xlint:-preview") : null,
-			JavacBug8226510_switchExpression = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8226510
-					new JavacBug8226510(" --release 12 --enable-preview -Xlint:-preview") : null,
-		    JavacBug8299416 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8299416
-					new JavacBugExtraJavacOptionsPlusMismatch(" --release 20 --enable-preview -Xlint:-preview",
-							MismatchType.EclipseErrorsJavacNone| MismatchType.EclipseErrorsJavacWarnings) : null,
-		    JavacBug8336255 = RUN_JAVAC ? // https://bugs.openjdk.org/browse/JDK-8336255
+					ClassFileConstants.JDK1_6, 10 /* 1.6.0_10_b08 or better - maybe before */),
+			JavacBug8033810 = // https://bugs.openjdk.java.net/browse/JDK-8033810
+				new JavacHasABug(MismatchType.EclipseErrorsJavacNone),
+			JavacBug8144673 = // https://bugs.openjdk.java.net/browse/JDK-8144673
+				new JavacHasABug(MismatchType.JavacErrorsEclipseNone, ClassFileConstants.JDK9, 0100),
+			JavacBug8204534 = // https://bugs.openjdk.java.net/browse/JDK-8204534
+				new JavacHasABug(MismatchType.EclipseErrorsJavacNone, ClassFileConstants.JDK11, 0000),
+			JavacBug8207032 = // https://bugs.openjdk.java.net/browse/JDK-8207032
+				new JavacHasABug(MismatchType.EclipseErrorsJavacNone, ClassFileConstants.JDK11, 0000),
+			JavacBug8044196 = // likely https://bugs.openjdk.java.net/browse/JDK-8044196, intermittently masked by https://bugs.openjdk.java.net/browse/JDK-8029161
+				new JavacHasABug(MismatchType.EclipseErrorsJavacNone, ClassFileConstants.JDK9, 0000, true),
+			JavacBug6337964 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=112433
+					new JavacHasABug(MismatchType.JavacErrorsEclipseNone, ClassFileConstants.JDK1_6, 1045/*guessed*/, true),
+			JavacBug8144832 = // https://bugs.openjdk.java.net/browse/JDK-8144832
+					new JavacHasABug(MismatchType.JavacErrorsEclipseNone, ClassFileConstants.JDK9, 0000),
+			JavacBug8179483_switchExpression = // https://bugs.openjdk.java.net/browse/JDK-8179483
+					new JavacBug8179483(" --release 23 --enable-preview -Xlint:-preview"),
+			JavacBug8221413_switchExpression = // https://bugs.openjdk.java.net/browse/JDK-8221413
+					new JavacBug8221413(" --release 12 --enable-preview -Xlint:-preview"),
+			JavacBug8226510_switchExpression = // https://bugs.openjdk.java.net/browse/JDK-8226510
+					new JavacBug8226510(" --release 12 --enable-preview -Xlint:-preview"),
+//		    JavacBug8299416 = // https://bugs.openjdk.java.net/browse/JDK-8299416 was active only in some builds of JDK 20
+		    JavacBug8336255 = // https://bugs.openjdk.org/browse/JDK-8336255
 					new JavacBugExtraJavacOptionsPlusMismatch(" --release 23 --enable-preview -Xlint:-preview",
-							MismatchType.JavacErrorsEclipseNone) : null;
+							MismatchType.JavacErrorsEclipseNone),
+			JavacBug8337980 = // https://bugs.openjdk.org/browse/JDK-8337980
+					new JavacHasABug(MismatchType.EclipseErrorsJavacNone /* add pivot JDK24 */),
+			JavacBug8343306 = // https://bugs.openjdk.org/browse/JDK-8343306
+					new JavacHasABug(MismatchType.EclipseErrorsJavacNone /* add pivot JDK24 */),
+			JavacBug8341408 = // https://bugs.openjdk.org/browse/JDK-8341408
+					new JavacBug8341408();
 
 		// bugs that have been fixed but that we've not identified
 		public static JavacHasABug
-			JavacBugFixed_6_10 = RUN_JAVAC ?
+			JavacBugFixed_6_10 =
 				new JavacHasABug(
 					0 /* all */,
-					ClassFileConstants.JDK1_6, 1000 /* 1.6.0_10_b08 or better - maybe before */) : null,
-			JavacBugFixed_6_10_b24 = RUN_JAVAC ?
+					ClassFileConstants.JDK1_6, 1000 /* 1.6.0_10_b08 or better - maybe before */),
+			JavacBugFixed_6_10_b24 =
 				new JavacHasABug(
 					0 /* all */,
-					ClassFileConstants.JDK1_6, 1010 /* 1.6.0_10_b24 or better - maybe before */) : null,
-			JavacBugFixed_7 = RUN_JAVAC ?
+					ClassFileConstants.JDK1_6, 1010 /* 1.6.0_10_b24 or better - maybe before */),
+			JavacBugFixed_7 =
 				new JavacHasABug(
 					0 /* all */,
-					ClassFileConstants.JDK1_7, 0 /* 1.7.0_b24 or better - maybe before */) : null,
-			JavacBugFixed_901 = RUN_JAVAC ?
+					ClassFileConstants.JDK1_7, 0 /* 1.7.0_b24 or better - maybe before */),
+			JavacBugFixed_901 =
 				new JavacHasABug(
 					0 /* all */,
-					ClassFileConstants.JDK9, 0100 /* 9.0.1 or better */) : null;
+					ClassFileConstants.JDK9, 0100 /* 9.0.1 or better */);
 		// bugs that have neither been fixed nor formally identified but which outcomes are obvious enough to clear any doubts
 		public static JavacHasABug
-			JavacThrowsAnException = RUN_JAVAC ? // some of these are transient - that is, depend on the system on which the test is run, aka stack overflow
+			JavacThrowsAnException = // some of these are transient - that is, depend on the system on which the test is run, aka stack overflow
 				new JavacHasABug(
-					MismatchType.JavacErrorsEclipseNone) : null,
-			JavacThrowsAnExceptionForJava_1_5_0_16 = RUN_JAVAC ?
+					MismatchType.JavacErrorsEclipseNone),
+			JavacThrowsAnExceptionForJava_1_5_0_16 =
 					new JavacHasABug(
 						MismatchType.JavacErrorsEclipseNone) {
 							@Override
@@ -1200,27 +1192,25 @@ protected static class JavacTestOptions {
 								return compiler.compliance != ClassFileConstants.JDK1_5 ||
 										compiler.minor != 1600 ? null : this;
 							}
-					}: null,
-			JavacThrowsAnExceptionForJava_since9_EclipseWarns = RUN_JAVAC ?
+					},
+			JavacThrowsAnExceptionForJava_since9_EclipseWarns =
 					new JavacHasABug(
 						MismatchType.JavacErrorsEclipseWarnings) {
 							@Override
 							Excuse excuseFor(JavacCompiler compiler) {
 								return compiler.compliance < ClassFileConstants.JDK9 ? null : this;
 							}
-					}: null;
+					};
 		public static JavacHasABug
-				NoWarningForMissingJavadocTag = RUN_JAVAC ?
-						new JavacHasABug(MismatchType.EclipseErrorsJavacNone)
-						: null,
-				NoWarningForDuplicateJavadocTag = RUN_JAVAC ?
-						new JavacHasABug(MismatchType.EclipseErrorsJavacNone)
-						: null;
+				NoWarningForMissingJavadocTag =
+						new JavacHasABug(MismatchType.EclipseErrorsJavacNone),
+				NoWarningForDuplicateJavadocTag =
+						new JavacHasABug(MismatchType.EclipseErrorsJavacNone);
 	}
 	public static class JavacBug8179483 extends JavacHasABug {
 		String extraJavacOptions;
 		public JavacBug8179483(String extraJavacOptions) {
-			super(MismatchType.EclipseErrorsJavacWarnings);
+			super(MismatchType.EclipseErrorsJavacNone);
 			this.extraJavacOptions = extraJavacOptions;
 		}
 		@Override
@@ -1259,6 +1249,12 @@ protected static class JavacTestOptions {
 		@Override
 		String getCompilerOptions() {
 			return super.getCompilerOptions() + this.extraJavacOptions;
+		}
+	}
+	public static class JavacBug8341408 extends JavacBugExtraJavacOptionsPlusMismatch {
+		public JavacBug8341408() {
+			super("--enable-preview -source 23 -Xlint:-preview", MismatchType.StandardOutputMismatch);
+// FIXME	this.pivotCompliance = ClassFileConstants.JDK24;
 		}
 	}
 }
@@ -1346,6 +1342,59 @@ protected static class JavacTestOptions {
 	public AbstractRegressionTest(String name) {
 		super(name);
 	}
+
+	/* argument 'inheritedDepth' is not exposed in original API, therefore these helpers are copied below with this arg added */
+	protected static void buildMinimalComplianceTestSuite(int minimalCompliance, int inheritedDepth, TestSuite suite, Class<?> evaluationTestClass) {
+		int complianceLevels = getPossibleComplianceLevels();
+		for (int[] map : complianceTestLevelMapping) {
+			if ((complianceLevels & map[0]) != 0) {
+				long complianceLevelForJavaVersion = ClassFileConstants.getComplianceLevelForJavaVersion(map[1]);
+				checkCompliance(evaluationTestClass, minimalCompliance, suite, complianceLevels, inheritedDepth, map[0], map[1], getVersionString(complianceLevelForJavaVersion));
+			}
+		}
+	}
+	protected static void checkCompliance(Class<?> evaluationTestClass, int minimalCompliance, TestSuite suite, int complianceLevels, int inheritedDepth,
+			int abstractCompilerTestCompliance, int classFileConstantsVersion, String release) {
+		int lev = complianceLevels & abstractCompilerTestCompliance;
+		if (lev != 0) {
+			if (lev < minimalCompliance) {
+				System.err.println("Cannot run "+evaluationTestClass.getName()+" at compliance " + release + "!");
+			} else {
+				suite.addTest(buildUniqueComplianceTestSuite(evaluationTestClass, ClassFileConstants.getComplianceLevelForJavaVersion(classFileConstantsVersion), inheritedDepth));
+			}
+		}
+	}
+	public static Test buildUniqueComplianceTestSuite(Class<?> evaluationTestClass, long uniqueCompliance, int inheritedDepth) {
+		long highestLevel = highestComplianceLevels();
+		if (highestLevel < uniqueCompliance) {
+			String complianceString;
+			if (highestLevel == ClassFileConstants.JDK10)
+				complianceString = "10";
+			else if (highestLevel == ClassFileConstants.JDK9)
+				complianceString = "9";
+			else if (highestLevel <= CompilerOptions.getFirstSupportedJdkLevel())
+				complianceString = CompilerOptions.getFirstSupportedJavaVersion();
+			else {
+				highestLevel = ClassFileConstants.getLatestJDKLevel();
+				if (highestLevel > 0) {
+					complianceString = CompilerOptions.versionFromJdkLevel(highestLevel);
+				} else {
+					complianceString = "unknown";
+				}
+
+			}
+
+			System.err.println("Cannot run "+evaluationTestClass.getName()+" at compliance "+complianceString+"!");
+			return new TestSuite();
+		}
+		TestSuite complianceSuite = new RegressionTestSetup(uniqueCompliance);
+		List<Test> tests = buildTestsList(evaluationTestClass, inheritedDepth);
+		for (int index=0, size=tests.size(); index<size; index++) {
+			complianceSuite.addTest(tests.get(index));
+		}
+		return complianceSuite;
+	}
+
 	protected boolean checkPreviewAllowed() {
 		return this.complianceLevel == ClassFileConstants.getLatestJDKLevel();
 	}
@@ -1741,13 +1790,12 @@ protected static class JavacTestOptions {
 		return DefaultJavaRuntimeEnvironment.getDefaultClassPaths();
 	}
 	/** Get class library paths built from default class paths plus the JDT null annotations. */
-	protected String[] getLibsWithNullAnnotations(long sourceLevel) {
+	protected String[] getLibsWithNullAnnotations() throws IOException {
 		String[] defaultLibs = getDefaultClassPaths();
 		int len = defaultLibs.length;
 		String[] libs = new String[len+1];
 		System.arraycopy(defaultLibs, 0, libs, 0, len);
-		String version = sourceLevel < ClassFileConstants.JDK1_8 ? "[1.1.0,2.0.0)" : "[2.0.0,3.0.0)";
-		Bundle[] bundles = Platform.getBundles("org.eclipse.jdt.annotation", version);
+		Bundle[] bundles = Platform.getBundles("org.eclipse.jdt.annotation", "[2.0.0,3.0.0)");
 		File bundleFile = FileLocator.getBundleFileLocation(bundles[0]).get();
 		if (bundleFile.isDirectory())
 			libs[len] = bundleFile.getPath()+"/bin";
@@ -1841,7 +1889,7 @@ protected static class JavacTestOptions {
 		System.out.println("");
 	}
 	protected void	printJavacResultsSummary() {
-		if (RUN_JAVAC) {
+		if (shouldRunJavac()) {
 			Integer count = (Integer)TESTS_COUNTERS.get(CURRENT_CLASS_NAME);
 			if (count != null) {
 				int newCount = count.intValue()-1;
@@ -3591,7 +3639,7 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 			}
 		}
 		// javac part
-		if (RUN_JAVAC && javacTestOptions != JavacTestOptions.SKIP) {
+		if (shouldRunJavac() && javacTestOptions != JavacTestOptions.SKIP) {
 			runJavac(testFiles, expectingCompilerErrors, expectedCompilerLog,
 					expectedJavacOutputString, expectedErrorString, shouldFlushOutputDirectory,
 					javacTestOptions, vmArguments, classLibraries, libsOnModulePath);
@@ -3998,6 +4046,9 @@ protected void runNegativeTest(
 		// javac options
 		javacTestOptions /* javac test options */);
 }
+	protected boolean shouldRunJavac() {
+		return RUN_JAVAC || (RUN_JAVAC_OPT_IN && this.runJavacOptIn);
+	}
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
@@ -4005,72 +4056,77 @@ protected void runNegativeTest(
 			this.verifier = new TestVerifier(true);
 			this.createdVerifier = true;
 		}
-		if (RUN_JAVAC) {
-			// WORK make all needed inits once and for all
-			if (isFirst()) {
-				if (javacFullLog == null) {
-					// One time initialization of javac related concerns
-					// compute command lines and extract javac version
-					JAVAC_OUTPUT_DIR = new File(JAVAC_OUTPUT_DIR_NAME);
-					// WORK simplify jdk.root out
-					String jdkRootDirectory = System.getProperty("jdk.root");
-					if (jdkRootDirectory == null)
-						jdkRootDirPath = (new Path(Util.getJREDirectory())).removeLastSegments(1);
-					else
-						jdkRootDirPath = new Path(jdkRootDirectory);
+		if (shouldRunJavac()) {
+			setupJavac();
+		}
+	}
 
-					StringBuilder cmdLineHeader = new StringBuilder(jdkRootDirPath.
-							append("bin").append(JAVA_NAME).toString()); // PREMATURE replace JAVA_NAME and JAVAC_NAME with locals? depends on potential reuse
-					javaCommandLineHeader = cmdLineHeader.toString();
-					cmdLineHeader = new StringBuilder(jdkRootDirPath.
-							append("bin").append(JAVAC_NAME).toString());
-					cmdLineHeader.append(" -classpath . ");
-					  // start with the current directory which contains the source files
-					String version = JavacCompiler.getVersion(cmdLineHeader.toString());
-					cmdLineHeader.append(" -d ");
-					cmdLineHeader.append(JAVAC_OUTPUT_DIR_NAME.indexOf(" ") != -1 ? "\"" + JAVAC_OUTPUT_DIR_NAME + "\"" : JAVAC_OUTPUT_DIR_NAME);
-					String firstSupportedVersion = CompilerOptions.getFirstSupportedJavaVersion();
-					cmdLineHeader.append(" -source " + firstSupportedVersion + " -deprecation -Xlint "); // enable recommended warnings
-					// WORK new javac system does not do that... reconsider
-					// REVIEW consider enabling all warnings instead? Philippe does not see
-					//        this as ez to use (too many changes in logs)
-					javacCommandLineHeader = cmdLineHeader.toString();
-					new File(Util.getOutputDirectory()).mkdirs();
-					// TODO maxime check why this happens to miss in some cases
-					// WORK if we keep a full log, it should not mix javac versions...
-					javacFullLogFileName = Util.getOutputDirectory() +	File.separatorChar +
-                    							version.replace(' ', '_') + "_" +
-                    					    (new SimpleDateFormat("yyyyMMdd_HHmmss")).format(new Date()) +
-                    					    ".txt";
-					javacFullLog =
-					  	new PrintWriter(new FileOutputStream(javacFullLogFileName)); // static that is initialized once, closed at process end
-					javacFullLog.println(version); // so that the contents is self sufficient
-					System.out.println("***************************************************************************");
-					System.out.println("* Sun Javac compiler output archived into file:");
-					System.out.println("* " + javacFullLogFileName);
-					System.out.println("***************************************************************************");
-					javacCompilers = new ArrayList<>();
-					String jdkRoots = System.getProperty("jdk.roots");
-					if (jdkRoots == null) {
-						javacCompilers.add(new JavacCompiler(jdkRootDirPath.toString()));
-					} else {
-						StringTokenizer tokenizer = new StringTokenizer(jdkRoots, File.pathSeparator);
-						while (tokenizer.hasMoreTokens()) {
-							javacCompilers.add(new JavacCompiler(tokenizer.nextToken()));
-						}
+	private void setupJavac() throws Exception {
+		// WORK make all needed inits once and for all
+		if (isFirst()) {
+			if (javacFullLog == null) {
+				// One time initialization of javac related concerns
+				// compute command lines and extract javac version
+				JAVAC_OUTPUT_DIR = new File(JAVAC_OUTPUT_DIR_NAME);
+				// WORK simplify jdk.root out
+				String jdkRootDirectory = System.getProperty("jdk.root");
+				if (jdkRootDirectory == null) {
+					jdkRootDirPath = (new Path(Util.getJREDirectory())); // requires java >= 9
+				} else {
+					jdkRootDirPath = new Path(jdkRootDirectory);
+				}
+
+				StringBuilder cmdLineHeader = new StringBuilder(jdkRootDirPath.
+						append("bin").append(JAVA_NAME).toString()); // PREMATURE replace JAVA_NAME and JAVAC_NAME with locals? depends on potential reuse
+				javaCommandLineHeader = cmdLineHeader.toString();
+				cmdLineHeader = new StringBuilder(jdkRootDirPath.
+						append("bin").append(JAVAC_NAME).toString());
+				cmdLineHeader.append(" -classpath . ");
+				  // start with the current directory which contains the source files
+				String version = JavacCompiler.getVersion(cmdLineHeader.toString());
+				cmdLineHeader.append(" -d ");
+				cmdLineHeader.append(JAVAC_OUTPUT_DIR_NAME.indexOf(" ") != -1 ? "\"" + JAVAC_OUTPUT_DIR_NAME + "\"" : JAVAC_OUTPUT_DIR_NAME);
+				String firstSupportedVersion = CompilerOptions.getFirstSupportedJavaVersion();
+				cmdLineHeader.append(" -source " + firstSupportedVersion + " -deprecation -Xlint "); // enable recommended warnings
+				// WORK new javac system does not do that... reconsider
+				// REVIEW consider enabling all warnings instead? Philippe does not see
+				//        this as ez to use (too many changes in logs)
+				javacCommandLineHeader = cmdLineHeader.toString();
+				new File(Util.getOutputDirectory()).mkdirs();
+				// TODO maxime check why this happens to miss in some cases
+				// WORK if we keep a full log, it should not mix javac versions...
+				javacFullLogFileName = Util.getOutputDirectory() +	File.separatorChar +
+		        							version.replace(' ', '_') + "_" +
+		        					    (new SimpleDateFormat("yyyyMMdd_HHmmss")).format(new Date()) +
+		        					    ".txt";
+				javacFullLog =
+				  	new PrintWriter(new FileOutputStream(javacFullLogFileName)); // static that is initialized once, closed at process end
+				javacFullLog.println(version); // so that the contents is self sufficient
+				System.out.println("***************************************************************************");
+				System.out.println("* Sun Javac compiler output archived into file:");
+				System.out.println("* " + javacFullLogFileName);
+				System.out.println("***************************************************************************");
+				javacCompilers = new ArrayList<>();
+				String jdkRoots = System.getProperty("jdk.roots");
+				if (jdkRoots == null) {
+					javacCompilers.add(new JavacCompiler(jdkRootDirPath.toString()));
+				} else {
+					StringTokenizer tokenizer = new StringTokenizer(jdkRoots, File.pathSeparator);
+					while (tokenizer.hasMoreTokens()) {
+						javacCompilers.add(new JavacCompiler(tokenizer.nextToken()));
 					}
 				}
-				// per class initialization
-				CURRENT_CLASS_NAME = getClass().getName();
-				dualPrintln("***************************************************************************");
-				System.out.print("* Comparison with Sun Javac compiler for class ");
-				dualPrintln(CURRENT_CLASS_NAME.substring(CURRENT_CLASS_NAME.lastIndexOf('.')+1) +
-						" (" + TESTS_COUNTERS.get(CURRENT_CLASS_NAME) + " tests)");
-				System.out.println("***************************************************************************");
-				DIFF_COUNTERS[0] = 0;
-				DIFF_COUNTERS[1] = 0;
-				DIFF_COUNTERS[2] = 0;
 			}
+			// per class initialization
+			CURRENT_CLASS_NAME = getClass().getName();
+			dualPrintln("***************************************************************************");
+			System.out.print("* Comparison with Sun Javac compiler for class ");
+			dualPrintln(CURRENT_CLASS_NAME.substring(CURRENT_CLASS_NAME.lastIndexOf('.')+1) +
+					" (" + TESTS_COUNTERS.get(CURRENT_CLASS_NAME) + " tests)");
+			System.out.println("***************************************************************************");
+			DIFF_COUNTERS[0] = 0;
+			DIFF_COUNTERS[1] = 0;
+			DIFF_COUNTERS[2] = 0;
 		}
 	}
 
@@ -4094,7 +4150,7 @@ protected void runNegativeTest(
 			Util.flushDirectoryContent(libDir);
 		}
 		super.tearDown();
-		if (RUN_JAVAC) {
+		if (shouldRunJavac()) {
 			if (JAVAC_OUTPUT_DIR.exists()) {
 				Util.flushDirectoryContent(JAVAC_OUTPUT_DIR);
 			}

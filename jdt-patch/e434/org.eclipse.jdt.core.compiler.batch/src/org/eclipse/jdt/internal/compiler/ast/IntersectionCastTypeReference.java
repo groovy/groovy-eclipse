@@ -19,7 +19,6 @@ package org.eclipse.jdt.internal.compiler.ast;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;

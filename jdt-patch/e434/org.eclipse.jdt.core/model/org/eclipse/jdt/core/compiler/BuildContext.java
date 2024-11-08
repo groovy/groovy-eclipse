@@ -16,7 +16,6 @@
 package org.eclipse.jdt.core.compiler;
 
 import java.io.ByteArrayInputStream;
-
 import org.eclipse.core.resources.IFile;
 
 /**

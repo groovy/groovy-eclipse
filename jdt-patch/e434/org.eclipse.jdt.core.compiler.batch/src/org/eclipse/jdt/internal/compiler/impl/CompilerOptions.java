@@ -37,7 +37,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
@@ -66,6 +65,7 @@ public class CompilerOptions {
 	public static final String OPTION_ReportDeprecationWhenOverridingDeprecatedMethod = "org.eclipse.jdt.core.compiler.problem.deprecationWhenOverridingDeprecatedMethod"; //$NON-NLS-1$
 	public static final String OPTION_ReportHiddenCatchBlock = "org.eclipse.jdt.core.compiler.problem.hiddenCatchBlock"; //$NON-NLS-1$
 	public static final String OPTION_ReportUnusedLocal = "org.eclipse.jdt.core.compiler.problem.unusedLocal"; //$NON-NLS-1$
+	public static final String OPTION_ReportUnusedLambdaParameter = "org.eclipse.jdt.core.compiler.problem.unusedLambdaParameter"; //$NON-NLS-1$
 	public static final String OPTION_ReportUnusedParameter = "org.eclipse.jdt.core.compiler.problem.unusedParameter"; //$NON-NLS-1$
 	public static final String OPTION_ReportUnusedExceptionParameter = "org.eclipse.jdt.core.compiler.problem.unusedExceptionParameter"; //$NON-NLS-1$
 	public static final String OPTION_ReportUnusedParameterWhenImplementingAbstract = "org.eclipse.jdt.core.compiler.problem.unusedParameterWhenImplementingAbstract"; //$NON-NLS-1$
@@ -411,6 +411,7 @@ public class CompilerOptions {
 	// group 3
 	public static final int InsufficientResourceManagement = IrritantSet.GROUP3 | ASTNode.Bit1;
 	public static final int IncompatibleOwningContract = IrritantSet.GROUP3 | ASTNode.Bit2;
+	public static final int UnusedLambdaParameter = IrritantSet.GROUP3 | ASTNode.Bit3;
 
 
 	// Severity level for handlers
@@ -444,6 +445,14 @@ public class CompilerOptions {
 	public long complianceLevel;
 	/** Java source level, refers to a JDK version, e.g. {@link ClassFileConstants#JDK1_4} */
 	public long sourceLevel;
+	/**
+	 * Initially requested source version, not necessarily consistent with {@link #sourceLevel} as
+	 * sourceLevel forcibly contain a version that is compatible with ECJ.
+	 * <p>Consumers are free to use {@code sourceLevel} or this
+	 * {@code requestedSourceVersion} value to decide of their behavior.</p>
+	 * <p>May be {@code null}.</p>
+	 */
+	public String requestedSourceVersion;
 	/** VM target level, refers to a JDK version, e.g. {@link ClassFileConstants#JDK1_4} */
 	public long targetJDK;
 	/** Source encoding format */
@@ -714,6 +723,8 @@ public class CompilerOptions {
 				return OPTION_ReportHiddenCatchBlock;
 			case UnusedLocalVariable :
 				return OPTION_ReportUnusedLocal;
+			case UnusedLambdaParameter:
+				return OPTION_ReportUnusedLambdaParameter;
 			case UnusedArgument :
 				return OPTION_ReportUnusedParameter;
 			case UnusedExceptionParameter :
@@ -1190,6 +1201,7 @@ public class CompilerOptions {
 			case UnusedImport :
 			case UnusedLabel :
 			case UnusedLocalVariable :
+			case UnusedLambdaParameter :
 			case UnusedObjectAllocation :
 			case UnusedArgument : 		// OPTION_ReportUnusedParameter
 			case UnusedPrivateMember :
@@ -1359,6 +1371,7 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportDeprecationWhenOverridingDeprecatedMethod, this.reportDeprecationWhenOverridingDeprecatedMethod ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportHiddenCatchBlock, getSeverityString(MaskedCatchBlock));
 		optionsMap.put(OPTION_ReportUnusedLocal, getSeverityString(UnusedLocalVariable));
+		optionsMap.put(OPTION_ReportUnusedLambdaParameter, getSeverityString(UnusedLambdaParameter));
 		optionsMap.put(OPTION_ReportUnusedParameter, getSeverityString(UnusedArgument));
 		optionsMap.put(OPTION_ReportUnusedExceptionParameter, getSeverityString(UnusedExceptionParameter));
 		optionsMap.put(OPTION_ReportUnusedImport, getSeverityString(UnusedImport));
@@ -1783,7 +1796,7 @@ public class CompilerOptions {
 			long level = versionToJdkLevel(optionValue);
 			if (level != 0) this.complianceLevel = level;
 		}
-		if ((optionValue = optionsMap.get(OPTION_Source)) != null) {
+		if ((this.requestedSourceVersion = optionValue = optionsMap.get(OPTION_Source)) != null) {
 			long level = versionToJdkLevel(optionValue);
 			if (level != 0) this.sourceLevel = level;
 		}
@@ -1944,6 +1957,7 @@ public class CompilerOptions {
 		if ((optionValue = optionsMap.get(OPTION_ReportTerminalDeprecation)) != null) updateSeverity(UsingTerminallyDeprecatedAPI, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportHiddenCatchBlock)) != null) updateSeverity(MaskedCatchBlock, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportUnusedLocal)) != null) updateSeverity(UnusedLocalVariable, optionValue);
+		if ((optionValue = optionsMap.get(OPTION_ReportUnusedLambdaParameter)) != null) updateSeverity(UnusedLambdaParameter, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportUnusedParameter)) != null) updateSeverity(UnusedArgument, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportUnusedExceptionParameter)) != null) updateSeverity(UnusedExceptionParameter, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportUnusedImport)) != null) updateSeverity(UnusedImport, optionValue);
@@ -2332,6 +2346,7 @@ public class CompilerOptions {
 		buf.append("\n\t- removal: ").append(getSeverityString(UsingTerminallyDeprecatedAPI)); //$NON-NLS-1$
 		buf.append("\n\t- masked catch block: ").append(getSeverityString(MaskedCatchBlock)); //$NON-NLS-1$
 		buf.append("\n\t- unused local variable: ").append(getSeverityString(UnusedLocalVariable)); //$NON-NLS-1$
+		buf.append("\n\t- unused lambda parameter: ").append(getSeverityString(UnusedLambdaParameter)); //$NON-NLS-1$
 		buf.append("\n\t- unused parameter: ").append(getSeverityString(UnusedArgument)); //$NON-NLS-1$
 		buf.append("\n\t- unused exception parameter: ").append(getSeverityString(UnusedExceptionParameter)); //$NON-NLS-1$
 		buf.append("\n\t- unused import: ").append(getSeverityString(UnusedImport)); //$NON-NLS-1$

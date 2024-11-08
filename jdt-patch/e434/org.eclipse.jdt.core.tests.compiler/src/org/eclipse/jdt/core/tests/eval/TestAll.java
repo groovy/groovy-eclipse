@@ -14,10 +14,8 @@
 package org.eclipse.jdt.core.tests.eval;
 
 import java.util.ArrayList;
-
-import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
-
 import junit.framework.Test;
+import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 /**
  * Run all tests defined in this package.
  */

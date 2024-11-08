@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core;
 
 import java.io.File;
-
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaElement;

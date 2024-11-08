@@ -16,7 +16,6 @@ package org.eclipse.jdt.internal.compiler.codegen;
 
 import java.util.Stack;
 import java.util.function.Supplier;
-
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
@@ -262,6 +261,20 @@ public class OperandStack {
 				push(val1);
 			}
 		}
+	}
+
+	@Override
+	public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        for (int i = 0, length = size(); i < length; i++) {
+        	if (i != 0)
+        		sb.append(", "); //$NON-NLS-1$
+        	TypeBinding type = this.stack.get(i);
+        	sb.append(type.shortReadableName());
+        }
+        sb.append("]\n"); //$NON-NLS-1$
+        return sb.toString();
 	}
 
 	public static class NullStack extends OperandStack {

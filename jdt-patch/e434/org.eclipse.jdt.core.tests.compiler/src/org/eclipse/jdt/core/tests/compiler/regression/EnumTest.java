@@ -20,9 +20,7 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
 import java.util.Map;
-
 import junit.framework.Test;
-
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.util.Util;
@@ -3893,24 +3891,40 @@ public void test112() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=93789
 public void test113() {
-	if (this.complianceLevel >= ClassFileConstants.JDK16) {
-		return;
-	}
-    this.runNegativeTest(
-        new String[] {
-            "X.java",
-			"enum BugDemo {\n" +
-			"	FOO() {\n" +
-			"		static int bar;\n" +
-			"	}\n" +
-			"}\n",
-        },
-		"----------\n" +
-		"1. ERROR in X.java (at line 3)\n" +
-		"	static int bar;\n" +
-		"	           ^^^\n" +
-		"The field bar cannot be declared static in a non-static inner type, unless initialized with a constant expression\n" +
-		"----------\n");
+	if (this.complianceLevel < ClassFileConstants.JDK16)
+	    this.runNegativeTest(
+	        new String[] {
+	            "X.java",
+				"enum BugDemo {\n" +
+				"	FOO() {\n" +
+				"		static int bar;\n" +
+				"	}\n" +
+				"}\n" +
+				"public class X {\n" +
+				"    public static void main(String [] args) {}\n" +
+				"}\n",
+	        },
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	static int bar;\n" +
+			"	           ^^^\n" +
+			"The field bar cannot be declared static in a non-static inner type, unless initialized with a constant expression\n" +
+			"----------\n");
+	else
+		this.runConformTest(
+	        new String[] {
+		            "X.java",
+					"enum BugDemo {\n" +
+					"	FOO() {\n" +
+					"		static int bar;\n" +
+					"	}\n" +
+					"}\n" +
+					"public class X {\n" +
+					"    public static void main(String [] args) {}\n" +
+					"}\n",
+		        },
+				"");
+
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=99428 and https://bugs.eclipse.org/bugs/show_bug.cgi?id=99655
 public void test114() {
@@ -7346,6 +7360,77 @@ public void testGHIssue2398() {
 			"	Inner(com.test.Option.Missing v) {\n" +
 			"	      ^^^^^^^^^^^^^^^\n" +
 			"com.test.Option cannot be resolved to a type\n" +
+			"----------\n");
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1368
+// JDT unable to detect variable reference errors in nested enum with an AnonymousClassDeclaration
+public void testGHIssue1368() {
+	if (this.complianceLevel < ClassFileConstants.JDK16)
+		return;
+	this.runNegativeTest(new String[] {
+			"X.java",
+			"""
+			public class X {
+			    static int f() {
+			        int h = 20;
+			        enum ENUM_C {
+			            INT_C () {
+			                @Override
+			                void k() {
+			                    System.out.println(h + "null");
+			                }
+			            };
+
+			            void k() {
+			                System.out.println(h);
+			            }
+			        }
+
+			        ENUM_C i = ENUM_C.INT_C;
+			        i.k();
+			        return 20;
+			    }
+			}
+
+
+			class C {
+
+			        int h = 20;
+			        enum ENUM_C {
+			            INT_C () {
+			                @Override
+			                void k() {
+			                    System.out.println(h + "null");
+			                }
+			            };
+
+			            void k() {
+			                System.out.println(h);
+			            }
+			        }
+			}
+			"""
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 8)\n" +
+			"	System.out.println(h + \"null\");\n" +
+			"	                   ^\n" +
+			"Cannot make a static reference to the non-static variable h\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 13)\n" +
+			"	System.out.println(h);\n" +
+			"	                   ^\n" +
+			"Cannot make a static reference to the non-static variable h\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 31)\n" +
+			"	System.out.println(h + \"null\");\n" +
+			"	                   ^\n" +
+			"Cannot make a static reference to the non-static field h\n" +
+			"----------\n" +
+			"4. ERROR in X.java (at line 36)\n" +
+			"	System.out.println(h);\n" +
+			"	                   ^\n" +
+			"Cannot make a static reference to the non-static field h\n" +
 			"----------\n");
 }
 }

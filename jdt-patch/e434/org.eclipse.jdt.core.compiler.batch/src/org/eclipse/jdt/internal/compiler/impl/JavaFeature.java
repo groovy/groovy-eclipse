@@ -56,7 +56,7 @@ public enum JavaFeature {
 
 	SEALED_CLASSES(ClassFileConstants.JDK17,
 			Messages.bind(Messages.sealed_types),
-			new char[][] {TypeConstants.SEALED, TypeConstants.PERMITS},
+			new char[][] {TypeConstants.SEALED, TypeConstants.NON_SEALED, TypeConstants.PERMITS},
 			false),
 	PATTERN_MATCHING_IN_SWITCH(ClassFileConstants.JDK21,
 			Messages.bind(Messages.pattern_matching_switch),
@@ -94,7 +94,7 @@ public enum JavaFeature {
 	 * <dt>Individual exceptions from old rules
 	 * <dd><ul><li>MethodScope.findField()<li>Scope.getBinding(char[], int, InvocationSite, boolean)</ul>
 	 * <dt>Main code gen change in TypeDeclaration.manageEnclosingInstanceAccessIfNecessary()
-	 * <dd>Only if feature is actually supported, we will generate special synthetid args & fields<br>
+	 * <dd>Only if feature is actually supported, we will generate special synthetic args and fields<br>
 	 * Uses some feature-specific help from BlockScope.getEmulationPath()
 	 * </dl>
 	 */

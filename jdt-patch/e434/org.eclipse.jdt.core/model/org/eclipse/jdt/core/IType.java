@@ -15,7 +15,6 @@
 package org.eclipse.jdt.core;
 
 import java.io.InputStream;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
@@ -762,17 +761,17 @@ public interface IType extends IMember, IAnnotatable {
 	String[] getSuperInterfaceNames() throws JavaModelException;
 
 	/**
-	 * Returns the names of types that this sealed type permits to be its sub types.
+	 * Returns the names of types that this sealed type permits to be its subtypes.
 	 * For a non sealed type, an empty array is returned.
-	 * If type declares an explicit permits clause, then the permitted sub-types
+	 * If type declares an explicit permits clause, then the permitted subtypes
 	 * are returned in the declared order. If a sealed type does not explicitly
-	 * declare permitted sub types, then the implicit permitted types, that is,
-	 * the types in the same compilation unit that are sub types of this sealed type
+	 * declare permitted subtypes, then the implicit permitted types, that is,
+	 * the types in the same compilation unit that are subtypes of this sealed type
 	 * are returned in the order they appear within the compilation unit.
 	 *
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource.
-	 * @return names of types that this type permits to be its sub types
+	 * @return names of types that this type permits to be its subtypes
 	 * @since 3.28
 	 */
 	String[] getPermittedSubtypeNames() throws JavaModelException;

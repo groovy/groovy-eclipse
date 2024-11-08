@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.core;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJarEntryResource;
 

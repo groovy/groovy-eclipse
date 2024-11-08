@@ -16,7 +16,10 @@
 package org.eclipse.jdt.internal.core;
 
 import org.eclipse.core.resources.IResource;
-import org.eclipse.jdt.core.*;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaElementDelta;
+import org.eclipse.jdt.core.IProblemRequestor;
+import org.eclipse.jdt.core.JavaModelException;
 
 /**
  * Switch and ICompilationUnit to working copy mode

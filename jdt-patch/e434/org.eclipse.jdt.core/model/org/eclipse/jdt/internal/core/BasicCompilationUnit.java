@@ -16,7 +16,6 @@ package org.eclipse.jdt.internal.core;
 
 import java.io.File;
 import java.io.IOException;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;

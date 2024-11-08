@@ -138,8 +138,9 @@ class MarkdownCommentHelper implements IMarkdownCommentHelper {
 		int required = this.insideFencedCodeBlock ? this.fenceLength : 3;
 		if (++this.fenceCharCount == required) {
 			this.insideFencedCodeBlock^=true;
-			this.fenceLength = this.fenceCharCount;
 		}
+		if (this.insideFencedCodeBlock && this.fenceCharCount >= this.fenceLength)
+			this.fenceLength = this.fenceCharCount;
 	}
 
 	@Override

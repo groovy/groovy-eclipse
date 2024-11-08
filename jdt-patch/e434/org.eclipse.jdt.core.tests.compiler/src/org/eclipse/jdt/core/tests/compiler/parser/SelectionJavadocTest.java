@@ -15,7 +15,7 @@ package org.eclipse.jdt.core.tests.compiler.parser;
 
 import java.util.Locale;
 import java.util.Map;
-
+import junit.framework.Test;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.codeassist.select.SelectionJavadoc;
 import org.eclipse.jdt.internal.codeassist.select.SelectionParser;
@@ -36,8 +36,6 @@ import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
-
-import junit.framework.Test;
 
 /**
  * Class to test selection in Javadoc comments.

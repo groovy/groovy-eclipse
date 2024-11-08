@@ -14,11 +14,9 @@
 package org.eclipse.jdt.core.tests.util;
 
 import java.util.Enumeration;
-
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "rawtypes" })
 public class CompilerTestSetup extends TestSuite {

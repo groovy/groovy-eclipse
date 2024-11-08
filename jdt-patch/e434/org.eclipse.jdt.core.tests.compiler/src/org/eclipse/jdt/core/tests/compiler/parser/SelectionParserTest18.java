@@ -13,9 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.parser;
 
-import org.eclipse.jdt.core.JavaModelException;
-
 import junit.framework.Test;
+import org.eclipse.jdt.core.JavaModelException;
 
 public class SelectionParserTest18 extends AbstractSelectionTest {
 static {

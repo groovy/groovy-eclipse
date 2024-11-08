@@ -16,14 +16,12 @@ package org.eclipse.jdt.core.formatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
-
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 import org.eclipse.jdt.internal.compiler.util.Util;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.DefaultLineTracker;
 import org.eclipse.jface.text.ILineTracker;
 import org.eclipse.jface.text.IRegion;
-
 import org.eclipse.text.edits.ReplaceEdit;
 
 /**

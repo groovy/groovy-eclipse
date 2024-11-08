@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.compiler.env;
 
 import java.util.Arrays;
-
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 

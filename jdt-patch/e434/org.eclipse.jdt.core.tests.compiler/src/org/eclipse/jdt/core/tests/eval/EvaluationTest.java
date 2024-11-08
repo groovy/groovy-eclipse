@@ -18,17 +18,25 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.tests.junit.extension.StopableTestCase;
 import org.eclipse.jdt.core.tests.runtime.LocalVMLauncher;
 import org.eclipse.jdt.core.tests.runtime.LocalVirtualMachine;
 import org.eclipse.jdt.core.tests.runtime.TargetException;
 import org.eclipse.jdt.core.tests.runtime.TargetInterface;
-import org.eclipse.jdt.core.tests.util.*;
+import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
+import org.eclipse.jdt.core.tests.util.CompilerTestSetup;
+import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
@@ -39,7 +47,7 @@ import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblem;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
-import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.eval.EvaluationContext;
 import org.eclipse.jdt.internal.eval.EvaluationResult;
 import org.eclipse.jdt.internal.eval.GlobalVariable;
@@ -568,5 +576,41 @@ public class EvaluationTest extends AbstractCompilerTest implements StopableTest
 			} catch (TargetException e) {
 			}
 		}
+	}
+
+	public void waitForAutoBuild() {
+		if (isWorkspaceRuleAlreadyInUse(getWorkspaceRoot())) {
+			// Don't wait holding workspace lock on FAMILY_AUTO_BUILD, because
+			// we might deadlock with AutoBuildOffJob
+			System.out.println("\n\nAborted waitForAutoBuild() because running with the workspace rule\n\n");
+			return;
+		}
+		boolean wasInterrupted = false;
+		do {
+			try {
+				Job.getJobManager().wakeUp(ResourcesPlugin.FAMILY_AUTO_BUILD);
+				Job.getJobManager().join(ResourcesPlugin.FAMILY_AUTO_BUILD, null);
+				JavaModelManager.getIndexManager().waitForIndex(isIndexDisabledForTest(), null);
+				wasInterrupted = false;
+			} catch (OperationCanceledException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				wasInterrupted = true;
+			}
+		} while (wasInterrupted);
+	}
+
+	private static boolean isWorkspaceRuleAlreadyInUse(ISchedulingRule rule) {
+		ISchedulingRule currentJobRule = Job.getJobManager().currentRule();
+		boolean workspaceRuleActive = currentJobRule != null && rule.contains(currentJobRule);
+		return workspaceRuleActive;
+	}
+
+	private IWorkspaceRoot getWorkspaceRoot() {
+		return getWorkspace().getRoot();
+	}
+
+	private IWorkspace getWorkspace() {
+		return ResourcesPlugin.getWorkspace();
 	}
 }

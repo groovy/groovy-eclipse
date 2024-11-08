@@ -16,9 +16,7 @@ package org.eclipse.jdt.core.tests.compiler.parser;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
-
 import junit.framework.Test;
-
 import org.eclipse.jdt.internal.codeassist.complete.CompletionJavadoc;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnJavadocTag;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionParser;

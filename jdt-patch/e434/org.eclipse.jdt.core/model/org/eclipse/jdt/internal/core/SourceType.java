@@ -16,11 +16,10 @@ package org.eclipse.jdt.internal.core;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.*;
-import org.eclipse.jdt.core.compiler.*;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -706,7 +705,6 @@ public boolean isRecord() throws JavaModelException {
 }
 /**
  * @see IType#isSealed()
- * @noreference This method is not intended to be referenced by clients as it is a part of Java preview feature.
  */
 @Override
 public boolean isSealed() throws JavaModelException {

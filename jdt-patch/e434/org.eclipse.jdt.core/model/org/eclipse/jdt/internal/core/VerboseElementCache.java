@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.core;
 
 import java.text.NumberFormat;
 import java.util.Date;
-
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IOpenable;
 

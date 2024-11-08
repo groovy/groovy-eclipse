@@ -17,9 +17,7 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
 import java.util.StringTokenizer;
-
 import junit.framework.Test;
-
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 

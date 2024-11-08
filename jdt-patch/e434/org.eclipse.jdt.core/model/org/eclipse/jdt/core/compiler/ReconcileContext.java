@@ -18,7 +18,6 @@
 package org.eclipse.jdt.core.compiler;
 
 import java.util.HashMap;
-
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElementDelta;
 import org.eclipse.jdt.core.IJavaModelMarker;

@@ -15,7 +15,6 @@
 package org.eclipse.jdt.internal.compiler.classfmt;
 
 import java.util.Arrays;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 public class ElementValuePairInfo implements org.eclipse.jdt.internal.compiler.env.IBinaryElementValuePair {

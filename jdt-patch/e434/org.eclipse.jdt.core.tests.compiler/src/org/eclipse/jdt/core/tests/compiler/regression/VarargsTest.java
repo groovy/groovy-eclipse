@@ -17,7 +17,7 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
 import java.util.Map;
-
+import junit.framework.Test;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -26,8 +26,6 @@ import org.eclipse.jdt.core.util.IClassFileReader;
 import org.eclipse.jdt.core.util.IMethodInfo;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
-import junit.framework.Test;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class VarargsTest extends AbstractComparableTest {
@@ -50,6 +48,14 @@ public class VarargsTest extends AbstractComparableTest {
 	public static Class testClass() {
 		return VarargsTest.class;
 	}
+
+	@Override
+	protected Map getCompilerOptions() {
+		Map defaultOptions = super.getCompilerOptions();
+		defaultOptions.put(CompilerOptions.OPTION_ReportUnusedLambdaParameter, CompilerOptions.IGNORE);
+		return defaultOptions;
+	}
+
 	@Override
 	protected String intersection(String... types) {
 		if (this.complianceLevel >= ClassFileConstants.JDK1_8)

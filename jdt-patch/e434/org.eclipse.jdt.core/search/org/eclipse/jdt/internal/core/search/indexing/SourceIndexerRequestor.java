@@ -17,7 +17,6 @@ import static org.eclipse.jdt.internal.core.JavaModelManager.traceDumpStack;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;

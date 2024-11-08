@@ -21,17 +21,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.eclipse.jdt.internal.compiler.ast.Argument;
-import org.eclipse.jdt.internal.compiler.ast.ConditionalExpression;
-import org.eclipse.jdt.internal.compiler.ast.Expression;
-import org.eclipse.jdt.internal.compiler.ast.ExpressionContext;
-import org.eclipse.jdt.internal.compiler.ast.Invocation;
-import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
-import org.eclipse.jdt.internal.compiler.ast.MessageSend;
-import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
-import org.eclipse.jdt.internal.compiler.ast.SwitchExpression;
-import org.eclipse.jdt.internal.compiler.ast.Wildcard;
+import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.lookup.InferenceContext18.SuspendedInferenceRecord;
 
 /**
@@ -158,9 +148,9 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 				};
 			}  else if (this.left instanceof SwitchExpression) {
 				SwitchExpression se = (SwitchExpression) this.left;
-				ConstraintFormula[] cfs = new ConstraintFormula[se.resultExpressions.size()];
+				ConstraintFormula[] cfs = new ConstraintFormula[se.resultExpressions().size()];
 				int i = 0;
-				for (Expression re : se.resultExpressions) {
+				for (Expression re : se.resultExpressions()) {
 					cfs[i++] = new ConstraintExpressionFormula(re, this.right, this.relation, this.isSoft);
 				}
 				return cfs;
@@ -552,7 +542,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 		} else if (this.left instanceof SwitchExpression && this.left.isPolyExpression()) {
 			SwitchExpression expr = (SwitchExpression) this.left;
 			Set<InferenceVariable> variables = new LinkedHashSet<>();
-			for (Expression re : expr.resultExpressions) {
+			for (Expression re : expr.resultExpressions()) {
 				variables.addAll(new ConstraintExpressionFormula(re, this.right, COMPATIBLE).inputVariables(context));
 			}
 			return variables;

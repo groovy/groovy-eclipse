@@ -790,6 +790,11 @@ void setSourceStart(int sourceStart);
 	/** @since 3.1 */
 	int DiscouragedReference = TypeRelated + 280;
 
+	/**
+	 * @since 3.40
+	 */
+	int LambdaParameterIsNeverUsed = Internal + 281;
+
 	int InterfaceCannotHaveInitializers = TypeRelated + 300;
 	int DuplicateModifierForType = TypeRelated + 301;
 	int IllegalModifierForClass = TypeRelated + 302;
@@ -2226,6 +2231,8 @@ void setSourceStart(int sourceStart);
 	int PreviewAPIUsed = Compliance + 1108;
 	/** @since 3.39*/
 	int JavaVersionNotSupported = Compliance + 1109;
+	/** @since 3.40*/
+	int JavaVersionTooRecent = Compliance + 1110;
 
 	/** @since 3.13 */
 	int UnlikelyCollectionMethodArgumentType = 1200;
@@ -2310,41 +2317,63 @@ void setSourceStart(int sourceStart);
 	/* Java14 errors - begin */
 	/** @since 3.21  */
 	int SwitchExpressionsYieldIncompatibleResultExpressionTypes = TypeRelated + 1700;
-	/** @since 3.21  */
+	/** @since 3.21
+	 * @deprecated no longer issued - will be removed
+	 */
 	int SwitchExpressionsYieldEmptySwitchBlock = Syntax + 1701;
 	/** @since 3.21  */
 	int SwitchExpressionsYieldNoResultExpression = Internal + 1702;
 	/** @since 3.21  */
 	int SwitchExpressionaYieldSwitchLabeledBlockCompletesNormally = Internal + 1703;
-	/** @since 3.21  */
+	/** @since 3.21
+	 * @deprecated no longer issued - will be removed
+	 */
 	int SwitchExpressionsYieldLastStatementCompletesNormally = Internal + 1704;
-	/** @since 3.21  */
+	/** @since 3.21
+	 * @deprecated no longer issued - will be removed
+	 */
 	int SwitchExpressionsYieldTrailingSwitchLabels = Internal + 1705;
 	/** @since 3.21  */
 	int SwitchPreviewMixedCase = Syntax + 1706;
 	/** @since 3.21  */
 	int SwitchExpressionsYieldMissingDefaultCase = Syntax + 1707;
-	/** @since 3.21  */
+	/** @since 3.21
+	 * @deprecated no longer issued - will be removed
+	 */
 	int SwitchExpressionsYieldMissingValue = Syntax + 1708;
 	/** @since 3.21  */
 	int SwitchExpressionsYieldMissingEnumConstantCase = Syntax + 1709;
-	/** @since 3.21  */
+	/** @since 3.21
+	 * @deprecated no longer issued - will be removed
+	 */
 	int SwitchExpressionsYieldIllegalLastStatement = Internal + 1710;
-	/** @since 3.21  */
+	/** @since 3.21
+	 * @deprecated no longer issued - will be removed
+	 */
 	int SwitchExpressionsYieldBreakNotAllowed = Syntax + 1711;
-	/** @since 3.21  */
+	/** @since 3.21
+	 * @deprecated no longer issued - will be removed
+	 */
 	int SwitchExpressionsYieldUnqualifiedMethodWarning = Syntax + 1712;
 	/** @since 3.21  */
 	int SwitchExpressionsYieldUnqualifiedMethodError = Syntax + 1713;
 	/** @since 3.21  */
 	int SwitchExpressionsYieldOutsideSwitchExpression = Syntax + 1714;
-	/** @since 3.21  */
+	/** @since 3.21
+	 * @deprecated no longer issued - will be removed
+	 */
 	int SwitchExpressionsYieldRestrictedGeneralWarning = Internal + 1715;
-	/** @since 3.21  */
+	/** @since 3.21
+	 * @deprecated no longer issued - will be removed
+	 */
 	int SwitchExpressionsYieldIllegalStatement = Internal + 1716;
-	/** @since 3.21  */
+	/** @since 3.21
+	 * @deprecated no longer issued - will be removed
+	 */
 	int SwitchExpressionsYieldTypeDeclarationWarning = Internal + 1717;
-	/** @since 3.21  */
+	/** @since 3.21
+	 * @deprecated no longer issued - will be removed
+	 */
 	int SwitchExpressionsYieldTypeDeclarationError = Internal + 1718;
 	/** @since 3.22 */
 	int MultiConstantCaseLabelsNotSupported = Syntax + 1719;
@@ -2531,7 +2560,9 @@ void setSourceStart(int sourceStart);
 	int SealedPermittedTypeOutsideOfPackage = TypeRelated + 1859;
 	/** @since 3.28 */
 	int SealedSealedTypeMissingPermits = TypeRelated + 1860;
-	/** @since 3.28 */
+	/** @since 3.28
+	 * @deprecated problem no longer generated
+	 */
 	int SealedInterfaceIsSealedAndNonSealed = TypeRelated + 1861;
 	/** @since 3.28 */
 	int SealedDisAllowedNonSealedModifierInInterface = TypeRelated + 1862;
@@ -2541,11 +2572,19 @@ void setSourceStart(int sourceStart);
 	int SealedLocalDirectSuperTypeSealed = TypeRelated + 1864;
 	/** @since 3.28 */
 	int SealedAnonymousClassCannotExtendSealedType = TypeRelated + 1865;
-	/** @since 3.28 */
+	/** @since 3.28
+	 * @deprecated problem no longer generated
+	 */
 	int SealedSuperTypeInDifferentPackage = TypeRelated + 1866;
-	/** @since 3.28 */
+	/** @since 3.28
+	 * @deprecated problem no longer generated
+	 */
 	int SealedSuperTypeDisallowed = TypeRelated + 1867;
-	/* Java15 errors - end */
+	/**
+	 * @since 3.40
+	 */
+	int FunctionalInterfaceMayNotbeSealed = TypeRelated + 1868;
+	/* Java17 Sealed types errors - end */
 
 	/**
 	 * @since 3.28

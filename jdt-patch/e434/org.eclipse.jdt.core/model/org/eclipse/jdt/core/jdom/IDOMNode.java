@@ -14,7 +14,6 @@
 package org.eclipse.jdt.core.jdom;
 
 import java.util.Enumeration;
-
 import org.eclipse.jdt.core.IJavaElement;
 
 /**

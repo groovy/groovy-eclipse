@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.compiler.batch;
 
 import java.util.Arrays;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.ExportsStatement;
 import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;

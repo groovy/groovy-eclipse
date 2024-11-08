@@ -14,30 +14,10 @@
 package org.eclipse.jdt.internal.codeassist;
 
 import java.util.Map;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.internal.codeassist.complete.CompletionOnAnnotationOfType;
-import org.eclipse.jdt.internal.codeassist.complete.CompletionOnArgumentName;
-import org.eclipse.jdt.internal.codeassist.complete.CompletionOnFieldName;
-import org.eclipse.jdt.internal.codeassist.complete.CompletionOnFieldType;
-import org.eclipse.jdt.internal.codeassist.complete.CompletionOnImportReference;
-import org.eclipse.jdt.internal.codeassist.complete.CompletionOnKeyword;
-import org.eclipse.jdt.internal.codeassist.complete.CompletionOnKeyword2;
-import org.eclipse.jdt.internal.codeassist.complete.CompletionOnMethodName;
-import org.eclipse.jdt.internal.codeassist.complete.CompletionOnMethodReturnType;
-import org.eclipse.jdt.internal.codeassist.complete.CompletionOnMethodTypeParameter;
-import org.eclipse.jdt.internal.codeassist.complete.CompletionOnPackageReference;
+import org.eclipse.jdt.internal.codeassist.complete.*;
 import org.eclipse.jdt.internal.compiler.SourceElementNotifier;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.Argument;
-import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ImportReference;
-import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 
 public class CompletionElementNotifier extends SourceElementNotifier {
@@ -221,8 +201,8 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 	}
 
 	@Override
-	protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boolean notifyTypePresence, TypeDeclaration declaringType, ImportReference currentPackage) {
+	protected void notifySourceElementRequestor(CompilationUnitDeclaration parsedUnit, TypeDeclaration typeDeclaration, boolean notifyTypePresence, TypeDeclaration declaringType, ImportReference currentPackage) {
 		if (typeDeclaration instanceof CompletionOnAnnotationOfType) return;
-		super.notifySourceElementRequestor(typeDeclaration, notifyTypePresence, declaringType, currentPackage);
+		super.notifySourceElementRequestor(parsedUnit, typeDeclaration, notifyTypePresence, declaringType, currentPackage);
 	}
 }

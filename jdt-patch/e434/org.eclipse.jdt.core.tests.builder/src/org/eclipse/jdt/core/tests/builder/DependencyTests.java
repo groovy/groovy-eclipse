@@ -14,7 +14,6 @@
 package org.eclipse.jdt.core.tests.builder;
 
 import junit.framework.Test;
-
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;

@@ -13,7 +13,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.eval.target;
 
-import java.util.*;
+import java.util.Hashtable;
 
 /**
  * A code snippet class loader is a class loader that loads code snippet classes and global

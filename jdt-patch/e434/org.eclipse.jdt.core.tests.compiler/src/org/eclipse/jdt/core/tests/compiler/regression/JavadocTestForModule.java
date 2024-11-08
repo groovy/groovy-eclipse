@@ -28,12 +28,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.eclipse.jdt.core.tests.util.Util;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
+import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 public class JavadocTestForModule extends AbstractBatchCompilerTest {
 
@@ -146,7 +144,7 @@ public class JavadocTestForModule extends AbstractBatchCompilerTest {
 			boolean shouldFlushOutputDirectory, String output, JavacTestOptions options, String javacCommandLine)
 	{
 		this.runConformTest(testFiles, commandLine, expectedFailureOutOutputString, expectedFailureErrOutputString, shouldFlushOutputDirectory);
-		if (RUN_JAVAC) {
+		if (shouldRunJavac()) {
 			File outputDir = new File(output);
 			final Set<String> outFiles = new HashSet<>();
 			walkOutFiles(output, outFiles, true);
@@ -226,7 +224,7 @@ public class JavadocTestForModule extends AbstractBatchCompilerTest {
 			boolean shouldFlushOutputDirectory, String javacErrorMatch, String output, JavacTestOptions options)
 	{
 		this.runNegativeTest(testFiles, commandLine, expectedFailureOutOutputString, expectedFailureErrOutputString, shouldFlushOutputDirectory);
-		if (RUN_JAVAC) {
+		if (shouldRunJavac()) {
 			String[] testFileNames = new String[testFiles.length/2];
 			for (int i = 0; i < testFileNames.length; i++) {
 				testFileNames[i] = testFiles[i*2];

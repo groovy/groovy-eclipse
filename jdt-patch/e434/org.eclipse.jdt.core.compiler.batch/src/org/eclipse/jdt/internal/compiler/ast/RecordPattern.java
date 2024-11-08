@@ -152,7 +152,7 @@ public class RecordPattern extends Pattern {
 				}
 			}
 			TypeBinding componentType = componentBinding.type;
-			if (p1.isApplicable(componentType, scope)) {
+			if (p1.isApplicable(componentType, scope, p1)) {
 				p1.isTotalTypeNode = p1.coversType(componentType, scope);
 				MethodBinding[] methods = this.resolvedType.getMethods(componentBinding.name);
 				if (methods != null && methods.length > 0) {

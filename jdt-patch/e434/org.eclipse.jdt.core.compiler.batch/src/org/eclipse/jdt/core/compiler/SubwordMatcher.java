@@ -15,7 +15,6 @@ package org.eclipse.jdt.core.compiler;
 
 import java.util.Arrays;
 import java.util.BitSet;
-
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 
 class SubwordMatcher {

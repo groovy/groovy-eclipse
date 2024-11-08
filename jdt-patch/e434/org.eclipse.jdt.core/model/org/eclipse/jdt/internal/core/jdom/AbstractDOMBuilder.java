@@ -14,8 +14,9 @@
 package org.eclipse.jdt.internal.core.jdom;
 
 import java.util.Stack;
-
-import org.eclipse.jdt.core.jdom.*;
+import org.eclipse.jdt.core.jdom.IDOMCompilationUnit;
+import org.eclipse.jdt.core.jdom.IDOMFactory;
+import org.eclipse.jdt.core.jdom.IDOMNode;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.core.util.ReferenceInfoAdapter;
 

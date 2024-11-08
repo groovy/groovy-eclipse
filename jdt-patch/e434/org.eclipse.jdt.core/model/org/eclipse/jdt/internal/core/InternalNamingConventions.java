@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core;
 
 import java.util.Map;
-
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;

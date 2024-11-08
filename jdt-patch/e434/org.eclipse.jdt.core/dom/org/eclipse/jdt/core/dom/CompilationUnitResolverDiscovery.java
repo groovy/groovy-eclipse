@@ -11,7 +11,6 @@
 package org.eclipse.jdt.core.dom;
 
 import java.util.Objects;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;

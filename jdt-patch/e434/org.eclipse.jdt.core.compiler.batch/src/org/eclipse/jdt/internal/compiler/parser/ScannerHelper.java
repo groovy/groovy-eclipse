@@ -17,7 +17,6 @@ package org.eclipse.jdt.internal.compiler.parser;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;

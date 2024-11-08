@@ -16,7 +16,6 @@ package org.eclipse.jdt.internal.core.dom.rewrite;
 
 import java.util.Arrays;
 import java.util.List;
-
 import org.eclipse.jdt.core.dom.LineComment;
 import org.eclipse.jdt.core.formatter.IndentManipulation;
 import org.eclipse.jdt.internal.compiler.util.Util;

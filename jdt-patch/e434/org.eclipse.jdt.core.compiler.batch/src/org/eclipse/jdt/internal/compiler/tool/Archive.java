@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
-
 import org.eclipse.jdt.internal.compiler.util.JRTUtil;
 
 /**

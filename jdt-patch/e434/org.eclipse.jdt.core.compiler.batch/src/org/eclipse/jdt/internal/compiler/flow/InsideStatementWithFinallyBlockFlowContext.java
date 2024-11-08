@@ -14,17 +14,17 @@
 package org.eclipse.jdt.internal.compiler.flow;
 
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.SubRoutineStatement;
+import org.eclipse.jdt.internal.compiler.ast.StatementWithFinallyBlock;
 
 /**
  * Reflects the context of code analysis, keeping track of enclosing
  *	try statements, exception handlers, etc...
  */
-public class InsideSubRoutineFlowContext extends TryFlowContext {
+public class InsideStatementWithFinallyBlockFlowContext extends TryFlowContext {
 
 	public UnconditionalFlowInfo initsOnReturn;
 
-public InsideSubRoutineFlowContext(
+public InsideStatementWithFinallyBlockFlowContext(
 	FlowContext parent,
 	ASTNode associatedNode) {
 	super(parent, associatedNode);
@@ -33,7 +33,7 @@ public InsideSubRoutineFlowContext(
 
 @Override
 public String individualToString() {
-	StringBuilder buffer = new StringBuilder("Inside SubRoutine flow context"); //$NON-NLS-1$
+	StringBuilder buffer = new StringBuilder("Inside StatementWithFinallyBlock flow context"); //$NON-NLS-1$
 	buffer.append("[initsOnReturn -").append(this.initsOnReturn.toString()).append(']'); //$NON-NLS-1$
 	return buffer.toString();
 }
@@ -45,7 +45,7 @@ public UnconditionalFlowInfo initsOnReturn(){
 
 @Override
 public boolean isNonReturningContext() {
-	return ((SubRoutineStatement) this.associatedNode).isSubRoutineEscaping();
+	return ((StatementWithFinallyBlock) this.associatedNode).isFinallyBlockEscaping();
 }
 
 @Override
@@ -60,7 +60,7 @@ public void recordReturnFrom(UnconditionalFlowInfo flowInfo) {
 }
 
 @Override
-public SubRoutineStatement subroutine() {
-	return (SubRoutineStatement) this.associatedNode;
+public StatementWithFinallyBlock statementWithFinallyBlock() {
+	return (StatementWithFinallyBlock) this.associatedNode;
 }
 }

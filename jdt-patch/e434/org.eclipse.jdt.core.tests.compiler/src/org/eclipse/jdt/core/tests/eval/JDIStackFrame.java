@@ -13,38 +13,20 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.eval;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import junit.framework.TestCase;
-
-import org.eclipse.jdt.core.tests.runtime.RuntimeConstants;
-import org.eclipse.jdt.internal.eval.EvaluationConstants;
-import org.eclipse.jdt.internal.eval.EvaluationResult;
-import org.eclipse.jdt.internal.eval.InstallException;
-
-import com.sun.jdi.AbsentInformationException;
-import com.sun.jdi.ClassNotLoadedException;
-import com.sun.jdi.ClassType;
-import com.sun.jdi.Field;
-import com.sun.jdi.IncompatibleThreadStateException;
-import com.sun.jdi.InvalidTypeException;
-import com.sun.jdi.InvocationException;
-import com.sun.jdi.LocalVariable;
-import com.sun.jdi.Location;
-import com.sun.jdi.Method;
-import com.sun.jdi.ObjectReference;
-import com.sun.jdi.ReferenceType;
-import com.sun.jdi.StackFrame;
-import com.sun.jdi.ThreadReference;
-import com.sun.jdi.Value;
-import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.*;
 import com.sun.jdi.event.BreakpointEvent;
 import com.sun.jdi.event.Event;
 import com.sun.jdi.event.EventSet;
 import com.sun.jdi.request.BreakpointRequest;
 import com.sun.jdi.request.EventRequest;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import junit.framework.TestCase;
+import org.eclipse.jdt.core.tests.runtime.RuntimeConstants;
+import org.eclipse.jdt.internal.eval.EvaluationConstants;
+import org.eclipse.jdt.internal.eval.EvaluationResult;
+import org.eclipse.jdt.internal.eval.InstallException;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class JDIStackFrame implements EvaluationConstants, RuntimeConstants {

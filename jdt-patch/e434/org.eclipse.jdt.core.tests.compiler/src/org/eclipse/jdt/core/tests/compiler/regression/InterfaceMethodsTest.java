@@ -16,16 +16,15 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
 import java.util.Map;
-
+import junit.framework.Test;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
+import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.JavacHasABug;
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
-import junit.framework.Test;
 
 // See https://bugs.eclipse.org/380501
 // Bug 380501 - [1.8][compiler] Add support for default methods (JSR 335)
@@ -3240,5 +3239,37 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 			"}",
 		},
 		"");
+	}
+
+	public void testJDK8337980() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"C.java",
+			"""
+			interface A {
+			    int op();
+			}
+			abstract class B {
+			    abstract int op();
+			}
+			public abstract class C extends B implements A {
+			    public static void main(String[] args) {
+			        test(1);
+			    }
+			    public static int test(int x) {
+			        return op();
+			    }
+			}
+			"""};
+		runner.expectedCompilerLog = """
+			----------
+			1. ERROR in C.java (at line 12)
+				return op();
+				       ^^
+			Cannot make a static reference to the non-static method op() from the type B
+			----------
+			""";
+		runner.javacTestOptions = JavacHasABug.JavacBug8337980;
+		runner.runNegativeTest();
 	}
 }

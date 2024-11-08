@@ -14,7 +14,10 @@
 package org.eclipse.jdt.core.search;
 
 import org.eclipse.core.resources.IResource;
-import org.eclipse.jdt.core.*;
+import org.eclipse.jdt.core.IAnnotation;
+import org.eclipse.jdt.core.IField;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.ILocalVariable;
 
 /**
  * A Java search match that represents a type reference.

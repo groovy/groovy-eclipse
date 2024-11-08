@@ -14,13 +14,11 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
-
+//import junit.framework.AssertionFailedError;
+import junit.framework.Test;
 //import org.apache.tools.ant.types.selectors.SelectorUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.compiler.CharOperation;
-
-//import junit.framework.AssertionFailedError;
-import junit.framework.Test;
 
 @SuppressWarnings({ "rawtypes" })
 public class UtilTest extends AbstractRegressionTest {

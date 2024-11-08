@@ -20,6 +20,6 @@
     <relativePath>../tests-pom/</relativePath>
   </parent>
   <artifactId>org.eclipse.jdt.core.tests.builder.mockcompiler</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.100-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
 </project>

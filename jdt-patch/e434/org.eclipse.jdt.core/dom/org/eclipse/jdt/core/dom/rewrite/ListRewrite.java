@@ -15,7 +15,6 @@ package org.eclipse.jdt.core.dom.rewrite;
 
 import java.util.Collections;
 import java.util.List;
-
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;

@@ -16,7 +16,6 @@ package org.eclipse.jdt.core.tests.compiler.parser;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Locale;
-
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.Util;

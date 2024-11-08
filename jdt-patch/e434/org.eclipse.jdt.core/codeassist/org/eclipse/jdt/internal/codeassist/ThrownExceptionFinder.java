@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.codeassist;
 
 import java.util.Stack;
-
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.Argument;

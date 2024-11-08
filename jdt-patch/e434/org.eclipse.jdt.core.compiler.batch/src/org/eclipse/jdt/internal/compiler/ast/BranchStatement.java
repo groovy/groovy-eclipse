@@ -13,14 +13,15 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
-import org.eclipse.jdt.internal.compiler.codegen.*;
-import org.eclipse.jdt.internal.compiler.lookup.*;
+import org.eclipse.jdt.internal.compiler.codegen.BranchLabel;
+import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
+import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 
 public abstract class BranchStatement extends Statement {
 
 	public char[] label;
 	public BranchLabel targetLabel;
-	public SubRoutineStatement[] subroutines;
+	public StatementWithFinallyBlock[] statementsWithFinallyBlock;
 	public int initStateIndex = -1;
 
 /**
@@ -32,12 +33,6 @@ public BranchStatement(char[] label, int sourceStart,int sourceEnd) {
 	this.sourceEnd = sourceEnd;
 }
 
-protected void setSubroutineSwitchExpression(SubRoutineStatement sub) {
-	// Do nothing
-}
-protected void restartExceptionLabels(CodeStream codeStream) {
-	// do nothing
-}
 /**
  * Branch code generation
  *
@@ -52,21 +47,17 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 
 	// generation of code responsible for invoking the finally
 	// blocks in sequence
-	if (this.subroutines != null){
-		for (int i = 0, max = this.subroutines.length; i < max; i++){
-			SubRoutineStatement sub = this.subroutines[i];
-			SwitchExpression se = sub.getSwitchExpression();
-			setSubroutineSwitchExpression(sub);
-			boolean didEscape = sub.generateSubRoutineInvocation(currentScope, codeStream, this.targetLabel, this.initStateIndex, null);
-			sub.setSwitchExpression(se);
+	if (this.statementsWithFinallyBlock != null){
+		for (int i = 0, max = this.statementsWithFinallyBlock.length; i < max; i++){
+			StatementWithFinallyBlock stmt = this.statementsWithFinallyBlock[i];
+			boolean didEscape = stmt.generateFinallyBlock(currentScope, codeStream, this.targetLabel, this.initStateIndex);
 			if (didEscape) {
 					codeStream.recordPositionsFrom(pc, this.sourceStart);
-					SubRoutineStatement.reenterAllExceptionHandlers(this.subroutines, i, codeStream);
+					StatementWithFinallyBlock.reenterAllExceptionHandlers(this.statementsWithFinallyBlock, i, codeStream);
 					if (this.initStateIndex != -1) {
 						codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.initStateIndex);
 						codeStream.addDefinitelyAssignedVariables(currentScope, this.initStateIndex);
 					}
-					restartExceptionLabels(codeStream);
 					return;
 			}
 		}
@@ -74,7 +65,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 //	checkAndLoadSyntheticVars(codeStream);
 	codeStream.goto_(this.targetLabel);
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
-	SubRoutineStatement.reenterAllExceptionHandlers(this.subroutines, -1, codeStream);
+	StatementWithFinallyBlock.reenterAllExceptionHandlers(this.statementsWithFinallyBlock, -1, codeStream);
 	if (this.initStateIndex != -1) {
 		codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.initStateIndex);
 		codeStream.addDefinitelyAssignedVariables(currentScope, this.initStateIndex);

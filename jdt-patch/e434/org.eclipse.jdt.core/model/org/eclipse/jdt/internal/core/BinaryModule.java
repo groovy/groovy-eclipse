@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core;
 
 import java.net.URL;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.IAnnotation;

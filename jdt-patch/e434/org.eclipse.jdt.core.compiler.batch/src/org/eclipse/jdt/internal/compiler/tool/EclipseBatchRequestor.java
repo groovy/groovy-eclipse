@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.compiler.tool;
 
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
-
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ICompilerRequestor;

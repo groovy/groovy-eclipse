@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,19 +121,23 @@ public final class SealedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 1)\n" +
             "\t@groovy.transform.Sealed(permittedSubclasses=[Bar,Baz])\n" +
             "\t                                              ^^^\n" +
-            "Permitted class Bar does not declare Foo as direct super class\n" +
+            (javaModelSealedSupport2()
+            ? "Permitted type Bar does not declare Foo as a direct supertype\n"
+            : "Permitted class Bar does not declare Foo as direct super class\n") +
             "----------\n" +
             "----------\n" +
             "1. ERROR in Baz.groovy (at line 1)\n" +
             "\tclass Baz extends Foo {\n" +
             "\t      ^^^\n" +
-            "The class Baz with a sealed direct superclass or a sealed direct superinterface Foo should be declared either final, sealed, or non-sealed\n" +
+            "The class Baz with a sealed direct super" + (javaModelSealedSupport2() ? "type" : "class or a sealed direct superinterface") +
+            " Foo should be declared either final, sealed, or non-sealed\n" +
             "----------\n" +
             "----------\n" +
             "1. ERROR in Boo.groovy (at line 1)\n" +
             "\tclass Boo extends Foo {\n" +
             "\t      ^^^\n" +
-            "The class Boo with a sealed direct superclass or a sealed direct superinterface Foo should be declared either final, sealed, or non-sealed\n" +
+            "The class Boo with a sealed direct super" + (javaModelSealedSupport2() ? "type" : "class or a sealed direct superinterface") +
+            " Foo should be declared either final, sealed, or non-sealed\n" +
             "----------\n" +
             "2. ERROR in Boo.groovy (at line 1)\n" +
             "\tclass Boo extends Foo {\n" +
@@ -143,7 +147,9 @@ public final class SealedTests extends GroovyCompilerTestSuite {
             "3. ERROR in Boo.groovy (at line 1)\n" +
             "\tclass Boo extends Foo {\n" +
             "\t                  ^^^\n" +
-            "The type Boo extending a sealed class Foo should be a permitted subtype of Foo\n" +
+            (javaModelSealedSupport2()
+            ? "The class Boo cannot extend the class Foo as it is not a permitted subtype of Foo\n"
+            : "The type Boo extending a sealed class Foo should be a permitted subtype of Foo\n") +
             "----------\n");
     }
 
@@ -176,7 +182,8 @@ public final class SealedTests extends GroovyCompilerTestSuite {
             "1. ERROR in p\\Baz.java (at line 2)\n" +
             "\tclass Baz extends Foo {\n" +
             "\t      ^^^\n" +
-            "The class Baz with a sealed direct superclass or a sealed direct superinterface Foo should be declared either final, sealed, or non-sealed\n" +
+            "The class Baz with a sealed direct super" + (javaModelSealedSupport2() ? "type" : "class or a sealed direct superinterface") +
+            " Foo should be declared either final, sealed, or non-sealed\n" +
             "----------\n");
     }
 
@@ -186,5 +193,10 @@ public final class SealedTests extends GroovyCompilerTestSuite {
     private static boolean javaModelSealedSupport() {
         return org.eclipse.jdt.core.JavaCore.getPlugin().getBundle().getVersion()
                 .compareTo(org.osgi.framework.Version.parseVersion("3.28")) >= 0;
+    }
+
+    private static boolean javaModelSealedSupport2() {
+        return org.eclipse.jdt.core.JavaCore.getPlugin().getBundle().getVersion()
+                .compareTo(org.osgi.framework.Version.parseVersion("3.40")) >= 0;
     }
 }

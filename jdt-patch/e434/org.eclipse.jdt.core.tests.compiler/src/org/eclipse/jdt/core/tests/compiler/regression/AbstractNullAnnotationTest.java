@@ -15,11 +15,11 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Map;
-
 import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.osgi.framework.Bundle;
 
@@ -90,14 +90,22 @@ public abstract class AbstractNullAnnotationTest extends AbstractComparableTest 
 			int len = defaultLibs.length;
 			this.LIBS = new String[len+1];
 			System.arraycopy(defaultLibs, 0, this.LIBS, 0, len);
-			String version = this.complianceLevel >= ClassFileConstants.JDK1_8 ? "[2.0.0,3.0.0)" : "[1.1.0,2.0.0)";
-			Bundle[] bundles = org.eclipse.jdt.core.tests.compiler.Activator.getPackageAdmin().getBundles("org.eclipse.jdt.annotation", version);
-			File bundleFile = FileLocator.getBundleFileLocation(bundles[0]).get();
-			if (bundleFile.isDirectory())
-				this.LIBS[len] = bundleFile.getPath()+"/bin";
-			else
-				this.LIBS[len] = bundleFile.getPath();
+			this.LIBS[len] = getAnnotationLibPath();
 		}
+	}
+
+	protected String getAnnotationLibPath() throws IOException {
+		Bundle bundle = Platform.getBundle("org.eclipse.jdt.annotation");
+		File bundleFile = FileLocator.getBundleFileLocation(bundle).get();
+		if (bundleFile.isDirectory())
+			return bundleFile.getPath()+"/bin";
+		else
+			return bundleFile.getPath();
+	}
+
+	public static String getAnnotationV1LibPath() throws IOException {
+		URL libEntry = Platform.getBundle("org.eclipse.jdt.core.tests.compiler").getEntry("/lib/org.eclipse.jdt.annotation_1.2.100.v20241001-0914.jar");
+		return FileLocator.toFileURL(libEntry).getPath();
 	}
 
 	// Conditionally augment problem detection settings

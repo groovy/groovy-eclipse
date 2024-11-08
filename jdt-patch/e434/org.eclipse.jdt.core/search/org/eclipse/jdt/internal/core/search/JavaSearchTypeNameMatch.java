@@ -13,8 +13,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search;
 
-import org.eclipse.jdt.core.*;
-import org.eclipse.jdt.core.search.*;
+import org.eclipse.jdt.core.IAccessRule;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.search.TypeNameMatch;
 
 /**
  * Java Search concrete class for a type name match.

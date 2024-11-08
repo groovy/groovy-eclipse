@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.core.builder;
 
 import java.util.Locale;
 import java.util.Map;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.IJavaElement;

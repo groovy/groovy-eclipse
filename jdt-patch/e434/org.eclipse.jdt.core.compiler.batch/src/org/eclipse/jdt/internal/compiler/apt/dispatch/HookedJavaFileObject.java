@@ -18,10 +18,8 @@ package org.eclipse.jdt.internal.compiler.apt.dispatch;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
-
 import javax.tools.ForwardingJavaFileObject;
 import javax.tools.JavaFileObject;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;

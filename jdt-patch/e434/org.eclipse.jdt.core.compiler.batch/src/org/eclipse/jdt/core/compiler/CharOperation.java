@@ -18,7 +18,6 @@ package org.eclipse.jdt.core.compiler;
 
 import java.util.Arrays;
 import java.util.List;
-
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 
 /**

@@ -20,7 +20,6 @@ package org.eclipse.jdt.internal.compiler.codegen;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.ArrayAllocationExpression;

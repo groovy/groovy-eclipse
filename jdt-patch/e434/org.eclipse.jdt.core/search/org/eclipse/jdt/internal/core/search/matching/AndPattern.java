@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core.search.matching;
 
 import java.util.stream.Stream;
-
 import org.eclipse.jdt.core.search.IParallelizable;
 import org.eclipse.jdt.core.search.SearchPattern;
 

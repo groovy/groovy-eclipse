@@ -22,24 +22,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.jdt.core.IClassFile;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.ITypeRoot;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.WorkingCopyOwner;
+import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
 import org.eclipse.jdt.internal.compiler.batch.Main;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.RecoveryScanner;
 import org.eclipse.jdt.internal.compiler.parser.RecoveryScannerData;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
@@ -273,7 +268,48 @@ public class ASTParser {
 		} catch (IllegalArgumentException e) {
 			throw new IllegalStateException("invalid environment settings", e); //$NON-NLS-1$
 		}
+		if ((this.bits & CompilationUnitResolver.RESOLVE_BINDING) != 0) {
+			checkForSystemLibrary(allClasspaths);
+		}
 		return allClasspaths;
+	}
+
+	private void checkForSystemLibrary(List<Classpath> allClasspaths) {
+		boolean hasSystemLibrary = true; // default for 1.8 setting without a valid project
+		boolean hasModule = false;
+		Throwable exception = null;
+		String compliance = this.compilerOptions.get(JavaCore.COMPILER_COMPLIANCE);
+		if (CompilerOptions.versionToJdkLevel(compliance) >= ClassFileConstants.JDK9) {
+			hasSystemLibrary = allClasspaths.stream().anyMatch(cp -> cp.getModule(TypeConstants.JAVA_DOT_BASE) != null);
+			if (!hasSystemLibrary && this.project != null) {
+				// not found in allClasspaths, try this.project instead:
+				try {
+					// try module java.base:
+					for (IPackageFragmentRoot root : this.project.getAllPackageFragmentRoots()) {
+						IModuleDescription moduleDescription = root.getModuleDescription();
+						if (moduleDescription != null) {
+							hasModule = true;
+							if (moduleDescription.getElementName().equals(String.valueOf(TypeConstants.JAVA_DOT_BASE))) {
+								hasSystemLibrary = true;
+								break;
+							}
+						}
+					}
+				} catch (JavaModelException e) {
+					exception = e;
+				}
+				if (!hasModule) {
+					try {
+						// if no modules try class java.lang.Object:
+						hasSystemLibrary = this.project.findType(String.valueOf(TypeConstants.CharArray_JAVA_LANG_OBJECT)) != null;
+					} catch (JavaModelException e) {
+						exception = e;
+					}
+				}
+			}
+			if (!hasSystemLibrary)
+				throw new IllegalStateException("Missing system library", exception); //$NON-NLS-1$
+		}
 	}
 	/**
 	 * Sets all the setting to their default values.

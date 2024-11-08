@@ -1,5 +1,6 @@
+// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2023 IBM Corporation and others.
+ * Copyright (c) 2000, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -38,11 +39,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -103,6 +102,8 @@ abstract public class TypeBinding extends Binding {
 
 	public final static VoidTypeBinding VOID = new VoidTypeBinding();
 
+	public final static TypeBinding [] NUMERIC_TYPES = // // Order sensitive to determine the type in numeric promotion
+			new TypeBinding [] {TypeBinding.DOUBLE, TypeBinding.FLOAT, TypeBinding.LONG, TypeBinding.INT, TypeBinding.SHORT, TypeBinding.BYTE, TypeBinding.CHAR };
 
 public TypeBinding() {
 	super();
@@ -682,6 +683,20 @@ public boolean isBoxedPrimitiveType() {
 	}
 }
 
+public TypeBinding unboxedType() {
+	return switch (this.id) {
+		case TypeIds.T_JavaLangBoolean -> TypeBinding.BOOLEAN;
+		case TypeIds.T_JavaLangByte -> TypeBinding.BYTE;
+		case TypeIds.T_JavaLangCharacter -> TypeBinding.CHAR;
+		case TypeIds.T_JavaLangShort -> TypeBinding.SHORT;
+		case TypeIds.T_JavaLangDouble -> TypeBinding.DOUBLE;
+		case TypeIds.T_JavaLangFloat -> TypeBinding.FLOAT;
+		case TypeIds.T_JavaLangInteger -> TypeBinding.INT;
+		case TypeIds.T_JavaLangLong -> TypeBinding.LONG;
+		default -> this;
+	};
+}
+
 /**
  *  Returns true if parameterized type AND not of the form {@code List<?>}
  */
@@ -702,6 +717,10 @@ public boolean isClass() {
 
 public boolean isRecord() {
 	return false;
+}
+
+public boolean isRecordWithComponents() { // do records without components make sense ??
+	return isRecord() && components() != null && components().length > 0; // GROOVY edit
 }
 
 /* Answer true if the receiver type can be assigned to the argument type (right)
@@ -1760,7 +1779,7 @@ public ReferenceBinding superclass() {
 }
 
 public ReferenceBinding[] permittedTypes() {
-	return Binding.NO_PERMITTEDTYPES;
+	return Binding.NO_PERMITTED_TYPES;
 }
 
 public ReferenceBinding[] superInterfaces() {
@@ -1811,9 +1830,4 @@ public boolean isNonDenotable() {
 public boolean isSealed() {
 	return false;
 }
-
-public List<ReferenceBinding> getAllEnumerableReferenceTypes() {
-	return Collections.emptyList();
-}
-
 }

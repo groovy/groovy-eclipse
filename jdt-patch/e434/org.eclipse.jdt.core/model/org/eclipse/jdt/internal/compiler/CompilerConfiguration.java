@@ -16,7 +16,6 @@ package org.eclipse.jdt.internal.compiler;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
-
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 

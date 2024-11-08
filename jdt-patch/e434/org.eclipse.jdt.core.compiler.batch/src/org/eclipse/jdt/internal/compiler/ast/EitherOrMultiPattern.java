@@ -55,6 +55,13 @@ public class EitherOrMultiPattern extends Pattern {
 	}
 
 	@Override
+	public void setOuterExpressionType(TypeBinding expressionType) {
+		super.setOuterExpressionType(expressionType);
+		for (int i = 0; i < this.patternsCount; i++)
+			this.patterns[i].setOuterExpressionType(expressionType);
+	}
+
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		boolean hasError = false;
 		for (int i = 0; i < this.patternsCount; i++) {

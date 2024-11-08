@@ -14,7 +14,6 @@
 package org.eclipse.jdt.core.tests.compiler.parser;
 
 import java.lang.reflect.InvocationTargetException;
-
 import junit.framework.TestCase;
 
 /**

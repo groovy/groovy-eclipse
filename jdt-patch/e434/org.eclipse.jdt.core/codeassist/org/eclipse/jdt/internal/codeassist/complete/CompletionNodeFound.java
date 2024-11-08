@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.codeassist.complete;
 
 import java.util.function.Supplier;
-
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;

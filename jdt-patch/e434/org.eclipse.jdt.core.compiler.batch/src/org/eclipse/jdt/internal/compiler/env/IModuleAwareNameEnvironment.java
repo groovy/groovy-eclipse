@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.compiler.env;
 
 import java.util.function.Predicate;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.util.SimpleSetOfCharArray;

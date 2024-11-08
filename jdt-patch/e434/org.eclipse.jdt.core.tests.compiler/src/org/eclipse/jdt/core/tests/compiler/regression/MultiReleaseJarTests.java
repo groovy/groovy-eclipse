@@ -1,10 +1,8 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
-
-import org.eclipse.jdt.core.tests.util.Util;
-
 import junit.framework.Test;
+import org.eclipse.jdt.core.tests.util.Util;
 
 public class MultiReleaseJarTests extends AbstractBatchCompilerTest {
 

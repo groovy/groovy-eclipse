@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.core.search;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaElement;

@@ -19,7 +19,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 public class SplitPackageBinding extends PackageBinding {

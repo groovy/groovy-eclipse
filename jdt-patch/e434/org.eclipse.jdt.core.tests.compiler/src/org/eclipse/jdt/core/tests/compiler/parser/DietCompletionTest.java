@@ -14,7 +14,6 @@
 package org.eclipse.jdt.core.tests.compiler.parser;
 
 import junit.framework.Test;
-
 import org.eclipse.jdt.internal.codeassist.complete.InvalidCursorLocation;
 
 public class DietCompletionTest extends AbstractCompletionTest {

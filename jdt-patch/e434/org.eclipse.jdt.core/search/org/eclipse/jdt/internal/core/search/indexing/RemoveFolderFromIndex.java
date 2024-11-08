@@ -16,7 +16,6 @@ package org.eclipse.jdt.internal.core.search.indexing;
 import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 
 import java.io.IOException;
-
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;

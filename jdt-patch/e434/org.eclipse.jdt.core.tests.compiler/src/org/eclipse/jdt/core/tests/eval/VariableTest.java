@@ -14,7 +14,6 @@
 package org.eclipse.jdt.core.tests.eval;
 
 import junit.framework.Test;
-
 import org.eclipse.jdt.internal.eval.GlobalVariable;
 /**
  * Test the global variable evaluation.

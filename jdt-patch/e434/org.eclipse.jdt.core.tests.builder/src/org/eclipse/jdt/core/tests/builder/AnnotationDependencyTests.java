@@ -17,22 +17,19 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.builder;
 
-import java.io.File;
+import java.io.IOException;
 import junit.framework.Test;
-
 import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.tests.compiler.regression.AbstractNullAnnotationTest;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.osgi.framework.Bundle;
 
 /**
  * Tests to verify that annotation changes cause recompilation of dependent types.
@@ -145,17 +142,19 @@ public class AnnotationDependencyTests extends BuilderTests {
 
 	void setupProjectForNullAnnotations() throws JavaModelException {
 		// add the org.eclipse.jdt.annotation library (bin/ folder or jar) to the project:
-		Bundle[] bundles = Platform.getBundles("org.eclipse.jdt.annotation","[1.1.0,2.0.0)");
-		File bundleFile = FileLocator.getBundleFileLocation(bundles[0]).get();
-		String annotationsLib = bundleFile.isDirectory() ? bundleFile.getPath()+"/bin" : bundleFile.getPath();
-		IJavaProject javaProject = env.getJavaProject(this.projectPath);
-		IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
-		int len = rawClasspath.length;
-		System.arraycopy(rawClasspath, 0, rawClasspath = new IClasspathEntry[len+1], 0, len);
-		rawClasspath[len] = JavaCore.newLibraryEntry(new Path(annotationsLib), null, null);
-		javaProject.setRawClasspath(rawClasspath, null);
+		try {
+			String annotationsLib = AbstractNullAnnotationTest.getAnnotationV1LibPath();
+			IJavaProject javaProject = env.getJavaProject(this.projectPath);
+			IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
+			int len = rawClasspath.length;
+			System.arraycopy(rawClasspath, 0, rawClasspath = new IClasspathEntry[len+1], 0, len);
+			rawClasspath[len] = JavaCore.newLibraryEntry(new Path(annotationsLib), null, null);
+			javaProject.setRawClasspath(rawClasspath, null);
 
-		javaProject.setOption(JavaCore.COMPILER_ANNOTATION_NULL_ANALYSIS, JavaCore.ENABLED);
+			javaProject.setOption(JavaCore.COMPILER_ANNOTATION_NULL_ANALYSIS, JavaCore.ENABLED);
+		} catch (IOException ioe) {
+			throw new JavaModelException(ioe, -13);
+		}
 	}
 
 	/**

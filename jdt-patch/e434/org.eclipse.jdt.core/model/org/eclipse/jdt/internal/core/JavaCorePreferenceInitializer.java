@@ -18,7 +18,6 @@ package org.eclipse.jdt.internal.core;
 
 import java.util.HashSet;
 import java.util.Map;
-
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;

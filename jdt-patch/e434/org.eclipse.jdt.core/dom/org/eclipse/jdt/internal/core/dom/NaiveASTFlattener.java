@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.core.dom;
 
 import java.util.Iterator;
 import java.util.List;
-
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 import org.eclipse.jdt.internal.core.dom.util.DOMASTUtil;
@@ -1910,6 +1909,25 @@ public class NaiveASTFlattener extends ASTVisitor {
 			this.buffer.append(" finally ");//$NON-NLS-1$
 			node.getFinally().accept(this);
 		}
+		return false;
+	}
+
+	@Override
+	public boolean visit(ImplicitTypeDeclaration node) {
+		//javaDoc
+		if (node.getJavadoc() != null) {
+			node.getJavadoc().accept(this);
+		}
+
+		//bodyDeclaration
+		this.indent++;
+		for (Object element : node.bodyDeclarations()) {
+			BodyDeclaration d = (BodyDeclaration) element;
+			d.accept(this);
+		}
+		this.indent--;
+		printIndent();
+
 		return false;
 	}
 

@@ -18,15 +18,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-
+import junit.framework.Test;
+import junit.framework.TestSuite;
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.internal.compiler.util.CharArrayHashMap;
 import org.eclipse.jdt.internal.compiler.util.CharArrayMap;
 import org.eclipse.jdt.internal.compiler.util.CharArrayMapper;
 import org.eclipse.jdt.internal.compiler.util.CharDelegateMap;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 public class CharArrayMapperTest extends TestCase {
 	public CharArrayMapperTest(String testName) {

@@ -1493,16 +1493,13 @@ public class Disassembler extends ClassFileBytesDisassembler {
 		buffer.append(Messages.disassembler_permittedsubclasses);
 		writeNewLine(buffer, lineSeparator, tabNumber + 1);
 		IPermittedSubclassesAttributeEntry[] entries = permittedSubclassesAttribute.getPermittedSubclassAttributesEntries();
-		int length = entries.length;
-		int permittedSubclassesIndex;
-		IPermittedSubclassesAttributeEntry entry;
-		for (int i = 0; i < length; i++) {
+		for (int i = 0, length = entries.length; i < length; i++) {
 			if (i != 0) {
 				buffer.append(Messages.disassembler_comma);
 				writeNewLine(buffer, lineSeparator, tabNumber + 1);
 			}
-			entry = entries[i];
-			permittedSubclassesIndex = entry.gePermittedSubclassIndex();
+			IPermittedSubclassesAttributeEntry entry = entries[i];
+			int permittedSubclassesIndex = entry.gePermittedSubclassIndex();
 			buffer
 				.append(Messages.disassembler_constantpoolindex)
 				.append(permittedSubclassesIndex);

@@ -13,20 +13,19 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
-
+import junit.framework.Test;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.Excuse;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.JavacHasABug;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
-import junit.framework.Test;
 
 
 public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 	static {
 //		TESTS_NUMBERS = new int [] { 40 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "571833" };
+//		TESTS_NAMES = new String[] { "testBug545567_18" };
 	}
 
 	public static Class<?> testClass() {
@@ -170,7 +169,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 			"	int tw = switch (i) {\n" +
 			"		};\n" +
 			"	         ^^^^^^^^^^^^^^^^\n" +
-			"A switch expression should have a non-empty switch block\n" +
+			"A switch expression should have at least one result expression\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 6)\n" +
 			"	int tw = switch (i) {\n" +
@@ -578,7 +577,8 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 	 * A simple multi constant case statement, compiler reports missing enum constants
 	 */
 	public void testBug544073_018() {
-		String[] testFiles = new String[] {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
 				"X.java",
 				"public class X {\n" +
 						"	public static void main(String[] args) {\n" +
@@ -596,16 +596,15 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 						"enum Day { SATURDAY, SUNDAY, MONDAY, TUESDAY;}",
 		};
 
-		String expectedProblemLog =
+		runner.expectedCompilerLog =
 						"----------\n" +
 						"1. WARNING in X.java (at line 5)\n" +
 						"	switch (day) {\n" +
 						"	        ^^^\n" +
 						"The enum constant TUESDAY needs a corresponding case label in this enum switch on Day\n" +
 						"----------\n";
-		this.runWarningTest(
-				testFiles,
-				expectedProblemLog);
+		runner.javacTestOptions = Excuse.EclipseHasSomeMoreWarnings;
+		runner.runWarningTest();
 	}
 	/*
 	 * A simple multi constant case statement with duplicate enums
@@ -696,7 +695,8 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 	/*
 	 */
 	public void testBug544073_021() {
-		String[] testFiles = new String[] {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
 				"X.java",
 				"public class X {\n" +
 						"public static void bar(Day day) {\n" +
@@ -715,16 +715,15 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 						"enum Day { SATURDAY, SUNDAY, MONDAY, TUESDAY;}",
 		};
 
-		String expectedProblemLog =
+		runner.expectedCompilerLog =
 				"----------\n" +
 				"1. WARNING in X.java (at line 3)\n" +
 				"	switch (day) {\n" +
 				"	        ^^^\n" +
 				"The enum constant MONDAY needs a corresponding case label in this enum switch on Day\n" +
 				"----------\n";
-		this.runWarningTest(
-				testFiles,
-				expectedProblemLog);
+		runner.javacTestOptions = Excuse.EclipseHasSomeMoreWarnings;
+		runner.runWarningTest();
 	}
 	public void testBug544073_022() {
 		String[] testFiles = new String[] {
@@ -1701,6 +1700,11 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"	case 0 -> x;\n" +
 				"	          ^\n" +
 				"x cannot be resolved to a variable\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 7)\n" +
+				"	return v;\n" +
+				"	       ^\n" +
+				"Type mismatch: cannot convert from Object to int\n" +
 				"----------\n";
 		this.runNegativeTest(
 				testFiles,
@@ -2028,8 +2032,6 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 			"----------\n");
 	}
 	public void testBug544073_071() {
-		if (this.complianceLevel < ClassFileConstants.JDK12)
-			return;
 		String message =
 				"----------\n" +
 				"1. WARNING in X.java (at line 5)\n" +
@@ -2054,8 +2056,6 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 			"-Xlint:preview");
 	}
 	public void testBug544073_072() {
-		if (this.complianceLevel < ClassFileConstants.JDK12)
-			return;
 		String message =
 				"----------\n" +
 				"1. WARNING in X.java (at line 5)\n" +
@@ -2147,11 +2147,6 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 			"	continue;\n" +
 			"	^^^^^^^^^\n" +
 			"Continue out of switch expressions not permitted\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 11)\n" +
-			"	continue;\n" +
-			"	^^^^^^^^^\n" +
-			"'continue' or 'return' cannot be the last statement in a Switch expression case body\n" +
 			"----------\n");
 	}
 	public void testBug544073_077() {
@@ -2184,11 +2179,6 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 			"	return 2;\n" +
 			"	^^^^^^^^^\n" +
 			"Return within switch expressions not permitted\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 11)\n" +
-			"	return 2;\n" +
-			"	^^^^^^^^^\n" +
-			"'continue' or 'return' cannot be the last statement in a Switch expression case body\n" +
 			"----------\n");
 	}
 	public void testBug544073_078() {
@@ -2718,8 +2708,6 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				expectedProblemLog);
 	}
 	public void testBug547891_15() {
-		if (this.complianceLevel < ClassFileConstants.JDK12)
-			return;
 		String message =
 				"----------\n" +
 				"1. ERROR in X.java (at line 6)\n" +
@@ -2764,8 +2752,6 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 			message);
 	}
 	public void testBug547891_16() {
-		if (this.complianceLevel < ClassFileConstants.JDK12)
-			return;
 		String message =
 				"----------\n" +
 				"1. ERROR in X.java (at line 9)\n" +
@@ -2907,8 +2893,6 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 			"-1");
 	}
 	public void testBug547891_21() {
-		if (this.complianceLevel < ClassFileConstants.JDK12)
-			return;
 		String message =
 				"----------\n" +
 				"1. ERROR in X.java (at line 7)\n" +
@@ -3340,6 +3324,11 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"	default -> 3;\n" +
 				"	^^^^^^^\n" +
 				"Arrow in case statement supported from Java 14 onwards only\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 4)\n" +
+				"	default -> 3;\n" +
+				"	           ^\n" +
+				"Invalid expression as statement\n" +
 				"----------\n";
 		this.runNegativeTest(
 				testFiles,
@@ -3894,6 +3883,42 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				},
 				"one");
 	}
+
+	public void testBug545567_5_1() {
+		runConformTest(
+				new String[] {
+						"X.java",
+						"""
+						public class X {
+						    public String toString() { return "some X"; }
+						    public static void main(String[] args) {
+						    	String t = switch (0) {
+						        default -> {
+						            try {
+						                yield new X().toString();
+						            }
+						            catch (Exception ex) {
+						            }
+						            yield "zero";
+						        }
+						     };
+						     System.out.print(t);
+						    }
+
+						    static int foo() {
+						    	try {
+						    		return 42;
+						    	} catch (Exception ex) {
+
+						    	}
+						    	return -1;
+						    }
+						}
+						"""
+				},
+				"some X");
+	}
+
 	public void testBug545567_6() {
 		runConformTest(
 				new String[] {
@@ -4442,7 +4467,10 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 			},
 			"10");
 	}
-	public void testBug545567_22() {
+	// Disabled until https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3259 and
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3258 are comprehensively
+	// resolved. Same issue, but was "compensated" for earlier
+	public void _testBug545567_22() {
 		runConformTest(
 			new String[] {
 				"X.java",
@@ -6028,7 +6056,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"1. ERROR in X.java (at line 7)\n" +
 				"	boolean b = foo( switch(i+1) {\n" +
 				"	            ^^^\n" +
-				"The method foo(short) in the type X is not applicable for the arguments (double)\n" +
+				"The method foo(short) in the type X is not applicable for the arguments (switch ((i + 1)) { ... })\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 9)\n" +
 				"	default -> Double.valueOf(2.0d);\n" +
@@ -6064,7 +6092,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"1. ERROR in X.java (at line 7)\n" +
 				"	boolean b = foo( switch(i+1) {\n" +
 				"	            ^^^\n" +
-				"The method foo(short) in the type X is not applicable for the arguments (double)\n" +
+				"The method foo(short) in the type X is not applicable for the arguments (switch ((i + 1)) { ... })\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 9)\n" +
 				"	default -> 2.0d;\n" +
@@ -6101,7 +6129,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"1. ERROR in X.java (at line 7)\n" +
 				"	boolean b = foo( switch(i+1) {\n" +
 				"	            ^^^\n" +
-				"The method foo(short) in the type X is not applicable for the arguments (double)\n" +
+				"The method foo(short) in the type X is not applicable for the arguments (switch ((i + 1)) { ... })\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 9)\n" +
 				"	default : yield 2.0d;\n" +
@@ -6348,12 +6376,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 			"1. ERROR in X.java (at line 3)\n" +
 			"	foo(switch (i) {\n" +
 			"	^^^\n" +
-			"The method foo(T) in the type X is not applicable for the arguments (switch (i) {\n" +
-			"case 0 ->\n" +
-			"    m.call();\n" +
-			"default ->\n" +
-			"    null;\n" +
-			"})\n" +
+			"The method foo(T) in the type X is not applicable for the arguments (switch (i) { ... })\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 4)\n" +
 			"	case 0 -> m.call();\n" +
@@ -8062,4 +8085,220 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"class [LX;\n42");
 	}
 
+	// test mixing of -> and : in the same switch
+	public void testMixingCaseStyles() {
+		if (this.complianceLevel < ClassFileConstants.JDK14)
+			return;
+		this.runNegativeTest(
+				new String[] {
+				"X.java",
+				"""
+				public class X {
+					public static void main(String[] args) {
+						 int i = switch(args.length) {
+							 case 2: yield 2;
+							 default -> 1;
+							 case 1 : yield 2;
+						 };
+					}
+				}
+				"""
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 5)\n" +
+				"	default -> 1;\n" +
+				"	^^^^^^^\n" +
+				"Mixing of '->' and ':' case statement styles is not allowed within a switch\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 6)\n" +
+				"	case 1 : yield 2;\n" +
+				"	^^^^^^\n" +
+				"Mixing of '->' and ':' case statement styles is not allowed within a switch\n" +
+				"----------\n");
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3205
+	// [Switch Expressions] ECJ accepts ambiguous method invocation involving switch expressions with poly type result expression
+	public void testIssue3205() {
+		this.runConformTest(
+				new String[] {
+				"X.java",
+				"""
+				interface I {
+					void foo();
+				}
+
+				interface J {
+					void foo();
+				}
+
+				public class X implements I, J {
+
+					public void foo() {
+					}
+
+					static void doit() {}
+
+					public static void foo(Object o, J j) {
+						System.out.println("Object");
+					}
+
+					public static void foo(String s, I i) {
+						System.out.println(s);
+					}
+
+					public static void main(String[] args) {
+
+						// Compiles with both ECJ and javac
+						foo("OK", () -> {});
+
+						// Compiles with both ECJ and javac
+						foo("OK", args == null ? () -> {} : () -> {});
+
+						// Compiles with both ECJ and javac
+						foo("OK", X::doit);
+
+						// Rejected by both ECJ and javac.
+						//foo("OK", new X());
+
+						// Rejected by javac, accepted by ECJ.
+						foo("OK", switch (0) {
+									 	case 0 -> () -> {};
+									 	default -> () -> {};
+						});
+					}
+				}
+				"""
+				},
+				"OK\nOK\nOK\nOK");
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3205
+	// [Switch Expressions] ECJ accepts ambiguous method invocation involving switch expressions with poly type result expression
+	public void testIssue3205_2() {
+		this.runNegativeTest(
+				new String[] {
+				"X.java",
+				"""
+				interface I {
+					void foo();
+				}
+
+				interface J {
+					void foo();
+				}
+
+				public class X implements I, J {
+
+					public void foo() {
+					}
+
+					static void doit() {}
+
+					public static void foo(Object o, J j) {
+						System.out.println("Object");
+					}
+
+					public static void foo(String s, I i) {
+						System.out.println(s);
+					}
+
+					public static void main(String[] args) {
+
+						// Compiles with both ECJ and javac
+						foo("OK", () -> {});
+
+						// Compiles with both ECJ and javac
+						foo("OK", args == null ? () -> {} : () -> {});
+
+						// Compiles with both ECJ and javac
+						foo("OK", X::doit);
+
+						// Rejected by both ECJ and javac.
+						foo("OK", new X());
+
+						// Rejected by javac, accepted by ECJ.
+						foo("OK", switch (0) {
+									 	case 0 -> () -> {};
+									 	default -> () -> {};
+						});
+					}
+				}
+				"""
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 36)\n" +
+				"	foo(\"OK\", new X());\n" +
+				"	^^^\n" +
+				"The method foo(Object, J) is ambiguous for the type X\n" +
+				"----------\n");
+	}
+
+	// fails when run as org.eclipse.jdt.core.tests.model.JavaSearchBugs14SwitchExpressionTests.testBug542559_0012
+	public void testBug542559_0012() {
+		this.runConformTest(
+				new String[] {
+				"X.java",
+				"""
+				import java.util.function.Supplier;
+				interface I0 { void i(); }
+				interface I1 extends I0 {}
+				interface I2 extends I0 {}
+				public class X {
+					I1 n1() { return null; }
+					<I extends I2> I n2() { return null; }
+
+					void test(int i, boolean b) {
+						m(switch (i) {
+							case 1 -> this::n1;
+							default -> this::n2;
+						}).i();
+					}
+
+					<M> M m(Supplier<M> m) { return m.get(); }
+
+					public static void main(String[] args) {
+						try {
+							new X().test(1, true);
+						} catch (NullPointerException e) {
+							System.out.println("NPE as expected!");
+						}
+					}
+				}
+				"""
+				},
+				"NPE as expected!");
+	}
+
+	// Disabled until https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3259 and
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3258 are comprehensively
+	// resolved. Same issue, but was "compensated" for earlier
+	public void _testBug545567_22_minimal() {
+		this.runConformTest(
+				new String[] {
+				"X.java",
+				"""
+				public class X implements AutoCloseable {
+				   public static void main(String[] args) {
+				       int t = switch (1) {
+				               default -> {
+				                   try (X x = new X()) {
+				                       if (args.length < 1)
+				                    	   yield 10;
+				                       else
+				                           yield 12;
+				                       } finally {
+				                            yield 3;
+				                       }
+				               }
+				       };
+				       System.out.println(t);
+				   }
+
+				   public void close() throws Exception {}
+				}
+				"""
+				},
+				"3");
+	}
 }

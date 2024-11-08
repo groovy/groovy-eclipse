@@ -15,26 +15,11 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.parser;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.eclipse.jdt.core.compiler.*;
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.Annotation;
-import org.eclipse.jdt.internal.compiler.ast.Argument;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.Block;
-import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
-import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.MemberValuePair;
-import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.Statement;
-import org.eclipse.jdt.internal.compiler.ast.SuperReference;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.util.Util;
@@ -63,6 +48,8 @@ public class RecoveredMethod extends RecoveredElement implements TerminalTokens 
 	int pendingModifersSourceStart = -1;
 	RecoveredAnnotation[] pendingAnnotations;
 	int pendingAnnotationCount;
+
+	public boolean incompleteParameterAnnotationSeen = false;
 
 public RecoveredMethod(AbstractMethodDeclaration methodDeclaration, RecoveredElement parent, int bracketBalance, Parser parser){
 	super(parent, bracketBalance, parser);
@@ -113,6 +100,10 @@ public RecoveredElement add(Block nestedBlockDeclaration, int bracketBalanceValu
  */
 @Override
 public RecoveredElement add(FieldDeclaration fieldDeclaration, int bracketBalanceValue) {
+	if (recoverAsArgument(fieldDeclaration)) {
+		resetPendingModifiers();
+		return this;
+	}
 	resetPendingModifiers();
 
 	/* local variables inside method can only be final and non void */
@@ -148,6 +139,37 @@ public RecoveredElement add(FieldDeclaration fieldDeclaration, int bracketBalanc
 	}
 	// still inside method, treat as local variable
 	return this; // ignore
+}
+
+private boolean recoverAsArgument(FieldDeclaration fieldDeclaration) {
+	if (!this.foundOpeningBrace
+			&& this.methodDeclaration.declarationSourceEnd == 0
+			&& this.incompleteParameterAnnotationSeen) { // misparsed parameter?
+		long position = ((long) fieldDeclaration.sourceStart << 32)+fieldDeclaration.sourceEnd;
+		Argument arg = new Argument(fieldDeclaration.name, position, fieldDeclaration.type, fieldDeclaration.modifiers);
+		if (this.methodDeclaration.arguments == null) {
+			this.methodDeclaration.arguments = new Argument[] { arg };
+		} else {
+			int len = this.methodDeclaration.arguments.length;
+			this.methodDeclaration.arguments = Arrays.copyOf(this.methodDeclaration.arguments, len+1);
+			this.methodDeclaration.arguments[len] = arg;
+		}
+		int annotCount = this.pendingAnnotationCount;
+		if (this.pendingAnnotations != null) {
+			int end = 0;
+			arg.annotations = new Annotation[annotCount];
+			for (int i = 0; i < this.pendingAnnotationCount; i++) {
+				arg.annotations[i] = this.pendingAnnotations[i].annotation;
+				if (i == 0)
+					arg.declarationSourceStart = arg.annotations[i].sourceStart;
+				end = arg.sourceEnd;
+			}
+			if (end > 0)
+				this.methodDeclaration.bodyStart = end + 1;
+		}
+		return true;
+	}
+	return false;
 }
 /*
  * Record a local declaration - regular method should have been created a block body
@@ -622,6 +644,11 @@ public RecoveredElement addAnnotationName(int identifierPtr, int identifierLengt
 		this.pendingAnnotations = new RecoveredAnnotation[5];
 		this.pendingAnnotationCount = 0;
 	} else {
+		if (this.pendingAnnotationCount > 0) {
+			RecoveredAnnotation lastAnnot = this.pendingAnnotations[this.pendingAnnotationCount-1];
+			if (lastAnnot.sourceStart() == annotationStart)
+				return this;
+		}
 		if (this.pendingAnnotationCount == this.pendingAnnotations.length) {
 			System.arraycopy(
 				this.pendingAnnotations,

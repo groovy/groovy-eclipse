@@ -17,31 +17,10 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.jdt.core.CompletionRequestor;
-import org.eclipse.jdt.core.IAnnotation;
-import org.eclipse.jdt.core.IClassFile;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IField;
-import org.eclipse.jdt.core.IInitializer;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaModelStatusConstants;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.IModuleDescription;
-import org.eclipse.jdt.core.IOrdinaryClassFile;
-import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.ITypeHierarchy;
-import org.eclipse.jdt.core.ITypeParameter;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.Signature;
-import org.eclipse.jdt.core.WorkingCopyOwner;
+import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
@@ -623,7 +602,7 @@ public String[] getSuperInterfaceNames() throws JavaModelException {
 @Override
 public String[] getPermittedSubtypeNames() throws JavaModelException {
 	IBinaryType info = getElementInfo();
-	char[][] names= info.getPermittedSubtypeNames();
+	char[][] names= info.getPermittedSubtypesNames();
 	int length;
 	if (names == null || (length = names.length) == 0) {
 		return CharOperation.NO_STRINGS;
@@ -791,12 +770,11 @@ public boolean isRecord() throws JavaModelException {
 }
 /**
  * @see IType#isSealed()
- * @noreference This method is not intended to be referenced by clients as it is a part of Java preview feature.
  */
 @Override
 public boolean isSealed() throws JavaModelException {
 	IBinaryType info = getElementInfo();
-	char[][] names = info.getPermittedSubtypeNames();
+	char[][] names = info.getPermittedSubtypesNames();
 	return (names != null && names.length > 0);
 }
 

@@ -14,7 +14,6 @@
 package org.eclipse.jdt.core.tests.eval;
 
 import junit.framework.Test;
-
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;

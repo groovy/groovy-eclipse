@@ -16,9 +16,7 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.Map;
-
 import junit.framework.Test;
-
 import org.eclipse.jdt.internal.compiler.ast.FakedTrackingVariable;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 

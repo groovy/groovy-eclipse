@@ -16,11 +16,10 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.IOException;
+import junit.framework.Test;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.core.util.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-
-import junit.framework.Test;
 
 @SuppressWarnings({ "rawtypes" })
 public class InstanceofExpressionTest extends AbstractRegressionTest {

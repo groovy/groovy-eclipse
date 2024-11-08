@@ -18,7 +18,6 @@
 package org.eclipse.jdt.internal.core.util;
 
 import java.text.MessageFormat;
-
 import org.eclipse.osgi.util.NLS;
 
 public final class Messages extends NLS {

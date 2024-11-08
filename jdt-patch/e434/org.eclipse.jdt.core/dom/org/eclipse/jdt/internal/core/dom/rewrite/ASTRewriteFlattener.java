@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.core.dom.rewrite;
 
 import java.util.Iterator;
 import java.util.List;
-
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.internal.compiler.util.Util;
 import org.eclipse.jdt.internal.core.dom.util.DOMASTUtil;
@@ -1207,6 +1206,17 @@ public class ASTRewriteFlattener extends ASTVisitor {
 			this.result.append(" finally "); //$NON-NLS-1$
 			finallyClause.accept(this);
 		}
+		return false;
+	}
+
+	@Override
+	public boolean visit(ImplicitTypeDeclaration node) {
+		ASTNode javadoc= getChildNode(node, TypeDeclaration.JAVADOC_PROPERTY);
+		if (javadoc != null) {
+			javadoc.accept(this);
+		}
+
+		visitList(node, TypeDeclaration.BODY_DECLARATIONS_PROPERTY, null);
 		return false;
 	}
 

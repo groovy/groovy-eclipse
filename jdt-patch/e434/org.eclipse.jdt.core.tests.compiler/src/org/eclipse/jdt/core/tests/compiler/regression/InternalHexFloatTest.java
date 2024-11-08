@@ -16,9 +16,7 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import junit.framework.Test;
-
 import org.eclipse.jdt.internal.compiler.util.FloatUtil;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })

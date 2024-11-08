@@ -25,37 +25,10 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.ExpressionStatement;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.FileASTRequestor;
-import org.eclipse.jdt.core.dom.IBinding;
-import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.IPackageBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.IVariableBinding;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.ModuleDeclaration;
-import org.eclipse.jdt.core.dom.Name;
-import org.eclipse.jdt.core.dom.NodeFinder;
-import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.SwitchExpression;
-import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
-import org.eclipse.jdt.core.dom.YieldStatement;
+import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
@@ -1955,6 +1928,40 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 			assertEquals("The left-hand side of an assignment must be a variable",cu.getProblems()[5].getMessage());
 			assertEquals("Syntax error, insert \"AssignmentOperator Expression\" to complete Expression",cu.getProblems()[6].getMessage());
 	}
+
+	public void testBugGithub2402() throws JavaModelException {
+        String contents = """
+        			package test;
+					public class TestClass {
+					    @com.Missing
+					    public TestClass() {
+					        new test.TestClass();
+					    }
+					}
+					class com {
+					}
+        		""";
+
+        ASTParser parser = ASTParser.newParser(AST_JLS_LATEST);
+        parser.setResolveBindings(true);
+        parser.setStatementsRecovery(true);
+        parser.setBindingsRecovery(true);
+        parser.setKind(ASTParser.K_COMPILATION_UNIT);
+        parser.setEnvironment(new String[0], new String[0], null, false);
+        parser.setSource(contents.toCharArray());
+        parser.setUnitName("test.TestClass");
+        ASTNode node = parser.createAST(null);
+        assertTrue("Should be a compilation unit", node instanceof CompilationUnit);
+        CompilationUnit cu = (CompilationUnit) node;
+        TypeDeclaration type = (TypeDeclaration) cu.types().get(0);
+        MethodDeclaration method = (MethodDeclaration) type.bodyDeclarations().get(0);
+        ExpressionStatement stmt = (ExpressionStatement) method.getBody().statements().get(0);
+        ClassInstanceCreation expr = (ClassInstanceCreation) stmt.getExpression();
+        IMethodBinding ctorBinding = expr.resolveConstructorBinding();
+        assertNotNull(ctorBinding);
+        IAnnotationBinding[] annotations = ctorBinding.getAnnotations();
+        assertNotNull(annotations);
+}
 
 
 }

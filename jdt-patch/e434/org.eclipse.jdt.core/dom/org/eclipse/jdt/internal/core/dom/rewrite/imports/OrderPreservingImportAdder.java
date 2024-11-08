@@ -13,16 +13,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.dom.rewrite.imports;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableSet;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Keeping existing imports in their existing order, inserts each new import before or after the

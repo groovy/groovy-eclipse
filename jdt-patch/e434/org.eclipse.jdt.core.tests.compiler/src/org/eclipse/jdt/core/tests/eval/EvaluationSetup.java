@@ -20,10 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.ServerSocket;
-
-import org.eclipse.jdt.core.tests.runtime.LocalVirtualMachine;
-
 import org.eclipse.jdt.core.tests.runtime.LocalVMLauncher;
+import org.eclipse.jdt.core.tests.runtime.LocalVirtualMachine;
 import org.eclipse.jdt.core.tests.runtime.TargetException;
 import org.eclipse.jdt.core.tests.runtime.TargetInterface;
 import org.eclipse.jdt.core.tests.util.CompilerTestSetup;

@@ -190,7 +190,7 @@ public class Scanner implements TerminalTokens {
 	private VanguardParser vanguardParser;
 	ConflictedParser activeParser = null;
 	private boolean consumingEllipsisAnnotations = false;
-	protected boolean multiCaseLabelComma = false;
+	public boolean multiCaseLabelComma = false;
 
 	public static final int RoundBracket = 0;
 	public static final int SquareBracket = 1;
@@ -5615,9 +5615,6 @@ int disambiguatedRestrictedIdentifierWhen(int restrictedIdentifierToken) {
 					TokenNameIdentifier : TokenNameRestrictedIdentifierWhen;
 }
 int disambiguatedRestrictedIdentifierYield(int restrictedIdentifierToken) {
-	// and here's the kludge
-	if (restrictedIdentifierToken != TokenNameRestrictedIdentifierYield)
-		return restrictedIdentifierToken;
 	if (this.sourceLevel < ClassFileConstants.JDK14)
 		return TokenNameIdentifier;
 

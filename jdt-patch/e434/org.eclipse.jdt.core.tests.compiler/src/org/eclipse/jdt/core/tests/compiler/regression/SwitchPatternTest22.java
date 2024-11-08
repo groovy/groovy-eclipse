@@ -13,22 +13,20 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
-
+import junit.framework.Test;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
-import junit.framework.Test;
-
-public class SwitchPatternTest21 extends AbstractBatchCompilerTest {
+public class SwitchPatternTest22 extends AbstractBatchCompilerTest {
 
 	static {
 		//	TESTS_NAMES = new String [] { "testNaming" };
 	}
 
 	public static Test suite() {
-		return buildMinimalComplianceTestSuite(SwitchPatternTest21.class, F_22);
+		return buildMinimalComplianceTestSuite(SwitchPatternTest22.class, F_22);
 	}
 
-	public SwitchPatternTest21(String name) {
+	public SwitchPatternTest22(String name) {
 		super(name);
 	}
 
@@ -957,5 +955,45 @@ public class SwitchPatternTest21 extends AbstractBatchCompilerTest {
 						"""
 				},
 			"A or B");
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3109
+	// [Patterns] Mixed multiple pattern and when is not fully supported in switch expression
+	public void testIssue3109() {
+		runConformTest(
+				new String[] {
+						"Maybe.java",
+						"""
+						import java.util.function.Function;
+						import java.util.function.Predicate;
+
+						public sealed interface Maybe<T>  {
+
+						  static <T> Maybe<T> of(T value) {
+						    return new Some<>(value);
+						  }
+
+						  static <T> Maybe<T> empty() {
+						    return new None<>();
+						  }
+
+						  default Maybe<T> filter(Predicate<T> predicate){
+						    return switch (this) {
+						      case Some(T value) when predicate.test(value) -> this; // unsupported line with 4 errors
+						      case Some(_), None<T> _ -> empty();
+						    };
+						  }
+
+						  default Maybe<T> filter2(Predicate<T> predicate){
+						    return switch (this) {
+						      case Some(_), None<T> _ -> empty(); //also unsupported with 1 error
+						    };
+						  }
+						  record Some<T>(T value) implements Maybe<T> {}
+						  record None<T>() implements Maybe<T>{}
+						}
+						"""
+				},
+			"");
 	}
 }

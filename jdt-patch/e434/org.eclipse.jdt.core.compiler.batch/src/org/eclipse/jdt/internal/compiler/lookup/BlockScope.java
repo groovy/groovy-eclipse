@@ -35,7 +35,6 @@ package org.eclipse.jdt.internal.compiler.lookup;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -324,7 +323,8 @@ void computeLocalVariablePositions(int ilocal, int initOffset, CodeStream codeSt
 			// could be optimized out, but does need to preserve unread variables ?
 			if (!generateCurrentLocalVar) {
 				if ((local.declaration != null && compilerOptions().preserveAllLocalVariables) ||
-						local.isPatternVariable()) { // too much voodoo around pattern codegen. Having warned, just treat them as used.
+						local.isPatternVariable() || // too much voodoo around pattern codegen. Having warned, just treat them as used.
+						local.isResourceVariable()) {
 					generateCurrentLocalVar = true; // force it to be preserved in the generated code
 					if (local.useFlag == LocalVariableBinding.UNUSED)
 						local.useFlag = LocalVariableBinding.USED;

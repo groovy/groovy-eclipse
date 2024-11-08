@@ -16,8 +16,8 @@ package org.eclipse.jdt.internal.core;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-
-import org.eclipse.core.resources.*;
+import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;

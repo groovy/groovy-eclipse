@@ -13,8 +13,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.eval.target;
 
-import java.io.*;
-import java.net.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 /**
  * The interface to the IDE. When connected, it uses TCP/IP sockets
  * to get code snippet classes and global variable classes from the IDE.

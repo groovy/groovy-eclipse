@@ -18,7 +18,7 @@ import static org.junit.Assert.assertArrayEquals;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
+import junit.framework.Test;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
@@ -26,7 +26,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.util.Util;
-import junit.framework.Test;
 
 public class Bug530366Test extends BuilderTests {
 

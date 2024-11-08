@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.Arrays;
 import java.util.Objects;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 public class AptBinaryLocalVariableBinding extends LocalVariableBinding {

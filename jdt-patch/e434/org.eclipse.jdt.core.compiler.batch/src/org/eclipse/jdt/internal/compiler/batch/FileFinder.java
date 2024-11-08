@@ -16,7 +16,6 @@ package org.eclipse.jdt.internal.compiler.batch;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.jdt.internal.compiler.env.IModule;
 
 public class FileFinder {

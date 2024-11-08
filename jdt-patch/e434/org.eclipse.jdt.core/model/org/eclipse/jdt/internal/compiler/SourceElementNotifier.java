@@ -15,41 +15,12 @@
 package org.eclipse.jdt.internal.compiler;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor.ParameterInfo;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor.TypeParameterInfo;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
-import org.eclipse.jdt.internal.compiler.ast.Annotation;
-import org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.Argument;
-import org.eclipse.jdt.internal.compiler.ast.ArrayAllocationExpression;
-import org.eclipse.jdt.internal.compiler.ast.ArrayInitializer;
-import org.eclipse.jdt.internal.compiler.ast.ArrayReference;
-import org.eclipse.jdt.internal.compiler.ast.Assignment;
-import org.eclipse.jdt.internal.compiler.ast.ClassLiteralAccess;
-import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
-import org.eclipse.jdt.internal.compiler.ast.ExportsStatement;
-import org.eclipse.jdt.internal.compiler.ast.Expression;
-import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ImportReference;
-import org.eclipse.jdt.internal.compiler.ast.Initializer;
-import org.eclipse.jdt.internal.compiler.ast.MessageSend;
-import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.OpensStatement;
-import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
-import org.eclipse.jdt.internal.compiler.ast.ThisReference;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
-import org.eclipse.jdt.internal.compiler.ast.ImplicitTypeDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
@@ -83,12 +54,12 @@ public class SourceElementNotifier {
 		}
 		@Override
 		public boolean visit(TypeDeclaration typeDeclaration, BlockScope scope) {
-			notifySourceElementRequestor(typeDeclaration, true, peekDeclaringType(), this.currentPackage);
+			notifySourceElementRequestor(null, typeDeclaration, true, peekDeclaringType(), this.currentPackage);
 			return false; // don't visit members as this was done during notifySourceElementRequestor(...)
 		}
 		@Override
 		public boolean visit(TypeDeclaration typeDeclaration, ClassScope scope) {
-			notifySourceElementRequestor(typeDeclaration, true, peekDeclaringType(), this.currentPackage);
+			notifySourceElementRequestor(null, typeDeclaration, true, peekDeclaringType(), this.currentPackage);
 			return false; // don't visit members as this was done during notifySourceElementRequestor(...)
 		}
 	}
@@ -167,8 +138,44 @@ protected char[] getSuperclassName(TypeDeclaration typeDeclaration) {
 	TypeReference superclass = typeDeclaration.superclass;
 	return superclass != null ? CharOperation.concatWith(superclass.getParameterizedTypeName(), '.') : null;
 }
-protected char[][] getPermittedSubTypes(TypeDeclaration typeDeclaration) {
-	return extractTypeReferences(typeDeclaration.permittedTypes);
+private void gatherPermittedTypesOf(TypeDeclaration potentialSubtype, TypeDeclaration sealedType, List<char []> list, char [] prefix) {
+	if (potentialSubtype != sealedType) {
+		char[][] qName = potentialSubtype.superclass == null ? null : potentialSubtype.superclass.getTypeName();
+		if (qName != null && CharOperation.equals(qName[qName.length - 1], sealedType.name)) {
+			char [] subTypeName = CharOperation.concat(prefix, potentialSubtype.name, '.');
+			list.add(subTypeName);
+		}
+		if (potentialSubtype.superInterfaces != null) {
+			for (TypeReference ref : potentialSubtype.superInterfaces) {
+				qName = ref.getTypeName();
+				if (CharOperation.equals(qName[qName.length - 1], sealedType.name)) {
+					char [] subTypeName = CharOperation.concat(prefix, potentialSubtype.name, '.');
+					list.add(subTypeName);
+					break;
+				}
+			}
+		}
+	}
+	if (potentialSubtype.memberTypes != null) {
+		for (int i = 0, size = potentialSubtype.memberTypes.length; i < size; i++) {
+			char [] prefixNow = CharOperation.concat(prefix, potentialSubtype.name, '.');
+			gatherPermittedTypesOf(potentialSubtype.memberTypes[i], sealedType, list, prefixNow);
+		}
+	}
+}
+protected char[][] getPermittedSubTypes(CompilationUnitDeclaration parsedUnit, TypeDeclaration sealedType) {
+
+	if (sealedType.permittedTypes != null)
+		return extractTypeReferences(sealedType.permittedTypes);
+
+	// compute implicit permitted types on the fly.
+	List<char []> list = new ArrayList();
+	if (parsedUnit != null) { // == null for local types.
+		for (TypeDeclaration type : parsedUnit.types) {
+			gatherPermittedTypesOf(type, sealedType, list, CharOperation.NO_CHAR);
+		}
+	}
+	return list.toArray(new char[list.size()][]);
 }
 protected char[][] getThrownExceptions(AbstractMethodDeclaration methodDeclaration) {
 	return extractTypeReferences(methodDeclaration.thrownExceptions);
@@ -486,7 +493,7 @@ public void notifySourceElementRequestor(
 						notifySourceElementRequestor(importRef, false);
 					}
 				} else if (node instanceof TypeDeclaration && !new String(parsedUnit.getFileName()).endsWith(TypeConstants.MODULE_INFO_FILE_NAME_STRING)) {
-					notifySourceElementRequestor((TypeDeclaration)node, true, null, currentPackage);
+					notifySourceElementRequestor(parsedUnit, (TypeDeclaration)node, true, null, currentPackage);
 				} else if (node instanceof ModuleDeclaration) {
 					notifySourceElementRequestor(parsedUnit.moduleDeclaration);
 				}
@@ -677,7 +684,7 @@ protected void notifySourceElementRequestor(ModuleDeclaration moduleDeclaration)
 //	}
 //
 //}
-protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boolean notifyTypePresence, TypeDeclaration declaringType, ImportReference currentPackage) {
+protected void notifySourceElementRequestor(CompilationUnitDeclaration parsedUnit, TypeDeclaration typeDeclaration, boolean notifyTypePresence, TypeDeclaration declaringType, ImportReference currentPackage) {
 
 	if (CharOperation.equals(TypeConstants.PACKAGE_INFO_NAME, typeDeclaration.name)) return;
 
@@ -741,7 +748,7 @@ protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boo
 			typeInfo.extraFlags = ExtraFlags.getExtraFlags(typeDeclaration);
 			typeInfo.node = typeDeclaration;
 			if ((currentModifiers & ExtraCompilerModifiers.AccSealed) != 0) {
-				typeInfo.permittedSubtypes = getPermittedSubTypes(typeDeclaration);
+				typeInfo.permittedSubtypes = getPermittedSubTypes(parsedUnit, typeDeclaration);
 			}
 			switch (kind) {
 				case TypeDeclaration.CLASS_DECL :
@@ -813,7 +820,7 @@ protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boo
 				break;
 			case 2 :
 				memberTypeIndex++;
-				notifySourceElementRequestor(nextMemberDeclaration, true, null, currentPackage);
+				notifySourceElementRequestor(parsedUnit, nextMemberDeclaration, true, null, currentPackage);
 				break;
 		}
 	}

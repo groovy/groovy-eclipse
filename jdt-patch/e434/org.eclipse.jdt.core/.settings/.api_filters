@@ -250,6 +250,12 @@
         </filter>
     </resource>
     <resource path="dom/org/eclipse/jdt/core/dom/Modifier.java" type="org.eclipse.jdt.core.dom.Modifier">
+        <filter comment="Withdraw incorrect modifier (tagged with noreference)" id="338755678">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.Modifier"/>
+                <message_argument value="WHEN"/>
+            </message_arguments>
+        </filter>
         <filter id="576725006">
             <message_arguments>
                 <message_argument value="IExtendedModifier"/>
@@ -262,6 +268,12 @@
             <message_arguments>
                 <message_argument value="org.eclipse.jdt.core.dom.Modifier.ModifierKeyword"/>
                 <message_argument value="MODULE_KEYWORD"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Withdraw incorrect modifier (tagged with noreference)" id="338755678">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.Modifier.ModifierKeyword"/>
+                <message_argument value="WHEN_KEYWORD"/>
             </message_arguments>
         </filter>
     </resource>

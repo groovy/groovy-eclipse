@@ -34,8 +34,7 @@ package org.eclipse.jdt.internal.codeassist.complete;
  * The arguments of the allocation expression are all the arguments defined
  * before the cursor.
  */
-
-import org.eclipse.jdt.internal.compiler.ast.*;
+import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 
 public class CompletionOnImportReference extends ImportReference implements CompletionNode {
 

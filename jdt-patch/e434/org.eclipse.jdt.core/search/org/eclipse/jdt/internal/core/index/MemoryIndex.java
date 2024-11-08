@@ -13,11 +13,11 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.index;
 
-import org.eclipse.jdt.core.search.*;
-import org.eclipse.jdt.internal.core.util.*;
+import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
+import org.eclipse.jdt.internal.core.util.SimpleWordSet;
 
 public class MemoryIndex {
 

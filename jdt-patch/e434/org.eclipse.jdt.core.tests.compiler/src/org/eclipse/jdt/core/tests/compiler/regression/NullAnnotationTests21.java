@@ -16,13 +16,11 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-
+import junit.framework.Test;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
-import junit.framework.Test;
 
 public class NullAnnotationTests21 extends AbstractNullAnnotationTest {
 
@@ -1133,5 +1131,117 @@ public class NullAnnotationTests21 extends AbstractNullAnnotationTest {
 				"Stuff[]";
 		runner.classLibraries = this.LIBS;
 		runner.runConformTest();
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2522
+	// Pattern matching on sealed classes cannot infer NonNull (JDK 21)
+	public void testIssue2522() {
+		Runner runner = getDefaultRunner();
+		runner.testFiles = new String[] {
+			"PatternMatching.java",
+			"""
+			import org.eclipse.jdt.annotation.*;
+
+			public sealed interface PatternMatching {
+
+			    record Stuff() implements PatternMatching {}
+
+			    @NonNull
+			    static Stuff match(PatternMatching pm, int v) {
+			    	if (v == 0) {
+						Stuff r = switch (pm) {
+						case Stuff s -> s;
+						case null -> throw new NullPointerException();
+						};
+						return r; // no error here - good
+			    	} else if (v == 1) {
+						Stuff r = switch (pm) {
+						case Stuff s -> s;
+						case null -> throw new NullPointerException();
+						};
+						return null; // get error here	- good
+			    	} else if (v == 2) {
+						Stuff r = switch (pm) {
+						case Stuff s -> s;
+						};
+						return r; // no error here -- good
+			    	} else if (v == 3) {
+						Stuff r = switch (pm) {
+						case Stuff s -> null; // <<<<<---------------------------- Line 28 - error Why ???
+						};
+						return r; // get error here - good
+			    	} else if (v == 4) {
+						Stuff r = switch (pm) {
+						case Stuff s -> s;
+						case null -> null;  // <<<-------------------------------- Line 34 - error Why ??
+						};
+						return new Stuff(); // no error here   // good
+			    	}
+			    	return new Stuff();
+			    }
+			}
+			"""
+		};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in PatternMatching.java (at line 20)
+					return null; // get error here	- good
+					       ^^^^
+				Null type mismatch: required 'PatternMatching.@NonNull Stuff' but the provided value is null
+				----------
+				2. ERROR in PatternMatching.java (at line 30)
+					return r; // get error here - good
+					       ^
+				Null type mismatch: required 'PatternMatching.@NonNull Stuff' but the provided value is null
+				----------
+				""";
+		runner.runNegativeTest();
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2522
+	// Pattern matching on sealed classes cannot infer NonNull (JDK 21)
+	public void testIssue2522_2() {
+		Runner runner = getDefaultRunner();
+		runner.testFiles = new String[] {
+			"PatternMatching.java",
+			"""
+			import org.eclipse.jdt.annotation.*;
+
+			public sealed interface PatternMatching {
+
+			    record Stuff() implements PatternMatching {}
+
+			    @NonNull
+			    static Stuff match(PatternMatching pm, int v) {
+			    	if (v == 0) {
+						return switch (pm) {
+						case Stuff s -> s;
+						case null -> throw new NullPointerException();
+						}; // no error here - good
+			    	} else if (v == 2) {
+						return switch (pm) {
+						case Stuff s -> s;
+						}; // no error here -- good
+			    	} else if (v == 3) {
+						return switch (pm) {
+						case Stuff s -> null;  // get error here - good
+						};
+			    	}
+			    	return new Stuff();
+			    }
+			}
+			"""
+		};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in PatternMatching.java (at line 20)
+					case Stuff s -> null;  // get error here - good
+					                ^^^^
+				Null type mismatch: required 'PatternMatching.@NonNull Stuff' but the provided value is null
+				----------
+				""";
+		runner.runNegativeTest();
 	}
 }

@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.core;
 
 import java.text.NumberFormat;
 import java.util.Enumeration;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.IBuffer;

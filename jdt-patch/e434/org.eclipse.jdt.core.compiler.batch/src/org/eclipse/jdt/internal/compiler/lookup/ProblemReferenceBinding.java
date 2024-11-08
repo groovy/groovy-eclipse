@@ -15,7 +15,6 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.lang.reflect.Field;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 @SuppressWarnings("rawtypes")

@@ -24,7 +24,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 
 /** Reads a list of ICompilationUnit before actually needed (ahead) **/

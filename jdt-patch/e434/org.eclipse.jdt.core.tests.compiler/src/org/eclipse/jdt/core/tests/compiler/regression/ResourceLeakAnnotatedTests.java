@@ -13,15 +13,11 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
-import java.util.List;
 import java.util.Map;
-
-import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class ResourceLeakAnnotatedTests extends ResourceLeakTests {
 
@@ -38,62 +34,9 @@ public ResourceLeakAnnotatedTests(String name) {
 }
 public static Test suite() {
 	TestSuite suite = new TestSuite(ResourceLeakAnnotatedTests.class.getName());
-	// argument 'inheritedDepth' is not exposed in original API, therefore these helpers are copied below with this arg added
 	buildMinimalComplianceTestSuite(FIRST_SUPPORTED_JAVA_VERSION, 1, suite, ResourceLeakAnnotatedTests.class);
 	return suite;
 }
-
-private static void buildMinimalComplianceTestSuite(int minimalCompliance, int inheritedDepth, TestSuite suite, Class<?> evaluationTestClass) {
-	int complianceLevels = AbstractCompilerTest.getPossibleComplianceLevels();
-	for (int[] map : complianceTestLevelMapping) {
-		if ((complianceLevels & map[0]) != 0) {
-			long complianceLevelForJavaVersion = ClassFileConstants.getComplianceLevelForJavaVersion(map[1]);
-			checkCompliance(evaluationTestClass, minimalCompliance, suite, complianceLevels, inheritedDepth, map[0], map[1], getVersionString(complianceLevelForJavaVersion));
-		}
-	}
-}
-protected static void checkCompliance(Class<?> evaluationTestClass, int minimalCompliance, TestSuite suite, int complianceLevels,
-		int inheritedDepth, int abstractCompilerTestCompliance, int classFileConstantsVersion, String release) {
-	int lev = complianceLevels & abstractCompilerTestCompliance;
-	if (lev != 0) {
-		if (lev < minimalCompliance) {
-			System.err.println("Cannot run "+evaluationTestClass.getName()+" at compliance " + release + "!");
-		} else {
-			suite.addTest(buildUniqueComplianceTestSuite(evaluationTestClass, ClassFileConstants.getComplianceLevelForJavaVersion(classFileConstantsVersion), inheritedDepth));
-		}
-	}
-}
-public static Test buildUniqueComplianceTestSuite(Class<?> evaluationTestClass, long uniqueCompliance, int inheritedDepth) {
-	long highestLevel = highestComplianceLevels();
-	if (highestLevel < uniqueCompliance) {
-		String complianceString;
-		if (highestLevel == ClassFileConstants.JDK10)
-			complianceString = "10";
-		else if (highestLevel == ClassFileConstants.JDK9)
-			complianceString = "9";
-		else if (highestLevel <= CompilerOptions.getFirstSupportedJdkLevel())
-			complianceString = CompilerOptions.getFirstSupportedJavaVersion();
-		else {
-			highestLevel = ClassFileConstants.getLatestJDKLevel();
-			if (highestLevel > 0) {
-				complianceString = CompilerOptions.versionFromJdkLevel(highestLevel);
-			} else {
-				complianceString = "unknown";
-			}
-
-		}
-
-		System.err.println("Cannot run "+evaluationTestClass.getName()+" at compliance "+complianceString+"!");
-		return new TestSuite();
-	}
-	TestSuite complianceSuite = new RegressionTestSetup(uniqueCompliance);
-	List<Test> tests = buildTestsList(evaluationTestClass, inheritedDepth);
-	for (int index=0, size=tests.size(); index<size; index++) {
-		complianceSuite.addTest(tests.get(index));
-	}
-	return complianceSuite;
-}
-
 
 @Override
 protected Map<String, String> getCompilerOptions() {

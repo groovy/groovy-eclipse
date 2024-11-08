@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.codeassist;
 
 import java.util.Map;
-
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -46,20 +45,7 @@ import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.env.IElementInfo;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
-import org.eclipse.jdt.internal.core.AnnotatableInfo;
-import org.eclipse.jdt.internal.core.Annotation;
-import org.eclipse.jdt.internal.core.CompilationUnit;
-import org.eclipse.jdt.internal.core.CompilationUnitElementInfo;
-import org.eclipse.jdt.internal.core.CompilationUnitStructureRequestor;
-import org.eclipse.jdt.internal.core.ImportContainer;
-import org.eclipse.jdt.internal.core.ImportDeclaration;
-import org.eclipse.jdt.internal.core.Initializer;
-import org.eclipse.jdt.internal.core.JavaElement;
-import org.eclipse.jdt.internal.core.PackageDeclaration;
-import org.eclipse.jdt.internal.core.SourceField;
-import org.eclipse.jdt.internal.core.SourceMethod;
-import org.eclipse.jdt.internal.core.SourceType;
-import org.eclipse.jdt.internal.core.TypeParameter;
+import org.eclipse.jdt.internal.core.*;
 import org.eclipse.jdt.internal.core.util.DeduplicationUtil;
 
 public class CompletionUnitStructureRequestor extends CompilationUnitStructureRequestor {

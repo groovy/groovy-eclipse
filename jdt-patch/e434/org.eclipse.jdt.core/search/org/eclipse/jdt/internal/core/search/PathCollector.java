@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.core.search;
 
 import java.util.HashSet;
 import java.util.Set;
-
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;

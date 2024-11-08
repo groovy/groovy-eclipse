@@ -16,7 +16,6 @@
 package org.eclipse.jdt.internal.compiler.apt.dispatch;
 
 import java.util.List;
-
 import javax.annotation.processing.Processor;
 
 /**

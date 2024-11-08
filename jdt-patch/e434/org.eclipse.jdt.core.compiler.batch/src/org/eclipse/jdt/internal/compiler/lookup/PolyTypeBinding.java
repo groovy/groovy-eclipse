@@ -17,7 +17,6 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import org.eclipse.jdt.internal.compiler.ast.Expression;
-import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 
 public class PolyTypeBinding extends TypeBinding {
 
@@ -75,8 +74,7 @@ public class PolyTypeBinding extends TypeBinding {
 
 	@Override
 	public char[] shortReadableName() {
-		return this.expression instanceof LambdaExpression ?
-				((LambdaExpression) this.expression).printExpression(0, new StringBuilder(), true).toString().toCharArray() : readableName();
+		return this.expression.printExpression(0, new StringBuilder(), true).toString().toCharArray();
 	}
 
 	@Override

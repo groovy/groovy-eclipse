@@ -22,7 +22,6 @@ Require-Bundle: org.junit;bundle-version="3.8.1",
  org.eclipse.test;bundle-version="[3.6.0,4.0.0)",
  org.eclipse.test.performance;bundle-version="[3.10.0,4.0.0)",
  org.eclipse.core.resources;bundle-version="[3.21.0,4.0.0)",
- org.eclipse.jdt.annotation;bundle-version="[1.1.0,2.0.0)";resolution:=optional,
  org.eclipse.jdt.annotation;bundle-version="[2.0.0,3.0.0)";resolution:=optional
 Import-Package: jakarta.annotation;version="[2.1.0,3.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-17

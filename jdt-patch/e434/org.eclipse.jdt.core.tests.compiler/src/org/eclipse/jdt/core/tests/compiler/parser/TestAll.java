@@ -18,14 +18,12 @@ package org.eclipse.jdt.core.tests.compiler.parser;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import junit.framework.Test;
+import junit.framework.TestSuite;
 import org.eclipse.jdt.core.tests.compiler.regression.JEP286ReservedWordTest;
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * Run all parser regression tests

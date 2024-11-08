@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core;
 
 import java.util.ArrayList;
-
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IInitializer;
 import org.eclipse.jdt.core.IMethod;

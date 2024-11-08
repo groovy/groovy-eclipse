@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core.dom.rewrite.imports;
 
 import java.util.Comparator;
-
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.JavaProject;

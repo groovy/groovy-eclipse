@@ -14,7 +14,6 @@
 package org.eclipse.jdt.core.tests.compiler.parser;
 
 import java.util.Locale;
-
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;

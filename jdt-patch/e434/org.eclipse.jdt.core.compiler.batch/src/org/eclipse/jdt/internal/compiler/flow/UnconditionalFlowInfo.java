@@ -27,7 +27,6 @@
 package org.eclipse.jdt.internal.compiler.flow;
 
 import java.util.Arrays;
-
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;

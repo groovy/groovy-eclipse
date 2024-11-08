@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.core.dom.rewrite;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.jdt.core.dom.ASTNode;
 
 @SuppressWarnings({"rawtypes", "unchecked"})

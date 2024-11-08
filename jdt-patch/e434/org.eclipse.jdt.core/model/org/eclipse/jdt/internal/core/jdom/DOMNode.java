@@ -14,8 +14,12 @@
 package org.eclipse.jdt.internal.core.jdom;
 
 import java.util.Enumeration;
-
-import org.eclipse.jdt.core.jdom.*;
+import org.eclipse.jdt.core.jdom.DOMException;
+import org.eclipse.jdt.core.jdom.DOMFactory;
+import org.eclipse.jdt.core.jdom.IDOMCompilationUnit;
+import org.eclipse.jdt.core.jdom.IDOMFactory;
+import org.eclipse.jdt.core.jdom.IDOMMethod;
+import org.eclipse.jdt.core.jdom.IDOMNode;
 import org.eclipse.jdt.internal.core.util.CharArrayBuffer;
 import org.eclipse.jdt.internal.core.util.Messages;
 

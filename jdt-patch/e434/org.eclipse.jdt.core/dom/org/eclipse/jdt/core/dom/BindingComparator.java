@@ -14,7 +14,6 @@
 package org.eclipse.jdt.core.dom;
 
 import java.util.HashSet;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;

@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -3188,6 +3187,19 @@ public final class AST {
 	 */
 	public TryStatement newTryStatement() {
 		return new TryStatement(this);
+	}
+
+	/**
+	 * Creates an unparented class declaration node owned by this AST.
+	 * The name of the class is an unspecified, but legal, name;
+	 * no modifiers; no doc comment; no superclass or superinterfaces;
+	 * and an empty class body.
+	 *
+	 * @return a new unparented type declaration node
+	 * @since 3.40
+	 */
+	public ImplicitTypeDeclaration newImplicitTypeDeclaration() {
+		return new ImplicitTypeDeclaration(this);
 	}
 
 	/**

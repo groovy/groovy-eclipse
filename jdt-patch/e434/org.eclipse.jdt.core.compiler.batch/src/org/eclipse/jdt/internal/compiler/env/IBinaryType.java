@@ -18,7 +18,6 @@
 package org.eclipse.jdt.internal.compiler.env;
 
 import java.net.URI;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.ExternalAnnotationStatus;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
@@ -95,13 +94,13 @@ char[] getGenericSignature();
 char[][] getInterfaceNames();
 
 /**
- * Answer the unresolved names of the receiver's permitted sub types
+ * Answer the unresolved names of the receiver's permitted subtypes in the
+ * class file format as specified in section 4.2 of the Java 2 VM spec
  * or null if the array is empty.
  *
- * A name is a simple name or a qualified, dot separated name.
- * For example, Hashtable or java.util.Hashtable.
+ * For example, java.lang.String is java/lang/String.
  */
-default char[][] getPermittedSubtypeNames() {
+default char[][] getPermittedSubtypesNames() {
 	return null;
 }
 

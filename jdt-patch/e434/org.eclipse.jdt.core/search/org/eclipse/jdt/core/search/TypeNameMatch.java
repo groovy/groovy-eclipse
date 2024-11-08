@@ -13,7 +13,11 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.search;
 
-import org.eclipse.jdt.core.*;
+import org.eclipse.jdt.core.IAccessRule;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMember;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.IType;
 
 /**
  * A match collected while {@link SearchEngine searching} for

@@ -17,7 +17,6 @@ import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 
 import java.io.IOException;
 import java.net.URI;
-
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;

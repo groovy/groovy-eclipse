@@ -16,7 +16,6 @@ package org.eclipse.jdt.internal.compiler.codegen;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 

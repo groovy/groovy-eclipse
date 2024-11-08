@@ -34,9 +34,9 @@ package org.eclipse.jdt.internal.codeassist.complete;
  * The arguments of the constructor call are all the arguments defined
  * before the cursor.
  */
-
-import org.eclipse.jdt.internal.compiler.ast.*;
-import org.eclipse.jdt.internal.compiler.lookup.*;
+import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
+import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
+import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 
 public class CompletionOnExplicitConstructorCall extends ExplicitConstructorCall implements CompletionNode {
 

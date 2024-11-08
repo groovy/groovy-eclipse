@@ -18,7 +18,6 @@ package org.eclipse.jdt.internal.compiler.apt.dispatch;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.jdt.internal.compiler.AbstractAnnotationProcessorManager;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;

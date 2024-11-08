@@ -15,7 +15,6 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
-
 import junit.framework.Test;
 
 @SuppressWarnings({ "rawtypes" })

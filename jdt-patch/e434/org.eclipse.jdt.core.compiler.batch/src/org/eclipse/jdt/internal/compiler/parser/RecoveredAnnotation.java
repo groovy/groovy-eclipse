@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008 IBM Corporation and others.
+ * Copyright (c) 2008, 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -13,16 +13,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.parser;
 
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.Annotation;
-import org.eclipse.jdt.internal.compiler.ast.Expression;
-import org.eclipse.jdt.internal.compiler.ast.MarkerAnnotation;
-import org.eclipse.jdt.internal.compiler.ast.MemberValuePair;
-import org.eclipse.jdt.internal.compiler.ast.NormalAnnotation;
-import org.eclipse.jdt.internal.compiler.ast.SingleMemberAnnotation;
-import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.ast.*;
 
 public class RecoveredAnnotation extends RecoveredElement {
 	public static final int MARKER = 0;
@@ -30,12 +21,13 @@ public class RecoveredAnnotation extends RecoveredElement {
 	public static final int SINGLE_MEMBER = 2;
 
 	private int kind;
-	private final int identifierPtr;
+	final int identifierPtr;
 	private final int identifierLengthPtr;
 	private final int sourceStart;
 	public boolean hasPendingMemberValueName;
 	public int memberValuPairEqualEnd = -1;
 	public Annotation annotation;
+	public int errorToken;
 
 	public RecoveredAnnotation(int identifierPtr, int identifierLengthPtr, int sourceStart, RecoveredElement parent, int bracketBalance) {
 		super(parent, bracketBalance);
@@ -79,16 +71,24 @@ public class RecoveredAnnotation extends RecoveredElement {
 			boolean needUpdateRParenPos = false;
 
 			MemberValuePair pendingMemberValueName = null;
+			Expression singleValue = null;
 			if (this.hasPendingMemberValueName && this.identifierPtr < parser.identifierPtr) {
 				char[] memberValueName = parser.identifierStack[this.identifierPtr + 1];
 
 				long pos = parser.identifierPositionStack[this.identifierPtr + 1];
 				int start = (int) (pos >>> 32);
 				int end = (int)pos;
-				int valueEnd = this.memberValuPairEqualEnd > -1 ? this.memberValuPairEqualEnd : end;
 
-				SingleNameReference fakeExpression = new SingleNameReference(RecoveryScanner.FAKE_IDENTIFIER, (((long) valueEnd + 1) << 32) + (valueEnd));
-				pendingMemberValueName = new MemberValuePair(memberValueName, start, end, fakeExpression);
+				if (this.errorToken == TerminalTokens.TokenNameDOT) {
+					// do we need to consult identifierLengthStack to pull more than one name segment?
+					char[][] qname = new char[][] { memberValueName, RecoveryScanner.FAKE_IDENTIFIER };
+					singleValue = new QualifiedNameReference(qname, new long[] {pos,pos}, start, end);
+					this.kind = SINGLE_MEMBER;
+				} else {
+					int valueEnd = this.memberValuPairEqualEnd > -1 ? this.memberValuPairEqualEnd : end;
+					SingleNameReference fakeExpression = new SingleNameReference(RecoveryScanner.FAKE_IDENTIFIER, (((long) valueEnd + 1) << 32) + (valueEnd));
+					pendingMemberValueName = new MemberValuePair(memberValueName, start, end, fakeExpression);
+				}
 			}
 			parser.identifierPtr = this.identifierPtr;
 			parser.identifierLengthPtr = this.identifierLengthPtr;
@@ -145,9 +145,10 @@ public class RecoveredAnnotation extends RecoveredElement {
 
 					break;
 				case SINGLE_MEMBER:
-					if (parser.expressionPtr > -1) {
-						Expression memberValue = parser.expressionStack[parser.expressionPtr--];
-
+					Expression memberValue = singleValue != null ? singleValue
+							: parser.expressionPtr > -1 ? parser.expressionStack[parser.expressionPtr--]
+							: null;
+					if (memberValue != null) {
 						SingleMemberAnnotation singleMemberAnnotation = new SingleMemberAnnotation(typeReference, this.sourceStart);
 						singleMemberAnnotation.memberValue = memberValue;
 						singleMemberAnnotation.declarationSourceEnd = memberValue.sourceEnd;
@@ -198,6 +199,10 @@ public class RecoveredAnnotation extends RecoveredElement {
 
 	public void setKind(int kind) {
 		this.kind = kind;
+	}
+
+	public int sourceStart() {
+		return this.sourceStart;
 	}
 
 	@Override

@@ -16,7 +16,6 @@ package org.eclipse.jdt.core.tests.compiler.parser;
 import java.io.File;
 import java.io.IOException;
 import junit.framework.Test;
-
 import org.eclipse.jdt.core.tests.util.CompilerTestSetup;
 
 @SuppressWarnings({ "rawtypes" })

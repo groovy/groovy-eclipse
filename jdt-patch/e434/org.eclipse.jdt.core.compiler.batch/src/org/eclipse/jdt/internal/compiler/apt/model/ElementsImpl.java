@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2023 BEA Systems, Inc. and others
+ * Copyright (c) 2006, 2024 BEA Systems, Inc. and others
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -41,7 +40,6 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.apt.dispatch.BaseProcessingEnvImpl;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
@@ -49,19 +47,7 @@ import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Javadoc;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
-import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
-import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
-import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
-import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
-import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
-import org.eclipse.jdt.internal.compiler.lookup.MethodVerifier;
-import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
-import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TagBits;
-import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
+import org.eclipse.jdt.internal.compiler.lookup.*;
 
 /**
  * Utilities for working with java8 and earlier language elements.
@@ -72,7 +58,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 public class ElementsImpl implements Elements {
 
 	// Used for parsing Javadoc comments: matches initial delimiter, followed by whitespace
-	private static final Pattern INITIAL_DELIMITER = Pattern.compile("^\\s*/\\*+"); //$NON-NLS-1$
+	protected static final Pattern INITIAL_DELIMITER = Pattern.compile("^\\s*/\\*+"); //$NON-NLS-1$
 
 	protected final BaseProcessingEnvImpl _env;
 
@@ -342,7 +328,7 @@ public class ElementsImpl implements Elements {
 	 * @param e an Element of any sort, possibly with a javadoc comment.
 	 * @return a String, or null if the comment is not available
 	 */
-	private char[] getUnparsedDocComment(Element e)
+	protected char[] getUnparsedDocComment(Element e)
 	{
 		Javadoc javadoc = null;
 		ReferenceContext referenceContext = null;
@@ -402,7 +388,8 @@ public class ElementsImpl implements Elements {
 		if (javadoc != null && referenceContext != null) {
 			char[] contents = referenceContext.compilationResult().getCompilationUnit().getContents();
 			if (contents != null) {
-				return CharOperation.subarray(contents, javadoc.sourceStart, javadoc.sourceEnd - 1);
+				// In case of markdown, the end of line is part of the source range
+				return CharOperation.subarray(contents, javadoc.sourceStart, javadoc.isMarkdown ? javadoc.sourceEnd : javadoc.sourceEnd - 1);
 			}
 		}
 		return null;
@@ -415,7 +402,7 @@ public class ElementsImpl implements Elements {
 	 * Javac's behavior with regard to tab expansion and trimming of whitespace and
 	 * asterisks is bizarre and undocumented.  We do our best here to emulate it.
 	 */
-	private static String formatJavadoc(char[] unparsed)
+	protected static String formatJavadoc(char[] unparsed)
 	{
 		if (unparsed == null || unparsed.length < 5) { // delimiters take 5 chars
 			return null;

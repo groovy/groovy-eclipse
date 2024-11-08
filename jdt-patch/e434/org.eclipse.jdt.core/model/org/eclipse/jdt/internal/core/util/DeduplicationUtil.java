@@ -17,7 +17,6 @@ package org.eclipse.jdt.internal.core.util;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.jdt.internal.core.JavaElement;
 
 /** Utility to provide deduplication by best effort. **/

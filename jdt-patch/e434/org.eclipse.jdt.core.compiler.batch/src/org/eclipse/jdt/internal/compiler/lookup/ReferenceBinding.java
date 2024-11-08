@@ -53,20 +53,18 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.compiler.impl.JavaFeature;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 
@@ -2110,11 +2108,6 @@ public ReferenceBinding superclass() {
 }
 
 @Override
-public ReferenceBinding[] permittedTypes() {
-	return Binding.NO_PERMITTEDTYPES;
-}
-
-@Override
 public ReferenceBinding[] superInterfaces() {
 	return Binding.NO_SUPERINTERFACES;
 }
@@ -2377,10 +2370,8 @@ public MethodBinding getSingleAbstractMethod(Scope scope, boolean replaceWildcar
 		return this.singleAbstractMethod[index];
 	} else {
 		this.singleAbstractMethod = new MethodBinding[2];
-		// Sec 9.8 of sealed preview - A functional interface is an interface that is not declared sealed...
-		if (JavaFeature.SEALED_CLASSES.isSupported(scope.compilerOptions())
-				&& this.isSealed())
-			return this.singleAbstractMethod[index] = samProblemBinding;
+		if (this.isSealed())
+			return this.singleAbstractMethod[index] = samProblemBinding; // JLS 9.8
 	}
 
 	if (this.compoundName != null)
@@ -2556,24 +2547,24 @@ public boolean hasEnclosingInstanceContext() {
 	return false;
 }
 
-@Override
-public List<ReferenceBinding> getAllEnumerableReferenceTypes() {
+public List<ReferenceBinding> getAllEnumerableAvatars() {
 	if (!isSealed())
-		return Collections.emptyList();
+		throw new UnsupportedOperationException("Operation valid only on sealed types!"); //$NON-NLS-1$
 
 	Set<ReferenceBinding> permSet = new HashSet<>(Arrays.asList(permittedTypes()));
-	if (isClass() && (!isAbstract()))
+	if (isClass() && canBeInstantiated())
 		permSet.add(this);
 	Set<ReferenceBinding> oldSet = new HashSet<>(permSet);
 	do {
 		for (ReferenceBinding type : permSet) {
-			oldSet.addAll(Arrays.asList(type.permittedTypes()));
+			if (type.isSealed())
+				oldSet.addAll(Arrays.asList(type.permittedTypes()));
 		}
 		Set<ReferenceBinding> tmp = oldSet;
 		oldSet = permSet;
 		permSet = tmp;
 	} while (oldSet.size() != permSet.size());
-	return Arrays.asList(permSet.toArray(new ReferenceBinding[0]));
+	return new ArrayList<>(permSet);
 }
 
 // 5.1.6.1 Allowed Narrowing Reference Conversion

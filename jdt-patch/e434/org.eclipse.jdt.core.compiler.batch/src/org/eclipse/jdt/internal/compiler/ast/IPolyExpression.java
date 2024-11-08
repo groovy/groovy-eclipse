@@ -40,6 +40,7 @@ public interface IPolyExpression {
 	// Target type injection.
 	public void setExpectedType(TypeBinding targetType);
 	public TypeBinding invocationTargetType();
+	public TypeBinding expectedType();
 
 	// Compatibility checks.
 	public boolean isPotentiallyCompatibleWith(TypeBinding targetType, Scope scope);

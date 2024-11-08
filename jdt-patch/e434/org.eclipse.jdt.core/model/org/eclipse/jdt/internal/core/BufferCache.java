@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.core;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.internal.core.util.LRUCache;
 

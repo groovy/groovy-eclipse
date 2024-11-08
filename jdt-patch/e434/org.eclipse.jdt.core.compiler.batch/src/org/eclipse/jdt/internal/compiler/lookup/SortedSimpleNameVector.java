@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.Arrays;
-
 import org.eclipse.jdt.internal.compiler.util.SortedCharArrays;
 
 /**

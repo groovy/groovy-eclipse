@@ -14,10 +14,8 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
-
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
 import junit.framework.Test;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class MarkdownCommentsTest extends JavadocTest {
@@ -56,6 +54,7 @@ public class MarkdownCommentsTest extends JavadocTest {
 		options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.ENABLED);
 		options.put(CompilerOptions.OPTION_DocCommentSupport, this.docCommentSupport);
 		options.put(CompilerOptions.OPTION_ReportInvalidJavadoc, this.reportInvalidJavadoc);
+		options.put(CompilerOptions.OPTION_ReportUnusedImport, CompilerOptions.ERROR);
 		if (!CompilerOptions.IGNORE.equals(this.reportInvalidJavadoc)) {
 			options.put(CompilerOptions.OPTION_ReportInvalidJavadocTagsVisibility, this.reportInvalidJavadocVisibility);
 		}
@@ -608,6 +607,102 @@ public class MarkdownCommentsTest extends JavadocTest {
 					"Javadoc: Invalid parameters declaration\n" +
 					"----------\n",
 					JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+		} finally {
+			this.reportMissingJavadocTags = bkup;
+		}
+	}
+	public void test022() {
+		String bkup = this.reportMissingJavadocTags;
+		try {
+			this.reportMissingJavadocTags = CompilerOptions.IGNORE;
+			this.runConformTest(new String[] {
+					"X.java",
+					"""
+					import java.lang.annotation.Documented;
+					/**
+					 * Reference type {@link Documented}:
+					 */
+					public class X {
+						public static void main(String[] args) {
+							System.out.println("Hello");
+						}
+					}
+					"""},
+					"Hello");
+		} finally {
+			this.reportMissingJavadocTags = bkup;
+		}
+	}
+	public void test023() {
+		String bkup = this.reportMissingJavadocTags;
+		try {
+			this.reportMissingJavadocTags = CompilerOptions.IGNORE;
+			this.runNegativeTest(new String[] {
+					"X.java",
+					"""
+					import java.lang.annotation.Documented;
+					/**
+					 * Reference type but no reference here - :
+					 */
+					public class X {
+						public static void main(String[] args) {
+							System.out.println("Hello");
+						}
+					}
+					"""},
+					"----------\n" +
+					"1. ERROR in X.java (at line 1)\n" +
+					"	import java.lang.annotation.Documented;\n" +
+					"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+					"The import java.lang.annotation.Documented is never used\n" +
+					"----------\n");
+		} finally {
+			this.reportMissingJavadocTags = bkup;
+		}
+	}
+	public void test024() {
+		String bkup = this.reportMissingJavadocTags;
+		try {
+			this.reportMissingJavadocTags = CompilerOptions.IGNORE;
+			this.runConformTest(new String[] { "X.java",
+					"""
+					import java.lang.annotation.Documented;
+					///
+					/// Reference type {@link Documented}:
+					///
+					public class X {
+						public static void main(String[] args) {
+							System.out.println("Hello");
+						}
+					}
+					"""},
+					"Hello");
+		} finally {
+			this.reportMissingJavadocTags = bkup;
+		}
+	}
+	public void test025() {
+		String bkup = this.reportMissingJavadocTags;
+		try {
+			this.reportMissingJavadocTags = CompilerOptions.IGNORE;
+			this.runNegativeTest(new String[] { "X.java",
+					"""
+					import java.lang.annotation.Documented;
+					///
+					/// Reference type but no reference here:
+					///
+					public class X {
+						public static void main(String[] args) {
+							System.out.println("Hello");
+						}
+					}
+					"""},
+					"----------\n" +
+					"1. ERROR in X.java (at line 1)\n" +
+					"	import java.lang.annotation.Documented;\n" +
+					"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+					"The import java.lang.annotation.Documented is never used\n" +
+					"----------\n");
 		} finally {
 			this.reportMissingJavadocTags = bkup;
 		}

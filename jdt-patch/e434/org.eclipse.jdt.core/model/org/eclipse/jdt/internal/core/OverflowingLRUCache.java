@@ -16,7 +16,6 @@ package org.eclipse.jdt.internal.core;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
-
 import org.eclipse.jdt.internal.core.util.LRUCache;
 import org.eclipse.jdt.internal.core.util.Messages;
 

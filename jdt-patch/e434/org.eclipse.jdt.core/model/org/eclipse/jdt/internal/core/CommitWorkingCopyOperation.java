@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core;
 
 import java.io.UnsupportedEncodingException;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;

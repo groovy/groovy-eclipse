@@ -13,10 +13,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
 
+import java.util.Locale;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
-
-import java.util.*;
 
 public class ProblemFactory extends DefaultProblemFactory {
 

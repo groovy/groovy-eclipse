@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core;
 
 import java.io.InputStream;
-
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;

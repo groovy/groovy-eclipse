@@ -22,7 +22,6 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.Set;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 /**

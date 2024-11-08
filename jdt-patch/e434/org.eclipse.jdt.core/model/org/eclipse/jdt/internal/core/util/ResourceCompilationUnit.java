@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core.util;
 
 import java.lang.ref.SoftReference;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.compiler.CharOperation;

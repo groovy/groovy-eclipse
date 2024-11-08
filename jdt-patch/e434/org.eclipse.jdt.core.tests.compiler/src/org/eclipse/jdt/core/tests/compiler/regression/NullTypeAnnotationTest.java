@@ -24,9 +24,7 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-
 import junit.framework.Test;
-
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.Excuse;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -54,6 +52,13 @@ public class NullTypeAnnotationTest extends AbstractNullAnnotationTest {
 
 	public static Class testClass() {
 		return NullTypeAnnotationTest.class;
+	}
+
+	@Override
+	protected Map getCompilerOptions() {
+		Map defaultOptions = super.getCompilerOptions();
+		defaultOptions.put(CompilerOptions.OPTION_ReportUnusedLambdaParameter, CompilerOptions.IGNORE);
+		return defaultOptions;
 	}
 
 	// a list with nullable elements is used
@@ -18021,12 +18026,11 @@ public void testBug540264() {
 	);
 }
 public void testBug542707_1() {
-	if (!checkPreviewAllowed()) return; // switch expression
+	if (this.complianceLevel < ClassFileConstants.JDK14)
+		return;
 	// switch expression has a functional type with interesting type inference and various null issues:
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
-	runner.customOptions.put(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, JavaCore.ENABLED);
-	runner.customOptions.put(JavaCore.COMPILER_PB_REPORT_PREVIEW_FEATURES, JavaCore.IGNORE);
 	runner.classLibraries = this.LIBS;
 	runner.testFiles = new String[] {
 		"X.java",
@@ -19407,6 +19411,48 @@ public void testGH2325_b() {
 		"""
 	};
 	runner.classLibraries = this.LIBS;
+	runner.runConformTest();
+}
+public void testGH3192() {
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_SyntacticNullAnalysisForFields, CompilerOptions.ENABLED);
+	runner.customOptions.put(CompilerOptions.OPTION_AnnotationBasedResourceAnalysis, CompilerOptions.ENABLED);
+	runner.testFiles = new String[] {
+			"test/Test.java",
+			"""
+			package test;
+
+			public class Test {
+
+			  public void test(final MyClass myClass) {
+			    if (myClass.me == MyEnum.A) { }
+			  }
+			}
+			""",
+			"test/MyClass",
+			"""
+			package test;
+
+			public final class MyClass {
+
+			  public final MyEnum me;
+
+			  public MyClass(final MyEnum me) {
+			    this.me = me;
+			  }
+			}
+			""",
+			"test/MyEnum",
+			"""
+			package test;
+
+			public enum MyEnum {
+			  A,
+			  ;
+			}
+			"""
+		};
 	runner.runConformTest();
 }
 }

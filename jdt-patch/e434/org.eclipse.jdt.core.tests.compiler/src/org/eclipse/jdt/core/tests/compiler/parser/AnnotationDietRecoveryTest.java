@@ -15,9 +15,7 @@ package org.eclipse.jdt.core.tests.compiler.parser;
 
 import java.util.Locale;
 import java.util.Map;
-
 import junit.framework.Test;
-
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionParser;
@@ -39,6 +37,10 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 public class AnnotationDietRecoveryTest extends AbstractCompilerTest {
 	private static final boolean CHECK_ALL_PARSE = true;
 	public static boolean optimizeStringLiterals = false;
+
+	static {
+//		TESTS_NAMES = new String[] { "test0025" };
+	}
 
 public AnnotationDietRecoveryTest(String testName){
 	super(testName);
@@ -1212,7 +1214,7 @@ public void test0024() {
 		"public class X {\n" +
 		"  public X() {\n" +
 		"  }\n" +
-		"  void foo(int param1) {\n" +
+		"  void foo(int param1, @AnAnnotation(name) int param2) {\n" +
 		"  }\n" +
 		"}\n";
 
@@ -1222,7 +1224,7 @@ public void test0024() {
 		"  public X() {\n" +
 		"    super();\n" +
 		"  }\n" +
-		"  void foo(int param1) {\n" +
+		"  void foo(int param1, @AnAnnotation(name) int param2) {\n" +
 		"  }\n" +
 		"}\n";
 
@@ -1231,7 +1233,13 @@ public void test0024() {
 		expectedDietUnitToString;
 
 	String expectedCompletionDietUnitToString =
-		expectedDietUnitToString;
+		"package a;\n" +
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo(int param1) {\n" +
+		"  }\n" +
+		"}\n";
 
 	String testName = "<generic type recovery>";
 	checkParse(
@@ -1256,7 +1264,7 @@ public void test0025() {
 		"public class X {\n" +
 		"  public X() {\n" +
 		"  }\n" +
-		"  void foo(int param1) {\n" +
+		"  void foo(int param1, @AnAnnotation(name = $missing$) int param2) {\n" +
 		"  }\n" +
 		"}\n";
 
@@ -1266,7 +1274,7 @@ public void test0025() {
 		"  public X() {\n" +
 		"    super();\n" +
 		"  }\n" +
-		"  void foo(int param1) {\n" +
+		"  void foo(int param1, @AnAnnotation(name = $missing$) int param2) {\n" +
 		"  }\n" +
 		"}\n";
 
@@ -1274,7 +1282,13 @@ public void test0025() {
 		expectedDietUnitToString;
 
 	String expectedCompletionDietUnitToString =
-		expectedDietUnitToString;
+		"package a;\n" +
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo(int param1) {\n" +
+		"  }\n" +
+		"}\n";
 
 	String testName = "<generic type recovery>";
 	checkParse(
@@ -1299,7 +1313,7 @@ public void test0026() {
 		"public class X {\n" +
 		"  public X() {\n" +
 		"  }\n" +
-		"  void foo(int param1) {\n" +
+		"  void foo(int param1, @AnAnnotation @AnAnnotation1(name1 = \"a\",name2 = $missing$) int param2) {\n" +
 		"  }\n" +
 		"}\n";
 
@@ -1309,7 +1323,7 @@ public void test0026() {
 		"  public X() {\n" +
 		"    super();\n" +
 		"  }\n" +
-		"  void foo(int param1) {\n" +
+		"  void foo(int param1, @AnAnnotation @AnAnnotation1(name1 = \"a\",name2 = $missing$) int param2) {\n" +
 		"  }\n" +
 		"}\n";
 
@@ -1317,7 +1331,13 @@ public void test0026() {
 		expectedDietUnitToString;
 
 	String expectedCompletionDietUnitToString =
-		expectedDietUnitToString;
+		"package a;\n" +
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo(int param1) {\n" +
+		"  }\n" +
+		"}\n";
 
 	String testName = "<generic type recovery>";
 	checkParse(

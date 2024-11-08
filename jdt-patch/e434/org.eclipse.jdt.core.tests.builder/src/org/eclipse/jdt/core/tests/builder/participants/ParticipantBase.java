@@ -15,7 +15,6 @@ package org.eclipse.jdt.core.tests.builder.participants;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
-
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.compiler.BuildContext;
 import org.eclipse.jdt.core.compiler.CompilationParticipant;

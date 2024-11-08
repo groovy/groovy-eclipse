@@ -13,7 +13,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
-import org.eclipse.jdt.internal.compiler.impl.*;
+import org.eclipse.jdt.internal.compiler.impl.LongConstant;
 
 public class LongLiteralMinValue extends LongLiteral {
 

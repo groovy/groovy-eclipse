@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.compiler.util;
 
 import java.util.Arrays;
 import java.util.Comparator;
-
 import org.eclipse.jdt.internal.compiler.lookup.InferenceVariable;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;

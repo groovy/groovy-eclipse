@@ -38,24 +38,10 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
-import org.eclipse.jdt.internal.compiler.ast.ArrayAllocationExpression;
-import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
-import org.eclipse.jdt.internal.compiler.ast.Expression;
-import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.FunctionalExpression;
-import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
-import org.eclipse.jdt.internal.compiler.ast.OperatorIds;
-import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.OperandStack.OperandCategory;
 import org.eclipse.jdt.internal.compiler.flow.UnconditionalFlowInfo;
@@ -5758,30 +5744,6 @@ public void ixor() {
 	this.bCodeStream[this.classFileOffset++] = Opcodes.OPC_ixor;
 }
 
-final public void jsr(BranchLabel lbl) {
-	if (this.wideMode) {
-		jsr_w(lbl);
-		return;
-	}
-	this.countLabels = 0;
-	if (this.classFileOffset >= this.bCodeStream.length) {
-		resizeByteArray();
-	}
-	this.position++;
-	this.bCodeStream[this.classFileOffset++] = Opcodes.OPC_jsr;
-	lbl.branch();
-}
-
-final public void jsr_w(BranchLabel lbl) {
-	this.countLabels = 0;
-	if (this.classFileOffset >= this.bCodeStream.length) {
-		resizeByteArray();
-	}
-	this.position++;
-	this.bCodeStream[this.classFileOffset++] = Opcodes.OPC_jsr_w;
-	lbl.branchWide();
-}
-
 public void l2d() {
 	this.countLabels = 0;
 	if (this.classFileOffset >= this.bCodeStream.length) {
@@ -7245,26 +7207,6 @@ private final void resizeByteArray() {
 		requiredSize = this.classFileOffset + length;
 	}
 	System.arraycopy(this.bCodeStream, 0, this.bCodeStream = new byte[requiredSize], 0, length);
-}
-
-final public void ret(int index) {
-	this.countLabels = 0;
-	if (index > 255) { // Widen
-		if (this.classFileOffset + 3 >= this.bCodeStream.length) {
-			resizeByteArray();
-		}
-		this.position += 2;
-		this.bCodeStream[this.classFileOffset++] = Opcodes.OPC_wide;
-		this.bCodeStream[this.classFileOffset++] = Opcodes.OPC_ret;
-		writeUnsignedShort(index);
-	} else { // Don't Widen
-		if (this.classFileOffset + 1 >= this.bCodeStream.length) {
-			resizeByteArray();
-		}
-		this.position += 2;
-		this.bCodeStream[this.classFileOffset++] = Opcodes.OPC_ret;
-		this.bCodeStream[this.classFileOffset++] = (byte) index;
-	}
 }
 
 public void return_() {

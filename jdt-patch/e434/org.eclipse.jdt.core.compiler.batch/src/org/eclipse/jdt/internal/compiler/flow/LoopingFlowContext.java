@@ -33,7 +33,6 @@
 package org.eclipse.jdt.internal.compiler.flow;
 
 import java.util.ArrayList;
-
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FakedTrackingVariable;

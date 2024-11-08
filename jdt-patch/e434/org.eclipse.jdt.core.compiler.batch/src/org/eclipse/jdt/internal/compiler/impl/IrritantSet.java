@@ -140,7 +140,8 @@ public class IrritantSet {
 				|CompilerOptions.UnstableAutoModuleName
 				|CompilerOptions.PreviewFeatureUsed)
 			.set(CompilerOptions.InsufficientResourceManagement
-				|CompilerOptions.IncompatibleOwningContract);
+				|CompilerOptions.IncompatibleOwningContract
+				|CompilerOptions.UnusedLambdaParameter);
 		// default errors IF AnnotationBasedNullAnalysis is enabled:
 		COMPILER_DEFAULT_ERRORS.set(
 				CompilerOptions.NullSpecViolation
@@ -178,7 +179,8 @@ public class IrritantSet {
 			.set(CompilerOptions.DeadCode)
 			.set(CompilerOptions.UnusedObjectAllocation)
 			.set(CompilerOptions.UnusedTypeParameter)
-			.set(CompilerOptions.RedundantSpecificationOfTypeArguments);
+			.set(CompilerOptions.RedundantSpecificationOfTypeArguments)
+			.set(CompilerOptions.UnusedLambdaParameter);
 		STATIC_METHOD
 		    .set(CompilerOptions.MethodCanBePotentiallyStatic);
 		RESOURCE

@@ -16,19 +16,9 @@ package org.eclipse.jdt.core.search;
 
 import java.io.IOException;
 import java.util.regex.Pattern;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.jdt.core.IField;
-import org.eclipse.jdt.core.IImportDeclaration;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IMember;
-import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.IModularClassFile;
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.ITypeParameter;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -46,21 +36,7 @@ import org.eclipse.jdt.internal.core.search.StringOperation;
 import org.eclipse.jdt.internal.core.search.indexing.IIndexConstants;
 import org.eclipse.jdt.internal.core.search.indexing.QualifierQuery;
 import org.eclipse.jdt.internal.core.search.indexing.QualifierQuery.QueryCategory;
-import org.eclipse.jdt.internal.core.search.matching.AndPattern;
-import org.eclipse.jdt.internal.core.search.matching.ConstructorPattern;
-import org.eclipse.jdt.internal.core.search.matching.FieldPattern;
-import org.eclipse.jdt.internal.core.search.matching.LocalVariablePattern;
-import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
-import org.eclipse.jdt.internal.core.search.matching.MethodPattern;
-import org.eclipse.jdt.internal.core.search.matching.ModulePattern;
-import org.eclipse.jdt.internal.core.search.matching.OrPattern;
-import org.eclipse.jdt.internal.core.search.matching.PackageDeclarationPattern;
-import org.eclipse.jdt.internal.core.search.matching.PackageReferencePattern;
-import org.eclipse.jdt.internal.core.search.matching.QualifiedTypeDeclarationPattern;
-import org.eclipse.jdt.internal.core.search.matching.SuperTypeReferencePattern;
-import org.eclipse.jdt.internal.core.search.matching.TypeDeclarationPattern;
-import org.eclipse.jdt.internal.core.search.matching.TypeParameterPattern;
-import org.eclipse.jdt.internal.core.search.matching.TypeReferencePattern;
+import org.eclipse.jdt.internal.core.search.matching.*;
 
 
 /**
@@ -1978,7 +1954,7 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo) {
  *         		<td>Return only method reference expressions (e.g. <code>A :: foo</code>).
  *         		<tr>
  *         		<td>{@link IJavaSearchConstants#PERMITTYPE_TYPE_REFERENCE PERMITTYPE_TYPE_REFERENCE}
- *         		<td>Return only type references used as a permit type.
+ *         		<td>Return only type references used as a permitted type.
  * 			</table>
  * 	</li>
  *	</ul>

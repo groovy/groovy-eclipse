@@ -15,17 +15,7 @@
 package org.eclipse.jdt.internal.codeassist;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.CompletionContext;
-import org.eclipse.jdt.core.CompletionFlags;
-import org.eclipse.jdt.core.CompletionProposal;
-import org.eclipse.jdt.core.Flags;
-import org.eclipse.jdt.core.IAccessRule;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryMethod;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;

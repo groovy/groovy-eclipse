@@ -15,7 +15,6 @@
 package org.eclipse.jdt.internal.codeassist.impl;
 
 import java.util.Map;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 public class AssistOptions {

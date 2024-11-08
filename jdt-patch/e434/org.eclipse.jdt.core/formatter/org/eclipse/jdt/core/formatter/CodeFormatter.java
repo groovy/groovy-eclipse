@@ -14,11 +14,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.formatter;
 
+import java.util.Map;
 import org.eclipse.jdt.internal.compiler.util.Util;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.text.edits.TextEdit;
-
-import java.util.Map;
 
 /**
  * Specification for a generic source code formatter.

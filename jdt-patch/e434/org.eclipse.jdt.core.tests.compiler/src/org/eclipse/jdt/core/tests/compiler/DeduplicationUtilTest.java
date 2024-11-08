@@ -16,12 +16,10 @@ package org.eclipse.jdt.core.tests.compiler;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
-
-import org.eclipse.jdt.core.tests.junit.extension.TestCase;
-import org.eclipse.jdt.internal.core.util.DeduplicationUtil;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import org.eclipse.jdt.core.tests.junit.extension.TestCase;
+import org.eclipse.jdt.internal.core.util.DeduplicationUtil;
 
 public class DeduplicationUtilTest extends TestCase {
 

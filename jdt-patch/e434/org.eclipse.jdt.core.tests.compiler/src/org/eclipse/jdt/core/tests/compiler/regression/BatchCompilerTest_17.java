@@ -23,10 +23,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import org.eclipse.jdt.core.tests.compiler.regression.BatchCompilerTest.SubstringMatcher;
-
 import junit.framework.Test;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.tests.compiler.regression.BatchCompilerTest.SubstringMatcher;
+import org.eclipse.jdt.core.tests.util.Util;
 
 public class BatchCompilerTest_17 extends AbstractBatchCompilerTest {
 
@@ -45,6 +45,10 @@ public class BatchCompilerTest_17 extends AbstractBatchCompilerTest {
 
 	public BatchCompilerTest_17(String name) {
 		super(name);
+	}
+
+	static {
+		// TESTS_NAMES = new String [] { "testGHI1774_Expression" };
 	}
 
 	/**
@@ -146,5 +150,79 @@ public class BatchCompilerTest_17 extends AbstractBatchCompilerTest {
 		        false);
 
 		return "StdErr: " + error + " StdOut: " + output;
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1774
+	// Check behavior of expression switch in JDK18-
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3096#issuecomment-2417954288
+	public void testGHI1774_Expression() throws Exception {
+		String javaVersion = System.getProperty("java.version");
+		if (javaVersion != null && JavaCore.compareJavaVersions(javaVersion, "18") < 0)
+			return;
+		String path = LIB_DIR;
+		String libPath = null;
+		if (path.endsWith(File.separator)) {
+			libPath = path + "lib.jar";
+		} else {
+			libPath = path + File.separator + "lib.jar";
+		}
+		Util.createJar(new String[] {
+			"p/Color.java",
+			"package p;\n" +
+			"public enum Color {\n" +
+			"	R, Y;\n" +
+			"	public static Color getColor() {\n" +
+			"		return R;\n" +
+			"	}\n" +
+			"}",
+		},
+		libPath,
+		JavaCore.VERSION_18);
+		this.runConformTest(
+			new String[] {
+				"src/p/X.java",
+				"package p;\n"
+				+ "import p.Color;\n"
+				+ "public class X {\n"
+				+ "	public static void main(String argv[]) {\n"
+				+ "		Color c = Color.getColor();\n"
+				+ "		try {\n"
+				+ "			int a = switch (c) {\n"
+				+ "				case R -> 1;\n"
+				+ "				case Y -> 2;\n"
+				+ "			};\n"
+				+ "		} catch (IncompatibleClassChangeError e) {\n"
+				+ "			System.out.print(\"OK\");\n"
+				+ "		} catch (Exception e) {\n"
+				+ "			System.out.print(\"NOT OK: \" + e);\n"
+				+ "		}\n"
+				+ "			System.out.print(\"END\");\n"
+				+ "	}\n"
+				+ "}",
+			},
+			"\"" + OUTPUT_DIR +  File.separator + "src/p/X.java\""
+			+ " -cp \"" + LIB_DIR + File.separator + "lib.jar\""
+			+ " -sourcepath \"" + OUTPUT_DIR +  File.separator + "src\""
+			+ " -source 18 -warn:none"
+			+ " -d \"" + OUTPUT_DIR + File.separator + "bin\" ",
+			"",
+			"",
+			true);
+		this.verifier.execute("p.X", new String[] {OUTPUT_DIR + File.separator + "bin", libPath}, new String[0], new String[] {"--enable-preview"});
+		assertEquals("Incorrect output", "END", this.verifier.getExecutionOutput());
+		Util.createJar(new String[] {
+				"p/Color.java",
+				"package p;\n" +
+				"public enum Color {\n" +
+				"	R, Y, B;\n" +
+				"	public static Color getColor() {\n" +
+				"		return B;\n" +
+				"	}\n" +
+				"}",
+			},
+			libPath,
+			JavaCore.VERSION_18);
+		this.verifier.execute("p.X", new String[] {OUTPUT_DIR + File.separator + "bin", libPath}, new String[0], new String[] {"--enable-preview"});
+		assertEquals("Incorrect output", "OKEND", this.verifier.getExecutionOutput());
 	}
 }

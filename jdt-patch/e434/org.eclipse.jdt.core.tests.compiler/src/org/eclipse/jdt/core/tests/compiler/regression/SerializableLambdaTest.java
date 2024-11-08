@@ -25,7 +25,7 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import java.io.File;
 import java.lang.reflect.Modifier;
 import java.util.Map;
-
+import junit.framework.Test;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.core.util.IBootstrapMethodsEntry;
@@ -38,8 +38,6 @@ import org.eclipse.jdt.core.util.IConstantPoolEntry2;
 import org.eclipse.jdt.core.util.IMethodInfo;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.util.BootstrapMethodsAttribute;
-
-import junit.framework.Test;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class SerializableLambdaTest extends AbstractRegressionTest {

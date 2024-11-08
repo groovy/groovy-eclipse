@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
@@ -35,7 +34,7 @@ public MissingTypeBinding(PackageBinding packageBinding, char[][] compoundName, 
 	this.modifiers = ClassFileConstants.AccPublic;
 	this.superclass = null; // will be fixed up using #setMissingSuperclass(...)
 	this.superInterfaces = Binding.NO_SUPERINTERFACES;
-	this.permittedSubtypes = Binding.NO_PERMITTEDTYPES;
+	this.permittedTypes = Binding.NO_PERMITTED_TYPES;
 	this.typeVariables = Binding.NO_TYPE_VARIABLES;
 	this.memberTypes = Binding.NO_MEMBER_TYPES;
 	this.fields = Binding.NO_FIELDS;

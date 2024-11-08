@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core.dom.rewrite;
 
 import java.util.*;
-
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;

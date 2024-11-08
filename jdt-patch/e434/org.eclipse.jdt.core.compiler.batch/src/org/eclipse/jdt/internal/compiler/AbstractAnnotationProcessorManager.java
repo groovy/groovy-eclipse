@@ -15,7 +15,6 @@
 package org.eclipse.jdt.internal.compiler;
 
 import java.io.PrintWriter;
-
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;

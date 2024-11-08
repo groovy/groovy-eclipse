@@ -14,7 +14,6 @@
 package org.eclipse.jdt.core.dom;
 
 import java.util.function.Function;
-
 import org.eclipse.jdt.core.ICompilationUnit;
 
 /**

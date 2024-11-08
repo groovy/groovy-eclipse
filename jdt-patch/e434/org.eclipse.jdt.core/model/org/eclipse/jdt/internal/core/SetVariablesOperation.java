@@ -17,7 +17,6 @@ import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 
 import java.util.HashMap;
 import java.util.Iterator;
-
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;

@@ -16,7 +16,6 @@
 package org.eclipse.jdt.core.util;
 
 import java.util.Comparator;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;

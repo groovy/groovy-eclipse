@@ -13,12 +13,10 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
-
+import junit.framework.Test;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
-import junit.framework.Test;
 
 public class SuperAfterStatementsTest extends AbstractRegressionTest9 {
 
@@ -40,6 +38,20 @@ public class SuperAfterStatementsTest extends AbstractRegressionTest9 {
 	public SuperAfterStatementsTest(String testName) {
 		super(testName);
 	}
+
+	// ========= OPT-IN to run.javac mode: ===========
+	@Override
+	protected void setUp() throws Exception {
+		this.runJavacOptIn = true;
+		super.setUp();
+	}
+	@Override
+	protected void tearDown() throws Exception {
+		super.tearDown();
+		this.runJavacOptIn = false; // do it last, so super can still clean up
+	}
+	// =================================================
+
 	// Enables the tests to run individually
 	protected Map<String, String> getCompilerOptions(boolean preview) {
 		Map<String, String> defaultOptions = super.getCompilerOptions();
@@ -2184,4 +2196,173 @@ public class SuperAfterStatementsTest extends AbstractRegressionTest9 {
 				""";
 		runner.runNegativeTest();
 	}
+
+	public void testGH3094() {
+		Runner runner = new Runner(false);
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				public class X {
+					class Nested extends X1 {
+						X1 xy;
+						class DeeplyNested extends NestedInX1 {
+							DeeplyNested(float f) {
+								Nested.super.x1.super(); // Error here
+							}
+						}
+					}
+					public static void main(String... args) {
+						Nested nest = new X().new Nested();
+						nest.x1 = new X1();
+						nest.new DeeplyNested(1.1f);
+					}
+				}
+				class X1 {
+					X1 x1;
+					class NestedInX1 {}
+				}
+				"""
+			};
+		runner.runConformTest();
+	}
+
+	public void testGH3094_2() {
+		Runner runner = new Runner(false);
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				public class X {
+					class Nested extends X1 {
+						X1 xy;
+						class DeeplyNested extends NestedInX1 {
+							DeeplyNested(float f) {
+								Nested.this.x1.super();
+							}
+						}
+					}
+					public static void main(String... args) {
+						Nested nest = new X().new Nested();
+						nest.x1 = new X1();
+						nest.new DeeplyNested(1.1f);
+					}
+				}
+				class X1 {
+					X1 x1;
+					class NestedInX1 {}
+				}
+				"""
+			};
+		runner.runConformTest();
+	}
+
+	public void testGH3094_3() {
+		Runner runner = new Runner(false);
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				public class X {
+					class Nested extends X1 {
+						X1 xy;
+						Nested() {
+							class DeeplyNested extends NestedInX1 {
+								DeeplyNested(float f) {
+									Nested.this.x1.super();
+								}
+							}
+							super();
+						}
+					}
+				}
+				class X1 {
+					X1 x1;
+					class NestedInX1 {}
+				}
+				"""
+			};
+		runner.expectedCompilerLog =
+			"""
+			----------
+			1. WARNING in X.java (at line 5)
+				class DeeplyNested extends NestedInX1 {
+				      ^^^^^^^^^^^^
+			The type DeeplyNested is never used locally
+			----------
+			2. ERROR in X.java (at line 7)
+				Nested.this.x1.super();
+				^^^^^^^^^^^^^^
+			Cannot read field x1 in an early construction context
+			----------
+			""";
+		runner.runNegativeTest();
+	}
+
+	public void testGH3132() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				public class X {
+					class Nested {
+						Nested(Object o) {}
+					}
+					class AnotherNested extends Nested {
+						AnotherNested() {
+							super(new Object() { // Cannot instantiate class new Object(){} in an early construction context of class X.AnotherNested
+							});
+						}
+					}
+					public static void main(String... args) {
+						new X().new AnotherNested();
+					}
+				}
+				"""
+			};
+		runner.runConformTest();
+	}
+
+	public void testGH3132_2() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				class O {} // demonstrates the the bug was not specific to j.l.Object
+				public class X {
+					class Nested extends O {
+						Nested(Object o) {}
+					}
+					class AnotherNested extends Nested {
+						AnotherNested() {
+							super(new O() {
+							});
+						}
+					}
+					public static void main(String... args) {
+						new X().new AnotherNested();
+					}
+				}
+				"""
+			};
+		runner.runConformTest();
+	}
+
+	public void testGH3153() {
+		runConformTest(new String[] {
+			"X.java",
+			"""
+			public class X {
+			  public static void main(String[] argv) {
+			    class Inner {
+			      Inner() {
+			        class Local {}
+			        new Local() {}; // Error: No enclosing instance of the type X is accessible in scope
+			        super();
+			      }
+			    }
+			    new Inner();
+			  }
+			}
+			""" },
+			"");
+	}
+
 }

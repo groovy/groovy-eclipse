@@ -18,9 +18,7 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
-
 import junit.framework.Test;
-
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
@@ -5660,12 +5658,11 @@ public void testBug541705b() {
 	runner.runConformTest();
 }
 public void testBug542707_001() {
-	if (!checkPreviewAllowed()) return; // uses switch expression
+	if (this.complianceLevel < ClassFileConstants.JDK14) // switch expression
+		return;
 	Map options = getCompilerOptions();
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
-	options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.ENABLED);
-	options.put(CompilerOptions.OPTION_ReportPreviewFeatures, CompilerOptions.IGNORE);
 	runLeakTest(
 		new String[] {
 			"X.java",
@@ -5712,7 +5709,7 @@ public void testBug542707_001() {
 		options);
 }
 public void testBug542707_002() {
-	if (this.complianceLevel < ClassFileConstants.JDK15) return; // uses switch expression
+	if (this.complianceLevel < ClassFileConstants.JDK14) return; // uses switch expression
 	Map options = getCompilerOptions();
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
@@ -5780,12 +5777,11 @@ public void testBug542707_002() {
 		options);
 }
 public void testBug542707_003() {
-	if (!checkPreviewAllowed()) return; // uses switch expression
+	if (this.complianceLevel < ClassFileConstants.JDK14)
+		return;  // uses switch expression
 	Map options = getCompilerOptions();
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
-	options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.ENABLED);
-	options.put(CompilerOptions.OPTION_ReportPreviewFeatures, CompilerOptions.IGNORE);
 	runLeakTest(
 		new String[] {
 			"X.java",
@@ -5842,7 +5838,7 @@ public void testBug542707_003() {
 		options);
 }
 public void testBug486506() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // uses switch expression
+	if (this.complianceLevel < ClassFileConstants.JDK1_8) return;
 	Map options = getCompilerOptions();
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);

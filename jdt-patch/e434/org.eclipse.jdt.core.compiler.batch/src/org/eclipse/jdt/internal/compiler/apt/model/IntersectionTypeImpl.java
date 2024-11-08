@@ -14,15 +14,14 @@
 
 package org.eclipse.jdt.internal.compiler.apt.model;
 
-import org.eclipse.jdt.internal.compiler.apt.dispatch.BaseProcessingEnvImpl;
-import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
-
+import java.util.Arrays;
+import java.util.List;
 import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
-import java.util.Arrays;
-import java.util.List;
+import org.eclipse.jdt.internal.compiler.apt.dispatch.BaseProcessingEnvImpl;
+import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 
 /**
  * Implementation of the WildcardType

@@ -65,10 +65,15 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -1147,6 +1152,18 @@ public abstract class Scope {
 			if (scope instanceof ClassScope) return (ClassScope) scope;
 		}
 		return null; // may answer null if no type around
+	}
+
+	public ClassScope enclosingInstanceScope() {
+		Scope scope = this;
+		while (true) {
+			scope = scope.parent;
+			if (scope == null || scope instanceof MethodScope ms && ms.isStatic) {
+				return null;
+			} else if (scope instanceof ClassScope cs) {
+				return cs;
+			}
+		}
 	}
 
 	public final ClassScope enclosingTopMostClassScope() {
@@ -3816,15 +3833,38 @@ public abstract class Scope {
 	}
 
 	/**
-	 * Returns the immediately enclosing switchCase statement (carried by closest blockScope),
+	 * Returns the immediately enclosing case statement (carried by closest blockScope),
 	 */
-	public CaseStatement innermostSwitchCase() {
+	public CaseStatement enclosingSwitchLabel() {
 		Scope scope = this;
 		do {
-			if (scope instanceof BlockScope)
-				return ((BlockScope) scope).enclosingCase;
+			if (scope instanceof BlockScope bs)
+				return bs.enclosingCase;
 			scope = scope.parent;
 		} while (scope != null);
+		return null;
+	}
+
+	/**
+	 * Returns the immediately enclosing switch expression (carried by closest blockScope),
+	 */
+	public SwitchExpression enclosingSwitchExpression() {
+		Scope current = this;
+		do {
+			switch(current.kind) {
+				case METHOD_SCOPE :
+				case CLASS_SCOPE :
+				case COMPILATION_UNIT_SCOPE :
+				case MODULE_SCOPE :
+					return null;
+				case BLOCK_SCOPE: {
+					BlockScope bs = (BlockScope) current;
+					if (bs.enclosingCase != null && bs.enclosingCase.swich instanceof SwitchExpression se)
+						return se;
+					break;
+				}
+			}
+		} while ((current = current.parent) != null);
 		return null;
 	}
 
@@ -5770,6 +5810,8 @@ public abstract class Scope {
 							|| (currentTarget instanceof ReferenceBinding currentRefBind && !currentRefBind.hasEnclosingInstanceContext())) {
 						break;
 					}
+					if (currentTarget.isStatic() || currentTarget.isLocalType())
+						break;
 					currentTarget = currentTarget.enclosingType();
 				}
 				currentEnclosing = currentEnclosing.parent.classScope();

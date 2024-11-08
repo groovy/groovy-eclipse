@@ -18,7 +18,6 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 import java.util.function.Consumer;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;

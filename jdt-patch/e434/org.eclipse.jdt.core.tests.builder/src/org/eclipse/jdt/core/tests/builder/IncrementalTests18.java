@@ -15,9 +15,7 @@ package org.eclipse.jdt.core.tests.builder;
 
 import java.io.File;
 import java.io.IOException;
-
 import junit.framework.Test;
-
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;

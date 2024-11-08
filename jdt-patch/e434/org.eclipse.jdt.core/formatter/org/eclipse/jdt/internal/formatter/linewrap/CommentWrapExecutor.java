@@ -23,13 +23,12 @@ import static org.eclipse.jdt.internal.formatter.CommentsPreparator.COMMENT_LINE
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.jdt.internal.formatter.DefaultCodeFormatterOptions;
 import org.eclipse.jdt.internal.formatter.Token;
-import org.eclipse.jdt.internal.formatter.TokenManager;
-import org.eclipse.jdt.internal.formatter.TokenTraverser;
 import org.eclipse.jdt.internal.formatter.Token.WrapMode;
 import org.eclipse.jdt.internal.formatter.Token.WrapPolicy;
+import org.eclipse.jdt.internal.formatter.TokenManager;
+import org.eclipse.jdt.internal.formatter.TokenTraverser;
 
 public class CommentWrapExecutor extends TokenTraverser {
 

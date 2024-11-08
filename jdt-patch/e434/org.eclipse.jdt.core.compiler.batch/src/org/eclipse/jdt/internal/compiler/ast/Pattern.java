@@ -139,25 +139,37 @@ public abstract class Pattern extends Expression {
 	}
 
 	// 14.30.3 Properties of Patterns: A pattern p is said to be applicable at a type T if ...
-	protected boolean isApplicable(TypeBinding other, BlockScope scope) {
-		TypeBinding patternType = this.resolvedType;
-		if (patternType == null) // ill resolved pattern
-			return false;
+	protected boolean isApplicable(TypeBinding expressionType, BlockScope scope, ASTNode location) {
+		if (expressionType == TypeBinding.NULL)
+			return true;
+		TypeReference typeRef = getType();
+		if (typeRef == null)
+			return true; // nothing to be checked for wildcard '_'
+		TypeBinding patternType = typeRef.resolvedType;
+		if (patternType == null || !patternType.isValidBinding() || !expressionType.isValidBinding())
+			return false; // problem already reported
+
 		// 14.30.3 Properties of Patterns doesn't allow boxing nor unboxing, primitive widening/narrowing (< JLS23)
-		if (patternType.isBaseType() != other.isBaseType() && !JavaFeature.PRIMITIVES_IN_PATTERNS.isSupported(scope.compilerOptions())) {
-			scope.problemReporter().incompatiblePatternType(this, other, patternType);
+		if (patternType.isBaseType() != expressionType.isBaseType() && !JavaFeature.PRIMITIVES_IN_PATTERNS.isSupported(scope.compilerOptions())) {
+			scope.problemReporter().notCompatibleTypesError(location, expressionType, patternType);
 			return false;
 		}
 		if (patternType.isBaseType()) {
 			PrimitiveConversionRoute route = Pattern.findPrimitiveConversionRoute(this.resolvedType, this.outerExpressionType, scope);
-			if (!TypeBinding.equalsEquals(other, patternType)
+			if (!TypeBinding.equalsEquals(expressionType, patternType)
 					&& route == PrimitiveConversionRoute.NO_CONVERSION_ROUTE) {
-				scope.problemReporter().incompatiblePatternType(this, other, patternType);
+				scope.problemReporter().notCompatibleTypesError(location, expressionType, patternType);
 				return false;
 			}
-		} else if (!checkCastTypesCompatibility(scope, other, patternType, null, true)) {
-			scope.problemReporter().incompatiblePatternType(this, other, patternType);
-			return false;
+		} else {
+			if (!checkCastTypesCompatibility(scope, patternType, expressionType, null, true)) {
+				scope.problemReporter().notCompatibleTypesError(location, expressionType, patternType);
+				return false;
+			}
+			if ((this.bits & ASTNode.UnsafeCast) != 0) {
+				scope.problemReporter().unsafeCastInTestingContext(location, patternType, this.outerExpressionType);
+				return false;
+			}
 		}
 		return true;
 	}

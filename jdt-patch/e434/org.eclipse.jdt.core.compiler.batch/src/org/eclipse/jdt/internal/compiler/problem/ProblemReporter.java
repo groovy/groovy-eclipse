@@ -88,7 +88,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
@@ -96,76 +95,7 @@ import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
-import org.eclipse.jdt.internal.compiler.ast.Annotation;
-import org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.Argument;
-import org.eclipse.jdt.internal.compiler.ast.ArrayAllocationExpression;
-import org.eclipse.jdt.internal.compiler.ast.ArrayInitializer;
-import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
-import org.eclipse.jdt.internal.compiler.ast.ArrayReference;
-import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
-import org.eclipse.jdt.internal.compiler.ast.Assignment;
-import org.eclipse.jdt.internal.compiler.ast.BinaryExpression;
-import org.eclipse.jdt.internal.compiler.ast.Block;
-import org.eclipse.jdt.internal.compiler.ast.BranchStatement;
-import org.eclipse.jdt.internal.compiler.ast.CaseStatement;
-import org.eclipse.jdt.internal.compiler.ast.CastExpression;
-import org.eclipse.jdt.internal.compiler.ast.ClassLiteralAccess;
-import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.CompoundAssignment;
-import org.eclipse.jdt.internal.compiler.ast.ConditionalExpression;
-import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.EqualExpression;
-import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
-import org.eclipse.jdt.internal.compiler.ast.Expression;
-import org.eclipse.jdt.internal.compiler.ast.ExpressionContext;
-import org.eclipse.jdt.internal.compiler.ast.FakedTrackingVariable;
-import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.FieldReference;
-import org.eclipse.jdt.internal.compiler.ast.FunctionalExpression;
-import org.eclipse.jdt.internal.compiler.ast.ImportReference;
-import org.eclipse.jdt.internal.compiler.ast.Initializer;
-import org.eclipse.jdt.internal.compiler.ast.InstanceOfExpression;
-import org.eclipse.jdt.internal.compiler.ast.LabeledStatement;
-import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
-import org.eclipse.jdt.internal.compiler.ast.Literal;
-import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.MemberValuePair;
-import org.eclipse.jdt.internal.compiler.ast.MessageSend;
-import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ModuleReference;
-import org.eclipse.jdt.internal.compiler.ast.NameReference;
-import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching;
-import org.eclipse.jdt.internal.compiler.ast.NullLiteral;
-import org.eclipse.jdt.internal.compiler.ast.OpensStatement;
-import org.eclipse.jdt.internal.compiler.ast.PackageVisibilityStatement;
-import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
-import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
-import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
-import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
-import org.eclipse.jdt.internal.compiler.ast.QualifiedSuperReference;
-import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
-import org.eclipse.jdt.internal.compiler.ast.Receiver;
-import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
-import org.eclipse.jdt.internal.compiler.ast.RecordPattern;
-import org.eclipse.jdt.internal.compiler.ast.Reference;
-import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
-import org.eclipse.jdt.internal.compiler.ast.ReturnStatement;
-import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
-import org.eclipse.jdt.internal.compiler.ast.Statement;
-import org.eclipse.jdt.internal.compiler.ast.SwitchExpression;
-import org.eclipse.jdt.internal.compiler.ast.SwitchStatement;
-import org.eclipse.jdt.internal.compiler.ast.ThisReference;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
-import org.eclipse.jdt.internal.compiler.ast.UnaryExpression;
-import org.eclipse.jdt.internal.compiler.ast.Wildcard;
+import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
@@ -176,40 +106,8 @@ import org.eclipse.jdt.internal.compiler.impl.IrritantSet;
 import org.eclipse.jdt.internal.compiler.impl.JavaFeature;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.impl.StringConstant;
-import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
-import org.eclipse.jdt.internal.compiler.lookup.Binding;
-import org.eclipse.jdt.internal.compiler.lookup.CaptureBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
-import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
-import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
-import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
-import org.eclipse.jdt.internal.compiler.lookup.InvocationSite;
-import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
-import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
-import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
-import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
-import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
-import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ParameterizedGenericMethodBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ProblemMethodBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
-import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
-import org.eclipse.jdt.internal.compiler.lookup.RecordComponentBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-import org.eclipse.jdt.internal.compiler.lookup.Scope;
-import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.SplitPackageBinding;
-import org.eclipse.jdt.internal.compiler.lookup.SyntheticArgumentBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TagBits;
-import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
+import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants.DangerousMethod;
-import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
-import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
-import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
-import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
 import org.eclipse.jdt.internal.compiler.parser.JavadocTagConstants;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.parser.RecoveryScanner;
@@ -303,6 +201,9 @@ public static int getIrritant(int problemID) {
 
 		case IProblem.LocalVariableIsNeverUsed :
 			return CompilerOptions.UnusedLocalVariable;
+
+		case IProblem.LambdaParameterIsNeverUsed :
+			return CompilerOptions.UnusedLambdaParameter;
 
 		case IProblem.ArgumentIsNeverUsed :
 			return CompilerOptions.UnusedArgument;
@@ -808,6 +709,7 @@ public static int getProblemCategory(int severity, int problemID) {
 				return CategorizedProblem.CAT_NAME_SHADOWING_CONFLICT;
 
 			case CompilerOptions.UnusedLocalVariable :
+			case CompilerOptions.UnusedLambdaParameter :
 			case CompilerOptions.UnusedArgument :
 			case CompilerOptions.UnusedExceptionParameter :
 			case CompilerOptions.UnusedImport :
@@ -922,6 +824,16 @@ public void abortDueToNotSupportedJavaVersion(String notSupportedVersion, String
 			args,
 			args,
 			ProblemSeverities.Error | ProblemSeverities.Abort | ProblemSeverities.Fatal,
+			0,
+			0);
+}
+public void tooRecentJavaVersion(String notSupportedVersion, String firstSupportedVersion) {
+	String[] args = new String[] {notSupportedVersion, firstSupportedVersion};
+	this.handle(
+			IProblem.JavaVersionTooRecent,
+			args,
+			args,
+			ProblemSeverities.Warning,
 			0,
 			0);
 }
@@ -1770,9 +1682,6 @@ public int computeSeverity(int problemID){
 
 	switch (problemID) {
 		case IProblem.VarargsConflict :
- 		case IProblem.SwitchExpressionsYieldUnqualifiedMethodWarning:
- 		case IProblem.SwitchExpressionsYieldRestrictedGeneralWarning:
- 		case IProblem.SwitchExpressionsYieldTypeDeclarationWarning:
  		case IProblem.StrictfpNotRequired:
  			return ProblemSeverities.Warning;
  		case IProblem.TypeCollidesWithPackage :
@@ -3455,7 +3364,7 @@ public void illegalVisibilityModifierCombinationForField(ReferenceBinding type, 
 		fieldDecl.sourceStart,
 		fieldDecl.sourceEnd);
 }
-public void IllegalModifierCombinationForType(SourceTypeBinding type) {
+public void illegalModifierCombinationForType(SourceTypeBinding type) {
 	String[] arguments = new String[] {new String(type.sourceName())};
 	this.handle(
 		IProblem.IllegalModifierCombinationForType,
@@ -5011,7 +4920,7 @@ public void invalidType(ASTNode location, TypeBinding type) {
 			}
 		}
 
-		if (type.isParameterizedType()) {
+		if (!(type instanceof MissingTypeBinding)) {
 			List<TypeBinding> missingTypes = type.collectMissingTypes(null);
 			if (missingTypes != null) {
 				ReferenceContext savedContext = this.referenceContext;
@@ -5342,82 +5251,7 @@ public void isClassPathCorrect(char[][] wellKnownTypeName, CompilationUnitDeclar
 private boolean isIdentifier(int token) {
 	return token == TerminalTokens.TokenNameIdentifier;
 }
-private boolean isRestrictedIdentifier(int token) {
-	switch(token) {
-		case TerminalTokens.TokenNameRestrictedIdentifierYield:
-		case TerminalTokens.TokenNameRestrictedIdentifierrecord:
-		case TerminalTokens.TokenNameRestrictedIdentifiersealed:
-		case TerminalTokens.TokenNameRestrictedIdentifierpermits:
-		case TerminalTokens.TokenNameRestrictedIdentifierWhen:
-			return true;
-		default: return false;
-	}
-}
-private boolean isKeyword(int token) {
-	switch(token) {
-		case TerminalTokens.TokenNameabstract:
-		case TerminalTokens.TokenNameassert:
-		case TerminalTokens.TokenNamebyte:
-		case TerminalTokens.TokenNamebreak:
-		case TerminalTokens.TokenNameboolean:
-		case TerminalTokens.TokenNamecase:
-		case TerminalTokens.TokenNamechar:
-		case TerminalTokens.TokenNamecatch:
-		case TerminalTokens.TokenNameclass:
-		case TerminalTokens.TokenNamecontinue:
-		case TerminalTokens.TokenNamedo:
-		case TerminalTokens.TokenNamedouble:
-		case TerminalTokens.TokenNamedefault:
-		case TerminalTokens.TokenNameelse:
-		case TerminalTokens.TokenNameextends:
-		case TerminalTokens.TokenNamefor:
-		case TerminalTokens.TokenNamefinal:
-		case TerminalTokens.TokenNamefloat:
-		case TerminalTokens.TokenNamefalse:
-		case TerminalTokens.TokenNamefinally:
-		case TerminalTokens.TokenNameif:
-		case TerminalTokens.TokenNameint:
-		case TerminalTokens.TokenNameimport:
-		case TerminalTokens.TokenNameinterface:
-		case TerminalTokens.TokenNameimplements:
-		case TerminalTokens.TokenNameinstanceof:
-		case TerminalTokens.TokenNamelong:
-		case TerminalTokens.TokenNamenew:
-		case TerminalTokens.TokenNamenon_sealed:
-		case TerminalTokens.TokenNamenull:
-		case TerminalTokens.TokenNamenative:
-		case TerminalTokens.TokenNamepublic:
-		case TerminalTokens.TokenNamepackage:
-		case TerminalTokens.TokenNameprivate:
-		case TerminalTokens.TokenNameprotected:
-		case TerminalTokens.TokenNamereturn:
-		case TerminalTokens.TokenNameshort:
-		case TerminalTokens.TokenNamesuper:
-		case TerminalTokens.TokenNamestatic:
-		case TerminalTokens.TokenNameswitch:
-		case TerminalTokens.TokenNamestrictfp:
-		case TerminalTokens.TokenNamesynchronized:
-		case TerminalTokens.TokenNametry:
-		case TerminalTokens.TokenNamethis:
-		case TerminalTokens.TokenNametrue:
-		case TerminalTokens.TokenNamethrow:
-		case TerminalTokens.TokenNamethrows:
-		case TerminalTokens.TokenNametransient:
-		case TerminalTokens.TokenNamevoid:
-		case TerminalTokens.TokenNamevolatile:
-		case TerminalTokens.TokenNamewhile:
-			return true;
-		case TerminalTokens.TokenNameRestrictedIdentifierYield:
-		case TerminalTokens.TokenNameRestrictedIdentifierrecord:
-		case TerminalTokens.TokenNameRestrictedIdentifiersealed:
-		case TerminalTokens.TokenNameRestrictedIdentifierpermits:
-		case TerminalTokens.TokenNameRestrictedIdentifierWhen:
-			// making explicit - not a (restricted) keyword but restricted identifier.
-			//$FALL-THROUGH$
-		default:
-			return false;
-	}
-}
+
 private boolean isLiteral(int token) {
 	return Scanner.isLiteral(token);
 }
@@ -7539,7 +7373,7 @@ public void noSuchEnclosingInstance(TypeBinding targetType, ASTNode location, bo
 		location.sourceStart,
 		location instanceof LambdaExpression ? ((LambdaExpression)location).diagnosticsSourceEnd() : location.sourceEnd);
 }
-public void notCompatibleTypesError(EqualExpression expression, TypeBinding leftType, TypeBinding rightType) {
+public void notCompatibleTypesError(ASTNode location, TypeBinding leftType, TypeBinding rightType) {
 	String leftName = new String(leftType.readableName());
 	String rightName = new String(rightType.readableName());
 	String leftShortName = new String(leftType.shortReadableName());
@@ -7548,28 +7382,18 @@ public void notCompatibleTypesError(EqualExpression expression, TypeBinding left
 		leftShortName = leftName;
 		rightShortName = rightName;
 	}
-	this.handle(
-		IProblem.IncompatibleTypesInEqualityOperator,
-		new String[] {leftName, rightName },
-		new String[] {leftShortName, rightShortName },
-		expression.sourceStart,
-		expression.sourceEnd);
-}
-public void notCompatibleTypesError(Expression expression, TypeBinding leftType, TypeBinding rightType) {
-	String leftName = new String(leftType.readableName());
-	String rightName = new String(rightType.readableName());
-	String leftShortName = new String(leftType.shortReadableName());
-	String rightShortName = new String(rightType.shortReadableName());
-	if (leftShortName.equals(rightShortName)){
-		leftShortName = leftName;
-		rightShortName = rightName;
+	int problemId = IProblem.IncompatibleTypesInEqualityOperator;
+	if (location instanceof Pattern p && p.getEnclosingPattern() instanceof RecordPattern) {
+		problemId = IProblem.PatternTypeMismatch;
+	} else if (location instanceof InstanceOfExpression) {
+		problemId = IProblem.IncompatibleTypesInConditionalOperator;
 	}
 	this.handle(
-		IProblem.IncompatibleTypesInConditionalOperator,
+		problemId,
 		new String[] {leftName, rightName },
 		new String[] {leftShortName, rightShortName },
-		expression.sourceStart,
-		expression.sourceEnd);
+		location.sourceStart,
+		location.sourceEnd);
 }
 public void notCompatibleTypesErrorInForeach(Expression expression, TypeBinding leftType, TypeBinding rightType) {
 	String leftName = new String(leftType.readableName());
@@ -7789,7 +7613,7 @@ public void parseError(
 	String[] possibleTokens) {
 
 	if (possibleTokens.length == 0) { //no suggestion available
-		if (isKeyword(currentToken)) {
+		if (Scanner.isKeyword(currentToken)) {
 			String[] arguments = new String[] {new String(currentTokenSource)};
 			this.handle(
 				IProblem.ParsingErrorOnKeywordNoSuggestion,
@@ -7822,7 +7646,7 @@ public void parseError(
 		list.append('"');
 	}
 
-	if (isKeyword(currentToken)) {
+	if (Scanner.isKeyword(currentToken)) {
 		String[] arguments = new String[] {new String(currentTokenSource), list.toString()};
 		this.handle(
 			IProblem.ParsingErrorOnKeyword,
@@ -8678,14 +8502,14 @@ private void syntaxError(
 		return;
 	}
 	String eTokenName;
-	if (isKeyword(currentKind) ||
+	if (Scanner.isKeyword(currentKind) ||
 		isLiteral(currentKind) ||
 		isIdentifier(currentKind)) {
 			eTokenName = new String(currentTokenSource);
 	} else {
 		eTokenName = errorTokenName;
 	}
-	if (isRestrictedIdentifier(currentKind))
+	if (TerminalTokens.isRestrictedKeyword(currentKind))
 		eTokenName = replaceIfSynthetic(eTokenName);
 
 	String[] arguments;
@@ -8793,21 +8617,21 @@ public void typeCastError(CastExpression expression, TypeBinding leftType, TypeB
 		expression.sourceStart,
 		expression.sourceEnd);
 }
-public void unsafeCastInInstanceof(Expression expression, TypeBinding leftType, TypeBinding rightType) {
-	String leftName = new String(leftType.readableName());
-	String rightName = new String(rightType.readableName());
-	String leftShortName = new String(leftType.shortReadableName());
-	String rightShortName = new String(rightType.shortReadableName());
-	if (leftShortName.equals(rightShortName)){
-		leftShortName = leftName;
-		rightShortName = rightName;
+public void unsafeCastInTestingContext(ASTNode location, TypeBinding castType, TypeBinding expressionType) {
+	String castName = new String(castType.readableName());
+	String exprName = new String(expressionType.readableName());
+	String castShortName = new String(castType.shortReadableName());
+	String exprShortName = new String(expressionType.shortReadableName());
+	if (castShortName.equals(exprShortName)){
+		castShortName = castName;
+		exprShortName = exprName;
 	}
 	this.handle(
 		IProblem.UnsafeCast,
-		new String[] { rightName, leftName },
-		new String[] { rightShortName, leftShortName },
-		expression.sourceStart,
-		expression.sourceEnd);
+		new String[] { exprName, castName },
+		new String[] { exprShortName, castShortName },
+		location.sourceStart,
+		location.sourceEnd);
 }
 public void typeCollidesWithEnclosingType(TypeDeclaration typeDecl) {
 	String[] arguments = new String[] {new String(typeDecl.name)};
@@ -9693,6 +9517,18 @@ public void unusedLocalVariable(LocalDeclaration localDecl) {
 		localDecl.sourceStart,
 		localDecl.sourceEnd);
 }
+public void unusedLambdaParameter(LocalDeclaration localDecl) {
+	int severity = computeSeverity(IProblem.LambdaParameterIsNeverUsed);
+	if (severity == ProblemSeverities.Ignore) return;
+	String[] arguments = new String[] {new String(localDecl.name)};
+	this.handle(
+		IProblem.LambdaParameterIsNeverUsed,
+		arguments,
+		arguments,
+		severity,
+		localDecl.sourceStart,
+		localDecl.sourceEnd);
+}
 public void unusedObjectAllocation(AllocationExpression allocationExpression) {
 	this.handle(
 		IProblem.UnusedObjectAllocation,
@@ -9969,7 +9805,7 @@ public boolean validateRestrictedKeywords(char[] name, ASTNode node) {
 		close();
 	}
 }
-//Returns true if the problem is handled and reported (only errors considered and not warnings)
+// Returns true if the problem is handled and reported (only errors considered and not warnings)
 public boolean validateJavaFeatureSupport(JavaFeature feature, int sourceStart, int sourceEnd) {
 	boolean versionInRange = feature.getCompliance() <= this.options.sourceLevel;
 	String version = CompilerOptions.versionFromJdkLevel(feature.getCompliance());
@@ -11940,24 +11776,15 @@ public void moduleDoesNotReadOther(ImportReference importReference, ModuleBindin
 		importReference.sourceStart,
 		importReference.sourceEnd);
 }
-public void switchExpressionIncompatibleResultExpressions(SwitchExpression expression) {
-	TypeBinding type = expression.resultExpressions.get(0).resolvedType;
+public void incompatibleSwitchExpressionResults(SwitchExpression expression) {
 	this.handle(
 		IProblem.SwitchExpressionsYieldIncompatibleResultExpressionTypes,
-		new String[] {new String(type.readableName())},
-		new String[] {new String(type.shortReadableName())},
-		expression.sourceStart,
-		expression.sourceEnd);
-}
-public void switchExpressionEmptySwitchBlock(SwitchExpression expression) {
-	this.handle(
-		IProblem.SwitchExpressionsYieldEmptySwitchBlock,
 		NoArgument,
 		NoArgument,
 		expression.sourceStart,
 		expression.sourceEnd);
 }
-public void switchExpressionNoResultExpressions(SwitchExpression expression) {
+public void unyieldingSwitchExpression(SwitchExpression expression) {
 	this.handle(
 		IProblem.SwitchExpressionsYieldNoResultExpression,
 		NoArgument,
@@ -11965,15 +11792,7 @@ public void switchExpressionNoResultExpressions(SwitchExpression expression) {
 		expression.sourceStart,
 		expression.sourceEnd);
 }
-public void switchExpressionSwitchLabeledBlockCompletesNormally(Block block) {
-	this.handle(
-		IProblem.SwitchExpressionaYieldSwitchLabeledBlockCompletesNormally,
-		NoArgument,
-		NoArgument,
-		block.sourceEnd - 1,
-		block.sourceEnd);
-}
-public void switchExpressionLastStatementCompletesNormally(Statement stmt) {
+public void switchExpressionBlockCompletesNormally(Statement stmt) {
 	this.handle(
 		IProblem.SwitchExpressionaYieldSwitchLabeledBlockCompletesNormally,
 		NoArgument,
@@ -11981,23 +11800,7 @@ public void switchExpressionLastStatementCompletesNormally(Statement stmt) {
 		stmt.sourceEnd - 1,
 		stmt.sourceEnd);
 }
-public void switchExpressionIllegalLastStatement(Statement stmt) {
-	this.handle(
-		IProblem.SwitchExpressionsYieldIllegalLastStatement,
-		NoArgument,
-		NoArgument,
-		stmt.sourceStart,
-		stmt.sourceEnd);
-}
-public void switchExpressionTrailingSwitchLabels(Statement stmt) {
-	this.handle(
-		IProblem.SwitchExpressionsYieldTrailingSwitchLabels,
-		NoArgument,
-		NoArgument,
-		stmt.sourceStart,
-		stmt.sourceEnd);
-}
-public void switchExpressionMixedCase(ASTNode statement) {
+public void arrowColonMixup(ASTNode statement) {
 	this.handle(
 		IProblem.SwitchPreviewMixedCase,
 		NoArgument,
@@ -12005,24 +11808,7 @@ public void switchExpressionMixedCase(ASTNode statement) {
 		statement.sourceStart,
 		statement.sourceEnd);
 }
-// Is this redundant ?? See switchExpressionsBreakOutOfSwitchExpression
-public void switchExpressionBreakNotAllowed(ASTNode statement) {
-	this.handle(
-		IProblem.SwitchExpressionsYieldBreakNotAllowed,
-		NoArgument,
-		NoArgument,
-		statement.sourceStart,
-		statement.sourceEnd);
-}
-public void switchExpressionsYieldUnqualifiedMethodWarning(ASTNode statement) {
-	this.handle(
-		IProblem.SwitchExpressionsYieldUnqualifiedMethodWarning,
-		NoArgument,
-		NoArgument,
-		statement.sourceStart,
-		statement.sourceEnd);
-}
-public void switchExpressionsYieldUnqualifiedMethodError(ASTNode statement) {
+public void unqualifiedYieldMethod(ASTNode statement) {
 	this.handle(
 		IProblem.SwitchExpressionsYieldUnqualifiedMethodError,
 		NoArgument,
@@ -12030,41 +11816,9 @@ public void switchExpressionsYieldUnqualifiedMethodError(ASTNode statement) {
 		statement.sourceStart,
 		statement.sourceEnd);
 }
-public void switchExpressionsYieldOutsideSwitchExpression(ASTNode statement) {
+public void yieldOutsideSwitchExpression(ASTNode statement) {
 	this.handle(
 		IProblem.SwitchExpressionsYieldOutsideSwitchExpression,
-		NoArgument,
-		NoArgument,
-		statement.sourceStart,
-		statement.sourceEnd);
-}
-public void switchExpressionsYieldRestrictedGeneralWarning(ASTNode statement) {
-	this.handle(
-		IProblem.SwitchExpressionsYieldRestrictedGeneralWarning,
-		NoArgument,
-		NoArgument,
-		statement.sourceStart,
-		statement.sourceEnd);
-}
-public void switchExpressionsYieldIllegalStatement(ASTNode statement) {
-	this.handle(
-		IProblem.SwitchExpressionsYieldIllegalStatement,
-		NoArgument,
-		NoArgument,
-		statement.sourceStart,
-		statement.sourceEnd);
-}
-public void switchExpressionsYieldTypeDeclarationWarning(ASTNode statement) {
-	this.handle(
-		IProblem.SwitchExpressionsYieldTypeDeclarationWarning,
-		NoArgument,
-		NoArgument,
-		statement.sourceStart,
-		statement.sourceEnd);
-}
-public void switchExpressionsYieldTypeDeclarationError(ASTNode statement) {
-	this.handle(
-		IProblem.SwitchExpressionsYieldTypeDeclarationError,
 		NoArgument,
 		NoArgument,
 		statement.sourceStart,
@@ -12094,7 +11848,7 @@ public void switchExpressionsNotSupported(ASTNode statement) {
 		statement.sourceStart,
 		statement.sourceEnd);
 }
-public void switchExpressionsBreakOutOfSwitchExpression(ASTNode statement) {
+public void breakOutOfSwitchExpression(ASTNode statement) {
 	this.handle(
 		IProblem.SwitchExpressionsBreakOutOfSwitchExpression,
 		NoArgument,
@@ -12102,7 +11856,7 @@ public void switchExpressionsBreakOutOfSwitchExpression(ASTNode statement) {
 		statement.sourceStart,
 		statement.sourceEnd);
 }
-public void switchExpressionsContinueOutOfSwitchExpression(ASTNode statement) {
+public void continueOutOfSwitchExpression(ASTNode statement) {
 	this.handle(
 		IProblem.SwitchExpressionsContinueOutOfSwitchExpression,
 		NoArgument,
@@ -12110,7 +11864,7 @@ public void switchExpressionsContinueOutOfSwitchExpression(ASTNode statement) {
 		statement.sourceStart,
 		statement.sourceEnd);
 }
-public void switchExpressionsReturnWithinSwitchExpression(ASTNode statement) {
+public void returnOutOfSwitchExpression(ASTNode statement) {
 	this.handle(
 		IProblem.SwitchExpressionsReturnWithinSwitchExpression,
 		NoArgument,
@@ -12414,140 +12168,80 @@ public void illegalModifierForLocalEnumDeclaration(SourceTypeBinding type) {
 		type.sourceStart(),
 		type.sourceEnd());
 }
-private void sealedMissingModifier(int problem, SourceTypeBinding type, TypeDeclaration typeDecl, TypeBinding superTypeBinding) {
+
+public void permittedTypeNeedsModifier(SourceTypeBinding type, TypeDeclaration typeDecl, TypeBinding superTypeBinding) {
 	String name = new String(type.sourceName());
 	String superTypeFullName = new String(superTypeBinding.readableName());
 	String superTypeShortName = new String(superTypeBinding.shortReadableName());
 	if (superTypeShortName.equals(name)) superTypeShortName = superTypeFullName;
 	this.handle(
-		problem,
+		type.isClass() ? IProblem.SealedMissingClassModifier : IProblem.SealedMissingInterfaceModifier,
 		new String[] {superTypeFullName, name},
 		new String[] {superTypeShortName, name},
 		typeDecl.sourceStart,
 		typeDecl.sourceEnd);
 }
 
-public void sealedMissingClassModifier(SourceTypeBinding type, TypeDeclaration typeDecl, TypeBinding superTypeBinding) {
-	sealedMissingModifier(IProblem.SealedMissingClassModifier, type, typeDecl, superTypeBinding);
-}
-public void sealedMissingInterfaceModifier(SourceTypeBinding type, TypeDeclaration typeDecl, TypeBinding superTypeBinding) {
-	sealedMissingModifier(IProblem.SealedMissingInterfaceModifier, type, typeDecl, superTypeBinding);
-}
-public void sealedDisAllowedNonSealedModifierInClass(SourceTypeBinding type, TypeDeclaration typeDecl) {
+public void disallowedNonSealedModifier(SourceTypeBinding type, TypeDeclaration typeDecl) {
 	String name = new String(type.sourceName());
 	this.handle(
-			IProblem.SealedDisAllowedNonSealedModifierInClass,
+			type.isClass() ? IProblem.SealedDisAllowedNonSealedModifierInClass : IProblem.SealedDisAllowedNonSealedModifierInInterface,
 			new String[] { name },
 			new String[] { name },
 			typeDecl.sourceStart,
 			typeDecl.sourceEnd);
 }
 
-private void sealedSuperTypeDoesNotPermit(int problem, SourceTypeBinding type, TypeReference superType, TypeBinding superTypeBinding) {
+public void sealedSupertypeDoesNotPermit(SourceTypeBinding type, TypeReference superType, TypeBinding superTypeBinding) {
 	String name = new String(type.sourceName());
 	String superTypeFullName = new String(superTypeBinding.readableName());
 	String superTypeShortName = new String(superTypeBinding.shortReadableName());
 	if (superTypeShortName.equals(name)) superTypeShortName = superTypeFullName;
-	this.handle(
-		problem,
-		new String[] {name, superTypeFullName},
-		new String[] {name, superTypeShortName},
-		superType.sourceStart,
-		superType.sourceEnd);
+	if (superTypeBinding.isClass()) {
+		this.handle(
+			IProblem.SealedSuperClassDoesNotPermit,
+			new String[] {name, superTypeFullName},
+			new String[] {name, superTypeShortName},
+			superType.sourceStart,
+			superType.sourceEnd);
+	} else {
+		String keyword = type.isClass() ? new String(TypeConstants.IMPLEMENTS) : new String(TypeConstants.KEYWORD_EXTENDS);
+		this.handle(
+				IProblem.SealedSuperInterfaceDoesNotPermit,
+			new String[] {name, superTypeFullName, keyword},
+			new String[] {name, superTypeShortName, keyword},
+			superType.sourceStart,
+			superType.sourceEnd);
+	}
 }
 
-public void sealedSuperTypeInDifferentPackage(int problem, SourceTypeBinding type, TypeReference curType, TypeBinding superTypeBinding, PackageBinding superPackageBinding) {
-	String typeName = new String(type.sourceName);
-	String name = new String(superTypeBinding.sourceName());
-	String packageName = superPackageBinding.compoundName == CharOperation.NO_CHAR_CHAR ? "default" : //$NON-NLS-1$
-		CharOperation.toString(superPackageBinding.compoundName);
-	String[] arguments = new String[] {typeName, packageName, name};
-	this.handle(problem,
-			arguments,
-			arguments,
-			curType.sourceStart,
-			curType.sourceEnd);
-}
-
-public void sealedSuperTypeDisallowed(int problem, SourceTypeBinding type, TypeReference curType, TypeBinding superTypeBinding) {
-	String typeName = new String(type.sourceName);
-	String name = new String(superTypeBinding.sourceName());
-	String[] arguments = new String[] {typeName, name};
-	this.handle(problem,
-			arguments,
-			arguments,
-			curType.sourceStart,
-			curType.sourceEnd);
-}
-
-public void sealedSuperClassDoesNotPermit(SourceTypeBinding type, TypeReference superType, TypeBinding superTypeBinding) {
-	sealedSuperTypeDoesNotPermit(IProblem.SealedSuperClassDoesNotPermit, type, superType, superTypeBinding);
-}
-
-public void sealedSuperClassInDifferentPackage(SourceTypeBinding type, TypeReference curType, TypeBinding superTypeBinding, PackageBinding superPackageBinding) {
-	sealedSuperTypeInDifferentPackage(IProblem.SealedSuperTypeInDifferentPackage, type, curType, superTypeBinding, superPackageBinding);
-}
-
-public void sealedSuperClassDisallowed(SourceTypeBinding type, TypeReference curType, TypeBinding superTypeBinding) {
-	sealedSuperTypeDisallowed(IProblem.SealedSuperTypeDisallowed, type, curType, superTypeBinding);
-}
-
-public void sealedSuperInterfaceDoesNotPermit(SourceTypeBinding type, TypeReference superType, TypeBinding superTypeBinding) {
-	String name = new String(type.sourceName());
-	String superTypeFullName = new String(superTypeBinding.readableName());
-	String superTypeShortName = new String(superTypeBinding.shortReadableName());
-	String keyword = type.isClass() ? new String(TypeConstants.IMPLEMENTS) : new String(TypeConstants.KEYWORD_EXTENDS);
-	if (superTypeShortName.equals(name)) superTypeShortName = superTypeFullName;
-	this.handle(
-			IProblem.SealedSuperInterfaceDoesNotPermit,
-		new String[] {name, superTypeFullName, keyword},
-		new String[] {name, superTypeShortName, keyword},
-		superType.sourceStart,
-		superType.sourceEnd);
-}
-
-public void sealedSuperInterfaceInDifferentPackage(SourceTypeBinding type, TypeReference curType, TypeBinding superTypeBinding, PackageBinding superPackageBinding) {
-	sealedSuperTypeInDifferentPackage(IProblem.SealedSuperTypeInDifferentPackage, type, curType, superTypeBinding, superPackageBinding);
-}
-
-public void sealedSuperInterfaceDisallowed(SourceTypeBinding type, TypeReference curType, TypeBinding superTypeBinding) {
-	sealedSuperTypeDisallowed(IProblem.SealedSuperTypeDisallowed, type, curType, superTypeBinding);
-}
-
-public void sealedMissingSealedModifier(SourceTypeBinding type, ASTNode node) {
+public void missingSealedModifier(SourceTypeBinding type, ASTNode node) {
 	String name = new String(type.sourceName());
 	this.handle(IProblem.SealedMissingSealedModifier, new String[] { name }, new String[] { name }, node.sourceStart,
 			node.sourceEnd);
 }
 
-public void sealedDuplicateTypeInPermits(SourceTypeBinding type, TypeReference reference, ReferenceBinding superType) {
+public void duplicatePermittedType(TypeReference reference, ReferenceBinding superType) {
 	this.handle(
 		IProblem.SealedDuplicateTypeInPermits,
-		new String[] {
-			new String(superType.readableName()),
-			new String(type.sourceName())},
-		new String[] {
-			new String(superType.shortReadableName()),
-			new String(type.sourceName())},
+		new String[] { new String(superType.readableName()) },
+		new String[] { new String(superType.shortReadableName()) },
 		reference.sourceStart,
 		reference.sourceEnd);
 }
 
-public void sealedNotDirectSuperClass(ReferenceBinding type, TypeReference reference, SourceTypeBinding superType) {
-	this.handle(
-		IProblem.SealedNotDirectSuperClass,
-		new String[] {
-			new String(type.sourceName()),
-			new String(superType.readableName())},
-		new String[] {
-				new String(type.sourceName()),
-				new String(superType.readableName())},
-		reference.sourceStart,
-		reference.sourceEnd);
+public void sealedClassNotDirectSuperClassOf(ReferenceBinding type, TypeReference reference, SourceTypeBinding superType) {
+	if ((type.tagBits & TagBits.HierarchyHasProblems) == 0 && (superType.tagBits & TagBits.HierarchyHasProblems) == 0) {
+		this.handle(IProblem.SealedNotDirectSuperClass,
+				new String[] { new String(type.sourceName()), new String(superType.readableName()) },
+				new String[] { new String(type.sourceName()), new String(superType.readableName()) },
+				reference.sourceStart, reference.sourceEnd);
+	}
 }
-public void sealedPermittedTypeOutsideOfModule(ReferenceBinding permType, SourceTypeBinding type, ASTNode node, ModuleBinding moduleBinding) {
+
+public void permittedTypeOutsideOfModule(ReferenceBinding permType, ReferenceBinding sealedType, ASTNode node, ModuleBinding moduleBinding) {
 	String permTypeName = new String(permType.sourceName);
-	String name = new String(type.sourceName());
+	String name = new String(sealedType.sourceName());
 	String moduleName = new String(moduleBinding.name());
 	String[] arguments = new String[] {permTypeName, moduleName, name};
 	this.handle(IProblem.SealedPermittedTypeOutsideOfModule,
@@ -12556,15 +12250,10 @@ public void sealedPermittedTypeOutsideOfModule(ReferenceBinding permType, Source
 			node.sourceStart,
 			node.sourceEnd);
 }
-public void sealedPermittedTypeOutsideOfModule(SourceTypeBinding type, ASTNode node) {
-	String name = new String(type.sourceName());
-	this.handle(IProblem.SealedPermittedTypeOutsideOfModule, new String[] { name }, new String[] { name },
-			node.sourceStart, node.sourceEnd);
-}
 
-public void sealedPermittedTypeOutsideOfPackage(ReferenceBinding permType, SourceTypeBinding type, ASTNode node, PackageBinding packageBinding) {
+public void permittedTypeOutsideOfPackage(ReferenceBinding permType, ReferenceBinding sealedType, ASTNode node, PackageBinding packageBinding) {
 	String permTypeName = new String(permType.sourceName);
-	String name = new String(type.sourceName());
+	String name = new String(sealedType.sourceName());
 	String packageName = packageBinding.compoundName == CharOperation.NO_CHAR_CHAR ? "default" : //$NON-NLS-1$
 		CharOperation.toString(packageBinding.compoundName);
 	String[] arguments = new String[] {permTypeName, packageName, name};
@@ -12575,45 +12264,22 @@ public void sealedPermittedTypeOutsideOfPackage(ReferenceBinding permType, Sourc
 			node.sourceEnd);
 }
 
-public void sealedSealedTypeMissingPermits(SourceTypeBinding type, ASTNode node) {
+public void missingPermitsClause(SourceTypeBinding type, ASTNode node) {
 	String name = new String(type.sourceName());
 	this.handle(IProblem.SealedSealedTypeMissingPermits, new String[] { name }, new String[] { name }, node.sourceStart,
 			node.sourceEnd);
 }
 
-public void sealedInterfaceIsSealedAndNonSealed(SourceTypeBinding type, ASTNode node) {
-	String name = new String(type.sourceName());
-	this.handle(IProblem.SealedInterfaceIsSealedAndNonSealed,
-			new String[] { name },
-			new String[] { name },
-			node.sourceStart,
-			node.sourceEnd);
+public void sealedInterfaceNotDirectSuperInterfaceOf(ReferenceBinding type, TypeReference reference, SourceTypeBinding superType) {
+	if ((type.tagBits & TagBits.HierarchyHasProblems) == 0 && (superType.tagBits & TagBits.HierarchyHasProblems) == 0) {
+		this.handle(IProblem.SealedNotDirectSuperInterface,
+				new String[] { new String(type.sourceName()), new String(superType.readableName()) },
+				new String[] { new String(type.sourceName()), new String(superType.readableName()) },
+				reference.sourceStart, reference.sourceEnd);
+	}
 }
 
-public void sealedDisAllowedNonSealedModifierInInterface(SourceTypeBinding type, TypeDeclaration typeDecl) {
-	String name = new String(type.sourceName());
-	this.handle(
-			IProblem.SealedDisAllowedNonSealedModifierInInterface,
-			new String[] { name },
-			new String[] { name },
-			typeDecl.sourceStart,
-			typeDecl.sourceEnd);
-}
-
-public void sealedNotDirectSuperInterface(ReferenceBinding type, TypeReference reference, SourceTypeBinding superType) {
-	this.handle(
-		IProblem.SealedNotDirectSuperInterface,
-		new String[] {
-			new String(type.sourceName()),
-			new String(superType.readableName())},
-		new String[] {
-				new String(type.sourceName()),
-				new String(superType.readableName())},
-		reference.sourceStart,
-		reference.sourceEnd);
-}
-
-public void sealedLocalDirectSuperTypeSealed(SourceTypeBinding type, TypeReference superclass, TypeBinding superTypeBinding) {
+public void localTypeMayNotBePermittedType(SourceTypeBinding type, TypeReference superclass, TypeBinding superTypeBinding) {
 	String name = new String(type.sourceName());
 	String superTypeFullName = new String(superTypeBinding.readableName());
 	String superTypeShortName = new String(superTypeBinding.shortReadableName());
@@ -12625,7 +12291,8 @@ public void sealedLocalDirectSuperTypeSealed(SourceTypeBinding type, TypeReferen
 		superclass.sourceStart,
 		superclass.sourceEnd);
 }
-public void sealedAnonymousClassCannotExtendSealedType(TypeReference reference, TypeBinding type) {
+
+public void anonymousClassCannotExtendSealedType(TypeReference reference, TypeBinding type) {
 	this.handle(
 			IProblem.SealedAnonymousClassCannotExtendSealedType,
 			new String[] {new String(type.readableName())},
@@ -12633,6 +12300,17 @@ public void sealedAnonymousClassCannotExtendSealedType(TypeReference reference, 
 			reference.sourceStart,
 			reference.sourceEnd);
 }
+
+public void functionalInterfaceMayNotBeSealed(TypeDeclaration type) {
+	TypeBinding binding = type.binding;
+	this.handle(
+		IProblem.FunctionalInterfaceMayNotbeSealed,
+		new String[] {new String(binding.readableName()), },
+		new String[] {new String(binding.shortReadableName()),},
+		type.sourceStart,
+		type.sourceEnd);
+}
+
 public void StrictfpNotRequired(int sourceStart, int sourceEnd) {
 	this.handle(
 			IProblem.StrictfpNotRequired,
@@ -12732,14 +12410,6 @@ public void recordPatternSignatureMismatch(TypeBinding type, ASTNode element) {
 			IProblem.RecordPatternMismatch,
 			new String[] {new String(type.readableName())},
 			new String[] {new String(type.shortReadableName())},
-			element.sourceStart,
-			element.sourceEnd);
-}
-public void incompatiblePatternType(ASTNode element, TypeBinding type, TypeBinding expected) {
-	this.handle(
-			IProblem.PatternTypeMismatch,
-			new String[] {new String(type.readableName()), new String(expected.readableName())},
-			new String[] {new String(type.shortReadableName()), new String(expected.readableName())},
 			element.sourceStart,
 			element.sourceEnd);
 }

@@ -14,7 +14,6 @@
 package org.eclipse.jdt.core.compiler.batch;
 
 import java.io.PrintWriter;
-
 import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.internal.compiler.batch.Main;
 

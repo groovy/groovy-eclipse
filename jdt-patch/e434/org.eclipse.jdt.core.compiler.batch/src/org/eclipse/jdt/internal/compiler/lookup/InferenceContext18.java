@@ -14,29 +14,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import java.util.*;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
-import org.eclipse.jdt.internal.compiler.ast.ConditionalExpression;
-import org.eclipse.jdt.internal.compiler.ast.Expression;
-import org.eclipse.jdt.internal.compiler.ast.FunctionalExpression;
-import org.eclipse.jdt.internal.compiler.ast.Invocation;
-import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
-import org.eclipse.jdt.internal.compiler.ast.RecordPattern;
-import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
-import org.eclipse.jdt.internal.compiler.ast.SwitchExpression;
-import org.eclipse.jdt.internal.compiler.ast.Wildcard;
+import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants.BoundCheckStatus;
 import org.eclipse.jdt.internal.compiler.util.Sorting;
 
@@ -599,7 +579,7 @@ public class InferenceContext18 {
 		} else if (argument instanceof SwitchExpression) {
 			SwitchExpression se = (SwitchExpression) argument;
 			ReductionResult result = ReductionResult.FALSE;
-			for (Expression re : se.resultExpressions) {
+			for (Expression re : se.resultExpressions()) {
 				result = addJDK_8153748ConstraintsFromExpression(re, parameter, method, substitution);
 				if (result == ReductionResult.FALSE)
 					break;
@@ -743,7 +723,7 @@ public class InferenceContext18 {
 					&& addConstraintsToC_OneExpr(ce.valueIfFalse, c, fsi, substF, method);
 		} else if (expri instanceof SwitchExpression) {
 			SwitchExpression se = (SwitchExpression) expri;
-			for (Expression re : se.resultExpressions) {
+			for (Expression re : se.resultExpressions()) {
 				if (!addConstraintsToC_OneExpr(re, c, fsi, substF, method))
 					return false;
 			}
@@ -993,7 +973,7 @@ public class InferenceContext18 {
 			return  checkExpression(cond.valueIfTrue, u, r1, v, r2) && checkExpression(cond.valueIfFalse, u, r1, v, r2);
 		} else if (expri instanceof SwitchExpression) {
 			SwitchExpression se = (SwitchExpression) expri;
-			for (Expression re : se.resultExpressions) {
+			for (Expression re : se.resultExpressions()) {
 				if (!checkExpression(re, u, r1, v, r2))
 					return false;
 			}

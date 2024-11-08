@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.core.util;
 
 import java.util.Locale;
 import java.util.Map;
-
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;

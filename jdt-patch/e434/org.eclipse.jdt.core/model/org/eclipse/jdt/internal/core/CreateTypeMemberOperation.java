@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.core;
 
 import java.util.List;
 import java.util.Map;
-
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelStatus;

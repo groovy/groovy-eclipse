@@ -16,14 +16,13 @@ package org.eclipse.jdt.core.tests.builder;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-
+import junit.framework.Test;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.tests.util.Util;
-import junit.framework.Test;
 
 public class Bug571363Test extends BuilderTests {
 

@@ -13,7 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.jdom;
 
-import org.eclipse.jdt.internal.core.jdom.*;
+import org.eclipse.jdt.internal.core.jdom.DOMBuilder;
+import org.eclipse.jdt.internal.core.jdom.SimpleDOMBuilder;
 
 /**
  * Standard implementation of <code>IDOMFactory</code>, and the only means

@@ -43,18 +43,18 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching;
-import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching.CheckMode;
 import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
+import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching.CheckMode;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants.BoundCheckStatus;
@@ -155,7 +155,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 			return BoundCheckStatus.OK;
 
 		BoundCheckStatus nullStatus = BoundCheckStatus.OK;
-		boolean checkNullAnnotations = scope.environment().usesNullTypeAnnotations() && (location == null || (location.bits & ASTNode.InsideJavadoc) == 0);
+		boolean checkNullAnnotations = scope != null && scope.environment().usesNullTypeAnnotations() && (location == null || (location.bits & ASTNode.InsideJavadoc) == 0);
 
 		if (argumentType.kind() == Binding.WILDCARD_TYPE) {
 			WildcardBinding wildcard = (WildcardBinding) argumentType;
@@ -743,6 +743,29 @@ public class TypeVariableBinding extends ReferenceBinding {
 		    }
 		}
 		return false;
+	}
+
+
+	@Override
+	public ReferenceBinding[] permittedTypes() {
+		Set<ReferenceBinding> permittedTypes = new HashSet<>();
+		if (this.superclass != null && this.superclass.isSealed()) {
+			for (ReferenceBinding pt : this.superclass.permittedTypes()) {
+				if (boundCheck(null, pt, null, null) != BoundCheckStatus.MISMATCH)
+					permittedTypes.add(pt);
+			}
+		}
+		if (this.superInterfaces != null && this.superInterfaces != Binding.NO_SUPERINTERFACES) {
+		    for (int i = 0, length = this.superInterfaces.length; i < length; i++) {
+		        if (this.superInterfaces[i].isSealed()) {
+		        	for (ReferenceBinding pt : this.superInterfaces[i].permittedTypes()) {
+		        		if (boundCheck(null, pt, null, null) != BoundCheckStatus.MISMATCH)
+							permittedTypes.add(pt);
+					}
+		        }
+		    }
+		}
+		return permittedTypes.toArray(new ReferenceBinding[0]);
 	}
 
 //	/**

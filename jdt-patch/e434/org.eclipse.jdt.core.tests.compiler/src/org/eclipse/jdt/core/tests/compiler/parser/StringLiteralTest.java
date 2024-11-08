@@ -1,13 +1,11 @@
 package org.eclipse.jdt.core.tests.compiler.parser;
 
 import java.util.List;
-
+import junit.framework.TestCase;
 import org.eclipse.jdt.internal.compiler.ast.CharLiteral;
 import org.eclipse.jdt.internal.compiler.ast.ExtendedStringLiteral;
 import org.eclipse.jdt.internal.compiler.ast.StringLiteral;
 import org.eclipse.jdt.internal.compiler.ast.StringLiteralConcatenation;
-
-import junit.framework.TestCase;
 
 public class StringLiteralTest extends TestCase {
 	public void testAppend() {

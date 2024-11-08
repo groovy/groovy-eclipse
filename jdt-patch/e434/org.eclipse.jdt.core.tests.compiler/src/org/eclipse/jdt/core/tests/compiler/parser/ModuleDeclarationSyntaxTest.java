@@ -14,12 +14,10 @@
 package org.eclipse.jdt.core.tests.compiler.parser;
 
 import java.io.IOException;
-
+import junit.framework.Test;
 import org.eclipse.jdt.core.tests.util.CompilerTestSetup;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
-import junit.framework.Test;
 
 public class ModuleDeclarationSyntaxTest extends AbstractSyntaxTreeTest {
 

@@ -17,10 +17,8 @@ import static org.eclipse.jdt.internal.compiler.env.AutomaticModuleNaming.determ
 import static org.eclipse.jdt.internal.compiler.env.AutomaticModuleNaming.determineAutomaticModuleNameFromFileName;
 
 import java.io.File;
-
-import org.eclipse.jdt.core.tests.util.Util;
-
 import junit.framework.Test;
+import org.eclipse.jdt.core.tests.util.Util;
 
 public class AutomaticModuleNamingTest extends AbstractRegressionTest {
 	static {

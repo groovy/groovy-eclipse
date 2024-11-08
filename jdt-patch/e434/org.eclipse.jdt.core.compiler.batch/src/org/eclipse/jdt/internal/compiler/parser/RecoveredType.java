@@ -18,19 +18,7 @@ package org.eclipse.jdt.internal.compiler.parser;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.Annotation;
-import org.eclipse.jdt.internal.compiler.ast.Block;
-import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.Initializer;
-import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
-import org.eclipse.jdt.internal.compiler.ast.Statement;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 /**
@@ -340,23 +328,26 @@ public int bodyEnd(){
 	if (this.bodyEnd == 0) return this.typeDeclaration.declarationSourceEnd;
 	return this.bodyEnd;
 }
-public boolean bodyStartsAtHeaderEnd(){
-	if (this.typeDeclaration.superInterfaces == null){
-		if (this.typeDeclaration.superclass == null){
-			if(this.typeDeclaration.typeParameters == null) {
-				return this.typeDeclaration.bodyStart == this.typeDeclaration.sourceEnd+1;
+
+public boolean bodyStartsAtHeaderEnd() {
+	if (this.typeDeclaration.permittedTypes == null) {
+		if (this.typeDeclaration.superInterfaces == null) {
+			if (this.typeDeclaration.superclass == null) {
+				if (this.typeDeclaration.typeParameters == null) {
+					return this.typeDeclaration.bodyStart == this.typeDeclaration.sourceEnd + 1;
+				} else {
+					return this.typeDeclaration.bodyStart == this.typeDeclaration.typeParameters[this.typeDeclaration.typeParameters.length - 1].sourceEnd + 1;
+				}
 			} else {
-				return this.typeDeclaration.bodyStart == this.typeDeclaration.typeParameters[this.typeDeclaration.typeParameters.length-1].sourceEnd+1;
+				return this.typeDeclaration.bodyStart == this.typeDeclaration.superclass.sourceEnd + 1;
 			}
 		} else {
-			return this.typeDeclaration.bodyStart == this.typeDeclaration.superclass.sourceEnd+1;
+			return this.typeDeclaration.bodyStart
+					== this.typeDeclaration.superInterfaces[this.typeDeclaration.superInterfaces.length - 1].sourceEnd + 1;
 		}
 	} else {
-		if (this.typeDeclaration.permittedTypes != null)
-			return this.typeDeclaration.bodyStart
-			== this.typeDeclaration.permittedTypes[this.typeDeclaration.permittedTypes.length-1].sourceEnd+1;
 		return this.typeDeclaration.bodyStart
-				== this.typeDeclaration.superInterfaces[this.typeDeclaration.superInterfaces.length-1].sourceEnd+1;
+				== this.typeDeclaration.permittedTypes[this.typeDeclaration.permittedTypes.length - 1].sourceEnd + 1;
 	}
 }
 /*

@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
-
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ast.Pattern.PrimitiveConversionRoute;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -44,7 +43,7 @@ public class CaseStatement extends Statement {
 	public BranchLabel targetLabel;
 	public Expression[] constantExpressions; // case with multiple expressions - if you want a under-the-hood view, use peeledLabelExpressions()
 	public BranchLabel[] targetLabels; // for multiple expressions
-	public boolean isExpr = false;
+	public boolean isSwitchRule = false;
 
 	public SwitchStatement swich; // owning switch
 	public int typeSwitchIndex;   // for the first pattern among this.constantExpressions
@@ -75,11 +74,16 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	int nullPatternCount = 0;
 	for (int i = 0, length = this.constantExpressions.length; i < length; i++) {
 		Expression e = this.constantExpressions[i];
-		for (LocalVariableBinding local : e.bindingsWhenTrue()) {
-			local.useFlag = LocalVariableBinding.USED; // these are structurally required even if not touched
+		CompilerOptions compilerOptions = currentScope.compilerOptions();
+		long sourceLevel = compilerOptions.sourceLevel;
+		boolean enablePreviewFeatures = compilerOptions.enablePreviewFeatures;
+		if (!JavaFeature.UNNAMMED_PATTERNS_AND_VARS.isSupported(sourceLevel, enablePreviewFeatures)) {
+			for (LocalVariableBinding local : e.bindingsWhenTrue()) {
+				local.useFlag = LocalVariableBinding.USED; // these are structurally required even if not touched
+			}
 		}
 		nullPatternCount +=  e instanceof NullLiteral ? 1 : 0;
-		if (i > 0 && (e instanceof Pattern) && !JavaFeature.UNNAMMED_PATTERNS_AND_VARS.isSupported(currentScope.compilerOptions().sourceLevel, currentScope.compilerOptions().enablePreviewFeatures)) {
+		if (i > 0 && (e instanceof Pattern) && !JavaFeature.UNNAMMED_PATTERNS_AND_VARS.isSupported(sourceLevel, enablePreviewFeatures)) {
 			if (!(i == nullPatternCount && e instanceof TypePattern))
 				currentScope.problemReporter().IllegalFallThroughToPattern(e);
 		}
@@ -173,6 +177,16 @@ public static class ResolvedCase {
  */
 public ResolvedCase[] resolveCase(BlockScope scope, TypeBinding switchExpressionType, SwitchStatement switchStatement) {
 	this.swich = switchStatement;
+
+	if (this.isSwitchRule)
+		this.swich.switchBits |= SwitchStatement.LabeledRules;
+	else
+		this.swich.switchBits |= SwitchStatement.LabeledBlockStatementGroup;
+
+	if ((this.swich.switchBits & (SwitchStatement.LabeledRules | SwitchStatement.LabeledBlockStatementGroup)) == (SwitchStatement.LabeledRules | SwitchStatement.LabeledBlockStatementGroup)) {
+		scope.problemReporter().arrowColonMixup(this);
+	}
+
 	scope.enclosingCase = this; // record entering in a switch case block
 	if (this.constantExpressions == Expression.NO_EXPRESSIONS) {
 		checkDuplicateDefault(scope, switchStatement, this);
@@ -367,6 +381,8 @@ private Constant resolveCasePattern(BlockScope scope, TypeBinding caseType, Type
 	if (type != null) {
 		constant = IntConstant.fromValue(switchStatement.constantIndex);
 		switchStatement.caseLabelElements.add(e);
+		if (e instanceof RecordPattern)
+			switchStatement.containsRecordPatterns = true;
 
 		if (isUnguarded)
 			switchStatement.caseLabelElementTypes.add(type);
@@ -375,11 +391,8 @@ private Constant resolveCasePattern(BlockScope scope, TypeBinding caseType, Type
 		// The following code is copied from InstanceOfExpression#resolve()
 		// But there are enough differences to warrant a copy
 		if (!type.isReifiable()) {
-			if (expressionType != TypeBinding.NULL && !(e instanceof RecordPattern)) {
-				boolean isLegal = e.checkCastTypesCompatibility(scope, type, expressionType, e, false);
-				if (!isLegal || (e.bits & ASTNode.UnsafeCast) != 0) {
-					scope.problemReporter().unsafeCastInInstanceof(e, type, expressionType);
-				}
+			if (!e.isApplicable(switchExpressionType, scope, e)) {
+				return Constant.NotAConstant;
 			}
 		} else if (type.isValidBinding()) {
 			// if not a valid binding, an error has already been reported for unresolved type
@@ -458,16 +471,15 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 public StringBuilder printStatement(int tab, StringBuilder output) {
 	printIndent(tab, output);
 	if (this.constantExpressions == Expression.NO_EXPRESSIONS) {
-		output.append("default "); //$NON-NLS-1$
-		output.append(this.isExpr ? "->" : ":"); //$NON-NLS-1$ //$NON-NLS-2$
+		output.append("default"); //$NON-NLS-1$
 	} else {
 		output.append("case "); //$NON-NLS-1$
 		for (int i = 0, l = this.constantExpressions.length; i < l; ++i) {
 			this.constantExpressions[i].printExpression(0, output);
 			if (i < l -1) output.append(',');
 		}
-		output.append(this.isExpr ? " ->" : " :"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
+	output.append(this.isSwitchRule ? " ->" : " :"); //$NON-NLS-1$ //$NON-NLS-2$
 	return output;
 }
 

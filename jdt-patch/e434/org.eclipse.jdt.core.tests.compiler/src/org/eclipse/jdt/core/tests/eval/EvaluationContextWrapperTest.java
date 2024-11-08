@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
+import junit.framework.Test;
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
@@ -48,8 +48,6 @@ import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.eval.EvaluationContextWrapper;
 import org.eclipse.jdt.internal.eval.InstallException;
-
-import junit.framework.Test;
 
 public class EvaluationContextWrapperTest extends EvaluationTest {
 
@@ -184,6 +182,7 @@ public class EvaluationContextWrapperTest extends EvaluationTest {
 
 	private void refreshProject() throws Exception {
 		this.project.getProject().refreshLocal(IResource.DEPTH_INFINITE, null);
+		waitForAutoBuild(); // wait for builds to complete.
 	}
 
 	private void removeTempClass(String className) {

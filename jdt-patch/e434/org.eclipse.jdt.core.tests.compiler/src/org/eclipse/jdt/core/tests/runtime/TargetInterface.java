@@ -13,11 +13,13 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.runtime;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.util.Util;
-
-import java.io.*;
-import java.net.*;
 /**
  * This is the interface to the target VM. It connects to an IDEInterface on the target side
  * using TCP/IO to send request for code snippet evaluation and to get the result back.

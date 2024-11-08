@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.core;
 
 import java.util.ArrayList;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IJavaElement;

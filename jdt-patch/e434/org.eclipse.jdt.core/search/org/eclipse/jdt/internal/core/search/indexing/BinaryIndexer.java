@@ -17,7 +17,6 @@ package org.eclipse.jdt.internal.core.search.indexing;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;

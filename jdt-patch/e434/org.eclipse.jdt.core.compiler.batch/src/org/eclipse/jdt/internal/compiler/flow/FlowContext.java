@@ -28,35 +28,11 @@
 package org.eclipse.jdt.internal.compiler.flow;
 
 import java.util.ArrayList;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.Expression;
-import org.eclipse.jdt.internal.compiler.ast.FakedTrackingVariable;
-import org.eclipse.jdt.internal.compiler.ast.LabeledStatement;
-import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
-import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching;
-import org.eclipse.jdt.internal.compiler.ast.Reference;
-import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
-import org.eclipse.jdt.internal.compiler.ast.SubRoutineStatement;
-import org.eclipse.jdt.internal.compiler.ast.SwitchExpression;
-import org.eclipse.jdt.internal.compiler.ast.ThrowStatement;
-import org.eclipse.jdt.internal.compiler.ast.TryStatement;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.BranchLabel;
-import org.eclipse.jdt.internal.compiler.lookup.Binding;
-import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
-import org.eclipse.jdt.internal.compiler.lookup.CatchParameterBinding;
-import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
-import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-import org.eclipse.jdt.internal.compiler.lookup.Scope;
-import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
-import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
-import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
+import org.eclipse.jdt.internal.compiler.lookup.*;
 
 /**
  * Reflects the context of code analysis, keeping track of enclosing
@@ -192,7 +168,7 @@ public FieldBinding[] nullCheckedFields() {
 	count = 0;
 	for (int i=0; i<len; i++) {
 		if (this.nullCheckedFieldReferences[i] != null)
-			result[count++] = this.nullCheckedFieldReferences[i].fieldBinding();
+			result[count++] = this.nullCheckedFieldReferences[i].lastFieldBinding();
 	}
 	return result;
 }
@@ -273,9 +249,9 @@ public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location
 		}
 	}
 	while (traversedContext != null) {
-		SubRoutineStatement sub;
-		if (((sub = traversedContext.subroutine()) != null) && sub.isSubRoutineEscaping()) {
-			// traversing a non-returning subroutine means that all unhandled
+		StatementWithFinallyBlock stmt;
+		if (((stmt = traversedContext.statementWithFinallyBlock()) != null) && stmt.isFinallyBlockEscaping()) {
+			// traversing a non-returning finally block means that all unhandled
 			// exceptions will actually never get sent...
 			return;
 		}
@@ -355,11 +331,11 @@ public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location
 		traversedContext.recordReturnFrom(flowInfo.unconditionalInits());
 
 		if (!isExceptionOnAutoClose) {
-			if (traversedContext instanceof InsideSubRoutineFlowContext) {
+			if (traversedContext instanceof InsideStatementWithFinallyBlockFlowContext) {
 				ASTNode node = traversedContext.associatedNode;
 				if (node instanceof TryStatement) {
 					TryStatement tryStatement = (TryStatement) node;
-					flowInfo.addInitializationsFrom(tryStatement.subRoutineInits); // collect inits
+					flowInfo.addInitializationsFrom(tryStatement.finallyBlockInits); // collect inits
 				}
 			}
 		}
@@ -397,9 +373,9 @@ public void checkExceptionHandlers(TypeBinding[] raisedExceptions, ASTNode locat
 
 	ArrayList abruptlyExitedLoops = null;
 	while (traversedContext != null) {
-		SubRoutineStatement sub;
-		if (((sub = traversedContext.subroutine()) != null) && sub.isSubRoutineEscaping()) {
-			// traversing a non-returning subroutine means that all unhandled
+		StatementWithFinallyBlock stmt;
+		if (((stmt = traversedContext.statementWithFinallyBlock()) != null) && stmt.isFinallyBlockEscaping()) {
+			// traversing a non-returning finally block means that all unhandled
 			// exceptions will actually never get sent...
 			return;
 		}
@@ -506,11 +482,11 @@ public void checkExceptionHandlers(TypeBinding[] raisedExceptions, ASTNode locat
 
 		traversedContext.recordReturnFrom(flowInfo.unconditionalInits());
 
-		if (traversedContext instanceof InsideSubRoutineFlowContext) {
+		if (traversedContext instanceof InsideStatementWithFinallyBlockFlowContext) {
 			ASTNode node = traversedContext.associatedNode;
 			if (node instanceof TryStatement) {
 				TryStatement tryStatement = (TryStatement) node;
-				flowInfo.addInitializationsFrom(tryStatement.subRoutineInits); // collect inits
+				flowInfo.addInitializationsFrom(tryStatement.finallyBlockInits); // collect inits
 			}
 		}
 		traversedContext = traversedContext.getLocalParent();
@@ -561,20 +537,20 @@ public FlowInfo getInitsForFinalBlankInitializationCheck(TypeBinding declaringTy
  * lookup through break labels
  */
 public FlowContext getTargetContextForBreakLabel(char[] labelName) {
-	FlowContext current = this, lastNonReturningSubRoutine = null;
+	FlowContext current = this, lastNonReturningContext = null;
 	while (current != null) {
 		if (current.associatedNode instanceof SwitchExpression)
 			return NonLocalGotoThroughSwitchContext;
 		if (current.isNonReturningContext()) {
-			lastNonReturningSubRoutine = current;
+			lastNonReturningContext = current;
 		}
 		char[] currentLabelName;
 		if (((currentLabelName = current.labelName()) != null)
 			&& CharOperation.equals(currentLabelName, labelName)) {
 			((LabeledStatement)current.associatedNode).bits |= ASTNode.LabelUsed;
-			if (lastNonReturningSubRoutine == null)
+			if (lastNonReturningContext == null)
 				return current;
-			return lastNonReturningSubRoutine;
+			return lastNonReturningContext;
 		}
 		current = current.getLocalParent();
 	}
@@ -588,13 +564,13 @@ public FlowContext getTargetContextForBreakLabel(char[] labelName) {
 public FlowContext getTargetContextForContinueLabel(char[] labelName) {
 	FlowContext current = this;
 	FlowContext lastContinuable = null;
-	FlowContext lastNonReturningSubRoutine = null;
+	FlowContext lastNonReturningContext = null;
 
 	while (current != null) {
 		if (current.associatedNode instanceof SwitchExpression)
 			return NonLocalGotoThroughSwitchContext;
 		if (current.isNonReturningContext()) {
-			lastNonReturningSubRoutine = current;
+			lastNonReturningContext = current;
 		} else {
 			if (current.isContinuable()) {
 				lastContinuable = current;
@@ -609,8 +585,8 @@ public FlowContext getTargetContextForContinueLabel(char[] labelName) {
 			if ((lastContinuable != null)
 					&& (current.associatedNode.concreteStatement()	== lastContinuable.associatedNode)) {
 
-				if (lastNonReturningSubRoutine == null) return lastContinuable;
-				return lastNonReturningSubRoutine;
+				if (lastNonReturningContext == null) return lastContinuable;
+				return lastNonReturningContext;
 			}
 			// label is found, but not a continuable location
 			return FlowContext.NotContinuableContext;
@@ -625,16 +601,16 @@ public FlowContext getTargetContextForContinueLabel(char[] labelName) {
  * lookup a default break through breakable locations
  */
 public FlowContext getTargetContextForDefaultBreak() {
-	FlowContext current = this, lastNonReturningSubRoutine = null;
+	FlowContext current = this, lastNonReturningContext = null;
 	while (current != null) {
 		if (current.associatedNode instanceof SwitchExpression)
 			return NonLocalGotoThroughSwitchContext;
 		if (current.isNonReturningContext()) {
-			lastNonReturningSubRoutine = current;
+			lastNonReturningContext = current;
 		}
 		if (current.isBreakable() && current.labelName() == null) {
-			if (lastNonReturningSubRoutine == null) return current;
-			return lastNonReturningSubRoutine;
+			if (lastNonReturningContext == null) return current;
+			return lastNonReturningContext;
 		}
 		current = current.getLocalParent();
 	}
@@ -644,15 +620,15 @@ public FlowContext getTargetContextForDefaultBreak() {
 /*
  * lookup a yield target ...
  */
-public FlowContext getTargetContextForYield(boolean requireExpression) {
-	FlowContext current = this, lastNonReturningSubRoutine = null;
+public FlowContext getTargetContextForYield(boolean implicitYield) {
+	FlowContext current = this, lastNonReturningContext = null;
 	while (current != null) {
 		if (current.isNonReturningContext()) {
-			lastNonReturningSubRoutine = current;
+			lastNonReturningContext = current;
 		}
-		if (current.isBreakable() && current.labelName() == null && (!requireExpression || ((SwitchFlowContext) current).isExpression)) {
-			if (lastNonReturningSubRoutine == null) return current;
-			return lastNonReturningSubRoutine;
+		if (current.isBreakable() && (implicitYield || current.isExplicitYieldable())) {
+			if (lastNonReturningContext == null) return current;
+			return lastNonReturningContext;
 		}
 		current = current.getLocalParent();
 	}
@@ -664,17 +640,17 @@ public FlowContext getTargetContextForYield(boolean requireExpression) {
  * lookup a default continue amongst continuable locations
  */
 public FlowContext getTargetContextForDefaultContinue() {
-	FlowContext current = this, lastNonReturningSubRoutine = null;
+	FlowContext current = this, lastNonReturningContext = null;
 	while (current != null) {
 		if (current.associatedNode instanceof SwitchExpression)
 			return NonLocalGotoThroughSwitchContext;
 		if (current.isNonReturningContext()) {
-			lastNonReturningSubRoutine = current;
+			lastNonReturningContext = current;
 		}
 		if (current.isContinuable()) {
-			if (lastNonReturningSubRoutine == null)
+			if (lastNonReturningContext == null)
 				return current;
-			return lastNonReturningSubRoutine;
+			return lastNonReturningContext;
 		}
 		current = current.getLocalParent();
 	}
@@ -715,15 +691,15 @@ public boolean isBreakable() {
 	return false;
 }
 
+public boolean isExplicitYieldable() {
+	return false;
+}
+
 public boolean isContinuable() {
 	return false;
 }
 
 public boolean isNonReturningContext() {
-	return false;
-}
-
-public boolean isSubRoutine() {
 	return false;
 }
 
@@ -1052,7 +1028,7 @@ void removeFinalAssignmentIfAny(Reference reference) {
 	// default implementation: do nothing
 }
 
-public SubRoutineStatement subroutine() {
+public StatementWithFinallyBlock statementWithFinallyBlock() {
 	return null;
 }
 

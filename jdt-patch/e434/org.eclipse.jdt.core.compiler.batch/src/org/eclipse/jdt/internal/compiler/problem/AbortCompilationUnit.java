@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.compiler.problem;
 
 import java.io.IOException;
-
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 

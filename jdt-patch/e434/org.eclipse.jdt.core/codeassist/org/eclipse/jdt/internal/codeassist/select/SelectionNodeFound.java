@@ -13,7 +13,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist.select;
 
-import org.eclipse.jdt.internal.compiler.lookup.*;
+import org.eclipse.jdt.internal.compiler.lookup.Binding;
 
 public class SelectionNodeFound extends RuntimeException {
 

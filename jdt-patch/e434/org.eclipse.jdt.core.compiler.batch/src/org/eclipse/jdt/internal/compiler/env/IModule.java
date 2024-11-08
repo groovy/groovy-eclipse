@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.compiler.env;
 
 import java.util.jar.Manifest;
-
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 public interface IModule {

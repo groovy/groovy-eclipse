@@ -15,7 +15,6 @@ package org.eclipse.jdt.core.tests.compiler.util;
 
 import java.io.File;
 import java.nio.file.Paths;
-
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;

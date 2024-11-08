@@ -15,10 +15,8 @@ package org.eclipse.jdt.core;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
-
 import org.eclipse.jdt.internal.core.JavaModelStatus;
 
 /**

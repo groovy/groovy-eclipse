@@ -15,7 +15,6 @@
 package org.eclipse.jdt.internal.core;
 
 import java.util.Map;
-
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.SourceRange;
 

@@ -36,7 +36,6 @@ package org.eclipse.jdt.internal.compiler.ast;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -46,24 +45,7 @@ import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
-import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
-import org.eclipse.jdt.internal.compiler.lookup.BaseTypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.Binding;
-import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
-import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
-import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
-import org.eclipse.jdt.internal.compiler.lookup.InferenceContext18;
-import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
-import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-import org.eclipse.jdt.internal.compiler.lookup.Scope;
-import org.eclipse.jdt.internal.compiler.lookup.TagBits;
-import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
-import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
-import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
-import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
-import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
+import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.eclipse.jdt.internal.compiler.problem.ShouldNotImplement;
 import org.eclipse.jdt.internal.compiler.util.Messages;
 
@@ -260,6 +242,10 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
  */
 protected void updateFlowOnBooleanResult(FlowInfo flowInfo, boolean result) {
 	// nop
+}
+
+public boolean hasSideEffects() {
+	return (this.constant == Constant.NotAConstant || (this.implicitConversion & TypeIds.BOXING) != 0) && !(this instanceof NullLiteral);
 }
 
 /**
@@ -1118,6 +1104,10 @@ public StringBuilder print(int indent, StringBuilder output) {
 
 public abstract StringBuilder printExpression(int indent, StringBuilder output);
 
+public StringBuilder printExpression(int tab, StringBuilder output, boolean makeShort) {
+	return printExpression(tab, output);
+}
+
 @Override
 public StringBuilder printStatement(int indent, StringBuilder output) {
 	return print(indent, output).append(";"); //$NON-NLS-1$
@@ -1254,7 +1244,7 @@ public boolean forcedToBeRaw(ReferenceContext referenceContext) {
 		}
 	} else if (this instanceof SwitchExpression) {
 		SwitchExpression se = (SwitchExpression) this;
-		for (Expression e : se.resultExpressions) {
+		for (Expression e : se.resultExpressions()) {
 			if (e.forcedToBeRaw(referenceContext))
 				return true;
 		}
@@ -1264,7 +1254,7 @@ public boolean forcedToBeRaw(ReferenceContext referenceContext) {
 
 /**
  * Returns an object which can be used to identify identical JSR sequence targets
- * (see TryStatement subroutine codegen)
+ * (see TryStatement finally block codegen)
  * or <code>null</code> if not reusable
  */
 public Object reusableJSRTarget() {

@@ -14,7 +14,7 @@
 package org.eclipse.jdt.core.tests.builder;
 
 import java.util.Hashtable;
-
+import junit.framework.Test;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
@@ -27,8 +27,6 @@ import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.test.OrderedTestSuite;
-
-import junit.framework.Test;
 
 
 @SuppressWarnings({"rawtypes", "unchecked"})

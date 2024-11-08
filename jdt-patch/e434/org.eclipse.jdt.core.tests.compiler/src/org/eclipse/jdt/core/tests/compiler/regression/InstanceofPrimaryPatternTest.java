@@ -13,11 +13,9 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
-
+import junit.framework.Test;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
-import junit.framework.Test;
 
 public class InstanceofPrimaryPatternTest extends AbstractRegressionTest {
 
@@ -647,5 +645,29 @@ public class InstanceofPrimaryPatternTest extends AbstractRegressionTest {
 			+ "	                                 ^\n"
 			+ "A pattern variable with the same name is already defined in the statement\n"
 			+ "----------\n");
+	}
+
+	public void testGH3074() {
+		runNegativeTest(
+			new String[] {
+				"Example.java",
+				"""
+				class Example<T> {
+					private void foo(String x) {
+						if (x instanceof Example<String> es) {
+
+						}
+					}
+				}
+				"""
+			},
+			"""
+			----------
+			1. ERROR in Example.java (at line 3)
+				if (x instanceof Example<String> es) {
+				    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+			Incompatible conditional operand types String and Example<String>
+			----------
+			""");
 	}
 }

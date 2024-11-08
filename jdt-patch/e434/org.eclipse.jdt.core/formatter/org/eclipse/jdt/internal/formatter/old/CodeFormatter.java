@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.formatter.old;
 
 import java.util.Map;
-
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;

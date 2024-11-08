@@ -15,7 +15,6 @@
 package org.eclipse.jdt.internal.compiler.classfmt;
 
 import java.util.Arrays;
-
 import org.eclipse.jdt.internal.compiler.codegen.AnnotationTargetTypeConstants;
 import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryTypeAnnotation;

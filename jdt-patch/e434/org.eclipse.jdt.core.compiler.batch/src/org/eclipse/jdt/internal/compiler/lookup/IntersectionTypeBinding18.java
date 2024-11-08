@@ -24,7 +24,6 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.Set;
-
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 

@@ -245,7 +245,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		}
 		if (e instanceof SwitchExpression) {
 			SwitchExpression se = (SwitchExpression)e;
-			for (Expression re : se.resultExpressions) {
+			for (Expression re : se.resultExpressions()) {
 				Expression candidate = findPolyExpression(re);
 				if (candidate != null) return candidate;
 			}

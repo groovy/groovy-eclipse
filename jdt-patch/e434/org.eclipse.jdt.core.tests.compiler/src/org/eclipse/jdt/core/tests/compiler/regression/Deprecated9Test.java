@@ -17,13 +17,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import junit.framework.Test;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
-import junit.framework.Test;
 
 public class Deprecated9Test extends AbstractRegressionTest9 {
 	public Deprecated9Test(String name) {
@@ -915,7 +914,10 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			"----------\n";
 		runner.runWarningTest();
 	}
-	public void testBug534304() throws Exception {
+	public void testBug534304_1() throws Exception {
+		if (this.complianceLevel < ClassFileConstants.JDK13) {
+			return;
+		}
 		runNegativeTest(
 			new String[] {
 				"p1/C1.java",
@@ -954,6 +956,43 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			"	 ^^^^^^^^\n" +
 			"CMissing cannot be resolved to a type\n" +
 			"----------\n");
+	}
+	public void testBug534304_2() throws Exception {
+		if (this.complianceLevel < ClassFileConstants.JDK13) {
+			runNegativeTest(
+				new String[] {
+					"p1/C1.java",
+					"package p1;\n" +
+					"\n" +
+					"import pdep.Dep1;\n" +
+					"\n" +
+					"public class C1 {\n" +
+					"	Dep1 f;\n" +
+					"}\n",
+					"pdep/Dep1.java",
+					"package pdep;\n" +
+					"\n" +
+					"import pmissing.CMissing;\n" +
+					"\n" +
+					"@Deprecated(since=\"13\")\n" +
+					"@CMissing\n" +
+					"public class Dep1 {\n" +
+					"\n" +
+					"}\n"
+				},
+				"----------\n" +
+				"----------\n" +
+				"1. ERROR in pdep\\Dep1.java (at line 3)\n" +
+				"	import pmissing.CMissing;\n" +
+				"	       ^^^^^^^^\n" +
+				"The import pmissing cannot be resolved\n" +
+				"----------\n" +
+				"2. ERROR in pdep\\Dep1.java (at line 6)\n" +
+				"	@CMissing\n" +
+				"	 ^^^^^^^^\n" +
+				"CMissing cannot be resolved to a type\n" +
+				"----------\n");
+		}
 	}
 	public void testBug542795() throws Exception {
 		Runner runner = new Runner();
