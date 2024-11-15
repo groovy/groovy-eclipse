@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.compiler;
 
 import java.util.Arrays;
-
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;

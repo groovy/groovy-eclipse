@@ -3,7 +3,9 @@ package org.eclipse.jdt.internal.core.builder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -17,7 +19,6 @@ import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -41,7 +42,6 @@ public class ClasspathMultiReleaseJar extends ClasspathJar {
 	public ClasspathMultiReleaseJar(ZipFile zipFile, AccessRuleSet accessRuleSet, boolean isOnModulePath, String compliance) {
 		this(zipFile.getName(), 0, accessRuleSet, null, isOnModulePath, compliance);
 		this.zipFile = zipFile;
-		this.closeZipFileAtEnd = true;
 	}
 
 	@Override
@@ -98,8 +98,9 @@ public class ClasspathMultiReleaseJar extends ClasspathJar {
 	}
 
 	@Override
-	protected String readJarContent(final SimpleSet packageSet) {
-		String modInfo = null;
+	protected Set<String> readPackageNames() {
+		final Set<String> packageSet = new HashSet<>();
+		packageSet.add(""); //$NON-NLS-1$
 		for (Enumeration<? extends ZipEntry> e = this.zipFile.entries(); e.hasMoreElements(); ) {
 			String fileName = e.nextElement().getName();
 			if (fileName.startsWith(META_INF_VERSIONS) && fileName.length() > META_INF_LENGTH) {
@@ -107,17 +108,9 @@ public class ClasspathMultiReleaseJar extends ClasspathJar {
 				fileName = fileName.substring(i + 1);
 			} else if (fileName.startsWith("META-INF/")) //$NON-NLS-1$
 				continue;
-			if (modInfo == null) {
-				int folderEnd = fileName.lastIndexOf('/');
-				folderEnd += 1;
-				String className = fileName.substring(folderEnd, fileName.length());
-				if (className.equalsIgnoreCase(IModule.MODULE_INFO_CLASS)) {
-					modInfo = fileName;
-				}
-			}
 			addToPackageSet(packageSet, fileName, false);
 		}
-		return modInfo;
+		return packageSet;
 	}
 
 	@Override

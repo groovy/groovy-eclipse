@@ -3845,29 +3845,6 @@ public abstract class Scope {
 		return null;
 	}
 
-	/**
-	 * Returns the immediately enclosing switch expression (carried by closest blockScope),
-	 */
-	public SwitchExpression enclosingSwitchExpression() {
-		Scope current = this;
-		do {
-			switch(current.kind) {
-				case METHOD_SCOPE :
-				case CLASS_SCOPE :
-				case COMPILATION_UNIT_SCOPE :
-				case MODULE_SCOPE :
-					return null;
-				case BLOCK_SCOPE: {
-					BlockScope bs = (BlockScope) current;
-					if (bs.enclosingCase != null && bs.enclosingCase.swich instanceof SwitchExpression se)
-						return se;
-					break;
-				}
-			}
-		} while ((current = current.parent) != null);
-		return null;
-	}
-
 	// Tie break IS running to determine the most specific method binding.
 	protected boolean isAcceptableMethod(MethodBinding one, MethodBinding two) {
 		TypeBinding[] oneParams = one.parameters;

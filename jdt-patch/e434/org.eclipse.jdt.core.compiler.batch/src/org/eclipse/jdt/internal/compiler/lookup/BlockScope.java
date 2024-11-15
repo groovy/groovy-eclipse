@@ -231,8 +231,8 @@ private void checkAndSetModifiersForVariable(LocalVariableBinding varBinding) {
 	varBinding.modifiers = modifiers;
 }
 
-public void adjustLocalVariablePositions(int delta, boolean offsetAlreadyUpdated) {
-	this.offset += offsetAlreadyUpdated ? 0 : delta;
+public void adjustLocalVariablePositions(int delta) {
+	this.offset += delta;
 	if (this.offset > this.maxOffset)
 		this.maxOffset = this.offset;
 
@@ -258,8 +258,14 @@ public void adjustCurrentAndSubScopeLocalVariablePositions(int delta) {
 		this.maxOffset = this.offset;
 
 	for (LocalVariableBinding lvb : this.locals) {
-		if (lvb != null && lvb.resolvedPosition != -1)
+		if (lvb != null && lvb.resolvedPosition != -1) {
 			lvb.resolvedPosition += delta;
+			if (lvb.resolvedPosition > 0xFFFF) { // no more than 65535 words of locals
+				problemReporter().noMoreAvailableSpaceForLocal(
+					lvb,
+					lvb.declaration == null ? (ASTNode)methodScope().referenceContext : lvb.declaration);
+			}
+		}
 	}
 	for (Scope subScope : this.subscopes) {
 		if (subScope instanceof BlockScope) {

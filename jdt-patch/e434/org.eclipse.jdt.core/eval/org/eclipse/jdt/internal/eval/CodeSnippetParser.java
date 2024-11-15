@@ -565,10 +565,10 @@ protected void consumeStatementReturn() {
 	recordLastStatementIfNeeded();
 }
 @Override
-protected void consumeStatementSwitch() {
-	super.consumeStatementSwitch();
-	/* recovery */
-	recordLastStatementIfNeeded();
+protected void consumeSwitchStatementOrExpression(boolean isStmt) {
+	super.consumeSwitchStatementOrExpression(isStmt);
+	if (isStmt) /* recovery */
+		recordLastStatementIfNeeded();
 }
 @Override
 protected void consumeStatementSynchronized() {

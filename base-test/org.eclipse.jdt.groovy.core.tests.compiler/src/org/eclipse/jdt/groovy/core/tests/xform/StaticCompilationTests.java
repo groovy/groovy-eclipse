@@ -769,7 +769,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
             "Pogo.groovy",
             "class Pogo {\n" +
-            "  Map<String,?> getMap() {\n" +
+            "  Map<String,Number> getMap() {\n" +
             "    return [:]\n" +
             "  }\n" +
             "}\n",

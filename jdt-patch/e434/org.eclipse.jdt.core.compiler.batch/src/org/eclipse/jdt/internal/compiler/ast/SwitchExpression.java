@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2023 IBM Corporation and others.
+ * Copyright (c) 2018, 2024 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,6 +9,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Advantest R & D - Switch Expressions 2.0
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -27,7 +28,6 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
@@ -46,11 +46,11 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 	private int nullStatus = FlowInfo.UNKNOWN;
 	public boolean jvmStackVolatile = false;
 	static final char[] SECRET_YIELD_VALUE_NAME = " yieldValue".toCharArray(); //$NON-NLS-1$
-	List<LocalVariableBinding> typesOnStack;
+	private List<LocalVariableBinding> typesOnStack;
 
-	public Result results = new Result();
+	public Results results = new Results();
 
-	class Result { // Abstraction to help with 15.28.1 determination of the type of a switch expression.
+	class Results { // Abstraction to help with 15.28.1 determination of the type of a switch expression.
 
 		private Set<Expression> rExpressions = new LinkedHashSet<>(4);
 		private Set<TypeBinding> rTypes = new HashSet<>();
@@ -176,25 +176,15 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 		return this.expressionContext;
 	}
 	@Override
-	protected boolean ignoreMissingDefaultCase(CompilerOptions compilerOptions) {
-		return true;
-	}
-	@Override
 	protected void reportMissingEnumConstantCase(BlockScope upperScope, FieldBinding enumConstant) {
+		// seeming identical body with super method causes varied overload selection
 		upperScope.problemReporter().missingEnumConstantCase(this, enumConstant);
 	}
 	@Override
 	protected int getFallThroughState(Statement stmt, BlockScope blockScope) {
-		if ((stmt instanceof Expression && ((Expression) stmt).isTrulyExpression())|| stmt instanceof ThrowStatement)
+		if (stmt.isTrulyExpression() || stmt instanceof ThrowStatement)
 			return BREAKING;
-		if ((this.switchBits & LabeledRules) != 0 // do this check for every block if '->' (Switch Labeled Rules)
-				&& stmt instanceof Block) {
-			Block block = (Block) stmt;
-			if (!block.canCompleteNormally()) {
-				return BREAKING;
-			}
-		}
-		return FALLTHROUGH;
+		return stmt.canCompleteNormally() ? FALLTHROUGH : BREAKING;
 	}
 	@Override
 	public boolean checkNPE(BlockScope skope, FlowContext flowContext, FlowInfo flowInfo, int ttlForFieldCheck) {
@@ -215,7 +205,7 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 		List<Expression> polys = new ArrayList<>();
 		for (Expression e : this.results.rExpressions) {
 			Expression[] ea = e.getPolyExpressions();
-			if (ea == null || ea.length ==0) continue;
+			if (ea == null || ea.length == 0) continue;
 			polys.addAll(Arrays.asList(ea));
 		}
 		return polys.toArray(new Expression[0]);
@@ -250,25 +240,13 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 			return FlowInfo.NON_NULL;
 		return this.nullStatus;
 	}
-	@Override
-	protected void statementGenerateCode(BlockScope currentScope, CodeStream codeStream, Statement statement) {
-		if (!(statement instanceof Expression && ((Expression) statement).isTrulyExpression())
-				|| statement instanceof Assignment
-				|| statement instanceof MessageSend
-				|| (statement instanceof SwitchStatement && !(statement instanceof SwitchExpression))) {
-			super.statementGenerateCode(currentScope, codeStream, statement);
-			return;
-		}
-		Expression expression1 = (Expression) statement;
-		expression1.generateCode(currentScope, codeStream, true /* valueRequired */);
-	}
-	private TypeBinding createType(int typeId) {
-		TypeBinding type = TypeBinding.wellKnownType(this.scope, typeId);
-		return type != null ? type : this.scope.getJavaLangObject();
-	}
-	private LocalVariableBinding addTypeStackVariable(CodeStream codeStream, TypeBinding type, int typeId, int index, int resolvedPosition) {
+	private LocalVariableBinding createStackSpillSlot(CodeStream codeStream, TypeBinding type, int typeId, int index, int resolvedPosition) {
 		char[] name = CharOperation.concat(SECRET_YIELD_VALUE_NAME, String.valueOf(index).toCharArray());
-		type = type != null ? type : createType(typeId);
+		if (type == null) {
+			type = TypeBinding.wellKnownType(this.scope, typeId);
+			if (type == null)
+				type = this.scope.getJavaLangObject();
+		}
 		LocalVariableBinding lvb =
 				new LocalVariableBinding(
 					name,
@@ -278,13 +256,7 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 		lvb.setConstant(Constant.NotAConstant);
 		lvb.useFlag = LocalVariableBinding.USED;
 		lvb.resolvedPosition = resolvedPosition;
-//		if (this.offset > 0xFFFF) { // no more than 65535 words of locals // TODO - also the cumulative at MethodScope
-//			problemReporter().noMoreAvailableSpaceForLocal(
-//				local,
-//				local.declaration == null ? (ASTNode)methodScope().referenceContext : local.declaration);
-//		}
 		this.scope.addLocalVariable(lvb);
-		lvb.declaration = new LocalDeclaration(name, 0, 0);
 		return lvb;
 	}
 
@@ -297,7 +269,7 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 		int index = 0;
 		while (operandStackSize > 0) {
 			TypeBinding type = codeStream.operandStack.peek();
-			LocalVariableBinding lvb = addTypeStackVariable(codeStream, type, TypeIds.T_undefined, index++, nextResolvedPosition);
+			LocalVariableBinding lvb = createStackSpillSlot(codeStream, type, TypeIds.T_undefined, index++, nextResolvedPosition);
 			nextResolvedPosition += switch (lvb.type.id) {
 				case TypeIds.T_long, TypeIds.T_double -> 2;
 				default -> 1;
@@ -311,7 +283,8 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 			codeStream.classFile.referenceBinding.scope.problemReporter().operandStackSizeInappropriate(codeStream.classFile.referenceBinding.scope.referenceContext);
 
 		int delta = nextResolvedPosition - this.scope.offset;
-		this.scope.adjustLocalVariablePositions(delta, false);
+		if (delta > 0)
+			this.scope.adjustLocalVariablePositions(delta);
 	}
 
 	public void refillOperandStackIfNeeded(CodeStream codeStream, YieldStatement yield) {
@@ -329,7 +302,7 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 		}
 	}
 
-	private void removeStoredTypes(CodeStream codeStream) {
+	private void releaseStackSpillSlots(CodeStream codeStream) {
 		List<LocalVariableBinding> tos = this.typesOnStack;
 		int index = tos != null ? tos.size() -1 : - 1;
 		while (index >= 0) {
@@ -343,7 +316,7 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 		spillOperandStackIfNeeded(codeStream);
 		super.generateCode(currentScope, codeStream);
 		if (this.jvmStackVolatile)
-			removeStoredTypes(codeStream);
+			releaseStackSpillSlots(codeStream);
 		if (!valueRequired) { // switch expression result discarded (saved to a variable that is not used.)
 			switch(postConversionType(currentScope).id) {
 				case TypeIds.T_long, TypeIds.T_double -> codeStream.pop2();

@@ -3341,7 +3341,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 	}
 
 	protected boolean readMarkdownEscapedToken(int expectedToken) throws InvalidInputException {
-		if (!this.markdown)
+		if (!this.markdown || (this.tagValue != TAG_LINK_VALUE && this.tagValue != TAG_LINKPLAIN_VALUE))
 			return readToken() == expectedToken;
 		if (this.currentTokenType < 0) {
 			this.tokenPreviousPosition = this.scanner.currentPosition;

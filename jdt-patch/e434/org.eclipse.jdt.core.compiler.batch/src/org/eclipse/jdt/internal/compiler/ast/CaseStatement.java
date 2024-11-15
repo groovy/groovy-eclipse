@@ -202,31 +202,30 @@ public ResolvedCase[] resolveCase(BlockScope scope, TypeBinding switchExpression
 	for (Expression e : this.constantExpressions) {
 		count++;
 		if (e instanceof FakeDefaultLiteral) {
+			 switchStatement.containsPatterns = switchStatement.isNonTraditional = true;
 			 checkDuplicateDefault(scope, switchStatement, this.constantExpressions.length > 1 ? e : this);
-			 if (count != 2 || nullCaseCount < 1) {
+			 if (count != 2 || nullCaseCount < 1)
 				 scope.problemReporter().patternSwitchCaseDefaultOnlyAsSecond(e);
-			 }
 			 continue;
 		}
 		if (e instanceof NullLiteral) {
-			if (switchStatement.nullCase == null) {
+			switchStatement.containsNull = switchStatement.isNonTraditional = true;
+			if (switchStatement.nullCase == null)
 				switchStatement.nullCase = this;
-			}
 			nullCaseCount++;
-			if (count > 1 && nullCaseCount < 2) {
+			if (count > 1 && nullCaseCount < 2)
 				scope.problemReporter().patternSwitchNullOnlyOrFirstWithDefault(e);
-			}
 		}
 
 		// tag constant name with enum type for privileged access to its members
-		if (switchExpressionType != null && switchExpressionType.isEnum() && (e instanceof SingleNameReference)) {
+		if (switchExpressionType != null && switchExpressionType.isEnum() && (e instanceof SingleNameReference))
 			((SingleNameReference) e).setActualReceiverType((ReferenceBinding)switchExpressionType);
-		} else if (e instanceof FakeDefaultLiteral) {
-			continue; // already processed
-		}
+
 		e.setExpressionContext(ExpressionContext.TESTING_CONTEXT);
-		if (e instanceof Pattern p)
+		if (e instanceof Pattern p) {
+			switchStatement.containsPatterns = switchStatement.isNonTraditional =  true;
 			p.setOuterExpressionType(switchExpressionType);
+		}
 
 		TypeBinding	caseType = e.resolveType(scope);
 
@@ -234,7 +233,6 @@ public ResolvedCase[] resolveCase(BlockScope scope, TypeBinding switchExpression
 			hasResolveErrors = true;
 			continue;
 		}
-
 
 		if (caseType.isValidBinding()) {
 			if (e instanceof Pattern) {

@@ -15,6 +15,8 @@ package org.eclipse.jdt.internal.core.builder;
 
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -26,14 +28,12 @@ import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
-import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 
 public class ClasspathJMod extends ClasspathJar {
 
 	public static char[] CLASSES = "classes".toCharArray(); //$NON-NLS-1$
 	public static final String CLASSES_FOLDER = "classes/"; //$NON-NLS-1$
-	private static int MODULE_DESCRIPTOR_NAME_LENGTH = IModule.MODULE_INFO_CLASS.length();
 
 	ClasspathJMod(String zipFilename, long lastModified, AccessRuleSet accessRuleSet, IPath externalAnnotationPath) {
 		super(zipFilename, lastModified, accessRuleSet, externalAnnotationPath, true);
@@ -80,8 +80,9 @@ public class ClasspathJMod extends ClasspathJar {
 		return null;
 	}
 	@Override
-	protected String readJarContent(final SimpleSet packageSet) {
-		String modInfo = null;
+	protected Set<String> readPackageNames() {
+		final Set<String> packageSet = new HashSet<>();
+		packageSet.add(""); //$NON-NLS-1$
 		for (Enumeration<? extends ZipEntry> e = this.zipFile.entries(); e.hasMoreElements(); ) {
 			ZipEntry entry = e.nextElement();
 			char[] entryName = entry.getName().toCharArray();
@@ -90,15 +91,10 @@ public class ClasspathJMod extends ClasspathJar {
 				char[] folder = CharOperation.subarray(entryName, 0, index);
 				if (CharOperation.equals(CLASSES, folder)) {
 					char[] fileName = CharOperation.subarray(entryName, index + 1, entryName.length);
-					if (modInfo == null && fileName.length == MODULE_DESCRIPTOR_NAME_LENGTH) {
-						if (CharOperation.equals(fileName, IModule.MODULE_INFO_CLASS.toCharArray())) {
-							modInfo = new String(entryName);
-						}
-					}
 					addToPackageSet(packageSet, new String(fileName), false);
 				}
 			}
 		}
-		return modInfo;
+		return packageSet;
 	}
 }

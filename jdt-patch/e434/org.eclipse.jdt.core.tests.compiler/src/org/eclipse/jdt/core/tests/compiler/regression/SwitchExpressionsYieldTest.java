@@ -5789,7 +5789,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"1. ERROR in X.java (at line 5)\n" +
 				"	case AAABBB -> 1;\n" +
 				"	                ^\n" +
-				"Syntax error on token \";\", case expected after this token\n" +
+				"Syntax error on token \";\", [ expected\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 6)\n" +
 				"	(I)()->();\n" +
@@ -5802,6 +5802,11 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"Syntax error, insert \")\" to complete Expression\n" +
 				"----------\n" +
 				"4. ERROR in X.java (at line 6)\n" +
+				"	(I)()->();\n" +
+				"	        ^\n" +
+				"Syntax error, insert \"]\" to complete ArrayAccess\n" +
+				"----------\n" +
+				"5. ERROR in X.java (at line 6)\n" +
 				"	(I)()->();\n" +
 				"	        ^\n" +
 				"Syntax error, insert \":\" to complete SwitchLabel\n" +
@@ -8109,11 +8114,6 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"	default -> 1;\n" +
 				"	^^^^^^^\n" +
 				"Mixing of '->' and ':' case statement styles is not allowed within a switch\n" +
-				"----------\n" +
-				"2. ERROR in X.java (at line 6)\n" +
-				"	case 1 : yield 2;\n" +
-				"	^^^^^^\n" +
-				"Mixing of '->' and ':' case statement styles is not allowed within a switch\n" +
 				"----------\n");
 	}
 
@@ -8300,5 +8300,50 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"""
 				},
 				"3");
+	}
+
+	public void testConditionalSwitchLabel() {
+		this.runConformTest(
+				new String[] {
+				"X.java",
+				"""
+				public class X {
+				    public static void main(String[] args) {
+				        var foo = switch (10) {
+				            case (10 > 20 ? 10 :  10) : yield "special" ;
+				            default : yield "default value";
+				        };
+				        System.out.println(foo);
+				    }
+
+				}
+				"""
+				},
+				"special");
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3283
+	// ECJ fails to recognize "yield" as a contextual keyword when there is a case fall-through
+	public void testIssue3283() {
+		this.runConformTest(
+				new String[] {
+				"X.java",
+				"""
+				public class X {
+					public static int var = 0;
+					public static void main(String argv[]) {
+				        int j = switch(var){
+				        case 0: yield (0 + 42); // If this is removed, there's a different error
+				        case 1: // If I remove this line, the error goes away
+				        case 2: yield 1; // multiple errors
+				        default:
+				          throw new IllegalArgumentException("Unexpected value: " + var);
+				    };
+				    System.out.println("Yield = " + j);
+				    }
+				}
+				"""
+				},
+				"Yield = 42");
 	}
 }

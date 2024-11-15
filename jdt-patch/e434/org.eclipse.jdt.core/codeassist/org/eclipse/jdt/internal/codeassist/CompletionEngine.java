@@ -3806,26 +3806,26 @@ public final class CompletionEngine
 		this.completionToken = singleNameReference.token;
 		SwitchStatement switchStatement = astNodeParent instanceof SwitchStatement ? (SwitchStatement) astNodeParent : null;
 		boolean isSwitchEnumOrType = false;
-		if((switchStatement != null
+		if ((switchStatement != null
 				&& switchStatement.expression.resolvedType != null)) {
 			TypeBinding resolvedType = switchStatement.expression.resolvedType;
 			isSwitchEnumOrType = resolvedType.isEnum();
-			if(!isSwitchEnumOrType) {
-				if( this.compilerOptions.complianceLevel >= ClassFileConstants.JDK17)
+			if (!isSwitchEnumOrType) {
+				if (this.compilerOptions.complianceLevel >= ClassFileConstants.JDK21)
 					isSwitchEnumOrType = resolvedType.isClass() || resolvedType.isInterface() || resolvedType.isRecord();
 			}
 
 		}
 		if (isSwitchEnumOrType) {
 			TypeBinding resolvedType = switchStatement.expression.resolvedType;
-			if(resolvedType.isEnum()) {
+			if (resolvedType.isEnum()) {
 				if (!this.requestor.isIgnored(CompletionProposal.FIELD_REF)) {
 					this.assistNodeIsEnum = true;
 					findEnumConstantsFromSwithStatement(this.completionToken, switchStatement);
 				}
-			}
-			else {
-					// if switch with class/interface/record - J17 onwards
+			} else {
+					// if switch with class/interface/record - J21 onwards
+					findTypesAndPackages(this.completionToken, scope, true, false, new ObjectVector());
 					char[][] keywords = new char[2][];
 					int count = 0;
 					if (switchStatement.defaultCase == null) {

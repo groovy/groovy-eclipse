@@ -1242,26 +1242,13 @@ public boolean forcedToBeRaw(ReferenceContext referenceContext) {
 		if (ternary.valueIfTrue.forcedToBeRaw(referenceContext) || ternary.valueIfFalse.forcedToBeRaw(referenceContext)) {
 			return true;
 		}
-	} else if (this instanceof SwitchExpression) {
-		SwitchExpression se = (SwitchExpression) this;
+	} else if (this instanceof SwitchExpression se) {
 		for (Expression e : se.resultExpressions()) {
 			if (e.forcedToBeRaw(referenceContext))
 				return true;
 		}
 	}
 	return false;
-}
-
-/**
- * Returns an object which can be used to identify identical JSR sequence targets
- * (see TryStatement finally block codegen)
- * or <code>null</code> if not reusable
- */
-public Object reusableJSRTarget() {
-	if (this.constant != Constant.NotAConstant && (this.implicitConversion & TypeIds.BOXING) == 0) {
-		return this.constant;
-	}
-	return null;
 }
 
 /**
@@ -1350,7 +1337,8 @@ public void traverse(ASTVisitor visitor, ClassScope scope) {
 public boolean statementExpression() {
 	return false;
 }
-// for switch statement
+
+@Override
 public boolean isTrulyExpression() {
 	return true;
 }

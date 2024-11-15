@@ -40,12 +40,6 @@ public TryStatementTest(String name) {
 public static Test suite() {
 	return buildAllCompliancesTestSuite(testClass());
 }
-@Override
-protected Map getCompilerOptions() {
-	Map compilerOptions = super.getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ShareCommonFinallyBlocks, CompilerOptions.ENABLED);
-	return compilerOptions;
-}
 
 public void test001() {
 	this.runConformTest(new String[] {
@@ -1983,101 +1977,6 @@ public void test041() throws Exception {
 		"      Stack map table: number of frames 2\n" +
 		"        [pc: 11, same_locals_1_stack_item, stack: {java.lang.Exception}]\n" +
 		"        [pc: 21, same_locals_1_stack_item, stack: {java.lang.Throwable}]\n";
-
-	File f = new File(OUTPUT_DIR + File.separator + "X.class");
-	byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(f);
-	ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
-	String result = disassembler.disassemble(classFileBytes, "\n", ClassFileBytesDisassembler.DETAILED);
-	int index = result.indexOf(expectedOutput);
-	if (index == -1 || expectedOutput.length() == 0) {
-		System.out.println(Util.displayString(result, 3));
-	}
-	if (index == -1) {
-		assertEquals("Wrong contents", expectedOutput, result);
-	}
-}
-//https://bugs.eclipse.org/bugs/show_bug.cgi?id=128705 - variation
-public void test042() throws Exception {
-	this.runConformTest(
-			new String[] {
-				"X.java",
-				" public class X {\n" +
-				" public static void main(String[] args) {\n" +
-				"		System.out.println(new X().foo(args));\n" +
-				"	}\n" +
-				"	String foo(String[] args) {\n" +
-				"		try {\n" +
-				"			if (args == null) return \"KO\";\n" +
-				"			switch(args.length) {\n" +
-				"			case 0:\n" +
-				"				return \"OK\";\n" +
-				"			case 1:\n" +
-				"				return \"KO\";\n" +
-				"			case 3:\n" +
-				"				return \"OK\";\n" +
-				"			default:\n" +
-				"				return \"KO\";\n" +
-				"			}\n" +
-				"		} finally {\n" +
-				"			System.out.print(\"FINALLY:\");\n" +
-				"		}\n" +
-				"	}\n" +
-				"}\n",
-			},
-			"FINALLY:OK");
-
-	String expectedOutput =
-			"  // Method descriptor #26 ([Ljava/lang/String;)Ljava/lang/String;\n" +
-			"  // Stack: 2, Locals: 3\n" +
-			"  java.lang.String foo(java.lang.String[] args);\n" +
-			"     0  aload_1 [args]\n" +
-			"     1  ifnonnull 15\n" +
-			"     4  getstatic java.lang.System.out : java.io.PrintStream [16]\n" +
-			"     7  ldc <String \"FINALLY:\"> [35]\n" +
-			"     9  invokevirtual java.io.PrintStream.print(java.lang.String) : void [37]\n" +
-			"    12  ldc <String \"KO\"> [40]\n" +
-			"    14  areturn\n" +
-			"    15  aload_1 [args]\n" +
-			"    16  arraylength\n" +
-			"    17  tableswitch default: 65\n" +
-			"          case 0: 48\n" +
-			"          case 1: 59\n" +
-			"          case 2: 65\n" +
-			"          case 3: 62\n" +
-			"    48  getstatic java.lang.System.out : java.io.PrintStream [16]\n" +
-			"    51  ldc <String \"FINALLY:\"> [35]\n" +
-			"    53  invokevirtual java.io.PrintStream.print(java.lang.String) : void [37]\n" +
-			"    56  ldc <String \"OK\"> [42]\n" +
-			"    58  areturn\n" +
-			"    59  goto 4\n" +
-			"    62  goto 48\n" +
-			"    65  goto 4\n" +
-			"    68  astore_2\n" +
-			"    69  getstatic java.lang.System.out : java.io.PrintStream [16]\n" +
-			"    72  ldc <String \"FINALLY:\"> [35]\n" +
-			"    74  invokevirtual java.io.PrintStream.print(java.lang.String) : void [37]\n" +
-			"    77  aload_2\n" +
-			"    78  athrow\n" +
-			"      Exception Table:\n" +
-			"        [pc: 0, pc: 4] -> 68 when : any\n" +
-			"        [pc: 15, pc: 48] -> 68 when : any\n" +
-			"        [pc: 59, pc: 68] -> 68 when : any\n" +
-			"      Line numbers:\n" +
-			"        [pc: 0, line: 7]\n" +
-			"        [pc: 4, line: 19]\n" +
-			"        [pc: 12, line: 7]\n" +
-			"        [pc: 15, line: 8]\n" +
-			"        [pc: 48, line: 19]\n" +
-			"        [pc: 56, line: 10]\n" +
-			"        [pc: 59, line: 12]\n" +
-			"        [pc: 62, line: 14]\n" +
-			"        [pc: 65, line: 16]\n" +
-			"        [pc: 68, line: 18]\n" +
-			"        [pc: 69, line: 19]\n" +
-			"        [pc: 77, line: 20]\n" +
-			"      Local variable table:\n" +
-			"        [pc: 0, pc: 79] local: this index: 0 type: X\n" +
-			"        [pc: 0, pc: 79] local: args index: 1 type: java.lang.String[]\n";
 
 	File f = new File(OUTPUT_DIR + File.separator + "X.class");
 	byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(f);

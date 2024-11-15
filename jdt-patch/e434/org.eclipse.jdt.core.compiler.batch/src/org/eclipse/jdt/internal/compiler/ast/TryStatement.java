@@ -53,6 +53,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.impl.JavaFeature;
 import org.eclipse.jdt.internal.compiler.lookup.*;
+import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
 
 public class TryStatement extends StatementWithFinallyBlock {
 
@@ -79,12 +80,6 @@ public class TryStatement extends StatementWithFinallyBlock {
 		secretReturnValue;
 
 	ExceptionLabel[] declaredExceptionLabels; // only set while generating code
-
-	// for sharing finally blocks - behavior disabled by https://bugs.eclipse.org/bugs/show_bug.cgi?id=404146; can be enabled only by an undocumented option.
-	private Object[] reusableJSRTargets;
-	private BranchLabel[] reusableJSRSequenceStartLabels;
-	private int[] reusableJSRStateIndexes;
-	private int reusableJSRTargetsCount = 0;
 
 	private static final int NO_FINALLY = 0;					// no finally block
 	private static final int FINALLY_DOES_NOT_COMPLETE = 2;		// non returning finally is optimized with only one instance of finally block
@@ -931,60 +926,11 @@ private boolean isDuplicateResourceReference(int index) {
 	return false;
 }
 
-// Disabled behavior enabled only by an undocumented option. See https://bugs.eclipse.org/bugs/show_bug.cgi?id=404146
-private boolean reusedFinallyBlock(CodeStream codeStream, Object targetLocation, int stateIndex) {
-	// optimize finally block generation, using the targetLocation (if any)
-	CompilerOptions options = this.scope.compilerOptions();
-	if (options.shareCommonFinallyBlocks && targetLocation != null) {
-		boolean reuseTargetLocation = true;
-		if (this.reusableJSRTargetsCount > 0) {
-			nextReusableTarget: for (int i = 0, count = this.reusableJSRTargetsCount; i < count; i++) {
-				Object reusableJSRTarget = this.reusableJSRTargets[i];
-				differentTarget: {
-					if (targetLocation == reusableJSRTarget)
-						break differentTarget;
-					if (targetLocation instanceof Constant
-							&& reusableJSRTarget instanceof Constant
-							&& ((Constant)targetLocation).hasSameValue((Constant) reusableJSRTarget)) {
-						break differentTarget;
-					}
-					// cannot reuse current target
-					continue nextReusableTarget;
-				}
-				// current target has been used in the past, simply branch to its label
-				if ((this.reusableJSRStateIndexes[i] != stateIndex) && finallyMode() == FINALLY_INLINE) {
-					reuseTargetLocation = false;
-					break nextReusableTarget;
-				} else {
-					codeStream.goto_(this.reusableJSRSequenceStartLabels[i]);
-					return true;
-				}
-			}
-		} else {
-			this.reusableJSRTargets = new Object[3];
-			this.reusableJSRSequenceStartLabels = new BranchLabel[3];
-			this.reusableJSRStateIndexes = new int[3];
-		}
-		if (reuseTargetLocation) {
-			if (this.reusableJSRTargetsCount == this.reusableJSRTargets.length) {
-				System.arraycopy(this.reusableJSRTargets, 0, this.reusableJSRTargets = new Object[2*this.reusableJSRTargetsCount], 0, this.reusableJSRTargetsCount);
-				System.arraycopy(this.reusableJSRSequenceStartLabels, 0, this.reusableJSRSequenceStartLabels = new BranchLabel[2*this.reusableJSRTargetsCount], 0, this.reusableJSRTargetsCount);
-				System.arraycopy(this.reusableJSRStateIndexes, 0, this.reusableJSRStateIndexes = new int[2*this.reusableJSRTargetsCount], 0, this.reusableJSRTargetsCount);
-			}
-			this.reusableJSRTargets[this.reusableJSRTargetsCount] = targetLocation;
-			BranchLabel reusableJSRSequenceStartLabel = new BranchLabel(codeStream);
-			reusableJSRSequenceStartLabel.place();
-			this.reusableJSRStateIndexes[this.reusableJSRTargetsCount] = stateIndex;
-			this.reusableJSRSequenceStartLabels[this.reusableJSRTargetsCount++] = reusableJSRSequenceStartLabel;
-		}
-	}
-	return false;
-}
 /**
- * @see StatementWithFinallyBlock#generateFinallyBlock(BlockScope, CodeStream, Object, int)
+ * @see StatementWithFinallyBlock#generateFinallyBlock(BlockScope, CodeStream, int)
  */
 @Override
-public boolean generateFinallyBlock(BlockScope currentScope, CodeStream codeStream, Object targetLocation, int stateIndex) {
+public boolean generateFinallyBlock(BlockScope currentScope, CodeStream codeStream, int stateIndex) {
 
 	int resourceCount = this.resources.length;
 	if (resourceCount > 0 && this.resourceExceptionLabels != null) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=375248
@@ -1008,21 +954,16 @@ public boolean generateFinallyBlock(BlockScope currentScope, CodeStream codeStre
 		case NO_FINALLY:
 			exitDeclaredExceptionHandlers(codeStream);
 			return false;
+		case FINALLY_INLINE:
+			((StackMapFrameCodeStream) codeStream).pushStateIndex(stateIndex);
+			exitAnyExceptionHandler();
+			exitDeclaredExceptionHandlers(codeStream);
+			this.finallyBlock.generateCode(currentScope, codeStream);
+			((StackMapFrameCodeStream) codeStream).popStateIndex();
+			return false;
+		default:
+			throw EclipseCompiler.REACHED_DEAD_CODE;
 	}
-
-	/*********  Begin: undocumented behavior off by default ******* */
-	if (reusedFinallyBlock( codeStream,  targetLocation,  stateIndex))
-		return true;
-	/*********  End: undocumented behavior off by default ******* */
-
-	if (finallyMode == FINALLY_INLINE) {
-		((StackMapFrameCodeStream) codeStream).pushStateIndex(stateIndex);
-		exitAnyExceptionHandler();
-		exitDeclaredExceptionHandlers(codeStream);
-		this.finallyBlock.generateCode(currentScope, codeStream);
-		((StackMapFrameCodeStream) codeStream).popStateIndex();
-	}
-	return false;
 }
 @Override
 public boolean isFinallyBlockEscaping() {
@@ -1072,9 +1013,9 @@ public void resolve(BlockScope upperScope) {
 	// special scope for secret locals optimization.
 	this.scope = new BlockScope(upperScope);
 	/* GROOVY edit
-	if (upperScope.enclosingSwitchExpression() instanceof SwitchExpression swich)
+	if (enclosingSwitchExpression(upperScope) instanceof SwitchExpression swich) {
 	*/
-	var swich = upperScope.enclosingSwitchExpression();
+	var swich = enclosingSwitchExpression(upperScope);
 	if (swich != null) {
 	// GROOVY end
 		swich.jvmStackVolatile = true; // ought to prepare for any raised exception blowing up the the operand stack to smithereens

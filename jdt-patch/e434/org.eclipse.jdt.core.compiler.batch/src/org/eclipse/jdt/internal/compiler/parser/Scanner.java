@@ -16,7 +16,6 @@
 package org.eclipse.jdt.internal.compiler.parser;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
@@ -113,9 +112,7 @@ public class Scanner implements TerminalTokens {
 	public boolean wasAcr = false;
 
 	public boolean fakeInModule = false;
-	public int caseStartPosition = -1;
 	boolean inCondition = false;
-	/* package */ int yieldColons = -1;
 	boolean breakPreviewAllowed = false;
 	/**
 	 * The current context of the scanner w.r.t restricted keywords
@@ -190,7 +187,7 @@ public class Scanner implements TerminalTokens {
 	private VanguardParser vanguardParser;
 	ConflictedParser activeParser = null;
 	private boolean consumingEllipsisAnnotations = false;
-	public boolean multiCaseLabelComma = false;
+	public boolean scanningSwitchLabel = false;
 
 	public static final int RoundBracket = 0;
 	public static final int SquareBracket = 1;
@@ -233,8 +230,7 @@ public Scanner(
 	this.complianceLevel = complianceLevel;
 	this.checkNonExternalizedStringLiterals = checkNonExternalizedStringLiterals;
 	this.previewEnabled = isPreviewEnabled;
-	this.caseStartPosition = -1;
-	this.multiCaseLabelComma = false;
+	this.scanningSwitchLabel = false;
 	if (taskTags != null) {
 		int taskTagsLength = taskTags.length;
 		int length = taskTagsLength;
@@ -557,13 +553,24 @@ protected final boolean scanForTextBlockBeginning() {
 	}
 	return false;
 }
-protected final boolean lineBeginsWithMarkdown() {
+protected final boolean lineBeginsWithMarkdown() throws InvalidInputException {
 	try {
 		int temp = this.currentPosition;
 		int count = 0;
 		// The scanner is already at \r, look for matching \n
-		if (this.currentCharacter == '\r' && this.source[temp] == '\n') {
-			temp++;
+		if (this.currentCharacter == '\r') {
+			char c = this.source[temp];
+			if (c == '\\') {
+				if (this.source[temp+1] == 'u') {
+					getNextUnicodeChar();
+					if (this.currentCharacter == '\n') {
+						pushUnicodeLineSeparator();
+					}
+					temp = this.currentPosition;
+				}
+			} else if (c == '\n') {
+				temp++;
+			}
 		}
 		while(true) {
 			char c = this.source[temp++];
@@ -1426,11 +1433,7 @@ public void ungetToken(int unambiguousToken) {
 	}
 	this.nextToken = unambiguousToken;
 }
-protected void updateCase(int token) {
-	if (token == TokenNamecase) {
-		this.caseStartPosition = this.startPosition;
-	}
-}
+
 public int getNextToken() throws InvalidInputException {
 
 	int token;
@@ -1443,7 +1446,6 @@ public int getNextToken() throws InvalidInputException {
 		this.scanContext = isInModuleDeclaration() ? ScanContext.EXPECTING_KEYWORD : ScanContext.INACTIVE;
 	}
 	token = getNextToken0();
-	updateCase(token);
 	if (areRestrictedModuleKeywordsActive()) {
 		if (isRestrictedKeyword(token))
 			token = disambiguatedRestrictedKeyword(token);
@@ -1452,7 +1454,6 @@ public int getNextToken() throws InvalidInputException {
 	if (this.activeParser == null) { // anybody interested in the grammatical structure of the program should have registered.
 		if (token != TokenNameWHITESPACE) {
 			addTokenToLookBack(token);
-			this.multiCaseLabelComma = false;
 		}
 		return token;
 	}
@@ -1461,10 +1462,9 @@ public int getNextToken() throws InvalidInputException {
 	} else if (token == TokenNameELLIPSIS) {
 		this.consumingEllipsisAnnotations = false;
 	} else if (mayBeAtCasePattern(token)) {
-		token = disambiguateCasePattern(token, this);
+		token = disambiguateCasePattern(token);
 	}
 	addTokenToLookBack(token);
-	this.multiCaseLabelComma = false;
 	return token;
 }
 protected int findCommentType() {
@@ -1719,7 +1719,6 @@ protected int getNextToken0() throws InvalidInputException {
 				case ':' :
 					if (getNextChar(':'))
 						return TokenNameCOLON_COLON;
-					++this.yieldColons;
 					return TokenNameCOLON;
 				case '\'' :
 					return processSingleQuotes(checkIfUnicode);
@@ -1891,7 +1890,7 @@ protected int getNextToken0() throws InvalidInputException {
 									previous = this.currentPosition;
 									if (((this.currentCharacter = this.source[this.currentPosition++]) == '\\')
 										&& (this.source[this.currentPosition] == 'u')) {
-										//-------------unicode traitement ------------
+										//-------------unicode treatement ------------
 										getNextUnicodeChar();
 										isUnicode = true;
 									} else {
@@ -3278,7 +3277,7 @@ public void resetTo(int begin, int end, boolean isModuleInfo, ScanContext contex
 	this.consumingEllipsisAnnotations = false;
 	this.insideModuleInfo = isModuleInfo;
 	this.scanContext = context == null ? getScanContext(begin) : context;
-	this.multiCaseLabelComma = false;
+	this.scanningSwitchLabel = false;
 }
 /**
  * @see #lookBack
@@ -3290,13 +3289,20 @@ final void resetLookBack() {
  * @see #lookBack
  */
 final void addTokenToLookBack(int newToken) {
-	// ignore whitespace and comments
 	switch (newToken) {
 		case TokenNameWHITESPACE:
 		case TokenNameCOMMENT_LINE:
 		case TokenNameCOMMENT_BLOCK:
 		case TokenNameCOMMENT_JAVADOC:
 			return;
+	}
+	if (newToken == TokenNamecase)
+		this.scanningSwitchLabel = true;
+	else if (newToken == TokenNameCaseArrow)
+		this.scanningSwitchLabel = false;
+	else if (this.scanningSwitchLabel && this.lookBack[1] == TokenNameCOLON) {
+		if (this.activeParser == null || this.activeParser.automatonWillShift(TokenNamecase))
+			this.scanningSwitchLabel = false;
 	}
 	this.lookBack[0] = this.lookBack[1];
 	this.lookBack[1] = newToken;
@@ -4221,7 +4227,7 @@ private int internalScanIdentifierOrKeyword(int index, int length, char[] data) 
 						&& (data[++index] == 'e')
 						&& (data[++index] == 'l')
 						&& (data[++index] == 'd'))
-						return disambiguatedRestrictedIdentifierYield(TokenNameRestrictedIdentifierYield);
+						return disambiguateYield();
 					//$FALL-THROUGH$
 				default :
 					return TokenNameIdentifier;
@@ -4566,7 +4572,6 @@ public final void setSource(char[] sourceString){
 	this.containsAssertKeyword = false;
 	this.linePtr = -1;
 	this.scanContext = null;
-	this.yieldColons = -1;
 	this.insideModuleInfo = false;
 }
 /*
@@ -4997,20 +5002,14 @@ private static final class VanguardScanner extends Scanner {
 			this.scanContext = isInModuleDeclaration() ? ScanContext.EXPECTING_KEYWORD : ScanContext.INACTIVE;
 		}
 		token = getNextToken0();
-		updateCase(token);
 		if (areRestrictedModuleKeywordsActive()) {
 			if (isRestrictedKeyword(token))
 				token = disambiguatedRestrictedKeyword(token);
 			updateScanContext(token);
 		} else if (mayBeAtCasePattern(token)) {
-			token = disambiguateCasePattern(token, this);
-		} else if (token == TokenNameARROW  &&
-				mayBeAtCaseLabelExpr() &&  this.caseStartPosition < this.startPosition) {
-				// this.caseStartPosition > this.startPositionpossible on recovery - bother only about correct ones.
-				// add fake token of TokenNameCOLON, call vanguard on this modified source
-				// TODO: Inefficient method due to redoing of the same source, investigate alternate
-				// Can we do a dup of parsing/check the transition of the state?
-				token = disambiguateArrowWithCaseExpr(this, token);
+			token = disambiguateCasePattern(token);
+		} else if (token == TokenNameARROW) {
+				token = disambiguatedToken(token, this);
 		} else	if (token == TokenNameAT && atTypeAnnotation()) {
 			if (((VanguardParser) this.activeParser).currentGoal == Goal.LambdaParameterListGoal) {
 				token = disambiguatedToken(token, this);
@@ -5019,7 +5018,6 @@ private static final class VanguardScanner extends Scanner {
 			}
 		}
 		this.addTokenToLookBack(token);
-		this.multiCaseLabelComma = false;
 		return token == TokenNameEOF ? TokenNameNotAToken : token;
 	}
 }
@@ -5035,8 +5033,6 @@ private static class Goal {
 	static int ReferenceExpressionRule = 0;
 	static int VarargTypeAnnotationsRule  = 0;
 	static int BlockStatementoptRule = 0;
-	static int YieldStatementRule = 0;
-	static int SwitchLabelCaseLhsRule = 0;
 	static int[] ModifiersoptRules;
 	static int PermittedTypesRule;
 	static int[] PatternRules;
@@ -5046,8 +5042,6 @@ private static class Goal {
 	static Goal VarargTypeAnnotationGoal;
 	static Goal ReferenceExpressionGoal;
 	static Goal BlockStatementoptGoal;
-	static Goal YieldStatementGoal;
-	static Goal SwitchLabelCaseLhsGoal;
 	static Goal SealedModifierGoal;
 	static Goal PermittedTypesGoal;
 	static Goal PatternGoal;
@@ -5055,7 +5049,7 @@ private static class Goal {
 	static int[] SealedModifierFollow =  { TokenNameclass, TokenNameinterface,
 			TokenNameenum, TokenNameRestrictedIdentifierrecord };// Note: enum/record allowed as error flagging rules.
 	static int[] PermittedTypesFollow =  { TokenNameLBRACE };
-	static int[] PatternCaseLabelFollow = {TokenNameCOLON, TokenNameARROW, TokenNameCOMMA, TokenNameBeginCaseExpr, TokenNameRestrictedIdentifierWhen};
+	static int[] PatternCaseLabelFollow = {TokenNameCOLON, TokenNameARROW, TokenNameCOMMA, TokenNameCaseArrow, TokenNameRestrictedIdentifierWhen};
 
 	static {
 
@@ -5078,17 +5072,11 @@ private static class Goal {
 			if ("BlockStatementopt".equals(Parser.name[Parser.non_terminal_index[Parser.lhs[i]]])) //$NON-NLS-1$
 				BlockStatementoptRule = i;
 			else
-			if ("YieldStatement".equals(Parser.name[Parser.non_terminal_index[Parser.lhs[i]]])) //$NON-NLS-1$
-				YieldStatementRule = i;
-			else
 			if ("Modifiersopt".equals(Parser.name[Parser.non_terminal_index[Parser.lhs[i]]])) //$NON-NLS-1$
 				modifiersOptStates.add(i);
 			else
 			if ("PermittedTypes".equals(Parser.name[Parser.non_terminal_index[Parser.lhs[i]]])) //$NON-NLS-1$
 				PermittedTypesRule = i;
-			else
-			if ("SwitchLabelCaseLhs".equals(Parser.name[Parser.non_terminal_index[Parser.lhs[i]]])) //$NON-NLS-1$
-				SwitchLabelCaseLhsRule = i;
 			else
 			if ("TypePattern".equals(Parser.name[Parser.non_terminal_index[Parser.lhs[i]]])) //$NON-NLS-1$
 				patternStates.add(i);
@@ -5107,11 +5095,9 @@ private static class Goal {
 		VarargTypeAnnotationGoal = new Goal(TokenNameAT, new int[] { TokenNameELLIPSIS }, VarargTypeAnnotationsRule);
 		ReferenceExpressionGoal =  new Goal(TokenNameLESS, new int[] { TokenNameCOLON_COLON }, ReferenceExpressionRule);
 		BlockStatementoptGoal =    new Goal(TokenNameLBRACE, new int [0], BlockStatementoptRule);
-		YieldStatementGoal =       new Goal(TokenNameARROW, new int [0], YieldStatementRule);
-		SwitchLabelCaseLhsGoal =   new Goal(TokenNameARROW, new int [0], SwitchLabelCaseLhsRule);
 		SealedModifierGoal = new Goal(TokenNameRestrictedIdentifiersealed, SealedModifierFollow, ModifiersoptRules);
 		PermittedTypesGoal = new Goal(TokenNameRestrictedIdentifierpermits, PermittedTypesFollow, PermittedTypesRule);
-		PatternGoal = new Goal(TokenNameBeginCaseElement, PatternCaseLabelFollow, PatternRules);
+		PatternGoal = new Goal(TokenNameBeginCasePattern, PatternCaseLabelFollow, PatternRules);
 	}
 
 
@@ -5176,7 +5162,6 @@ private static class VanguardParser extends Parser {
 
 	// Canonical LALR pushdown automaton identical to Parser.parse() minus side effects of any kind, returns the rule reduced.
 	protected boolean parse(Goal goal) {
-		int parenthesized = 0;
 		this.currentGoal = goal;
 		try {
 			int act = START_STATE;
@@ -5202,10 +5187,6 @@ private static class VanguardParser extends Parser {
 					this.unstackedAct = act;
 					try {
 					this.currentToken = this.scanner.getNextToken();
-					if (this.currentToken == TokenNameLPAREN)
-						parenthesized++;
-					else if (this.currentToken == TokenNameRPAREN)
-						parenthesized --;
 					} finally {
 						this.unstackedAct = ERROR_ACTION;
 					}
@@ -5215,10 +5196,6 @@ private static class VanguardParser extends Parser {
 				    	this.unstackedAct = act;
 						try {
 				    	this.currentToken = this.scanner.getNextToken();
-				    	if (this.currentToken == TokenNameLPAREN)
-				    		parenthesized++;
-						else if (this.currentToken == TokenNameRPAREN)
-							parenthesized --;
 						} finally {
 							this.unstackedAct = ERROR_ACTION;
 						}
@@ -5229,15 +5206,6 @@ private static class VanguardParser extends Parser {
 
 				// ProcessNonTerminals :
 				do { /* reduce */
-					// mimic the unfortunate side effect introduced by org.eclipse.jdt.internal.compiler.parser.Parser.consumeCaseLabelElement(CaseLabelKind)
-					if (parenthesized == 0 && this.currentToken == TerminalTokens.TokenNameCOMMA && this.scanner.caseStartPosition < this.scanner.startPosition) {
-						for (int patternRule : Goal.PatternRules) {
-							if (act == patternRule) {
-								this.scanner.multiCaseLabelComma = true;
-								break;
-							}
-						}
-					}
 					if (goal.hasBeenReached(act, this.currentToken))
 						return SUCCESS;
 					if (this.currentToken == TokenNameIdentifier) {
@@ -5336,9 +5304,7 @@ private VanguardScanner getNewVanguardScanner() {
 	vs.resetTo(this.startPosition, this.eofPosition - 1, isInModuleDeclaration(), this.scanContext);
 	return vs;
 }
-protected final boolean mayBeAtCasePattern(int token) {
-	return (token == TokenNamecase || this.multiCaseLabelComma) && !isInModuleDeclaration();
-}
+
 protected final boolean maybeAtLambdaOrCast() { // Could the '(' we saw just now herald a lambda parameter list or a cast expression ? (the possible locations for both are identical.)
 
 	if (isInModuleDeclaration())
@@ -5436,7 +5402,7 @@ public void setActiveParser(ConflictedParser parser) {
 	if (parser != null) {
 		this.insideModuleInfo = parser.isParsingModuleDeclaration();
 	}
-	this.multiCaseLabelComma = false;
+	this.scanningSwitchLabel = false;
 }
 public static boolean isRestrictedKeyword(int token) {
 	switch(token) {
@@ -5469,7 +5435,7 @@ private boolean mayBeAtAnYieldStatement() {
 		case TokenNamedo:
 			return true;
 		case TokenNameCOLON:
-			return this.lookBack[0] == TokenNamedefault || this.yieldColons == 1;
+			return this.lookBack[0] == TokenNamedefault || (this.scanningSwitchLabel &&  (this.activeParser == null || this.activeParser.automatonWillShift(TokenNamecase)));
 		case TokenNameDOT:
 		case TokenNameARROW:
 		default:
@@ -5541,72 +5507,7 @@ private boolean disambiguaterecordWithLookAhead() {
 	}
 	return false; // IIE event;
 }
-private boolean disambiguateYieldWithLookAhead() {
-	getVanguardParser();
-	this.vanguardScanner.resetTo(this.currentPosition, this.eofPosition - 1);
-	try {
-		int lookAhead1 = this.vanguardScanner.getNextToken();
-		switch (lookAhead1) {
-			case TokenNameEQUAL_EQUAL :
-			case TokenNameLESS_EQUAL :
-			case TokenNameGREATER_EQUAL :
-			case TokenNameNOT_EQUAL :
-			case TokenNameLEFT_SHIFT :
-			case TokenNameRIGHT_SHIFT :
-			case TokenNameUNSIGNED_RIGHT_SHIFT :
-			case TokenNamePLUS_EQUAL :
-			case TokenNameMINUS_EQUAL :
-			case TokenNameMULTIPLY_EQUAL :
-			case TokenNameDIVIDE_EQUAL :
-			case TokenNameAND_EQUAL :
-			case TokenNameOR_EQUAL :
-			case TokenNameXOR_EQUAL :
-			case TokenNameREMAINDER_EQUAL :
-			case TokenNameLEFT_SHIFT_EQUAL :
-			case TokenNameRIGHT_SHIFT_EQUAL :
-			case TokenNameUNSIGNED_RIGHT_SHIFT_EQUAL :
-			case TokenNameOR_OR :
-			case TokenNameAND_AND :
-			case TokenNameREMAINDER :
-			case TokenNameXOR :
-			case TokenNameAND :
-			case TokenNameMULTIPLY :
-			case TokenNameOR :
-			case TokenNameTWIDDLE :
-			case TokenNameDIVIDE :
-			case TokenNameGREATER :
-			case TokenNameLESS :
-			case TokenNameLBRACE :
-			case TokenNameRBRACE :
-			case TokenNameLBRACKET :
-			case TokenNameRBRACKET :
-			case TokenNameSEMICOLON :
-			case TokenNameQUESTION :
-			case TokenNameCOLON :
-			case TokenNameCOMMA :
-			case TokenNameDOT :
-			case TokenNameEQUAL :
-			case TokenNameAT :
-			case TokenNameELLIPSIS :
-			case TokenNameARROW :
-			case TokenNameCOLON_COLON :
-				return false;
-			case TokenNameMINUS_MINUS :
-			case TokenNamePLUS_PLUS :
-				int lookAhead2 = this.vanguardScanner.getNextToken();
-				return lookAhead2 == TokenNameIdentifier;
-			default : return true;
-		}
-	} catch (InvalidInputException e) {
-		if (e.getMessage().equals(INVALID_CHAR_IN_STRING)) {
-			//Ignore
-		} else {
-			// Shouldn't happen, but log the error
-			e.printStackTrace();
-		}
-	}
-	return false; // IIE event;
-}
+
 int disambiguatedRestrictedIdentifierWhen(int restrictedIdentifierToken) {
 	// and here's the kludge
 	if (restrictedIdentifierToken != TokenNameRestrictedIdentifierWhen)
@@ -5614,12 +5515,74 @@ int disambiguatedRestrictedIdentifierWhen(int restrictedIdentifierToken) {
 	return this.activeParser == null || !this.activeParser.automatonWillShift(TokenNameRestrictedIdentifierWhen) ?
 					TokenNameIdentifier : TokenNameRestrictedIdentifierWhen;
 }
-int disambiguatedRestrictedIdentifierYield(int restrictedIdentifierToken) {
-	if (this.sourceLevel < ClassFileConstants.JDK14)
+
+int disambiguateYield() {
+	if (this.sourceLevel < ClassFileConstants.JDK14 || !mayBeAtAnYieldStatement())
 		return TokenNameIdentifier;
 
-	return mayBeAtAnYieldStatement() && disambiguateYieldWithLookAhead() ?
-			restrictedIdentifierToken : TokenNameIdentifier;
+	getVanguardParser();
+	this.vanguardScanner.resetTo(this.currentPosition, this.eofPosition - 1);
+	try {
+		switch (this.vanguardScanner.getNextToken()) {
+			case TokenNameEQUAL_EQUAL:
+			case TokenNameLESS_EQUAL:
+			case TokenNameGREATER_EQUAL:
+			case TokenNameNOT_EQUAL:
+			case TokenNameLEFT_SHIFT:
+			case TokenNameRIGHT_SHIFT:
+			case TokenNameUNSIGNED_RIGHT_SHIFT:
+			case TokenNamePLUS_EQUAL:
+			case TokenNameMINUS_EQUAL:
+			case TokenNameMULTIPLY_EQUAL:
+			case TokenNameDIVIDE_EQUAL:
+			case TokenNameAND_EQUAL:
+			case TokenNameOR_EQUAL:
+			case TokenNameXOR_EQUAL:
+			case TokenNameREMAINDER_EQUAL:
+			case TokenNameLEFT_SHIFT_EQUAL:
+			case TokenNameRIGHT_SHIFT_EQUAL:
+			case TokenNameUNSIGNED_RIGHT_SHIFT_EQUAL:
+			case TokenNameOR_OR:
+			case TokenNameAND_AND:
+			case TokenNameREMAINDER:
+			case TokenNameXOR:
+			case TokenNameAND:
+			case TokenNameMULTIPLY:
+			case TokenNameOR:
+			case TokenNameTWIDDLE:
+			case TokenNameDIVIDE:
+			case TokenNameGREATER:
+			case TokenNameLESS:
+			case TokenNameLBRACE:
+			case TokenNameRBRACE:
+			case TokenNameLBRACKET:
+			case TokenNameRBRACKET:
+			case TokenNameSEMICOLON:
+			case TokenNameQUESTION:
+			case TokenNameCOLON:
+			case TokenNameCOMMA:
+			case TokenNameDOT:
+			case TokenNameEQUAL:
+			case TokenNameAT:
+			case TokenNameELLIPSIS:
+			case TokenNameARROW:
+			case TokenNameCOLON_COLON:
+				return TokenNameIdentifier;
+			case TokenNameMINUS_MINUS:
+			case TokenNamePLUS_PLUS:
+				return this.vanguardScanner.getNextToken() == TokenNameIdentifier ? TokenNameRestrictedIdentifierYield : TokenNameIdentifier;
+			default:
+				return TokenNameRestrictedIdentifierYield;
+		}
+	} catch (InvalidInputException e) {
+		if (e.getMessage().equals(INVALID_CHAR_IN_STRING)) {
+			// Ignore
+		} else {
+			// Shouldn't happen, but log the error
+			e.printStackTrace();
+		}
+	}
+	return TokenNameIdentifier; // IIE event;
 }
 int disambiguatedRestrictedKeyword(int restrictedKeywordToken) {
 	int token = restrictedKeywordToken;
@@ -5702,27 +5665,14 @@ int disambiguatesRestrictedIdentifierWithLookAhead(int restrictedIdentifierToken
 	return TokenNameIdentifier;
 }
 
-private VanguardScanner getNewVanguardScanner(char[] src) {
-	VanguardScanner vs = new VanguardScanner(this.sourceLevel, this.complianceLevel, this.previewEnabled);
-	vs.setSource(src);
-	vs.resetTo(0, src.length, isInModuleDeclaration(), this.scanContext);
-	return vs;
-}
-private VanguardParser getNewVanguardParser(char[] src) {
-	VanguardScanner vs = getNewVanguardScanner(src);
-	VanguardParser vp = new VanguardParser(vs);
-	vs.setActiveParser(vp);
-	return vp;
-}
 int disambiguatedToken(int token, Scanner scanner) {
 	final VanguardParser parser = getVanguardParser();
-	parser.scanner.caseStartPosition = this.caseStartPosition;
-	if (token == TokenNameARROW  &&  mayBeAtCaseLabelExpr() &&  scanner.caseStartPosition < scanner.startPosition) {
-		// this.caseStartPosition > this.startPositionpossible on recovery - bother only about correct ones.
-		// add fake token of TokenNameCOLON, call vanguard on this modified source
-		// TODO: Inefficient method due to redoing of the same source, investigate alternate
-		// Can we do a dup of parsing/check the transition of the state?
-		return disambiguateArrowWithCaseExpr(scanner, token);
+	if (token == TokenNameARROW) {
+		if (this.lookBack[1] == TokenNamedefault)
+			return TokenNameCaseArrow;
+		if (this.sourceLevel < ClassFileConstants.JDK14 || this.activeParser == null || !this.activeParser.automatonWillShift(TokenNameCaseArrow))
+			return TokenNameARROW;
+		return TokenNameCaseArrow;
 	} else	if (token == TokenNameLPAREN  && maybeAtLambdaOrCast()) {
 		if (parser.parse(Goal.LambdaParameterListGoal) == VanguardParser.SUCCESS) {
 			scanner.nextToken = TokenNameLPAREN;
@@ -5751,42 +5701,27 @@ int disambiguatedToken(int token, Scanner scanner) {
 	return token;
 }
 
-protected int disambiguateArrowWithCaseExpr(Scanner scanner, int retToken) {
-	char[] nSource = CharOperation.append(Arrays.copyOfRange(scanner.source, scanner.caseStartPosition, scanner.startPosition), ':');
-	VanguardParser vp = getNewVanguardParser(nSource);
-	if (vp.parse(Goal.SwitchLabelCaseLhsGoal) == VanguardParser.SUCCESS) {
-		scanner.nextToken = TokenNameARROW;
-		retToken = TokenNameBeginCaseExpr;
-//		scanner.caseStartPosition = scanner.caseStartStack.isEmpty() ? -1 : scanner.caseStartStack.pop();
-	}
-	return retToken;
+public boolean atMultiCaseComma() {
+	return this.scanningSwitchLabel && this.lookBack[1] == TokenNameCOMMA && (this.activeParser == null || this.activeParser.automatonWillShift(TokenNameBeginCasePattern));
 }
-/*
- * Assumption: mayBeAtCasePattern(token) is true before calling this method.
- */
-int disambiguateCasePattern(int token, Scanner scanner) {
+
+protected final boolean mayBeAtCasePattern(int token) {
+	return token == TokenNamecase || atMultiCaseComma();
+}
+
+int disambiguateCasePattern(int token) {
 	int delta = token == TokenNamecase ? 4 : 0; // 4 for case.
 	final VanguardParser parser = getNewVanguardParser();
 	parser.scanner.resetTo(parser.scanner.currentPosition + delta, parser.scanner.eofPosition);
-	parser.scanner.caseStartPosition = this.caseStartPosition;
 	if (parser.parse(Goal.PatternGoal) == VanguardParser.SUCCESS) {
 		if (token == TokenNamecase) {
-			scanner.nextToken = TokenNameBeginCaseElement;
+			this.nextToken = TokenNameBeginCasePattern;
 		} else {
-			scanner.nextToken = token;
-			token = TokenNameBeginCaseElement;
+			this.nextToken = token;
+			token = TokenNameBeginCasePattern;
 		}
 	}
 	return token;
-}
-
-protected boolean mayBeAtCaseLabelExpr() {
-	if (isInModuleDeclaration() || this.caseStartPosition <= 0)
-		return false;
-	if (this.lookBack[1] == TokenNamedefault) {
-		return this.lookBack[0] == TerminalTokens.TokenNamecase || this.lookBack[0] == TerminalTokens.TokenNameCOMMA;
-	}
-	return true;
 }
 
 protected boolean isAtAssistIdentifier() {
@@ -5870,7 +5805,7 @@ public int fastForward(Statement unused) {
 			case TokenNameLBRACE:
 			case TokenNameAT:
 			case TokenNameBeginLambda:
-			case TokenNameBeginCaseExpr:
+			case TokenNameCaseArrow:
 			case TokenNameAT308:
 			case TokenNameRestrictedIdentifierYield: // can be in FOLLOW of Block
 				if(getVanguardParser().parse(Goal.BlockStatementoptGoal) == VanguardParser.SUCCESS)

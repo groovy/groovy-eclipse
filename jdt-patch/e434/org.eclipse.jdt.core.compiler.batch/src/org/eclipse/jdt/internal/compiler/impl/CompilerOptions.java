@@ -515,8 +515,6 @@ public class CompilerOptions {
 	public int reportMissingJavadocCommentsVisibility;
 	/** Specify if need to flag missing javadoc comment for overriding method */
 	public boolean reportMissingJavadocCommentsOverriding;
-	/** Indicate whether common escaping finally blocks should be shared */
-	public boolean shareCommonFinallyBlocks;
 	/** Indicate if @SuppressWarning annotations are activated */
 	public boolean suppressWarnings;
 	/** Indicate if @SuppressWarning annotations should also suppress optional errors */
@@ -1446,7 +1444,7 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportUnusedParameterIncludeDocCommentReference, this.reportUnusedParameterIncludeDocCommentReference ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportSpecialParameterHidingField, this.reportSpecialParameterHidingField ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_MaxProblemPerUnit, String.valueOf(this.maxProblemsPerUnit));
-		optionsMap.put(OPTION_ShareCommonFinallyBlocks, this.shareCommonFinallyBlocks ? ENABLED : DISABLED);
+		optionsMap.put(OPTION_ShareCommonFinallyBlocks, DISABLED);
 		optionsMap.put(OPTION_ReportNullReference, getSeverityString(NullReference));
 		optionsMap.put(OPTION_ReportPotentialNullReference, getSeverityString(PotentialNullReference));
 		optionsMap.put(OPTION_ReportRedundantNullCheck, getSeverityString(RedundantNullCheck));
@@ -1658,9 +1656,6 @@ public class CompilerOptions {
 		// check missing javadoc comments
 		this.reportMissingJavadocCommentsVisibility = ClassFileConstants.AccPublic;
 		this.reportMissingJavadocCommentsOverriding = false;
-
-		// JSR bytecode and sharing
-		this.shareCommonFinallyBlocks = false;
 
 		// javadoc comment support
 		this.docCommentSupport = false;
@@ -1896,11 +1891,7 @@ public class CompilerOptions {
 			}
 		}
 		if ((optionValue = optionsMap.get(OPTION_ShareCommonFinallyBlocks)) != null) {
-			if (ENABLED.equals(optionValue)) {
-				this.shareCommonFinallyBlocks = true;
-			} else if (DISABLED.equals(optionValue)) {
-				this.shareCommonFinallyBlocks = false;
-			}
+			// withdrawn support
 		}
 		if ((optionValue = optionsMap.get(OPTION_MethodParametersAttribute)) != null) {
 			if (GENERATE.equals(optionValue)) {
@@ -2400,7 +2391,6 @@ public class CompilerOptions {
 		buf.append("\n\t- report unused parameter when overriding concrete method : ").append(this.reportUnusedParameterWhenOverridingConcrete ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- report unused parameter include doc comment reference : ").append(this.reportUnusedParameterIncludeDocCommentReference ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- report constructor/setter parameter hiding existing field : ").append(this.reportSpecialParameterHidingField ? ENABLED : DISABLED); //$NON-NLS-1$
-		buf.append("\n\t- share common finally blocks : ").append(this.shareCommonFinallyBlocks ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- report unavoidable generic type problems : ").append(this.reportUnavoidableGenericTypeProblems ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- unsafe type operation: ").append(getSeverityString(UncheckedTypeOperation)); //$NON-NLS-1$
 		buf.append("\n\t- unsafe raw type: ").append(getSeverityString(RawTypeReference)); //$NON-NLS-1$

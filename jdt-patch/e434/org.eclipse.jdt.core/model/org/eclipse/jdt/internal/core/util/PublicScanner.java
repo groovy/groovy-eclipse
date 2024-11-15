@@ -139,8 +139,8 @@ public class PublicScanner implements IScanner, ITerminalSymbols {
 			case TerminalTokens.TokenNameAT : nextToken = ITerminalSymbols.TokenNameAT; break;
 			case TerminalTokens.TokenNameAT308 : nextToken = ITerminalSymbols.TokenNameAT; break;
 			case TerminalTokens.TokenNameAT308DOTDOTDOT : nextToken = ITerminalSymbols.TokenNameAT; break;
-			case TerminalTokens.TokenNameBeginCaseElement : nextToken = getNextToken(); break;
-			case TerminalTokens.TokenNameBeginCaseExpr : nextToken = getNextToken(); break;
+			case TerminalTokens.TokenNameBeginCasePattern : nextToken = getNextToken(); break;
+			case TerminalTokens.TokenNameCaseArrow : nextToken = ITerminalSymbols.TokenNameARROW; break;
 			case TerminalTokens.TokenNameBeginIntersectionCast : nextToken = getNextToken(); break;
 			case TerminalTokens.TokenNameBeginLambda : nextToken = getNextToken(); break;
 			case TerminalTokens.TokenNameBeginTypeArguments : nextToken = getNextToken(); break;

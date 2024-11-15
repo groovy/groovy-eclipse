@@ -240,8 +240,8 @@ public class FakedTrackingVariable extends LocalDeclaration {
 			else if (expression instanceof ConditionalExpression) {
 				return getMoreUnsafeFromBranches((ConditionalExpression)expression, flowInfo,
 										branch -> getCloseTrackingVariable(branch, flowInfo, flowContext, useAnnotations));
-			} else if (expression instanceof SwitchExpression) {
-				for (Expression re : ((SwitchExpression) expression).resultExpressions()) {
+			} else if (expression instanceof SwitchExpression se) {
+				for (Expression re : se.resultExpressions()) {
 					FakedTrackingVariable fakedTrackingVariable = getCloseTrackingVariable(re, flowInfo, flowContext, useAnnotations);
 					if (fakedTrackingVariable != null) {
 						return fakedTrackingVariable;
@@ -885,9 +885,9 @@ public class FakedTrackingVariable extends LocalDeclaration {
 			return getMoreUnsafeFromBranches((ConditionalExpression) expression, flowInfo,
 						branch -> analyseCloseableExpression(scope, flowInfo, flowContext, useAnnotations,
 																local, location, branch, previousTracker));
-		} else if (expression instanceof SwitchExpression) {
+		} else if (expression instanceof SwitchExpression se) {
 			FakedTrackingVariable mostRisky = null;
-			for (Expression result : ((SwitchExpression) expression).resultExpressions()) {
+			for (Expression result : se.resultExpressions()) {
 				FakedTrackingVariable current = analyseCloseableExpression(scope, flowInfo, flowContext, useAnnotations,
 						local, location, result, previousTracker);
 				if (mostRisky == null)

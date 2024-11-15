@@ -13,8 +13,12 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.eclipse.core.runtime.ISafeRunnable;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.SafeRunner;
@@ -28,9 +32,15 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CompilationParticipant;
+import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.compiler.ReconcileContext;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilationUnit;
+import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
+import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -178,7 +188,6 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 		if (this.ast != null)
 			return this.ast; // no need to recompute AST if known already
 
-		CompilationUnitDeclaration unit = null;
 		try {
 			JavaModelManager.getJavaModelManager().abortOnMissingSource.set(Boolean.TRUE);
 			CompilationUnit source = workingCopy.cloneCachingContents();
@@ -186,33 +195,81 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 			if (JavaProject.hasJavaNature(workingCopy.getJavaProject().getProject())
 					&& (this.reconcileFlags & ICompilationUnit.FORCE_PROBLEM_DETECTION) != 0) {
 				this.resolveBindings = this.requestorIsActive;
-				if (this.problems == null)
+				if (this.problems == null) {
 					this.problems = new HashMap<>();
-				unit =
-					CompilationUnitProblemFinder.process(
-						source,
-						this.workingCopyOwner,
-						this.problems,
-						this.astLevel != ICompilationUnit.NO_AST/*creating AST if level is not NO_AST */,
-						this.reconcileFlags,
-						this.progressMonitor);
-				if (this.progressMonitor != null) this.progressMonitor.worked(1);
-			}
-
-			// create AST if needed
-			if (this.astLevel != ICompilationUnit.NO_AST
-					&& unit !=null/*unit is null if working copy is consistent && (problem detection not forced || non-Java project) -> don't create AST as per API*/) {
+				}
 				Map<String, String> options = workingCopy.getJavaProject().getOptions(true);
-				// convert AST
-				this.ast =
-					AST.convertCompilationUnit(
-						this.astLevel,
-						unit,
-						options,
-						this.resolveBindings,
-						source,
-						this.reconcileFlags,
-						this.progressMonitor);
+				if (CompilationUnit.DOM_BASED_OPERATIONS) {
+					try {
+						ASTParser parser = ASTParser.newParser(this.astLevel > 0 ? this.astLevel : AST.getJLSLatest());
+						parser.setResolveBindings(this.resolveBindings || (this.reconcileFlags & ICompilationUnit.FORCE_PROBLEM_DETECTION) != 0);
+						parser.setCompilerOptions(options);
+						parser.setSource(source);
+						org.eclipse.jdt.core.dom.CompilationUnit newAST = (org.eclipse.jdt.core.dom.CompilationUnit) parser.createAST(this.progressMonitor);
+						if ((this.reconcileFlags & ICompilationUnit.FORCE_PROBLEM_DETECTION) != 0 && newAST != null) {
+							newAST.getAST().resolveWellKnownType(PrimitiveType.BOOLEAN.toString()); //trigger resolution and analysis
+						}
+						Map<String, List<CategorizedProblem>> groupedProblems = new HashMap<>();
+						for (IProblem problem : newAST.getProblems()) {
+							if (problem instanceof CategorizedProblem categorizedProblem) {
+								groupedProblems.computeIfAbsent(categorizedProblem.getMarkerType(), key -> new ArrayList<>()).add(categorizedProblem);
+							}
+						}
+						for (Entry<String, List<CategorizedProblem>> entry : groupedProblems.entrySet()) {
+							this.problems.put(entry.getKey(), entry.getValue().toArray(CategorizedProblem[]::new));
+						}
+						if (this.astLevel != ICompilationUnit.NO_AST) {
+							this.ast = newAST;
+						}
+					} catch (AbortCompilationUnit ex) {
+						var problem = ex.problem;
+						if (problem == null && ex.exception instanceof IOException ioEx) {
+							String path = source.getPath().toString();
+							String exceptionTrace = ioEx.getClass().getName() + ':' + ioEx.getMessage();
+							problem = new DefaultProblemFactory().createProblem(
+									path.toCharArray(),
+									IProblem.CannotReadSource,
+									new String[] { path, exceptionTrace },
+									new String[] { path, exceptionTrace },
+									ProblemSeverities.AbortCompilation | ProblemSeverities.Error | ProblemSeverities.Fatal,
+									0, 0, 1, 0);
+						}
+						this.problems.put(Integer.toString(CategorizedProblem.CAT_BUILDPATH),
+							new CategorizedProblem[] { problem });
+					}
+				} else {
+					CompilationUnitDeclaration unit = null;
+					try {
+						unit = CompilationUnitProblemFinder.process(
+								source,
+								this.workingCopyOwner,
+								this.problems,
+								this.astLevel != ICompilationUnit.NO_AST/*creating AST if level is not NO_AST */,
+								this.reconcileFlags,
+								this.progressMonitor);
+						if (this.progressMonitor != null) this.progressMonitor.worked(1);
+
+						// create AST if needed
+						if (this.astLevel != ICompilationUnit.NO_AST
+								&& unit !=null/*unit is null if working copy is consistent && (problem detection not forced || non-Java project) -> don't create AST as per API*/) {
+							// convert AST
+							this.ast =
+								AST.convertCompilationUnit(
+									this.astLevel,
+									unit,
+									options,
+									this.resolveBindings,
+									source,
+									this.reconcileFlags,
+									this.progressMonitor);
+						}
+					} finally {
+						if (unit != null) {
+							unit.cleanUp();
+						}
+					}
+				}
+
 				if (this.ast != null) {
 					if (this.deltaBuilder.delta == null) {
 						this.deltaBuilder.delta = new JavaElementDelta(workingCopy);
@@ -228,9 +285,6 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 	    	// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=100919)
 	    } finally {
 			JavaModelManager.getJavaModelManager().abortOnMissingSource.remove();
-	        if (unit != null) {
-	            unit.cleanUp();
-	        }
 	    }
 		return this.ast;
 	}

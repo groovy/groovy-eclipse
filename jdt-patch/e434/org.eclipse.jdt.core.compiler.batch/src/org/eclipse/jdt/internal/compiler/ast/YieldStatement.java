@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) , 2024 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -10,6 +10,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Advantest R & D - Switch Expressions 2.0
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -27,9 +28,10 @@ public class YieldStatement extends BranchStatement {
 	public SwitchExpression switchExpression;
 	public boolean isImplicit;
 
-public YieldStatement(Expression expression, int sourceStart, int sourceEnd) {
+public YieldStatement(Expression expression, boolean isImplicit, int sourceStart, int sourceEnd) {
 	super(null, sourceStart, sourceEnd);
 	this.expression = expression;
+	this.isImplicit = isImplicit;
 }
 
 @Override
@@ -69,9 +71,8 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		traversedContext.recordBreakTo(targetContext);
 
 		if (traversedContext instanceof InsideStatementWithFinallyBlockFlowContext) {
-			if (traversedContext.associatedNode instanceof TryStatement ts) {
+			if (traversedContext.associatedNode instanceof TryStatement ts)
 				flowInfo.addInitializationsFrom(ts.finallyBlockInits); // collect inits
-			}
 		} else if (traversedContext == targetContext) {
 			targetContext.recordBreakFrom(flowInfo);
 			break;
@@ -85,11 +86,9 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 }
 
 private void adjustOperandStackTopIfNeeded(CodeStream codeStream) { // See https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3135
-	if (this.expression.resolvedType == TypeBinding.NULL) {
-		if (!this.switchExpression.resolvedType.isBaseType()) {     // no opcode called for to align the types, but we need to adjust the notion of type of TOS.
-			codeStream.operandStack.pop(TypeBinding.NULL);
-			codeStream.operandStack.push(this.switchExpression.resolvedType);
-		}
+	if (this.expression.resolvedType == TypeBinding.NULL && !this.switchExpression.resolvedType.isBaseType()) {     // no opcode called for to align the types, but we need to adjust the notion of type of TOS.
+		codeStream.operandStack.pop(TypeBinding.NULL);
+		codeStream.operandStack.push(this.switchExpression.resolvedType);
 	}
 }
 
@@ -110,14 +109,13 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 		this.expression.generateCode(currentScope, codeStream, valueRequired);
 		if (valueRequired)
 			adjustOperandStackTopIfNeeded(codeStream);
-	} else {
+	} else
 		codeStream.nop(); // prevent exception ranges from being empty on account of deferral : try { yield 42; } catch (Exception ex) {}  ...
-	}
 
 	// inline finally blocks in sequence
 	for (int i = 0, max = this.statementsWithFinallyBlock.length; i < max; i++) {
 		StatementWithFinallyBlock stmt = this.statementsWithFinallyBlock[i];
-		boolean didEscape = stmt.generateFinallyBlock(currentScope, codeStream,  this.expression.reusableJSRTarget(), this.initStateIndex);
+		boolean didEscape = stmt.generateFinallyBlock(currentScope, codeStream, this.initStateIndex);
 		if (didEscape) {
 			codeStream.recordPositionsFrom(pc, this.sourceStart);
 			StatementWithFinallyBlock.reenterAllExceptionHandlers(this.statementsWithFinallyBlock, i, codeStream);
@@ -147,7 +145,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 public void resolve(BlockScope scope) {
 
 	if (this.switchExpression == null) {
-		this.switchExpression = scope.enclosingSwitchExpression();
+		this.switchExpression = enclosingSwitchExpression(scope);
 		if (this.switchExpression != null && this.switchExpression.isPolyExpression()) {
 			this.expression.setExpressionContext(this.switchExpression.expressionContext); // result expressions feature in same context ...
 			this.expression.setExpectedType(this.switchExpression.expectedType);           // ... with the same target type
@@ -155,17 +153,15 @@ public void resolve(BlockScope scope) {
 	}
 
 	this.expression.resolveType(scope);
-	if (this.switchExpression != null) {
+	if (this.switchExpression != null)
 		this.switchExpression.results.add(this.expression);
-	}
 
 	if (this.isImplicit) {
 		if (this.switchExpression == null && !this.expression.statementExpression()) {
 			scope.problemReporter().invalidExpressionAsStatement(this.expression);
 		}
-	} else if (this.switchExpression == null) {
+	} else if (this.switchExpression == null)
 		scope.problemReporter().yieldOutsideSwitchExpression(this);
-	}
 }
 
 @Override

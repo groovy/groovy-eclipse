@@ -377,25 +377,21 @@ public class SwitchStatement extends Expression {
 	}
 	protected int getFallThroughState(Statement stmt, BlockScope blockScope) {
 		if ((this.switchBits & LabeledRules) != 0) {
-			if ((stmt instanceof Expression && ((Expression) stmt).isTrulyExpression()) || stmt instanceof ThrowStatement)
+			if (stmt.isTrulyExpression() || stmt instanceof ThrowStatement)
 				return BREAKING;
 			if (!stmt.canCompleteNormally())
 				return BREAKING;
-
-			if (stmt instanceof Block) {
-				Block block = (Block) stmt;
-				// Note implicit break anyway - Let the flow analysis do the dead code analysis
+			if (stmt instanceof Block block) {
 				BreakStatement breakStatement = new BreakStatement(null, block.sourceEnd -1, block.sourceEnd);
 				breakStatement.isSynthetic = true; // suppress dead code flagging - codegen will not generate dead code anyway
-
-				int l = block.statements == null ? 0 : block.statements.length;
-				if (l == 0) {
+				int length = block.statements == null ? 0 : block.statements.length;
+				if (length == 0) {
 					block.statements = new Statement[] {breakStatement};
 					block.scope = this.scope; // (upper scope) see Block.resolve() for similar
 				} else {
-					Statement[] newArray = new Statement[l + 1];
-					System.arraycopy(block.statements, 0, newArray, 0, l);
-					newArray[l] = breakStatement;
+					Statement[] newArray = new Statement[length + 1];
+					System.arraycopy(block.statements, 0, newArray, 0, length);
+					newArray[length] = breakStatement;
 					block.statements = newArray;
 				}
 				return BREAKING;
@@ -1085,37 +1081,29 @@ public class SwitchStatement extends Expression {
 	@Override
 	public void resolve(BlockScope upperScope) {
 		try {
-			boolean isStringSwitch = false;
 			TypeBinding expressionType = this.expression.resolveType(upperScope);
 			CompilerOptions compilerOptions = upperScope.compilerOptions();
 			if (expressionType != null) {
 				this.expression.computeConversion(upperScope, expressionType, expressionType);
 				checkType: {
+
 					if (!expressionType.isValidBinding()) {
 						expressionType = null; // fault-tolerance: ignore type mismatch from constants from hereon
 						break checkType;
-					} else if (expressionType.isBaseType()) {
-						if (JavaFeature.PRIMITIVES_IN_PATTERNS.isSupported(compilerOptions)) {
+					}
+
+					if (expressionType.isBaseType()) {
+						if (JavaFeature.PRIMITIVES_IN_PATTERNS.isSupported(compilerOptions))
 							this.isPrimitiveSwitch = true;
-						}
 						if (this.expression.isConstantValueOfTypeAssignableToType(expressionType, TypeBinding.INT))
 							break checkType;
 						if (expressionType.isCompatibleWith(TypeBinding.INT))
 							break checkType;
-					} else if (expressionType.isEnum()) {
-						break checkType;
-					} else if (!this.containsPatterns && !this.containsNull && upperScope.isBoxingCompatibleWith(expressionType, TypeBinding.INT)) {
-						this.expression.computeConversion(upperScope, TypeBinding.INT, expressionType);
-						break checkType;
-					} else if (expressionType.id == TypeIds.T_JavaLangString) {
-						if (this.containsPatterns || this.containsNull) {
-							isStringSwitch = !JavaFeature.PATTERN_MATCHING_IN_SWITCH.isSupported(compilerOptions);
-							this.isNonTraditional = true;
-							break checkType;
-						}
-						isStringSwitch = true;
-						break checkType;
 					}
+
+					if (expressionType.id == TypeIds.T_JavaLangString || expressionType.isEnum() || upperScope.isBoxingCompatibleWith(expressionType, TypeBinding.INT))
+						break checkType;
+
 					if (!JavaFeature.PATTERN_MATCHING_IN_SWITCH.isSupported(compilerOptions) || (expressionType.isBaseType() && expressionType.id != T_null && expressionType.id != T_void)) {
 						if (!this.isPrimitiveSwitch) { // when isPrimitiveSwitch is set it is approved above
 							upperScope.problemReporter().incorrectSwitchType(this.expression, expressionType);
@@ -1126,16 +1114,10 @@ public class SwitchStatement extends Expression {
 					}
 				}
 			}
- 			if (isStringSwitch) {
-				// the secret variable should be created before iterating over the switch's statements that could
-				// create more locals. This must be done to prevent overlapping of locals
-				// See https://bugs.eclipse.org/bugs/show_bug.cgi?id=356002
-				this.dispatchStringCopy  = new LocalVariableBinding(SecretStringVariableName, upperScope.getJavaLangString(), ClassFileConstants.AccDefault, false);
-				upperScope.addLocalVariable(this.dispatchStringCopy);
-				this.dispatchStringCopy.setConstant(Constant.NotAConstant);
-				this.dispatchStringCopy.useFlag = LocalVariableBinding.USED;
-			}
-			addSecretPatternSwitchVariables(upperScope);
+
+			if (expressionType != null)
+				reserveSecretVariablesSlots(upperScope);
+
 			if (this.statements != null) {
 				if (this.scope == null)
 					this.scope = new BlockScope(upperScope);
@@ -1258,12 +1240,22 @@ public class SwitchStatement extends Expression {
 					upperScope.problemReporter().undocumentedEmptyBlock(this.blockStart, this.sourceEnd);
 				}
 			}
-			// Try it again in case we found any qualified enums.
-			if (this.dispatchPatternCopy == null) {
-				addSecretPatternSwitchVariables(upperScope);
-			}
 
-			complainIfNotExhaustiveSwitch(upperScope, expressionType, compilerOptions);
+			if (expressionType != null) {
+				if (!expressionType.isBaseType() && upperScope.isBoxingCompatibleWith(expressionType, TypeBinding.INT)) {
+					if (this.containsPatterns || this.containsNull) {
+						if (!JavaFeature.PATTERN_MATCHING_IN_SWITCH.isSupported(compilerOptions) || (expressionType.isBaseType() && expressionType.id != T_null && expressionType.id != T_void)) {
+							if (!this.isPrimitiveSwitch) { // when isPrimitiveSwitch is set it is approved above
+								upperScope.problemReporter().incorrectSwitchType(this.expression, expressionType);
+								expressionType = null; // fault-tolerance: ignore type mismatch from constants from hereon
+							}
+						}
+					} else
+						this.expression.computeConversion(upperScope, TypeBinding.INT, expressionType);
+				}
+				releaseUnusedSecretVariables(upperScope);
+				complainIfNotExhaustiveSwitch(upperScope, expressionType, compilerOptions);
+			}
 
 		} finally {
 			if (this.scope != null) this.scope.enclosingCase = null; // no longer inside switch case block
@@ -1290,16 +1282,16 @@ public class SwitchStatement extends Expression {
 						if (isEnhanced)
 							upperScope.problemReporter().enhancedSwitchMissingDefaultCase(this.expression);
 						else {
-							for (FieldBinding enumConstant : unenumeratedConstants) {
+							for (FieldBinding enumConstant : unenumeratedConstants)
 								reportMissingEnumConstantCase(upperScope, enumConstant);
-							}
 						}
 					}
 				}
 			}
 
 			if (this.defaultCase == null) {
-				if (ignoreMissingDefaultCase(compilerOptions)) {
+			    if (this instanceof SwitchExpression // complained about elsewhere, don't also bark here
+			    				|| compilerOptions.getSeverity(CompilerOptions.MissingDefaultCase) == ProblemSeverities.Ignore) {
 					upperScope.methodScope().hasMissingSwitchDefault = true;
 				} else {
 					upperScope.problemReporter().missingDefaultCase(this, true, selectorType);
@@ -1473,24 +1465,37 @@ public class SwitchStatement extends Expression {
 		}
 		return !(eType.isPrimitiveOrBoxedPrimitiveType() || eType.isEnum() || eType.id == TypeIds.T_JavaLangString); // classic selectors
 	}
-	private void addSecretPatternSwitchVariables(BlockScope upperScope) {
+
+	private void reserveSecretVariablesSlots(BlockScope upperScope) { // may be released later if unused.
+
+		if (this.expression.resolvedType.id == T_JavaLangString) {
+			this.dispatchStringCopy  = new LocalVariableBinding(SecretStringVariableName, upperScope.getJavaLangString(), ClassFileConstants.AccDefault, false);
+			upperScope.addLocalVariable(this.dispatchStringCopy);
+			this.dispatchStringCopy.setConstant(Constant.NotAConstant);
+		}
+
+		this.scope = new BlockScope(upperScope);
+
+		this.dispatchPatternCopy  = new LocalVariableBinding(SecretPatternVariableName, this.expression.resolvedType, ClassFileConstants.AccDefault, false);
+		this.scope.addLocalVariable(this.dispatchPatternCopy);
+		this.dispatchPatternCopy.setConstant(Constant.NotAConstant);
+
+		this.restartIndexLocal  = new LocalVariableBinding(SecretPatternRestartIndexName, TypeBinding.INT, ClassFileConstants.AccDefault, false);
+		this.scope.addLocalVariable(this.restartIndexLocal);
+		this.restartIndexLocal.setConstant(Constant.NotAConstant);
+	}
+
+	private void releaseUnusedSecretVariables(BlockScope upperScope) {
+		if (this.expression.resolvedType.id == T_JavaLangString && !this.isNonTraditional)
+			this.dispatchStringCopy.useFlag = LocalVariableBinding.USED;
+
 		if (needPatternDispatchCopy()) {
-			this.scope = new BlockScope(upperScope);
-			this.dispatchPatternCopy  = new LocalVariableBinding(SecretPatternVariableName, this.expression.resolvedType, ClassFileConstants.AccDefault, false);
-			this.scope.addLocalVariable(this.dispatchPatternCopy);
-			this.dispatchPatternCopy.setConstant(Constant.NotAConstant);
 			this.dispatchPatternCopy.useFlag = LocalVariableBinding.USED;
-			this.restartIndexLocal  = new LocalVariableBinding(SecretPatternRestartIndexName, TypeBinding.INT, ClassFileConstants.AccDefault, false);
-			this.scope.addLocalVariable(this.restartIndexLocal);
-			this.restartIndexLocal.setConstant(Constant.NotAConstant);
 			this.restartIndexLocal.useFlag = LocalVariableBinding.USED;
 		}
 	}
 	protected void reportMissingEnumConstantCase(BlockScope upperScope, FieldBinding enumConstant) {
 		upperScope.problemReporter().missingEnumConstantCase(this, enumConstant);
-	}
-	protected boolean ignoreMissingDefaultCase(CompilerOptions compilerOptions) {
-		return compilerOptions.getSeverity(CompilerOptions.MissingDefaultCase) == ProblemSeverities.Ignore;
 	}
 	@Override
 	public boolean isTrulyExpression() {

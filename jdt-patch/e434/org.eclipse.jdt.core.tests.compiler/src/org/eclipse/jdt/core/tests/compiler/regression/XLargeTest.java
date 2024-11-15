@@ -3918,7 +3918,7 @@ public void test014() {
 	},
 	"");
 }
-public void test015() {
+public void _test015() {
 	Map settings = getCompilerOptions();
 	settings.put(CompilerOptions.OPTION_ShareCommonFinallyBlocks, CompilerOptions.ENABLED);
 	runConformTest(

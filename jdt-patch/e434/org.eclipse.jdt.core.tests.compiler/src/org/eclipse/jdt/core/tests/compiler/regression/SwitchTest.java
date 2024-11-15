@@ -3502,6 +3502,73 @@ public void testIssue1777_3() throws Exception {
 	},
 	"DefaultEND");
 }
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3274
+// [Enhanced Switch] Compiler tolerates pure expressions in switch rule expressions in a switch statement
+public void testIssue3274() throws Exception {
+	if (this.complianceLevel < ClassFileConstants.JDK14)
+		return;
+
+	this.runNegativeTest(new String[] {
+		"X.java",
+		"""
+		public class X {
+		       static public void main (String[] args) {
+		               int a = 0x21;
+		               int b = 0xff;
+		               System.out.println(
+		               switch (a) {
+		               case 0x21 : {
+		                       switch (b) {
+		                       default -> "default";
+		                       }
+		               }
+		               case 0x3b : yield "3b <- WTH?";
+		               default : yield "default";
+		               });
+		       }
+		}
+		""",
+	},
+	"----------\n" +
+	"1. ERROR in X.java (at line 9)\n" +
+	"	default -> \"default\";\n" +
+	"	           ^^^^^^^^^\n" +
+	"Invalid expression as statement\n" +
+	"----------\n");
+}
+
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3276
+// [Switch Expression] Verify error since at least 4.18 on switch expression with instance creation in switch block
+public void testIssue3276() throws Exception {
+	if (this.complianceLevel < ClassFileConstants.JDK14)
+		return;
+
+	this.runConformTest(new String[] {
+		"X.java",
+		"""
+		public class X {
+
+			static int foo() {
+				return 42;
+			}
+		       static public void main (String[] args) {
+		               int a = 0x3a;
+		               int b = 0xff;
+		               System.out.println(
+		               switch (a) {
+		               case 0x21 : foo();
+		                           yield 10;
+		               case 0x3b : b++ ;
+		               default :  new X();
+		               			  yield 42;
+		               });
+		       }
+		}
+		""",
+	},
+	"42");
+}
+
 public static Class testClass() {
 	return SwitchTest.class;
 }

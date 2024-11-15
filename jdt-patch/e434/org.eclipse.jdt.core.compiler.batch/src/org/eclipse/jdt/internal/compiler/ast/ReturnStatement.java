@@ -246,10 +246,9 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 
 	// generation of code responsible for invoking the finally blocks in sequence
 	if (this.statementsWithFinallyBlock != null) {
-		Object reusableJSRTarget = this.expression == null ? (Object)TypeBinding.VOID : this.expression.reusableJSRTarget();
 		for (int i = 0, max = this.statementsWithFinallyBlock.length; i < max; i++) {
 			StatementWithFinallyBlock stmt = this.statementsWithFinallyBlock[i];
-			boolean didEscape = stmt.generateFinallyBlock(currentScope, codeStream, reusableJSRTarget, this.initStateIndex);
+			boolean didEscape = stmt.generateFinallyBlock(currentScope, codeStream, this.initStateIndex);
 			if (didEscape) {
 					codeStream.recordPositionsFrom(pc, this.sourceStart);
 					StatementWithFinallyBlock.reenterAllExceptionHandlers(this.statementsWithFinallyBlock, i, codeStream);

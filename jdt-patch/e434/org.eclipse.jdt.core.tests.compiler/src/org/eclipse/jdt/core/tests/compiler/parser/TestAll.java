@@ -140,7 +140,7 @@ public static TestSuite getTestSuite(boolean addComplianceDiagnoseTest) {
 		ArrayList tests_13 = (ArrayList)testClasses.clone();
 		tests_13.addAll(TEST_CLASSES_1_5);
 		addJava12Tests(tests_13);
-		addJava13Tests(tests_13);
+
 		//TODO:To add SwitchExpressionYieldTests here as well as master
 		// Reset forgotten subsets tests
 		TestCase.TESTS_PREFIX = null;
@@ -154,6 +154,7 @@ public static TestSuite getTestSuite(boolean addComplianceDiagnoseTest) {
 		ArrayList tests_14 = (ArrayList)testClasses.clone();
 		tests_14.addAll(TEST_CLASSES_1_5);
 		addJava12Tests(tests_14);
+		addJava14Tests(tests_14);
 		// Reset forgotten subsets tests
 		TestCase.TESTS_PREFIX = null;
 		TestCase.TESTS_NAMES = null;
@@ -265,12 +266,11 @@ private static void addJava16Tests(ArrayList tests_16) {
 	addJava1_8Tests(tests_16);
 	tests_16.add(PatternMatchingSelectionTest.class);
 }
-private static void addJava13Tests(ArrayList tests_12) {
-	tests_12.add(SelectionParserTest13.class);
+private static void addJava14Tests(ArrayList tests_14) {
+	tests_14.add(SelectionParserTest14.class);
 }
 private static void addJava12Tests(ArrayList tests_12) {
 	addJava10Tests(tests_12);
-	tests_12.add(SelectionParserTest12.class);
 }
 
 private static void addJava10Tests(ArrayList tests_10) {

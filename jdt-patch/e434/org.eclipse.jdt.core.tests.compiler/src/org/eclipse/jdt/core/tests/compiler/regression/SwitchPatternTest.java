@@ -4654,34 +4654,42 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 					+ "	}\n"
 					+ "}",
 				},
-				"""
-				----------
-				1. ERROR in X.java (at line 4)
-					case (Long l) when l.toString().equals("0") -> {
-					           ^
-				Syntax error on token "l", delete this token
-				----------
-				2. ERROR in X.java (at line 4)
-					case (Long l) when l.toString().equals("0") -> {
-					              ^^^^
-				Syntax error, insert ":: IdentifierOrNew" to complete ReferenceExpression
-				----------
-				3. ERROR in X.java (at line 4)
-					case (Long l) when l.toString().equals("0") -> {
-					              ^^^^
-				Syntax error, insert ":" to complete SwitchLabel
-				----------
-				4. ERROR in X.java (at line 4)
-					case (Long l) when l.toString().equals("0") -> {
-					                                            ^^
-				Syntax error on token "->", ; expected
-				----------
-				5. ERROR in X.java (at line 6)
-					case Long l1 when l1.toString().equals(l1.toString()) -> {
-					             ^^^^
-				Syntax error on token "when", , expected
-				----------
-				""");
+				"----------\n" +
+				"1. ERROR in X.java (at line 4)\n" +
+				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
+				"	           ^\n" +
+				"Syntax error on token \"l\", delete this token\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 4)\n" +
+				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
+				"	              ^^^^\n" +
+				"Syntax error, insert \":: IdentifierOrNew\" to complete ReferenceExpression\n" +
+				"----------\n" +
+				"3. ERROR in X.java (at line 4)\n" +
+				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
+				"	              ^^^^\n" +
+				"Syntax error, insert \":\" to complete SwitchLabel\n" +
+				"----------\n" +
+				"4. ERROR in X.java (at line 4)\n" +
+				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
+				"	                                            ^^\n" +
+				"Syntax error on token \"->\", ; expected\n" +
+				"----------\n" +
+				"5. ERROR in X.java (at line 6)\n" +
+				"	case Long l1 when l1.toString().equals(l1.toString()) -> {\n" +
+				"	             ^^^^\n" +
+				"Syntax error on token \"when\", -> expected\n" +
+				"----------\n" +
+				"6. ERROR in X.java (at line 6)\n" +
+				"	case Long l1 when l1.toString().equals(l1.toString()) -> {\n" +
+				"	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"Syntax error on tokens, TypeElidedUnnamedFormalParameter expected instead\n" +
+				"----------\n" +
+				"7. ERROR in X.java (at line 8)\n" +
+				"	}\n" +
+				"	^\n" +
+				"Syntax error, insert \";\" to complete SwitchRule\n" +
+				"----------\n");
 	}
 	public void testBug578553_3() {
 		runNegativeTest(
@@ -4703,34 +4711,42 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 					+ "	}\n"
 					+ "}",
 				},
-				"""
-				----------
-				1. ERROR in X.java (at line 4)
-					case (Long l) when l.toString().equals("0") -> {
-					           ^
-				Syntax error on token "l", delete this token
-				----------
-				2. ERROR in X.java (at line 4)
-					case (Long l) when l.toString().equals("0") -> {
-					              ^^^^
-				Syntax error, insert ":: IdentifierOrNew" to complete ReferenceExpression
-				----------
-				3. ERROR in X.java (at line 4)
-					case (Long l) when l.toString().equals("0") -> {
-					              ^^^^
-				Syntax error, insert ":" to complete SwitchLabel
-				----------
-				4. ERROR in X.java (at line 4)
-					case (Long l) when l.toString().equals("0") -> {
-					                                            ^^
-				Syntax error on token "->", ; expected
-				----------
-				5. ERROR in X.java (at line 6)
-					case Long l1 when l.toString().equals(l1.toString()) -> {
-					             ^^^^
-				Syntax error on token "when", , expected
-				----------
-				""");
+				"----------\n" +
+				"1. ERROR in X.java (at line 4)\n" +
+				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
+				"	           ^\n" +
+				"Syntax error on token \"l\", delete this token\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 4)\n" +
+				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
+				"	              ^^^^\n" +
+				"Syntax error, insert \":: IdentifierOrNew\" to complete ReferenceExpression\n" +
+				"----------\n" +
+				"3. ERROR in X.java (at line 4)\n" +
+				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
+				"	              ^^^^\n" +
+				"Syntax error, insert \":\" to complete SwitchLabel\n" +
+				"----------\n" +
+				"4. ERROR in X.java (at line 4)\n" +
+				"	case (Long l) when l.toString().equals(\"0\") -> {\n" +
+				"	                                            ^^\n" +
+				"Syntax error on token \"->\", ; expected\n" +
+				"----------\n" +
+				"5. ERROR in X.java (at line 6)\n" +
+				"	case Long l1 when l.toString().equals(l1.toString()) -> {\n" +
+				"	             ^^^^\n" +
+				"Syntax error on token \"when\", -> expected\n" +
+				"----------\n" +
+				"6. ERROR in X.java (at line 6)\n" +
+				"	case Long l1 when l.toString().equals(l1.toString()) -> {\n" +
+				"	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"Syntax error on tokens, TypeElidedUnnamedFormalParameter expected instead\n" +
+				"----------\n" +
+				"7. ERROR in X.java (at line 8)\n" +
+				"	}\n" +
+				"	^\n" +
+				"Syntax error, insert \";\" to complete SwitchRule\n" +
+				"----------\n");
 	}
 	public void testBug578553_4() {
 		runNegativeTest(
@@ -9241,4 +9257,41 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"42");
 	}
 
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3039
+	// [Sealed types] Broken program crashes the compiler
+	public void testIssue3039_2() {
+		runNegativeTest(
+				new String[] {
+						"X.java",
+						"""
+						public interface X {
+
+						  static <T extends Object & I2> Integer get(T object) {
+						    return switch (object) {
+						      case A ignored -> 42;
+						      default -> 42;
+						    };
+						  }
+
+						  public abstract sealed interface I2 permits , AB {
+						  }
+
+
+						  final class AB implements I2 {}
+
+						}
+						"""
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 5)\n" +
+				"	case A ignored -> 42;\n" +
+				"	     ^\n" +
+				"A cannot be resolved to a type\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 10)\n" +
+				"	public abstract sealed interface I2 permits , AB {\n" +
+				"	                                 ^^\n" +
+				"Syntax error on token \"I2\", permits expected after this token\n" +
+				"----------\n");
+	}
 }

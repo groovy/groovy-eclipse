@@ -8501,6 +8501,15 @@ private void syntaxError(
 		// We should silently recover so swallow the message.
 		return;
 	}
+
+	if (currentKind == TerminalTokens.TokenNameARROW && expectedToken != null && expectedToken.equals("CaseArrow")) { //$NON-NLS-1$
+		/* Silently swallow the error: "Syntax error on token "->", CaseArrow expected": Diagnose Parser will apply this repair and chug along on its way ...
+		 * This can never be the only error in a program, so we are good suppressing this. In fact, this means there is NO penalty in the Scanner having to
+		 * failed to disambiguate between TokenNameARROW and TokenNameCaseArrow and that is beautiful!
+		 */
+		return;
+	}
+
 	String eTokenName;
 	if (Scanner.isKeyword(currentKind) ||
 		isLiteral(currentKind) ||
@@ -8509,8 +8518,8 @@ private void syntaxError(
 	} else {
 		eTokenName = errorTokenName;
 	}
-	if (TerminalTokens.isRestrictedKeyword(currentKind))
-		eTokenName = replaceIfSynthetic(eTokenName);
+
+	eTokenName = replaceIfSynthetic(eTokenName);
 
 	String[] arguments;
 	if(expectedToken != null) {
@@ -8533,7 +8542,7 @@ private String replaceIfSynthetic(String token) {
 	   third synthetic token "ElidedSemicolonAndRightBrace" that we don't expect to show up in messages since it is manufactured by
 	   the parser automatically.
 	*/
-	if (token.equals("BeginCaseExpr")) //$NON-NLS-1$
+	if (token.equals("CaseArrow")) //$NON-NLS-1$
 		return "->"; //$NON-NLS-1$
 	if (token.equals("BeginTypeArguments")) //$NON-NLS-1$
 		return "."; //$NON-NLS-1$
@@ -11776,7 +11785,7 @@ public void moduleDoesNotReadOther(ImportReference importReference, ModuleBindin
 		importReference.sourceStart,
 		importReference.sourceEnd);
 }
-public void incompatibleSwitchExpressionResults(SwitchExpression expression) {
+public void incompatibleSwitchExpressionResults(ASTNode expression) {
 	this.handle(
 		IProblem.SwitchExpressionsYieldIncompatibleResultExpressionTypes,
 		NoArgument,
@@ -11784,7 +11793,7 @@ public void incompatibleSwitchExpressionResults(SwitchExpression expression) {
 		expression.sourceStart,
 		expression.sourceEnd);
 }
-public void unyieldingSwitchExpression(SwitchExpression expression) {
+public void unyieldingSwitchExpression(ASTNode expression) {
 	this.handle(
 		IProblem.SwitchExpressionsYieldNoResultExpression,
 		NoArgument,
@@ -11801,6 +11810,9 @@ public void switchExpressionBlockCompletesNormally(Statement stmt) {
 		stmt.sourceEnd);
 }
 public void arrowColonMixup(ASTNode statement) {
+	CompilationResult result = this.referenceContext.compilationResult();
+	if (result != null && result.hasSyntaxError)
+		return;  // Diagnose parser's "repair" can cause this mixup where there is none in source, CU is rejected anyway
 	this.handle(
 		IProblem.SwitchPreviewMixedCase,
 		NoArgument,

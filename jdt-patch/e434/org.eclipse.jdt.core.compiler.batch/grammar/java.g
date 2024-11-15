@@ -114,12 +114,12 @@ $Terminals
 	ElidedSemicolonAndRightBrace
 	AT308
 	AT308DOTDOTDOT
-	BeginCaseExpr
+	CaseArrow
 	RestrictedIdentifierYield
 	RestrictedIdentifierrecord
 	RestrictedIdentifiersealed
 	RestrictedIdentifierpermits
-	BeginCaseElement
+	BeginCasePattern
 	RestrictedIdentifierWhen
 	UNDERSCORE
 
@@ -226,14 +226,11 @@ Goal ::= '(' ParenthesizedCastNameAndBounds
 Goal ::= '<' ReferenceExpressionTypeArgumentsAndTrunk
 -- JSR 308 Reconnaissance mission.
 Goal ::= '@' TypeAnnotations
--- JSR 354 Reconnaissance mission.
-Goal ::= '->' YieldStatement
-Goal ::= '->' SwitchLabelCaseLhs
 -- JEP 409 Sealed types Reconnaissance mission.
 Goal ::= RestrictedIdentifiersealed Modifiersopt
 Goal ::= RestrictedIdentifierpermits PermittedTypes
 -- jsr 427 --
-Goal ::= BeginCaseElement Pattern
+Goal ::= BeginCasePattern Pattern
 Goal ::= RestrictedIdentifierWhen Expression
 /:$readableName Goal:/
 
@@ -1491,16 +1488,16 @@ IfThenElseStatementNoShortIf ::= 'if' '(' Expression ')' PostExpressionInIf Stat
 /:$readableName IfStatement:/
 
 SwitchStatement ::= 'switch' '(' Expression ')' PostExpressionInSwitchStatement OpenBlock SwitchBlock
-/.$putCase consumeStatementSwitch() ; $break ./
+/.$putCase consumeSwitchStatementOrExpression(true) ; $break ./
 /:$readableName SwitchStatement:/
 
 SwitchBlock ::= '{' '}'
-/.$putCase consumeEmptySwitchBlock() ; $break ./
+/.$putCase consumeSwitchBlock(false) ; $break ./
 
-SwitchBlock ::= '{' SwitchBlockStatements '}'
-SwitchBlock ::= '{' SwitchLabels '}'
+SwitchBlock -> '{' SwitchBlockStatements '}'
+SwitchBlock -> '{' SwitchLabels '}'
 SwitchBlock ::= '{' SwitchBlockStatements SwitchLabels '}'
-/.$putCase consumeSwitchBlock() ; $break ./
+/.$putCase consumeSwitchBlock(true) ; $break ./
 /:$readableName SwitchBlock:/
 
 SwitchBlockStatements -> SwitchBlockStatement
@@ -1508,20 +1505,24 @@ SwitchBlockStatements ::= SwitchBlockStatements SwitchBlockStatement
 /.$putCase consumeSwitchBlockStatements() ; $break ./
 /:$readableName SwitchBlockStatements:/
 
-SwitchBlockStatement -> SwitchLabeledRule
+SwitchBlockStatement -> SwitchRule
 SwitchBlockStatement ::= SwitchLabels BlockStatements
 /.$putCase consumeSwitchBlockStatement() ; $break ./
 /:$readableName SwitchBlockStatement:/
 
-SwitchLabels -> SwitchLabel
-SwitchLabels ::= SwitchLabels SwitchLabel
-/.$putCase consumeSwitchLabels() ; $break ./
-/:$readableName SwitchLabels:/
+SwitchLabels ::= SwitchLabel ':'
+/.$putCase consumeSwitchLabels(false, false) ; $break ./
+SwitchLabels ::= SwitchLabels SwitchLabel ':'
+/.$putCase consumeSwitchLabels(true, false) ; $break ./
+/:$readableName SwitchLabel:/
 
-SwitchLabel ::= SwitchLabelCaseLhs ':'
-/. $putCase consumeCaseLabel(); $break ./
+PostCaseArrow ::= $empty
+/.$putCase consumeSwitchLabels(false, true) ; $break ./
 
-SwitchLabel ::= 'default' ':'
+SwitchLabel -> 'case' CaseLabelElements
+/:$readableName SwitchLabel:/
+
+SwitchLabel ::= 'default'
 /. $putCase consumeDefaultLabel(); $break ./
 /:$readableName SwitchLabel:/
 
@@ -1531,38 +1532,20 @@ UnaryExpressionNotPlusMinus -> SwitchExpression
 UnaryExpressionNotPlusMinus_NotName -> SwitchExpression
 
 SwitchExpression ::= 'switch' '(' Expression ')' PostExpressionInSwitchExpression OpenBlock SwitchBlock
-/.$putCase consumeSwitchExpression() ; $break ./
+/.$putCase consumeSwitchStatementOrExpression(false) ; $break ./
 /:$readableName SwitchExpression:/
 
-SwitchLabeledRule ::= SwitchLabeledExpression
-SwitchLabeledRule ::= SwitchLabeledBlock
-SwitchLabeledRule ::= SwitchLabeledThrowStatement
-/. $putCase consumeSwitchLabeledRule(); $break ./
-/:$readableName SwitchLabeledRule:/
+SwitchRule ::= SwitchLabel CaseArrow PostCaseArrow Expression ';'
+/. $putCase consumeSwitchRule(SwitchRuleKind.EXPRESSION); $break ./
+/:$readableName SwitchRule:/
 
-SwitchLabeledExpression ::= SwitchLabelExpr Expression ';'
-/. $putCase consumeSwitchLabeledExpression(); $break ./
-/:$readableName SwitchLabeledExpression:/
+SwitchRule ::= SwitchLabel CaseArrow PostCaseArrow Block
+/. $putCase consumeSwitchRule(SwitchRuleKind.BLOCK); $break ./
+/:$readableName SwitchRule:/
 
-SwitchLabeledBlock ::= SwitchLabelExpr Block
-/. $putCase consumeSwitchLabeledBlock(); $break ./
-/:$readableName SwitchLabeledBlock:/
-
-SwitchLabeledThrowStatement ::= SwitchLabelExpr ThrowExpression ';'
-/. $putCase consumeSwitchLabeledThrowStatement(); $break ./
-/:$readableName SwitchLabeledThrowStatement:/
-
-SwitchLabelExpr ::= 'default'  '->'
-/. $putCase consumeDefaultLabelExpr(); $break ./
-/:$readableName SwitchLabelDefaultExpr:/
-
-SwitchLabelExpr ::= SwitchLabelCaseLhs BeginCaseExpr '->'
-/. $putCase consumeCaseLabelExpr(); $break ./
-/:$readableName SwitchLabelExpr:/
-
-SwitchLabelCaseLhs ::= 'case' CaseLabelElements
-/. $putCase consumeSwitchLabelCaseLhs(); $break ./
-/:$readableName SwitchLabelCaseLhs:/
+SwitchRule ::= SwitchLabel CaseArrow PostCaseArrow ThrowStatement
+/. $putCase consumeSwitchRule(SwitchRuleKind.THROW); $break ./
+/:$readableName SwitchRule:/
 
 -- END SwitchExpression (JEP 325) --
 
@@ -1591,7 +1574,7 @@ CaseLabelElement ::=  CaseLabelElementPattern Guard
 /.$putCase consumeCaseLabelElement(CaseLabelKind.CASE_PATTERN); $break ./
 /:$readableName CaseLabelElement:/
 
-CaseLabelElementPattern -> BeginCaseElement Pattern
+CaseLabelElementPattern -> BeginCasePattern Pattern
 /:$readableName CaseLabelElementPattern:/
 
 Guard ::= RestrictedIdentifierWhen Expression
@@ -1668,10 +1651,6 @@ ReturnStatement ::= 'return' Expressionopt ';'
 ThrowStatement ::= 'throw' Expression ';'
 /.$putCase consumeStatementThrow(); $break ./
 /:$readableName ThrowStatement:/
-
-ThrowExpression ::= 'throw' Expression
-/.$putCase consumeThrowExpression() ; $break ./
-/:$readableName ThrowExpression:/
 
 SynchronizedStatement ::= OnlySynchronized '(' Expression ')' Block
 /.$putCase consumeStatementSynchronized(); $break ./
@@ -3191,4 +3170,3 @@ UNDERSCORE ::= '_'
 
 $end
 -- need a carriage return after the $end
-

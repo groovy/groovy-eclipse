@@ -65,11 +65,6 @@ public class NullLiteral extends MagicLiteral {
 	}
 
 	@Override
-	public Object reusableJSRTarget() {
-		return TypeBinding.NULL;
-	}
-
-	@Override
 	public char[] source() {
 		return source;
 	}

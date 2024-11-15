@@ -12,8 +12,6 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
-
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileVisitResult;
@@ -26,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -39,8 +38,6 @@ import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.util.CtSym;
 import org.eclipse.jdt.internal.compiler.util.JRTUtil;
-import org.eclipse.jdt.internal.compiler.util.JrtFileSystem;
-import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -57,7 +54,6 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 	private final Path releasePath;
 	private final String modPathString;
 	private CtSym ctSym;
-	private final JrtFileSystem jrtFileSystemForRelease;
 
 
 	public ClasspathJrtWithReleaseOption(String zipFilename, AccessRuleSet accessRuleSet, IPath externalAnnotationPath,
@@ -71,13 +67,6 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 			this.externalAnnotationPath = externalAnnotationPath.toString();
 		}
 		this.release = getReleaseOptionFromCompliance(release);
-		JrtFileSystem systemForRelease = null;
-		try {
-			systemForRelease = JRTUtil.getJrtSystem(new File(zipFilename), this.release);
-		} catch (IOException e) {
-			Util.log(e, "Failed to init packages for " + zipFilename); //$NON-NLS-1$
-		}
-		this.jrtFileSystemForRelease = systemForRelease;
 		try {
 			this.ctSym = JRTUtil.getCtSym(Path.of(this.zipFilename).getParent().getParent());
 		} catch (IOException e) {
@@ -126,27 +115,6 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 		}
 	}
 
-	Map<String, SimpleSet> findPackagesInModules() {
-		// In JDK 11 and before, classes are not listed under their respective modules
-		// Hence, we simply go to the default module system for package-module mapping
-		if (this.fs == null || !this.ctSym.isJRE12Plus()) {
-			return ClasspathJrt.findPackagesInModules(this);
-		}
-		if (this.modPathString == null) {
-			return Map.of();
-		}
-		Map<String, SimpleSet> cache = PackageCache.computeIfAbsent(this.modPathString, key -> {
-			final Map<String, SimpleSet> packagesInModule = new HashMap<>();
-			try {
-				JRTUtil.walkModuleImage(this.jrtFileSystemForRelease, new JrtPackageVisitor(packagesInModule), JRTUtil.NOTIFY_PACKAGES | JRTUtil.NOTIFY_MODULES);
-			} catch (IOException e) {
-				Util.log(e, "Failed to init packages for " + this.modPathString); //$NON-NLS-1$
-			}
-			return packagesInModule.isEmpty() ? null : Collections.unmodifiableMap(packagesInModule);
-		});
-		return cache;
-	}
-
 	public void loadModules() {
 		if (this.fs == null || !this.ctSym.isJRE12Plus()) {
 			ClasspathJrt.loadModules(this);
@@ -155,7 +123,7 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 		if (this.modPathString == null) {
 			return;
 		}
-		ModulesCache.computeIfAbsent(this.modPathString, key -> {
+		modulesCache.computeIfAbsent(this.modPathString, key -> {
 			List<Path> releaseRoots = this.ctSym.releaseRoots(this.releaseCode);
 			Map<String, IModule> newCache = new HashMap<>();
 			for (Path root : releaseRoots) {
@@ -180,7 +148,7 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 					Util.log(e, "Failed to init modules cache for " + key); //$NON-NLS-1$
 				}
 			}
-			return newCache.isEmpty() ? null : Collections.unmodifiableMap(newCache);
+			return newCache.isEmpty() ? null : Map.copyOf(newCache);
 		});
 	}
 
@@ -241,9 +209,9 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 
 	@Override
 	public Collection<String> getModuleNames(Collection<String> limitModules) {
-		Map<String, SimpleSet> cache = findPackagesInModules();
+		Set<String> cache = ClasspathJrt.getModuleNames(this);
 		if (cache != null)
-			return selectModules(cache.keySet(), limitModules);
+			return selectModules(cache, limitModules);
 		return Collections.emptyList();
 	}
 

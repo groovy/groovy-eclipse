@@ -858,17 +858,15 @@ protected void consumePostExpressionInWhile() {
 }
 
 @Override
-protected void consumeStatementSwitch() {
-	super.consumeStatementSwitch();
-	popUntilElement(K_INSIDE_STATEMENT_SWITCH);
-	popElement(K_INSIDE_STATEMENT_SWITCH);
-}
-
-@Override
-protected void consumeSwitchExpression() {
-	super.consumeSwitchExpression();
-	popUntilElement(K_INSIDE_EXPRESSION_SWITCH);
-	popElement(K_INSIDE_EXPRESSION_SWITCH);
+protected void consumeSwitchStatementOrExpression(boolean isStmt) {
+	super.consumeSwitchStatementOrExpression(isStmt);
+	if (isStmt) {
+		popUntilElement(K_INSIDE_STATEMENT_SWITCH);
+		popElement(K_INSIDE_STATEMENT_SWITCH);
+	} else {
+		popUntilElement(K_INSIDE_EXPRESSION_SWITCH);
+		popElement(K_INSIDE_EXPRESSION_SWITCH);
+	}
 }
 
 @Override
@@ -960,10 +958,12 @@ protected void consumeInsideCastExpressionWithQualifiedGenerics() {
 	super.consumeInsideCastExpressionWithQualifiedGenerics();
 	pushOnElementStack(K_CAST_STATEMENT);
 }
+
 @Override
-protected void consumeSwitchLabeledExpression() {
-	super.consumeSwitchLabeledExpression();
-	popElement(K_SWITCH_EXPRESSION_DELIMITTER);
+protected void consumeSwitchRule(SwitchRuleKind kind) {
+	super.consumeSwitchRule(kind);
+	if (kind == SwitchRuleKind.EXPRESSION)
+		popElement(K_SWITCH_EXPRESSION_DELIMITTER);
 }
 
 @Override
@@ -1457,7 +1457,7 @@ protected void consumeToken(int token) {
 				pushOnElementStack(K_BETWEEN_CASE_AND_COLONORARROW, this.expressionPtr);
 				break;
 			case TokenNameCOMMA :
-				if (this.scanner.multiCaseLabelComma) {
+				if (this.scanner.atMultiCaseComma()) {
 					switch (topKnownElementKind(SELECTION_OR_ASSIST_PARSER)) {
 						// for multi constant case stmt
 						// case MONDAY, FRIDAY
@@ -1469,22 +1469,13 @@ protected void consumeToken(int token) {
 					}
 				}
 				break;
-			case TokenNameARROW:
-				// TODO: Uncomment the line below
-				//if (this.options.sourceLevel < ClassFileConstants.JDK13) break;
-				// else FALL-THROUGH
+			case TokenNameCaseArrow:
 			case TokenNameCOLON:
 				if(topKnownElementKind(SELECTION_OR_ASSIST_PARSER) == K_BETWEEN_CASE_AND_COLONORARROW) {
 					popElement(K_BETWEEN_CASE_AND_COLONORARROW);
-					if (token == TokenNameARROW)
+					if (token == TokenNameCaseArrow)
 						pushOnElementStack(K_SWITCH_EXPRESSION_DELIMITTER);
 				}
-				break;
-			case TokenNameBeginCaseExpr:
-				if(topKnownElementKind(SELECTION_OR_ASSIST_PARSER) == K_BETWEEN_CASE_AND_COLONORARROW) {
-					popElement(K_BETWEEN_CASE_AND_COLONORARROW);
-				}
-				pushOnElementStack(K_SWITCH_EXPRESSION_DELIMITTER);
 				break;
 			case TokenNamereturn:
 				pushOnElementStack(K_INSIDE_RETURN_STATEMENT, this.bracketDepth);

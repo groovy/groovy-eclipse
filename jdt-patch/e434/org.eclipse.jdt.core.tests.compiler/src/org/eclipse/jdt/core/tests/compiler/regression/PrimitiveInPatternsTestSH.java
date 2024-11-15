@@ -1646,6 +1646,7 @@ public class PrimitiveInPatternsTestSH extends AbstractRegressionTest9 {
 					}
 					public static String switchfloatMoreCases(float f) {
 						return switch (f) {
+						    case float v when v == 1.6 -> "v="+String.valueOf(v);
 							case 1.0f -> "1.0";
 							case 1.5f -> "1.5";
 							case float v -> "v="+String.valueOf(v);
@@ -2621,4 +2622,31 @@ public class PrimitiveInPatternsTestSH extends AbstractRegressionTest9 {
 			"----------\n");
 	}
 
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3265
+	// [Primitive Patterns] Wrong duplicate case error
+	public void _testIssue3265() {
+		runConformTest(new String[] {
+				"X.java",
+				"""
+				public class X {
+					public static String switchfloatMoreCases(float f) {
+						return switch (f) {
+						case 1.0f -> "1.0";
+						case 1.5f -> "1.5";
+						default -> String.valueOf(f);
+						};
+					}
+
+					public static void main(String... args) {
+						System.out.print(switchfloatMoreCases(1.0f));
+						System.out.print("|");
+						System.out.print(switchfloatMoreCases(1.5f));
+						System.out.print("|");
+						System.out.print(switchfloatMoreCases(1.6f));
+						System.out.print("|");
+					}
+				}
+				"""},
+				"1.0|1.5|1.6|");
+	}
 }

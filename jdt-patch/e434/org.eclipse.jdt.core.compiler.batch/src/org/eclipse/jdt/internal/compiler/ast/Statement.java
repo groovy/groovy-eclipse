@@ -284,6 +284,33 @@ private void internalCheckAgainstNullTypeAnnotation(BlockScope scope, TypeBindin
 }
 
 /**
+ * Returns the immediately enclosing switch expression (carried by closest blockScope),
+ */
+public SwitchExpression enclosingSwitchExpression(Scope current) {
+	boolean implicitYield = this instanceof YieldStatement yield && yield.isImplicit;
+	do {
+		switch(current.kind) {
+			case Scope.METHOD_SCOPE :
+			case Scope.CLASS_SCOPE :
+			case Scope.COMPILATION_UNIT_SCOPE :
+			case Scope.MODULE_SCOPE :
+				return null;
+			case Scope.BLOCK_SCOPE: {
+				BlockScope bs = (BlockScope) current;
+				if (bs.enclosingCase != null) {
+					if (bs.enclosingCase.swich instanceof SwitchExpression se)
+						return se;
+					if (implicitYield)
+						return null; // do not ascend to enclosing: implicit yield always binds to closest switch{expression|statement}
+				}
+				break;
+			}
+		}
+	} while ((current = current.parent) != null);
+	return null;
+}
+
+/**
  * INTERNAL USE ONLY.
  * This is used to redirect inter-statements jumps.
  */
@@ -454,6 +481,11 @@ public boolean isBoxingCompatible(TypeBinding expressionType, TypeBinding target
 }
 
 public boolean isEmptyBlock() {
+	return false;
+}
+
+// for switch statement
+public boolean isTrulyExpression() {
 	return false;
 }
 

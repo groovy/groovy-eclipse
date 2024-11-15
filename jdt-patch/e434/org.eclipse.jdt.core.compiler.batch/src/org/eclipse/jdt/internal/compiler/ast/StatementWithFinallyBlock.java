@@ -51,7 +51,7 @@ public abstract class StatementWithFinallyBlock extends Statement {
 	public void enterResourceExceptionHandlers(CodeStream codeStream) {
 		// do nothing by default
 	}
-	
+
 	public void exitAnyExceptionHandler() {
 		if (this.anyExceptionLabel != null) {
 			this.anyExceptionLabel.placeEnd();
@@ -66,7 +66,7 @@ public abstract class StatementWithFinallyBlock extends Statement {
 	 * Generate the finally block in current context.
 	 * @return boolean, <code>true</code> if the generated code will complete abruptly.
 	 */
-	public abstract boolean generateFinallyBlock(BlockScope currentScope, CodeStream codeStream, Object targetLocation, int stateIndex);
+	public abstract boolean generateFinallyBlock(BlockScope currentScope, CodeStream codeStream, int stateIndex);
 
 	public abstract boolean isFinallyBlockEscaping();
 

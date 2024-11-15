@@ -174,10 +174,10 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 }
 
 /**
- * @see StatementWithFinallyBlock#generateFinallyBlock(BlockScope, CodeStream, Object, int)
+ * @see StatementWithFinallyBlock#generateFinallyBlock(BlockScope, CodeStream, int)
  */
 @Override
-public boolean generateFinallyBlock(BlockScope currentScope, CodeStream codeStream, Object targetLocation, int stateIndex) {
+public boolean generateFinallyBlock(BlockScope currentScope, CodeStream codeStream, int stateIndex) {
 	codeStream.load(this.synchroVariable);
 	codeStream.monitorexit();
 	exitAnyExceptionHandler();

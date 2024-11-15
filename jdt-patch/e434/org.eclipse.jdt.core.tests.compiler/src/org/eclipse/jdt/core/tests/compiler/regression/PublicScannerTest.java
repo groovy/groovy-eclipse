@@ -68,11 +68,11 @@ public class PublicScannerTest extends AbstractRegressionTest {
 		Map<Integer, Integer> map = new HashMap<>();
 		map.put(TerminalTokens.TokenNameAT308DOTDOTDOT, TerminalTokens.TokenNameAT);
 		map.put(TerminalTokens.TokenNameAT308, TerminalTokens.TokenNameAT);
+		map.put(TerminalTokens.TokenNameCaseArrow, TerminalTokens.TokenNameARROW);
 		SYNTHETIC_REPLACE_TOKENS = Collections.unmodifiableMap(map);
 
 		List<Integer> list = new ArrayList<>();
-		list.add(TerminalTokens.TokenNameBeginCaseElement);
-		list.add(TerminalTokens.TokenNameBeginCaseExpr);
+		list.add(TerminalTokens.TokenNameBeginCasePattern);
 		list.add(TerminalTokens.TokenNameBeginIntersectionCast);
 		list.add(TerminalTokens.TokenNameBeginLambda);
 		list.add(TerminalTokens.TokenNameBeginTypeArguments);

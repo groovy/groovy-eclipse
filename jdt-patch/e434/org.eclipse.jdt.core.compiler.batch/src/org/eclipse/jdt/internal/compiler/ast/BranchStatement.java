@@ -50,7 +50,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if (this.statementsWithFinallyBlock != null){
 		for (int i = 0, max = this.statementsWithFinallyBlock.length; i < max; i++){
 			StatementWithFinallyBlock stmt = this.statementsWithFinallyBlock[i];
-			boolean didEscape = stmt.generateFinallyBlock(currentScope, codeStream, this.targetLabel, this.initStateIndex);
+			boolean didEscape = stmt.generateFinallyBlock(currentScope, codeStream, this.initStateIndex);
 			if (didEscape) {
 					codeStream.recordPositionsFrom(pc, this.sourceStart);
 					StatementWithFinallyBlock.reenterAllExceptionHandlers(this.statementsWithFinallyBlock, i, codeStream);
