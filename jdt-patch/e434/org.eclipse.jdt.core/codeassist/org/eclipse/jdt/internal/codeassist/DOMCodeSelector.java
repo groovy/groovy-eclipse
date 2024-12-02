@@ -227,7 +227,7 @@ public class DOMCodeSelector {
 					/* GROOVY edit
 					variableBinding.getDeclaringMethod() instanceof IMethodBinding declaringMethod &&
 					declaringMethod.isCompactConstructor() &&
-					Arrays.stream(declaringMethod.getParameterNames()).anyMatch(pn -> variableBinding.getName().equals(pn)) &&
+					Arrays.stream(declaringMethod.getParameterNames()).anyMatch(variableBinding.getName()::equals) &&
 					declaringMethod.getDeclaringClass() instanceof ITypeBinding recordBinding &&
 					recordBinding.isRecord() &&
 					recordBinding.getJavaElement() instanceof IType recordType &&

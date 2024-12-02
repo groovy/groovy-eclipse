@@ -305,13 +305,13 @@
       <requirement
           name="org.eclipse.test.feature.group"/>
       <repositoryList
-          name="2023-06">
+          name="2024-12">
         <repository
             url="https://download.eclipse.org/releases/2024-12"/>
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.34"/>
         <repository
-            url="https://download.eclipse.org/eclipse/updates/4.34-I-builds/I20241113-1800"/>
+            url="https://download.eclipse.org/eclipse/updates/4.34-I-builds/I20241120-1800"/>
       </repositoryList>
       <repositoryList
           name="2024-09">

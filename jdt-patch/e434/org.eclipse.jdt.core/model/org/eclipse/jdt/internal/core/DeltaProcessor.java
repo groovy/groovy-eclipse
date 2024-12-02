@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.ISafeRunnable;
@@ -2022,7 +2023,9 @@ public class DeltaProcessor {
 	 */
 	public void registerJavaModelDelta(IJavaElementDelta delta) {
 		if (JavaModelManager.isReadOnly()) {
-			throw new IllegalStateException("Its not allow to modify JavaModel during ReadOnly action. delta=" + delta); //$NON-NLS-1$
+			ILog.get().warn("JavaModel change during read only operation", new IllegalStateException( //$NON-NLS-1$
+					"JavaModel modified during 'read only' operation. Consider to report this warning to https://github.com/eclipse-jdt/eclipse.jdt.core/issues. delta=" //$NON-NLS-1$
+							+ delta));
 		}
 		this.javaModelDeltas.add(delta);
 	}
