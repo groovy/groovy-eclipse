@@ -1180,8 +1180,20 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         } else {
             name = identifier(node);
         }
+        /* GRECLIPSE edit
         ClassNode exception = ClassHelper.make(name);
+        */
+        ClassNode exception = makeClassNode(name);
+        // GRECLIPSE end
         configureAST(exception, node);
+        // GRECLIPSE add
+        if (isType(DOT, node)) {
+            GroovySourceAST type = (GroovySourceAST) node.getFirstChild().getNextSibling();
+            exception.setNameStart2(locations.findOffset(type.getLine(), type.getColumn()));
+            exception.setEnd(locations.findOffset(type.getLineLast(), type.getColumnLast()));
+            exception.setLastLineNumber(type.getLineLast()); exception.setLastColumnNumber(type.getColumnLast());
+        }
+        // GRECLIPSE end
         list.add(exception);
         AST next = node.getNextSibling();
         if (next != null) throwsList(next, list);

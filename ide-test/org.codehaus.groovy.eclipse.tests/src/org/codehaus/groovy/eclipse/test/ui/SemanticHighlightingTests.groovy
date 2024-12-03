@@ -5268,6 +5268,19 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1603
+    void testQualifiedType9() {
+        String contents = '''\
+            |def foo() throws java.lang.Exception , java.lang.Throwable {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Exception'), 9, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Throwable'), 9, CLASS))
+    }
+
     @Test
     void testSwitch1() {
         assumeTrue(isParrotParser() && isAtLeastGroovy(40))
