@@ -86,11 +86,10 @@
 										<zip zipfile="${dist.full.path}" filesonly="true">
 											<zipfileset dir="${project.build.directory}/site" />
 										</zip>
-										<checksum file="${dist.full.path}" algorithm="MD5" fileext=".md5" />
 										<checksum file="${dist.full.path}" algorithm="SHA1" fileext=".sha1" />
 
-										<!-- ${project.build.directory} (usually <project>/Site-org.codehaus.groovy.eclipse/target) now contains -->
-										<!-- site/, size.zip, *-updatesize.zip, *-updatesize.zip.[md5|sha1] and composite[Artifacts|Content].xml -->
+										<!-- ${project.build.directory} (usually <project>/Site-org.codehaus.groovy.eclipse/target) files: -->
+										<!-- site/, size.zip, *-updatesize.zip, *-updatesize.zip.sha1 and composite[Artifacts|Content].xml -->
 									</target>
 								</configuration>
 								<goals>

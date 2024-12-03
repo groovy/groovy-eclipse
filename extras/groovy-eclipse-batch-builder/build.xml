@@ -31,8 +31,14 @@
         <copy file="${maven.dir}/pom.xml" tofile="${build.dir}/${maven.pom}"/>
         <replace file="${build.dir}/${maven.pom}" token="REPLACE_WITH_VERSION" value="${version}"/>
 
+        <taskdef name="jarjar" classname="com.eed3si9n.jarjar.JarJarTask">
+            <classpath>
+                <fileset dir="jarjar" includes="*.jar"/>
+            </classpath>
+        </taskdef>
+
         <!-- create main artifact from stage directory -->
-        <jar destfile="${build.dir}/${main.jar}">
+        <jarjar destfile="${build.dir}/${main.jar}">
             <fileset dir="${stage.dir}">
                 <exclude name="**/*.g"/>
                 <exclude name="**/*.g4"/>
@@ -49,12 +55,15 @@
                 <exclude name="module-info.class"/>
                 <exclude name="plugin.*"/>
                 <exclude name="systembundle.properties"/>
-                <exclude name="META-INF/*.properties"/>
                 <exclude name="META-INF/eclipse.inf"/>
                 <exclude name="META-INF/INDEX.LIST"/>
                 <exclude name="META-INF/maven/**"/>
+                <exclude name="META-INF/native-image/**"/>
+                <exclude name="META-INF/services/org.osgi.*"/>
+                <exclude name="META-INF/*.properties"/>
                 <exclude name="META-INF/*.RSA"/>
                 <exclude name="META-INF/*.SF"/>
+                <exclude name="OSGI-INF/**"/>
                 <exclude name="OSGI-OPT/**"/>
             </fileset>
             <manifest>
@@ -62,7 +71,13 @@
                 <attribute name="Implementation-Version" value="${version} (${jdt.patch.target})"/>
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.compiler.batch.Main"/>
             </manifest>
-        </jar>
+            <rule pattern="org.eclipse.core.**" result="groovyjarjareclipse.core.@1"/>
+            <rule pattern="org.eclipse.equinox.**" result="groovyjarjareclipse.equinox.@1"/>
+            <rule pattern="org.eclipse.jface.**" result="groovyjarjareclipse.jface.@1"/>
+            <rule pattern="org.eclipse.osgi.**" result="groovyjarjareclipse.osgi.@1"/>
+            <rule pattern="org.eclipse.text.**" result="groovyjarjareclipse.text.@1"/>
+            <rule pattern="org.osgi.**" result="groovyjarjarosgi.@1"/>
+        </jarjar>
 
         <!-- create javadoc artifact -->
         <jar destfile="${build.dir}/${javadoc.jar}">
@@ -90,7 +105,7 @@
                 <include name="**/*.java"/>
             </fileset>
             <fileset dir="${stage.dir}">
-            	<exclude name="OSGI-OPT/**"/>
+                <exclude name="OSGI-OPT/**"/>
                 <include name="**/*.groovy"/>
                 <include name="**/*.java"/>
             </fileset>

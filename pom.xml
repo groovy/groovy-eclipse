@@ -24,7 +24,7 @@
 		<groovy-eclipse-compiler-version>3.9.0</groovy-eclipse-compiler-version>
 
 		<!-- This should align with the oldest supported Groovy version. -->
-		<groovy-eclipse-batch-version>3.0.23-02</groovy-eclipse-batch-version>
+		<groovy-eclipse-batch-version>3.0.23-03</groovy-eclipse-batch-version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -104,11 +104,6 @@
 					<id>eclipse</id>
 					<layout>p2</layout>
 					<url>https://download.eclipse.org/eclipse/updates/4.34</url>
-				</repository>
-				<repository>
-					<id>milestone</id>
-					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.34-I-builds/I20241120-1800</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -536,7 +531,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-deploy-plugin</artifactId>
-				<version>3.1.1</version>
+				<version>3.1.3</version>
 				<!-- disable default behavior; see Site project -->
 				<configuration>
 					<skip>true</skip>
@@ -546,7 +541,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.1.0</version>
+				<version>3.1.2</version>
 				<!-- disable default behavior; tycho-surefire-plugin tests units -->
 				<configuration>
 					<skip>true</skip>
@@ -556,7 +551,7 @@
 			<!--plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-toolchains-plugin</artifactId>
-				<version>3.1.0</version>
+				<version>3.2.0</version>
 				<configuration>
 					<toolchains>
 						<jdk>
