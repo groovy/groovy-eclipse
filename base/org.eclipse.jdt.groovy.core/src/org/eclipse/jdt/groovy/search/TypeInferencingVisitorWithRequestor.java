@@ -634,6 +634,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         try {
             IField enumConstant = ((IType) enclosingElement).getField(((FieldNode) enclosingDeclarationNode).getName());
             assert enumConstant != null && enumConstant.exists();
+            // visit inlined object initializers
+            enclosingElement = findAnonType(node, enumConstant).get();
+            node.getDeclaredConstructors().forEach(this::visitMethodInternal);
+            //
             for (MethodNode method : node.getMethods()) {
                 if (method.getEnd() > 0) {
                     enclosingElement = JavaCoreUtil.findMethod(method, (IType) enumConstant.getChildren()[0]);

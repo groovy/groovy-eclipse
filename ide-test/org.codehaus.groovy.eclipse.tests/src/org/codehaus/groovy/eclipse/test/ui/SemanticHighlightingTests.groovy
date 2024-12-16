@@ -2561,6 +2561,25 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('-1'), 2, NUMBER))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1606
+    void testEnumInner3() {
+        String contents = '''\
+            |enum X {
+            |  Y {
+            |    {
+            |      throw new Exception()
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, ENUMERATION),
+            new HighlightedTypedPosition(contents.indexOf('Y'), 1, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('Exception'), 9, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Exception'), 9, CTOR_CALL))
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/1004
     void testEnumMethod() {
         String contents = '''\
