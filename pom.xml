@@ -12,9 +12,9 @@
 
 	<properties>
 		<!-- See https://www.eclipse.org/tycho/sitedocs/index.html -->
-		<tycho-version>2.7.5</tycho-version>
+		<tycho-version>4.0.10</tycho-version>
 		<!-- See https://www.eclipse.org/tycho/sitedocs/tycho-extras/index.html -->
-		<tycho-extras-version>2.7.5</tycho-extras-version>
+		<tycho-extras-version>4.0.10</tycho-extras-version>
 
 		<!-- Versions of groovy compiler components to use for building. Some bundles,
 			mostly test related, have Groovy code that can't be compiled with standard
@@ -626,7 +626,7 @@
 				</dependencies>
 			</plugin>
 
-			<!--plugin>
+			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-source-plugin</artifactId>
 				<version>${tycho-version}</version>
@@ -644,7 +644,15 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin-->
+				<configuration>
+					<excludes>
+						<plugin  id="org.codehaus.groovy" />
+						<feature id="org.codehaus.groovy30.feature" />
+						<feature id="org.codehaus.groovy40.feature" />
+						<feature id="org.codehaus.groovy50.feature" />
+					</excludes>
+				</configuration>
+			</plugin>
 
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>

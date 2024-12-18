@@ -18,6 +18,8 @@
    </license>
 
    <includes id="org.codehaus.groovy.jdt.patch" version="0.0.0"/>
+   <!-- https://github.com/eclipse-tycho/tycho/issues/893 -->
+   <requires> <import feature="org.eclipse.jdt"/> </requires>
 
    <plugin
          id="org.codehaus.groovy.eclipse.ant"

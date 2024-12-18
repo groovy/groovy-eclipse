@@ -7,24 +7,11 @@
 		<version>5.6.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>org.codehaus.groovy.eclipse.site</artifactId>
-	<packaging>eclipse-update-site</packaging>
+	<packaging>eclipse-repository</packaging>
 
 	<properties>
 		<deploy.version>latest</deploy.version>
 	</properties>
-
-	<!--build>
-		<plugins>
-			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>tycho-packaging-plugin</artifactId>
-				<version>${tycho-version}</version>
-				<configuration>
-					<archiveSite>true</archiveSite>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build-->
 
 	<profiles>
 		<profile>
@@ -53,6 +40,9 @@
 						<version>1.0.0-SNAPSHOT</version>
 						<executions>
 							<execution>
+								<goals>
+									<goal>generate</goal>
+								</goals>
 								<configuration>
 									<name>Groovy Development Tools for ${deploy.target}</name>
 									<sites>
@@ -60,41 +50,6 @@
 									</sites>
 									<target>${project.build.directory}</target><!-- writes compositeArtifacts.xml and compositeContent.xml -->
 								</configuration>
-								<goals>
-									<goal>generate</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-
-					<plugin>
-						<artifactId>maven-antrun-plugin</artifactId>
-						<version>1.8</version>
-						<executions>
-							<execution>
-								<id>archive-update-site</id>
-								<phase>deploy</phase>
-								<configuration>
-									<target>
-										<echo>Creating update site zip...</echo>
-
-										<property name="dist.file.name" value="org.codehaus.groovy-${unqualifiedVersion}.${buildQualifier}-updatesite.zip" />
-										<echo>dist.file.name=${dist.file.name}</echo><!-- ie org.codehaus.groovy-3.5.0.v201909232147-e1909-updatesite.zip -->
-										<property name="dist.full.path" value="${project.build.directory}/${dist.file.name}" />
-
-										<delete file="${dist.full.path}" />
-										<zip zipfile="${dist.full.path}" filesonly="true">
-											<zipfileset dir="${project.build.directory}/site" />
-										</zip>
-										<checksum file="${dist.full.path}" algorithm="SHA1" fileext=".sha1" />
-
-										<!-- ${project.build.directory} (usually <project>/Site-org.codehaus.groovy.eclipse/target) files: -->
-										<!-- site/, size.zip, *-updatesize.zip, *-updatesize.zip.sha1 and composite[Artifacts|Content].xml -->
-									</target>
-								</configuration>
-								<goals>
-									<goal>run</goal>
-								</goals>
 							</execution>
 						</executions>
 					</plugin>
@@ -102,4 +57,18 @@
 			</build>
 		</profile>
 	</profiles>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-p2-repository-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<configuration>
+					<filterProvided>true</filterProvided>
+					<keepNonXzIndexFiles>false</keepNonXzIndexFiles>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

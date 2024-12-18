@@ -8,11 +8,11 @@
       </description>
    </category-def>
 
-   <!--category-def name="org.codehaus.groovy.eclipse.sdk" label="Main Sources (optional)">
+   <category-def name="org.codehaus.groovy.eclipse.sdk" label="Main Sources (optional)">
       <description>
          Provides source code for the Groovy-Eclipse plugins.
       </description>
-   </category-def-->
+   </category-def>
 
    <category-def name="org.codehaus.groovy.compilers" label="More Compilers (optional)">
       <description>
@@ -31,9 +31,9 @@
       <category name="org.codehaus.groovy.eclipse"/>
    </feature>
 
-   <!--feature id="org.codehaus.groovy.eclipse.feature.source" url="features/org.codehaus.groovy.eclipse.feature.source_5.6.0.qualifier.jar" version="5.6.0.qualifier">
+   <feature id="org.codehaus.groovy.eclipse.feature.source" url="features/org.codehaus.groovy.eclipse.feature.source_5.6.0.qualifier.jar" version="5.6.0.qualifier">
       <category name="org.codehaus.groovy.eclipse.sdk"/>
-   </feature-->
+   </feature>
 
    <!--feature id="org.codehaus.groovy.jdt.patch" url="features/org.codehaus.groovy.jdt.patch_5.6.0.qualifier.jar" version="5.6.0.qualifier" patch="true">
       <category name="org.codehaus.groovy.eclipse"/>
