@@ -15,8 +15,6 @@
  */
 package dsld
 
-assertVersion(groovyEclipse: '3.2.0')
-
 contribute(enclosingScript(isConfigScript()) & isThisType()) {
     property name: 'configuration', type: org.codehaus.groovy.control.CompilerConfiguration
     delegatesTo type: org.codehaus.groovy.control.customizers.builder.CompilerCustomizationBuilder

@@ -3,6 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.codeassist.test;singleton:=true
 Bundle-Name: Groovy Content Assist Tests
+Bundle-Vendor: Pivotal Software, Inc.
 Bundle-Version: 5.6.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.codeassist.tests
 Require-Bundle: org.codehaus.groovy.eclipse.codeassist;bundle-version="5.6.0",

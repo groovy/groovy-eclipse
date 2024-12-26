@@ -22,8 +22,6 @@ import org.codehaus.groovy.transform.stc.AbstractTypeCheckingExtension
 import org.codehaus.groovy.transform.stc.GroovyTypeCheckingExtensionSupport
 import org.codehaus.groovy.transform.stc.GroovyTypeCheckingExtensionSupport.TypeCheckingDSL
 
-assertVersion(groovyEclipse: '4.8.0')
-
 contribute(isScript() & currentType(subType(TypeCheckingDSL))) {
     provider = "{@link ${GroovyTypeCheckingExtensionSupport.name}.TypeCheckingDSL TypeCheckingDSL}"
 
