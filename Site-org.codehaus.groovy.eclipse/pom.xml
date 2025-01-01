@@ -4,7 +4,7 @@
 		<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
 		<groupId>org.codehaus.groovy.eclipse</groupId>
 		<relativePath>../pom.xml</relativePath>
-		<version>5.6.0-SNAPSHOT</version>
+		<version>5.7.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>org.codehaus.groovy.eclipse.site</artifactId>
 	<packaging>eclipse-repository</packaging>
@@ -18,7 +18,7 @@
 			<id>release</id>
 
 			<properties>
-				<deploy.version>5.6.0</deploy.version>
+				<deploy.version>5.7.0</deploy.version>
 			</properties>
 
 			<pluginRepositories>
@@ -48,7 +48,7 @@
 									<sites>
 										<param>https://groovy.jfrog.io/artifactory/plugins-release-local/org/codehaus/groovy/groovy-eclipse-integration/${deploy.version}/${deploy.target}</param>
 									</sites>
-									<target>${project.build.directory}</target><!-- writes compositeArtifacts.xml and compositeContent.xml -->
+									<target>${project.build.directory}/composite</target><!-- writes compositeArtifacts.xml and compositeContent.xml -->
 								</configuration>
 							</execution>
 						</executions>

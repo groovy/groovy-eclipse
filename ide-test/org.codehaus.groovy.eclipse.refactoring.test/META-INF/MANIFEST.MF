@@ -4,14 +4,14 @@ Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.refactoring.test;singleton:=true
 Bundle-Name: Groovy Refactoring Tests
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 5.6.0.qualifier
+Bundle-Version: 5.7.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.refactoring.test,
  org.codehaus.groovy.eclipse.refactoring.test.extract,
  org.codehaus.groovy.eclipse.refactoring.test.formatter,
  org.codehaus.groovy.eclipse.refactoring.test.rename
 Import-Package: org.eclipse.jdt.launching
-Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="5.6.0",
- org.codehaus.groovy.eclipse.codebrowsing.test;bundle-version="5.6.0",
- org.codehaus.groovy.eclipse.refactoring;bundle-version="5.6.0",
- org.codehaus.groovy.eclipse.tests;bundle-version="5.6.0"
+Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="5.7.0",
+ org.codehaus.groovy.eclipse.codebrowsing.test;bundle-version="5.7.0",
+ org.codehaus.groovy.eclipse.refactoring;bundle-version="5.7.0",
+ org.codehaus.groovy.eclipse.tests;bundle-version="5.7.0"
 Eclipse-BundleShape: dir

@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.dsl;singleton:=true
 Bundle-Name: Groovy DSL support
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 5.6.0.qualifier
+Bundle-Version: 5.7.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.dsl,
  org.codehaus.groovy.eclipse.dsl.checker,
  org.codehaus.groovy.eclipse.dsl.classpath,
@@ -18,8 +18,8 @@ Export-Package: org.codehaus.groovy.eclipse.dsl,
  org.codehaus.groovy.eclipse.dsl.proposals,
  org.codehaus.groovy.eclipse.dsl.script,
  org.codehaus.groovy.eclipse.dsl.ui
-Require-Bundle: org.codehaus.groovy.eclipse.codeassist;bundle-version="5.6.0",
- org.codehaus.groovy.eclipse.ui;bundle-version="5.6.0",
+Require-Bundle: org.codehaus.groovy.eclipse.codeassist;bundle-version="5.7.0",
+ org.codehaus.groovy.eclipse.ui;bundle-version="5.7.0",
  org.eclipse.ui.ide
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
