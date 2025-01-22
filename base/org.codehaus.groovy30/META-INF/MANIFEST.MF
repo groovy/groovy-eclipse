@@ -7,7 +7,7 @@ Bundle-Vendor: Pivotal Software, Inc.
 Bundle-Version: 3.0.23.qualifier
 Bundle-ClassPath: eclipse-trace.jar,
  groovy-eclipse.jar,
- lib/ivy-2.5.2.jar,
+ lib/ivy-2.5.3.jar,
  lib/groovy-3.0.23-indy.jar,
  lib/groovy-test-3.0.23-indy.jar
 Export-Package: groovy.beans;version="3.0.23",

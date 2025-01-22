@@ -70,6 +70,7 @@
                 <attribute name="Implementation-Vendor" value="Pivotal Software, Inc."/>
                 <attribute name="Implementation-Version" value="${version} (${jdt.patch.target})"/>
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.compiler.batch.Main"/>
+                <attribute name="Require-Capability" value="osgi.ee;filter:=&quot;(&amp;(osgi.ee=JavaSE)(version=17))&quot;"/>
             </manifest>
             <rule pattern="org.eclipse.core.**" result="groovyjarjareclipse.core.@1"/>
             <rule pattern="org.eclipse.equinox.**" result="groovyjarjareclipse.equinox.@1"/>

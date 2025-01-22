@@ -6,7 +6,7 @@
         <element name="dependencies" implicit="true" />
 
         <sequential xmlns:ivy="antlib:org.apache.ivy.ant">
-            <taskdef classpath="../lib/ivy-2.5.2.jar"
+            <taskdef classpath="../lib/ivy-2.5.3.jar"
               resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant">
             </taskdef>
 
@@ -19,7 +19,7 @@
 
     <target name="build" depends="clean">
         <resolve-dependencies pathid="classpath.antlr4">
-            <dependency org="me.sunlan" name="antlr4" rev="4.13.1.5">
+            <dependency org="me.sunlan" name="antlr4" rev="4.13.2.6">
                 <exclude name="org.abego.treelayout.core" />
             </dependency>
         </resolve-dependencies>

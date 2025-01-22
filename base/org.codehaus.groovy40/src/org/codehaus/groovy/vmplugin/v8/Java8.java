@@ -254,7 +254,6 @@ public class Java8 implements VMPlugin {
     private ClassNode configureParameterizedType(final ParameterizedType parameterizedType) {
         ClassNode base = configureType(parameterizedType.getRawType());
         GenericsType[] gts = configureTypeArguments(parameterizedType.getActualTypeArguments());
-        // GRECLIPSE add -- GROOVY-10153, GROOVY-10651, GROOVY-10671, GROOVY-10756, GROOVY-11258
         // fix erasure : ResolveVisitor#resolveWildcardBounding
         final int n; if (gts != null && (n = gts.length) > 0) {
             for (int i = 0; i < n; i += 1) { GenericsType gt = gts[i];
@@ -263,7 +262,6 @@ public class Java8 implements VMPlugin {
                 if (ubs != null && !ClassHelper.OBJECT_TYPE.equals(ubs[0])) gt.getType().setRedirect(ubs[0]);
             }
         }
-        // GRECLIPSE end
         base.setGenericsTypes(gts);
         return base;
     }
