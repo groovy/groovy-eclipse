@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -139,7 +139,7 @@ public abstract class GroovyCompilerTestSuite {
                 String[] newcps = Arrays.copyOf(cps, cps.length + 2);
 
                 String[] groovyVersions = {"5.0.0", "4.0.24", "3.0.23-indy"};
-                String[] ivyVersions = {"2.5.2", "2.5.1", "2.5.0"};
+                String[] ivyVersions = {"2.5.3", "2.5.2", "2.5.1", "2.5.0"};
                 try {
                     URL groovyJar = null;
                     for (String groovyVer : groovyVersions) {

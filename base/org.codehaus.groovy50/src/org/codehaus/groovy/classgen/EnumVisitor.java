@@ -45,10 +45,13 @@ import org.codehaus.groovy.syntax.PreciseSyntaxException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
+import static org.apache.groovy.ast.tools.ClassNodeUtils.hasNoArgConstructor;
 import static org.codehaus.groovy.ast.ClassHelper.int_TYPE;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*;
+import static org.codehaus.groovy.runtime.StreamGroovyMethods.stream;
 import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
 import static groovyjarjarasm.asm.Opcodes.ACC_FINAL;
 import static groovyjarjarasm.asm.Opcodes.ACC_PRIVATE;
@@ -93,33 +96,33 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                 } else if (!ctor.isPrivate()) {
                     addError(ctor, "Illegal modifier for the enum constructor; only private is permitted.");
                 }
-                // GRECLIPSE add
                 if (ctor.firstStatementIsSpecialConstructorCall()) {
                     var ctorCall = (ConstructorCallExpression) ((ExpressionStatement) ctor.getFirstStatement()).getExpression();
                     if (ctorCall.isSuperCall()) {
-                        var spec = new java.util.StringJoiner(",", enumClass.getNameWithoutPackage() + "(", ")");
-                        for (var param : ctor.getParameters()) spec.add(param.getType().getUnresolvedName());
+                        var spec = new StringJoiner(",", enumClass.getNameWithoutPackage() + "(", ")");
+                        for (Parameter p : ctor.getParameters()) spec.add(p.getType().getUnresolvedName());
                         addError(ctorCall, "Cannot invoke super constructor from enum constructor " + spec);
                     }
                 }
-                // GRECLIPSE end
+            }
+
+            // GROOVY-10811: final and abstract are implicit modifiers
+            boolean isInnerClass = (enumClass.getOuterClass() != null);
+            if ((enumClass.getModifiers() & (ACC_ABSTRACT | ACC_FINAL)) != 0) {
+                String name = enumClass.getNameWithoutPackage(); // TODO: substring after the $
+                String permitted = (!isInnerClass ? "public is" : "public, private, protected & static are");
+                addError(enumClass, "Illegal modifier for the enum " + name + "; only " + permitted + " permitted.");
             }
 
             addMethods(enumClass, values, minValue, maxValue);
-            checkForAbstractMethods(enumClass);
+
+            // for now, inner enum is always static
+            if (isInnerClass) enumClass.setModifiers(enumClass.getModifiers() | ACC_STATIC);
+            if (isAnyAbstract(enumClass)) enumClass.setModifiers(enumClass.getModifiers() | ACC_ABSTRACT);
+            else if (isNotExtended(enumClass)) enumClass.setModifiers(enumClass.getModifiers() | ACC_FINAL);
         }
 
         addInit(enumClass, minValue, maxValue, values, isAIC);
-    }
-
-    private static void checkForAbstractMethods(final ClassNode enumClass) {
-        for (MethodNode method : enumClass.getMethods()) {
-            if (method.isAbstract()) {
-                // make the class abstract also; see Effective Java p.152
-                enumClass.setModifiers(enumClass.getModifiers() | ACC_ABSTRACT);
-                break;
-            }
-        }
     }
 
     private static void addMethods(final ClassNode enumClass, final FieldNode values, FieldNode minValue, FieldNode maxValue) {
@@ -222,43 +225,37 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
         // static init
         List<FieldNode> fields = enumClass.getFields();
         List<Expression> arrayInit = new ArrayList<>();
-        int value = -1;
         List<Statement> block = new ArrayList<>();
+        int index = -1;
         FieldNode tempMin = null;
         FieldNode tempMax = null;
         for (FieldNode field : fields) {
             if (!field.isEnum()) continue;
-            value += 1;
+            index += 1; // the next ordinal
             if (tempMin == null) tempMin = field;
             tempMax = field;
 
-            ClassNode enumBase = enumClass;
-            ArgumentListExpression args = args(constX(field.getName()), constX(value));
+            ClassNode enumType = enumClass;
+            ArgumentListExpression args = args(constX(field.getName()), constX(index));
             if (field.getInitialExpression() == null) {
                 if (enumClass.isAbstract()) {
-                    addError(field, "The enum constant " + field.getName() + " must override abstract methods from " + enumBase.getName() + ".");
-                    continue;
+                    addError(field, "The enum constant " + field.getName() + " must override abstract methods from " + enumClass.getName() + ".");
+                }
+                if (!(hasNoArgConstructor(enumClass) || enumClass.getDeclaredConstructors().isEmpty())) { // GROOVY-10811
+                    addError(field, "The constructor " + enumClass.getNameWithoutPackage() + "() is undefined.");
                 }
             } else {
-                ListExpression oldArgs = (ListExpression) field.getInitialExpression();
+                var initList = (ListExpression) field.getInitialExpression();
                 List<MapEntryExpression> savedMapEntries = new ArrayList<>();
-                for (Expression exp : oldArgs.getExpressions()) {
+                for (Expression exp : initList.getExpressions()) {
                     if (exp instanceof MapEntryExpression) {
                         savedMapEntries.add((MapEntryExpression) exp);
                         continue;
                     }
 
-                    InnerClassNode inner = null;
-                    if (exp instanceof ClassExpression) {
-                        ClassExpression clazzExp = (ClassExpression) exp;
-                        ClassNode ref = clazzExp.getType();
-                        if (ref instanceof EnumConstantClassNode) {
-                            inner = (InnerClassNode) ref;
-                        }
-                    }
-                    if (inner != null) {
-                        List<MethodNode> baseMethods = enumBase.getMethods();
-                        for (MethodNode methodNode : baseMethods) {
+                    if (exp instanceof ClassExpression && exp.getType() instanceof EnumConstantClassNode) {
+                        InnerClassNode inner = (InnerClassNode) exp.getType();
+                        for (MethodNode methodNode : enumClass.getMethods()) {
                             if (!methodNode.isAbstract()) continue;
                             MethodNode enumConstMethod = inner.getMethod(methodNode.getName(), methodNode.getParameters());
                             if (enumConstMethod == null || enumConstMethod.isAbstract()) {
@@ -266,7 +263,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                             }
                         }
                         if (inner.getVariableScope() == null) {
-                            enumBase = inner;
+                            enumType = inner;
                             /*
                              * GROOVY-3985: Remove the final modifier from $INIT method in this case
                              * so that subclasses of enum generated for enum constants (aic) can provide
@@ -281,10 +278,10 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                 if (!savedMapEntries.isEmpty()) {
                     args.getExpressions().add(2, mapX(savedMapEntries));
                 }
+                field.setInitialValueExpression(null); // GRECLIPSE edit
             }
-            field.setInitialValueExpression(null);
-            block.add(assignS(fieldX(field), callX(enumBase, "$INIT", args)));
             arrayInit.add(fieldX(field));
+            block.add(assignS(fieldX(field), callX(enumType, "$INIT", args)));
         }
 
         if (!isAIC) {
@@ -298,14 +295,15 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             block.add(assignS(fieldX(values), arrayX(enumClass, arrayInit)));
             enumClass.addField(values);
         }
+
         enumClass.addStaticInitializerStatements(block, true);
     }
 
-    private void addError(final AnnotatedNode exp, final String msg) {
+    private void addError(final AnnotatedNode an, final String msg) {
         // GRECLIPSE add
-        int start = exp.getStart(), end = exp.getEnd();
-        if (exp instanceof FieldNode && ((FieldNode) exp).hasInitialExpression()) {
-            List args = ((ListExpression) ((FieldNode) exp).getInitialExpression()).getExpressions();
+        int start = an.getStart(), end = an.getEnd();
+        if (an instanceof FieldNode && ((FieldNode) an).hasInitialExpression()) {
+            List args = ((ListExpression) ((FieldNode) an).getInitialExpression()).getExpressions();
             ClassNode type = ((ClassExpression) args.get(args.size() - 1)).getType();
             end = type.getStart() - 2; // cover arguments but not start of block
         }
@@ -313,9 +311,9 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
         getSourceUnit().getErrorCollector().addErrorAndContinue(
                 new SyntaxErrorMessage(
                         /* GRECLIPSE edit
-                        new SyntaxException(msg + '\n', exp),
+                        new SyntaxException(msg + '\n', an),
                         */
-                        new PreciseSyntaxException(msg + '\n', exp.getLineNumber(), exp.getColumnNumber(), start, end),
+                        new PreciseSyntaxException(msg + '\n', an.getLineNumber(), an.getColumnNumber(), start, end),
                         // GRECLIPSE end
                         getSourceUnit()
                 )
@@ -325,5 +323,13 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
     static boolean isAnonymousInnerClass(final ClassNode enumClass) {
         return enumClass instanceof EnumConstantClassNode
             && ((EnumConstantClassNode) enumClass).getVariableScope() == null;
+    }
+
+    private static boolean isAnyAbstract(final ClassNode enumClass) {
+        return enumClass.getMethods().stream().anyMatch(MethodNode::isAbstract);
+    }
+
+    private static boolean isNotExtended(final ClassNode enumClass) {
+        return stream(enumClass.getInnerClasses()).noneMatch(it -> it instanceof EnumConstantClassNode);
     }
 }

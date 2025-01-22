@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2766,10 +2766,17 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources);
-        /*
-        runNegativeTest(sources, "The method add(capture#1-of ?) in the type Collection<capture#1-of ?> is not applicable for the arguments (Object)");
-        */
+        if (!isAtLeastGroovy(50)) {
+            runConformTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 5)\n" +
+                "\tc.add(new Object())\n" +
+                "\t^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Cannot call java.util.Collection#add(capture-of ?) with arguments [java.lang.Object]\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -2792,15 +2799,22 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\n" +
             "@groovy.transform.TypeChecked\n" +
             "void addRectangle(List<? extends Shape> shapes) {\n" +
-            "  shapes.add(0, new Rectangle()) // TODO: compile-time error!\n" +
+            "  shapes.add(0, new Rectangle())\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources);
-        /*
-        runNegativeTest(sources, "The method add(capture#1-of ?) in the type List<capture#1-of ?> is not applicable for the arguments (Rectangle)");
-        */
+        if (!isAtLeastGroovy(50)) {
+            runConformTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 16)\n" +
+                "\tshapes.add(0, new Rectangle())\n" +
+                "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Cannot call java.util.List#add(int, capture-of ? extends Shape) with arguments [int, Rectangle]\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -4456,14 +4470,14 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.groovy",
             "def <T> void a(T one, T two) { }\n" +
-            "def <T> void b(T one, List<T> many) { }\n" +
-            "def <T> void c(T one, T two, T three) { }\n" +
+            "def <T> void b(T one, T two, T three) { }\n" +
+            "def <T> void c(T one, List<? extends T> ts) { }\n" +
             "def <T extends Number> void d(T one, T two) { }\n" +
             "@groovy.transform.TypeChecked\n" +
             "void test() {\n" +
             "  a(1,'II')\n" +
-            "  b(1,['II','III'])\n" +
-            "  c(1,'II',Class)\n" +
+            "  b(1,'II',Class)\n" +
+            "  c(1,['II','III'])\n" +
             "  d(1L,2G)\n" +
             "}\n",
         };

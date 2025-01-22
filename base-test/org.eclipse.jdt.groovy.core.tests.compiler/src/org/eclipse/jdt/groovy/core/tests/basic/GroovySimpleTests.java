@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3768,7 +3768,17 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "success");
+        if (!isAtLeastGroovy(50)) {
+            runConformTest(sources, "success");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in p\\X.groovy (at line 2)\n" +
+                "\tprotected class X {\n" +
+                "\t                ^\n" +
+                "Groovy:The class 'p.X' has invalid modifier protected.\n" +
+                "----------\n");
+        }
     }
 
     @Test

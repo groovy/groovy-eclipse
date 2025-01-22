@@ -1,4 +1,4 @@
-// Generated from GroovyParser.g4 by ANTLR 4.13.1.5
+// Generated from GroovyParser.g4 by ANTLR 4.13.2.6
 package org.apache.groovy.parser.antlr4;
 
     import java.util.Map;
@@ -5977,7 +5977,6 @@ public class GroovyParser extends AbstractParser {
 			variableDeclaratorId();
 			setState(1050); 
 			_errHandler.sync(this);
-			_la = _input.LA(1);
 			do {
 				{
 				{
@@ -6208,7 +6207,6 @@ public class GroovyParser extends AbstractParser {
 				{
 				setState(1080); 
 				_errHandler.sync(this);
-				_la = _input.LA(1);
 				do {
 					{
 					{
@@ -11871,7 +11869,6 @@ public class GroovyParser extends AbstractParser {
 				{
 				setState(1718); 
 				_errHandler.sync(this);
-				_la = _input.LA(1);
 				do {
 					{
 					{

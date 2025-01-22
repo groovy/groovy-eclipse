@@ -396,7 +396,7 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
                 /* GRECLIPSE edit
                 if (oe instanceof ClassExpression) {
                     ClassExpression ce = (ClassExpression) oe;
-                    if (ce.getType().getName().equals("groovy.transform.DefaultsMode")) {
+                    if ("groovy.transform.DefaultsMode".equals(ce.getType().getName())) {
                         return DefaultsMode.valueOf(prop.getPropertyAsString());
                     }
                 }
