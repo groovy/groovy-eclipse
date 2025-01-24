@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -58,7 +57,6 @@ import org.eclipse.jdt.internal.core.manipulation.util.BasicElementLabels;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.internal.corext.refactoring.StubTypeContext;
 import org.eclipse.jdt.internal.corext.refactoring.TypeContextChecker;
-import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.internal.ui.dialogs.StatusInfo;
@@ -775,8 +773,6 @@ public class NewTypeWizard extends NewElementWizard {
                     Type type = TypeContextChecker.parseSuperClass(typeName);
                     if (type == null) {
                         status.setError(NewWizardMessages.NewTypeWizardPage_error_InvalidSuperClassName);
-                    } else if (type instanceof ParameterizedType && !JavaModelUtil.is50OrHigher(getJavaProject())) {
-                        status.setError(NewWizardMessages.NewTypeWizardPage_error_SuperClassNotParameterized);
                     }
                 }
                 composite.setData("SuperClass", typeName);
@@ -825,10 +821,6 @@ public class NewTypeWizard extends NewElementWizard {
                     if (type == null) {
                         status.setError(WizardMessages.bind(
                             NewWizardMessages.NewTypeWizardPage_error_InvalidSuperInterfaceName, BasicElementLabels.getJavaElementName(interfaceName)));
-                        //
-                    } else if (type instanceof ParameterizedType && !JavaModelUtil.is50OrHigher(getJavaProject())) {
-                        status.setError(WizardMessages.bind(
-                            NewWizardMessages.NewTypeWizardPage_error_SuperInterfaceNotParameterized, BasicElementLabels.getJavaElementName(interfaceName)));
                     }
                 }
 

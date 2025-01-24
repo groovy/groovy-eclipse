@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,19 +93,24 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     static {
         try {
             Class<?> style = Class.forName("org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingManager$Highlighting");
-            HIGHLIGHTING_STYLE = ReflectionUtils.getConstructor(style, TextAttribute.class, boolean.class);
+            try {
+                HIGHLIGHTING_STYLE = style.getDeclaredConstructor(String.class, TextAttribute.class, boolean.class);
+            } catch (NoSuchMethodException nsme) {
+                HIGHLIGHTING_STYLE = style.getDeclaredConstructor(TextAttribute.class, boolean.class);
+            }
+            HIGHLIGHTING_STYLE.setAccessible(true);
 
             Class<?> position = Class.forName("org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingManager$HighlightedPosition");
-            HIGHLIGHTED_POSITION = ReflectionUtils.getConstructor(position, int.class, int.class, style, Object.class);
+            HIGHLIGHTED_POSITION = position.getDeclaredConstructor(int.class, int.class, style, Object.class);
+            HIGHLIGHTED_POSITION.setAccessible(true);
 
             GET_HIGHLIGHTING = position.getDeclaredMethod("getHighlighting");
             GET_HIGHLIGHTING.setAccessible(true);
 
-        } catch (ClassNotFoundException cnfe) {
+        } catch (ReflectiveOperationException e) {
             HIGHLIGHTING_STYLE = null;
             HIGHLIGHTED_POSITION = null;
-            GroovyPlugin.getDefault().logError("Semantic highlighting disabled", cnfe);
-        } catch (NoSuchMethodException nsme) {
+            GroovyPlugin.getDefault().logError("Semantic highlighting disabled", e);
         }
     }
 
@@ -239,18 +244,27 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     }
 
     protected Object newHighlightingStyle(Color color) {
+        Object[] arguments = new Object[HIGHLIGHTING_STYLE.getParameterCount()];
         //return new HighlightingStyle(new TextAttribute(color), true);
-        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, new TextAttribute(color), Boolean.TRUE);
+        arguments[arguments.length - 2] = new TextAttribute(color);
+        arguments[arguments.length - 1] = Boolean.TRUE;
+        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, arguments);
     }
 
     protected Object newHighlightingStyle(int style) {
-        //return new HighlightingStyle(new TextAttribute(color), true);
-        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, new TextAttribute(null, null, style), Boolean.TRUE);
+        Object[] arguments = new Object[HIGHLIGHTING_STYLE.getParameterCount()];
+        //return new HighlightingStyle(new TextAttribute(null, null, style), true);
+        arguments[arguments.length - 2] = new TextAttribute(null, null, style);
+        arguments[arguments.length - 1] = Boolean.TRUE;
+        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, arguments);
     }
 
     protected Object newHighlightingStyle(Color color, int style) {
-        //return new HighlightingStyle(new TextAttribute(color, null, style), true);
-        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, new TextAttribute(color, null, style), color == null ? Boolean.FALSE : Boolean.TRUE);
+        Object[] arguments = new Object[HIGHLIGHTING_STYLE.getParameterCount()];
+        //return new HighlightingStyle(new TextAttribute(color, null, style), color != null);
+        arguments[arguments.length - 2] = new TextAttribute(color, null, style);
+        arguments[arguments.length - 1] = Boolean.valueOf(color != null);
+        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, arguments);
     }
 
     protected void setHighlightingStyle(Position pos, Object val) {

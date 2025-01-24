@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %pluginName
+Bundle-SymbolicName: org.eclipse.jdt.core.tests.builder.mockcompiler; singleton:=true
+Bundle-Version: 1.0.100.qualifier
+Bundle-Vendor: %providerName
+Bundle-Localization: plugin
+Fragment-Host: org.eclipse.jdt.core
+Export-Package: org.eclipse.jdt.core.tests.builder.mockcompiler
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Eclipse-BundleShape: dir
+Automatic-Module-Name: org.eclipse.jdt.core.tests.builder.mockcompiler
