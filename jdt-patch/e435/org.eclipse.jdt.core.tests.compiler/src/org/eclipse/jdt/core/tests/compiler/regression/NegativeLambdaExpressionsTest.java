@@ -4995,6 +4995,40 @@ this.runNegativeTest(
 				"The type of foo() from the type X is Zork, this is incompatible with the descriptor\'s return type: int[]\n" +
 				"----------\n");
 }
+// reference to missing type occurs during type inference involving a reference expression:
+public void testGH3501() {
+	runNegativeTest(new String[] {
+			"X.java",
+			"""
+			interface I<T> { void doit(T t); }
+			public class X {
+				void foo(Zork z) { }
+				<U> void acceptI(I<U> i) { }
+				void test() {
+					acceptI(this::foo);
+				}
+			}
+			"""
+		},
+		"""
+		----------
+		1. ERROR in X.java (at line 3)
+			void foo(Zork z) { }
+			         ^^^^
+		Zork cannot be resolved to a type
+		----------
+		2. ERROR in X.java (at line 6)
+			acceptI(this::foo);
+			^^^^^^^
+		Inference for this invocation of method acceptI(I<U>) from the type X refers to the missing type Zork
+		----------
+		3. ERROR in X.java (at line 6)
+			acceptI(this::foo);
+			        ^^^^^^^^^
+		The type X does not define foo(U) that is applicable here
+		----------
+		""");
+}
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=401610, [1.8][compiler] Allow lambda/reference expressions in non-overloaded method invocation contexts
 public void test401610() {
 this.runConformTest(
@@ -6584,9 +6618,9 @@ public void test406588() {
 				"}\n"
 			},
 			"----------\n" +
-			"1. ERROR in X.java (at line 10)\n" + 
-			"	this(Z::new);\n" + 
-			"	     ^^^^^^\n" + 
+			"1. ERROR in X.java (at line 10)\n" +
+			"	this(Z::new);\n" +
+			"	     ^^^^^^\n" +
 			"No enclosing instance of type X.Y is available due to some intermediate constructor invocation\n" +
 			"----------\n");
 }

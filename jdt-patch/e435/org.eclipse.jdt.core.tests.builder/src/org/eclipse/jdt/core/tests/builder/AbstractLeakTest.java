@@ -188,7 +188,6 @@ public abstract class AbstractLeakTest extends BuilderTests {
 		System.runFinalization();
 	}
 
-
 	private void selfTestLsof() throws Exception {
 		Path tempFile = Files.createTempFile("testLsof", "tmp");
 		Files.deleteIfExists(tempFile);
@@ -230,7 +229,7 @@ public abstract class AbstractLeakTest extends BuilderTests {
 
 	private static List<String> readLsofLines(String cmd, boolean skipFirst) throws Exception {
 		List<String> lines = new ArrayList<>();
-		Process process = Runtime.getRuntime().exec(cmd);
+		Process process = Runtime.getRuntime().exec(cmd.split("\\s"));
 		try (BufferedReader rdr = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 			if (skipFirst) {
 				rdr.readLine();

@@ -76,13 +76,14 @@ protected boolean isExcluded(IResource resource) {
 }
 @Override
 String[] directoryList(String qualifiedPackageName) {
-	String[] dirList = (String[]) this.directoryCache.get(qualifiedPackageName);
+	String[] dirList = this.directoryCache.get(qualifiedPackageName);
+	if (dirList == this.missingPackageHolder) return null; // package exists in another classpath directory or jar
 	if (dirList != null) return dirList;
 
 	try {
 		IResource container = this.binaryFolder.findMember(qualifiedPackageName); // this is a case-sensitive check
-		if (container instanceof IContainer) {
-			IResource[] members = ((IContainer) container).members();
+		if (container instanceof IContainer binaryContainer) {
+			IResource[] members = binaryContainer.members();
 			dirList = new String[members.length];
 			int index = 0;
 			boolean foundClass = false;
@@ -99,8 +100,8 @@ String[] directoryList(String qualifiedPackageName) {
 			}
 			if(!foundClass) {
 				container = this.sourceFolder.findMember(qualifiedPackageName);
-				if (container instanceof IContainer) {
-					members = ((IContainer) container).members();
+				if (container instanceof IContainer sourceContainer) {
+					members = sourceContainer.members();
 					if (members.length > 0) {
 						dirList = new String[members.length];
 						index = 0;
@@ -123,6 +124,7 @@ String[] directoryList(String qualifiedPackageName) {
 	} catch(CoreException ignored) {
 		// ignore
 	}
+	this.directoryCache.put(qualifiedPackageName, this.missingPackageHolder);
 	return null;
 }
 

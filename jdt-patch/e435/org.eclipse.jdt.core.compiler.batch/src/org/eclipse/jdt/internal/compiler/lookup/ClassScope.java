@@ -47,7 +47,6 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 
-@SuppressWarnings({"rawtypes"})
 public class ClassScope extends Scope {
 
 	public TypeDeclaration referenceContext;
@@ -1024,7 +1023,7 @@ public class ClassScope extends Scope {
 		// check for parameterized interface collisions (when different parameterizations occur)
 		SourceTypeBinding sourceType = this.referenceContext.binding;
 		ReferenceBinding[] interfaces = sourceType.superInterfaces(); // GROOVY edit
-		Map invocations = new HashMap(2);
+		Map<TypeBinding, Object> invocations = new HashMap<>(2);
 		ReferenceBinding itsSuperclass = sourceType.isInterface() ? null : sourceType.superclass;
 		nextInterface: for (int i = 0, length = (interfaces != null ? interfaces.length : 0); i < length; i++) { // GROOVY edit
 			ReferenceBinding one =  interfaces[i];

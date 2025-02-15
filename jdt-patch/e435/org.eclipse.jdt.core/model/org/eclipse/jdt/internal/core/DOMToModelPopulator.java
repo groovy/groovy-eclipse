@@ -1183,10 +1183,12 @@ public class DOMToModelPopulator extends ASTVisitor {
 	private static int getStartConsideringLeadingComments(ASTNode node) {
 		int start = node.getStartPosition();
 		var unit = domUnit(node);
-		int index = unit.firstLeadingCommentIndex(node);
-		if (index >= 0 && index <= unit.getCommentList().size()) {
-			Comment comment = (Comment)unit.getCommentList().get(index);
-			start = comment.getStartPosition();
+		if (unit != null) {
+			int index = unit.firstLeadingCommentIndex(node);
+			if (index >= 0 && index <= unit.getCommentList().size()) {
+				Comment comment = (Comment)unit.getCommentList().get(index);
+				start = comment.getStartPosition();
+			}
 		}
 		return start;
 	}

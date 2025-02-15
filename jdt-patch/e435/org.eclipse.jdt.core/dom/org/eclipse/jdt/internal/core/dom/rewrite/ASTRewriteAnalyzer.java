@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2024 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -968,7 +968,7 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 							} catch(CoreException e) {
 								// ignore
 							}
-							if (token == TerminalTokens.TokenNameCOMMENT_LINE) {
+							if (token == TerminalTokens.TokenNameCOMMENT_LINE && node instanceof Block) {
 								insertNewLine = true;
 							}
 						}
@@ -1733,6 +1733,9 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 				String separator;
 				if (lastChild.getNewValue() instanceof Annotation) {
 					separator= formatterPrefix.getPrefix(getIndent(pos));
+					for (int i= 0; i < this.formatter.computeIndentInSpaces(getIndentOfLine(pos)) % this.formatter.getTabWidth(); ++i) {
+						separator += " "; //$NON-NLS-1$
+					}
 				} else {
 					separator= String.valueOf(' ');
 				}

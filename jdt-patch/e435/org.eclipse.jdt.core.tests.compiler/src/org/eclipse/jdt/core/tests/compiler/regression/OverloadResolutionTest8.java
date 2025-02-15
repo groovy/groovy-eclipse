@@ -2722,4 +2722,68 @@ public void test482440b() {
 			"}\n"
 		});
 }
+public void testGH2941_a() {
+	runConformTest(
+		new String[] {
+			"BiStream.java",
+			"""
+			import static java.util.stream.Collectors.collectingAndThen;
+
+			import java.util.function.Function;
+			import java.util.stream.Collector;
+			import java.util.stream.Stream;
+
+			public abstract class BiStream<K, V> {
+			  public static <E, K, V> Collector<E, ?, BiStream<K, V>> toBiStream(
+			      Function<? super E, ? extends K> toKey, Function<? super E, ? extends V> toValue) {
+			    return collectingAndThen(toStream(), stream -> from(stream));
+			  }
+
+			  private static <T> Collector<T, ?, Stream<T>> toStream() {
+			    return null;
+			  }
+
+			  public static <T, K, V> BiStream<K, V> from(Iterable<T> elements) {
+			    return null;
+			  }
+
+			  public static <T, K, V> BiStream<K, V> from(Stream<T> stream) {
+			    return null;
+			  }
+			}
+			"""
+		});
+}
+public void testGH2941_b() {
+	runConformTest(
+		new String[] {
+			"BiStream.java",
+			"""
+			import static java.util.stream.Collectors.collectingAndThen;
+
+			import java.util.function.Function;
+			import java.util.stream.Collector;
+			import java.util.stream.Stream;
+
+			public abstract class BiStream<K, V> {
+			  public static <E, K, V> Collector<E, ?, BiStream<K, V>> toBiStream(
+			      Function<? super E, ? extends K> toKey, Function<? super E, ? extends V> toValue) {
+			    return collectingAndThen(toStream(), stream -> from(stream));
+			  }
+
+			  private static <T> Collector<T, ?, Stream<T>> toStream() {
+			    return null;
+			  }
+
+			  public static <T, K, V> BiStream<K, V> from(Stream<T> stream) {
+			    return null;
+			  }
+
+			  public static <T, K, V> BiStream<K, V> from(Iterable<T> elements) {
+			    return null;
+			  }
+			}
+			"""
+		});
+}
 }

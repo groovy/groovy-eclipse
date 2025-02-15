@@ -216,7 +216,18 @@ public class StringLiteral extends Expression {
 			throw new IllegalArgumentException();
 		}
 
-		Scanner scanner = this.ast.scanner;
+		// create a new local scanner to allow concurrent use
+		Scanner scanner = new Scanner(
+				this.ast.scanner.tokenizeComments,
+				this.ast.scanner.tokenizeWhiteSpace,
+				this.ast.scanner.checkNonExternalizedStringLiterals,
+				this.ast.scanner.sourceLevel,
+				this.ast.scanner.complianceLevel,
+				this.ast.scanner.taskTags,
+				this.ast.scanner.taskPriorities,
+				this.ast.scanner.isTaskCaseSensitive,
+				this.ast.scanner.previewEnabled);
+
 		char[] source = s.toCharArray();
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length);
@@ -226,10 +237,10 @@ public class StringLiteral extends Expression {
 				case TerminalTokens.TokenNameStringLiteral:
 					return scanner.getCurrentStringLiteral();
 				default:
-					throw new IllegalArgumentException();
+					throw new IllegalArgumentException("tokenType: " + tokenType); //$NON-NLS-1$
 			}
 		} catch(InvalidInputException e) {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException(e);
 		}
 	}
 

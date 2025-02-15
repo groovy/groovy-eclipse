@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2022 GK Software AG, and others.
+ * Copyright (c) 2013, 2025 GK Software AG, and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -161,7 +161,7 @@ public class InferenceContext18 {
 	private boolean isInexactVarargsInference = false;
 	boolean prematureOverloadResolution = false;
 	// during reduction we ignore missing types but record that fact here:
-	boolean hasIgnoredMissingType;
+	TypeBinding missingType;
 
 	public static boolean isSameSite(InvocationSite site1, InvocationSite site2) {
 		if (site1 == site2)
@@ -691,6 +691,8 @@ public class InferenceContext18 {
 			MethodBinding innerMethod = invocation.binding();
 			if (innerMethod == null)
 				return true; 		  // -> proceed with no new C set elements.
+			if (innerMethod instanceof PolyParameterizedGenericMethodBinding poly && poly.hasOverloads)
+				return true;		  // don't let ambiguous inner method influence outer inference
 
 			Expression[] arguments = invocation.arguments();
 			TypeBinding[] argumentTypes = arguments == null ? Binding.NO_PARAMETERS : new TypeBinding[arguments.length];

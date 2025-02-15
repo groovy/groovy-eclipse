@@ -25,6 +25,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.JavaFileManager;
+import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.apt.model.ElementsImpl;
 import org.eclipse.jdt.internal.compiler.apt.model.Factory;
@@ -218,6 +219,10 @@ public abstract class BaseProcessingEnvImpl implements ProcessingEnvironment {
 
 	public JavaFileManager getFileManager() {
 		return null;
+	}
+
+	CompilationProgress getCompilationProgress() {
+		return this._compiler.progress;
 	}
 
 }

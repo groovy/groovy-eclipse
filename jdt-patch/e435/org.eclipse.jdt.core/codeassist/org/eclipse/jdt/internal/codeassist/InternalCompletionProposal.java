@@ -207,7 +207,7 @@ public class InternalCompletionProposal extends CompletionProposal {
 		int length = paramTypeNames.length;
 
 		char[] tName = CharOperation.concat(declaringTypePackageName,declaringTypeName,'.');
-		Object cachedType = this.completionEngine.typeCache.get(tName);
+		Object cachedType = getFromEngineTypeCache(tName);
 
 		IType type = null;
 		if(cachedType != null) {
@@ -226,7 +226,7 @@ public class InternalCompletionProposal extends CompletionProposal {
 				null);
 			type = answer == null ? null : answer.type;
 			if(type instanceof BinaryType){
-				this.completionEngine.typeCache.put(tName, type);
+				addToCompletionEngineTypeCache(tName, type);
 			} else {
 				type = null;
 			}
@@ -242,14 +242,15 @@ public class InternalCompletionProposal extends CompletionProposal {
 
 					IPackageFragmentRoot packageFragmentRoot = (IPackageFragmentRoot)type.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
 					if (packageFragmentRoot.isArchive() ||
-							this.completionEngine.openedBinaryTypes < getOpenedBinaryTypesThreshold()) {
+							getOpenedBinaryTypesCount() < getOpenedBinaryTypesThreshold()) {
 						SourceMapper mapper = ((JavaElement)method).getSourceMapper();
 						if (mapper != null) {
 							char[][] paramNames = mapper.getMethodParameterNames(method);
 
 							// map source and try to find parameter names
 							if(paramNames == null) {
-								if (!packageFragmentRoot.isArchive()) this.completionEngine.openedBinaryTypes++;
+								if (!packageFragmentRoot.isArchive())
+									incrementOpenedBinaryTypesCount();
 								IBinaryType info = ((BinaryType) type).getElementInfo();
 								char[] source = mapper.findSource(type, info);
 								if (source != null){
@@ -290,6 +291,22 @@ public class InternalCompletionProposal extends CompletionProposal {
 		return parameters;
 	}
 
+	protected void incrementOpenedBinaryTypesCount() {
+		this.completionEngine.openedBinaryTypes++;
+	}
+
+	protected int getOpenedBinaryTypesCount() {
+		return this.completionEngine.openedBinaryTypes;
+	}
+
+	protected void addToCompletionEngineTypeCache(char[] tName, IType type) {
+		this.completionEngine.typeCache.put(tName, type);
+	}
+
+	protected Object getFromEngineTypeCache(char[] tName) {
+		return this.completionEngine.typeCache.get(tName);
+	}
+
 	protected char[][] findMethodParameterNames(char[] declaringTypePackageName, char[] declaringTypeName, char[] selector, char[][] paramTypeNames){
 		if(paramTypeNames == null || declaringTypeName == null) return null;
 
@@ -297,7 +314,7 @@ public class InternalCompletionProposal extends CompletionProposal {
 		int length = paramTypeNames.length;
 
 		char[] tName = CharOperation.concat(declaringTypePackageName,declaringTypeName,'.');
-		Object cachedType = this.completionEngine.typeCache.get(tName);
+		Object cachedType = getFromEngineTypeCache(tName);
 
 		IType type = null;
 		if(cachedType != null) {
@@ -316,7 +333,7 @@ public class InternalCompletionProposal extends CompletionProposal {
 				null);
 			type = answer == null ? null : answer.type;
 			if(type instanceof BinaryType){
-				this.completionEngine.typeCache.put(tName, type);
+				addToCompletionEngineTypeCache(tName, type);
 			} else {
 				type = null;
 			}

@@ -202,12 +202,26 @@ public class InstanceofPrimaryPatternTest extends AbstractRegressionTest {
 				"	}\n" +
 				"}\n",
 			},
+			this.complianceLevel < ClassFileConstants.JDK21 ?
+
 			"----------\n" +
-			"1. ERROR in X.java (at line 4)\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	if (s instanceof Object o) {\n" +
+			"	    ^\n" +
+			"Expression type cannot be a subtype of the Pattern type\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 4)\n" +
 			"	System.out.println(s1);\n" +
 			"	                   ^^\n" +
 			"s1 cannot be resolved to a variable\n" +
-			"----------\n");
+			"----------\n" :
+
+					"----------\n" +
+					"1. ERROR in X.java (at line 4)\n" +
+					"	System.out.println(s1);\n" +
+					"	                   ^^\n" +
+					"s1 cannot be resolved to a variable\n" +
+					"----------\n");
 	}
 	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1076
 	// ECJ accepts invalid Java code instanceof final Type
@@ -652,6 +666,8 @@ public class InstanceofPrimaryPatternTest extends AbstractRegressionTest {
 	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3222
 	// [Patterns][Ternary] Pattern binding variable not recognized in poly conditional operator expression
 	public void testIssue3222() {
+		if (this.complianceLevel < ClassFileConstants.JDK21)
+			return;
 		runConformTest(
 			new String[] {
 				"X.java",
@@ -679,6 +695,8 @@ public class InstanceofPrimaryPatternTest extends AbstractRegressionTest {
 	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3222
 	// [Patterns][Ternary] Pattern binding variable not recognized in poly conditional operator expression
 	public void testIssue3222_2() {
+		if (this.complianceLevel < ClassFileConstants.JDK21)
+			return;
 		runConformTest(
 			new String[] {
 				"X.java",
@@ -706,6 +724,8 @@ public class InstanceofPrimaryPatternTest extends AbstractRegressionTest {
 	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3222
 	// [Patterns][Ternary] Pattern binding variable not recognized in poly conditional operator expression
 	public void testIssue3222_3() {
+		if (this.complianceLevel < ClassFileConstants.JDK21)
+			return;
 		runConformTest(
 			new String[] {
 				"X.java",

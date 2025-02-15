@@ -17,6 +17,7 @@ package org.eclipse.jdt.internal.compiler.apt.dispatch;
 
 import java.util.List;
 import javax.annotation.processing.Processor;
+import org.eclipse.jdt.core.compiler.CompilationProgress;
 
 /**
  * Implementors know how to discover annotation processors, and maintain a list of processors that
@@ -45,4 +46,6 @@ public interface IProcessorProvider {
 	 * @param p the processor, if known, or null if not.
 	 */
 	void reportProcessorException(Processor p, Exception e);
+
+	CompilationProgress getCompilationProgress();
 }

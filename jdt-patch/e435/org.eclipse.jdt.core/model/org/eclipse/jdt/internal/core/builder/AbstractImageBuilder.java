@@ -50,6 +50,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.CompilationParticipant;
+import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.AbstractAnnotationProcessorManager;
 import org.eclipse.jdt.internal.compiler.ClassFile;
@@ -645,13 +646,41 @@ protected Compiler newCompiler() {
 	if (compilerFactory == null) {
 		compilerFactory = new DefaultCompilerFactory();
 	}
+	CompilationProgress compilationProgress= new CompilationProgress() {
 
-	Compiler newCompiler = compilerFactory.newCompiler(
-			this.nameEnvironment,
-			DefaultErrorHandlingPolicies.proceedWithAllProblems(),
-			prepareCompilerConfiguration(compilerOptions),
-			this,
-			ProblemFactory.getProblemFactory(Locale.getDefault()));
+		@Override
+		public void begin(int remainingWork) {
+			// ignore
+		}
+
+		@Override
+		public void done() {
+			// ignore
+		}
+
+		@Override
+		public boolean isCanceled() {
+			return AbstractImageBuilder.this.notifier.cancelling;
+		}
+
+		@Override
+		public void setTaskName(String name) {
+			// ignore
+
+			// idea was to use
+			// AbstractImageBuilder.this.notifier.subTask(name);
+			// but that only works in SWT thread while compile can run in any thread.
+		}
+
+		@Override
+		public void worked(int workIncrement, int remainingWork) {
+			// ignore
+		}
+
+	};
+	Compiler newCompiler = compilerFactory.newCompiler(this.nameEnvironment,
+			DefaultErrorHandlingPolicies.proceedWithAllProblems(), prepareCompilerConfiguration(compilerOptions), this,
+			ProblemFactory.getProblemFactory(Locale.getDefault()), compilationProgress);
 
 	CompilerOptions options = newCompiler.options;
 	// temporary code to allow the compiler to revert to a single thread

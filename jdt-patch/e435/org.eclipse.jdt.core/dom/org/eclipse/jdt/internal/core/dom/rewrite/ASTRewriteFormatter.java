@@ -212,6 +212,10 @@ public final class ASTRewriteFormatter {
 		return IndentManipulation.measureIndentUnits(line, this.tabWidth, this.indentWidth);
 	}
 
+	public int computeIndentInSpaces(String line) {
+		return IndentManipulation.measureIndentInSpaces(line, this.tabWidth);
+	}
+
 	/**
 	 * Evaluates the edit on the given string.
 	 * @param string The string to format

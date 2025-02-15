@@ -79,6 +79,7 @@ public final class Messages {
 		// Do not instantiate
 	}
 
+	public static String apt_processing;
 	public static String compilation_unresolvedProblem;
 	public static String compilation_unresolvedProblems;
 	public static String compilation_request;

@@ -742,9 +742,9 @@ protected void consumeFieldAccess(boolean isSuperAccess) {
 	this.isOrphanCompletionNode = true;
 }
 @Override
-protected void consumeFormalParameter(boolean isVarArgs) {
-	if (this.indexOfAssistIdentifier() < 0) {
-		super.consumeFormalParameter(isVarArgs);
+protected void consumeSingleVariableDeclarator(boolean isVarArgs) {
+	if (this.indexOfAssistIdentifier() < 0 || this.parsingRecordComponents) {
+		super.consumeSingleVariableDeclarator(isVarArgs);
 	} else {
 		boolean isReceiver = this.intStack[this.intPtr--] == 0;
 	    if (isReceiver) {

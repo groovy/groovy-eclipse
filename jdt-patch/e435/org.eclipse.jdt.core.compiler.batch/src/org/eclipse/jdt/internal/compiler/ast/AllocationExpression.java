@@ -59,6 +59,7 @@ import static org.eclipse.jdt.internal.compiler.ast.ExpressionContext.INVOCATION
 import static org.eclipse.jdt.internal.compiler.ast.ExpressionContext.VANILLA_CONTEXT;
 
 import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -71,7 +72,6 @@ import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.impl.JavaFeature;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
-import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 
 public class AllocationExpression extends Expression implements IPolyExpression, Invocation {
 
@@ -89,7 +89,7 @@ public class AllocationExpression extends Expression implements IPolyExpression,
 	public ExpressionContext expressionContext = VANILLA_CONTEXT;
 
 	 // hold on to this context from invocation applicability inference until invocation type inference (per method candidate):
-	private SimpleLookupTable/*<PMB,IC18>*/ inferenceContexts;
+	private Map<ParameterizedGenericMethodBinding, InferenceContext18> inferenceContexts;
 	public HashMap<TypeBinding, MethodBinding> solutionsPerTargetType;
 	private InferenceContext18 outerInferenceContext; // resolving within the context of an outer (lambda) inference?
 	public boolean argsContainCast;
@@ -826,7 +826,7 @@ public Expression[] arguments() {
 @Override
 public void registerInferenceContext(ParameterizedGenericMethodBinding method, InferenceContext18 infCtx18) {
 	if (this.inferenceContexts == null)
-		this.inferenceContexts = new SimpleLookupTable();
+		this.inferenceContexts = new HashMap<>();
 	this.inferenceContexts.put(method, infCtx18);
 }
 
@@ -843,16 +843,16 @@ public void registerResult(TypeBinding targetType, MethodBinding method) {
 public InferenceContext18 getInferenceContext(ParameterizedMethodBinding method) {
 	if (this.inferenceContexts == null)
 		return null;
-	return (InferenceContext18) this.inferenceContexts.get(method);
+	return this.inferenceContexts.get(method);
 }
 
 @Override
 public void cleanUpInferenceContexts() {
 	if (this.inferenceContexts == null)
 		return;
-	for (Object value : this.inferenceContexts.valueTable)
-		if (value != null)
-			((InferenceContext18) value).cleanUp();
+	for (InferenceContext18 value : this.inferenceContexts.values()) {
+		value.cleanUp();
+	}
 	this.inferenceContexts = null;
 	this.outerInferenceContext = null;
 	this.solutionsPerTargetType = null;

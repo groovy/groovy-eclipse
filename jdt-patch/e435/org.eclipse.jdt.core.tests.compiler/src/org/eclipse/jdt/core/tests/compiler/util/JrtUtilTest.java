@@ -14,6 +14,10 @@
 package org.eclipse.jdt.core.tests.compiler.util;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Paths;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
@@ -68,6 +72,20 @@ public class JrtUtilTest extends TestCase {
 
 		Object jrtSystem3 = JRTUtil.getJrtSystem(this.image, null);
 		assertSame(jrtSystem, jrtSystem3);
+	}
+
+	@Test
+	public void testWorksUnderInterruptCondition() throws IOException {
+		FileSystem fs = FileSystems.getFileSystem(URI.create("jrt:/"));
+		try {
+			Thread.currentThread().interrupt();
+			assertNotNull(JRTUtil.safeReadBytes(fs.getPath("modules", "java.base", "java/lang/Object.class")));
+			assertTrue(Thread.currentThread().isInterrupted());
+			assertNull(JRTUtil.safeReadBytes(fs.getPath("xxxxxxxxx")));
+			assertTrue(Thread.currentThread().isInterrupted());
+		} finally {
+			Thread.interrupted();
+		}
 	}
 
 	private static int getMajorVersionSegment(String releaseVersion) {

@@ -13,14 +13,16 @@
 
 package org.eclipse.jdt.internal.compiler;
 
+import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 
 public class DefaultCompilerFactory implements ICompilerFactory {
 
 	@Override
 	public Compiler newCompiler(INameEnvironment environment, IErrorHandlingPolicy policy,
-			CompilerConfiguration compilerConfig, ICompilerRequestor requestor, IProblemFactory problemFactory) {
-		return new Compiler(environment, policy, compilerConfig.compilerOptions(),
-				requestor, problemFactory);
+			CompilerConfiguration compilerConfig, ICompilerRequestor requestor, IProblemFactory problemFactory,
+			CompilationProgress compilationProgress) {
+		return new Compiler(environment, policy, compilerConfig.compilerOptions(), requestor, problemFactory,
+				null /* printwriter */, compilationProgress);
 	}
 }

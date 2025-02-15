@@ -122,9 +122,12 @@ public class ClasspathJsr199 extends ClasspathLocation {
 			char[] answerModule = this.module != null ? this.module.name() : null;
 			if (jfo.getKind() == Kind.CLASS) {
 				ClassFileReader reader = readJavaClass(jfo, qualifiedBinaryFileName);
-				if (reader != null) {
-					return new NameEnvironmentAnswer(reader, fetchAccessRestriction(qualifiedBinaryFileName), answerModule);
-				}
+				// To avoid false compiler errors "package collides with type" on case insensitive file systems
+				// (e. g. Windows), make a case sensitive comparison of class name and type name from reader. The
+				// reader contains the CASE SENSITIVE type name.
+				return  reader != null && className.equals(new String(reader.getName()))
+					? new NameEnvironmentAnswer(reader, fetchAccessRestriction(qualifiedBinaryFileName), answerModule)
+					: null;
 			} else {
 				if (this.initialJavaFileObjects != null && this.initialJavaFileObjects.contains(jfo))
 					return null; // refuse to re-add an initial file (possibly via a wrong module?)

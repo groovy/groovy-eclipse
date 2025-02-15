@@ -242,12 +242,16 @@ protected Collection<String> selectModules(Set<String> keySet, Collection<String
 		result.retainAll(limitModules);
 		rootModules = result;
 	} else {
-		rootModules = JavaProject.internalDefaultRootModules(keySet, s -> s, this::getModule);
+		rootModules = JavaProject.internalDefaultRootModules(keySet, s -> s, this::getModule, getReleaseVersion());
 	}
 	Set<String> allModules = new HashSet<>(rootModules);
 	for (String mod : rootModules)
 		addRequired(mod, allModules);
 	return allModules;
+}
+
+protected String getReleaseVersion() {
+	return null;
 }
 
 protected void addRequired(String mod, Set<String> allModules) {

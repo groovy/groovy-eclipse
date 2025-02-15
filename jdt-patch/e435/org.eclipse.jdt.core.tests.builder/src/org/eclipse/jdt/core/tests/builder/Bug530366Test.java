@@ -135,7 +135,6 @@ public class Bug530366Test extends BuilderTests {
 		expectingOnlySpecificProblemsFor(myClass2, expectedProblems);
 	}
 
-//	@SuppressWarnings("restriction")
 	private void assertEqualContents(byte[] expectedContents, byte[] actualContents) throws org.junit.internal.ArrayComparisonFailure {
 		String failMessage =
 				String.join(System.lineSeparator()

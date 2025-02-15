@@ -331,30 +331,16 @@ protected void consumeClassInstanceCreationExpressionWithTypeArguments() {
 	}
 }
 @Override
-protected void consumeConstructorHeaderName() {
+protected void consumeConstructorHeaderName(boolean isCompact) {
 	long selectorSourcePositions = this.identifierPositionStack[this.identifierPtr];
 	int selectorSourceEnd = (int) selectorSourcePositions;
 	int currentAstPtr = this.astPtr;
-	super.consumeConstructorHeaderName();
+	super.consumeConstructorHeaderName(isCompact);
 	if (this.astPtr > currentAstPtr) { // if ast node was pushed on the ast stack
 		this.sourceEnds.put(this.astStack[this.astPtr], selectorSourceEnd);
 		rememberCategories();
 	}
 }
-
-@Override
-protected void consumeCompactConstructorHeaderName() {
-	long selectorSourcePositions = this.identifierPositionStack[this.identifierPtr];
-	int selectorSourceEnd = (int) selectorSourcePositions;
-	int currentAstPtr = this.astPtr;
-	super.consumeCompactConstructorHeaderName();
-	if (this.astPtr > currentAstPtr) { // if ast node was pushed on the ast stack
-		this.sourceEnds.put(this.astStack[this.astPtr], selectorSourceEnd);
-		rememberCategories();
-	}
-}
-
-
 @Override
 protected void consumeConstructorHeaderNameWithTypeParameters() {
 	long selectorSourcePositions = this.identifierPositionStack[this.identifierPtr];
@@ -436,8 +422,8 @@ protected void consumeFieldAccess(boolean isSuperAccess) {
 	}
 }
 @Override
-protected void consumeFormalParameter(boolean isVarArgs) {
-	super.consumeFormalParameter(isVarArgs);
+protected void consumeSingleVariableDeclarator(boolean isVarArgs) {
+	super.consumeSingleVariableDeclarator(isVarArgs);
 
 	// Flush comments prior to this formal parameter so the declarationSourceStart of the following parameter
 	// is correctly set (see bug 80904)

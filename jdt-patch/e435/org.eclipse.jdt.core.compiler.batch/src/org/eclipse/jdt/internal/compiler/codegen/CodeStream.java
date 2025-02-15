@@ -1869,90 +1869,12 @@ public void generateBoxingConversion(int unboxedTypeID) {
 /**
  * Macro for building a class descriptor object
  */
-public void generateClassLiteralAccessForType(Scope scope, TypeBinding accessedType, FieldBinding syntheticFieldBinding) {
+public void generateClassLiteralAccessForType(Scope scope, TypeBinding accessedType) {
 	if (accessedType.isBaseType() && accessedType != TypeBinding.NULL) {
 		getClass(accessedType);
 		return;
 	}
-	if (this.targetLevel >= ClassFileConstants.JDK1_5) {
-		// generation using the new ldc_w bytecode
-		this.ldc(accessedType);
-	} else {
-		BranchLabel endLabel = new BranchLabel(this);
-		if (syntheticFieldBinding != null) { // non interface case
-			fieldAccess(Opcodes.OPC_getstatic, syntheticFieldBinding, null /* default declaringClass */);
-			dup();
-			ifnonnull(endLabel);
-			pop();
-		}
-
-		/* Macro for building a class descriptor object... using or not a field cache to store it into...
-		this sequence is responsible for building the actual class descriptor.
-
-		If the fieldCache is set, then it is supposed to be the body of a synthetic access method
-		factoring the actual descriptor creation out of the invocation site (saving space).
-		If the fieldCache is nil, then we are dumping the bytecode on the invocation site, since
-		we have no way to get a hand on the field cache to do better. */
-
-
-		// Wrap the code in an exception handler to convert a ClassNotFoundException into a NoClassDefError
-
-		ExceptionLabel classNotFoundExceptionHandler = new ExceptionLabel(this, TypeBinding.NULL /*represents ClassNotFoundException*/);
-		classNotFoundExceptionHandler.placeStart();
-		this.ldc(accessedType == TypeBinding.NULL ? "java.lang.Object" : String.valueOf(accessedType.constantPoolName()).replace('/', '.')); //$NON-NLS-1$
-		invokeClassForName();
-
-		/* See https://bugs.eclipse.org/bugs/show_bug.cgi?id=37565
-		if (accessedType == BaseTypes.NullBinding) {
-			this.ldc("java.lang.Object"); //$NON-NLS-1$
-		} else if (accessedType.isArrayType()) {
-			this.ldc(String.valueOf(accessedType.constantPoolName()).replace('/', '.'));
-		} else {
-			// we make it an array type (to avoid class initialization)
-			this.ldc("[L" + String.valueOf(accessedType.constantPoolName()).replace('/', '.') + ";"); //$NON-NLS-1$//$NON-NLS-2$
-		}
-		this.invokeClassForName();
-		if (!accessedType.isArrayType()) { // extract the component type, which doesn't initialize the class
-			this.invokeJavaLangClassGetComponentType();
-		}
-		*/
-		/* We need to protect the runtime code from binary inconsistencies
-		in case the accessedType is missing, the ClassNotFoundException has to be converted
-		into a NoClassDefError(old ex message), we thus need to build an exception handler for this one. */
-		classNotFoundExceptionHandler.placeEnd();
-
-		if (syntheticFieldBinding != null) { // non interface case
-			dup();
-			fieldAccess(Opcodes.OPC_putstatic, syntheticFieldBinding, null /* default declaringClass */);
-		}
-		goto_(endLabel);
-
-		int savedStackDepth = this.stackDepth;
-
-		// Generate the body of the exception handler
-		/* ClassNotFoundException on stack -- the class literal could be doing more things
-		on the stack, which means that the stack may not be empty at this point in the
-		above code gen. So we save its state and restart it from 1. */
-
-		pushExceptionOnStack(scope.getJavaLangClassNotFoundException());
-		classNotFoundExceptionHandler.place();
-
-		// Transform the current exception, and repush and throw a
-		// NoClassDefFoundError(ClassNotFound.getMessage())
-
-		newNoClassDefFoundError();
-		dup_x1();
-		this.swap();
-
-		// Retrieve the message from the old exception
-		invokeThrowableGetMessage();
-
-		// Send the constructor taking a message string as an argument
-		invokeNoClassDefFoundErrorStringConstructor();
-		athrow();
-		endLabel.place();
-		this.stackDepth = savedStackDepth;
-	}
+	this.ldc(accessedType);
 }
 
 /**
@@ -2679,7 +2601,7 @@ public void generateSyntheticBodyForFactoryMethod(SyntheticMethodBinding methodB
 //}
 public void generateSyntheticBodyForEnumValueOf(SyntheticMethodBinding methodBinding) {
 	final ReferenceBinding declaringClass = methodBinding.declaringClass;
-	generateClassLiteralAccessForType(((SourceTypeBinding) methodBinding.declaringClass).scope, declaringClass, null);
+	generateClassLiteralAccessForType(((SourceTypeBinding) methodBinding.declaringClass).scope, declaringClass);
 	aload_0();
 	invokeJavaLangEnumvalueOf(declaringClass);
 	this.checkcast(declaringClass);

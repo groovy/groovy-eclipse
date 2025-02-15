@@ -13,6 +13,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.index;
 
+import java.io.BufferedOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -433,7 +434,7 @@ void initialize(boolean reuseExistingFile) throws IOException {
 		}
 	}
 	if (this.indexLocation.createNewFile()) {
-		try (FileOutputStream stream = new FileOutputStream(this.indexLocation.getIndexFile(), false);) {
+		try (OutputStream stream = new BufferedOutputStream(new FileOutputStream(this.indexLocation.getIndexFile(), false));) {
 			this.streamBuffer = new byte[BUFFER_READ_SIZE];
 			this.bufferIndex = 0;
 			writeStreamChars(stream, SIGNATURE_CHARS);
@@ -466,7 +467,7 @@ private void initializeFrom(DiskIndex diskIndex, File newIndexFile) throws IOExc
 	this.categoryTables = new HashtableOfObject(size);
 	this.separator = diskIndex.separator;
 }
-private void mergeCategories(DiskIndex onDisk, int[] positions, FileOutputStream stream) throws IOException {
+private void mergeCategories(DiskIndex onDisk, int[] positions, OutputStream stream) throws IOException {
 	// at this point, this.categoryTables contains the names -> wordsToDocs added in copyQueryResults()
 	char[][] oldNames = onDisk.categoryOffsets.keyTable;
 	for (char[] oldName : oldNames) {
@@ -480,7 +481,7 @@ private void mergeCategories(DiskIndex onDisk, int[] positions, FileOutputStream
 			mergeCategory(categoryName, onDisk, positions, stream);
 	this.categoryTables = null;
 }
-private void mergeCategory(char[] categoryName, DiskIndex onDisk, int[] positions, FileOutputStream stream) throws IOException {
+private void mergeCategory(char[] categoryName, DiskIndex onDisk, int[] positions, OutputStream stream) throws IOException {
 	HashtableOfObject wordsToDocs = (HashtableOfObject) this.categoryTables.get(categoryName);
 	if (wordsToDocs == null)
 		wordsToDocs = new HashtableOfObject(3);
@@ -559,7 +560,7 @@ DiskIndex mergeWith(MemoryIndex memoryIndex) throws IOException {
 	try {
 		newDiskIndex.initializeFrom(this, newIndexFile);
 		int offsetToHeader = -1;
-		try (FileOutputStream stream = new FileOutputStream(newIndexFile, false)) {
+		try (OutputStream stream = new BufferedOutputStream(new FileOutputStream(newIndexFile, false))) {
 			newDiskIndex.writeAllDocumentNames(docNames, stream);
 			docNames = null; // free up the space
 
@@ -1051,7 +1052,7 @@ private int readStreamInt(InputStream stream) throws IOException {
 	val += (this.streamBuffer[this.bufferIndex++] & 0xFF) << 8;
 	return val + (this.streamBuffer[this.bufferIndex++] & 0xFF);
 }
-private void writeAllDocumentNames(String[] sortedDocNames, FileOutputStream stream) throws IOException {
+private void writeAllDocumentNames(String[] sortedDocNames, OutputStream stream) throws IOException {
 	if (sortedDocNames.length == 0)
 		throw new IllegalArgumentException();
 
@@ -1117,7 +1118,7 @@ private void writeAllDocumentNames(String[] sortedDocNames, FileOutputStream str
 	}
 	this.startOfCategoryTables = this.streamEnd + 1;
 }
-private void writeCategories(FileOutputStream stream) throws IOException {
+private void writeCategories(OutputStream stream) throws IOException {
 	char[][] categoryNames = this.categoryTables.keyTable;
 	Object[] tables = this.categoryTables.valueTable;
 	for (int i = 0, l = categoryNames.length; i < l; i++)
@@ -1125,7 +1126,7 @@ private void writeCategories(FileOutputStream stream) throws IOException {
 			writeCategoryTable(categoryNames[i], (HashtableOfObject) tables[i], stream);
 	this.categoryTables = null;
 }
-private void writeCategoryTable(char[] categoryName, HashtableOfObject wordsToDocs, FileOutputStream stream) throws IOException {
+private void writeCategoryTable(char[] categoryName, HashtableOfObject wordsToDocs, OutputStream stream) throws IOException {
 	// the format of a category table is as follows:
 	// any document number arrays with >= 256 elements are written before the table (the offset to each array is remembered)
 	// then the number of word->int[] pairs in the table is written
@@ -1170,7 +1171,7 @@ private void writeCategoryTable(char[] categoryName, HashtableOfObject wordsToDo
 		}
 	}
 }
-private void writeDocumentNumbers(int[] documentNumbers, FileOutputStream stream) throws IOException {
+private void writeDocumentNumbers(int[] documentNumbers, OutputStream stream) throws IOException {
 	// must store length as a positive int to detect in-lined array of 1 element
 	int length = documentNumbers.length;
 	writeStreamInt(stream, length);
@@ -1216,7 +1217,7 @@ private void writeDocumentNumbers(int[] documentNumbers, FileOutputStream stream
 			break;
 	}
 }
-private void writeHeaderInfo(FileOutputStream stream) throws IOException {
+private void writeHeaderInfo(OutputStream stream) throws IOException {
 	writeStreamInt(stream, this.numberOfChunks);
 	if ((this.bufferIndex + 3) >= BUFFER_WRITE_SIZE)  {
 		stream.write(this.streamBuffer, 0, this.bufferIndex);
@@ -1278,7 +1279,7 @@ private void writeOffsetToHeader(int offsetToHeader) throws IOException {
  * @exception  IOException  if an I/O error occurs while writting
  * 	the bytes array to the stream.
  */
-private void writeStreamChars(FileOutputStream stream, char[] array) throws IOException {
+private void writeStreamChars(OutputStream stream, char[] array) throws IOException {
 	if ((this.bufferIndex + 2) >= BUFFER_WRITE_SIZE)  {
 		stream.write(this.streamBuffer, 0, this.bufferIndex);
 		this.bufferIndex = 0;
@@ -1310,7 +1311,7 @@ private void writeStreamChars(FileOutputStream stream, char[] array) throws IOEx
 		}
 	}
 }
-private void writeStreamChars(FileOutputStream stream, char[] array, int start, int end) throws IOException {
+private void writeStreamChars(OutputStream stream, char[] array, int start, int end) throws IOException {
 	// start can NOT be == end
 	// must have checked that there is enough room for end - start * 3 bytes in the buffer
 
@@ -1348,7 +1349,7 @@ private void writeStreamChars(FileOutputStream stream, char[] array, int start, 
 	}
 	this.streamEnd += this.bufferIndex - oldIndex;
 }
-private void writeStreamInt(FileOutputStream stream, int val) throws IOException {
+private void writeStreamInt(OutputStream stream, int val) throws IOException {
 	if ((this.bufferIndex + 4) >= BUFFER_WRITE_SIZE)  {
 		stream.write(this.streamBuffer, 0, this.bufferIndex);
 		this.bufferIndex = 0;

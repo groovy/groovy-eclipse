@@ -19455,4 +19455,31 @@ public void testGH3192() {
 		};
 	runner.runConformTest();
 }
+public void testErrorPosition() {
+	StringBuilder padding = new StringBuilder();
+	// push the relevant source to a position beyond 0xFFFF to trigger bug in position computation
+	for (int i=0; i<1000; i++)
+		padding.append("// ============================== padding ================================\n");
+	runNegativeTestWithLibs(new String[]{
+			"X.java",
+			padding.toString() +
+			"""
+			import org.eclipse.jdt.annotation.*;
+			class X {
+				@Nullable String s;
+				String test() {
+					return this.s.toLowerCase();
+				}
+			}
+			"""
+		},
+		"""
+		----------
+		1. ERROR in X.java (at line 1005)
+			return this.s.toLowerCase();
+			            ^
+		Potential null pointer access: this expression has a '@Nullable' type
+		----------
+		""");
+}
 }

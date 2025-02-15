@@ -9670,4 +9670,46 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 		String unexpectedOutput = "static synthetic int[] $SWITCH_TABLE$E();\n";
 		SwitchPatternTest.verifyClassFile(expectedOutput, unexpectedOutput, "X.class", ClassFileBytesDisassembler.SYSTEM);
 	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3559
+	// Boolean switch inconsistency between ECJ and javac
+	public void testIssue3559() throws Exception {
+		if (this.complianceLevel > ClassFileConstants.JDK23) // 21-23 testing is good enough
+			return;
+		runNegativeTest(
+			new String[] {
+				"X.java",
+				"""
+				public class X {
+
+					public static void main(String[] args) {
+						new X().d(true);
+					}
+
+					void d(Boolean b) {
+						switch (b) {
+							case true  -> System.out.println("1");
+							case false -> System.out.println("2");
+						};
+					}
+				}
+				"""
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 8)\n" +
+			"	switch (b) {\n" +
+			"	        ^\n" +
+			"An enhanced switch statement should be exhaustive; a default label expected\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 9)\n" +
+			"	case true  -> System.out.println(\"1\");\n" +
+			"	     ^^^^\n" +
+			"Case constant of type boolean is incompatible with switch selector type Boolean\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 10)\n" +
+			"	case false -> System.out.println(\"2\");\n" +
+			"	     ^^^^^\n" +
+			"Case constant of type boolean is incompatible with switch selector type Boolean\n" +
+			"----------\n");
+	}
 }

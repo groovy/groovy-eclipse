@@ -242,7 +242,6 @@ public class EclipseFileManager implements StandardJavaFileManager {
 		return (JrtFileSystem) getArchive(f);
 	}
 
-//	@SuppressWarnings("resource") // Archive is returned to caller
 	private Archive getArchive(File f) {
 		// check the archive (jar/zip) cache
 		Archive existing = this.archivesCache.get(f);

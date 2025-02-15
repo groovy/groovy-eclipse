@@ -15,12 +15,12 @@ package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.IntFunction;
 import java.util.stream.Stream;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 
 public class SourceModuleBinding extends ModuleBinding {
 
@@ -154,9 +154,9 @@ public class SourceModuleBinding extends ModuleBinding {
 	}
 
 	@Override
-	SimpleLookupTable storedAnnotations(boolean forceInitialize, boolean forceStore) {
+	Map<Binding, AnnotationHolder> storedAnnotations(boolean forceInitialize, boolean forceStore) {
 		if (this.scope != null) { // scope null when no annotation cached, and module got processed fully (159631)
-			SimpleLookupTable annotationTable = super.storedAnnotations(forceInitialize, forceStore);
+			Map<Binding, AnnotationHolder> annotationTable = super.storedAnnotations(forceInitialize, forceStore);
 			if (annotationTable != null)
 				this.scope.referenceCompilationUnit().compilationResult.hasAnnotations = true;
 			return annotationTable;

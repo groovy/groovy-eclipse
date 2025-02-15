@@ -15,6 +15,8 @@ package org.eclipse.jdt.internal.compiler.lookup;
 
 public class PolyParameterizedGenericMethodBinding extends ParameterizedGenericMethodBinding { // confused citizen.
 
+	public boolean hasOverloads;
+
 	private final ParameterizedGenericMethodBinding wrappedBinding;
 	public PolyParameterizedGenericMethodBinding(ParameterizedGenericMethodBinding applicableMethod) {
 		super(applicableMethod.originalMethod, applicableMethod.typeArguments, applicableMethod.environment, applicableMethod.inferredWithUncheckedConversion, false,  applicableMethod.targetType);

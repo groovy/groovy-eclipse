@@ -6500,9 +6500,22 @@ public final class JavaCore extends Plugin {
 	 * @param allSystemRoots all physically available system modules, represented by their package fragment roots
 	 * @return the list of names of default root modules
 	 * @since 3.14
+	 * @deprecated This method cannot distinguish strategies for old (9/10) vs new (11+) JDK versions. Please use {@link #defaultRootModules(Iterable, String)}
 	 */
+	@Deprecated
 	public static List<String> defaultRootModules(Iterable<IPackageFragmentRoot> allSystemRoots) {
 		return JavaProject.defaultRootModules(allSystemRoots);
+	}
+
+	/**
+	 * Filter the given set of system roots by the rules for root modules from JEP 261.
+	 * @param allSystemRoots all physically available system modules, represented by their package fragment roots
+	 * @param release JDK version to select strategies before / after resolution of https://bugs.openjdk.org/browse/JDK-8205169
+	 * @return the list of names of default root modules
+	 * @since 3.41
+	 */
+	public static List<String> defaultRootModules(Iterable<IPackageFragmentRoot> allSystemRoots, String release) {
+		return JavaProject.defaultRootModules(allSystemRoots, release);
 	}
 
 	/**

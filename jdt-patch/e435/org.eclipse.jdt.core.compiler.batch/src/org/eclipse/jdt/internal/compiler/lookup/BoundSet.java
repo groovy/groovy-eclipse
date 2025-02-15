@@ -528,6 +528,7 @@ class BoundSet {
 		boolean analyzeNull = context.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled;
 		ConstraintTypeFormula [] mostRecentFormulas = new ConstraintTypeFormula[4]; // poor man's cache to toss out duplicates, in pathological cases there are a good quarter million of them.
 		// check each pair, in each way.
+		Map<InferenceVariable,TypeBound> properTypesByInferenceVariable = properTypesByInferenceVariable(first, next);
 		for (TypeBound bound1 : first) {
 			for (TypeBound bound2 : next) {
 				if (bound1 == bound2)
@@ -545,18 +546,18 @@ class BoundSet {
 						case ReductionResult.SAME:
 							switch (bound2.relation) {
 								case ReductionResult.SAME:
-									newConstraint = combineSameSame(bound1, bound2, first, next);
+									newConstraint = combineSameSame(bound1, bound2, properTypesByInferenceVariable);
 									break;
 								case ReductionResult.SUBTYPE:
 								case ReductionResult.SUPERTYPE:
-									newConstraint = combineSameSubSuper(bound1, bound2, first, next);
+									newConstraint = combineSameSubSuper(bound1, bound2, properTypesByInferenceVariable);
 									break;
 							}
 							break;
 						case ReductionResult.SUBTYPE:
 							switch (bound2.relation) {
 								case ReductionResult.SAME:
-									newConstraint = combineSameSubSuper(bound2, bound1, first, next);
+									newConstraint = combineSameSubSuper(bound2, bound1, properTypesByInferenceVariable);
 									break;
 								case ReductionResult.SUPERTYPE:
 									newConstraint = combineSuperAndSub(bound2, bound1);
@@ -570,7 +571,7 @@ class BoundSet {
 						case ReductionResult.SUPERTYPE:
 							switch (bound2.relation) {
 								case ReductionResult.SAME:
-									newConstraint = combineSameSubSuper(bound2, bound1, first, next);
+									newConstraint = combineSameSubSuper(bound2, bound1, properTypesByInferenceVariable);
 									break;
 								case ReductionResult.SUBTYPE:
 									newConstraint = combineSuperAndSub(bound1, bound2);
@@ -728,7 +729,7 @@ class BoundSet {
 			reduceOneConstraint(context, formula);
 	}
 
-	private ConstraintTypeFormula combineSameSame(TypeBound boundS, TypeBound boundT, TypeBound[] firstBounds, TypeBound[] nextBounds) {
+	private ConstraintTypeFormula combineSameSame(TypeBound boundS, TypeBound boundT, Map<InferenceVariable,TypeBound> properTypesByInferenceVariable) {
 
 		// α = S and α = T imply ⟨S = T⟩
 		if (TypeBinding.equalsEquals(boundS.left, boundT.left))
@@ -736,10 +737,10 @@ class BoundSet {
 
 		// match against more shapes:
 		ConstraintTypeFormula newConstraint;
-		newConstraint = combineSameSameWithProperType(boundS, boundT, firstBounds, nextBounds);
+		newConstraint = combineSameSameWithProperType(boundS, boundT, properTypesByInferenceVariable);
 		if (newConstraint != null)
 			return newConstraint;
-		newConstraint = combineSameSameWithProperType(boundT, boundS, firstBounds, nextBounds);
+		newConstraint = combineSameSameWithProperType(boundT, boundS, properTypesByInferenceVariable);
 		if (newConstraint != null)
 			return newConstraint;
 		return null;
@@ -747,14 +748,14 @@ class BoundSet {
 
 	// pre: boundLeft.left != boundRight.left
 	private ConstraintTypeFormula combineSameSameWithProperType(TypeBound boundLeft, TypeBound boundRight,
-			TypeBound[] firstBounds, TypeBound[] nextBounds) {
+			Map<InferenceVariable, TypeBound> properTypesByInferenceVariable) {
 		//  α = U and S = T imply ⟨S[α:=U] = T[α:=U]⟩
 		TypeBinding u = boundLeft.right;
 		if (enableOptimizationForBug543480 && isParameterizedDependency(boundRight)) {
 			// Performance optimization: do not incorporate arguments one by one, which yielt 2^n new bounds (n=number of type arguments) in the past.
 			// Instead, all arguments of a parameterized dependency are incorporated at once - but only when they are available.
 			return incorporateIntoParameterizedDependencyIfAllArgumentsAreProperTypes(boundRight,
-					firstBounds, nextBounds);
+					properTypesByInferenceVariable);
 		}
 		if (u.isProperType(true)) {
 			InferenceVariable alpha = boundLeft.left;
@@ -765,7 +766,7 @@ class BoundSet {
 		return null;
 	}
 
-	private ConstraintTypeFormula combineSameSubSuper(TypeBound boundS, TypeBound boundT, TypeBound[] firstBounds, TypeBound[] nextBounds) {
+	private ConstraintTypeFormula combineSameSubSuper(TypeBound boundS, TypeBound boundT, Map<InferenceVariable,TypeBound> properTypesByInferenceVariable) {
 		//  α = S and α <: T imply ⟨S <: T⟩
 		//  α = S and T <: α imply ⟨T <: S⟩
 		InferenceVariable alpha = boundS.left;
@@ -792,13 +793,13 @@ class BoundSet {
 				return ConstraintTypeFormula.create(t, s, boundT.relation, boundT.isSoft||boundS.isSoft);
 			}
 		}
-		return combineSameSubSuperWithProperType(boundS, boundT, alpha, firstBounds, nextBounds);
+		return combineSameSubSuperWithProperType(boundS, boundT, alpha, properTypesByInferenceVariable);
 	}
 
 	// pre: boundLeft.left != boundRight.left
 	// pre: boundLeft.left != boundRight.right
 	private ConstraintTypeFormula combineSameSubSuperWithProperType(TypeBound boundLeft, TypeBound boundRight,
-			InferenceVariable alpha, TypeBound[] firstBounds, TypeBound[] nextBounds) {
+			InferenceVariable alpha, Map<InferenceVariable, TypeBound> properTypesByInferenceVariable) {
 		//  α = U and S <: T imply ⟨S[α:=U] <: T[α:=U]⟩
 		TypeBinding u = boundLeft.right;
 
@@ -806,7 +807,7 @@ class BoundSet {
 			// Performance optimization: do not incorporate arguments one by one, which yielt 2^n new bounds (n=number of type arguments) in the past.
 			// Instead, all arguments of a parameterized dependency are incorporated at once - but only when they are available.
 			return incorporateIntoParameterizedDependencyIfAllArgumentsAreProperTypes(boundRight,
-								firstBounds, nextBounds);
+					properTypesByInferenceVariable);
 		}
 		if (u.isProperType(true)) {
 			boolean substitute = TypeBinding.equalsEquals(alpha, boundRight.left);
@@ -852,19 +853,20 @@ class BoundSet {
 				&& typeBound.right.isParameterizedTypeWithActualArguments();
 	}
 
-	private ConstraintTypeFormula incorporateIntoParameterizedDependencyIfAllArgumentsAreProperTypes(TypeBound typeBound,
-			TypeBound[] firstBounds, TypeBound[] nextBounds) {
-		Collection<TypeBound> properTypesForAllInferenceVariables = getProperTypesForAllInferenceVariablesOrNull((ParameterizedTypeBinding)typeBound.right, firstBounds, nextBounds);
+	private ConstraintTypeFormula incorporateIntoParameterizedDependencyIfAllArgumentsAreProperTypes(
+			TypeBound typeBound, Map<InferenceVariable, TypeBound> properTypesByInferenceVariable) {
+		Collection<TypeBound> properTypesForAllInferenceVariables = getProperTypesForAllInferenceVariablesOrNull(
+				(ParameterizedTypeBinding) typeBound.right, properTypesByInferenceVariable);
 		if (null != properTypesForAllInferenceVariables) {
 			return combineWithProperTypes(properTypesForAllInferenceVariables, typeBound);
 		}
 		return null;
 	}
 
-	private Collection<TypeBound> getProperTypesForAllInferenceVariablesOrNull(ParameterizedTypeBinding parameterizedType,
-			TypeBound[] firstBounds, TypeBound[] nextBounds) {
-		final Map<InferenceVariable,TypeBound> properTypesByInferenceVariable = properTypesByInferenceVariable(firstBounds, nextBounds);
-		if(properTypesByInferenceVariable.size() == 0) {
+	private Collection<TypeBound> getProperTypesForAllInferenceVariablesOrNull(
+			ParameterizedTypeBinding parameterizedType,
+			Map<InferenceVariable, TypeBound> properTypesByInferenceVariable) {
+		if (properTypesByInferenceVariable.isEmpty()) {
 			return null;
 		}
 		final Set<InferenceVariable> inferenceVariables = getInferenceVariables(parameterizedType);

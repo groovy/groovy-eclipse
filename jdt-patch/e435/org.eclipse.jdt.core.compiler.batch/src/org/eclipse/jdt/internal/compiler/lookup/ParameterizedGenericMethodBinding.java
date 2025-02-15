@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2022 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -307,8 +307,12 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 					if (invocationSite instanceof Invocation && allArgumentsAreProper && (expectedType == null || expectedType.isProperType(true)))
 						infCtx18.forwardResults(result, (Invocation) invocationSite, methodSubstitute, expectedType);
 					try {
-						if (infCtx18.hasIgnoredMissingType) {
-							return new ProblemMethodBinding(originalMethod, originalMethod.selector, parameters, ProblemReasons.MissingTypeInSignature);
+						if (infCtx18.missingType != null
+								&& (expectedType == null
+									|| (expectedType.tagBits & TagBits.HasMissingType) == 0)) { // here the context will have reported an error already, so keep quiet
+							ProblemMethodBinding problemMethod = new ProblemMethodBinding(originalMethod, originalMethod.selector, parameters, ProblemReasons.MissingTypeInSignature);
+							problemMethod.missingType = infCtx18.missingType;
+							return problemMethod;
 						}
 						if (hasReturnProblem) { // illegally working from the provisional result?
 							MethodBinding problemMethod = infCtx18.getReturnProblemMethodIfNeeded(expectedType, methodSubstitute);

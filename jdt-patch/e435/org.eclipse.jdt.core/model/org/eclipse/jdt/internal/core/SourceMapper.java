@@ -253,7 +253,6 @@ public class SourceMapper
 	 *  Anonymous counter in case we want to map the source of an anonymous class.
 	 */
 	int anonymousCounter;
-	int anonymousClassName;
 
 	String encoding;
 	String defaultEncoding;
@@ -808,14 +807,8 @@ public class SourceMapper
 		}
 		if (typeInfo.name.length == 0) {
 			this.anonymousCounter++;
-			if (this.anonymousCounter == this.anonymousClassName) {
-				this.types[this.typeDepth] = getType(this.binaryTypeOrModule.getElementName());
-			} else {
-				this.types[this.typeDepth] = getType(DeduplicationUtil.toString(typeInfo.name));
-			}
-		} else {
-			this.types[this.typeDepth] = getType(DeduplicationUtil.toString(typeInfo.name));
 		}
+		this.types[this.typeDepth] = getType(DeduplicationUtil.toString(typeInfo.name));
 		this.typeNameRanges[this.typeDepth] =
 			new SourceRange(typeInfo.nameSourceStart, typeInfo.nameSourceEnd - typeInfo.nameSourceStart + 1);
 		this.typeDeclarationStarts[this.typeDepth] = typeInfo.declarationStart;
@@ -1555,7 +1548,6 @@ public class SourceMapper
 			IProblemFactory factory = new DefaultProblemFactory();
 			SourceElementParser parser = null;
 			boolean doFullParse = false;
-			this.anonymousClassName = 0;
 			String sourceFileName;
 			if (this.binaryTypeOrModule instanceof BinaryType) {
 				if (info == null) {
@@ -1566,18 +1558,7 @@ public class SourceMapper
 					}
 				}
 				sourceFileName = ((BinaryType) this.binaryTypeOrModule).sourceFileName(info);
-				boolean isAnonymousClass = info.isAnonymous();
-
 				char[] fullName = info.getName();
-				if (isAnonymousClass) {
-					String eltName = this.binaryTypeOrModule.getParent().getElementName();
-					eltName = eltName.substring(eltName.lastIndexOf('$') + 1, eltName.length());
-					try {
-						this.anonymousClassName = Integer.parseInt(eltName);
-					} catch(NumberFormatException e) {
-						// ignore
-					}
-				}
 				doFullParse = hasToRetrieveSourceRangesForLocalClass(fullName);
 			} else {
 				sourceFileName = TypeConstants.MODULE_INFO_CLASS_NAME_STRING;

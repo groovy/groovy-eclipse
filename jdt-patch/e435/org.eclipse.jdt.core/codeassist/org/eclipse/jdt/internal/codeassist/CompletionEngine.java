@@ -99,7 +99,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public final class CompletionEngine
 	extends Engine
-	implements ISearchRequestor, TypeConstants , TerminalTokens , RelevanceConstants, SuffixConstants {
+	implements ISearchRequestor, TypeConstants , TerminalTokens , RelevanceConstants, SuffixConstants, ICompletionEngine {
 
 	private static class AcceptedConstructor {
 		public int modifiers;
@@ -1956,8 +1956,13 @@ public final class CompletionEngine
 	 *  @param completionPosition int
 	 *      a position in the source where the completion is taking place.
 	 *      This position is relative to the source provided.
+	 *
+	 *  @param adjustment the amount to subtract from all positions in completion proposals passed to the requestor
+	 *
+	 *  @param root the type root of the compilation unit being completed
 	 */
-	public void complete(ICompilationUnit sourceUnit, int completionPosition, int pos, ITypeRoot root) {
+	@Override
+	public void complete(ICompilationUnit sourceUnit, int completionPosition, int adjustment, ITypeRoot root) {
 
 		if(DEBUG) {
 			trace("COMPLETION IN " + new String(sourceUnit.getFileName()) + " AT POSITION " + completionPosition);  //$NON-NLS-1$//$NON-NLS-2$
@@ -1969,7 +1974,7 @@ public final class CompletionEngine
 		try {
 			this.fileName = sourceUnit.getFileName();
 			this.actualCompletionPosition = completionPosition - 1;
-			this.offset = pos;
+			this.offset = adjustment;
 			this.typeRoot = root;
 			this.source = sourceUnit.getContents();
 

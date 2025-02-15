@@ -70,6 +70,21 @@
 <extension-point name="%compilationUnitResolverName" 
 	id="compilationUnitResolver"
 	schema="schema/compilationUnitResolver.exsd"/>
+	
+<!-- =================================================================================== -->
+<!-- Extension Point: CompletionEngine Provider                                          -->
+<!-- =================================================================================== -->
+
+<extension-point name="%completionEngineProviderName"
+	id="completionEngineProvider"
+	schema="schema/completionEngineProvider.exsd"/>
+	
+<!-- =================================================================================== -->
+<!-- Extension Point: Java Search Delegate                                               -->
+<!-- =================================================================================== -->
+<extension-point name="%javaSearchDelegateName"
+	id="javaSearchDelegate"
+	schema="schema/javaSearchDelegate.exsd"/>
 
 <!-- =================================================================================== -->
 <!-- Extension Point: Java 6 Annotation Processor Manager                                -->

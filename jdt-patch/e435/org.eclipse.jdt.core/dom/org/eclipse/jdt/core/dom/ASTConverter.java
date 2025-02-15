@@ -1897,8 +1897,13 @@ class ASTConverter {
 				if (anonymousType != null) {
 					AnonymousClassDeclaration anonymousClassDeclaration = new AnonymousClassDeclaration(this.ast);
 					int start = retrieveStartBlockPosition(anonymousType.sourceEnd, anonymousType.bodyEnd);
+					if (start == -1) start = anonymousType.bodyStart;
+
 					int end = retrieveRightBrace(anonymousType.bodyEnd +1, declarationSourceEnd);
 					if (end == -1) end = anonymousType.bodyEnd;
+
+					if(end < start) start = end;
+
 					anonymousClassDeclaration.setSourceRange(start, end - start + 1);
 					enumConstantDeclaration.setAnonymousClassDeclaration(anonymousClassDeclaration);
 					buildBodyDeclarations(anonymousType, anonymousClassDeclaration);

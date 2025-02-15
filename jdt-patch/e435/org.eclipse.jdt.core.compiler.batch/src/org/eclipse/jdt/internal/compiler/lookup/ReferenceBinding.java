@@ -56,8 +56,10 @@ package org.eclipse.jdt.internal.compiler.lookup;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
@@ -66,7 +68,6 @@ import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
-import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 
 /*
 Not all fields defined by this type (& its subclasses) are initialized when it is created.
@@ -89,7 +90,7 @@ abstract public class ReferenceBinding extends TypeBinding {
 	char[] constantPoolName;
 	char[] signature;
 
-	private SimpleLookupTable compatibleCache;
+	private Map<TypeBinding, Boolean> compatibleCache;
 
 	int typeBits; // additional bits characterizing this type
 	protected MethodBinding [] singleAbstractMethod;
@@ -1445,9 +1446,9 @@ public boolean isCompatibleWith(TypeBinding otherType, /*@Nullable*/ Scope captu
 
 	if (otherType.id == TypeIds.T_JavaLangObject)
 		return true;
-	Object result;
+	Boolean result;
 	if (this.compatibleCache == null) {
-		this.compatibleCache = new SimpleLookupTable(3);
+		this.compatibleCache = new HashMap<>();
 		result = null;
 	} else {
 		result = this.compatibleCache.get(otherType); // [dbg reset] this.compatibleCache.put(otherType,null)
@@ -1898,8 +1899,8 @@ protected void appendNullAnnotation(StringBuilder nameBuffer, CompilerOptions op
 }
 
 public AnnotationHolder retrieveAnnotationHolder(Binding binding, boolean forceInitialization) {
-	SimpleLookupTable store = storedAnnotations(forceInitialization, false);
-	return store == null ? null : (AnnotationHolder) store.get(binding);
+	Map<Binding, AnnotationHolder> store = storedAnnotations(forceInitialization, false);
+	return store == null ? null : store.get(binding);
 }
 
 AnnotationBinding[] retrieveAnnotations(Binding binding) {
@@ -2064,11 +2065,11 @@ public TypeBinding downwardsProjection(Scope scope, TypeBinding[] mentionedTypeV
 
 void storeAnnotationHolder(Binding binding, AnnotationHolder holder) {
 	if (holder == null) {
-		SimpleLookupTable store = storedAnnotations(false, false);
+		Map<Binding, AnnotationHolder> store = storedAnnotations(false, false);
 		if (store != null)
-			store.removeKey(binding);
+			store.remove(binding);
 	} else {
-		SimpleLookupTable store = storedAnnotations(true, false);
+		Map<Binding, AnnotationHolder> store = storedAnnotations(true, false);
 		if (store != null)
 			store.put(binding, holder);
 	}
@@ -2077,21 +2078,21 @@ void storeAnnotationHolder(Binding binding, AnnotationHolder holder) {
 void storeAnnotations(Binding binding, AnnotationBinding[] annotations, boolean forceStore) {
 	AnnotationHolder holder = null;
 	if (annotations == null || annotations.length == 0) {
-		SimpleLookupTable store = storedAnnotations(false, forceStore);
+		Map<Binding, AnnotationHolder> store = storedAnnotations(false, forceStore);
 		if (store != null)
-			holder = (AnnotationHolder) store.get(binding);
+			holder = store.get(binding);
 		if (holder == null) return; // nothing to delete
 	} else {
-		SimpleLookupTable store = storedAnnotations(true, forceStore);
+		Map<Binding, AnnotationHolder> store = storedAnnotations(true, forceStore);
 		if (store == null) return; // not supported
-		holder = (AnnotationHolder) store.get(binding);
+		holder = store.get(binding);
 		if (holder == null)
 			holder = new AnnotationHolder();
 	}
 	storeAnnotationHolder(binding, holder.setAnnotations(annotations));
 }
 
-SimpleLookupTable storedAnnotations(boolean forceInitialize, boolean forceStore) {
+Map<Binding, AnnotationHolder> storedAnnotations(boolean forceInitialize, boolean forceStore) {
 	return null; // overrride if interested in storing annotations for the receiver, its fields and methods
 }
 

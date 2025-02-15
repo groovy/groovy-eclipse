@@ -309,25 +309,26 @@ public class JRTUtil {
 	}
 
 	/**
-	 * Tries to read all bytes of the file denoted by path,
-	 * returns null if the file could not be found or if the read was interrupted.
+	 * Tries to read all bytes of the file denoted by path, returns null if the file could not be found. If
+	 * {@link ClosedByInterruptException} occurs, one more attempt is made to read the file before the error is
+	 * rethrown.
+	 *
 	 * @return bytes or null
-	 * @throws IOException any IO exception other than NoSuchFileException
+	 * @throws IOException
+	 *             any IO exception other than NoSuchFileException
 	 */
 	public static byte[] safeReadBytes(Path path) throws IOException {
 		try {
 			return Files.readAllBytes(path);
 		} catch (ClosedByInterruptException e) {
-			// retry once again
+			Thread.interrupted(); // clear the interrupt flag to simulate non interruptible i/o
 			try {
 				return Files.readAllBytes(path);
 			} catch (NoSuchFileException e2) {
 				return null;
-			} catch (ClosedByInterruptException e2) {
-				if (PROPAGATE_IO_ERRORS) {
-					throw e2;
-				}
-				return null;
+			} finally {
+				// restore interrupt flag
+				Thread.currentThread().interrupt();
 			}
 		} catch (NoSuchFileException e) {
 			return null;

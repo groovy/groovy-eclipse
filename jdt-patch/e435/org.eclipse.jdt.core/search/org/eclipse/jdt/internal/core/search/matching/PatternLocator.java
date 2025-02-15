@@ -35,6 +35,25 @@ protected boolean isErasureMatch;
 protected boolean mustResolve;
 protected boolean mayBeGeneric;
 
+public int getMatchMode() {
+	return this.matchMode;
+}
+public boolean isCaseSensitive() {
+	return this.isCaseSensitive;
+}
+public boolean isEquivalentMatch() {
+	return this.isEquivalentMatch;
+}
+public boolean isErasureMatch() {
+	return this.isErasureMatch;
+}
+public boolean isMustResolve() {
+	return this.mustResolve;
+}
+public boolean isMayBeGeneric() {
+	return this.mayBeGeneric;
+}
+
 // match to report
 SearchMatch match = null;
 
@@ -127,12 +146,14 @@ public static char[] qualifiedSourceName(TypeBinding binding) {
 }
 
 public PatternLocator(SearchPattern pattern) {
-	int matchRule = pattern.getMatchRule();
-	this.isCaseSensitive = (matchRule & SearchPattern.R_CASE_SENSITIVE) != 0;
-	this.isErasureMatch = (matchRule & SearchPattern.R_ERASURE_MATCH) != 0;
-	this.isEquivalentMatch = (matchRule & SearchPattern.R_EQUIVALENT_MATCH) != 0;
-	this.matchMode = matchRule & JavaSearchPattern.MATCH_MODE_MASK;
-	this.mustResolve = pattern.mustResolve;
+	if( pattern != null ) {
+		int matchRule = pattern.getMatchRule();
+		this.isCaseSensitive = (matchRule & SearchPattern.R_CASE_SENSITIVE) != 0;
+		this.isErasureMatch = (matchRule & SearchPattern.R_ERASURE_MATCH) != 0;
+		this.isEquivalentMatch = (matchRule & SearchPattern.R_EQUIVALENT_MATCH) != 0;
+		this.matchMode = matchRule & JavaSearchPattern.MATCH_MODE_MASK;
+		this.mustResolve = pattern.mustResolve;
+	}
 }
 /*
  * Clear caches

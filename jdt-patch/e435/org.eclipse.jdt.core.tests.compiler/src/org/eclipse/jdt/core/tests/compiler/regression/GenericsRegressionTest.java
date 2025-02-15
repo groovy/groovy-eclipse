@@ -7017,5 +7017,33 @@ public void testIssue1802() {
 			"----------\n";
 	runner.runWarningTest();
 }
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3624
+// Internal compiler error: java.lang.AssertionError: array store with invalid types at org.eclipse.jdt.internal.compiler.codegen.OperandStack.xastore
+public void testIssue3624() {
+	if (this.complianceLevel >= ClassFileConstants.JDK14)
+		this.runConformTest(
+			new String[] {
+				"FailToCompile.java",
+				"""
+				import java.util.Arrays;
+
+				public class FailToCompile {
+				    public static void main(String[] args) {
+				        D<Object> a = new ACDClass();
+				        C<Object, Object> c = new ACDClass();
+				        Arrays.asList(a, c); // fail to compile
+				        Arrays.<A<Object>>asList(a, c);// compile
+				    }
+
+				    static class ACDClass implements A, C, D {}
+				    interface A<AA> {}
+				    interface B<AA> {}
+				    interface C<AA, BB> extends A<AA>, B<BB> {}
+				    interface D<AA> extends A<AA>, B<Object> {}
+				}
+				"""
+			}
+		);
+}
 }
 

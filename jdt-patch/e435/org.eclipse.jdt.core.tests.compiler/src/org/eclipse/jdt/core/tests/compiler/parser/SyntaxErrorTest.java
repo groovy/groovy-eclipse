@@ -183,7 +183,7 @@ public void test03() {
 			"4. ERROR in <parenthesis mismatch> (at line 5)\n" +
 			"	arg3, 						\n" +
 			"	    ^\n" +
-			"Syntax error on token \",\", FormalParameter expected after this token\n" +
+			"Syntax error on token \",\", SingleVariableDeclarator expected after this token\n" +
 			"----------\n";
 
 	String testName = "<parenthesis mismatch>";

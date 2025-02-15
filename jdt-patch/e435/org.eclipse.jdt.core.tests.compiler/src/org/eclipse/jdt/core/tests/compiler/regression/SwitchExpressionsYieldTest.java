@@ -8399,4 +8399,44 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				},
 				"a = -2 b = -1 c = -3");
 	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3554
+	// [Switch Expressions] ArrayIndexOutOfBoundsException in Scope.leastContainingInvocation for sealed class and switch
+	public void testIssue3554() {
+		if (this.complianceLevel < ClassFileConstants.JDK21)
+			return;
+		this.runNegativeTest(
+				new String[] {
+				"X.java",
+				"""
+				public class X {
+
+					sealed interface Index {
+
+						enum TimeIndex implements Index {
+							SECONDS;
+						}
+					}
+
+					public class AbstractLine<S extends Index> {}
+
+					public class AbstractTimeLine extends AbstractLine<X.Index.TimeIndex> {}
+
+					@SuppressWarnings("unchecked")
+					public static <S extends Index> AbstractLine<S> create(int id, S index, int owner) {
+						return (AbstractLine<S>) switch (index) {
+							case X.Index.TimeIndex tindex when tindex == X.Index.TimeIndex.SECONDS -> new AbstractTimeLine();
+							default -> new AbstractLine<>(state().newId(), index, owner);
+						};
+					}
+				}
+				"""
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 18)\n" +
+				"	default -> new AbstractLine<>(state().newId(), index, owner);\n" +
+				"	                              ^^^^^\n" +
+				"The method state() is undefined for the type X\n" +
+				"----------\n");
+	}
 }

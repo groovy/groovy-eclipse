@@ -152,9 +152,9 @@ public void resolve(BlockScope scope) {
 		}
 	}
 
-	this.expression.resolveType(scope);
+	TypeBinding expressionType = this.expression.resolveType(scope);
 	if (this.switchExpression != null)
-		this.switchExpression.results.add(this.expression);
+		this.switchExpression.results.add(this.expression, expressionType);
 
 	if (this.isImplicit) {
 		if (this.switchExpression == null && !this.expression.statementExpression()) {

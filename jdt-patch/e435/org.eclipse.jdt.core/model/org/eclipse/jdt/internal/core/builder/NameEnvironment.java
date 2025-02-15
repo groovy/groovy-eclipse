@@ -23,6 +23,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -57,7 +58,6 @@ import org.eclipse.jdt.internal.compiler.env.IUpdatableModule.UpdateKind;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
-import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.compiler.util.Util;
@@ -68,7 +68,6 @@ import org.eclipse.jdt.internal.core.JavaModel;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.ModuleUpdater;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class NameEnvironment implements IModuleAwareNameEnvironment, SuffixConstants {
 
 boolean isIncrementalBuild;
@@ -78,12 +77,12 @@ Map<String,IModulePathEntry> modulePathEntries; // is null when performing a non
 BuildNotifier notifier;
 
 SimpleSet initialTypeNames; // assumed that each name is of the form "a/b/ClassName", or, if a module is given: "my.mod:a/b/ClassName"
-SimpleLookupTable additionalUnits;
+Map<String, SourceFile> additionalUnits;
 private final CompilationGroup compilationGroup;
 /** Tasks resulting from add-reads or add-exports classpath attributes. */
 ModuleUpdater moduleUpdater;
 
-NameEnvironment(IWorkspaceRoot root, JavaProject javaProject, SimpleLookupTable binaryLocationsPerProject, BuildNotifier notifier, CompilationGroup compilationGroup) throws CoreException {
+NameEnvironment(IWorkspaceRoot root, JavaProject javaProject, Map<IProject, ClasspathLocation[]> binaryLocationsPerProject, BuildNotifier notifier, CompilationGroup compilationGroup) throws CoreException {
 	this.compilationGroup = compilationGroup;
 	this.isIncrementalBuild = false;
 	this.notifier = notifier;
@@ -128,7 +127,7 @@ public NameEnvironment(IJavaProject javaProject, CompilationGroup compilationGro
 private void computeClasspathLocations(
 	IWorkspaceRoot root,
 	JavaProject javaProject,
-	SimpleLookupTable binaryLocationsPerProject) throws CoreException {
+	Map<IProject, ClasspathLocation[]> binaryLocationsPerProject) throws CoreException {
 
 	/* Update cycle marker */
 	IMarker cycleMarker = javaProject.getCycleMarker();
@@ -143,7 +142,7 @@ private void computeClasspathLocations(
 	IClasspathEntry[] classpathEntries = javaProject.getExpandedClasspath(this.compilationGroup == CompilationGroup.MAIN);
 	ArrayList<ClasspathLocation> sLocations = new ArrayList<>(classpathEntries.length);
 	ArrayList<ClasspathLocation> bLocations = new ArrayList<>(classpathEntries.length);
-	ArrayList sLocationsForTest = new ArrayList(classpathEntries.length);
+	ArrayList<ClasspathLocation> sLocationsForTest = new ArrayList<>(classpathEntries.length);
 	Map<String, IModulePathEntry> moduleEntries = null;
 	String compliance = javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true);
 	if (CompilerOptions.versionToJdkLevel(compliance) >= ClassFileConstants.JDK9) {
@@ -226,7 +225,7 @@ private void computeClasspathLocations(
 
 				JavaProject prereqJavaProject = (JavaProject) JavaCore.create(prereqProject);
 				IClasspathEntry[] prereqClasspathEntries = prereqJavaProject.getRawClasspath();
-				ArrayList seen = new ArrayList();
+				ArrayList<IContainer> seen = new ArrayList<>();
 				List<ClasspathLocation> projectLocations = new ArrayList<>();
 				nextPrereqEntry: for (int j = 0, m = prereqClasspathEntries.length; j < m; j++) {
 					IClasspathEntry prereqEntry = prereqClasspathEntries[j];
@@ -266,7 +265,7 @@ private void computeClasspathLocations(
 							bLocations.add(bLocation);
 							projectLocations.add(bLocation);
 							if (binaryLocationsPerProject != null) { // normal builder mode
-								ClasspathLocation[] existingLocations = (ClasspathLocation[]) binaryLocationsPerProject.get(prereqProject);
+								ClasspathLocation[] existingLocations = binaryLocationsPerProject.get(prereqProject);
 								if (existingLocations == null) {
 									existingLocations = new ClasspathLocation[] {bLocation};
 								} else {
@@ -337,7 +336,7 @@ private void computeClasspathLocations(
 					}
 					if (binaryLocationsPerProject != null) { // normal builder mode
 						IProject p = resource.getProject(); // can be the project being built
-						ClasspathLocation[] existingLocations = (ClasspathLocation[]) binaryLocationsPerProject.get(p);
+						ClasspathLocation[] existingLocations = binaryLocationsPerProject.get(p);
 						if (existingLocations == null) {
 							existingLocations = new ClasspathLocation[] {bLocation};
 						} else {
@@ -382,7 +381,7 @@ private void computeClasspathLocations(
 	}
 
 	// now split the classpath locations... place the output folders ahead of the other .class file folders & jars
-	ArrayList outputFolders = new ArrayList(1);
+	ArrayList<ClasspathDirectory> outputFolders = new ArrayList<>(1);
 	this.sourceLocations = new ClasspathMultiDirectory[sLocations.size()];
 	if (!sLocations.isEmpty()) {
 		sLocations.toArray(this.sourceLocations);
@@ -557,13 +556,13 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 		// when doing the lookup (https://bugs.eclipse.org/372418).
 		// Also take care of $ in the name of the class (https://bugs.eclipse.org/377401)
 		// and prefer name with '$' if unit exists rather than failing to search for nested class (https://bugs.eclipse.org/392727)
-		SourceFile unit = (SourceFile) this.additionalUnits.get(qualifiedTypeName); // doesn't have file extension
+		SourceFile unit = this.additionalUnits.get(qualifiedTypeName); // doesn't have file extension
 		if (unit != null)
 			return new NameEnvironmentAnswer(unit, null /*no access restriction*/);
 		int index = qualifiedTypeName.indexOf('$');
 		if (index > 0) {
 			String enclosingTypeName = qualifiedTypeName.substring(0, index);
-			unit = (SourceFile) this.additionalUnits.get(enclosingTypeName); // doesn't have file extension
+			unit = this.additionalUnits.get(enclosingTypeName); // doesn't have file extension
 			if (unit != null)
 				return new NameEnvironmentAnswer(unit, null /*no access restriction*/);
 		}
@@ -783,7 +782,7 @@ void setNames(String[] typeNames, SourceFile[] additionalFiles) {
 	if (additionalFiles == null) {
 		this.additionalUnits = null;
 	} else {
-		this.additionalUnits = new SimpleLookupTable(additionalFiles.length);
+		this.additionalUnits = new HashMap<>(additionalFiles.length);
 		for (SourceFile additionalUnit : additionalFiles) {
 			if (additionalUnit != null)
 				this.additionalUnits.put(additionalUnit.initialTypeName, additionalUnit);

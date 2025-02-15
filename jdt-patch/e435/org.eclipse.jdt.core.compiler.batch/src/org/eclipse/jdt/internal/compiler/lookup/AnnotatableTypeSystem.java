@@ -422,6 +422,31 @@ public class AnnotatableTypeSystem extends TypeSystem {
 		return series;
 	}
 
+	/**
+	 * Forcefully register the given type as a derived type.
+	 * If it itself is already registered as the key unannotated type of its family,
+	 * create a clone to play that role from now on and swap types in the types cache.
+	 */
+	@Override
+	public void forceRegisterAsDerived(TypeVariableBinding derived) {
+		int id = derived.id;
+		TypeBinding[] derivedTypes = getDerivedTypes(derived);
+		if (id != TypeIds.NoId && derivedTypes != null) {
+			TypeBinding unannotated = derivedTypes[0];
+			if (unannotated == derived) { //$IDENTITY-COMPARISON$
+				// was previously registered as unannotated, replace by a fresh clone to remain unannotated:
+				derivedTypes[0] = unannotated = derived.clone(null);
+				if (derived.updateWhenSettingTypeAnnotations != null) {
+					derived.updateWhenSettingTypeAnnotations.accept((TypeVariableBinding) unannotated);
+				}
+			}
+			// proceed as normal:
+			cacheDerivedType(unannotated, derived);
+		} else {
+			throw new IllegalStateException("Type was not yet registered as expected: "+derived); //$NON-NLS-1$
+		}
+	}
+
 	@Override
 	public boolean isAnnotatedTypeSystem() {
 		return true;

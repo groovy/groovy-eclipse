@@ -157,7 +157,7 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 					cmdLineAsString = cmdLine.toString();
 				}
 				// Launch process
-				process = Runtime.getRuntime().exec(cmdLineAsString, null, GenericTypeSignatureTest.this.dirPath.toFile());
+				process = Runtime.getRuntime().exec(cmdLineAsString.split("\\s"), null, GenericTypeSignatureTest.this.dirPath.toFile());
 	            // Log errors
 	            Logger errorLogger = new Logger(process.getErrorStream(), "ERROR");
 

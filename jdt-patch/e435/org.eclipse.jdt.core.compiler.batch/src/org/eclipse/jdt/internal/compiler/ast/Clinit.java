@@ -31,7 +31,6 @@ import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
-import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SyntheticMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
@@ -41,7 +40,6 @@ public class Clinit extends AbstractMethodDeclaration {
 	private static int ENUM_CONSTANTS_THRESHOLD = 2000;
 
 	private FieldBinding assertionSyntheticFieldBinding = null;
-	private FieldBinding classLiteralSyntheticField = null;
 
 	public Clinit(CompilationResult compilationResult) {
 		super(compilationResult);
@@ -202,8 +200,7 @@ public class Clinit extends AbstractMethodDeclaration {
 			// generate code related to the activation of assertion for this class
 			codeStream.generateClassLiteralAccessForType(
 					classScope,
-					classScope.outerMostClassScope().enclosingSourceType(),
-					this.classLiteralSyntheticField);
+					classScope.outerMostClassScope().enclosingSourceType());
 			codeStream.invokeJavaLangClassDesiredAssertionStatus();
 			BranchLabel falseLabel = new BranchLabel(codeStream);
 			codeStream.ifne(falseLabel);
@@ -414,19 +411,8 @@ public class Clinit extends AbstractMethodDeclaration {
 		visitor.endVisit(this, classScope);
 	}
 
-	public void setAssertionSupport(FieldBinding assertionSyntheticFieldBinding, boolean needClassLiteralField) {
-
+	public void setAssertionSupport(FieldBinding assertionSyntheticFieldBinding) {
 		this.assertionSyntheticFieldBinding = assertionSyntheticFieldBinding;
-
-		// we need to add the field right now, because the field infos are generated before the methods
-		if (needClassLiteralField) {
-			SourceTypeBinding sourceType =
-				this.scope.outerMostClassScope().enclosingSourceType();
-			// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=22334
-			if (!sourceType.isInterface() && !sourceType.isBaseType()) {
-				this.classLiteralSyntheticField = sourceType.addSyntheticFieldForClassLiteral(sourceType, this.scope);
-			}
-		}
 	}
 
 }

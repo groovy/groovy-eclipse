@@ -16,7 +16,9 @@ package org.eclipse.jdt.internal.core.builder;
 import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import org.eclipse.core.resources.IContainer;
@@ -33,7 +35,6 @@ import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
-import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -44,7 +45,7 @@ public class ClasspathDirectory extends ClasspathLocation {
 final boolean isOnModulePath;
 IContainer binaryFolder; // includes .class files for a single directory
 boolean isOutputFolder;
-SimpleLookupTable directoryCache;
+final Map<String, String[]> directoryCache = new HashMap<>();
 String[] missingPackageHolder = new String[1];
 
 ClasspathDirectory(IContainer binaryFolder, boolean isOutputFolder, AccessRuleSet accessRuleSet,
@@ -52,7 +53,6 @@ ClasspathDirectory(IContainer binaryFolder, boolean isOutputFolder, AccessRuleSe
 {
 	this.binaryFolder = binaryFolder;
 	this.isOutputFolder = isOutputFolder || binaryFolder.getProjectRelativePath().isEmpty(); // if binaryFolder == project, then treat it as an outputFolder
-	this.directoryCache = new SimpleLookupTable(5);
 	this.accessRuleSet = accessRuleSet;
 	if (externalAnnotationPath != null)
 		this.externalAnnotationPath = externalAnnotationPath.toOSString();
@@ -68,7 +68,7 @@ public void cleanup() {
 		}
 		this.annotationZipFile = null;
 	}
-	this.directoryCache = null;
+	this.directoryCache.clear();
 }
 
 IModule initializeModule() {
@@ -102,14 +102,14 @@ IModule initializeModule() {
 }
 /** Lists all java-like files and also sub-directories (for recursive tests). */
 String[] directoryList(String qualifiedPackageName) {
-	String[] dirList = (String[]) this.directoryCache.get(qualifiedPackageName);
+	String[] dirList = this.directoryCache.get(qualifiedPackageName);
 	if (dirList == this.missingPackageHolder) return null; // package exists in another classpath directory or jar
 	if (dirList != null) return dirList;
 
 	try {
 		IResource container = this.binaryFolder.findMember(qualifiedPackageName); // this is a case-sensitive check
-		if (container instanceof IContainer) {
-			IResource[] members = ((IContainer) container).members();
+		if (container instanceof IContainer binaryContainer) {
+			IResource[] members = binaryContainer.members();
 			dirList = new String[members.length];
 			int index = 0;
 			for (IResource m : members) {
@@ -238,7 +238,7 @@ public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName
 
 @Override
 public void reset() {
-	this.directoryCache = new SimpleLookupTable(5);
+	this.directoryCache.clear();
 }
 
 @Override

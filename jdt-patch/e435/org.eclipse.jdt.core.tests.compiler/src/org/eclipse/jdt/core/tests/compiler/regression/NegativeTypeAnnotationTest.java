@@ -3327,7 +3327,7 @@ public class NegativeTypeAnnotationTest extends AbstractRegressionTest {
 				"2. ERROR in X.java (at line 2)\n" +
 				"	public void foobar(X this, int, int k) {} // NPE!\n" +
 				"	                           ^^^\n" +
-				"Syntax error, insert \"... VariableDeclaratorId\" to complete FormalParameter\n" +
+				"Syntax error, insert \"... VariableDeclaratorId\" to complete SingleVariableDeclarator\n" +
 				"----------\n" +
 				"3. ERROR in X.java (at line 3)\n" +
 				"	}\n" +

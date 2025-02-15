@@ -1,6 +1,5 @@
-// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2025 IBM Corporation and others.
+ * Copyright (c) 2000, 2023 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -728,8 +727,9 @@ public boolean isRecord() {
 	return false;
 }
 
-public boolean isRecordWithComponents() { // do records without components make sense ??
-	return isRecord() && components() != null && components().length > 0; // GROOVY edit
+public boolean isRecordWithComponents() { // do records without components make sense ??!
+	RecordComponentBinding [] components;
+	return isRecord() && (components = components()) != null && components.length > 0;
 }
 
 /* Answer true if the receiver type can be assigned to the argument type (right)
@@ -1684,11 +1684,6 @@ public char[] signature() {
 }
 
 public abstract char[] sourceName();
-
-public void swapUnresolved(UnresolvedReferenceBinding unresolvedType,
-		ReferenceBinding resolvedType, LookupEnvironment environment) {
-	// subclasses must override if they wrap another type binding
-}
 
 TypeBinding [] typeArguments () {
 	return null;

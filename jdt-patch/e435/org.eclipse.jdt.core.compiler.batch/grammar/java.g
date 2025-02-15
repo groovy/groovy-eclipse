@@ -209,7 +209,6 @@ Goal ::= '?' PackageDeclaration
 Goal ::= '+' TypeDeclaration
 Goal ::= '/' GenericMethodDeclaration
 Goal ::= '&' ClassBodyDeclarations
-Goal ::= '-' RecordBodyDeclarations
 -- code snippet
 Goal ::= '%' Expression
 Goal ::= '%' ArrayInitializer
@@ -743,6 +742,7 @@ ClassBodyDeclarations ::= ClassBodyDeclarations ClassBodyDeclaration
 ClassBodyDeclaration -> ClassMemberDeclaration
 ClassBodyDeclaration -> StaticInitializer
 ClassBodyDeclaration -> ConstructorDeclaration
+ClassBodyDeclaration -> CompactConstructorDeclaration
 
 ImplicitlyDeclaredClassBodyDeclarations -> ClassMemberDeclaration
 ImplicitlyDeclaredClassBodyDeclarations ::= ClassMemberDeclaration ImplicitlyDeclaredClassBodyDeclarations
@@ -917,29 +917,44 @@ ConstructorHeader ::= ConstructorHeaderName FormalParameterListopt MethodHeaderR
 ConstructorHeaderName ::= Modifiersopt TypeParameters 'Identifier' '('
 /.$putCase consumeConstructorHeaderNameWithTypeParameters(); $break ./
 ConstructorHeaderName ::= Modifiersopt 'Identifier' '('
-/.$putCase consumeConstructorHeaderName(); $break ./
+/.$putCase consumeConstructorHeaderName(false); $break ./
 /:$readableName ConstructorHeaderName:/
 
-FormalParameterList -> FormalParameter
-FormalParameterList ::= FormalParameterList ',' FormalParameter
-/.$putCase consumeFormalParameterList(); $break ./
-/:$readableName FormalParameterList:/
+CompactConstructorDeclaration ::= CompactConstructorHeader MethodBody
+/.$putCase consumeConstructorDeclaration(); $break ./
+/:$readableName CompactConstructorDeclaration:/
+/:$compliance 16:/
+
+CompactConstructorHeader ::= CompactConstructorHeaderName MethodHeaderThrowsClauseopt
+/.$putCase consumeConstructorHeader(); $break ./
+/:$readableName CompactConstructorHeader:/
+/:$compliance 16:/
+
+CompactConstructorHeaderName ::= Modifiersopt 'Identifier'
+/.$putCase consumeConstructorHeaderName(true); $break ./
+/:$readableName CompactConstructorHeaderName:/
+/:$compliance 16:/
+
+SingleVariableDeclaratorList -> SingleVariableDeclarator
+SingleVariableDeclaratorList ::= SingleVariableDeclaratorList ',' SingleVariableDeclarator
+/.$putCase consumeSingleVariableDeclaratorList(); $break ./
+/:$readableName SingleVariableDeclaratorList:/
 
 --1.1 feature
-FormalParameter ::= Modifiersopt Type VariableDeclaratorIdOrThis
-/.$putCase consumeFormalParameter(false); $break ./
-FormalParameter ::= Modifiersopt Type PushZeroTypeAnnotations '...' VariableDeclaratorIdOrThis
-/.$putCase consumeFormalParameter(true); $break ./
+SingleVariableDeclarator ::= Modifiersopt Type VariableDeclaratorIdOrThis
+/.$putCase consumeSingleVariableDeclarator(false); $break ./
+SingleVariableDeclarator ::= Modifiersopt Type PushZeroTypeAnnotations '...' VariableDeclaratorIdOrThis
+/.$putCase consumeSingleVariableDeclarator(true); $break ./
 /:$compliance 1.5:/
-FormalParameter ::= Modifiersopt Type @308... TypeAnnotations '...' VariableDeclaratorIdOrThis
-/.$putCase consumeFormalParameter(true); $break ./
-/:$readableName FormalParameter:/
+SingleVariableDeclarator ::= Modifiersopt Type @308... TypeAnnotations '...' VariableDeclaratorIdOrThis
+/.$putCase consumeSingleVariableDeclarator(true); $break ./
+/:$readableName SingleVariableDeclarator:/
 /:$compliance 1.8:/
 /:$recovery_template Identifier Identifier:/
 
 CatchFormalParameter ::= Modifiersopt CatchType VariableDeclaratorId
 /.$putCase consumeCatchFormalParameter(); $break ./
-/:$readableName FormalParameter:/
+/:$readableName CatchFormalParameter:/
 /:$recovery_template Identifier Identifier:/
 
 CatchType ::= UnionType
@@ -1124,115 +1139,52 @@ InterfaceMemberDeclaration -> RecordDeclaration
 /:$readableName InterfaceMemberDeclaration:/
 
 -----------------------------------------------
--- 14 feature : record type
+-- 16 feature : record type
 -----------------------------------------------
 
-RecordDeclaration ::= RecordHeaderPart RecordBody
+RecordDeclaration ::= RecordHeaderPart ClassBody
 /.$putCase consumeRecordDeclaration(); $break ./
 /:$readableName RecordDeclaration:/
-/:$compliance 14:/
+/:$compliance 16:/
 
 RecordHeaderPart ::= RecordHeaderName RecordHeader ClassHeaderImplementsopt
 /.$putCase consumeRecordHeaderPart(); $break ./
 /:$readableName RecordHeaderPart:/
-/:$compliance 14:/
+/:$compliance 16:/
 
 RecordHeaderName ::= RecordHeaderName1 TypeParameters
 /.$putCase consumeRecordHeaderNameWithTypeParameters(); $break ./
-/:$compliance 14:/
+/:$compliance 16:/
 
-RecordHeaderName -> RecordHeaderName1
+RecordHeaderName ::= RecordHeaderName1
+/.$putCase consumeRecordHeaderName(); $break ./
 /:$readableName RecordHeaderName:/
-/:$compliance 14:/
+/:$compliance 16:/
 
 RecordHeaderName1 ::= Modifiersopt RestrictedIdentifierrecord 'Identifier'
 /.$putCase consumeRecordHeaderName1(); $break ./
 /:$readableName RecordHeaderName:/
-/:$compliance 14:/
+/:$compliance 16:/
 
 RecordComponentHeaderRightParen ::= ')'
 /.$putCase consumeRecordComponentHeaderRightParen(); $break ./
 /:$readableName ):/
 /:$recovery_template ):/
-/:$compliance 14:/
+/:$compliance 16:/
 
-RecordHeader ::= '(' RecordComponentsopt RecordComponentHeaderRightParen
+RecordHeader ::= '(' RecordComponentListOpt RecordComponentHeaderRightParen
 /.$putCase consumeRecordHeader(); $break ./
 /:$readableName RecordHeader:/
-/:$compliance 14:/
+/:$compliance 16:/
 
-RecordComponentsopt ::= $empty
+RecordComponentListOpt ::= $empty
 /.$putCase consumeRecordComponentsopt(); $break ./
-RecordComponentsopt -> RecordComponents
+RecordComponentListOpt -> SingleVariableDeclaratorList
 /:$readableName RecordComponentsopt:/
-/:$compliance 14:/
-
-RecordComponents -> RecordComponent
-RecordComponents ::= RecordComponents ',' RecordComponent
-/.$putCase consumeRecordComponents(); $break ./
-/:$readableName RecordComponents:/
-/:$compliance 14:/
-
-RecordComponent -> VariableArityRecordComponent
-RecordComponent ::= Modifiersopt Type VariableDeclaratorId
-/.$putCase consumeRecordComponent(false); $break ./
-/:$readableName RecordComponent:/
-/:$compliance 14:/
-
-VariableArityRecordComponent ::= Modifiersopt Type PushZeroTypeAnnotations '...' VariableDeclaratorId
-/.$putCase consumeRecordComponent(true); $break ./
-/:$readableName VariableArityRecordComponent:/
-/:$compliance 14:/
-
-VariableArityRecordComponent ::= Modifiersopt Type @308... TypeAnnotations '...' VariableDeclaratorId
-/.$putCase consumeRecordComponent(true); $break ./
-/:$readableName VariableArityRecordComponent:/
-/:$compliance 14:/
-/:$recovery_template Identifier Identifier:/
-
-RecordBody ::= '{' RecordBodyDeclarationopt '}'
-/.$putCase consumeRecordBody(); $break ./
-/:$readableName RecordBody:/
-/:$compliance 14:/
-
-RecordBodyDeclarationopt ::= $empty
-/.$putCase consumeEmptyRecordBodyDeclaration(); $break ./
-RecordBodyDeclarationopt -> RecordBodyDeclarations
-/:$readableName RecordBodyDeclarationopt:/
-/:$compliance 14:/
-
-RecordBodyDeclarations ::= RecordBodyDeclaration
-RecordBodyDeclarations ::= RecordBodyDeclarations RecordBodyDeclaration
-/.$putCase consumeRecordBodyDeclarations(); $break ./
-/:$readableName RecordBodyDeclarations:/
-/:$compliance 14:/
-
-RecordBodyDeclaration ::=  ClassBodyDeclaration
-/.$putCase consumeRecordBodyDeclaration(); $break ./
-RecordBodyDeclaration ::=  CompactConstructorDeclaration
-/.$putCase consumeRecordBodyDeclaration(); $break ./
-/:$readableName RecordBodyDeclaration:/
-/:$compliance 14:/
-
-CompactConstructorDeclaration ::= CompactConstructorHeader MethodBody
-/.$putCase consumeCompactConstructorDeclaration(); $break ./
-/:$readableName CompactConstructorDeclaration:/
-/:$compliance 14:/
-
-CompactConstructorHeader ::= CompactConstructorHeaderName MethodHeaderThrowsClauseopt
-/.$putCase consumeCompactConstructorHeader(); $break ./
-/:$readableName CompactConstructorDeclaration:/
-/:$compliance 14:/
-
-CompactConstructorHeaderName ::= Modifiersopt 'Identifier'
-/.$putCase consumeCompactConstructorHeaderName(); $break ./
-CompactConstructorHeaderName ::= Modifiersopt TypeParameters 'Identifier'
-/.$putCase consumeCompactConstructorHeaderNameWithTypeParameters(); $break ./
-/:$readableName CompactConstructorHeaderName:/
-/:$compliance 14:/
+/:$compliance 16:/
 
 -----------------------------------------------
--- 14 feature : end of record type
+-- 16 feature : end of record type
 -----------------------------------------------
 
 -----------------------------------------------
@@ -1892,7 +1844,7 @@ LambdaParameterList -> PushLPAREN TypeElidedFormalParameterList PushRPAREN
 
 TypeElidedFormalParameterList -> TypeElidedFormalParameter
 TypeElidedFormalParameterList ::= TypeElidedFormalParameterList ',' TypeElidedFormalParameter
-/.$putCase consumeFormalParameterList(); $break ./
+/.$putCase consumeSingleVariableDeclaratorList(); $break ./
 /:$readableName TypeElidedFormalParameterList:/
 /:$compliance 1.8:/
 
@@ -2355,7 +2307,7 @@ MethodHeaderThrowsClauseopt -> MethodHeaderThrowsClause
 
 FormalParameterListopt ::= $empty
 /.$putcase consumeFormalParameterListopt(); $break ./
-FormalParameterListopt -> FormalParameterList
+FormalParameterListopt -> SingleVariableDeclaratorList
 /:$readableName FormalParameterList:/
 
 ClassHeaderImplementsopt ::= $empty
@@ -3170,3 +3122,4 @@ UNDERSCORE ::= '_'
 
 $end
 -- need a carriage return after the $end
+

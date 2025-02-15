@@ -13,23 +13,24 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
-import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 
 /**
  * A set of PossibleMatches that is sorted by package fragment roots.
  */
 public class PossibleMatchSet {
 
-private SimpleLookupTable rootsToPossibleMatches = new SimpleLookupTable(5);
+private Map<IPath, ObjectVector> rootsToPossibleMatches = new HashMap<>();
 private int elementCount = 0;
 
 public void add(PossibleMatch possibleMatch) {
 	IPath path = possibleMatch.openable.getPackageFragmentRoot().getPath();
-	ObjectVector possibleMatches = (ObjectVector) this.rootsToPossibleMatches.get(path);
+	ObjectVector possibleMatches = this.rootsToPossibleMatches.get(path);
 	if (possibleMatches != null) {
 		PossibleMatch storedMatch = (PossibleMatch) possibleMatches.find(possibleMatch);
 		if (storedMatch != null) {
@@ -52,7 +53,7 @@ public PossibleMatch[] getPossibleMatches(IPackageFragmentRoot[] roots) {
 	HashSet<IPath> processedHash = new HashSet<>();
 	for (IPackageFragmentRoot root : roots) {
 		IPath path = root.getPath();
-		ObjectVector possibleMatches = (ObjectVector) this.rootsToPossibleMatches.get(path);
+		ObjectVector possibleMatches = this.rootsToPossibleMatches.get(path);
 		if (possibleMatches != null && !processedHash.contains(path)) {
 			possibleMatches.copyInto(result, index);
 			index += possibleMatches.size();
@@ -64,7 +65,7 @@ public PossibleMatch[] getPossibleMatches(IPackageFragmentRoot[] roots) {
 	return result;
 }
 public void reset() {
-	this.rootsToPossibleMatches = new SimpleLookupTable(5);
+	this.rootsToPossibleMatches = new HashMap<>();
 	this.elementCount = 0;
 }
 }

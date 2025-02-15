@@ -273,7 +273,7 @@ public void resolve(BlockScope scope) {
 				//  - if T is one of long, float, double, or boolean, the type of the case constant is T.
 				//  - if T is one of Long, Float, Double, or Boolean, the type of the case constant is, respectively, long, float, double, or boolean.
 				if (caseType.id != T_null) {
-					TypeBinding expectedCaseType = selectorType.isBoxedPrimitiveType() ? selectorType.unboxedType() : selectorType;
+					TypeBinding expectedCaseType = selectorType.isBoxedPrimitiveType() && JavaFeature.PRIMITIVES_IN_PATTERNS.isSupported(scope.compilerOptions()) ? selectorType.unboxedType() : selectorType;
 					switch (expectedCaseType.id) {
 						case TypeIds.T_long, TypeIds.T_float, TypeIds.T_double, TypeIds.T_boolean -> {
 							if (caseType.id != expectedCaseType.id) {

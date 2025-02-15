@@ -210,10 +210,14 @@ public class InferenceVariable extends TypeVariableBinding {
 
 	@Override
 	public int hashCode() {
-		int code = this.typeParameter.hashCode() + 17 * this.rank;
+		int code = this.typeParameter.hashCode() + 92821 * this.rank;
 		if (this.site != null) {
-			code = 31 * code + this.site.sourceStart();
-			code = 31 * code + this.site.sourceEnd();
+			int sourceStart = this.site.sourceStart();
+			// avoid using sourceEnd with a Mersenne prime, to avoid constant low bits:
+			// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3593
+			int sourceLength = this.site.sourceEnd() - sourceStart;
+			code = 92821 * code + sourceLength;
+			code = 92821 * code + sourceStart;
 		}
 		return code;
 	}

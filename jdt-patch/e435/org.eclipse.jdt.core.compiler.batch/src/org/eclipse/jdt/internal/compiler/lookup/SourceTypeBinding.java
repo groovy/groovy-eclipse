@@ -60,6 +60,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -78,7 +79,6 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
-import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -96,18 +96,16 @@ public class SourceTypeBinding extends ReferenceBinding {
 	protected SourceTypeBinding prototype;
 	LookupEnvironment environment;
 	public ModuleBinding module;
-	// Synthetics are separated into 4 categories: methods, super methods, fields, class literals and bridge methods
+	// Synthetics are separated into 2 categories: methods & fields
 	// if a new category is added, also increment MAX_SYNTHETICS
-	private final static int METHOD_EMUL        = 0; // value type: SyntheticMethodBinding[]
-	private final static int FIELD_EMUL         = 1; // value type: FieldBinding
-	private final static int CLASS_LITERAL_EMUL = 2; // value type: FieldBinding
-
-	private final static int MAX_SYNTHETICS = 3;
+	private final static int METHOD_EMUL    = 0; // value type: SyntheticMethodBinding[]
+	private final static int FIELD_EMUL     = 1; // value type: FieldBinding
+	private final static int MAX_SYNTHETICS = 2;
 
 	Map[] synthetics;
 	char[] genericReferenceTypeSignature;
 
-	private SimpleLookupTable storedAnnotations; // keys are this ReferenceBinding & its fields and methods, value is an AnnotationHolder
+	private Map<Binding, AnnotationHolder> storedAnnotations; // keys are this ReferenceBinding & its fields and methods, value is an AnnotationHolder
 
 	public int defaultNullness;
 	boolean memberTypesSorted;
@@ -348,49 +346,6 @@ public FieldBinding addSyntheticFieldForInnerclass(ReferenceBinding enclosingTyp
 			}
 		}
 	} while (needRecheck);
-	return synthField;
-}
-
-/**
- * Adds a new synthetic field for a class literal access. Answers the new field
- * or the existing field if one already existed.
- */
-public FieldBinding addSyntheticFieldForClassLiteral(TypeBinding targetType, BlockScope blockScope) {
-	if (!isPrototype()) throw new IllegalStateException();
-
-	if (this.synthetics == null)
-		this.synthetics = new Map[MAX_SYNTHETICS];
-	if (this.synthetics[SourceTypeBinding.CLASS_LITERAL_EMUL] == null)
-		this.synthetics[SourceTypeBinding.CLASS_LITERAL_EMUL] = new LinkedHashMap(5);
-
-	// use a different table than FIELDS, given there might be a collision between emulation of X.this$0 and X.class.
-	FieldBinding synthField = (FieldBinding) this.synthetics[SourceTypeBinding.CLASS_LITERAL_EMUL].get(targetType);
-	if (synthField == null) {
-		synthField = new SyntheticFieldBinding(
-			CharOperation.concat(
-				TypeConstants.SYNTHETIC_CLASS,
-				String.valueOf(this.synthetics[SourceTypeBinding.CLASS_LITERAL_EMUL].size()).toCharArray()),
-			blockScope.getJavaLangClass(),
-			ClassFileConstants.AccDefault | ClassFileConstants.AccStatic | ClassFileConstants.AccSynthetic,
-			this,
-			Constant.NotAConstant,
-			this.synthetics[SourceTypeBinding.CLASS_LITERAL_EMUL].size());
-		this.synthetics[SourceTypeBinding.CLASS_LITERAL_EMUL].put(targetType, synthField);
-	}
-	// ensure there is not already such a field defined by the user
-	FieldBinding existingField;
-	if ((existingField = getField(synthField.name, true /*resolve*/)) != null) {
-		TypeDeclaration typeDecl = blockScope.referenceType();
-		FieldDeclaration[] typeDeclarationFields = typeDecl.fields;
-		int max = typeDeclarationFields == null ? 0 : typeDeclarationFields.length;
-		for (int i = 0; i < max; i++) {
-			FieldDeclaration fieldDecl = typeDeclarationFields[i];
-			if (fieldDecl.binding == existingField) {
-				blockScope.problemReporter().duplicateFieldInType(this, fieldDecl);
-				break;
-			}
-		}
-	}
 	return synthField;
 }
 
@@ -3245,7 +3200,7 @@ public final int sourceStart() {
 }
 
 @Override
-SimpleLookupTable storedAnnotations(boolean forceInitialize, boolean forceStore) {
+Map<Binding, AnnotationHolder> storedAnnotations(boolean forceInitialize, boolean forceStore) {
 	if (!isPrototype())
 		return this.prototype.storedAnnotations(forceInitialize, forceStore);
 
@@ -3254,7 +3209,7 @@ SimpleLookupTable storedAnnotations(boolean forceInitialize, boolean forceStore)
 		final CompilerOptions globalOptions = this.scope.environment().globalOptions;
 		if (!globalOptions.storeAnnotations && !forceStore)
 			return null; // not supported during this compile
-		this.storedAnnotations = new SimpleLookupTable(3);
+		this.storedAnnotations = new HashMap<>();
 	}
 	return this.storedAnnotations;
 }
@@ -3321,25 +3276,16 @@ public FieldBinding[] syntheticFields() {
 
 	if (this.synthetics == null) return null;
 	int fieldSize = this.synthetics[SourceTypeBinding.FIELD_EMUL] == null ? 0 : this.synthetics[SourceTypeBinding.FIELD_EMUL].size();
-	int literalSize = this.synthetics[SourceTypeBinding.CLASS_LITERAL_EMUL] == null ? 0 :this.synthetics[SourceTypeBinding.CLASS_LITERAL_EMUL].size();
-	int totalSize = fieldSize + literalSize;
-	if (totalSize == 0) return null;
-	FieldBinding[] bindings = new FieldBinding[totalSize];
+
+	if (fieldSize == 0) return null;
+	FieldBinding[] bindings = new FieldBinding[fieldSize];
 
 	// add innerclass synthetics
-	if (this.synthetics[SourceTypeBinding.FIELD_EMUL] != null){
+	if (this.synthetics[SourceTypeBinding.FIELD_EMUL] != null) {
 		Iterator elements = this.synthetics[SourceTypeBinding.FIELD_EMUL].values().iterator();
 		for (int i = 0; i < fieldSize; i++) {
 			SyntheticFieldBinding synthBinding = (SyntheticFieldBinding) elements.next();
 			bindings[synthBinding.index] = synthBinding;
-		}
-	}
-	// add class literal synthetics
-	if (this.synthetics[SourceTypeBinding.CLASS_LITERAL_EMUL] != null){
-		Iterator elements = this.synthetics[SourceTypeBinding.CLASS_LITERAL_EMUL].values().iterator();
-		for (int i = 0; i < literalSize; i++) {
-			SyntheticFieldBinding synthBinding = (SyntheticFieldBinding) elements.next();
-			bindings[fieldSize+synthBinding.index] = synthBinding;
 		}
 	}
 	return bindings;

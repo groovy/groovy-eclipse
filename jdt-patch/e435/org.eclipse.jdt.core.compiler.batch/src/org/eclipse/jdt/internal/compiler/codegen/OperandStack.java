@@ -18,6 +18,7 @@ import java.util.Stack;
 import java.util.function.Supplier;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
+import org.eclipse.jdt.internal.compiler.lookup.IntersectionTypeBinding18;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
@@ -31,18 +32,21 @@ public class OperandStack {
 
 	private Stack<TypeBinding> stack;
 	private ClassFile classFile;
+	private Scope scope;
 
 	public OperandStack() {}
 
 	public OperandStack(ClassFile classFile) {
 		this.stack = new Stack<>();
 		this.classFile = classFile;
+		this.scope = classFile.referenceBinding.scope;
 	}
 
 	@SuppressWarnings("unchecked")
 	private OperandStack(OperandStack operandStack) {
 		this.stack = (Stack<TypeBinding>) operandStack.stack.clone();
 		this.classFile = operandStack.classFile;
+		this.scope = operandStack.scope;
 	}
 
 	protected OperandStack copy() {
@@ -61,8 +65,15 @@ public class OperandStack {
 		*/
 		this.stack.push(switch(typeBinding.id) {
 			case TypeIds.T_boolean, TypeIds.T_byte, TypeIds.T_short, TypeIds.T_char -> TypeBinding.INT;
-			default -> typeBinding.erasure();
+			default -> erasure(typeBinding);
 		});
+	}
+
+	private TypeBinding erasure(TypeBinding type) {
+		TypeBinding erasure = type.erasure();
+		if (erasure instanceof ArrayBinding array && array.leafComponentType instanceof IntersectionTypeBinding18)
+			erasure = this.scope.createArrayType(this.scope.getJavaLangObject(), array.dimensions);
+		return erasure;
 	}
 
 	public void push(int localSlot) {
@@ -74,8 +85,7 @@ public class OperandStack {
 	}
 
 	public void push(char[] typeName) {
-		Scope scope = this.classFile.referenceBinding.scope;
-		Supplier<ReferenceBinding> finder = scope.getCommonReferenceBinding(typeName);
+		Supplier<ReferenceBinding> finder = this.scope.getCommonReferenceBinding(typeName);
 		TypeBinding type = finder != null ? finder.get() : TypeBinding.NULL;
 		push(type);
 	}

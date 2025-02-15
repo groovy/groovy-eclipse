@@ -13,20 +13,21 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
-import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 
 public class ProblemFactory extends DefaultProblemFactory {
 
-static SimpleLookupTable factories = new SimpleLookupTable(5);
+static Map<Locale, ProblemFactory> factories = new HashMap<>();
 
 private ProblemFactory(Locale locale) {
 	super(locale);
 }
 
 public static ProblemFactory getProblemFactory(Locale locale) {
-	ProblemFactory factory = (ProblemFactory) factories.get(locale);
+	ProblemFactory factory = factories.get(locale);
 	if (factory == null)
 		factories.put(locale, factory = new ProblemFactory(locale));
 	return factory;

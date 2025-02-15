@@ -18,6 +18,7 @@ package org.eclipse.jdt.internal.compiler.apt.dispatch;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.internal.compiler.AbstractAnnotationProcessorManager;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -100,6 +101,11 @@ public abstract class BaseAnnotationProcessorManager extends AbstractAnnotationP
 	@Override
 	public void reset() {
 		this._processingEnv.reset();
+	}
+
+	@Override
+	public CompilationProgress getCompilationProgress() {
+		return this._processingEnv.getCompilationProgress();
 	}
 
 	/* (non-Javadoc)

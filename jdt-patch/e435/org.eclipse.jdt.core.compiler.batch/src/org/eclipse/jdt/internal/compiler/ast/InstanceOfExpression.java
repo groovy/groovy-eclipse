@@ -277,15 +277,16 @@ public TypeBinding resolveType(BlockScope scope) {
 	if (expressionType == null || checkedType == null)
 		return null;
 
+	CompilerOptions options = scope.compilerOptions();
 	if (this.pattern != null) {
-		if (this.pattern.isApplicable(expressionType, scope, this)) {
+		if (this.pattern.isApplicable(expressionType, scope, this))
 			checkForPrimitives(scope, checkedType, expressionType);
-		}
+		if (options.complianceLevel < ClassFileConstants.JDK21 && expressionType.isSubtypeOf(checkedType, false))
+			scope.problemReporter().expressionTypeCannotBeSubtypeOfPatternType(this.expression);
 		return this.resolvedType = TypeBinding.BOOLEAN;
 	}
 
 	if (!checkedType.isReifiable()) {
-		CompilerOptions options = scope.compilerOptions();
 		// Report same as before for older compliances
 		if (options.complianceLevel < ClassFileConstants.JDK16) {
 			scope.problemReporter().illegalInstanceOfGenericType(checkedType, this);

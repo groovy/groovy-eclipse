@@ -17,6 +17,7 @@ package org.eclipse.jdt.internal.core.hierarchy;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.IFile;
@@ -999,18 +1000,24 @@ public boolean subOrSuperOfFocus(ReferenceBinding typeBinding) {
 	return false;
 }
 private boolean subTypeOfType(ReferenceBinding subType, ReferenceBinding typeBinding) {
+	return subTypeOfType(subType, typeBinding, new IdentityHashMap<>());
+}
+
+private boolean subTypeOfType(ReferenceBinding subType, ReferenceBinding typeBinding,
+		Map<ReferenceBinding, Object> visited) {
 	if (typeBinding == null || subType == null) return false;
+	if (visited.put(subType, subType) != null) return false; // don't evaluate the same "subType" twice
 	if (TypeBinding.equalsEquals(subType, typeBinding)) return true;
 	ReferenceBinding superclass = subType.superclass();
 	if (superclass != null) superclass = (ReferenceBinding) superclass.erasure();
 //	if (superclass != null && superclass.id == TypeIds.T_JavaLangObject && subType.isHierarchyInconsistent()) return false;
-	if (subTypeOfType(superclass, typeBinding)) return true;
+	if (subTypeOfType(superclass, typeBinding, visited)) return true;
 	ReferenceBinding[] superInterfaces = subType.superInterfaces();
 	if (superInterfaces != null) {
 		for (ReferenceBinding si : superInterfaces) {
 			ReferenceBinding superInterface = (ReferenceBinding) si.erasure();
 			if (superInterface.isHierarchyInconsistent()) return false;
-			if (subTypeOfType(superInterface, typeBinding)) return true;
+			if (subTypeOfType(superInterface, typeBinding, visited)) return true;
 		}
 	}
 	return false;
@@ -1025,3 +1032,4 @@ protected void worked(IProgressMonitor monitor, int work) {
 	}
 }
 }
+

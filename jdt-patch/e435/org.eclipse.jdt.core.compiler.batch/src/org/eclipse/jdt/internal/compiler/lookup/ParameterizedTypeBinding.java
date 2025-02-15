@@ -67,7 +67,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeConstants.BoundCheckStatus;
 /**
  * A parameterized type encapsulates a type with type arguments,
  */
-public class ParameterizedTypeBinding extends ReferenceBinding implements Substitution {
+public class ParameterizedTypeBinding extends ReferenceBinding implements Substitution, HotSwappable {
 
 	protected ReferenceBinding type; // must ensure the type is resolved
 	public TypeBinding[] arguments;

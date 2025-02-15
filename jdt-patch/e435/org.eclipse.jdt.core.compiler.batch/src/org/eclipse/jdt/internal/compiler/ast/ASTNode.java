@@ -58,8 +58,6 @@ import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference.AnnotationPosition;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.compiler.impl.StringConstant;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -501,8 +499,6 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 		// inside same unit - no report
 		if (scope.isDefinedInSameUnit(field.declaringClass)) return false;
 
-		if (sinceValueUnreached(field, scope)) return false;
-
 		// if context is deprecated, may avoid reporting
 		if (!scope.compilerOptions().reportDeprecationInsideDeprecatedCode && scope.isInsideDeprecatedCode()) return false;
 		return true;
@@ -553,8 +549,6 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 		// inside same unit - no report
 		if (scope.isDefinedInSameUnit(method.declaringClass)) return false;
 
-		if (sinceValueUnreached(method, scope)) return false;
-
 		// non explicit use and non explicitly deprecated - no report
 		if (!isExplicitUse &&
 				(method.modifiers & ClassFileConstants.AccDeprecated) == 0) {
@@ -564,37 +558,6 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 		// if context is deprecated, may avoid reporting
 		if (!scope.compilerOptions().reportDeprecationInsideDeprecatedCode && scope.isInsideDeprecatedCode()) return false;
 		return true;
-	}
-
-	private boolean sinceValueUnreached(Binding binding, Scope scope) {
-		if (binding instanceof TypeBinding typeBinding) {
-			if (!typeBinding.isReadyForAnnotations()) {
-				return false;
-			}
-		}
-		AnnotationBinding[] annotations = binding.getAnnotations();
-		for (AnnotationBinding annotation : annotations) {
-			if (annotation != null &&  annotation.getAnnotationType().id == TypeIds.T_JavaLangDeprecated) {
-				ElementValuePair[] pairs = annotation.getElementValuePairs();
-				for (ElementValuePair pair : pairs) {
-					if (CharOperation.equals(pair.getName(), TypeConstants.SINCE)) {
-						if (pair.getValue() instanceof StringConstant strConstant) {
-							try {
-								String value = strConstant.stringValue();
-								long sinceLevel = CompilerOptions.versionToJdkLevel(value);
-								long complianceLevel = scope.compilerOptions().complianceLevel;
-								if (complianceLevel < sinceLevel) {
-									return true;
-								}
-							} catch (NumberFormatException e) {
-								// do nothing and fall through
-							}
-						}
-					}
-				}
-			}
-		}
-		return false;
 	}
 
 	public boolean isSuper() {
@@ -656,8 +619,6 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 
 		// inside same unit - no report
 		if (scope.isDefinedInSameUnit(refType)) return false;
-
-		if (sinceValueUnreached(refType, scope)) return false;
 
 		// if context is deprecated, may avoid reporting
 		if (!scope.compilerOptions().reportDeprecationInsideDeprecatedCode && scope.isInsideDeprecatedCode()) return false;

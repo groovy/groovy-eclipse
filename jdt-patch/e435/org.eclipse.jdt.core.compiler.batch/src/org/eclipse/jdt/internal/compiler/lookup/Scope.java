@@ -85,10 +85,8 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
-import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
 public abstract class Scope {
 
 	public static Binding NOT_REDUNDANT = new Binding() {
@@ -185,7 +183,7 @@ public abstract class Scope {
 	 * Returns a type where either all variables or specific ones got discarded.
 	 * e.g. {@code List<E> (discarding <E extends Enum<E>)} will return: {@code List<? extends Enum<?>>}
 	 */
-	public static TypeBinding convertEliminatingTypeVariables(TypeBinding originalType, ReferenceBinding genericType, int rank, Set eliminatedVariables) {
+	public static TypeBinding convertEliminatingTypeVariables(TypeBinding originalType, ReferenceBinding genericType, int rank, Set<TypeBinding> eliminatedVariables) {
 		if ((originalType.tagBits & TagBits.HasTypeVariable) != 0) {
 			switch (originalType.kind()) {
 				case Binding.ARRAY_TYPE :
@@ -231,7 +229,7 @@ public abstract class Scope {
 					}
 					TypeBinding originalUpperBound = originalVariable.upperBound();
 					if (eliminatedVariables == null) {
-						eliminatedVariables = new HashSet(2);
+						eliminatedVariables = new HashSet<>(2);
 					}
 					eliminatedVariables.add(originalVariable);
 					TypeBinding substitutedUpperBound = convertEliminatingTypeVariables(originalUpperBound, genericType, rank, eliminatedVariables);
@@ -911,7 +909,7 @@ public abstract class Scope {
 		   at all, we assume that the concerned java element has some legitimate business with them.
 		 */
 		if (typeParameters == null || typeParameters.length == 0) return true;
-		Map invocations = new HashMap(2);
+		Map<TypeBinding, Object> invocations = new HashMap<>(2);
 		boolean noProblems = true;
 		// preinitializing each type variable
 		int paramLength = typeParameters.length;
@@ -3814,7 +3812,7 @@ public abstract class Scope {
 		return qualifiedType;
 	}
 
-	public boolean hasErasedCandidatesCollisions(TypeBinding one, TypeBinding two, Map invocations, ReferenceBinding type, ASTNode typeRef) {
+	public boolean hasErasedCandidatesCollisions(TypeBinding one, TypeBinding two, Map<TypeBinding, Object> invocations, ReferenceBinding type, ASTNode typeRef) {
 		invocations.clear();
 		TypeBinding[] mecs = minimalErasedCandidates(new TypeBinding[] {one, two}, invocations);
 		if (mecs != null) {
@@ -4134,7 +4132,7 @@ public abstract class Scope {
 		return false;
 	}
 
-	private TypeBinding leastContainingInvocation(TypeBinding mec, Object invocationData, ArrayList lubStack) {
+	private TypeBinding leastContainingInvocation(TypeBinding mec, Object invocationData, ArrayList<TypeBinding[]> lubStack) {
 		if (invocationData == null) return mec; // no alternate invocation
 		if (invocationData instanceof TypeBinding) { // only one invocation, simply return it (array only allocated if more than one)
 			return (TypeBinding) invocationData;
@@ -4156,7 +4154,7 @@ public abstract class Scope {
 				case Binding.GENERIC_TYPE :
 					TypeVariableBinding[] invocationVariables = invocation.typeVariables();
 					for (int j = 0; j < argLength; j++) {
-						TypeBinding bestArgument = leastContainingTypeArgument(bestArguments[j], invocationVariables[j], (ReferenceBinding) mec, j, (ArrayList)lubStack.clone());
+						TypeBinding bestArgument = leastContainingTypeArgument(bestArguments[j], invocationVariables[j], (ReferenceBinding) mec, j, new ArrayList<>(lubStack));
 						if (bestArgument == null) return null;
 						bestArguments[j] = bestArgument;
 					}
@@ -4164,7 +4162,7 @@ public abstract class Scope {
 				case Binding.PARAMETERIZED_TYPE :
 					ParameterizedTypeBinding parameterizedType = (ParameterizedTypeBinding)invocation;
 					for (int j = 0; j < argLength; j++) {
-						TypeBinding bestArgument = leastContainingTypeArgument(bestArguments[j], parameterizedType.arguments[j], (ReferenceBinding) mec, j, (ArrayList)lubStack.clone());
+						TypeBinding bestArgument = leastContainingTypeArgument(bestArguments[j], parameterizedType.arguments[j], (ReferenceBinding) mec, j, new ArrayList<>(lubStack));
 						if (bestArgument == null) return null;
 						bestArguments[j] = bestArgument;
 					}
@@ -4178,7 +4176,7 @@ public abstract class Scope {
 	}
 
 	// JLS 15.12.2
-	private TypeBinding leastContainingTypeArgument(TypeBinding u, TypeBinding v, ReferenceBinding genericType, int rank, ArrayList lubStack) {
+	private TypeBinding leastContainingTypeArgument(TypeBinding u, TypeBinding v, ReferenceBinding genericType, int rank, ArrayList<TypeBinding[]> lubStack) {
 		if (u == null) return v;
 		if (TypeBinding.equalsEquals(u, v)) return u;
 		if (v.isWildcard()) {
@@ -4264,11 +4262,11 @@ public abstract class Scope {
 			TypeBinding type = types[0];
 			return type == null ? TypeBinding.VOID : type;
 		}
-		return lowerUpperBound(types, new ArrayList(1));
+		return lowerUpperBound(types, new ArrayList<>(1));
 	}
 
 	// 15.12.2
-	private TypeBinding lowerUpperBound(TypeBinding[] types, ArrayList lubStack) {
+	private TypeBinding lowerUpperBound(TypeBinding[] types, ArrayList<TypeBinding[]> lubStack) {
 
 		int typeLength = types.length;
 		if (typeLength == 1) {
@@ -4278,7 +4276,7 @@ public abstract class Scope {
 		// cycle detection
 		int stackLength = lubStack.size();
 		nextLubCheck: for (int i = 0; i < stackLength; i++) {
-			TypeBinding[] lubTypes = (TypeBinding[])lubStack.get(i);
+			TypeBinding[] lubTypes = lubStack.get(i);
 			int lubTypeLength = lubTypes.length;
 			if (lubTypeLength < typeLength) continue nextLubCheck;
 			nextTypeCheck:	for (int j = 0; j < typeLength; j++) {
@@ -4296,7 +4294,7 @@ public abstract class Scope {
 		}
 
 		lubStack.add(types);
-		Map invocations = new HashMap(1);
+		Map<TypeBinding, Object> invocations = new HashMap<>(1);
 		TypeBinding[] mecs = minimalErasedCandidates(types, invocations);
 		if (mecs == null) return null;
 		int length = mecs.length;
@@ -4377,7 +4375,7 @@ public abstract class Scope {
 	 * of minimal erased types, where some nulls may appear (and must simply be
 	 * ignored).
 	 */
-	protected TypeBinding[] minimalErasedCandidates(TypeBinding[] types, Map allInvocations) {
+	protected TypeBinding[] minimalErasedCandidates(TypeBinding[] types, Map<TypeBinding, Object> allInvocations) {
 		int length = types.length;
 		int indexOfFirst = -1, actualLength = 0;
 		for (int i = 0; i < length; i++) {
@@ -4398,7 +4396,7 @@ public abstract class Scope {
 
 		// record all supertypes of type
 		// intersect with all supertypes of otherType
-		ArrayList typesToVisit = new ArrayList(5);
+		List<TypeBinding> typesToVisit = new ArrayList<>();
 
 		int dim = firstType.dimensions();
 		TypeBinding leafType = firstType.leafComponentType();
@@ -4421,7 +4419,7 @@ public abstract class Scope {
 		int max = 1;
 		ReferenceBinding currentType;
 		for (int i = 0; i < max; i++) {
-			TypeBinding typeToVisit = (TypeBinding) typesToVisit.get(i);
+			TypeBinding typeToVisit = typesToVisit.get(i);
 			dim = typeToVisit.dimensions();
 			if (dim > 0) {
 				leafType = typeToVisit.leafComponentType();
@@ -5356,7 +5354,7 @@ public abstract class Scope {
 		if (this.kind == CLASS_SCOPE) {
 			ClassScope classScope = (ClassScope) this;
 			if (classScope.deferredBoundChecks == null) {
-				classScope.deferredBoundChecks = new ArrayList(3);
+				classScope.deferredBoundChecks = new ArrayList<>(3);
 				classScope.deferredBoundChecks.add(typeRef);
 			} else if (!classScope.deferredBoundChecks.contains(typeRef)) {
 				classScope.deferredBoundChecks.add(typeRef);
@@ -5414,7 +5412,7 @@ public abstract class Scope {
 			MethodBinding targetMethod = isInterface ? new MethodBinding(method.original(), genericType) : method.original();
 			MethodBinding staticFactory = new SyntheticFactoryMethodBinding(targetMethod, environment, originalEnclosingType);
 			staticFactory.typeVariables = new TypeVariableBinding[factoryArity];
-			final SimpleLookupTable map = new SimpleLookupTable(factoryArity);
+			Map<TypeBinding, TypeVariableBinding> map = new HashMap<>(factoryArity);
 
 			// Rename each type variable T of the type to T' or T'' or T''' based on the enclosing level to avoid a clash.
 			String prime = ""; //$NON-NLS-1$
@@ -5449,7 +5447,7 @@ public abstract class Scope {
 					}
 					@Override
 					public TypeBinding substitute(TypeVariableBinding typeVariable) {
-						TypeBinding retVal = (TypeBinding) map.get(typeVariable.unannotated());
+						TypeBinding retVal = map.get(typeVariable.unannotated());
 						return retVal == null ? typeVariable : typeVariable.hasTypeAnnotations() ? environment().createAnnotatedType(retVal, typeVariable.getTypeAnnotations()) : retVal;
 					}
 				};
@@ -5457,7 +5455,7 @@ public abstract class Scope {
 			// initialize new variable bounds
 			for (int j = 0; j < factoryArity; j++) {
 				TypeVariableBinding originalVariable = j < classTypeVariablesArity ? classTypeVariables[j] : methodTypeVariables[j - classTypeVariablesArity];
-				TypeVariableBinding substitutedVariable = (TypeVariableBinding) map.get(originalVariable.unannotated());
+				TypeVariableBinding substitutedVariable = map.get(originalVariable.unannotated());
 
 				TypeBinding substitutedSuperclass = Scope.substitute(substitution, originalVariable.superclass);
 				ReferenceBinding[] substitutedInterfaces = Scope.substitute(substitution, originalVariable.superInterfaces);
@@ -5762,7 +5760,7 @@ public abstract class Scope {
 		}
 		// First iteration ignores superclasses, to prefer finding the target in outers, rather than supers.
 		// Note on performance: while deeply nested loops look painful, poor-man's measurements showed good results.
-		for (Enum phase : phases) {
+		for (Enum<?> phase : phases) {
 			// 1. Scope in->out
 			ClassScope currentEnclosing = classScope();
 			while (currentEnclosing != null) {

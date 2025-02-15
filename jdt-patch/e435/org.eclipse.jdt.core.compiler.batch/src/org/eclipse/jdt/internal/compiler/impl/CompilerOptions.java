@@ -446,6 +446,11 @@ public class CompilerOptions {
 	/** Java source level, refers to a JDK version, e.g. {@link ClassFileConstants#JDK1_4} */
 	public long sourceLevel;
 	/**
+	 * Use <code>-release</code> setting to pass compliance version and enable checking for
+	 * availability of system APIs for the compliance version.
+	 */
+	public boolean release;
+	/**
 	 * Initially requested source version, not necessarily consistent with {@link #sourceLevel} as
 	 * sourceLevel forcibly contain a version that is compatible with ECJ.
 	 * <p>Consumers are free to use {@code sourceLevel} or this
@@ -1429,7 +1434,7 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportUnusedLabel, getSeverityString(UnusedLabel));
 		optionsMap.put(OPTION_ReportUnusedTypeArgumentsForMethodInvocation, getSeverityString(UnusedTypeArguments));
 		optionsMap.put(OPTION_Compliance, versionFromJdkLevel(this.complianceLevel));
-		optionsMap.put(OPTION_Release, DISABLED);
+		optionsMap.put(OPTION_Release, this.release ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_Source, versionFromJdkLevel(this.sourceLevel));
 		optionsMap.put(OPTION_TargetPlatform, versionFromJdkLevel(this.targetJDK));
 		optionsMap.put(OPTION_FatalOptionalError, this.treatOptionalErrorAsFatal ? ENABLED : DISABLED);
@@ -1598,6 +1603,7 @@ public class CompilerOptions {
 		this.complianceLevel = firstSupportedJdkLevel;
 		this.sourceLevel = firstSupportedJdkLevel;
 		this.targetJDK = firstSupportedJdkLevel;
+		this.release = false;
 
 		this.defaultEncoding = null; // will use the platform default encoding
 
@@ -1795,6 +1801,7 @@ public class CompilerOptions {
 			long level = versionToJdkLevel(optionValue);
 			if (level != 0) this.sourceLevel = level;
 		}
+		this.release = ENABLED.equals(optionsMap.get(OPTION_Release));
 		if ((optionValue = optionsMap.get(OPTION_TargetPlatform)) != null) {
 			long level = versionToJdkLevel(optionValue);
 			if (level != 0) {

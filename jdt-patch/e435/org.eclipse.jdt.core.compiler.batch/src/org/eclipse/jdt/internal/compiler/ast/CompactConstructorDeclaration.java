@@ -47,6 +47,16 @@ public class CompactConstructorDeclaration extends ConstructorDeclaration {
 	protected void doFieldReachAnalysis(FlowInfo flowInfo, FieldBinding[] fields) {
 		// do nothing
 	}
+
+	@Override
+	public void resolve(ClassScope upperScope) {
+		if (!upperScope.referenceContext.isRecord()) {
+			upperScope.problemReporter().compactConstructorsOnlyInRecords(this);
+			return;
+		}
+		super.resolve(upperScope);
+	}
+
 	@Override
 	protected void checkAndGenerateFieldAssignment(FlowContext flowContext, FlowInfo flowInfo, FieldBinding[] fields) {
 		this.scope.isCompactConstructorScope = false;

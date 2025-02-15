@@ -117,7 +117,7 @@ public class TypeDeclaration extends Statement implements ProblemSeverities, Ref
 	public static boolean TESTING_GH_2158 = false;
 
 	static {
-		disallowedComponentNames = new HashSet<>(6);
+		disallowedComponentNames = new HashSet<>(9);
 		disallowedComponentNames.add("clone"); //$NON-NLS-1$
 		disallowedComponentNames.add("finalize"); //$NON-NLS-1$
 		disallowedComponentNames.add("getClass"); //$NON-NLS-1$
@@ -126,6 +126,7 @@ public class TypeDeclaration extends Statement implements ProblemSeverities, Ref
 		disallowedComponentNames.add("notifyAll");//$NON-NLS-1$
 		disallowedComponentNames.add("toString"); //$NON-NLS-1$
 		disallowedComponentNames.add("wait"); //$NON-NLS-1$
+		disallowedComponentNames.add("this"); //$NON-NLS-1$
 	}
 
 public TypeDeclaration(CompilationResult compilationResult){

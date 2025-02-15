@@ -14,12 +14,14 @@
 package org.eclipse.jdt.internal.core.search.matching;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfLong;
-import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -32,7 +34,7 @@ public class MatchingNodeSet {
  * Map of matching ast nodes that don't need to be resolved to their accuracy level.
  * Each node is removed as it is reported.
  */
-SimpleLookupTable matchingNodes = new SimpleLookupTable(3); // node -> accuracy
+Map<ASTNode, Integer> matchingNodes = new HashMap<>(); // node -> accuracy
 private final HashtableOfLong matchingNodesKeys = new HashtableOfLong(3); // sourceRange -> node
 static Integer EXACT_MATCH = Integer.valueOf(SearchMatch.A_ACCURATE);
 static Integer POTENTIAL_MATCH = Integer.valueOf(SearchMatch.A_INACCURATE);
@@ -110,7 +112,7 @@ void addTrustedMatch(ASTNode node, Integer level) {
 	long key = (((long) node.sourceStart) << 32) + node.sourceEnd;
 	ASTNode existing = (ASTNode) this.matchingNodesKeys.get(key);
 	if (existing != null && existing.getClass().equals(node.getClass()))
-		this.matchingNodes.removeKey(existing);
+		this.matchingNodes.remove(existing);
 
 	// map node to its accuracy level
 	this.matchingNodes.put(node, level);
@@ -123,9 +125,7 @@ protected boolean hasPossibleNodes(int start, int end) {
 		if (node != null && start <= node.sourceStart && node.sourceEnd <= end)
 			return true;
 	}
-	nodes = this.matchingNodes.keyTable;
-	for (Object n : nodes) {
-		ASTNode node = (ASTNode) n;
+	for (ASTNode node : this.matchingNodes.keySet()) {
 		if (node != null && start <= node.sourceStart && node.sourceEnd <= end)
 			return true;
 	}
@@ -136,9 +136,7 @@ protected boolean hasPossibleNodes(int start, int end) {
  */
 protected ASTNode[] matchingNodes(int start, int end) {
 	List<ASTNode> nodes = null;
-	Object[] keyTable = this.matchingNodes.keyTable;
-	for (Object o : keyTable) {
-		ASTNode node = (ASTNode) o;
+	for (ASTNode node : this.matchingNodes.keySet()) {
 		if (node != null && start <= node.sourceStart && node.sourceEnd <= end) {
 			if (nodes == null) nodes = new ArrayList<>();
 			nodes.add(node);
@@ -172,20 +170,18 @@ public Object removeTrustedMatch(ASTNode node) {
 	if (existing == null) return null;
 
 	this.matchingNodesKeys.put(key, null);
-	return this.matchingNodes.removeKey(node);
+	return this.matchingNodes.remove(node);
 }
 @Override
 public String toString() {
 	// TODO (jerome) should show both tables
 	StringBuilder result = new StringBuilder();
 	result.append("Exact matches:"); //$NON-NLS-1$
-	Object[] keyTable = this.matchingNodes.keyTable;
-	Object[] valueTable = this.matchingNodes.valueTable;
-	for (int i = 0, l = keyTable.length; i < l; i++) {
-		ASTNode node = (ASTNode) keyTable[i];
+	for (Entry<ASTNode, Integer> entry:this.matchingNodes.entrySet()) {
+		ASTNode node = entry.getKey();
 		if (node == null) continue;
 		result.append("\n\t"); //$NON-NLS-1$
-		switch (((Integer)valueTable[i]).intValue()) {
+		switch (entry.getValue().intValue()) {
 			case SearchMatch.A_ACCURATE:
 				result.append("ACCURATE_MATCH: "); //$NON-NLS-1$
 				break;

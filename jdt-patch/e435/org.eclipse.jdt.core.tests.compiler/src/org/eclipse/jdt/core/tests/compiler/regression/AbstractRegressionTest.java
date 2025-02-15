@@ -213,8 +213,7 @@ static class JavacCompiler {
 		this.compliance = CompilerOptions.versionToJdkLevel(this.version);
 		this.minor = minorFromRawVersion(this.version, rawVersion);
 		this.rawVersion = rawVersion;
-		StringBuilder classpathBuffer = new StringBuilder(" -classpath ");
-		this.classpath = classpathBuffer.toString();
+		this.classpath = "-classpath ";
 	}
 	/** Call this if " -classpath " should be replaced by some other option token. */
 	protected void usePathOption(String option) {
@@ -223,7 +222,7 @@ static class JavacCompiler {
 	static String getVersion(String javacPathName) throws IOException, InterruptedException {
 		Process fetchVersionProcess = null;
 		try {
-			fetchVersionProcess = Runtime.getRuntime().exec(javacPathName + " -version", env, null);
+			fetchVersionProcess = Runtime.getRuntime().exec(new String[] {javacPathName, "-version"}, env, null);
 		    Logger versionStdErrLogger = new Logger(fetchVersionProcess.getErrorStream(), ""); // for javac <= 1.8
 		    Logger versionStdOutLogger = new Logger(fetchVersionProcess.getInputStream(), ""); // for javac >= 9
 		    versionStdErrLogger.start();
@@ -593,7 +592,7 @@ static class JavacCompiler {
 			} else {
 				cmdLineAsString = cmdLine.toString();
 			}
-			compileProcess = Runtime.getRuntime().exec(cmdLineAsString, env, directory);
+			compileProcess = Runtime.getRuntime().exec(cmdLineAsString.split("\\s"), env, directory);
 			Logger errorLogger = new Logger(compileProcess.getErrorStream(),
 					"ERROR", log == null ? new StringBuilder() : log);
 			errorLogger.start();
@@ -660,7 +659,7 @@ static class JavaRuntime {
 			cmdLine.append(options);
 			cmdLine.append(' ');
 			cmdLine.append(className);
-			executionProcess = Runtime.getRuntime().exec(cmdLine.toString(), env, directory);
+			executionProcess = Runtime.getRuntime().exec(cmdLine.toString().split("\\s"), env, directory);
 			Logger outputLogger = new Logger(executionProcess.getInputStream(),
 					"RUNTIME OUTPUT", stdout == null ? new StringBuilder() : stdout);
 			outputLogger.start();
@@ -2319,7 +2318,7 @@ protected static class JavacTestOptions {
 
 			// Launch process
 			compileProcess = Runtime.getRuntime().exec(
-				cmdLine.toString(), env, this.outputTestDirectory);
+				cmdLine.toString().split("\\s"), env, this.outputTestDirectory);
 
 			// Log errors
       Logger errorLogger = new Logger(compileProcess.getErrorStream(), "ERROR");
@@ -2384,7 +2383,7 @@ protected static class JavacTestOptions {
 						javaCmdLine.append(cp);
 						javaCmdLine.append(' ').append(testFiles[0].substring(0, testFiles[0].indexOf('.')));
 							// assume executable class is name of first test file - PREMATURE check if this is also the case in other test fwk classes
-						execProcess = Runtime.getRuntime().exec(javaCmdLine.toString(), env, this.outputTestDirectory);
+						execProcess = Runtime.getRuntime().exec(javaCmdLine.toString().split("\\s"), env, this.outputTestDirectory);
 						Logger logger = new Logger(execProcess.getInputStream(), "");
 						// PREMATURE implement consistent error policy
 	     				logger.start();
@@ -2473,7 +2472,7 @@ protected static class JavacTestOptions {
 			// Launch process
 			File currentDirectory = new File(currentDirectoryPath);
 			compileProcess = Runtime.getRuntime().exec(
-				cmdLine.toString(), env, currentDirectory);
+				cmdLine.toString().split("\\s"), env, currentDirectory);
 
 			// Log errors
 			Logger errorLogger = new Logger(compileProcess.getErrorStream(), "ERROR");

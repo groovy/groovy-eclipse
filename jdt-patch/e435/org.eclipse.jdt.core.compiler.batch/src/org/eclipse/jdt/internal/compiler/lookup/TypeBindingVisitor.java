@@ -13,13 +13,14 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
-import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 
 
 public class TypeBindingVisitor {
 
-	private SimpleLookupTable visitedCache;
+	private Map<TypeBinding, Boolean> visitedCache;
 
 	public void reset() {
 		this.visitedCache = null;
@@ -72,9 +73,9 @@ public class TypeBindingVisitor {
 		if (type == null)
 			return;
 
-		SimpleLookupTable visitedCache = visitor.visitedCache;
+		Map<TypeBinding, Boolean>  visitedCache = visitor.visitedCache;
 		if (visitedCache == null) {
-			visitor.visitedCache = new SimpleLookupTable(3);
+			visitor.visitedCache = new HashMap<>();
 			visitedCache = visitor.visitedCache;
 		}
 

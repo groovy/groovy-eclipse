@@ -23,6 +23,9 @@ import java.util.Set;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import org.eclipse.jdt.core.compiler.CompilationProgress;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
+import org.eclipse.jdt.internal.compiler.util.Messages;
 
 /**
  * Manages context during a single round of annotation processing.
@@ -137,6 +140,13 @@ public class RoundDispatcher {
 			boolean shouldCall = pi.computeSupportedAnnotations(
 					this._unclaimedAnnotations, annotationsToProcess);
 			if (shouldCall) {
+				CompilationProgress progress = this._provider.getCompilationProgress();
+				if (progress != null) {
+					if (progress.isCanceled()) {
+						throw new AbortCompilation(true, null);
+					}
+					progress.setTaskName(Messages.bind(Messages.apt_processing, pi._processor.getClass().getName()));
+				}
 				boolean claimed = pi._processor.process(annotationsToProcess, this._roundEnv);
 				if (null != this._traceProcessorInfo && !this._roundEnv.processingOver()) {
 					StringBuilder sb = new StringBuilder();
@@ -165,9 +175,22 @@ public class RoundDispatcher {
 				}
 			}
 		} catch (Throwable e) {
+			// Keep AbortCompilation Exception from cancel during annotation processing as is:
+			// Currently IdeAnnotationProcessorManager.reportProcessorException would only log the exception.
+			if (e instanceof AbortCompilation cancelSignal) {
+				throw cancelSignal;
+			}
+			// unfold InvocationTargetException:
+			if (e.getCause() instanceof AbortCompilation cancelSignal) {
+				throw cancelSignal;
+			}
 			// If a processor throws an exception (as opposed to reporting an error),
 			// report it and abort compilation by throwing AbortCompilation.
-			this._provider.reportProcessorException(pi._processor, new Exception(e));
+			this._provider.reportProcessorException(pi._processor,
+					(e instanceof Exception ex) ? ex
+							: new Exception(
+									"Error while processing Annotation Processor " + pi._processor.getClass().getName(), //$NON-NLS-1$
+									e));
 		}
 	}
 

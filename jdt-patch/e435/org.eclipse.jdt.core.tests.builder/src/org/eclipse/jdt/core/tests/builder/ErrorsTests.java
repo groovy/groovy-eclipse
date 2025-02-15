@@ -273,7 +273,7 @@ public void _test0105() throws JavaModelException, CoreException, IOException { 
 			// waiting for JDK 6: outputFolder.setWritable(true); -- workaround:
 			Process process = null;
 			try {
-				process = Runtime.getRuntime().exec("chmod -R a+w " + outputFolder.getAbsolutePath());
+				process = Runtime.getRuntime().exec(new String[]{"chmod", "-R", "a+w", outputFolder.getAbsolutePath()});
 				process.waitFor();
 			} catch (InterruptedException e) {
 				// go ahead
@@ -289,7 +289,7 @@ public void _test0105() throws JavaModelException, CoreException, IOException { 
 		} catch (Throwable t) {
 			Process process = null;
 			try {
-				process = Runtime.getRuntime().exec("chmod -R a+w " + outputFolder.getAbsolutePath());
+				process = Runtime.getRuntime().exec(new String[]{"chmod", "-R", "a+w", outputFolder.getAbsolutePath()});
 				process.waitFor();
 			} catch (InterruptedException ie) {
 				// go ahead

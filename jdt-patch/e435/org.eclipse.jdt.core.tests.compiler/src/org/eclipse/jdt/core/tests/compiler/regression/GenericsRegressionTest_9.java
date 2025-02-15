@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2021 IBM Corporation.
+ * Copyright (c) 2016, 2025 IBM Corporation.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -1024,6 +1024,30 @@ public void testGH2817() {
 			"""
 		};
 	runner.runConformTest();
+}
+public void testGH3501() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+			"X.java",
+			"""
+			import java.util.Collections;
+			public class X {
+				void test() {
+					Zork v = Collections.singleton("1");
+				}
+			}
+			"""
+		};
+	runner.expectedCompilerLog =
+			"""
+			----------
+			1. ERROR in X.java (at line 4)
+				Zork v = Collections.singleton("1");
+				^^^^
+			Zork cannot be resolved to a type
+			----------
+			""";
+	runner.runNegativeTest();
 }
 public static Class<GenericsRegressionTest_9> testClass() {
 	return GenericsRegressionTest_9.class;

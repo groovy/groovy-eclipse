@@ -221,7 +221,7 @@ public boolean visit(Argument argument, BlockScope scope) {
 }
 @Override
 public boolean visit(LambdaExpression lambdaExpression, BlockScope scope) {
-	Integer level = (Integer) this.nodeSet.matchingNodes.removeKey(lambdaExpression);
+	Integer level = this.nodeSet.matchingNodes.remove(lambdaExpression);
 	try {
 		if (lambdaExpression.resolvedType != null && lambdaExpression.resolvedType.isValidBinding() &&
 				!(lambdaExpression.descriptor instanceof ProblemMethodBinding))
@@ -329,7 +329,7 @@ public boolean visit(TypeDeclaration typeDeclaration, BlockScope unused) {
 		if ((typeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {
 			this.locator.reportMatching(typeDeclaration, this.enclosingElement, -1, this.nodeSet, occurrenceCount);
 		} else {
-			Integer level = (Integer) this.nodeSet.matchingNodes.removeKey(typeDeclaration);
+			Integer level = this.nodeSet.matchingNodes.remove(typeDeclaration);
 			this.locator.reportMatching(typeDeclaration, this.enclosingElement, level != null ? level.intValue() : -1, this.nodeSet, occurrenceCount);
 		}
 		this.locator.inTypeOccurrencesCounts = oldOccurencesCount;

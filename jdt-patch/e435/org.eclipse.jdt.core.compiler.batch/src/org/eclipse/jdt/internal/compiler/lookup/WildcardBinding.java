@@ -40,7 +40,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
  * abstract parameterized types, e.g. List<String> is not compatible with List<Object>,
  * but compatible with List<?>.
  */
-public class WildcardBinding extends ReferenceBinding {
+public class WildcardBinding extends ReferenceBinding implements HotSwappable{
 
 	public ReferenceBinding genericType;
 	public int rank;

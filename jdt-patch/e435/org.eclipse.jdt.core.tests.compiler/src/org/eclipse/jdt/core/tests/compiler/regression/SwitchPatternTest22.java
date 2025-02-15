@@ -405,7 +405,7 @@ public class SwitchPatternTest22 extends AbstractBatchCompilerTest {
 			"----------\n");
 	}
 	public void testInternalDomination_this() throws Exception {
-		runConformTest(
+		runNegativeTest(
 			new String[] {
 				"X.java",
 				"""
@@ -423,8 +423,17 @@ public class SwitchPatternTest22 extends AbstractBatchCompilerTest {
 				}
 				"""
 			},
-			"Integer\n"
-			+ "Object");
+			"----------\n" +
+			"1. ERROR in X.java (at line 5)\r\n" +
+			"	case Object _, Integer _, X _ when o != null : System.out.println(\"Integer\");\r\n" +
+			"	               ^^^^^^^^^\n" +
+			"This case label is dominated by one of the preceding case labels\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 5)\r\n" +
+			"	case Object _, Integer _, X _ when o != null : System.out.println(\"Integer\");\r\n" +
+			"	                          ^^^\n" +
+			"This case label is dominated by one of the preceding case labels\n" +
+			"----------\n");
 	}
 	public void testInternalDomination_2() throws Exception {
 		runNegativeTest(

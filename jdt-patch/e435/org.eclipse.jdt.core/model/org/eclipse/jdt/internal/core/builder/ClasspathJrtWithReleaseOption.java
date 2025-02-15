@@ -115,6 +115,11 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 		}
 	}
 
+	@Override
+	protected String getReleaseVersion() {
+		return this.release;
+	}
+
 	public void loadModules() {
 		if (this.fs == null || !this.ctSym.isJRE12Plus()) {
 			ClasspathJrt.loadModules(this);

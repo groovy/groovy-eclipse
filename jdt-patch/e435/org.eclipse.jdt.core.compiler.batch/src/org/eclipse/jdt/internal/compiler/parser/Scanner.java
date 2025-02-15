@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2024 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -2322,7 +2322,6 @@ protected int scanForTextBlock() throws InvalidInputException {
 						if (this.recordLineSeparator) {
 							pushLineSeparator();
 						}
-						this.currentCharacter = '\\';
 						break;
 					case '\"' :
 						this.currentPosition++;
@@ -3999,7 +3998,7 @@ private int internalScanIdentifierOrKeyword(int index, int length, char[] data) 
 							&& (data[++index] == 'o')
 							&& (data[++index] == 'r')
 							&& (data[++index] == 'd'))
-								return disambiguatedRestrictedIdentifierrecord(TokenNameRestrictedIdentifierrecord);
+								return disambiguateRecord();
 					}
 					return TokenNameIdentifier;
 				case 8:
@@ -4201,7 +4200,7 @@ private int internalScanIdentifierOrKeyword(int index, int length, char[] data) 
 					else if ((data[++index] == 'h')
 							&& (data[++index] == 'e')
 							&& (data[++index] == 'n'))
-							return disambiguatedRestrictedIdentifierWhen(TokenNameRestrictedIdentifierWhen);
+							return disambiguateWhen();
 					else
 						return TokenNameIdentifier;
 				case 5 :
@@ -5442,15 +5441,12 @@ private boolean mayBeAtAnYieldStatement() {
 			return false;
 	}
 }
-int disambiguatedRestrictedIdentifierrecord(int restrictedIdentifierToken) {
-	// and here's the kludge
-	if (restrictedIdentifierToken != TokenNameRestrictedIdentifierrecord)
-		return restrictedIdentifierToken;
-	if (!JavaFeature.RECORDS.isSupported(this.complianceLevel, this.previewEnabled))
-		return TokenNameIdentifier;
-
-	return disambiguaterecordWithLookAhead() ?
-			restrictedIdentifierToken : TokenNameIdentifier;
+int disambiguateRecord() {
+	if (JavaFeature.RECORDS.isSupported(this.complianceLevel, this.previewEnabled)) {
+		if (disambiguateRecordWithLookAhead())
+			return TokenNameRestrictedIdentifierrecord;
+	}
+	return TokenNameIdentifier;
 }
 private int getNextTokenAfterTypeParameterHeader() {
 	int count = 1;
@@ -5480,7 +5476,7 @@ private int getNextTokenAfterTypeParameterHeader() {
 	}
 	return TokenNameEOF;
 }
-private boolean disambiguaterecordWithLookAhead() {
+private boolean disambiguateRecordWithLookAhead() {
 	if (isInModuleDeclaration())
 		return false;
 	getVanguardParser();
@@ -5508,10 +5504,7 @@ private boolean disambiguaterecordWithLookAhead() {
 	return false; // IIE event;
 }
 
-int disambiguatedRestrictedIdentifierWhen(int restrictedIdentifierToken) {
-	// and here's the kludge
-	if (restrictedIdentifierToken != TokenNameRestrictedIdentifierWhen)
-		return restrictedIdentifierToken;
+int disambiguateWhen() {
 	return this.activeParser == null || !this.activeParser.automatonWillShift(TokenNameRestrictedIdentifierWhen) ?
 					TokenNameIdentifier : TokenNameRestrictedIdentifierWhen;
 }

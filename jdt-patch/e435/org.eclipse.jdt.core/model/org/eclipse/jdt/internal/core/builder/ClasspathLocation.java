@@ -183,6 +183,11 @@ public static ClasspathLocation forLibrary(String libraryPathname, AccessRuleSet
 
 public static ClasspathLocation forLibrary(IFile library, AccessRuleSet accessRuleSet, IPath annotationsPath,
 										boolean isOnModulePath, String compliance) {
+	IPath location = library.getLocation();
+	String libraryPathname = location == null? library.getFullPath().toPortableString() : location.toOSString();
+	if (Util.archiveFormat(libraryPathname) == Util.JMOD_FILE) {
+		return new ClasspathJMod(libraryPathname, 0, accessRuleSet, annotationsPath);
+	}
 	return (CompilerOptions.versionToJdkLevel(compliance) < ClassFileConstants.JDK9) ?
 			new ClasspathJar(library, accessRuleSet, annotationsPath, isOnModulePath) :
 				new ClasspathMultiReleaseJar(library, accessRuleSet, annotationsPath, isOnModulePath, compliance);

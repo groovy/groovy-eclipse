@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2024 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -1589,6 +1589,42 @@ public class ScannerTest extends AbstractRegressionTest {
 			}
 			assertEquals("Wrong contents", "This is the new String", String.valueOf(buffer));
 			assertEquals("Missing line end for continuation", 44, scanner.lineEnds[2]);
+		} catch (InvalidInputException e) {
+			assertTrue(false);
+		}
+	}
+
+	public void testIssue3666_001_since_14() {
+		char[] source = ("class X {\n" +
+				"  String  s = \"\"\"\nThis is the new String\\\n\"\"\";\n" +
+				"}").toCharArray();
+		Scanner scanner = new Scanner(false, false, false, ClassFileConstants.MAJOR_LATEST_VERSION, null, null, false);
+		scanner.previewEnabled = true;
+		scanner.recordLineSeparator = true;
+		scanner.setSource(source);
+		scanner.resetTo(0, source.length - 1);
+		try {
+			int token;
+			StringBuilder buffer = new StringBuilder();
+			while ((token = scanner.getNextToken()) != TerminalTokens.TokenNameEOF) {
+				try {
+					switch(token) {
+						case TerminalTokens.TokenNameTextBlock :
+							buffer.append( new String(scanner.getCurrentTextBlock()));
+							break;
+						case TerminalTokens.TokenNameStringLiteral :
+							break;
+						case TerminalTokens.TokenNameEOF :
+							break;
+						default :
+							break;
+					}
+				} catch (ArrayIndexOutOfBoundsException e) {
+					e.printStackTrace();
+				}
+			}
+			assertEquals("Wrong contents", "This is the new String", String.valueOf(buffer));
+			assertEquals("Missing line end for continuation", 51, scanner.lineEnds[2]);
 		} catch (InvalidInputException e) {
 			assertTrue(false);
 		}

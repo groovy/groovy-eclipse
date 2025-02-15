@@ -52,6 +52,8 @@ package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.classfmt.AnnotationInfo;
@@ -67,7 +69,6 @@ import org.eclipse.jdt.internal.compiler.impl.BooleanConstant;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
-import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 /*
@@ -109,7 +110,7 @@ public class BinaryTypeBinding extends ReferenceBinding {
 	// For the link with the principle structure
 	protected LookupEnvironment environment;
 
-	protected SimpleLookupTable storedAnnotations = null; // keys are this ReferenceBinding & its fields and methods, value is an AnnotationHolder
+	protected Map<Binding, AnnotationHolder> storedAnnotations = null; // keys are this ReferenceBinding & its fields and methods, value is an AnnotationHolder
 
 	private ReferenceBinding containerAnnotationType;
 	int defaultNullness = 0;
@@ -439,7 +440,17 @@ public MethodBinding[] availableMethods() {
 	return availableMethods;
 }
 
-void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
+final void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
+	try {
+		cachePartsFrom2(binaryType, needFieldsAndMethods);
+	} catch (AbortCompilation e) {
+		throw e;
+	} catch (RuntimeException e) {
+		throw new RuntimeException("RuntimeException loading " + new String(binaryType.getFileName()), e); //$NON-NLS-1$
+	}
+}
+
+private void cachePartsFrom2(IBinaryType binaryType, boolean needFieldsAndMethods) {
 	if (!isPrototype()) throw new IllegalStateException();
 	ReferenceBinding previousRequester = this.environment.requestingType;
 	this.environment.requestingType = this;
@@ -1018,11 +1029,13 @@ private MethodBinding createMethod(IBinaryMethod method, IBinaryType binaryType,
 		}
 
 	} else {
-		if (sourceLevel >= ClassFileConstants.JDK1_8) { // below 1.8, external annotations will be attached later
-			walker = binaryType.enrichWithExternalAnnotationsFor(walker, method, this.environment);
-		}
-		if (walker == ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER && this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
-			walker = provideSyntheticEEA(method, walker);
+		if (this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
+			if (sourceLevel >= ClassFileConstants.JDK1_8) { // below 1.8, external annotations will be attached later
+				walker = binaryType.enrichWithExternalAnnotationsFor(walker, method, this.environment);
+			}
+			if (walker == ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER) {
+				walker = provideSyntheticEEA(method, walker);
+			}
 		}
 		methodModifiers |= ExtraCompilerModifiers.AccGenericSignature;
 		// MethodTypeSignature = ParameterPart(optional) '(' TypeSignatures ')' return_typeSignature ['^' TypeSignature (optional)]
@@ -2017,7 +2030,7 @@ public void tagAsHavingDefectiveContainerType() {
 }
 
 @Override
-SimpleLookupTable storedAnnotations(boolean forceInitialize, boolean forceStore) {
+Map<Binding, AnnotationHolder> storedAnnotations(boolean forceInitialize, boolean forceStore) {
 
 	if (!isPrototype())
 		return this.prototype.storedAnnotations(forceInitialize, forceStore);
@@ -2025,7 +2038,7 @@ SimpleLookupTable storedAnnotations(boolean forceInitialize, boolean forceStore)
 	if (forceInitialize && this.storedAnnotations == null) {
 		if (!this.environment.globalOptions.storeAnnotations && !forceStore)
 			return null; // not supported during this compile
-		this.storedAnnotations = new SimpleLookupTable(3);
+		this.storedAnnotations = new HashMap<>();
 	}
 	return this.storedAnnotations;
 }

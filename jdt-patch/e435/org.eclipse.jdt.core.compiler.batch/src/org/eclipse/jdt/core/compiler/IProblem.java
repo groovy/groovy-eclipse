@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2024 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -2515,6 +2515,8 @@ void setSourceStart(int sourceStart);
 	int ClassExtendFinalRecord = TypeRelated + 1767;
 	/** @since 3.29 */
 	int RecordErasureIncompatibilityInCanonicalConstructor = TypeRelated + 1768;
+	/** @since 3.41 */
+	int CompactConstructorOnlyInRecords = TypeRelated + 1769;
 	/* records - end */
 
 
@@ -2526,9 +2528,8 @@ void setSourceStart(int sourceStart);
 	 */
 	int PatternVariableRedefined = Internal + 1781;
 	/** @since 3.26
-	 * @deprecated
 	 */
-	int PatternSubtypeOfExpression = Internal + 1782;
+	int PatternSubtypeOfExpression = Internal + 1782;  // ass backwards naming of API constant :-( It should read ExpressionSubtypeOfPattern
 	/** @since 3.26
 	 */
 	int IllegalModifierForPatternVariable = Internal + 1783;
@@ -2776,4 +2777,7 @@ void setSourceStart(int sourceStart);
 	 * @noreference preview feature
 	 */
 	int DefaultTrueAndFalseCases = PreviewRelated + 2102;
+
+	/** @since 3.41 */
+	int MissingTypeForInference = Internal + 2103;
 }

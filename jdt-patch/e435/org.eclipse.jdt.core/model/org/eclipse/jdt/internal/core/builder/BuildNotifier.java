@@ -86,9 +86,9 @@ public void begin() {
 }
 
 /**
- * Check whether the build has been canceled.
+ * Check whether the build has been canceled. Throws OperationCanceledException when canceled.
  */
-public void checkCancel() {
+public void checkCancel() throws OperationCanceledException{
 	if (this.cancelling) {
 		throw new OperationCanceledException();
 	}
@@ -121,20 +121,22 @@ private long getBuildDurationInMs() {
 }
 
 /**
- * Check whether the build has been canceled.
+ * Check whether the build has been canceled. Throws AbortCompilation when canceled.
  * Must use this call instead of checkCancel() when within the compiler.
  */
-public void checkCancelWithinCompiler() {
-	if (!this.cancelling) {
-		try {
-			checkCancel();
-		} catch (OperationCanceledException cancelRequest) {
-			// Once the compiler has been canceled, don't check again.
-			setCancelling(true);
-			// Only AbortCompilation can stop the compiler cleanly.
-			// We check cancelation again following the call to compile.
-			throw new AbortCompilation(true, null);
-		}
+public void checkCancelWithinCompiler() throws AbortCompilation {
+	if (this.cancelling) {
+		// when annotation processor catched already thrown AbortCompilation away throw it again
+		throw new AbortCompilation(true, null);
+	}
+	try {
+		checkCancel();
+	} catch (OperationCanceledException cancelRequest) {
+		// Once the compiler has been canceled, don't check again.
+		setCancelling(true);
+		// Only AbortCompilation can stop the compiler cleanly.
+		// We check cancelation again following the call to compile.
+		throw new AbortCompilation(true, null);
 	}
 }
 

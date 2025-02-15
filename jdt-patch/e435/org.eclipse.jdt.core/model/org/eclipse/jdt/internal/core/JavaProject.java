@@ -745,7 +745,9 @@ public class JavaProject
 								if (limitModules != null) {
 									rootModules = Arrays.asList(limitModules.split(",")); //$NON-NLS-1$
 								} else if (isUnNamedModule()) {
-									rootModules = defaultRootModules((Iterable) imageRoots);
+									String release = JavaCore.ENABLED.equals(getOption(JavaCore.COMPILER_RELEASE, true))
+											? getOption(JavaCore.COMPILER_COMPLIANCE, true) : null;
+									rootModules = defaultRootModules((Iterable) imageRoots, release);
 								}
 								if (rootModules != null) {
 									imageRoots = filterLimitedModules(entryPath, imageRoots, rootModules);
@@ -796,30 +798,50 @@ public class JavaProject
 		}
 	}
 
-	/** Implements selection of root modules per JEP 261. */
+	/**
+	 * Implements selection of root modules per JEP 261.
+	 * @deprecated This method cannot distinguish strategies for old (9/10) vs new (11+) JDK versions. Please use {@link #defaultRootModules(Iterable, String)}
+	 */
+	@Deprecated
 	public static List<String> defaultRootModules(Iterable<IPackageFragmentRoot> allSystemRoots) {
-		return internalDefaultRootModules(allSystemRoots,
-				IPackageFragmentRoot::getElementName,
-				r ->  (r instanceof JrtPackageFragmentRoot) ? ((JrtPackageFragmentRoot) r).getModule() : null);
+		return defaultRootModules(allSystemRoots, JavaCore.VERSION_11); // 11 is fix version of https://bugs.openjdk.org/browse/JDK-8205169
 	}
 
-	public static <T> List<String> internalDefaultRootModules(Iterable<T> allSystemModules, Function<T,String> getModuleName, Function<T,IModule> getModule) {
+	/**
+	 * Implements selection of root modules per JEP 261.
+	 * @param allSystemRoots all modules found in the JRT system
+	 * @param releaseVersion the release version which decides about the strategy for selecting root modules
+	 */
+	public static List<String> defaultRootModules(Iterable<IPackageFragmentRoot> allSystemRoots, String releaseVersion) {
+		return internalDefaultRootModules(allSystemRoots,
+				IPackageFragmentRoot::getElementName,
+				r ->  (r instanceof JrtPackageFragmentRoot) ? ((JrtPackageFragmentRoot) r).getModule() : null,
+				releaseVersion);
+	}
+
+	public static <T> List<String> internalDefaultRootModules(Iterable<T> allSystemModules, Function<T,String> getModuleName, Function<T,IModule> getModule, String releaseVersion) {
 		List<String> result = new ArrayList<>();
+		boolean beforeJDK8205169 = JavaCore.VERSION_9.equals(releaseVersion) || JavaCore.VERSION_10.equals(releaseVersion);
 		boolean hasJavaDotSE = false;
-		for (T mod : allSystemModules) {
-			String moduleName = getModuleName.apply(mod);
-			if ("java.se".equals(moduleName)) { //$NON-NLS-1$
-				result.add(moduleName);
-				hasJavaDotSE = true;
-				break;
+		if (beforeJDK8205169) {
+			for (T mod : allSystemModules) {
+				String moduleName = getModuleName.apply(mod);
+				if ("java.se".equals(moduleName)) { //$NON-NLS-1$
+					result.add(moduleName);
+					hasJavaDotSE = true;
+					break;
+				}
 			}
 		}
 		for (T mod : allSystemModules) {
 			String moduleName = getModuleName.apply(mod);
-			boolean isJavaDotStart = moduleName.startsWith("java."); //$NON-NLS-1$
-			boolean isPotentialRoot = !isJavaDotStart;	// always include non-java.*
-			if (!hasJavaDotSE)
-				isPotentialRoot |= isJavaDotStart;		// no java.se => add all java.*
+			boolean isPotentialRoot = true;  // since JDK-8205169 all system modules are considered
+			if (beforeJDK8205169) {
+				boolean isJavaDotStart = moduleName.startsWith("java."); //$NON-NLS-1$
+				isPotentialRoot = !isJavaDotStart;	// always include non-java.*
+				if (!hasJavaDotSE)
+					isPotentialRoot |= isJavaDotStart;		// no java.se => add all java.*
+			}
 
 			if (isPotentialRoot) {
 				IModule module = getModule.apply(mod);
@@ -3619,12 +3641,10 @@ public class JavaProject
 				cyclesPerProject.put(project, list = new ArrayList<>());
 			} else {
 				for (CycleInfo cycleInfo: list) {
-					if (cycleInfo.cycle.equals(cycle)) {
-						// same cycle: use the shorter prefix:
-						if (cycleInfo.pathToCycle.size() > prefix.size()) {
-							cycleInfo.pathToCycle.clear();
-							cycleInfo.pathToCycle.addAll(prefix);
-						}
+					if (cycleInfo.pathToCycle.size() > prefix.size() && cycleInfo.cycle.equals(cycle)) {
+						// use same cycle with shorter prefix:
+						cycleInfo.pathToCycle.clear();
+						cycleInfo.pathToCycle.addAll(prefix);
 						return;
 					}
 				}
@@ -3651,7 +3671,7 @@ public class JavaProject
 	 */
 	public void updateCycleParticipants(
 			List<IPath> prereqChain,
-			LinkedHashSet cycleParticipants,
+			LinkedHashSet<IPath> cycleParticipants,
 			Map<IPath,List<CycleInfo>> cyclesPerProject,
 			IWorkspaceRoot workspaceRoot,
 			HashSet traversed,

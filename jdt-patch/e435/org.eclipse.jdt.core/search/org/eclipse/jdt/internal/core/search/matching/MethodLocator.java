@@ -57,7 +57,7 @@ public char[][][] allSuperDeclaringTypeNames;
 // See https://bugs.eclipse.org/bugs/show_bug.cgi?id=357547
 private char[][][] samePkgSuperDeclaringTypeNames;
 
-private MatchLocator matchLocator;
+protected MatchLocator matchLocator;
 //method declarations which parameters verification fail
 private Map<ASTNode, Boolean> methodDeclarationsWithInvalidParam = new HashMap<>();
 

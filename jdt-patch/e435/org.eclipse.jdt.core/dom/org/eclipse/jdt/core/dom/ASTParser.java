@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2022 IBM Corporation and others.
+ * Copyright (c) 2004, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.dom.CompilationUnitResolver.IntArrayList;
 import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
@@ -38,16 +39,13 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.RecoveryScanner;
 import org.eclipse.jdt.internal.compiler.parser.RecoveryScannerData;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
+import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
-import org.eclipse.jdt.internal.core.BasicCompilationUnit;
-import org.eclipse.jdt.internal.core.BinaryType;
-import org.eclipse.jdt.internal.core.ClassFileWorkingCopy;
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
-import org.eclipse.jdt.internal.core.JavaModelManager;
-import org.eclipse.jdt.internal.core.PackageFragment;
+import org.eclipse.jdt.internal.core.*;
 import org.eclipse.jdt.internal.core.dom.ICompilationUnitResolver;
 import org.eclipse.jdt.internal.core.dom.util.DOMASTUtil;
 import org.eclipse.jdt.internal.core.util.CodeSnippetParsingUtil;
+import org.eclipse.jdt.internal.core.util.DOMFinder;
 import org.eclipse.jdt.internal.core.util.RecordedParsingInformation;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -128,8 +126,7 @@ public class ASTParser {
 	 * Creates a new object for creating a Java abstract syntax tree
      * (AST) following the specified set of API rules.
      *
- 	 * @param level the API level; one of the <code>.JLS*</code> level constants
-     * declared on {@link AST}
+ 	 * @param level the API level; one of the <code>.JLS*</code> level constants declared on {@link AST} or {@link AST#getJLSLatest}
 	 * @return new ASTParser instance
 	 */
 	public static ASTParser newParser(int level) {
@@ -227,7 +224,7 @@ public class ASTParser {
 	 * </p>
 	 *
 	 * @param level the API level; one of the <code>JLS*</code> level constants
-	 * declared on {@link AST}
+	 * declared on {@link AST} or {@link AST#getJLSLatest()}
 	 */
 	ASTParser(int level) {
 		DOMASTUtil.checkASTLevel(level);
@@ -275,6 +272,9 @@ public class ASTParser {
 	}
 
 	private void checkForSystemLibrary(List<Classpath> allClasspaths) {
+		if (!hasJavaNature()) {
+			return;
+		}
 		boolean hasSystemLibrary = true; // default for 1.8 setting without a valid project
 		boolean hasModule = false;
 		Throwable exception = null;
@@ -1167,11 +1167,107 @@ public class ASTParser {
 			if ((this.bits & CompilationUnitResolver.IGNORE_METHOD_BODIES) != 0) {
 				flags |= ICompilationUnit.IGNORE_METHOD_BODIES;
 			}
-			return CompilationUnitResolver.resolve(elements, this.apiLevel, this.compilerOptions, this.project, this.workingCopyOwner, flags, monitor);
+
+			return resolve(elements, this.apiLevel, this.compilerOptions, this.project, this.workingCopyOwner, flags, this.unitResolver, monitor);
 		} finally {
 			// reset to defaults to allow reuse (and avoid leaking)
 			initializeDefaults();
 		}
+	}
+
+	/**
+	 * Parse and resolve bindings for the given java elements with the following options.
+	 *
+	 * @param elements
+	 * @param apiLevel
+	 * @param compilerOptions
+	 * @param javaProject
+	 * @param owner
+	 * @param flags
+	 * @param monitor
+	 * @return an array of bindings that match the resolved elements
+	 */
+	static IBinding[] resolve(
+		final IJavaElement[] elements,
+		int apiLevel,
+		Map<String,String> compilerOptions,
+		IJavaProject javaProject,
+		WorkingCopyOwner owner,
+		int flags,
+		ICompilationUnitResolver unitResolver,
+		IProgressMonitor monitor) {
+
+		final int length = elements.length;
+		final HashMap<IJavaElement, IntArrayList> sourceElementPositions = new HashMap<>(); // a map from ICompilationUnit to int[] (positions in elements)
+		int cuNumber = 0;
+		final HashtableOfObjectToInt binaryElementPositions = new HashtableOfObjectToInt(); // a map from String (binding key) to int (position in elements)
+		for (int i = 0; i < length; i++) {
+			IJavaElement element = elements[i];
+			if (!(element instanceof SourceRefElement))
+				throw new IllegalStateException(element + " is not part of a compilation unit or class file"); //$NON-NLS-1$
+			IJavaElement cu = element.getAncestor(IJavaElement.COMPILATION_UNIT);
+			if (cu != null) {
+				// source member
+				IntArrayList intList = sourceElementPositions.get(cu);
+				if (intList == null) {
+					sourceElementPositions.put(cu, intList = new IntArrayList());
+					cuNumber++;
+				}
+				intList.add(i);
+			} else {
+				// binary member or method argument
+				try {
+					String key;
+					if (element instanceof BinaryMember)
+						key = ((BinaryMember) element).getKey(true/*open to get resolved info*/);
+					else if (element instanceof LocalVariable)
+						key = ((LocalVariable) element).getKey(true/*open to get resolved info*/);
+					else if (element instanceof org.eclipse.jdt.internal.core.TypeParameter)
+						key = ((org.eclipse.jdt.internal.core.TypeParameter) element).getKey(true/*open to get resolved info*/);
+					else if (element instanceof BinaryModule)
+						key = ((BinaryModule) element).getKey(true);
+					else
+						throw new IllegalArgumentException(element + " has an unexpected type"); //$NON-NLS-1$
+					binaryElementPositions.put(key, i);
+				} catch (JavaModelException e) {
+					throw new IllegalArgumentException(element + " does not exist", e); //$NON-NLS-1$
+				}
+			}
+		}
+		ICompilationUnit[] cus = new ICompilationUnit[cuNumber];
+		sourceElementPositions.keySet().toArray(cus);
+
+		int bindingKeyNumber = binaryElementPositions.size();
+		String[] bindingKeys = new String[bindingKeyNumber];
+		binaryElementPositions.keysToArray(bindingKeys);
+
+		class Requestor extends ASTRequestor {
+			IBinding[] bindings = new IBinding[length];
+			@Override
+			public void acceptAST(ICompilationUnit source, CompilationUnit ast) {
+				// TODO (jerome) optimize to visit the AST only once
+				IntArrayList intList = sourceElementPositions.get(source);
+				for (int i = 0; i < intList.length; i++) {
+					final int index = intList.list[i];
+					SourceRefElement element = (SourceRefElement) elements[index];
+					DOMFinder finder = new DOMFinder(ast, element, true/*resolve binding*/);
+					try {
+						finder.search();
+					} catch (JavaModelException e) {
+						throw new IllegalArgumentException(element + " does not exist", e); //$NON-NLS-1$
+					}
+					this.bindings[index] = finder.foundBinding;
+				}
+			}
+			@Override
+			public void acceptBinding(String bindingKey, IBinding binding) {
+				int index = binaryElementPositions.get(bindingKey);
+				this.bindings[index] = binding;
+			}
+		}
+		Requestor requestor = new Requestor();
+		unitResolver.resolve(cus, bindingKeys, requestor, apiLevel, compilerOptions, javaProject, owner, flags, monitor);
+		return requestor.bindings;
 	}
 
 	private ASTNode internalCreateAST(IProgressMonitor monitor) {
@@ -1562,5 +1658,9 @@ public class ASTParser {
 					compilationUnit.types().add(typeDeclaration);
 				}
 		}
+	}
+
+	private boolean hasJavaNature() {
+		return this.project == null || JavaProject.hasJavaNature(this.project.getProject());
 	}
 }

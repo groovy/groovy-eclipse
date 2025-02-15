@@ -682,7 +682,7 @@ public void test05() {
 		"  }\n" +
 		"  void foo() {\n" +
 		"    System.out.println();\n" +
-		(this.complianceLevel < ClassFileConstants.JDK14
+		(this.complianceLevel < ClassFileConstants.JDK16
 		?
 		"    new baz() {\n" +
 		"    };\n"
@@ -4404,26 +4404,26 @@ public void test74() {
 		"}									\n";
 
 	String expectedDietUnitToString =
-		"package pack;\n" +
-		"class A extends IOException {\n" +
-		"  {\n" +
-		"  }\n" +
-		"  A() {\n" +
-		"  }\n" +
-		"}\n";
+			"package pack;\n" +
+			"class A extends IOException {\n" +
+			"  A() {\n" +
+			"  }\n" +
+			"  S() {\n" +
+			"  }\n" +
+			"}\n";
 
 	String expectedDietPlusBodyUnitToString =
-		"package pack;\n" +
-		"class A extends IOException {\n" +
-		"  {\n" +
-		"    int x;\n" +
-		"  }\n" +
-		"  A() {\n" +
-		"    super();\n" +
-		"  }\n" +
-		"}\n";
+			"package pack;\n" +
+			"class A extends IOException {\n" +
+			"  A() {\n" +
+			"    super();\n" +
+			"  }\n" +
+			"  S() {\n" +
+			"    int x;\n" +
+			"  }\n" +
+			"}\n";
 
-	String expectedFullUnitToString = expectedDietUnitToString;
+	String expectedFullUnitToString = expectedDietPlusBodyUnitToString;
 
 	String expectedCompletionDietUnitToString = expectedDietUnitToString;
 
@@ -6976,7 +6976,7 @@ public void test117() {
 			"        super();\n" +
 			"      }\n" +
 			"    }\n" +
-			(this.complianceLevel < ClassFileConstants.JDK14
+			(this.complianceLevel < ClassFileConstants.JDK16
 			?
 			"    new foo2() {\n" +
 			"    };\n" +
@@ -7066,7 +7066,7 @@ public void test117_2() {
 		"        super();\n" +
 		"      }\n" +
 		"    }\n" +
-		(this.complianceLevel < ClassFileConstants.JDK14
+		(this.complianceLevel < ClassFileConstants.JDK16
 		?
 		"    new foo2() {\n" +
 		"    };\n" +

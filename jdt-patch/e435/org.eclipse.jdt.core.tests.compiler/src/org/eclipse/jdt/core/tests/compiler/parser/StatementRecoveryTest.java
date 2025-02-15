@@ -3139,7 +3139,7 @@ public void test0038() {
 		"    }\n" +
 		"    public void aMethod(int A) {\n" +
 		"      public void anotherMethod;\n" +
-		(this.complianceLevel < ClassFileConstants.JDK14
+		(this.complianceLevel < ClassFileConstants.JDK16
 		?
 		"      int A;\n" +
 		"      ;\n"

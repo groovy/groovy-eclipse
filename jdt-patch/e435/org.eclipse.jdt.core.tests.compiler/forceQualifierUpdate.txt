@@ -1,3 +1,4 @@
 # To force a version qualifier update, add the bug here
 Bug 534597 - Unanticipated comparator errors in I20180511-2000
 https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2652
+https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3665

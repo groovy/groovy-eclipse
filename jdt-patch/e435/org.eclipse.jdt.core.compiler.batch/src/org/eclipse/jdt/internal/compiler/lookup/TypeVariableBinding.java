@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2024 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -51,10 +51,10 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching;
+import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching.CheckMode;
 import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
-import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching.CheckMode;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants.BoundCheckStatus;
@@ -912,7 +912,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 
 	@Override
 	public void setTypeAnnotations(AnnotationBinding[] annotations, boolean evalNullAnnotations) {
-		if (getClass() == TypeVariableBinding.class) {
+		if (getClass() == TypeVariableBinding.class && this.environment.globalOptions.storeAnnotations) {
 			// TVB only: if the declaration itself carries type annotations,
 			// make sure TypeSystem will still have an unannotated variant at position 0, to answer getUnannotated()
 			// (in this case the unannotated type is never explicit in source code, that's why we need this charade).

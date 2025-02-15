@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019, 2024 IBM Corporation and others.
+ * Copyright (c) 2019, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,7 +28,7 @@ public class RecordsRestrictedClassTest extends AbstractRegressionTest {
 	static {
 //		TESTS_NUMBERS = new int [] { 40 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "testIssue1641"};
+//		TESTS_NAMES = new String[] { "testBug3504_1"};
 	}
 
 	public static Class<?> testClass() {
@@ -9312,7 +9312,7 @@ public void testIssue1218_001() {
 			"2. ERROR in X.java (at line 2)\n" +
 			"	record R(T x);\n" +
 			"	            ^\n" +
-			"Syntax error, insert \"RecordBody\" to complete ClassBodyDeclarations\n" +
+			"Syntax error, insert \"ClassBody\" to complete ClassBodyDeclarations\n" +
 			"----------\n");
 }
 @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -9590,5 +9590,48 @@ public void testGH1939() {
 					"""
 			},
 		"OK!");
+}
+public void testBug3504_1() {
+	runNegativeTest(
+			new String[] {
+				"X.java",
+				"""
+					class X {
+					       public static void main(String[] args) {
+					           record R(int x) {
+					           		static {
+					                	static int i = 0;
+					          		}
+					        	}
+					        	R r =  new R(100);
+					        	System.out.println(r.x());
+					    	}
+					}
+				"""
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 5)\n" +
+			"	static int i = 0;\n" +
+			"	           ^\n" +
+			"Illegal modifier for the variable i; only final is permitted\n" +
+			"----------\n");
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/pull/3675
+public void testPR3675() {
+	runNegativeTest(
+			new String[] {
+				"X.java",
+				"""
+					class X {
+					       X {}
+					}
+				"""
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 2)\n" +
+			"	X {}\n" +
+			"	^\n" +
+			"A canonical constructor is allowed only in record classes\n" +
+			"----------\n");
 }
 }

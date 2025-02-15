@@ -61,7 +61,7 @@ public class DOMCodeSelector {
 		if (offset + length > this.unit.getSource().length()) {
 			throw new JavaModelException(new IndexOutOfBoundsException(offset + length), IJavaModelStatusConstants.INDEX_OUT_OF_BOUNDS);
 		}
-		org.eclipse.jdt.core.dom.CompilationUnit currentAST = this.unit.getOrBuildAST(this.owner);
+		org.eclipse.jdt.core.dom.CompilationUnit currentAST = this.unit.getOrBuildAST(this.owner, this.unit.getBuffer().getLength() < 50000 ? -1 : offset);
 		if (currentAST == null) {
 			return new IJavaElement[0];
 		}
@@ -198,18 +198,18 @@ public class DOMCodeSelector {
 				return reorderedOverloadedMethods;
 			}
 			return new IJavaElement[] { importBinding.getJavaElement() };
+		} else if (node instanceof MethodDeclaration decl && offset > decl.getName().getStartPosition()) {
+			// most likely inside and empty `()`
+			// case for TypeHierarchyCommandTest.testTypeHierarchy()
+			return null;
 		} else if (findTypeDeclaration(node) == null) {
 			IBinding binding = resolveBinding(node);
 			if (binding != null && !binding.isRecovered()) {
+				ITypeBinding declaringClass;
 				if (node instanceof SuperMethodInvocation && // on `super`
 					binding instanceof IMethodBinding methodBinding &&
-					/* GROOVY edit
-					methodBinding.getDeclaringClass() instanceof ITypeBinding typeBinding &&
-					typeBinding.getJavaElement() instanceof IType type) {
-					*/
-					methodBinding.getDeclaringClass() != null &&
-					methodBinding.getDeclaringClass().getJavaElement() instanceof IType type) {
-					// GROOVY end
+					(declaringClass = methodBinding.getDeclaringClass()) != null &&
+					declaringClass.getJavaElement() instanceof IType type) {
 					return new IJavaElement[] { type };
 				}
 				if (binding instanceof IPackageBinding packageBinding
@@ -223,22 +223,19 @@ public class DOMCodeSelector {
 					}
 				}
 				// workaround https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2177
+				IMethodBinding declaringMethod;
+				ITypeBinding recordBinding;
 				if (binding instanceof IVariableBinding variableBinding &&
-					/* GROOVY edit
-					variableBinding.getDeclaringMethod() instanceof IMethodBinding declaringMethod &&
+					(declaringMethod = variableBinding.getDeclaringMethod()) != null &&
 					declaringMethod.isCompactConstructor() &&
+					/* GROOVY edit
 					Arrays.stream(declaringMethod.getParameterNames()).anyMatch(variableBinding.getName()::equals) &&
-					declaringMethod.getDeclaringClass() instanceof ITypeBinding recordBinding &&
+					*/
+					Arrays.stream(declaringMethod.getParameterNames()).anyMatch(pn -> variableBinding.getName().equals(pn)) &&
+					// GROOVY end
+					(recordBinding = declaringMethod.getDeclaringClass()) != null &&
 					recordBinding.isRecord() &&
 					recordBinding.getJavaElement() instanceof IType recordType &&
-					*/
-					variableBinding.getDeclaringMethod() != null &&
-					variableBinding.getDeclaringMethod().isCompactConstructor() &&
-					Arrays.stream(variableBinding.getDeclaringMethod().getParameterNames()).anyMatch(pn -> variableBinding.getName().equals(pn)) &&
-					variableBinding.getDeclaringMethod().getDeclaringClass() != null &&
-					variableBinding.getDeclaringMethod().getDeclaringClass().isRecord() &&
-					variableBinding.getDeclaringMethod().getDeclaringClass().getJavaElement() instanceof IType recordType &&
-					// GROOVY end
 					recordType.getField(variableBinding.getName()) instanceof SourceField field) {
 					// the parent must be the field and not the method
 					return new IJavaElement[] { new LocalVariable(field,
@@ -285,15 +282,11 @@ public class DOMCodeSelector {
 						}
 					}
 				}
-				IField field; // GROOVY add
+				IField field;
 				if (binding instanceof IMethodBinding methodBinding &&
 					methodBinding.isSyntheticRecordMethod() &&
 					methodBinding.getDeclaringClass().getJavaElement() instanceof IType recordType &&
-					/* GROOVY edigt
-					recordType.getField(methodBinding.getName()) instanceof IField field) {
-					*/
 					(field = recordType.getField(methodBinding.getName())) != null) {
-					// GROOVY end
 					return new IJavaElement[] { field };
 				}
 				ASTNode bindingNode = currentAST.findDeclaringNode(binding);
@@ -342,6 +335,7 @@ public class DOMCodeSelector {
 			return new IJavaElement[] { currentElement };
 		}
 		if (insideComment) {
+			IType type;
 			String toSearch = trimmedText.isBlank() ? findWord(offset) : trimmedText;
 			String resolved = ((List<org.eclipse.jdt.core.dom.ImportDeclaration>)currentAST.imports()).stream()
 				.map(org.eclipse.jdt.core.dom.ImportDeclaration::getName)
@@ -349,12 +343,7 @@ public class DOMCodeSelector {
 				.filter(importedPackage -> importedPackage.endsWith(toSearch))
 				.findAny()
 				.orElse(toSearch);
-			/* GROOVY edit
-			if (this.unit.getJavaProject().findType(resolved) instanceof IType type) {
-			*/
-			IType type;
 			if ((type = this.unit.getJavaProject().findType(resolved)) != null) {
-			// GROOVY end
 				return new IJavaElement[] { type };
 			}
 		}
@@ -392,7 +381,7 @@ public class DOMCodeSelector {
 		return new IJavaElement[0];
 	}
 
-	static IBinding resolveBinding(ASTNode node) {
+	public static IBinding resolveBinding(ASTNode node) {
 		if (node instanceof MethodDeclaration decl) {
 			return decl.resolveBinding();
 		}
@@ -470,7 +459,7 @@ public class DOMCodeSelector {
 				}
 				IMethod methodModel = ((IMethod)methodBinding.getJavaElement());
 				boolean allowExtraParam = true;
-				if ((methodModel.getFlags() & Flags.AccStatic) != 0) {
+				if (methodModel != null && (methodModel.getFlags() & Flags.AccStatic) != 0) {
 					allowExtraParam = false;
 					if (methodRef.getExpression() instanceof ClassInstanceCreation) {
 						return null;
@@ -483,14 +472,20 @@ public class DOMCodeSelector {
 				while (type == null && cursor != null) {
 					if (cursor.getParent() instanceof VariableDeclarationFragment declFragment) {
 						type = declFragment.resolveBinding().getType();
-					}
-					else if (cursor.getParent() instanceof MethodInvocation methodInvocation) {
+					} else if (cursor.getParent() instanceof MethodInvocation methodInvocation) {
 						IMethodBinding methodInvocationBinding = methodInvocation.resolveMethodBinding();
-						int index = methodInvocation.arguments().indexOf(cursor);
-						type = methodInvocationBinding.getParameterTypes()[index];
+						if (methodInvocationBinding != null) {
+							int index = methodInvocation.arguments().indexOf(cursor);
+							type = methodInvocationBinding.getParameterTypes()[index];
+						} else {
+							cursor = null;
+						}
 					} else {
 						cursor = cursor.getParent();
 					}
+				}
+				if (type == null) {
+					return null;
 				}
 
 				IMethodBinding boundMethod = type.getDeclaredMethods()[0];
@@ -582,6 +577,9 @@ public class DOMCodeSelector {
 	}
 
 	private IJavaElement[] findTypeInIndex(String packageName, String simpleName) throws JavaModelException {
+		if (simpleName == null) {
+			return new IJavaElement[0];
+		}
 		List<IType> indexMatch = new ArrayList<>();
 		TypeNameMatchRequestor requestor = new TypeNameMatchRequestor() {
 			@Override

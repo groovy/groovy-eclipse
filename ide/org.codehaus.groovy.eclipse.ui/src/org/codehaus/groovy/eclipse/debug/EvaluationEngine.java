@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ import org.eclipse.jdt.core.dom.Message;
 import org.eclipse.jdt.debug.core.IEvaluationRunnable;
 import org.eclipse.jdt.debug.core.IJavaDebugTarget;
 import org.eclipse.jdt.debug.core.IJavaObject;
+import org.eclipse.jdt.debug.core.IJavaPrimitiveValue;
 import org.eclipse.jdt.debug.core.IJavaReferenceType;
 import org.eclipse.jdt.debug.core.IJavaStackFrame;
 import org.eclipse.jdt.debug.core.IJavaThread;
@@ -93,6 +94,9 @@ public class EvaluationEngine implements IAstEvaluationEngine {
     @Override
     public void evaluateExpression(ICompiledExpression expression, IJavaObject object, IJavaThread thread, IEvaluationListener listener, int evaluationDetail, boolean hitBreakpoints) throws DebugException {
         evaluateExpression(expression, null, object, thread, listener, evaluationDetail, hitBreakpoints);
+    }
+
+    public void evaluateExpression(ICompiledExpression expression, IJavaPrimitiveValue value, IJavaThread thread, IEvaluationListener listener, int evaluationDetail, boolean hitBreakpoints) throws DebugException {
     }
 
     private void evaluateExpression(ICompiledExpression expression, IJavaStackFrame stackFrame, IJavaObject thisObject, IJavaThread thread, IEvaluationListener listener, int evaluationDetail, boolean hitBreakpoints) throws DebugException {

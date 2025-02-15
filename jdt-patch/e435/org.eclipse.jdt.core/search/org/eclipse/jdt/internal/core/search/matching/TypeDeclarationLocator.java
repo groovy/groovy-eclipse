@@ -184,7 +184,7 @@ private HashSet<String> getModuleGraph(String mName, TypeDeclarationPattern type
 	mGraph.addAll(tmpGraph);
 	return mGraph;
 }
-private char[][] getModuleList(TypeDeclarationPattern typePattern) {
+protected char[][] getModuleList(TypeDeclarationPattern typePattern) {
 	if (!typePattern.moduleGraph)
 		return typePattern.moduleNames;
 	if (typePattern.moduleGraphElements != null) // already computed

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2015 GK Software AG.
+ * Copyright (c) 2013, 2025 GK Software AG.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -44,7 +44,7 @@ public class ConstraintExceptionFormula extends ConstraintFormula {
 	@Override
 	public Object reduce(InferenceContext18 inferenceContext) {
 		if ((this.right.tagBits & TagBits.HasMissingType) != 0) {
-			inferenceContext.hasIgnoredMissingType = true;
+			inferenceContext.missingType = this.right;
 			return TRUE;
 		}
 		// JLS 18.2.5

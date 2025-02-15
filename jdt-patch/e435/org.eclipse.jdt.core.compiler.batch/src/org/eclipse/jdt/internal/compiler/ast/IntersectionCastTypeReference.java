@@ -28,7 +28,6 @@ import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
-@SuppressWarnings({"rawtypes"})
 public class IntersectionCastTypeReference extends TypeReference {
 	public TypeReference[] typeReferences;
 
@@ -138,7 +137,7 @@ public class IntersectionCastTypeReference extends TypeReference {
 			System.arraycopy(intersectingTypes, 1, interfaces = new ReferenceBinding[typeCount - 1], 0, typeCount - 1);
 		}
 
-		Map invocations = new HashMap(2);
+		Map<TypeBinding, Object> invocations = new HashMap<>(2);
 		nextInterface: for (int i = 0, interfaceCount = interfaces.length; i < interfaceCount; i++) {
 			ReferenceBinding one = interfaces[i];
 			if (one == null) continue nextInterface;

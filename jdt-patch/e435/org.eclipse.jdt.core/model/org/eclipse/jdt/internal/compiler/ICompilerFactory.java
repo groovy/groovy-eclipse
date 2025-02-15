@@ -13,6 +13,7 @@
 
 package org.eclipse.jdt.internal.compiler;
 
+import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 
 /**
@@ -28,11 +29,15 @@ public interface ICompilerFactory {
 	 * @param compilerConfig - the configuration to control the compiler behavior
 	 * @param requestor - the requestor to receive and persist compilation results
 	 * @param problemFactory - the factory to create problem descriptors
+	 * @param compilationProgress - the CompilationProgress to be used
 	 * @return the new compiler instance
+	 * @see CompilationProgress
 	 */
-	public Compiler newCompiler(final INameEnvironment environment,
-			final IErrorHandlingPolicy policy,
-			final CompilerConfiguration compilerConfig,
-			final ICompilerRequestor requestor,
-			final IProblemFactory problemFactory);
+	public Compiler newCompiler(INameEnvironment environment,
+			IErrorHandlingPolicy policy,
+			CompilerConfiguration compilerConfig,
+			ICompilerRequestor requestor,
+			IProblemFactory problemFactory,
+			CompilationProgress compilationProgress
+			);
 }

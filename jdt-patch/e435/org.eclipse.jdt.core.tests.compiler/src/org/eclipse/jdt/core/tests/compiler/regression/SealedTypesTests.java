@@ -1106,26 +1106,10 @@ public class SealedTypesTests extends AbstractRegressionTest9 {
 			"	^^^^^^^^^^^\n" +
 			"Syntax error on token(s), misplaced construct(s)\n" +
 			"----------\n" +
-			"2. ERROR in p1\\X.java (at line 1)\n" +
-			"	package p1;\n" +
-			"public  non-sealed @interface X {\n" +
-			"	^^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"Syntax error on token(s), misplaced construct(s)\n" +
-			"----------\n" +
-			"3. ERROR in p1\\X.java (at line 2)\n" +
+			"2. ERROR in p1\\X.java (at line 2)\n" +
 			"	public  non-sealed @interface X {\n" +
-			"	            ^^^^^^\n" +
-			"Syntax error, insert \"Identifier (\" to complete MethodHeaderName\n" +
-			"----------\n" +
-			"4. ERROR in p1\\X.java (at line 2)\n" +
-			"	public  non-sealed @interface X {\n" +
-			"	            ^^^^^^\n" +
-			"Syntax error, insert \")\" to complete MethodDeclaration\n" +
-			"----------\n" +
-			"5. ERROR in p1\\X.java (at line 2)\n" +
-			"	public  non-sealed @interface X {\n" +
-			"	            ^^^^^^\n" +
-			"Syntax error, insert \";\" to complete RecordBodyDeclarations\n" +
+			"	        ^^^^^^^^^^\n" +
+			"Syntax error on tokens, delete these tokens\n" +
 			"----------\n");
 	}
 	public void testBug563806_035() {

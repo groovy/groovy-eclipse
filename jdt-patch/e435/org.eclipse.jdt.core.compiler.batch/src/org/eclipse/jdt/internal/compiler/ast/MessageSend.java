@@ -70,6 +70,7 @@ import static org.eclipse.jdt.internal.compiler.ast.ExpressionContext.INVOCATION
 import static org.eclipse.jdt.internal.compiler.ast.ExpressionContext.VANILLA_CONTEXT;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
@@ -86,7 +87,6 @@ import org.eclipse.jdt.internal.compiler.impl.IrritantSet;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
-import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 
 public class MessageSend extends Expression implements IPolyExpression, Invocation {
 
@@ -106,7 +106,7 @@ public class MessageSend extends Expression implements IPolyExpression, Invocati
 	public ExpressionContext expressionContext = VANILLA_CONTEXT;
 
 	 // hold on to this context from invocation applicability inference until invocation type inference (per method candidate):
-	private SimpleLookupTable/*<PGMB,InferenceContext18>*/ inferenceContexts;
+	private Map<ParameterizedGenericMethodBinding, InferenceContext18> inferenceContexts;
 	private HashMap<TypeBinding, MethodBinding> solutionsPerTargetType;
 	private InferenceContext18 outerInferenceContext; // resolving within the context of an outer (lambda) inference?
 
@@ -1312,7 +1312,7 @@ public void registerInferenceContext(ParameterizedGenericMethodBinding method, I
 		System.out.println("Register inference context of "+this+" for "+method+":\n"+infCtx18); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	if (this.inferenceContexts == null)
-		this.inferenceContexts = new SimpleLookupTable();
+		this.inferenceContexts = new HashMap<>();
 	this.inferenceContexts.put(method, infCtx18);
 }
 
@@ -1331,7 +1331,7 @@ public void registerResult(TypeBinding targetType, MethodBinding method) {
 public InferenceContext18 getInferenceContext(ParameterizedMethodBinding method) {
 	InferenceContext18 context = null;
 	if (this.inferenceContexts != null)
-		context = (InferenceContext18) this.inferenceContexts.get(method);
+		context = this.inferenceContexts.get(method);
 	if (InferenceContext18.DEBUG) {
 		System.out.println("Retrieve inference context of "+this+" for "+method+":\n"+context); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
@@ -1341,9 +1341,9 @@ public InferenceContext18 getInferenceContext(ParameterizedMethodBinding method)
 public void cleanUpInferenceContexts() {
 	if (this.inferenceContexts == null)
 		return;
-	for (Object value : this.inferenceContexts.valueTable)
-		if (value != null)
-			((InferenceContext18) value).cleanUp();
+	for (InferenceContext18 value : this.inferenceContexts.values()) {
+			value.cleanUp();
+	}
 	this.inferenceContexts = null;
 	this.outerInferenceContext = null;
 	this.solutionsPerTargetType = null;

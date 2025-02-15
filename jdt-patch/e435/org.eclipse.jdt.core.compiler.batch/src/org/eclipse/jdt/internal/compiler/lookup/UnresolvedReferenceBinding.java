@@ -20,10 +20,10 @@ package org.eclipse.jdt.internal.compiler.lookup;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 
-public class UnresolvedReferenceBinding extends ReferenceBinding {
+public class UnresolvedReferenceBinding extends ReferenceBinding implements HotSwappable {
 
 ReferenceBinding resolvedType;
-TypeBinding[] wrappers;
+HotSwappable[] wrappers;
 UnresolvedReferenceBinding prototype;
 ReferenceBinding requestingType;
 
@@ -53,7 +53,7 @@ public TypeBinding clone(TypeBinding outerType) {
 	return copy;
 }
 
-void addWrapper(TypeBinding wrapper, LookupEnvironment environment) {
+void addWrapper(HotSwappable wrapper, LookupEnvironment environment) {
 	if (this.resolvedType != null) {
 		// the type reference B<B<T>.M> means a signature of <T:Ljava/lang/Object;>LB<LB<TT;>.M;>;
 		// when the ParameterizedType for Unresolved B is created with args B<T>.M, the Unresolved B is resolved before the wrapper is added
@@ -61,10 +61,10 @@ void addWrapper(TypeBinding wrapper, LookupEnvironment environment) {
 		return;
 	}
 	if (this.wrappers == null) {
-		this.wrappers = new TypeBinding[] {wrapper};
+		this.wrappers = new HotSwappable[] {wrapper};
 	} else {
 		int length = this.wrappers.length;
-		System.arraycopy(this.wrappers, 0, this.wrappers = new TypeBinding[length + 1], 0, length);
+		System.arraycopy(this.wrappers, 0, this.wrappers = new HotSwappable[length + 1], 0, length);
 		this.wrappers[length] = wrapper;
 	}
 }
@@ -148,7 +148,7 @@ void setResolvedType(ReferenceBinding targetType, LookupEnvironment environment)
 	// must ensure to update any other type bindings that can contain the resolved type
 	// otherwise we could create 2 : 1 for this unresolved type & 1 for the resolved type
 	if (this.wrappers != null)
-		for (TypeBinding wrapper : this.wrappers)
+		for (HotSwappable wrapper : this.wrappers)
 			wrapper.swapUnresolved(this, targetType, environment);
 }
 
@@ -161,7 +161,7 @@ public void swapUnresolved(UnresolvedReferenceBinding unresolvedType, ReferenceB
 
 	environment.updateCaches(this, annotatedType);
 	if (this.wrappers != null)
-		for (TypeBinding wrapper : this.wrappers)
+		for (HotSwappable wrapper : this.wrappers)
 			wrapper.swapUnresolved(this, annotatedType, environment);
 }
 

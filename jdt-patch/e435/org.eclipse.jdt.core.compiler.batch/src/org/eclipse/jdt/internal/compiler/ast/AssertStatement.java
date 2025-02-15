@@ -19,7 +19,6 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.BranchLabel;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.Opcodes;
@@ -210,7 +209,7 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo f
 		AbstractMethodDeclaration[] methods = typeDeclaration.methods;
 		for (AbstractMethodDeclaration method : methods) {
 			if (method.isClinit()) {
-				((Clinit) method).setAssertionSupport(this.assertionSyntheticFieldBinding, currentScope.compilerOptions().sourceLevel < ClassFileConstants.JDK1_5);
+				((Clinit) method).setAssertionSupport(this.assertionSyntheticFieldBinding);
 				break;
 			}
 		}

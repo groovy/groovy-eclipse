@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.CompilerConfiguration;
@@ -34,7 +35,7 @@ public class MockCompilerFactory implements ICompilerFactory {
 
 	@Override
 	public Compiler newCompiler(INameEnvironment environment, IErrorHandlingPolicy policy,
-			CompilerConfiguration compilerConfig, ICompilerRequestor requestor, IProblemFactory problemFactory) {
+			CompilerConfiguration compilerConfig, ICompilerRequestor requestor, IProblemFactory problemFactory, CompilationProgress progress) {
 		Compiler compiler = new MockCompiler(environment, policy, compilerConfig, requestor, problemFactory);
 		for (Consumer<Compiler> listener : listeners) {
 			listener.accept(compiler);

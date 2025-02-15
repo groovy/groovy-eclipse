@@ -514,7 +514,7 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 
 			// Launch process
 			compileProcess = Runtime.getRuntime().exec(
-				cmdLine.toString(), null, this.outputTestDirectory);
+				cmdLine.toString().split("\\s"), null, this.outputTestDirectory);
 
 			// Log errors
       Logger errorLogger = new Logger(compileProcess.getErrorStream(), "ERROR");

@@ -72,7 +72,7 @@ public void generateStoreSaveValueIfNecessary(Scope scope, CodeStream codeStream
 		codeStream.aconst_null();
 
 		// void.class
-		codeStream.generateClassLiteralAccessForType(scope, TypeBinding.VOID, null);
+		codeStream.generateClassLiteralAccessForType(scope, TypeBinding.VOID);
 	} else {
 		// swap with expression
 		int valueTypeID = this.expression.resolvedType.id;
@@ -89,7 +89,7 @@ public void generateStoreSaveValueIfNecessary(Scope scope, CodeStream codeStream
 		}
 
 		// generate the expression type
-		codeStream.generateClassLiteralAccessForType(scope, this.expression.resolvedType, null);
+		codeStream.generateClassLiteralAccessForType(scope, this.expression.resolvedType);
 	}
 
 	// generate the invoke virtual to "setResult(Object,Class)"

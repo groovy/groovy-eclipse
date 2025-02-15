@@ -392,7 +392,7 @@ protected void consumeConstructorHeader() {
 			this.scanner.currentPosition - 1);
 }
 @Override
-protected void consumeConstructorHeaderName() {
+protected void consumeConstructorHeaderName(boolean isCompact) {
 	// ConstructorHeaderName ::=  Modifiersopt 'Identifier' '('
 	ConstructorDeclaration cd = new ConstructorDeclaration(this.compilationUnit.compilationResult);
 
@@ -719,7 +719,7 @@ protected void consumeFieldDeclaration() {
 	}
 }
 @Override
-protected void consumeFormalParameter(boolean isVarArgs) {
+protected void consumeSingleVariableDeclarator(boolean isVarArgs) {
 	// FormalParameter ::= Type VariableDeclaratorId ==> false
 	// FormalParameter ::= Modifiers Type VariableDeclaratorId ==> true
 	/*
@@ -731,6 +731,10 @@ protected void consumeFormalParameter(boolean isVarArgs) {
 	identifierStack :
 	intStack :
 	*/
+	if (this.parsingRecordComponents) {
+		super.consumeSingleVariableDeclarator(isVarArgs);
+		return;
+	}
 	NameReference qualifyingNameReference = null;
     boolean isReceiver = this.intStack[this.intPtr--] == 0;
     if (isReceiver) {

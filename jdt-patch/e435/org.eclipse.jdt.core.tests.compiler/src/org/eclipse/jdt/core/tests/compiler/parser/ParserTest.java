@@ -745,7 +745,7 @@ public void test027() {
 		"1. ERROR in X.java (at line 19)\n" +
 		"	catch (\n" +
 		"	      ^\n" +
-		"Syntax error on token \"(\", FormalParameter expected after this token\n" +
+		"Syntax error on token \"(\", CatchFormalParameter expected after this token\n" +
 		"----------\n"
 	);
 }
