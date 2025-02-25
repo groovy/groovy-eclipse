@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,14 +39,14 @@ public class JDIBinding extends Binding {
 
     private final JDITargetDelegate delegate;
 
-    JDIBinding(JDITargetDelegate delegate, IJavaStackFrame stackFrame, IJavaObject thisObject) throws DebugException {
+    JDIBinding(JDITargetDelegate delegate, IJavaStackFrame stackFrame, IJavaValue thisObject) throws DebugException {
         super(variables(delegate, stackFrame, thisObject));
         this.delegate = delegate;
 
         setMetaClass(new JDIMetaClass(getThis(), delegate));
     }
 
-    private static Map<String, Object> variables(JDITargetDelegate delegate, IJavaStackFrame stackFrame, IJavaObject thisObject) throws DebugException {
+    private static Map<String, Object> variables(JDITargetDelegate delegate, IJavaStackFrame stackFrame, IJavaValue thisObject) throws DebugException {
         Map<String, Object> map = new HashMap<>();
         if (stackFrame != null) {
             for (IVariable variable : stackFrame.getLocalVariables()) {
@@ -59,7 +59,7 @@ public class JDIBinding extends Binding {
                 }
             }
             map.put("this", stackFrame.isStatic() ? stackFrame.getReferenceType().getClassObject() : stackFrame.getThis());
-        } else {
+        } else if (thisObject != null) {
             map.put("this", thisObject);
         }
         map.put("__comparator", new JDIComparator(delegate)); // JDIScriptLoader

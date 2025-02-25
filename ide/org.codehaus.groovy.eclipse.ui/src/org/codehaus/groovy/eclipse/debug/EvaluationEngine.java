@@ -97,9 +97,10 @@ public class EvaluationEngine implements IAstEvaluationEngine {
     }
 
     public void evaluateExpression(ICompiledExpression expression, IJavaPrimitiveValue value, IJavaThread thread, IEvaluationListener listener, int evaluationDetail, boolean hitBreakpoints) throws DebugException {
+        evaluateExpression(expression, null, value, thread, listener, evaluationDetail, hitBreakpoints);
     }
 
-    private void evaluateExpression(ICompiledExpression expression, IJavaStackFrame stackFrame, IJavaObject thisObject, IJavaThread thread, IEvaluationListener listener, int evaluationDetail, boolean hitBreakpoints) throws DebugException {
+    private void evaluateExpression(ICompiledExpression expression, IJavaStackFrame stackFrame, IJavaValue thisObject, IJavaThread thread, IEvaluationListener listener, int evaluationDetail, boolean hitBreakpoints) throws DebugException {
         if (thread.isPerformingEvaluation() && evaluationDetail == DebugEvent.EVALUATION) {
             listener.evaluationComplete(withError("Cannot perform nested evaluations.", thread, expression.getSnippet()));
         } else {
