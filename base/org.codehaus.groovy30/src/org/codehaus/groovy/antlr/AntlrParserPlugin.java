@@ -1949,26 +1949,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected Statement ifStatement(AST ifNode) {
-        AST node = ifNode.getFirstChild();
-        assertNodeType(EXPR, node);
+        AST node = ifNode.getFirstChild(); assertNodeType(EXPR, node);
         BooleanExpression booleanExpression = booleanExpression(node);
 
         node = node.getNextSibling();
-        Statement ifBlock = statement(node);
+        Statement thenBlock = isType(SEMI, node) ? EmptyStatement.INSTANCE : statement(node); // GROOVY-11565
 
-        Statement elseBlock = EmptyStatement.INSTANCE;
-        // GRECLIPSE add
-        // coping with a missing 'then' block (can happen due to recovery)
-        if (node != null) {
-        // GRECLIPSE end
+        if (node != null) // GRECLIPSE add -- coping with a missing 'then' block (can happen due to recovery)
         node = node.getNextSibling();
-        if (node != null) {
-            elseBlock = statement(node);
-        }
-        // GRECLIPSE add
-        }
-        // GRECLIPSE end
-        IfStatement ifStatement = new IfStatement(booleanExpression, ifBlock, elseBlock);
+        Statement elseBlock = (node == null || isType(SEMI, node)) ? EmptyStatement.INSTANCE : statement(node);
+
+        IfStatement ifStatement = new IfStatement(booleanExpression, thenBlock, elseBlock);
         configureAST(ifStatement, ifNode);
         return ifStatement;
     }

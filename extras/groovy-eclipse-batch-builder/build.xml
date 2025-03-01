@@ -67,6 +67,7 @@
                 <exclude name="OSGI-OPT/**"/>
             </fileset>
             <manifest>
+                <attribute name="Created-By" value="Eclipse JDT toolchain"/>
                 <attribute name="Implementation-Vendor" value="Pivotal Software, Inc."/>
                 <attribute name="Implementation-Version" value="${version} (${jdt.patch.target})"/>
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.compiler.batch.Main"/>
