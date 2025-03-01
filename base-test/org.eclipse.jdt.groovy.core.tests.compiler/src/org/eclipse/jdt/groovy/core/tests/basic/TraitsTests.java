@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1388,10 +1388,10 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Script.groovy",
             "trait T {\n" +
-            "  def m() {}\n" +
+            "  def m() { 'T' }\n" +
             "}\n" +
             "class C {\n" +
-            "  final m() {}\n" +
+            "  final m() { 'C' }\n" +
             "}\n" +
             "class D extends C implements T {\n" +
             "}\n" +
@@ -1399,13 +1399,17 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Script.groovy (at line 1)\n" +
-            "\ttrait T {\n" +
-            "\t^\n" +
-            "Groovy:You are not allowed to override the final method m() from class 'C'.\n" +
-            "----------\n");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "C"); // GROOVY-11548
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Script.groovy (at line 1)\n" +
+                "\ttrait T {\n" +
+                "\t^\n" +
+                "Groovy:You are not allowed to override the final method m() from class 'C'.\n" +
+                "----------\n");
+        }
     }
 
     @Test // final trait method cannot be overridden by subclass
@@ -1419,7 +1423,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class C implements T {\n" +
             "}\n" +
             "class D extends C {\n" +
-            "  def m() {'D'}\n" +
+            "  def m() { 'D' }\n" +
             "}\n" +
             "print new D().m()\n",
         };
