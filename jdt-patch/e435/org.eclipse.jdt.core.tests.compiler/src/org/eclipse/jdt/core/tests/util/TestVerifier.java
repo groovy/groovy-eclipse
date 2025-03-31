@@ -449,9 +449,11 @@ private String[] getVMArguments(String[] vmArguments) {
 	if (vmArguments != null) {
 		Collections.addAll(completeVmArguments, vmArguments);
 	}
-	completeVmArguments.add("-verify");
+	if (Integer.parseInt(System.getProperty("java.specification.version")) < 24) {
+		completeVmArguments.add("-verify");
+	}
 
-	return completeVmArguments.toArray(new String[0]);
+	return completeVmArguments.toArray(String[]::new);
 }
 
 private void launchAndRun(String className, String[] classpaths, String[] programArguments, String[] vmArguments) {

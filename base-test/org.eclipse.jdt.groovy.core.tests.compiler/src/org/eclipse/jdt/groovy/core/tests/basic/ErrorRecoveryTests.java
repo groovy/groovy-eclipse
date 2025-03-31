@@ -2669,10 +2669,15 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in X.groovy (at line 2)\n" +
-            "\tdef x=\"\n" +
+            "\tdef x=\"\n" + (isParrotParser()
+            ?
+            "\t      ^\n" +
+            "Groovy:Unexpected character: '\"'\n"
+            :
             "}\n" +
             "\t       ^\n" +
-            "Groovy:expecting anything but \'\'\\n\'\'; got it anyway\n" +
+            "Groovy:expecting anything but \'\'\\n\'\'; got it anyway\n"
+            ) +
             "----------\n");
 
         ModuleNode moduleNode = getModuleNode("X.groovy");
@@ -2691,11 +2696,24 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources,
+            "----------\n" + (isParrotParser()
+            ?
+            "1. ERROR in X.groovy (at line 0)\n" +
+            "\tpackage a\n" +
+            "\t^\n" +
+            "Groovy:General error during conversion: groovyjarjarantlr4.v4.runtime.InputMismatchException\n" +
             "----------\n" +
+            "2. ERROR in X.groovy (at line 4)\n" +
+            "\tdef foo(Nuthin\n" +
+            "\n" +
+            "\t              ^\n" +
+            "Groovy:Unexpected input: '<EOF>'\n"
+            :
             "1. ERROR in X.groovy (at line 3)\n" +
             "\tdef foo(Nuthin\n" +
             "\t        ^\n" +
-            "Groovy:unexpected token: Nuthin\n" +
+            "Groovy:unexpected token: Nuthin\n"
+            ) +
             "----------\n");
 
         ModuleNode moduleNode = getModuleNode("X.groovy");

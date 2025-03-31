@@ -66,7 +66,6 @@
 				<version>${tycho-version}</version>
 				<configuration>
 					<filterProvided>true</filterProvided>
-					<keepNonXzIndexFiles>false</keepNonXzIndexFiles>
 				</configuration>
 			</plugin>
 		</plugins>

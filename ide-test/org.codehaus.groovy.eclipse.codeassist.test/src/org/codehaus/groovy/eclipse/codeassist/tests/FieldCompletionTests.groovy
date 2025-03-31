@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1093,8 +1093,14 @@ final class FieldCompletionTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
-        float javaVersion = Float.parseFloat(System.getProperty('java.specification.version'))
-        proposalExists(proposals, 'forName', javaVersion < 9 ? 2 : (javaVersion < 21 ? 3 : 6))
+        int forNameCount
+        switch (Integer.parseInt(System.getProperty('java.specification.version'))) {
+        case  0..< 9: forNameCount = 2; break
+        case  9..<21: forNameCount = 3; break
+        case 21..<24: forNameCount = 6; break
+        case 24..<99: forNameCount = 4; break
+        }
+        proposalExists(proposals, 'forName', forNameCount)
     }
 
     @Test

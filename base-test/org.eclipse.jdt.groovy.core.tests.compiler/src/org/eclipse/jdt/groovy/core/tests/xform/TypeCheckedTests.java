@@ -1984,7 +1984,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Test.groovy",
             "class A<I, O> {\n" +
-            "  def <IO extends A<? super O, ?>> IO andThen(IO next) {\n" +
+            "  def <T extends A<? super O, ?>> T andThen(T next) {\n" +
             "    next\n" +
             "  }\n" +
             "}\n" +
