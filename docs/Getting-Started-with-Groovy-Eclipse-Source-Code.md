@@ -170,7 +170,7 @@ This minimal project set should be open in your workspace:
 * org.eclipse.jdt.groovy.core.tests.builder
 * org.eclipse.jdt.groovy.core.tests.compiler
 
-Note: Only one JDT patch should be imported (`org.eclipse.jdt.core`, `org.eclipse.jdt.core.compiler.batch`, etc.) and it should be matched to the target platform of your workspace.  For example, the patch in the `/e435` folder is for Eclipse 4.35 (2025-03).
+Note: Only one JDT patch should be imported (`org.eclipse.jdt.core`, `org.eclipse.jdt.core.compiler.batch`, etc.) and it should be matched to the target platform of your workspace.  For example, the patch in the `/e436` folder is for Eclipse 4.36 (2025-06).
 
 
 ## Test with Eclipse
@@ -188,14 +188,15 @@ For manual testing and debugging, right-click on the org.codehaus.groovy.eclipse
 
 [Download and install Maven](https://maven.apache.org/).
 
-From the root directory of the repository, execute the following command to build Groovy-Eclipse for Eclipse 4.35 (2025-03).
+From the root directory of the repository, execute the following command to build Groovy-Eclipse for Eclipse 4.36 (2025-06).
 
 	```
-	mvn -Pe4.35 clean verify
+	mvn -Pe4.36 clean verify
 	```
 
-Replace e4.35 with a different option to build it for another Eclipse version:
+Replace e4.36 with a different option to build it for another Eclipse version:
 
+* e4.35
 * e4.34
 * e4.33
 * e4.32
@@ -203,15 +204,6 @@ Replace e4.35 with a different option to build it for another Eclipse version:
 * e4.30
 * e4.29
 * e4.28
-* e4.27
-* e4.26
-* e4.25
-* e4.24
-* e4.23
-* e4.22
-* e4.21
-* e4.20
-* e4.19
 
 Tests will be executed as part of the build.  To skip them, append this option to the command: `-Dmaven.test.skip=true`.
 

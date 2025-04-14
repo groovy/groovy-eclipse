@@ -1,0 +1,349 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>JDT Core Porting Guide</title>
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">	 
+   <link rel="stylesheet" href="../jdt_core_style.css" charset="iso-8859-1" type="text/css">
+</head>
+
+<body>
+
+<h1>JDT Core 3.0 Porting Guide</h1>
+<p>Last modified January 30, 2004</p> 
+<p>These entries for the porting guide cover Debug-related items.</p>
+<h2>Required changes for 3.0</h2>
+<p>None.</p>
+<h2>Recommended changes for 3.0</h2>
+<p><b class="title1">
+[JDT only] Improved support for working copies (package org.eclipse.jdt.core)
+</b></p>
+<p>The Java model working copy facility has been reworked in 3.0 to provide
+greatly increased functionality. Prior to 3.0, the Java model allowed creation
+of individual working copies of compilation units. Changes could be made to the
+working copy and later committed. There was support for limited analysis of a
+working copy in the context of the rest of the Java model. However, there was no
+way these these analyses could ever take into account more than one of the
+working copies at a time.</p>
+<p>The changes in 3.0 make it possible to create and manage sets of working
+copies of compilation units, and to perform analyses in the presence of all
+working copies in a set. For example, it is now possible for a client like JDT
+refactoring to create working copies for one or more compilation units that it
+is considering modifying and then to resolve type references between the working
+copies. Formerly this was only possible after the changes to the compilation
+unit working copies had been committed.</p>
+<p>The Java model API changes in 2 ways to add this improved support:</p>
+<p>(1) The functionality formerly found on IWorkingCopy and inherited by
+ICompilationUnit has been consolidated into ICompilationUnit. The IWorkingCopy
+interface was only used in this one place, and was gratuitously more general
+that in needed to be. This change simplifies the API. IWorkingCopy has been
+deprecated. Other places in the API where IWorkingCopy is used as a parameter or
+result type have been deprecated as well; the replacement API methods mention
+ICompilationUnit instead of IWorkingCopy.</p>
+<p>(2) The interface IBufferFactory has been replaced by WorkingCopyOwner. The
+improved support for working copies requires that there be an object to own the
+working copies. Although IBufferFactory is in the right place, the name does not
+adequately convey how the new working copy mechanism works. WorkingCopyOwner is
+much more suggestive. In addition, WorkingCopyOwner is declared as an abstract
+class, rather than as an interface, to allow the notion of working copy owner to
+evolve in the future. The one method on IBufferFactory moves to WorkingCopyOwner
+unaffected. WorkingCopyOwner does not implement IBufferFactory to make it clear
+that IBufferFactory is a thing of the past. IBufferFactory has been deprecated.
+Other places in the API where IBufferFactory&nbsp; appears as a parameter or
+result type have been deprecated as well; the replacement API methods mention
+WorkingCopyOwner instead of IBufferFactory.</p>
+<p>These changes do not break binary compatibility.</p>
+<p>When migrating, all references to the type IWorkingCopy should instead
+reference ICompilationUnit. The sole implementation of IWorkingCopy implements
+ICompilationUnit as well, meaning objects of type IWorkingCopy can be safely
+cast to ICompilationUnit.</p>
+<p>A class that implements IBufferFactory will need to replaced by a subclass of
+WorkingCopyOwner. Although WorkingCopyOwner does not implement IBufferFactory
+itself, it would be possible to declare the subclass of WorkingCopyOwner that
+implements IBufferFactory thereby creating a bridge between old and new (IBufferFactory
+declares createBuffer(IOpenable) whereas WorkingCopyOwner declares
+createBuffer(ICompilationUnit); ICompilationUnit extends IOpenable).</p>
+<p>Because the changes involving IWorkingCopy and IBufferFactory are interwined,
+we recommend dealing with both at the same time. The detail</p>
+<ul>
+  <li>IWorkingCopy (package org.eclipse.jdt.core)
+    <ul>
+      <li>public void commit(boolean, IProgressMonitor) has been deprecated.
+        <ul>
+          <li>The equivalent functionality is now provided on ICompilationUnit
+            directly:
+            <ul>
+              <li>public void commitWorkingCopy(boolean, IProgressMonitor)</li>
+            </ul>
+          </li>
+          <li>Replace wc.commit(b,monitor) with ((ICompilationUnit)
+            wc).commitWorkingCopy(b,monitor)</li>
+        </ul>
+      </li>
+      <li>public void destroy() has been deprecated.
+        <ul>
+          <li>The equivalent functionality is now provided on ICompilationUnit
+            directly:
+            <ul>
+              <li>public void discardWorkingCopy(boolean, IProgressMonitor)</li>
+            </ul>
+          </li>
+          <li>Replace wc.destroy() with ((ICompilationUnit)
+            wc).discardWorkingCopy()</li>
+        </ul>
+      </li>
+      <li>public IJavaElement findSharedWorkingCopy(IBufferFactory) has been
+        deprecated.
+        <ul>
+          <li>The equivalent functionality is now provided on ICompilationUnit
+            directly:
+            <ul>
+              <li>public ICompilationUnit findWorkingCopy(WorkingCopyOwner)</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>public IJavaElement getOriginal(IJavaElement) has been deprecated.
+        <ul>
+          <li>The equivalent functionality is now provided on IJavaElement:
+            <ul>
+              <li>public IJavaElement getPrimaryElement()</li>
+            </ul>
+          </li>
+        </ul>
+        <ul>
+          <li>Replace wc.getOriginal(elt) with elt.getPrimaryElement()</li>
+          <li>Note: Unlike IWorkingCopy.getOriginal,
+            IJavaElement.getPrimaryElement does not return <code>null</code> if
+            the receiver is not a working copy.</li>
+        </ul>
+      </li>
+      <li>public IJavaElement getOriginalElement() has been deprecated.
+        <ul>
+          <li>The equivalent functionality is now provided on ICompilationUnit
+            directly:
+            <ul>
+              <li>public ICompilationUnit getPrimary()</li>
+            </ul>
+          </li>
+          <li>Replace wc.getOriginalElement() with ((ICompilationUnit)
+            wc).getPrimary()</li>
+          <li>Note: Unlike IWorkingCopy.getOriginalElement,
+            IWorkingCopy.getPrimary does not return <code>null</code> if the
+            receiver is not a working copy.</li>
+        </ul>
+      </li>
+      <li>public IJavaElement[] findElements(IJavaElement) has been deprecated.
+        <ul>
+          <li>The method is now declared on ICompilationUnit directly.</li>
+          <li>Replace wc.findElements(elts) with ((ICompilationUnit)
+            wc).findElements(elts)</li>
+        </ul>
+      </li>
+      <li>public IType findPrimaryType() has been deprecated.
+        <ul>
+          <li>The method is now declared on ICompilationUnit directly.</li>
+          <li>Replace wc.findPrimaryType() with ((ICompilationUnit)
+            wc).findPrimaryType()</li>
+        </ul>
+      </li>
+      <li>public IJavaElement getSharedWorkingCopy(IProgressMonitor,
+        IBufferFactory, IProblemRequestor) has been deprecated.
+        <ul>
+          <li>The equivalent functionality is now provided on ICompilationUnit
+            directly:
+            <ul>
+              <li>public ICompilationUnit getWorkingCopy(WorkingCopyOwner,
+                IProblemRequestor, IProgressMonitor)</li>
+            </ul>
+          </li>
+          <li>[parameter order scrambling]</li>
+        </ul>
+      </li>
+      <li>public IJavaElement getWorkingCopy() has been deprecated.
+        <ul>
+          <li>The equivalent functionality is now provided on ICompilationUnit
+            directly:
+            <ul>
+              <li>public ICompilationUnit getWorkingCopy(IProgressMonitor)</li>
+            </ul>
+          </li>
+          <li>Replace wc.getWorkingCopy() with ((ICompilationUnit)
+            wc).getWorkingCopy(null)</li>
+        </ul>
+      </li>
+      <li>public IJavaElement getWorkingCopy(IProgressMonitor, IBufferFactory,
+        IProblemRequestor) has been deprecated.
+        <ul>
+          <li>The equivalent functionality is now provided on ICompilationUnit
+            directly:
+            <ul>
+              <li>public ICompilationUnit getWorkingCopy(WorkingCopyOwner,
+                IProblemRequestor, IProgressMonitor)</li>
+            </ul>
+          </li>
+          <li>[parameter order scrambling]</li>
+        </ul>
+      </li>
+      <li>public boolean isBasedOn(IResource) has been deprecated.
+        <ul>
+          <li>The equivalent functionality is now provided on ICompilationUnit
+            directly:
+            <ul>
+              <li>public boolean hasResourceChanged()</li>
+            </ul>
+          </li>
+          <li>Replace wc.isBasesOn(res) with ((ICompilationUnit)
+            wc).hasResourceChanged()</li>
+        </ul>
+      </li>
+      <li>public boolean isWorkingCopy() has been deprecated.
+        <ul>
+          <li>The method is now declared on ICompilationUnit directly.</li>
+          <li>Replace wc.isWorkingCopy() with ((ICompilationUnit)
+            wc).isWorkingCopy()</li>
+        </ul>
+      </li>
+      <li>public IMarker[]&nbsp; reconcile() has been deprecated.
+        <ul>
+          <li>The equivalent functionality is now provided on ICompilationUnit
+            directly:
+            <ul>
+              <li>public void reconcile(boolean,boolean,WorkingCopyOwner,IProgressMonitor)</li>
+            </ul>
+          </li>
+          <li>Replace wc.reconcile() with ((ICompilationUnit)
+            wc).reconcile(false,false,null,null)</li>
+          <li>Note: The former method always returned null; the replacement
+            method does not return a result.</li>
+        </ul>
+      </li>
+      <li>public void reconcile(boolean, IProgressMonitor) has been deprecated.
+        <ul>
+          <li>The method is now declared on ICompilationUnit directly.</li>
+          <li>Replace wc.reconcile(b,monitor) with ((ICompilationUnit)
+            wc).reconcile(false,b,null,monitor)</li>
+        </ul>
+      </li>
+      <li>public void restore() has been deprecated.
+        <ul>
+          <li>The method is now declared on ICompilationUnit directly.</li>
+          <li>Replace wc.restore() with ((ICompilationUnit) wc).restore()</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>IType (package org.eclipse.jdt.core)
+    <ul>
+      <li>public ITypeHierarchy newSupertypeHierarchy(IWorkingCopy[],
+        IProgressMonitor) has been deprecated.
+        <ul>
+          <li>The replacement method is provided on the same class:
+            <ul>
+              <li>public ITypeHierarchy newSupertypeHierarchy(ICompilationUnit[],
+                IProgressMonitor)</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>public ITypeHierarchy newTypeHierarchy(IWorkingCopy[],
+        IProgressMonitor) has been deprecated.
+        <ul>
+          <li>The replacement method is provided on the same class:
+            <ul>
+              <li>public ITypeHierarchy newTypeHierarchy(ICompilationUnit[],
+                IProgressMonitor)</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>IClassFile (package org.eclipse.jdt.core)
+    <ul>
+      <li>public IJavaElement getWorkingCopy(IProgressMonitor, IBufferFactory)
+        has been deprecated.
+        <ul>
+          <li>The replacement method is provided on the same class:
+            <ul>
+              <li>public ICompilationUnit getWorkingCopy(WorkingCopyOwner,
+                IProgressMonitor)</li>
+            </ul>
+          </li>
+          <li>[parameter order scrambling]</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>JavaCore (package org.eclipse.jdt.core)
+    <ul>
+      <li>public IWorkingCopy[] getSharedWorkingCopies(IBufferFactory) has been
+        deprecated.
+        <ul>
+          <li>The replacement method is provided on the same class:
+            <ul>
+              <li>public ICompilationUnit[] getWorkingCopies(WorkingCopyOwner)</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>SearchEngine (package org.eclipse.jdt.core.search)
+    <ul>
+      <li>public SearchEngine(IWorkingCopy[]) has been deprecated.
+        <ul>
+          <li>The replacement constructor is provided on the same class:
+            <ul>
+              <li>public SearchEngine(ICompilationUnit[])</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p><b class="title1">
+[JDT only] Java search participants (package org.eclipse.jdt.core.search)
+</b></p>
+<p>Languages close to Java (such as JSP, SQLJ, JWS, etc.) should be able to participate in Java searching. 
+In particular implementors of such languages should be able to:</p>
+<ul>
+<li>index their source by converting it into Java equivalent, and feeding it to the Java indexer</li>
+<li>index their source by parsing it themselves, but record Java index entries</li>
+<li>locate matches in their source by converting it into Java equivalent, and feeding it to the Java match locator</li>
+<li>locate matches in their source by matching themselves, and return Java matches</li>
+</ul>
+<p>Such an implementor is called a search participant. It extends the SearchParticipant 
+class. Search participants are passed to search queries 
+(see SearchEngine.search(SearchPattern, SearchParticipant[], IJavaSearchScope, SearchRequestor, IProgressMonitor).</p>
+<p>For either indexing or locating matches, a search participant needs to define a subclass of 
+SearchDocument that can retrieve the contents of a document by overriding either 
+getByteContents() or getCharContents(). An instance of such class is
+returned in SearchParticipant.getDocument(IFile) or getDocument(String).</p>
+<p>A search participant whishing to index some document will use 
+SearchParticipant.scheduleDocumentIndexing(SearchDocument, IPath) to schedule the indexing
+of the given document in the given index. Once the document is ready to be indexed, the underlying framework
+calls SearchParticipant.indexDocument(SearchDocument, IPath). The search participant is then
+supposed to get the document's content, parse it and add index entries using 
+SearchParticipant.addIndexEntry(char[], char[], SearchDocument).</p>
+<p>Once indexing is done, one can then query the indexes and locate matches using 
+SearchEngine.search(SearchPattern, SearchParticipant[], IJavaSearchScope, SearchRequestor, IProgressMonitor).
+This first asks each search participant for the indexes needed by this query using 
+SearchParticipant.selectIndexes(SearchPattern, IJavaSearchScope). For each index entry that matches
+the given pattern, a search document is created by asking the search participant (see getDocument(String)).
+All these documents are passed to the search participant so that it can locate matches using 
+locateMatches(SearchDocument[], SearchPattern, IJavaSearchScope, SearchRequestor, IProgressMonitor).
+The search participant notifies the SearchRequestor of search matches using acceptSearchMatch(SearchMatch)
+and passing an instance of a subclass of SearchMatch.</p>
+<p>A search participant can delegate part of its work to the default Java search participant. An instance of
+this default participant is obtained using SearchEngine.getDefaultSearchParticipant(). For example when asked to
+locate matches, an SQLJ participant can create documents .java documents from its .sqlj documents and
+delegate the work to the default participant passing it the .java documents.</p>
+
+</body>
+
+</html>
