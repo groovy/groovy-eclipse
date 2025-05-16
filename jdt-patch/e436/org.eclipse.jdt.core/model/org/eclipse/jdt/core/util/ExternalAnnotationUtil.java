@@ -464,7 +464,7 @@ public final class ExternalAnnotationUtil {
 		if (updatePosition <= POSITION_TYPE_PARAMETER) {
 			// '<' [Annot] Identifier ClassBound {InterfaceBound} ... '>'
 			assert originalSignature.charAt(0) ==  '<': "generic signature must start with '<'"; //$NON-NLS-1$
-			SignatureWrapper wrapper = new SignatureWrapper(originalSignature.toCharArray(), true, true); // may already contain annotations
+			SignatureWrapper wrapper = new SignatureWrapper(originalSignature.toCharArray(), true); // may already contain annotations
 			wrapper.start = 1; // skip '<'
 			// skip preceding type parameters:
 			for (int i = 0; i < (-updatePosition+POSITION_TYPE_PARAMETER); i++) {
@@ -491,7 +491,7 @@ public final class ExternalAnnotationUtil {
 					signatureToReplace = originalSignature.substring(close+1);
 					break;
 				default: // parameter
-					SignatureWrapper wrapper = new SignatureWrapper(originalSignature.toCharArray(), true, true); // may already contain annotations
+					SignatureWrapper wrapper = new SignatureWrapper(originalSignature.toCharArray(), true); // may already contain annotations
 					wrapper.start = CharOperation.indexOf('(', wrapper.signature) + 1; // possibly skipping type parameters
 					for (int i = 0; i < updatePosition; i++)
 						wrapper.start = wrapper.skipAngleContents(wrapper.computeEnd()) + 1;
@@ -538,8 +538,8 @@ public final class ExternalAnnotationUtil {
 			return false;
 		}
 		try {
-			SignatureWrapper oWrap = new SignatureWrapper(oldType, true, true); // may already contain annotations
-			SignatureWrapper nWrap = new SignatureWrapper(newType, true, true); // may already contain annotations
+			SignatureWrapper oWrap = new SignatureWrapper(oldType, true); // may already contain annotations
+			SignatureWrapper nWrap = new SignatureWrapper(newType, true); // may already contain annotations
 			if (match(buf, oWrap, nWrap, 'L', false)
 				|| match(buf, oWrap, nWrap, 'T', false))
 			{
@@ -584,8 +584,8 @@ public final class ExternalAnnotationUtil {
 			return false;
 		}
 		try {
-			SignatureWrapper oWrap = new SignatureWrapper(oldType, true, true); // may already contain annotations
-			SignatureWrapper nWrap = new SignatureWrapper(newType, true, true); // may already contain annotations
+			SignatureWrapper oWrap = new SignatureWrapper(oldType, true); // may already contain annotations
+			SignatureWrapper nWrap = new SignatureWrapper(newType, true); // may already contain annotations
 			// [Annot]
 			mergeAnnotation(buf, oWrap, nWrap, mergeStrategy);
 			// Identifier:
@@ -847,7 +847,7 @@ public final class ExternalAnnotationUtil {
 	public static String[] annotateParameterType(String originalSignature, String annotatedType, int paramIdx, MergeStrategy mergeStrategy)
 	{
 		String[] result = new String[4]; // prefix, orig, replacement, postfix
-		SignatureWrapper wrapper = new SignatureWrapper(originalSignature.toCharArray(), true, true); // may already contain annotations
+		SignatureWrapper wrapper = new SignatureWrapper(originalSignature.toCharArray(), true); // may already contain annotations
 		wrapper.start = CharOperation.indexOf('(', wrapper.signature) + 1; // possibly skip type parameters
 		for (int i = 0; i < paramIdx; i++)
 			wrapper.start = wrapper.skipAngleContents(wrapper.computeEnd()) + 1;
@@ -882,7 +882,7 @@ public final class ExternalAnnotationUtil {
 	{
 		String[] result = new String[4]; // prefix, orig, replacement, postfix
 		StringBuilder buf = new StringBuilder();
-		SignatureWrapper wrapper = new SignatureWrapper(originalSignature.toCharArray(), true, true); // may already contain annotations
+		SignatureWrapper wrapper = new SignatureWrapper(originalSignature.toCharArray(), true); // may already contain annotations
 		wrapper.start = 1; // skip '<'
 		// prefix:
 		for (int i = 0; i < rank; i++) {

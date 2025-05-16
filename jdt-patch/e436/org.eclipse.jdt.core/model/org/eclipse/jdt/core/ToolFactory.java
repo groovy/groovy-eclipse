@@ -30,13 +30,11 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.jdt.core.compiler.IScanner;
-import org.eclipse.jdt.core.compiler.ITerminalSymbols;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.core.util.ClassFormatException;
 import org.eclipse.jdt.core.util.IClassFileReader;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.compiler.util.Util;
@@ -400,15 +398,12 @@ public class ToolFactory {
 	 * </pre>
 	 *
 	 * <p>By default the compliance used to create the scanner is the workspace's compliance when running inside the IDE
-	 * or 1.4 if running from outside of a headless eclipse.
+	 * or 1.8 if running from outside of a headless eclipse.
 	 * </p>
 	 *
 	 * @param tokenizeComments if set to <code>false</code>, comments will be silently consumed
 	 * @param tokenizeWhiteSpace if set to <code>false</code>, white spaces will be silently consumed,
-	 * @param assertMode if set to <code>false</code>, occurrences of 'assert' will be reported as identifiers
-	 * ({@link ITerminalSymbols#TokenNameIdentifier}), whereas if set to <code>true</code>, it
-	 * would report assert keywords ({@link ITerminalSymbols#TokenNameassert}). Java 1.4 has introduced
-	 * a new 'assert' keyword.
+	 * @param assertMode unused
 	 * @param recordLineSeparator if set to <code>true</code>, the scanner will record positions of encountered line
 	 * separator ends. In case of multi-character line separators, the last character position is considered. These positions
 	 * can then be extracted using {@link IScanner#getLineEnds()}. Only non-unicode escape sequences are
@@ -417,17 +412,16 @@ public class ToolFactory {
 	 * @see org.eclipse.jdt.core.compiler.IScanner
 	 * @see #createScanner(boolean, boolean, boolean, String, String)
 	 */
-	@SuppressWarnings("javadoc") // references deprecated TokenNameIdentifier
 	public static IScanner createScanner(boolean tokenizeComments, boolean tokenizeWhiteSpace, boolean assertMode, boolean recordLineSeparator){
 		// use default workspace compliance
 		long complianceLevelValue = CompilerOptions.versionToJdkLevel(JavaCore.getOption(JavaCore.COMPILER_COMPLIANCE));
-		if (complianceLevelValue == 0) complianceLevelValue = ClassFileConstants.JDK1_4; // fault-tolerance
+		if (complianceLevelValue == 0) complianceLevelValue = CompilerOptions.getFirstSupportedJdkLevel(); // fault-tolerance
 		PublicScanner scanner =
 			new PublicScanner(
 				tokenizeComments,
 				tokenizeWhiteSpace,
 				false/*nls*/,
-				assertMode ? ClassFileConstants.JDK1_4 : ClassFileConstants.JDK1_3/*sourceLevel*/,
+				CompilerOptions.getFirstSupportedJdkLevel()/*sourceLevel*/,
 				complianceLevelValue,
 				null/*taskTags*/,
 				null/*taskPriorities*/,
@@ -455,7 +449,7 @@ public class ToolFactory {
 	 * </pre>
 	 *
 	 * <p>By default the compliance used to create the scanner is the workspace's compliance when running inside the IDE
-	 * or 1.4 if running from outside of a headless eclipse.
+	 * or 1.8 if running from outside of a headless eclipse.
 	 * </p>
 	 *
 	 * @param tokenizeComments if set to <code>false</code>, comments will be silently consumed
@@ -464,22 +458,18 @@ public class ToolFactory {
 	 * separator ends. In case of multi-character line separators, the last character position is considered. These positions
 	 * can then be extracted using {@link IScanner#getLineEnds()}. Only non-unicode escape sequences are
 	 * considered as valid line separators.
-	 * @param sourceLevel if set to <code>&quot;1.3&quot;</code> or <code>null</code>, occurrences of 'assert' will be reported as identifiers
-	 * ({@link ITerminalSymbols#TokenNameIdentifier}), whereas if set to <code>&quot;1.4&quot;</code>, it
-	 * would report assert keywords ({@link ITerminalSymbols#TokenNameassert}). Java 1.4 has introduced
-	 * a new 'assert' keyword.
+	 * @param sourceLevel source level
 	 * @return a scanner
 	 * @see org.eclipse.jdt.core.compiler.IScanner
 	 * @see #createScanner(boolean, boolean, boolean, String, String)
 	 * @since 3.0
 	 */
-	@SuppressWarnings("javadoc") // references deprecated TokenNameIdentifier
 	public static IScanner createScanner(boolean tokenizeComments, boolean tokenizeWhiteSpace, boolean recordLineSeparator, String sourceLevel) {
 		// use default workspace compliance
 		long complianceLevelValue = CompilerOptions.versionToJdkLevel(JavaCore.getOption(JavaCore.COMPILER_COMPLIANCE));
-		if (complianceLevelValue == 0) complianceLevelValue = ClassFileConstants.JDK1_4; // fault-tolerance
+		if (complianceLevelValue == 0) complianceLevelValue = CompilerOptions.getFirstSupportedJdkLevel(); // fault-tolerance
 		long sourceLevelValue = CompilerOptions.versionToJdkLevel(sourceLevel);
-		if (sourceLevelValue == 0) sourceLevelValue = ClassFileConstants.JDK1_3; // fault-tolerance
+		if (sourceLevelValue == 0) sourceLevelValue = CompilerOptions.getFirstSupportedJdkLevel(); // fault-tolerance
 		PublicScanner scanner =
 			new PublicScanner(
 				tokenizeComments,
@@ -518,18 +508,14 @@ public class ToolFactory {
 	 * separator ends. In case of multi-character line separators, the last character position is considered. These positions
 	 * can then be extracted using {@link IScanner#getLineEnds()}. Only non-unicode escape sequences are
 	 * considered as valid line separators.
-	 * @param sourceLevel if set to <code>&quot;1.3&quot;</code> or <code>null</code>, occurrences of 'assert' will be reported as identifiers
-	 * ({@link ITerminalSymbols#TokenNameIdentifier}), whereas if set to <code>&quot;1.4&quot;</code>, it
-	 * would report assert keywords ({@link ITerminalSymbols#TokenNameassert}). Java 1.4 has introduced
-	 * a new 'assert' keyword.
+	 * @param sourceLevel
 	 * @param complianceLevel This is used to support the Unicode 4.0 character sets. if set to 1.5 or above,
-	 * the Unicode 4.0 is supported, otherwise Unicode 3.0 is supported.
+	 * the Unicode 4.0 is supported
 	 * @return a scanner
 	 * @see org.eclipse.jdt.core.compiler.IScanner
 	 *
 	 * @since 3.1
 	 */
-	@SuppressWarnings("javadoc") // references deprecated TokenNameIdentifier
 	public static IScanner createScanner(boolean tokenizeComments, boolean tokenizeWhiteSpace, boolean recordLineSeparator, String sourceLevel, String complianceLevel) {
 		return createScanner(tokenizeComments, tokenizeWhiteSpace, recordLineSeparator, sourceLevel, complianceLevel, true);
 	}
@@ -556,25 +542,21 @@ public class ToolFactory {
 	 * separator ends. In case of multi-character line separators, the last character position is considered. These positions
 	 * can then be extracted using {@link IScanner#getLineEnds()}. Only non-unicode escape sequences are
 	 * considered as valid line separators.
-	 * @param sourceLevel if set to <code>&quot;1.3&quot;</code> or <code>null</code>, occurrences of 'assert' will be reported as identifiers
-	 * ({@link ITerminalSymbols#TokenNameIdentifier}), whereas if set to <code>&quot;1.4&quot;</code>, it
-	 * would report assert keywords ({@link ITerminalSymbols#TokenNameassert}). Java 1.4 has introduced
-	 * a new 'assert' keyword.
+	 * @param sourceLevel source level
 	 * @param complianceLevel This is used to support the Unicode 4.0 character sets. if set to 1.5 or above,
-	 * the Unicode 4.0 is supported, otherwise Unicode 3.0 is supported.
+	 * the Unicode 4.0 is supported
 	 * @param enablePreview specify whether the scanner should look for preview language features for the specified compliance level
 	 * @return a scanner
 	 * @see org.eclipse.jdt.core.compiler.IScanner
 	 *
 	 * @since 3.20
 	 */
-	@SuppressWarnings("javadoc") // references deprecated TokenNameIdentifier
 	public static IScanner createScanner(boolean tokenizeComments, boolean tokenizeWhiteSpace, boolean recordLineSeparator, String sourceLevel, String complianceLevel, boolean enablePreview) {
 		PublicScanner scanner = null;
 		long sourceLevelValue = CompilerOptions.versionToJdkLevel(sourceLevel);
-		if (sourceLevelValue == 0) sourceLevelValue = ClassFileConstants.JDK1_3; // fault-tolerance
+		if (sourceLevelValue == 0) sourceLevelValue = CompilerOptions.getFirstSupportedJdkLevel(); // fault-tolerance
 		long complianceLevelValue = CompilerOptions.versionToJdkLevel(complianceLevel);
-		if (complianceLevelValue == 0) complianceLevelValue = ClassFileConstants.JDK1_4; // fault-tolerance
+		if (complianceLevelValue == 0) complianceLevelValue = CompilerOptions.getFirstSupportedJdkLevel(); // fault-tolerance
 		scanner = new PublicScanner(tokenizeComments, tokenizeWhiteSpace,
 				false/*nls*/,sourceLevelValue /*sourceLevel*/, complianceLevelValue,
 				null/*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/,

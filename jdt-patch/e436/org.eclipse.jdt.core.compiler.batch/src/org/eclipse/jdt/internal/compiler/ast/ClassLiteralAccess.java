@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
@@ -95,21 +94,16 @@ public class ClassLiteralAccess extends Expression {
 			scope.problemReporter().illegalClassLiteralForTypeVariable((TypeVariableBinding)this.targetType, this);
 		}
 		ReferenceBinding classType = scope.getJavaLangClass();
-		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=328689
-		if (scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5) {
-			// Integer.class --> Class<Integer>, perform boxing of base types (int.class --> Class<Integer>)
-			TypeBinding boxedType = null;
-			if (this.targetType.id == T_void) {
-				boxedType = environment.getResolvedJavaBaseType(JAVA_LANG_VOID, scope);
-			} else {
-				boxedType = scope.boxing(this.targetType);
-			}
-			if (environment.usesNullTypeAnnotations())
-				boxedType = environment.createNonNullAnnotatedType(boxedType);
-			this.resolvedType = environment.createParameterizedType(classType, new TypeBinding[]{ boxedType }, null/*not a member*/);
+		// Integer.class --> Class<Integer>, perform boxing of base types (int.class --> Class<Integer>)
+		TypeBinding boxedType = null;
+		if (this.targetType.id == T_void) {
+			boxedType = environment.getResolvedJavaBaseType(JAVA_LANG_VOID, scope);
 		} else {
-			this.resolvedType = classType;
+			boxedType = scope.boxing(this.targetType);
 		}
+		if (environment.usesNullTypeAnnotations())
+			boxedType = environment.createNonNullAnnotatedType(boxedType);
+		this.resolvedType = environment.createParameterizedType(classType, new TypeBinding[]{ boxedType }, null/*not a member*/);
 		return this.resolvedType;
 	}
 

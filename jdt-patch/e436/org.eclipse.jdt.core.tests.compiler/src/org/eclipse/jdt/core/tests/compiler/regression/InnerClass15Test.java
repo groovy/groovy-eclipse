@@ -492,8 +492,6 @@ public void testBug520874b() {
 			"----------\n");
 }
 public void testBug520874c() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return; // Limit the new tests to newer levels
 	this.runNegativeTest(new String[] {
 			"cycle/X.java",
 			"package cycle;\n" +
@@ -524,8 +522,6 @@ public void testBug520874c() {
 			"----------\n");
 }
 public void testBug520874d() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return; // Limit the new tests to newer levels
 	this.runNegativeTest(new String[] {
 			"cycle/X.java",
 			"package cycle;\n" +
@@ -556,8 +552,6 @@ public void testBug520874d() {
 			"----------\n");
 }
 public void testBug520874e() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return; // Limit the new tests to newer levels
 	this.runNegativeTest(new String[] {
 			"cycle/X.java",
 			"package cycle;\n" +
@@ -587,8 +581,6 @@ public void testBug520874e() {
 			"----------\n");
 }
 public void testBug520874f() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return; // Limit the new tests to newer levels
 	this.runNegativeTest(new String[] {
 			"cycle/X.java",
 			"package cycle;\n" +
@@ -618,8 +610,6 @@ public void testBug520874f() {
 			"----------\n");
 }
 public void testBug520874g() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return; // Limit the new tests to newer levels
 	this.runNegativeTest(new String[] {
 			"cycle/X.java",
 			"package cycle;\n" +
@@ -649,8 +639,6 @@ public void testBug520874g() {
 			"----------\n");
 }
 public void testBug520874h() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return; // Limit the new tests to newer levels
 	this.runNegativeTest(new String[] {
 			"cycle/X.java",
 			"package cycle;\n" +
@@ -680,8 +668,6 @@ public void testBug520874h() {
 			"----------\n");
 }
 public void testBug520874i() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return; // Limit the new tests to newer levels
 	this.runNegativeTest(new String[] {
 			"cycle/X.java",
 			"package cycle;\n" +
@@ -738,7 +724,6 @@ public void testBug526681() {
 		"----------\n");
 }
 public void testBug527731() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // uses diamond, 1.7-inference fails, only 1.8 is good
 	runConformTest(
 		new String[] {
 			"OuterClass.java",

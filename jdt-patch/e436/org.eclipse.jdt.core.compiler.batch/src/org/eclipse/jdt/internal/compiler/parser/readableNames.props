@@ -273,7 +273,6 @@ QualifiedName=QualifiedName
 RecordComponentHeaderRightParen=)
 RecordComponentListOpt=RecordComponentsopt
 RecordDeclaration=RecordDeclaration
-RecordHeader=RecordHeader
 RecordHeaderName1=RecordHeaderName
 RecordHeaderName=RecordHeaderName
 RecordHeaderPart=RecordHeaderPart

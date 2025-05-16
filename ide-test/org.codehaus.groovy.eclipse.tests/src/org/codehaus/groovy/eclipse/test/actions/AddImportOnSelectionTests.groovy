@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1249,9 +1249,12 @@ final class AddImportOnSelectionTests extends GroovyEditorTestSuite {
 
     @Test
     void testTryAddConflictingType() {
+        def javaCoreVersion = org.eclipse.jdt.core.JavaCore.plugin.bundle.version
+        boolean errorChange = (javaCoreVersion.major > 3 || javaCoreVersion.minor > 41)
+
         addImportOnSelection "import a.b.c.Pattern\n\ndef pat = java.util.regex.Pat${CARET}tern.compile('123')"
         assertEditorContents 'import a.b.c.Pattern\n\ndef pat = java.util.regex.Pattern.compile(\'123\')'
-        assertStatusLineText 'Import would conflict with an other import declaration or visible type.'
+        assertStatusLineText "Import would conflict with ${errorChange ? 'another' : 'an other'} import declaration or visible type."
     }
 
     @Test

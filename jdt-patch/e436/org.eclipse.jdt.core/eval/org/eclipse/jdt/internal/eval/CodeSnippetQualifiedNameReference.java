@@ -22,7 +22,6 @@ import org.eclipse.jdt.internal.compiler.ast.CompoundAssignment;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.IntLiteral;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.Opcodes;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
@@ -94,7 +93,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 											&& this.otherBindings == null; // could be dup: next.next.next
 			TypeBinding requiredGenericCast = getGenericCast(this.otherBindings == null ? 0 : this.otherBindings.length);
 			if (valueRequired
-					|| (!isFirst && currentScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4)
+					|| (!isFirst)
 					|| ((this.implicitConversion & TypeIds.UNBOXING) != 0)
 					|| requiredGenericCast != null) {
 				int lastFieldPc = codeStream.position;
@@ -288,7 +287,6 @@ public FieldBinding generateReadSequence(BlockScope currentScope, CodeStream cod
 	FieldBinding lastFieldBinding;
 	TypeBinding lastGenericCast;
 	TypeBinding lastReceiverType;
-	boolean complyTo14 = currentScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4;
 
 	switch (this.bits & RestrictiveFlagMASK) {
 		case Binding.FIELD :
@@ -370,7 +368,7 @@ public FieldBinding generateReadSequence(BlockScope currentScope, CodeStream cod
 						codeStream.generateConstant(fieldConstant, 0);
 					}
 				} else {
-					if (needValue || (i > 0 && complyTo14) || lastGenericCast != null) {
+					if (needValue || (i > 0) || lastGenericCast != null) {
 						if (lastFieldBinding.canBeSeenBy(lastReceiverType, this, currentScope)) {
 							MethodBinding accessor = this.syntheticReadAccessors == null ? null : this.syntheticReadAccessors[i];
 							if (accessor == null) {

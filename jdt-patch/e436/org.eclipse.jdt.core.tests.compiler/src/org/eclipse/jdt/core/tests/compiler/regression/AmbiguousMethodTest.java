@@ -85,48 +85,28 @@ public class AmbiguousMethodTest extends AbstractComparableTest {
 	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=122881
 	public void test002() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_7) {
-		this.runConformTest(
-			new String[] {
-				"X.java",
-				"public class X {\n" +
-				"	static interface I1<E1> { void method(E1 o); }\n" +
-				"	static interface I2<E2> { void method(E2 o); }\n" +
-				"	static interface I3<E3, E4> extends I1<E3>, I2<E4> {}\n" +
-				"	static class Class1 implements I3<String, String> {\n" +
-				"		public void method(String o) { System.out.println(o); }\n" +
-				"	}\n" +
-				"	public static void main(String[] args) {\n" +
-				"		I3<String, String> i = new Class1();\n" +
-				"		i.method(\"works\");\n" +
-				"	}\n" +
-				"}"
-			},
-			"works");
-		} else {
-			this.runNegativeTest(
-					new String[] {
-						"X.java",
-						"public class X {\n" +
-						"	static interface I1<E1> { void method(E1 o); }\n" +
-						"	static interface I2<E2> { void method(E2 o); }\n" +
-						"	static interface I3<E3, E4> extends I1<E3>, I2<E4> {}\n" +
-						"	static class Class1 implements I3<String, String> {\n" +
-						"		public void method(String o) { System.out.println(o); }\n" +
-						"	}\n" +
-						"	public static void main(String[] args) {\n" +
-						"		I3<String, String> i = new Class1();\n" +
-						"		i.method(\"works\");\n" +
-						"	}\n" +
-						"}"
-					},
-					"----------\n" +
-					"1. ERROR in X.java (at line 4)\n" +
+		this.runNegativeTest(
+				new String[] {
+					"X.java",
+					"public class X {\n" +
+					"	static interface I1<E1> { void method(E1 o); }\n" +
+					"	static interface I2<E2> { void method(E2 o); }\n" +
 					"	static interface I3<E3, E4> extends I1<E3>, I2<E4> {}\n" +
-					"	                 ^^\n" +
-					"Name clash: The method method(E2) of type X.I2<E2> has the same erasure as method(E1) of type X.I1<E1> but does not override it\n" +
-					"----------\n");
-		}
+					"	static class Class1 implements I3<String, String> {\n" +
+					"		public void method(String o) { System.out.println(o); }\n" +
+					"	}\n" +
+					"	public static void main(String[] args) {\n" +
+					"		I3<String, String> i = new Class1();\n" +
+					"		i.method(\"works\");\n" +
+					"	}\n" +
+					"}"
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 4)\n" +
+				"	static interface I3<E3, E4> extends I1<E3>, I2<E4> {}\n" +
+				"	                 ^^\n" +
+				"Name clash: The method method(E2) of type X.I2<E2> has the same erasure as method(E1) of type X.I1<E1> but does not override it\n" +
+				"----------\n");
 	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=122881
 	public void test002a() {
@@ -275,23 +255,7 @@ public class AmbiguousMethodTest extends AbstractComparableTest {
 	}
 	public void test005() {
 		// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6182950
-		String expectedCompilerLog = (this.complianceLevel == ClassFileConstants.JDK1_6)?
-				"----------\n" +
-				"1. WARNING in X.java (at line 2)\n" +
-				"	<S extends A> void foo() { }\n" +
-				"	                   ^^^^^\n" +
-				"Duplicate method foo() in type X\n" +
-				"----------\n" +
-				"2. WARNING in X.java (at line 3)\n" +
-				"	<N extends B> N foo() { return null; }\n" +
-				"	                ^^^^^\n" +
-				"Duplicate method foo() in type X\n" +
-				"----------\n" +
-				"3. ERROR in X.java (at line 5)\n" +
-				"	new X().foo();\n" +
-				"	        ^^^\n" +
-				"The method foo() is ambiguous for the type X\n" +
-				"----------\n":
+		String expectedCompilerLog =
 					"----------\n" +
 					"1. ERROR in X.java (at line 2)\n" +
 					"	<S extends A> void foo() { }\n" +
@@ -329,28 +293,7 @@ X.java:3: name clash: <N>foo() and <S>foo() have the same erasure
 	}
 	public void test006() {
 		// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6182950
-		String expectedCompilerLog = (this.complianceLevel == ClassFileConstants.JDK1_6)?
-		"----------\n" +
-		"1. ERROR in X.java (at line 3)\n" +
-		"	new Y<Object>().foo(\"X\");\n" +
-		"	                ^^^\n" +
-		"The method foo(Object) is ambiguous for the type Y<Object>\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 4)\n" +
-		"	new Y<Object>().foo2(\"X\");\n" +
-		"	                ^^^^\n" +
-		"The method foo2(Object) is ambiguous for the type Y<Object>\n" +
-		"----------\n" +
-		"3. WARNING in X.java (at line 10)\n" +
-		"	void foo(T2 t) {}\n" +
-		"	     ^^^^^^^^^\n" +
-		"Name clash: The method foo(T2) of type Y<T2> has the same erasure as foo(U1) of type X<T> but does not override it\n" +
-		"----------\n" +
-		"4. WARNING in X.java (at line 11)\n" +
-		"	<U3> void foo2(T2 t) {}\n" +
-		"	          ^^^^^^^^^^\n" +
-		"Name clash: The method foo2(T2) of type Y<T2> has the same erasure as foo2(U2) of type X<T> but does not override it\n" +
-		"----------\n":
+		String expectedCompilerLog =
 			"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
 			"	new Y<Object>().foo(\"X\");\n" +
@@ -517,32 +460,27 @@ sure, yet neither overrides the other
 						"}\n" +
 						"interface OrderedSet<E> extends List<E>, Set<E> { boolean add(E o); }\n"
 		};
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			this.runConformTest(testFiles, "");
-		else
-			this.runNegativeTest(
-				testFiles,
-				"----------\n" +
-				"1. WARNING in T.java (at line 5)\n" +
-				"	os.add(\"hello\");\n" +
-				"	^^\n" +
-				"Null pointer access: The variable os can only be null at this location\n" +
-				"----------\n" +
-				"2. WARNING in T.java (at line 7)\n" +
-				"	os2.add(1);\n" +
-				"	^^^\n" +
-				"Null pointer access: The variable os2 can only be null at this location\n" +
-				"----------\n" +
-				"3. ERROR in T.java (at line 10)\n" +
-				"	interface OrderedSet<E> extends List<E>, Set<E> { boolean add(E o); }\n" +
-				"	          ^^^^^^^^^^\n" +
-				"Duplicate default methods named spliterator with the parameters () and () are inherited from the types Set<E> and List<E>\n" +
-				"----------\n");
+		this.runNegativeTest(
+			testFiles,
+			"----------\n" +
+			"1. WARNING in T.java (at line 5)\n" +
+			"	os.add(\"hello\");\n" +
+			"	^^\n" +
+			"Null pointer access: The variable os can only be null at this location\n" +
+			"----------\n" +
+			"2. WARNING in T.java (at line 7)\n" +
+			"	os2.add(1);\n" +
+			"	^^^\n" +
+			"Null pointer access: The variable os2 can only be null at this location\n" +
+			"----------\n" +
+			"3. ERROR in T.java (at line 10)\n" +
+			"	interface OrderedSet<E> extends List<E>, Set<E> { boolean add(E o); }\n" +
+			"	          ^^^^^^^^^^\n" +
+			"Duplicate default methods named spliterator with the parameters () and () are inherited from the types Set<E> and List<E>\n" +
+			"----------\n");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=123943 variant to make it pass on JRE8
 	public void test009a() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		this.runConformTest(
 			new String[] {
 				"T.java",
@@ -659,18 +597,7 @@ public void test010c() {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=106090
 	public void test011a() {
 		// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6182950
-		String expectedCompilerLog = (this.complianceLevel == ClassFileConstants.JDK1_6)?
-		"----------\n" +
-		"1. WARNING in Combined.java (at line 2)\n" +
-		"	<T extends Comparable<T>> void pickOne(T value) throws ExOne {}\n" +
-		"	                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		"Erasure of method pickOne(T) is the same as another method in type Combined<A,B>\n" +
-		"----------\n" +
-		"2. WARNING in Combined.java (at line 3)\n" +
-		"	<T> T pickOne(Comparable<T> value) throws ExTwo { return null;}\n" +
-		"	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		"Erasure of method pickOne(Comparable<T>) is the same as another method in type Combined<A,B>\n" +
-		"----------\n":
+		String expectedCompilerLog =
 			"----------\n" +
 			"1. ERROR in Combined.java (at line 2)\n" +
 			"	<T extends Comparable<T>> void pickOne(T value) throws ExOne {}\n" +
@@ -711,28 +638,7 @@ X.java:3: name clash: <T#1>pickOne(Comparable<T#1>) and <T#2>pickOne(T#2) have t
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=106090
 	public void test011b() {
 		// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6182950
-		String expectedCompilerLog = (this.complianceLevel == ClassFileConstants.JDK1_6)?
-		"----------\n" +
-		"1. WARNING in Test1.java (at line 2)\n" +
-		"	<T extends Comparable<T>> void pickOne(T value) throws ExOne {}\n" +
-		"	                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		"Erasure of method pickOne(T) is the same as another method in type Test1<AA,BB>\n" +
-		"----------\n" +
-		"2. WARNING in Test1.java (at line 3)\n" +
-		"	<T> T pickOne(Comparable<T> value) throws ExTwo { return null;}\n" +
-		"	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		"Erasure of method pickOne(Comparable<T>) is the same as another method in type Test1<AA,BB>\n" +
-		"----------\n" +
-		"3. WARNING in Test1.java (at line 4)\n" +
-		"	void pickOne2(Test1<Integer,Integer> c) throws ExOne { c.pickOne((Comparable) \"test\"); }\n" +
-		"	                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		"Type safety: Unchecked invocation pickOne(Comparable) of the generic method pickOne(T) of type Test1<Integer,Integer>\n" +
-		"----------\n" +
-		"4. WARNING in Test1.java (at line 4)\n" +
-		"	void pickOne2(Test1<Integer,Integer> c) throws ExOne { c.pickOne((Comparable) \"test\"); }\n" +
-		"	                                                                  ^^^^^^^^^^\n" +
-		"Comparable is a raw type. References to generic type Comparable<T> should be parameterized\n" +
-		"----------\n":
+		String expectedCompilerLog =
 			"----------\n" +
 			"1. ERROR in Test1.java (at line 2)\n" +
 			"	<T extends Comparable<T>> void pickOne(T value) throws ExOne {}\n" +
@@ -1148,7 +1054,7 @@ X.java:4: warning: [unchecked] unchecked method invocation: method pickOne in cl
 				"	}\n" +
 				"}\n"
 			},
-			(this.complianceLevel < ClassFileConstants.JDK1_8 ?
+			// in 1.8 fewer of the calls are ambiguous
 			"----------\n" +
 			"1. WARNING in Y.java (at line 4)\n" +
 			"	H hraw = null;\n" +
@@ -1175,83 +1081,16 @@ X.java:4: warning: [unchecked] unchecked method invocation: method pickOne in cl
 			"	        ^^\n" +
 			"The method a2(G) is ambiguous for the type X\n" +
 			"----------\n" +
-			"6. ERROR in Y.java (at line 9)\n" +
-			"	new X().a3(h);\n" +
-			"	        ^^\n" +
-			"The method a3(G) is ambiguous for the type X\n" +
-			"----------\n" +
-			"7. ERROR in Y.java (at line 10)\n" +
-			"	new X().a3(hraw);\n" +
-			"	        ^^\n" +
-			"The method a3(G) is ambiguous for the type X\n" +
-			"----------\n" +
-			"8. ERROR in Y.java (at line 11)\n" +
-			"	new X().a4(h);\n" +
-			"	        ^^\n" +
-			"The method a4(G) is ambiguous for the type X\n" +
-			"----------\n" +
-			"9. ERROR in Y.java (at line 12)\n" +
-			"	new X().a4(hraw);\n" +
-			"	        ^^\n" +
-			"The method a4(G) is ambiguous for the type X\n" +
-			"----------\n" +
-			"10. ERROR in Y.java (at line 13)\n" +
+			"6. ERROR in Y.java (at line 13)\n" +
 			"	new X().a5(h);\n" +
 			"	        ^^\n" +
 			"The method a5(H<C>) is ambiguous for the type X\n" +
 			"----------\n" +
-			"11. ERROR in Y.java (at line 14)\n" +
+			"7. ERROR in Y.java (at line 14)\n" +
 			"	new X().a5(hraw);\n" +
 			"	        ^^\n" +
 			"The method a5(H) is ambiguous for the type X\n" +
-			"----------\n" +
-			"12. ERROR in Y.java (at line 15)\n" +
-			"	new X().a6(h);\n" +
-			"	        ^^\n" +
-			"The method a6(H<C>) is ambiguous for the type X\n" +
-			"----------\n" +
-			"13. ERROR in Y.java (at line 16)\n" +
-			"	new X().a6(hraw);\n" +
-			"	        ^^\n" +
-			"The method a6(H) is ambiguous for the type X\n" +
-			"----------\n"
-			: // in 1.8 fewer of the calls are ambiguous
-				"----------\n" +
-				"1. WARNING in Y.java (at line 4)\n" +
-				"	H hraw = null;\n" +
-				"	^\n" +
-				"H is a raw type. References to generic type H<T3> should be parameterized\n" +
-				"----------\n" +
-				"2. ERROR in Y.java (at line 5)\n" +
-				"	new X().a(h);\n" +
-				"	        ^\n" +
-				"The method a(G) is ambiguous for the type X\n" +
-				"----------\n" +
-				"3. ERROR in Y.java (at line 6)\n" +
-				"	new X().a(hraw);\n" +
-				"	        ^\n" +
-				"The method a(G) is ambiguous for the type X\n" +
-				"----------\n" +
-				"4. ERROR in Y.java (at line 7)\n" +
-				"	new X().a2(h);\n" +
-				"	        ^^\n" +
-				"The method a2(G) is ambiguous for the type X\n" +
-				"----------\n" +
-				"5. ERROR in Y.java (at line 8)\n" +
-				"	new X().a2(hraw);\n" +
-				"	        ^^\n" +
-				"The method a2(G) is ambiguous for the type X\n" +
-				"----------\n" +
-				"6. ERROR in Y.java (at line 13)\n" +
-				"	new X().a5(h);\n" +
-				"	        ^^\n" +
-				"The method a5(H<C>) is ambiguous for the type X\n" +
-				"----------\n" +
-				"7. ERROR in Y.java (at line 14)\n" +
-				"	new X().a5(hraw);\n" +
-				"	        ^^\n" +
-				"The method a5(H) is ambiguous for the type X\n" +
-				"----------\n"),
+			"----------\n",
 			null,
 			false
 		);
@@ -1474,141 +1313,48 @@ X.java:4: warning: [unchecked] unchecked method invocation: method pickOne in cl
 			"	^\n" +
 			"H is a raw type. References to generic type H<T3> should be parameterized\n" +
 			"----------\n" +
-			(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-			"23. ERROR in X.java (at line 52)\n" +
-			"	x.a(h);\n" +
-			"	  ^\n" +
-			"The method a(G) is ambiguous for the type X\n" +
-			"----------\n" +
-			"24. ERROR in X.java (at line 53)\n" +
-			"	x.a(hraw);\n" +
-			"	  ^\n" +
-			"The method a(G) is ambiguous for the type X\n" +
-			"----------\n" +
-			"25. ERROR in X.java (at line 58)\n" +
-			"	x.c(h);\n" +
-			"	  ^\n" +
-			"The method c(G) is ambiguous for the type X\n" +
-			"----------\n" +
-			"26. ERROR in X.java (at line 59)\n" +
-			"	x.c(hraw);\n" +
-			"	  ^\n" +
-			"The method c(G) is ambiguous for the type X\n" +
-			"----------\n" +
-			"27. ERROR in X.java (at line 61)\n" +
+			// fewer ambiguities in 1.8
+			"23. ERROR in X.java (at line 61)\n" +
 			"	x.d(h);\n" +
 			"	  ^\n" +
 			"The method d(G) is ambiguous for the type X\n" +
 			"----------\n" +
-			"28. ERROR in X.java (at line 62)\n" +
+			"24. ERROR in X.java (at line 62)\n" +
 			"	x.d(hraw);\n" +
 			"	  ^\n" +
 			"The method d(G) is ambiguous for the type X\n" +
 			"----------\n" +
-			"29. ERROR in X.java (at line 64)\n" +
+			"25. ERROR in X.java (at line 64)\n" +
 			"	x.e(h);\n" +
 			"	  ^\n" +
 			"The method e(G) is ambiguous for the type X\n" +
 			"----------\n" +
-			"30. ERROR in X.java (at line 65)\n" +
+			"26. ERROR in X.java (at line 65)\n" +
 			"	x.e(hraw);\n" +
 			"	  ^\n" +
 			"The method e(G) is ambiguous for the type X\n" +
 			"----------\n" +
-			"31. ERROR in X.java (at line 71)\n" +
-			"	x.g(hraw);\n" +
-			"	  ^\n" +
-			"The method g(G) is ambiguous for the type X\n" +
-			"----------\n" +
-			"32. ERROR in X.java (at line 73)\n" +
-			"	x.a2(h);\n" +
-			"	  ^^\n" +
-			"The method a2(H<C>) is ambiguous for the type X\n" +
-			"----------\n" +
-			"33. ERROR in X.java (at line 74)\n" +
-			"	x.a2(hraw);\n" +
-			"	  ^^\n" +
-			"The method a2(H) is ambiguous for the type X\n" +
-			"----------\n" +
-			"34. ERROR in X.java (at line 79)\n" +
-			"	x.c2(h);\n" +
-			"	  ^^\n" +
-			"The method c2(H<C>) is ambiguous for the type X\n" +
-			"----------\n" +
-			"35. ERROR in X.java (at line 80)\n" +
-			"	x.c2(hraw);\n" +
-			"	  ^^\n" +
-			"The method c2(H) is ambiguous for the type X\n" +
-			"----------\n" +
-			"36. ERROR in X.java (at line 82)\n" +
+			"27. ERROR in X.java (at line 82)\n" +
 			"	x.d2(h);\n" +
 			"	  ^^\n" +
 			"The method d2(H<C>) is ambiguous for the type X\n" +
 			"----------\n" +
-			"37. ERROR in X.java (at line 83)\n" +
+			"28. ERROR in X.java (at line 83)\n" +
 			"	x.d2(hraw);\n" +
 			"	  ^^\n" +
 			"The method d2(H) is ambiguous for the type X\n" +
 			"----------\n" +
-			"38. ERROR in X.java (at line 85)\n" +
+			"29. ERROR in X.java (at line 85)\n" +
 			"	x.e2(h);\n" +
 			"	  ^^\n" +
 			"The method e2(H<C>) is ambiguous for the type X\n" +
 			"----------\n" +
-			"39. ERROR in X.java (at line 86)\n" +
+			"30. ERROR in X.java (at line 86)\n" +
 			"	x.e2(hraw);\n" +
 			"	  ^^\n" +
 			"The method e2(H) is ambiguous for the type X\n" +
 			"----------\n" +
-			"40. ERROR in X.java (at line 92)\n" +
-			"	x.g2(hraw);\n" +
-			"	  ^^\n" +
-			"The method g2(H) is ambiguous for the type X\n" +
-			"----------\n" +
-			"41. WARNING in X.java (at line 98)\n"
-			: // fewer ambiguities in 1.8
-				"23. ERROR in X.java (at line 61)\n" +
-				"	x.d(h);\n" +
-				"	  ^\n" +
-				"The method d(G) is ambiguous for the type X\n" +
-				"----------\n" +
-				"24. ERROR in X.java (at line 62)\n" +
-				"	x.d(hraw);\n" +
-				"	  ^\n" +
-				"The method d(G) is ambiguous for the type X\n" +
-				"----------\n" +
-				"25. ERROR in X.java (at line 64)\n" +
-				"	x.e(h);\n" +
-				"	  ^\n" +
-				"The method e(G) is ambiguous for the type X\n" +
-				"----------\n" +
-				"26. ERROR in X.java (at line 65)\n" +
-				"	x.e(hraw);\n" +
-				"	  ^\n" +
-				"The method e(G) is ambiguous for the type X\n" +
-				"----------\n" +
-				"27. ERROR in X.java (at line 82)\n" +
-				"	x.d2(h);\n" +
-				"	  ^^\n" +
-				"The method d2(H<C>) is ambiguous for the type X\n" +
-				"----------\n" +
-				"28. ERROR in X.java (at line 83)\n" +
-				"	x.d2(hraw);\n" +
-				"	  ^^\n" +
-				"The method d2(H) is ambiguous for the type X\n" +
-				"----------\n" +
-				"29. ERROR in X.java (at line 85)\n" +
-				"	x.e2(h);\n" +
-				"	  ^^\n" +
-				"The method e2(H<C>) is ambiguous for the type X\n" +
-				"----------\n" +
-				"30. ERROR in X.java (at line 86)\n" +
-				"	x.e2(hraw);\n" +
-				"	  ^^\n" +
-				"The method e2(H) is ambiguous for the type X\n" +
-				"----------\n" +
-				"31. WARNING in X.java (at line 98)\n"
-			) +
+			"31. WARNING in X.java (at line 98)\n" +
 			"	class C extends B implements I {}\n" +
 			"	                             ^\n" +
 			"I is a raw type. References to generic type I<T> should be parameterized\n" +
@@ -1725,131 +1471,12 @@ X.java:4: warning: [unchecked] unchecked method invocation: method pickOne in cl
 			""
 		);
 	}
-	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=147647
-	public void test018() {
-	if (this.complianceLevel >= ClassFileConstants.JDK1_7)
-			return;
-	this.runConformTest(
-		new String[] {
-			"Y.java",
-			"class X<T extends Object> {\n" +
-			"  public static <U extends Object> X<U> make(Class<U> clazz) {\n" +
-			"    System.out.print(false);\n" +
-			"    return new X<U>();\n" +
-			"  }\n" +
-			"}\n" +
-			"public class Y<V extends String> extends X<V> {\n" +
-			"  public static <W extends String> Y<W> make(Class<W> clazz) {\n" +
-			"    System.out.print(true);\n" +
-			"    return new Y<W>();\n" +
-			"  }\n" +
-			"  public static void main(String[] args) throws Exception {\n" +
-			"    Y.make(String.class);\n" +
-			"  }\n" +
-			"}"
-		},
-		"true");
-	}
-	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=147647
-	// in fact, <W extends String> Y<W> make(Class<W> clazz) is the most
-	// specific method according to JLS 15.12.2.5
-	public void test019() {
-	if (this.complianceLevel >= ClassFileConstants.JDK1_7)
-		return;
 
-	this.runConformTest(
-		new String[] {
-			"Y.java",
-			"class X<T extends Object> {\n" +
-			"  public static <U extends Object> X<U> make(Class<U> clazz) {\n" +
-			"    System.out.print(false);\n" +
-			"    return new X<U>();\n" +
-			"  }\n" +
-			"}\n" +
-			"public class Y<V extends String> extends X<V> {\n" +
-			"  public static <W extends String> Y<W> make(Class<W> clazz) {\n" +
-			"    System.out.print(true);\n" +
-			"    return new Y<W>();\n" +
-			"  }\n" +
-			"  public static void main(String[] args) throws Exception {\n" +
-			"    Y.make(getClazz());\n" +
-			"  }\n" +
-			"  public static Class getClazz() {\n" +
-			"    return String.class;\n" +
-			"  }\n" +
-			"}"
-		},
-		"true");
-	}
-	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=147647
-	public void test020() {
-	if (this.complianceLevel >= ClassFileConstants.JDK1_7)
-		return;
-	this.runConformTest(
-		new String[] {
-			"Y.java",
-			"class X<T extends Object> {\n" +
-			"  public static <U extends Object> X<U> make(Class<U> clazz) {\n" +
-			"    System.out.print(true);\n" +
-			"    return new X<U>();\n" +
-			"  }\n" +
-			"}\n" +
-			"public class Y<V extends String> extends X<V> {\n" +
-			"  public static <W extends String> Y<W> make(Class<W> clazz) {\n" +
-			"    System.out.print(false);\n" +
-			"    return new Y<W>();\n" +
-			"  }\n" +
-			"  public static void main(String[] args) throws Exception {\n" +
-			"    Y.make(getClazz().newInstance().getClass());\n" +
-			"  }\n" +
-			"  public static Class getClazz() {\n" +
-			"    return String.class;\n" +
-			"  }\n" +
-			"}"
-		},
-		"true");
-	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=147647
 	// variant: having both methods in the same class should not change anything
 	public void test021() {
 		// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6182950
-		String expectedCompilerLog = (this.complianceLevel == ClassFileConstants.JDK1_6)?
-		"----------\n" +
-		"1. WARNING in Y.java (at line 3)\n" +
-		"	public class Y<V extends String> extends X<V> {\n" +
-		"	                         ^^^^^^\n" +
-		"The type parameter V should not be bounded by the final type String. Final types cannot be further extended\n" +
-		"----------\n" +
-		"2. WARNING in Y.java (at line 4)\n" +
-		"	public static <W extends String> Y<W> make(Class<W> clazz) {\n" +
-		"	                         ^^^^^^\n" +
-		"The type parameter W should not be bounded by the final type String. Final types cannot be further extended\n" +
-		"----------\n" +
-		"3. WARNING in Y.java (at line 4)\n" +
-		"	public static <W extends String> Y<W> make(Class<W> clazz) {\n" +
-		"	                                      ^^^^^^^^^^^^^^^^^^^^\n" +
-		"Erasure of method make(Class<W>) is the same as another method in type Y<V>\n" +
-		"----------\n" +
-		"4. WARNING in Y.java (at line 8)\n" +
-		"	public static <U extends Object> X<U> make(Class<U> clazz) {\n" +
-		"	                                      ^^^^^^^^^^^^^^^^^^^^\n" +
-		"Erasure of method make(Class<U>) is the same as another method in type Y<V>\n" +
-		"----------\n" +
-		"5. WARNING in Y.java (at line 13)\n" +
-		"	Y.make(getClazz());\n" +
-		"	^^^^^^^^^^^^^^^^^^\n" +
-		"Type safety: Unchecked invocation make(Class) of the generic method make(Class<W>) of type Y\n" +
-		"----------\n" +
-		"6. WARNING in Y.java (at line 13)\n" +
-		"	Y.make(getClazz());\n" +
-		"	       ^^^^^^^^^^\n" +
-		"Type safety: The expression of type Class needs unchecked conversion to conform to Class<String>\n" +
-		"----------\n" +
-		"7. WARNING in Y.java (at line 15)\n" +
-		"	public static Class getClazz() {\n" +
-		"	              ^^^^^\n" +
-		"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
-		"----------\n":
+		String expectedCompilerLog =
 			"----------\n" +
 			"1. WARNING in Y.java (at line 3)\n" +
 			"	public class Y<V extends String> extends X<V> {\n" +
@@ -1940,58 +1567,7 @@ X.java:13: warning: [unchecked] unchecked method invocation: method make in clas
 	// variant: using instances triggers raw methods, which are ambiguous
 	public void test022() {
 		// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6182950
-		String expectedCompilerLog = (this.complianceLevel == ClassFileConstants.JDK1_6)?
-		"----------\n" +
-		"1. WARNING in X.java (at line 3)\n" +
-		"	class Y<V extends String> extends X<V> {\n" +
-		"	                  ^^^^^^\n" +
-		"The type parameter V should not be bounded by the final type String. Final types cannot be further extended\n" +
-		"----------\n" +
-		"2. WARNING in X.java (at line 4)\n" +
-		"	public <W extends String> Y<W> make(Class<W> clazz) {\n" +
-		"	                  ^^^^^^\n" +
-		"The type parameter W should not be bounded by the final type String. Final types cannot be further extended\n" +
-		"----------\n" +
-		"3. WARNING in X.java (at line 4)\n" +
-		"	public <W extends String> Y<W> make(Class<W> clazz) {\n" +
-		"	                               ^^^^^^^^^^^^^^^^^^^^\n" +
-		"Erasure of method make(Class<W>) is the same as another method in type Y<V>\n" +
-		"----------\n" +
-		"4. WARNING in X.java (at line 7)\n" +
-		"	public <U extends Object> X<U> make(Class<U> clazz) {\n" +
-		"	                               ^^^^^^^^^^^^^^^^^^^^\n" +
-		"Erasure of method make(Class<U>) is the same as another method in type Y<V>\n" +
-		"----------\n" +
-		"5. WARNING in X.java (at line 12)\n" +
-		"	Y y = new Y();\n" +
-		"	^\n" +
-		"Y is a raw type. References to generic type Y<V> should be parameterized\n" +
-		"----------\n" +
-		"6. WARNING in X.java (at line 12)\n" +
-		"	Y y = new Y();\n" +
-		"	          ^\n" +
-		"Y is a raw type. References to generic type Y<V> should be parameterized\n" +
-		"----------\n" +
-		"7. ERROR in X.java (at line 13)\n" +
-		"	y.make(String.class);\n" +
-		"	  ^^^^\n" +
-		"The method make(Class) is ambiguous for the type Y\n" +
-		"----------\n" +
-		"8. ERROR in X.java (at line 14)\n" +
-		"	y.make(getClazz());\n" +
-		"	  ^^^^\n" +
-		"The method make(Class) is ambiguous for the type Y\n" +
-		"----------\n" +
-		"9. ERROR in X.java (at line 15)\n" +
-		"	y.make(getClazz().newInstance().getClass());\n" +
-		"	  ^^^^\n" +
-		"The method make(Class) is ambiguous for the type Y\n" +
-		"----------\n" +
-		"10. WARNING in X.java (at line 17)\n" +
-		"	public static Class getClazz() {\n" +
-		"	              ^^^^^\n" +
-		"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
-		"----------\n":
+		String expectedCompilerLog =
 			"----------\n" +
 			"1. WARNING in X.java (at line 3)\n" +
 			"	class Y<V extends String> extends X<V> {\n" +
@@ -2707,8 +2283,7 @@ public void test050() {
 public void test051() {
 	this.runNegativeTest(
 		false /* skipJavac */,
-		this.complianceLevel < ClassFileConstants.JDK1_8 ?
-				null : JavacTestOptions.EclipseHasABug.EclipseBug427719,
+		JavacTestOptions.EclipseHasABug.EclipseBug427719,
 		new String[] { /* test files */
 			"X.java",
 			"interface I<T> {\n" +
@@ -2727,19 +2302,7 @@ public void test051() {
 			"  }\n" +
 			"}\n"
 		},
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"----------\n" +
-		"1. ERROR in X.java (at line 9)\n" +
-		"	bar(new Z());\n" +
-		"	^^^\n" +
-		"The method bar(X.Z) is ambiguous for the type X\n" +
-		"----------\n" +
-		"2. WARNING in X.java (at line 13)\n" +
-		"	private static final class Z implements I {\n" +
-		"	                                        ^\n" +
-		"I is a raw type. References to generic type I<T> should be parameterized\n" +
-		"----------\n"
-		: this.complianceLevel < ClassFileConstants.JDK11 ?
+		this.complianceLevel < ClassFileConstants.JDK11 ?
 			// in 1.8 bar(Z) is recognized as being more specific than bar(I<#RAW>)
 			"----------\n" +
 			"1. WARNING in X.java (at line 9)\n" +
@@ -2758,7 +2321,7 @@ public void test051() {
 				"	private static final class Z implements I {\n" +
 				"	                                        ^\n" +
 				"I is a raw type. References to generic type I<T> should be parameterized\n" +
-				"----------\n"));
+				"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=166355
 // variant
@@ -2789,8 +2352,7 @@ public void test052() {
 public void test053() {
 	this.runNegativeTest(
 		false /* skipJavac */,
-		this.complianceLevel < ClassFileConstants.JDK1_8 ?
-				null : JavacTestOptions.EclipseHasABug.EclipseBug427719,
+		JavacTestOptions.EclipseHasABug.EclipseBug427719,
 		new String[] { /* test files */
 			"X.java",
 			"interface I<T> {\n" +
@@ -2809,19 +2371,7 @@ public void test053() {
 			"  }\n" +
 			"}\n"
 		},
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"----------\n" +
-		"1. ERROR in X.java (at line 9)\n" +
-		"	bar(new Z(){});\n" +
-		"	^^^\n" +
-		"The method bar(X.Z) is ambiguous for the type X\n" +
-		"----------\n" +
-		"2. WARNING in X.java (at line 13)\n" +
-		"	private static class Z implements I {\n" +
-		"	                                  ^\n" +
-		"I is a raw type. References to generic type I<T> should be parameterized\n" +
-		"----------\n"
-		:  this.complianceLevel < ClassFileConstants.JDK11 ?
+		this.complianceLevel < ClassFileConstants.JDK11 ?
 			// in 1.8 bar(Z) is recognized as being more specific than bar(I<#RAW>)
 			"----------\n" +
 			"1. WARNING in X.java (at line 9)\n" +
@@ -2839,7 +2389,7 @@ public void test053() {
 				"	private static class Z implements I {\n" +
 				"	                                  ^\n" +
 				"I is a raw type. References to generic type I<T> should be parameterized\n" +
-				"----------\n"));
+				"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=166355
 // variant
@@ -2885,41 +2435,7 @@ public void _test055() {
 		},
 		"ERR");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=184190
-public void test056() {
-	if (this.complianceLevel >= ClassFileConstants.JDK1_7)
-		return;
-	this.runConformTest(
-		new String[] {
-			"X.java",
-			"public class X<T> {\n" +
-			"  void bar(X x) {\n" +
-			"    ZA z = ZA.foo(x);\n" +
-			"    z.toString();\n" +
-			"  }\n" +
-			"}\n" +
-			"class Y<T> {\n" +
-			"  public static <U> Y<U> foo(X<U> x) {\n" +
-			"    return null;\n" +
-			"  }\n" +
-			"}\n" +
-			"class YA<T extends A> extends Y<T> {\n" +
-			"  public static <U extends A> YA<U> foo(X<U> x) {\n" +
-			"    return (YA<U>) Y.foo(x);\n" +
-			"  }\n" +
-			"}\n" +
-			"class ZA<T extends B> extends YA<T> {\n" +
-			"  public static <U extends B> ZA<U> foo(X<U> x) {\n" +
-			"    return (ZA<U>) Y.foo(x);\n" +
-			"  }\n" +
-			"}\n" +
-			"abstract class A  {\n" +
-			"}\n" +
-			"abstract class B extends A {\n" +
-			"}"
-		},
-		"");
-}
+
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=186382
 public void test057() {
 	this.runConformTest(
@@ -3507,8 +3023,7 @@ public void test073() {
 public void test074() {
 	this.runNegativeTest(
 		false /* skipJavac */,
-		this.complianceLevel < ClassFileConstants.JDK1_8 ?
-				null : JavacTestOptions.EclipseHasABug.EclipseBug427719,
+		JavacTestOptions.EclipseHasABug.EclipseBug427719,
 		new String[] {
 			"Y.java",
 			"interface I<T> {}\n" +
@@ -3564,7 +3079,7 @@ public void test074() {
 			"}\n" +
 			"public class Y {}\n"
 		},
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
+		// no ambiguities in 1.8
 		"----------\n" +
 		"1. WARNING in Y.java (at line 3)\n" +
 		"	void a(I x) {}\n" +
@@ -3576,78 +3091,21 @@ public void test074() {
 		"	                             ^\n" +
 		"I is a raw type. References to generic type I<T> should be parameterized\n" +
 		"----------\n" +
-		"3. ERROR in Y.java (at line 19)\n" +
-		"	b(new C());\n" +
-		"	^\n" +
-		"The method b(C) is ambiguous for the type D\n" +
-		"----------\n" +
-		"4. ERROR in Y.java (at line 20)\n" +
-		"	b(new D());\n" +
-		"	^\n" +
-		"The method b(C) is ambiguous for the type D\n" +
-		"----------\n" +
-		"5. ERROR in Y.java (at line 21)\n" +
-		"	b(new C[0]);\n" +
-		"	^\n" +
-		"The method b(C[]) is ambiguous for the type D\n" +
-		"----------\n" +
-		"6. ERROR in Y.java (at line 22)\n" +
-		"	b(new D[0]);\n" +
-		"	^\n" +
-		"The method b(C[]) is ambiguous for the type D\n" +
-		"----------\n" +
-		"7. ERROR in Y.java (at line 23)\n" +
-		"	c(new C());\n" +
-		"	^\n" +
-		"The method c(C) is ambiguous for the type D\n" +
-		"----------\n" +
-		"8. ERROR in Y.java (at line 24)\n" +
-		"	c(new D());\n" +
-		"	^\n" +
-		"The method c(C) is ambiguous for the type D\n" +
-		"----------\n" +
-		"9. WARNING in Y.java (at line 28)\n" +
+		"3. WARNING in Y.java (at line 28)\n" +
 		"	void a(I x) {}\n" +
 		"	       ^\n" +
 		"I is a raw type. References to generic type I<T> should be parameterized\n" +
 		"----------\n" +
-		"10. WARNING in Y.java (at line 33)\n" +
+		"4. WARNING in Y.java (at line 33)\n" +
 		"	class B2 extends A2 {}\n" +
 		"	                 ^^\n" +
 		"A2 is a raw type. References to generic type A2<T> should be parameterized\n" +
 		"----------\n" +
-		"11. WARNING in Y.java (at line 34)\n" +
+		"5. WARNING in Y.java (at line 34)\n" +
 		"	class C2 extends B2 implements I {\n" +
 		"	                               ^\n" +
 		"I is a raw type. References to generic type I<T> should be parameterized\n" +
 		"----------\n"
-		: // no ambiguities in 1.8
-			"----------\n" +
-			"1. WARNING in Y.java (at line 3)\n" +
-			"	void a(I x) {}\n" +
-			"	       ^\n" +
-			"I is a raw type. References to generic type I<T> should be parameterized\n" +
-			"----------\n" +
-			"2. WARNING in Y.java (at line 9)\n" +
-			"	class C extends B implements I {\n" +
-			"	                             ^\n" +
-			"I is a raw type. References to generic type I<T> should be parameterized\n" +
-			"----------\n" +
-			"3. WARNING in Y.java (at line 28)\n" +
-			"	void a(I x) {}\n" +
-			"	       ^\n" +
-			"I is a raw type. References to generic type I<T> should be parameterized\n" +
-			"----------\n" +
-			"4. WARNING in Y.java (at line 33)\n" +
-			"	class B2 extends A2 {}\n" +
-			"	                 ^^\n" +
-			"A2 is a raw type. References to generic type A2<T> should be parameterized\n" +
-			"----------\n" +
-			"5. WARNING in Y.java (at line 34)\n" +
-			"	class C2 extends B2 implements I {\n" +
-			"	                               ^\n" +
-			"I is a raw type. References to generic type I<T> should be parameterized\n" +
-			"----------\n")
 	);
 }
 
@@ -3683,108 +3141,7 @@ public void test075() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=268837
 // See that this test case exhibits the bug 345947
 public void test076() {
-	String output = (this.complianceLevel == ClassFileConstants.JDK1_6)?
-			"----------\n" +
-			"1. WARNING in X.java (at line 8)\n" +
-			"	<U> J<String> b();\n" +
-			"	              ^^^\n" +
-			"Name clash: The method b() of type J<E> has the same erasure as b() of type I<E> but does not override it\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 15)\n" +
-			"	J<Integer> b = ints.a();\n" +
-			"	               ^^^^^^^^\n" +
-			"Type mismatch: cannot convert from J<String> to J<Integer>\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 16)\n" +
-			"	J<Object> c = ints.a();\n" +
-			"	              ^^^^^^^^\n" +
-			"Type mismatch: cannot convert from J<String> to J<Object>\n" +
-			"----------\n" +
-			"4. WARNING in X.java (at line 17)\n" +
-			"	J d = ints.a();\n" +
-			"	^\n" +
-			"J is a raw type. References to generic type J<E> should be parameterized\n" +
-			"----------\n" +
-			"5. ERROR in X.java (at line 19)\n" +
-			"	I<Integer> f = ints.a();\n" +
-			"	               ^^^^^^^^\n" +
-			"Type mismatch: cannot convert from J<String> to I<Integer>\n" +
-			"----------\n" +
-			"6. ERROR in X.java (at line 20)\n" +
-			"	I<Object> g = ints.a();\n" +
-			"	              ^^^^^^^^\n" +
-			"Type mismatch: cannot convert from J<String> to I<Object>\n" +
-			"----------\n" +
-			"7. WARNING in X.java (at line 21)\n" +
-			"	I h = ints.a();\n" +
-			"	^\n" +
-			"I is a raw type. References to generic type I<E> should be parameterized\n" +
-			"----------\n" +
-			"8. ERROR in X.java (at line 24)\n" +
-			"	ints.b();\n" +
-			"	     ^\n" +
-			"The method b() is ambiguous for the type J<Integer>\n" +
-			"----------\n" +
-			"9. ERROR in X.java (at line 25)\n" +
-			"	J<String> a = ints.b();\n" +
-			"	                   ^\n" +
-			"The method b() is ambiguous for the type J<Integer>\n" +
-			"----------\n" +
-			"10. ERROR in X.java (at line 26)\n" +
-			"	J<Integer> b = ints.b();\n" +
-			"	                    ^\n" +
-			"The method b() is ambiguous for the type J<Integer>\n" +
-			"----------\n" +
-			"11. ERROR in X.java (at line 27)\n" +
-			"	J<Object> c = ints.b();\n" +
-			"	                   ^\n" +
-			"The method b() is ambiguous for the type J<Integer>\n" +
-			"----------\n" +
-			"12. WARNING in X.java (at line 28)\n" +
-			"	J d = ints.b();\n" +
-			"	^\n" +
-			"J is a raw type. References to generic type J<E> should be parameterized\n" +
-			"----------\n" +
-			"13. ERROR in X.java (at line 28)\n" +
-			"	J d = ints.b();\n" +
-			"	           ^\n" +
-			"The method b() is ambiguous for the type J<Integer>\n" +
-			"----------\n" +
-			"14. ERROR in X.java (at line 29)\n" +
-			"	I<String> e = ints.b();\n" +
-			"	                   ^\n" +
-			"The method b() is ambiguous for the type J<Integer>\n" +
-			"----------\n" +
-			"15. ERROR in X.java (at line 30)\n" +
-			"	I<Integer> f = ints.b();\n" +
-			"	                    ^\n" +
-			"The method b() is ambiguous for the type J<Integer>\n" +
-			"----------\n" +
-			"16. ERROR in X.java (at line 31)\n" +
-			"	I<Object> g = ints.b();\n" +
-			"	                   ^\n" +
-			"The method b() is ambiguous for the type J<Integer>\n" +
-			"----------\n" +
-			"17. WARNING in X.java (at line 32)\n" +
-			"	I h = ints.b();\n" +
-			"	^\n" +
-			"I is a raw type. References to generic type I<E> should be parameterized\n" +
-			"----------\n" +
-			"18. ERROR in X.java (at line 32)\n" +
-			"	I h = ints.b();\n" +
-			"	           ^\n" +
-			"The method b() is ambiguous for the type J<Integer>\n" +
-			"----------\n" +
-			"19. WARNING in X.java (at line 39)\n" +
-			"	J d = ints.c();\n" +
-			"	^\n" +
-			"J is a raw type. References to generic type J<E> should be parameterized\n" +
-			"----------\n" +
-			"20. WARNING in X.java (at line 43)\n" +
-			"	I h = ints.c();\n" +
-			"	^\n" +
-			"I is a raw type. References to generic type I<E> should be parameterized\n" +
-			"----------\n":
+	String output =
 				"----------\n" +
 				"1. ERROR in X.java (at line 8)\n" +
 				"	<U> J<String> b();\n" +
@@ -4388,21 +3745,9 @@ public void test087() {
 		"    public static <T> Collection<T> with(Collection<T> p) { return null; }\n" +
 		"    static { with(null); }\n" +
 		"} \n";
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		this.runNegativeTest( // FIXME: Eclipse has a bug
-			new String[] { "X.java", source },
-			"----------\n" +
-			"1. ERROR in X.java (at line 6)\n" +
-			"	static { with(null); }\n" +
-			"	         ^^^^\n" +
-			"The method with(List<? extends Object>) is ambiguous for the type X\n" +
-			"----------\n"
-		);
-	} else {
-		this.runConformTest(
-			new String[] { "X.java", source }
-		);
-	}
+	this.runConformTest(
+		new String[] { "X.java", source }
+	);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=354579
 public void test088a() {
@@ -4490,7 +3835,6 @@ public void testBug426521() {
 			"    }\n" +
 			"}\n"
 		},
-		this.complianceLevel < ClassFileConstants.JDK1_8 ? "" :
 		"----------\n" +
 		"1. ERROR in Test.java (at line 9)\n" +
 		"	m(l, l); //JDK 6/7 give ambiguity here - EJC compiles ok\n" +

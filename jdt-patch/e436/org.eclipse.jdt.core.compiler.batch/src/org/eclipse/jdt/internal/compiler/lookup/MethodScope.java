@@ -25,6 +25,7 @@ package org.eclipse.jdt.internal.compiler.lookup;
 
 import static org.eclipse.jdt.internal.compiler.impl.JavaFeature.FLEXIBLE_CONSTRUCTOR_BODIES;
 
+import java.util.Arrays;
 import java.util.Map;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
@@ -92,6 +93,15 @@ public MethodScope(Scope parent, ReferenceContext context, boolean isStatic, int
 	this.lastVisibleFieldID = lastVisibleFieldID;
 }
 
+public LocalVariableBinding [] argumentBindings() {
+	int i = 0;
+	while (i < this.localIndex) {
+		LocalVariableBinding local = this.locals[i++];
+		if (local == null ||  !local.isParameter()) break; // done with arguments
+	}
+	return Arrays.copyOf(this.locals, i);
+}
+
 @Override
 String basicToString(int tab) {
 	String newLine = "\n"; //$NON-NLS-1$
@@ -121,8 +131,7 @@ private void checkAndSetModifiersForConstructor(MethodBinding methodBinding) {
 		problemReporter().duplicateModifierForMethod(declaringClass, (AbstractMethodDeclaration) this.referenceContext);
 
 	int astNodeBits = ((ConstructorDeclaration) this.referenceContext).bits;
-	if ((astNodeBits & ASTNode.IsDefaultConstructor) != 0
-			||((astNodeBits & ASTNode.IsImplicit) != 0 && (astNodeBits & ASTNode.IsCanonicalConstructor) != 0))  {
+	if ((astNodeBits & ASTNode.IsDefaultConstructor) != 0)  {
 		// certain flags are propagated from declaring class onto constructor
 		final int DECLARING_FLAGS = ClassFileConstants.AccEnum|ClassFileConstants.AccPublic|ClassFileConstants.AccProtected;
 		final int VISIBILITY_FLAGS = ClassFileConstants.AccPrivate|ClassFileConstants.AccPublic|ClassFileConstants.AccProtected;
@@ -202,7 +211,7 @@ private void checkAndSetModifiersForMethod(MethodBinding methodBinding) {
 		int expectedModifiers = ClassFileConstants.AccPublic | ClassFileConstants.AccAbstract;
 		boolean isDefaultMethod = (modifiers & ExtraCompilerModifiers.AccDefaultMethod) != 0; // no need to check validity, is done by the parser
 		boolean reportIllegalModifierCombination = false;
-		if (sourceLevel >= ClassFileConstants.JDK1_8 && !declaringClass.isAnnotationType()) {
+		if (!declaringClass.isAnnotationType()) {
 			expectedModifiers |= ClassFileConstants.AccStrictfp
 					| ExtraCompilerModifiers.AccDefaultMethod | ClassFileConstants.AccStatic;
 			expectedModifiers |= sourceLevel >= ClassFileConstants.JDK9 ? ClassFileConstants.AccPrivate : 0;
@@ -250,6 +259,8 @@ private void checkAndSetModifiersForMethod(MethodBinding methodBinding) {
 				methodBinding.tagBits |= TagBits.AnnotationOverride;
 			}
 		}
+	} else if (declaringClass.isRecord() && methodBinding.isNative()) {
+		problemReporter().recordIllegalNativeModifierInRecord((AbstractMethodDeclaration) this.referenceContext);
 	}
 
 	// check for abnormal modifiers
@@ -304,7 +315,7 @@ private void checkAndSetModifiersForMethod(MethodBinding methodBinding) {
 }
 
 public void checkUnusedParameters(MethodBinding method) {
-	if (method.isAbstract()
+	if (method.isAbstract() || method.isCompactConstructor()
 			|| (method.isImplementing() && !compilerOptions().reportUnusedParameterWhenImplementingAbstract)
 			|| (method.isOverriding() && !method.isImplementing() && !compilerOptions().reportUnusedParameterWhenOverridingConcrete)
 			|| method.isMain()) {
@@ -396,7 +407,8 @@ MethodBinding createMethod(AbstractMethodDeclaration method) {
 	this.referenceContext = method;
 	method.scope = this;
 	long sourceLevel = compilerOptions().sourceLevel;
-	SourceTypeBinding declaringClass = referenceType().binding;
+	TypeDeclaration referenceType = referenceType();
+	SourceTypeBinding declaringClass = referenceType.binding;
 	int modifiers = method.modifiers | ExtraCompilerModifiers.AccUnresolved;
 	if (method.isConstructor()) {
 		if (method.isDefaultConstructor())
@@ -443,31 +455,30 @@ MethodBinding createMethod(AbstractMethodDeclaration method) {
 	}
 	this.isStatic = method.binding.isStatic();
 
-	Argument[] argTypes = method.arguments;
-	int argLength = argTypes == null ? 0 : argTypes.length;
+	AbstractVariableDeclaration[] arguments = method.arguments(true);
+	int argLength = arguments == null ? 0 : arguments.length;
 	if (argLength > 0) {
-		Argument argument = argTypes[argLength - 1];
+		AbstractVariableDeclaration argument = arguments[argLength - 1];
 		method.binding.parameterNames = new char[argLength][];
 		method.binding.parameterNames[--argLength] = argument.name;
-		if (argument.isVarArgs() && sourceLevel >= ClassFileConstants.JDK1_5)
+		if (argument.isVarArgs())
 			method.binding.modifiers |= ClassFileConstants.AccVarargs;
-		if (CharOperation.equals(argument.name, ConstantPool.This)) {
+		if (!method.isCompactConstructor() && CharOperation.equals(argument.name, ConstantPool.This)) { // no double jeopardy
 			problemReporter().illegalThisDeclaration(argument);
 		}
 		while (--argLength >= 0) {
-			argument = argTypes[argLength];
+			argument = arguments[argLength];
 			method.binding.parameterNames[argLength] = argument.name;
-			if (argument.isVarArgs() && sourceLevel >= ClassFileConstants.JDK1_5)
-				problemReporter().illegalVararg(argument, method);
-			if (CharOperation.equals(argument.name, ConstantPool.This)) {
-				problemReporter().illegalThisDeclaration(argument);
+			if (!method.isCompactConstructor()) { // no double jeopardy
+				if (argument.isVarArgs())
+					problemReporter().illegalVararg(argument, method);
+				if (CharOperation.equals(argument.name, ConstantPool.This)) {
+					problemReporter().illegalThisDeclaration(argument);
+				}
 			}
 		}
 	}
 	if (method.receiver != null) {
-		if (sourceLevel <= ClassFileConstants.JDK1_7) {
-			problemReporter().illegalSourceLevelForThis(method.receiver);
-		}
 		if (method.receiver.annotations != null) {
 			method.bits |= ASTNode.HasTypeAnnotations;
 		}
@@ -481,16 +492,7 @@ MethodBinding createMethod(AbstractMethodDeclaration method) {
 		method.binding.typeVariables = createTypeVariables(typeParameters, method.binding);
 		method.binding.modifiers |= ExtraCompilerModifiers.AccGenericSignature;
 	}
-	checkAndSetRecordCanonicalConsAndMethods(method);
-	return method.binding;
-}
-
-private void checkAndSetRecordCanonicalConsAndMethods(AbstractMethodDeclaration am) {
-	if (am.binding != null && (am.bits & ASTNode.IsImplicit) != 0) {
-		am.binding.extendedTagBits |= ExtendedTagBits.isImplicit;
-		if ((am.bits & ASTNode.IsCanonicalConstructor) != 0)
-			am.binding.extendedTagBits |= ExtendedTagBits.IsCanonicalConstructor;
-	}
+    return method.binding;
 }
 
 /**

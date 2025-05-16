@@ -22,7 +22,6 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
@@ -34,7 +33,7 @@ public class StatementRecoveryTest_1_5 extends AbstractCompilerTest {
 	public static final boolean ONLY_DIET_PLUS_BODY_WITH_STATEMENT_RECOVERY = false;
 
 	public static boolean optimizeStringLiterals = false;
-	public static long sourceLevel = ClassFileConstants.JDK1_3; //$NON-NLS-1$
+	public static long sourceLevel = CompilerOptions.getFirstSupportedJdkLevel(); //$NON-NLS-1$
 
 static {
 //	TESTS_NAMES = new String[] { "test0037"};

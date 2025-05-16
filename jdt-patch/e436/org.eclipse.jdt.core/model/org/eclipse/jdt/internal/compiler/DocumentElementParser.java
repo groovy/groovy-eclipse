@@ -1135,11 +1135,7 @@ protected void consumeModifiers() {
 @Override
 protected void consumePackageComment() {
 	// get possible comment for syntax since 1.5
-	if(this.options.sourceLevel >= ClassFileConstants.JDK1_5) {
-		checkComment();
-	} else {
-		pushOnIntArrayStack(getJavaDocPositions());
-	}
+	checkComment();
 	resetModifiers();
 }
 /*

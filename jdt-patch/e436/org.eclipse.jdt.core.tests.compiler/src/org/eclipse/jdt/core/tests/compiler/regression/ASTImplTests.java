@@ -20,7 +20,6 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
@@ -741,9 +740,6 @@ public void test0016_combined_binary_expression() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=157170
 public void test0017() {
 	CompilerOptions options = new CompilerOptions();
-	options.complianceLevel = ClassFileConstants.JDK1_5;
-	options.sourceLevel = ClassFileConstants.JDK1_5;
-	options.targetJDK = ClassFileConstants.JDK1_5;
 	this.runConformTest(
 		"X.java",
 		"@interface Annot {\n" +
@@ -773,9 +769,6 @@ public void test0017() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=157170
 public void test0018() {
 	CompilerOptions options = new CompilerOptions();
-	options.complianceLevel = ClassFileConstants.JDK1_5;
-	options.sourceLevel = ClassFileConstants.JDK1_5;
-	options.targetJDK = ClassFileConstants.JDK1_5;
 	options.docCommentSupport = true;
 	this.runConformTest(
 		"X.java",
@@ -817,9 +810,6 @@ public void test0018() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=157170
 public void test0019() {
 	CompilerOptions options = new CompilerOptions();
-	options.complianceLevel = ClassFileConstants.JDK1_5;
-	options.sourceLevel = ClassFileConstants.JDK1_5;
-	options.targetJDK = ClassFileConstants.JDK1_5;
 	options.docCommentSupport = true;
 	this.runConformTest(
 		"X.java",

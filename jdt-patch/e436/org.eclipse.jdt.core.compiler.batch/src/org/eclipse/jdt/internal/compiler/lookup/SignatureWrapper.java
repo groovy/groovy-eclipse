@@ -19,31 +19,23 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationProvider;
 
 public class SignatureWrapper {
-	public char[] signature;
+	public final char[] signature;
 	public int start;
 	public int end;
 	public int bracket;
-	private final boolean use15specifics;
-	private boolean useExternalAnnotations;
+	private final boolean useExternalAnnotations;
 
-	public SignatureWrapper(char[] signature, boolean use15specifics) {
-		this.signature = signature;
-		this.start = 0;
-		this.end = this.bracket = -1;
-		this.use15specifics = use15specifics;
-		if (!use15specifics) removeTypeArguments();
+	public SignatureWrapper(char[] signature) {
+		this(signature, false);
 	}
-	public SignatureWrapper(char[] signature, boolean use15specifics, boolean useExternalAnnotations) {
+
+	public SignatureWrapper(char[] signature, boolean useExternalAnnotations) {
 		this.signature = signature;
 		this.start = 0;
 		this.end = this.bracket = -1;
-		this.use15specifics = use15specifics;
 		this.useExternalAnnotations = useExternalAnnotations;
-		if (!use15specifics) removeTypeArguments();
 	}
-	public SignatureWrapper(char [] signature) {
-		this(signature, true);
-	}
+
 	public boolean atEnd() {
 		return this.start < 0 || this.start >= this.signature.length;
 	}
@@ -89,40 +81,8 @@ public class SignatureWrapper {
 				this.end = index;
 		}
 
-		if (this.use15specifics || this.end != this.bracket) {
-			this.start = this.end + 1; // skip ';' or '<'
-		} else {
-			this.start = skipAngleContents(this.end) + 1;  // skip <<>*>;
-			this.bracket = -1;
-		}
+		this.start = this.end + 1; // skip ';' or '<'
 		return this.end;
-	}
-	/**
-	 * Removes the generic content from this.signature. Keeps the type parameter of the method, though.
-	 * <p>
-	 * E.g. running the signature <code>&lt;T:Ljava/lang/Object;&gt;(TT;Ljava/lang/String;)TT;</code> through
-	 * this method results in
-	 * <code>&lt;T:Ljava/lang/Object;&gt;(TT;Ljava/lang/String;)TT;</code>
-	 * <p>
-	 * But for the signature <code>(Lp18/Klass&lt;TT;&gt;.MethodInfo&lt;Ljava/lang/String;&gt;.InnerMethodInfo&lt;Ljava/lang/String;&gt;;)V</code>
-	 * it produces <code>(Lp18/Klass.MethodInfo.InnerMethodInfo;)V</code>
-	 */
-	private void removeTypeArguments() {
-		StringBuilder buffer = new StringBuilder();
-		int offset = 0;
-		int index = this.start;
-		if (this.signature[0] == '<') {
-			index++;
-		}
-		for (; index < this.signature.length; index++) {
-			if (this.signature[index] == '<') {
-				buffer.append(this.signature, offset, index - offset);
-				index = offset = skipAngleContents(index);
-			}
-		}
-		buffer.append(this.signature, offset, index - offset);
-		this.signature = new char[buffer.length()];
-		buffer.getChars(0, this.signature.length, this.signature, 0);
 	}
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=324850, do not expose generics if we shouldn't

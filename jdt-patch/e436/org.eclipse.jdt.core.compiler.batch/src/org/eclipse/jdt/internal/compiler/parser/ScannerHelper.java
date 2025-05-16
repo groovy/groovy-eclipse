@@ -40,8 +40,6 @@ public class ScannerHelper {
 	private static final int START_INDEX = 0;
 	private static final int PART_INDEX = 1;
 
-	private static long[][][] Tables;
-	private static long[][][] Tables7;
 	private static long[][][] Tables8;
 	private static long[][][] Tables9;
 	private static long[][][] Tables11;
@@ -137,12 +135,7 @@ public class ScannerHelper {
 		OBVIOUS_IDENT_CHAR_NATURES['"'] = C_SEPARATOR;
 		OBVIOUS_IDENT_CHAR_NATURES['\''] = C_SEPARATOR;
 	}
-static void initializeTable() {
-	Tables = initializeTables("unicode"); //$NON-NLS-1$
-}
-static void initializeTable17() {
-	Tables7 = initializeTables("unicode6"); //$NON-NLS-1$
-}
+
 static void initializeTable18() {
 	Tables8 = initializeTables("unicode6_2"); //$NON-NLS-1$
 }
@@ -361,18 +354,7 @@ private static boolean isJavaIdentifierPart0(int codePoint, long[][][] tables, b
 	return false;
 }
 public static boolean isJavaIdentifierPart(long complianceLevel, int codePoint) {
-	if (complianceLevel <= ClassFileConstants.JDK1_6) {
-		if (Tables == null) {
-			initializeTable();
-		}
-		return isJavaIdentifierPart0(codePoint, Tables);
-	} else if (complianceLevel <= ClassFileConstants.JDK1_7) {
-		// java 7 supports Unicode 6
-		if (Tables7 == null) {
-			initializeTable17();
-		}
-		return isJavaIdentifierPart0(codePoint, Tables7);
-	} else if (complianceLevel <= ClassFileConstants.JDK1_8) {
+	if (complianceLevel <= ClassFileConstants.JDK1_8) {
 		// java 8 supports Unicode 6.2
 		if (Tables8 == null) {
 			initializeTable18();
@@ -448,18 +430,7 @@ private static boolean isJavaIdentifierStart0(int codePoint, long[][][] tables, 
 	return false;
 }
 public static boolean isJavaIdentifierStart(long complianceLevel, int codePoint) {
-	if (complianceLevel <= ClassFileConstants.JDK1_6) {
-		if (Tables == null) {
-			initializeTable();
-		}
-		return isJavaIdentifierStart0(codePoint, Tables);
-	} else if (complianceLevel <= ClassFileConstants.JDK1_7) {
-		// java 7 supports Unicode 6
-		if (Tables7 == null) {
-			initializeTable17();
-		}
-		return isJavaIdentifierStart0(codePoint, Tables7);
-	} else if (complianceLevel <= ClassFileConstants.JDK1_8) {
+	if (complianceLevel <= ClassFileConstants.JDK1_8) {
 		// java 8 supports Unicode 6.2
 		if (Tables8 == null) {
 			initializeTable18();

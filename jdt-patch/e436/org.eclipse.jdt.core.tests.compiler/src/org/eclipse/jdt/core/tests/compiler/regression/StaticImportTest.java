@@ -826,19 +826,12 @@ public class StaticImportTest extends AbstractComparableTest {
 				"package p;\n" +
 				"public class B { public static int F = 2; }\n",
 			},
-			this.complianceLevel < ClassFileConstants.JDK1_8 ?
-					"----------\n" +
-					"1. ERROR in X.java (at line 2)\n" +
-					"	import static p.B.F;\n" +
-					"	              ^^^^^\n" +
-					"The import p.B.F collides with another import statement\n" +
-					"----------\n" :
-						"----------\n" +
-						"1. ERROR in X.java (at line 4)\n" +
-						"	int i = F;\n" +
-						"	        ^\n" +
-						"The field F is ambiguous\n" +
-						"----------\n"
+			"----------\n" +
+			"1. ERROR in X.java (at line 4)\n" +
+			"	int i = F;\n" +
+			"	        ^\n" +
+			"The field F is ambiguous\n" +
+			"----------\n"
 			// F is already defined in a single-type import
 		);
 	}
@@ -2930,21 +2923,13 @@ public class StaticImportTest extends AbstractComparableTest {
 				"	}\n" +
 				"}\n"
 			},
-			this.complianceLevel < ClassFileConstants.JDK1_8 ?
-					"----------\n" +
-					"1. ERROR in Test.java (at line 2)\n" +
-					"	import static p3.Foo.B;\n" +
-					"	              ^^^^^^^^\n" +
-					"The import p3.Foo.B collides with another import statement\n" +
-					"----------\n" :
-						"----------\n" +
-						"1. ERROR in Test.java (at line 7)\n" +
-						"	System.out.println(B.class.getCanonicalName().toString());\n" +
-						"	                   ^\n" +
-						"The type B is ambiguous\n" +
-						"----------\n"
-
-				);
+			"----------\n" +
+			"1. ERROR in Test.java (at line 7)\n" +
+			"	System.out.println(B.class.getCanonicalName().toString());\n" +
+			"	                   ^\n" +
+			"The type B is ambiguous\n" +
+			"----------\n"
+			);
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=361327
 	// To verify that all static members are imported with a single static import statement,
@@ -3157,39 +3142,22 @@ public class StaticImportTest extends AbstractComparableTest {
 				"    { I i = null; }\n" +
 				"}\n"
 			},
-			this.complianceLevel < ClassFileConstants.JDK1_8 ?
-					"----------\n" +
-					"1. ERROR in X.java (at line 2)\n" +
-					"	import static q.X.f;\n" +
-					"	              ^^^^^\n" +
-					"The import q.X.f collides with another import statement\n" +
-					"----------\n" +
-					"2. ERROR in X.java (at line 5)\n" +
-					"	import static q.X.C;\n" +
-					"	              ^^^^^\n" +
-					"The import q.X.C collides with another import statement\n" +
-					"----------\n" +
-					"3. ERROR in X.java (at line 6)\n" +
-					"	import static q.X.I;\n" +
-					"	              ^^^^^\n" +
-					"The import q.X.I collides with another import statement\n" +
-					"----------\n" :
-						"----------\n" +
-						"1. ERROR in X.java (at line 8)\n" +
-						"	{ f = 0; }\n" +
-						"	  ^\n" +
-						"The field f is ambiguous\n" +
-						"----------\n" +
-						"2. ERROR in X.java (at line 9)\n" +
-						"	{ C c = null; }\n" +
-						"	  ^\n" +
-						"The type C is ambiguous\n" +
-						"----------\n" +
-						"3. ERROR in X.java (at line 10)\n" +
-						"	{ I i = null; }\n" +
-						"	  ^\n" +
-						"The type I is ambiguous\n" +
-						"----------\n");
+			"----------\n" +
+			"1. ERROR in X.java (at line 8)\n" +
+			"	{ f = 0; }\n" +
+			"	  ^\n" +
+			"The field f is ambiguous\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 9)\n" +
+			"	{ C c = null; }\n" +
+			"	  ^\n" +
+			"The type C is ambiguous\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 10)\n" +
+			"	{ I i = null; }\n" +
+			"	  ^\n" +
+			"The type I is ambiguous\n" +
+			"----------\n");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=479287
 	// erroneous compile error using static imports and generics

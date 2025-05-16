@@ -21,9 +21,7 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.ConstantPool;
-import org.eclipse.jdt.internal.compiler.codegen.StackMapFrameCodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.TypeAnnotationCodeStream;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
@@ -121,21 +119,9 @@ public CodeSnippetClassFile(
 	}
 	this.produceAttributes = this.referenceBinding.scope.compilerOptions().produceDebugAttributes;
 	this.creatingProblemType = creatingProblemType;
-	if (this.targetJDK >= ClassFileConstants.JDK1_6) {
-		this.produceAttributes |= ClassFileConstants.ATTR_STACK_MAP_TABLE;
-		if (this.targetJDK >= ClassFileConstants.JDK1_8) {
-			this.produceAttributes |= ClassFileConstants.ATTR_TYPE_ANNOTATION;
-			this.codeStream = new TypeAnnotationCodeStream(this);
-		} else {
-			this.codeStream = new StackMapFrameCodeStream(this);
-		}
-	} else if (this.targetJDK == ClassFileConstants.CLDC_1_1) {
-		this.targetJDK = ClassFileConstants.JDK1_1; // put back 45.3
-		this.produceAttributes |= ClassFileConstants.ATTR_STACK_MAP;
-		this.codeStream = new StackMapFrameCodeStream(this);
-	} else {
-		this.codeStream = new CodeStream(this);
-	}
+	this.produceAttributes |= ClassFileConstants.ATTR_STACK_MAP_TABLE;
+	this.produceAttributes |= ClassFileConstants.ATTR_TYPE_ANNOTATION;
+	this.codeStream = new TypeAnnotationCodeStream(this);
 	// retrieve the enclosing one guaranteed to be the one matching the propagated flow info
 	// 1FF9ZBU: LFCOM:ALL - Local variable attributes busted (Sanity check)
 	this.codeStream.maxFieldCount = aType.scope.outerMostClassScope().referenceType().maxFieldCount;
@@ -194,8 +180,6 @@ public static void createProblemType(TypeDeclaration typeDeclaration, Compilatio
 	boolean abstractMethodsOnly = false;
 	if (methodDecls != null) {
 		if (typeBinding.isInterface()) {
-			if (typeBinding.scope.compilerOptions().sourceLevel < ClassFileConstants.JDK1_8)
-				abstractMethodsOnly = true;
 			// We generate a clinit which contains all the problems, since we may not be able to generate problem methods (< 1.8) and problem constructors (all levels).
 			classFile.addProblemClinit(problemsCopy);
 		}

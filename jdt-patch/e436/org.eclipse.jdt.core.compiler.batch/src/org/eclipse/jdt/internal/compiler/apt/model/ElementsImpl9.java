@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2024 BEA Systems, Inc. and others
+ * Copyright (c) 2006, 2025 BEA Systems, Inc. and others
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -86,7 +86,7 @@ public class ElementsImpl9 extends ElementsImpl {
 				for (int i = 0; i < topLevelSegments; ++i) {
 					topLevelName[i] = compoundName[i];
 				}
-				topLevelBinding = le.getType(topLevelName);
+				topLevelBinding = le.getType(topLevelName, mBinding);
 				if (null != topLevelBinding) {
 					break;
 				}

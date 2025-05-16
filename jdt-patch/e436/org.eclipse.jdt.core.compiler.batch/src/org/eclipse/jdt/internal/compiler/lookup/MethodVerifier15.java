@@ -43,7 +43,6 @@ import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
@@ -179,7 +178,7 @@ void checkForNameClash(MethodBinding currentMethod, MethodBinding inheritedMetho
 
 	if (inheritedMethod.isStatic() || currentMethod.isStatic()) {
 		MethodBinding original = inheritedMethod.original(); // can be the same as inherited
-		if (this.type.scope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_7 && currentMethod.areParameterErasuresEqual(original)) {
+		if (currentMethod.areParameterErasuresEqual(original)) {
 			problemReporter(currentMethod).methodNameClashHidden(currentMethod, inheritedMethod.declaringClass.isRawType() ? inheritedMethod : original);
 		}
 		return; // no chance of bridge method's clashing
@@ -268,8 +267,6 @@ void checkInheritedMethods(MethodBinding inheritedMethod, MethodBinding otherInh
 	//		abstract class X extends Y implements I {}
 
 	if (inheritedMethod.isStatic()) return;
-	if (this.environment.globalOptions.complianceLevel < ClassFileConstants.JDK1_7 && inheritedMethod.declaringClass.isInterface())
-		return;  // JDK7 checks for name clashes in interface inheritance, while JDK6 and below don't. See https://bugs.eclipse.org/bugs/show_bug.cgi?id=354229
 
 	detectInheritedNameClash(inheritedMethod.original(), otherInheritedMethod.original());
 }
@@ -326,8 +323,7 @@ void checkInheritedMethods(MethodBinding[] methods, int length, boolean[] isOver
 							continue;
 					}
 
-					problemReporter().duplicateInheritedMethods(this.type, concreteMethod, methods[i],
-											this.environment.globalOptions.sourceLevel >= ClassFileConstants.JDK1_8);
+					problemReporter().duplicateInheritedMethods(this.type, concreteMethod, methods[i], true);
 					continueInvestigation = false;
 				}
 				concreteMethod = methods[i];
@@ -343,10 +339,8 @@ void checkInheritedMethods(MethodBinding[] methods, int length, boolean[] isOver
 			}
 		} else {
 			if (concreteMethod != null && concreteMethod.isDefaultMethod()) {
-				if (this.environment.globalOptions.complianceLevel >= ClassFileConstants.JDK1_8) {
-					if (!checkInheritedDefaultMethods(methods, isOverridden, length))
-						return;
-				}
+				if (!checkInheritedDefaultMethods(methods, isOverridden, length))
+					return;
 			}
 		}
 		super.checkInheritedMethods(methods, length, isOverridden, isInherited);
@@ -433,8 +427,7 @@ void checkNullSpecInheritance(MethodBinding currentMethod, AbstractMethodDeclara
 
 void reportRawReferences() {
 	CompilerOptions compilerOptions = this.type.scope.compilerOptions();
-	if (compilerOptions.sourceLevel < ClassFileConstants.JDK1_5 // shouldn't whine at all
-			|| compilerOptions.reportUnavoidableGenericTypeProblems) { // must have already whined
+	if (compilerOptions.reportUnavoidableGenericTypeProblems) { // must have already whined
 		return;
 	}
 	/* Code below is only for a method that does not override/implement a super type method. If it were to,
@@ -477,8 +470,7 @@ void reportRawReferences() {
 @Override
 public void reportRawReferences(MethodBinding currentMethod, MethodBinding inheritedMethod) {
 	CompilerOptions compilerOptions = this.type.scope.compilerOptions();
-	if (compilerOptions.sourceLevel < ClassFileConstants.JDK1_5 // shouldn't whine at all
-			|| compilerOptions.reportUnavoidableGenericTypeProblems) { // must have already whined
+	if (compilerOptions.reportUnavoidableGenericTypeProblems) { // must have already whined
 		return;
 	}
 	AbstractMethodDeclaration methodDecl = currentMethod.sourceMethod();
@@ -827,12 +819,6 @@ boolean detectNameClash(MethodBinding current, MethodBinding inherited, boolean 
 	if (!current.areParameterErasuresEqual(original))
 		return false;
 	int severity = ProblemSeverities.Error;
-	if (this.environment.globalOptions.complianceLevel == ClassFileConstants.JDK1_6) {
-		// for 1.6 return types also need to be checked
-		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=317719
-		if (TypeBinding.notEquals(current.returnType.erasure(), original.returnType.erasure()))
-			severity = ProblemSeverities.Warning;
-	}
 	if (!treatAsSynthetic) {
 		// For a user method, see if current class overrides the inherited method. If it does,
 		// then any grievance we may have ought to be against the current class's method and

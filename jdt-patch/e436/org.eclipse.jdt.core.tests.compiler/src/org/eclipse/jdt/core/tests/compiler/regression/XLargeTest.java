@@ -1372,7 +1372,6 @@ public void _test015() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=350095
 public void test0016() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	// only run in 1.5 or above
 	StringBuilder buffer = new StringBuilder();
 	buffer
@@ -1455,7 +1454,6 @@ public void test0016() {
 	}
 }
 public void test0017() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	// only run in 1.5 or above
 	StringBuilder buffer = new StringBuilder();
 	buffer
@@ -1525,7 +1523,6 @@ public void test0017() {
 		buffer.toString());
 }
 public void test0018() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	// only run in 1.5 or above
 	StringBuilder buffer = new StringBuilder();
 	buffer
@@ -1593,7 +1590,6 @@ public void test0018() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=393749
 public void test0019() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	// only run in 1.5 or above
 
 	StringBuilder fileContents = new StringBuilder();

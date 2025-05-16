@@ -459,20 +459,22 @@ private SourceMethodElementInfo createMethodInfo(MethodInfo methodInfo, SourceMe
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=334783
 	// Process the parameter annotations from the arguments
-	if (methodInfo.node != null && methodInfo.node.arguments != null) {
-		info.arguments = acceptMethodParameters(methodInfo.node.arguments, handle, methodInfo);
+	if (methodInfo.node != null) {
+		AbstractVariableDeclaration [] arguments = methodInfo.node.arguments(true);
+		if (arguments != null)
+			info.arguments = acceptMethodParameters(arguments, handle, methodInfo);
 	}
 	if (methodInfo.typeAnnotated) {
 		this.unitInfo.annotationNumber = CompilationUnitElementInfo.ANNOTATION_THRESHOLD_FOR_DIET_PARSE;
 	}
 	return info;
 }
-private LocalVariable[] acceptMethodParameters(Argument[] arguments, JavaElement methodHandle, MethodInfo methodInfo) {
+private LocalVariable[] acceptMethodParameters(AbstractVariableDeclaration[] arguments, JavaElement methodHandle, MethodInfo methodInfo) {
 	if (arguments == null) return null;
 	LocalVariable[] result = new LocalVariable[arguments.length];
 	Annotation[][] paramAnnotations = new Annotation[arguments.length][];
 	for(int i = 0; i < arguments.length; i++) {
-		Argument argument = arguments[i];
+		AbstractVariableDeclaration argument = arguments[i];
 		AnnotatableInfo localVarInfo = new AnnotatableInfo();
 		localVarInfo.setSourceRangeStart(argument.declarationSourceStart);
 		localVarInfo.setSourceRangeEnd(argument.declarationSourceStart);

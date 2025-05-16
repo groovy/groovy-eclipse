@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2024 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -871,7 +871,7 @@ protected static class JavacTestOptions {
 				new EclipseHasABug(MismatchType.EclipseErrorsJavacNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
-						return compiler.compliance > ClassFileConstants.JDK1_5 ? this : null;
+						return this;
 					}
 				},
 			EclipseBug236242 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=236242
@@ -892,7 +892,7 @@ protected static class JavacTestOptions {
 				new EclipseHasABug(MismatchType.EclipseWarningsJavacNone) {
 					@Override
 					Excuse excuseFor(JavacCompiler compiler) {
-						return compiler.compliance > ClassFileConstants.JDK1_5 ? null : this;
+						return null;
 					}
 				},
 			EclipseBug424410 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=424410
@@ -1044,21 +1044,6 @@ protected static class JavacTestOptions {
 			if (this.minorsFixed != null) {
 				if (compiler.compliance == ClassFileConstants.JDK1_8) {
 					return this.minorsFixed[5] > compiler.minor || this.minorsFixed[5] < 0 ?
-							this : null;
-				} else if (compiler.compliance == ClassFileConstants.JDK1_7) {
-					return this.minorsFixed[4] > compiler.minor || this.minorsFixed[4] < 0 ?
-							this : null;
-				} else if (compiler.compliance == ClassFileConstants.JDK1_6) {
-					return this.minorsFixed[3] > compiler.minor || this.minorsFixed[3] < 0 ?
-							this : null;
-				} else if (compiler.compliance == ClassFileConstants.JDK1_5) {
-					return this.minorsFixed[2] > compiler.minor || this.minorsFixed[2] < 0 ?
-							this : null;
-				} else if (compiler.compliance == ClassFileConstants.JDK1_4) {
-					return this.minorsFixed[1] > compiler.minor || this.minorsFixed[1] < 0 ?
-							this : null;
-				} else if (compiler.compliance == ClassFileConstants.JDK1_3) {
-					return this.minorsFixed[0] > compiler.minor || this.minorsFixed[0] < 0 ?
 							this : null;
 				}
 				throw new RuntimeException(); // should not get there
@@ -1558,15 +1543,7 @@ protected static class JavacTestOptions {
 			.append("\" -d \"")
 			.append(EVAL_DIRECTORY);
 		String processAnnot = this.enableAPT ? "" : "-proc:none";
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-			buffer.append("\" -1.4 -source 1.3 -target 1.2");
-		} else if (this.complianceLevel == ClassFileConstants.JDK1_5) {
-			buffer.append("\" -1.5");
-		} else if (this.complianceLevel == ClassFileConstants.JDK1_6) {
-			buffer.append("\" -1.6 " + processAnnot);
-		} else if (this.complianceLevel == ClassFileConstants.JDK1_7) {
-			buffer.append("\" -1.7 " + processAnnot);
-		} else if (this.complianceLevel == ClassFileConstants.JDK1_8) {
+		if (this.complianceLevel == ClassFileConstants.JDK1_8) {
 			buffer.append("\" -1.8 " + processAnnot);
 		} else if (this.complianceLevel == ClassFileConstants.JDK9) {
 			buffer.append("\" -9 " + processAnnot);

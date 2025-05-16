@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.AbstractCommentParser;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
@@ -40,17 +40,7 @@ class DocCommentParser extends AbstractCommentParser {
 		super(null);
 		this.ast = ast;
 		this.scanner = scanner;
-		switch(this.ast.apiLevel()) {
-			case AST.JLS2_INTERNAL :
-				this.sourceLevel = ClassFileConstants.JDK1_3;
-				break;
-			case AST.JLS3_INTERNAL:
-				this.sourceLevel = ClassFileConstants.JDK1_5;
-				break;
-			default:
-				// AST.JLS4 for now
-				this.sourceLevel = ClassFileConstants.JDK1_7;
-		}
+		this.sourceLevel = CompilerOptions.getFirstSupportedJdkLevel();
 		this.checkDocComment = check;
 		this.kind = DOM_PARSER | TEXT_PARSE;
 	}
@@ -972,7 +962,7 @@ class DocCommentParser extends AbstractCommentParser {
 						}
 					break;
 					case 'v':
-						if (this.sourceLevel >= ClassFileConstants.JDK1_5 && length == TAG_VALUE_LENGTH && CharOperation.equals(TAG_VALUE, tagName)) {
+						if (length == TAG_VALUE_LENGTH && CharOperation.equals(TAG_VALUE, tagName)) {
 							this.tagValue = TAG_VALUE_VALUE;
 							if (this.inlineTagStarted) {
 								valid = parseReference();

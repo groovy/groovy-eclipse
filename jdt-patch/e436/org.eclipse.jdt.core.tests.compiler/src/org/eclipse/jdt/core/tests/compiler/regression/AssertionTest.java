@@ -14,7 +14,6 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import junit.framework.Test;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 @SuppressWarnings({ "rawtypes" })
 public class AssertionTest extends AbstractRegressionTest {
@@ -635,8 +634,6 @@ public class AssertionTest extends AbstractRegressionTest {
 			"----------\n");
 	}
 	public void test023() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		this.runConformTest(new String[] {"X.java",
 				"interface Foo {\n" +
 				"  default Object test(Object a) {\n" +

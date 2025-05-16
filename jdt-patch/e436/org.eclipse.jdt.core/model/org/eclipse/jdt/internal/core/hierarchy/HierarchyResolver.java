@@ -41,7 +41,6 @@ import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
@@ -195,7 +194,7 @@ public void accept(ISourceType[] sourceTypes, PackageBinding packageBinding, Acc
 	CompilationUnitDeclaration unit =
 		SourceTypeConverter.buildCompilationUnit(
 			new ISourceType[] {sourceType}, // ignore secondary types, to improve laziness
-			SourceTypeConverter.MEMBER_TYPE | (this.lookupEnvironment.globalOptions.sourceLevel >= ClassFileConstants.JDK1_8 ? SourceTypeConverter.METHOD : 0), // need member types
+			SourceTypeConverter.MEMBER_TYPE | SourceTypeConverter.METHOD, // need member types
 			// no need for field initialization
 			this.lookupEnvironment.problemReporter,
 			result);
@@ -361,7 +360,7 @@ private IType[] findSuperInterfaces(IGenericType type, ReferenceBinding typeBind
 		}
 	}
 	// GROOVY end
-	if (index != superinterfaces.length)
+	if (index != length)
 		System.arraycopy(superinterfaces, 0, superinterfaces = new IType[index], 0, index);
 	return superinterfaces;
 }
@@ -732,7 +731,6 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 		*/
 		Parser parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment.globalOptions, this.lookupEnvironment.problemReporter, true, 1);
 		// GROOVY end
-		final boolean isJava8 = this.options.sourceLevel >= ClassFileConstants.JDK1_8;
 		for (int i = 0; i < openablesLength; i += 1) {
 			Openable openable = openables[i];
 			if (openable instanceof org.eclipse.jdt.core.ICompilationUnit) {
@@ -767,7 +765,7 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 						// types/cu exist since cu is opened
 					}
 					int flags = !containsLocalType
-						? SourceTypeConverter.MEMBER_TYPE | (isJava8 ? SourceTypeConverter.METHOD : 0)
+						? SourceTypeConverter.MEMBER_TYPE | SourceTypeConverter.METHOD
 						: SourceTypeConverter.FIELD_AND_METHOD | SourceTypeConverter.MEMBER_TYPE | SourceTypeConverter.LOCAL_TYPE;
 					parsedUnit =
 						SourceTypeConverter.buildCompilationUnit(

@@ -1383,6 +1383,7 @@ public void test011_problem_categories() {
 	    expectedProblemAttributes.put("CompactConstructorOnlyInRecords", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
 	    expectedProblemAttributes.put("LocalMustBeEffectivelyFinal", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
 	    expectedProblemAttributes.put("ResourceLocalMustBeEffectivelyFinal", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
+	    expectedProblemAttributes.put("RecordAccessorMissingOverrideAnnotation", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
 
 	    StringBuilder failures = new StringBuilder();
 		StringBuilder correctResult = new StringBuilder(70000);
@@ -2532,6 +2533,7 @@ public void test012_compiler_problems_tuning() {
 	    expectedProblemAttributes.put("CompactConstructorOnlyInRecords", SKIP);
 	    expectedProblemAttributes.put("LocalMustBeEffectivelyFinal", SKIP);
 	    expectedProblemAttributes.put("ResourceLocalMustBeEffectivelyFinal", SKIP);
+	    expectedProblemAttributes.put("RecordAccessorMissingOverrideAnnotation", SKIP);
 
 
 	    Map constantNamesIndex = new HashMap();

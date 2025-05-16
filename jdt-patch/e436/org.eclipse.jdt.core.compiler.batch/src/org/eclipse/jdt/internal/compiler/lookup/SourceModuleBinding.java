@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2019 GK Software AG, and others.
+ * Copyright (c) 2017, 2025 GK Software AG, and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -137,14 +137,13 @@ public class SourceModuleBinding extends ModuleBinding {
 		return this.tagBits;
 	}
 	protected void ensureAnnotationsResolved() {
-		if ((this.tagBits & TagBits.AnnotationResolved) == 0 && this.scope != null) {
+		if ((this.extendedTagBits & ExtendedTagBits.AnnotationResolved) == 0 && this.scope != null) {
 			ModuleDeclaration module = this.scope.referenceContext.moduleDeclaration;
 			ASTNode.resolveAnnotations(module.scope, module.annotations, this);
 			if ((this.tagBits & TagBits.AnnotationDeprecated) != 0) {
 				this.modifiers |= ClassFileConstants.AccDeprecated;
-				this.tagBits |= TagBits.DeprecatedAnnotationResolved;
 			}
-			this.tagBits |= TagBits.AnnotationResolved;
+			this.extendedTagBits |= ExtendedTagBits.AllAnnotationsResolved;
 		}
 	}
 	@Override

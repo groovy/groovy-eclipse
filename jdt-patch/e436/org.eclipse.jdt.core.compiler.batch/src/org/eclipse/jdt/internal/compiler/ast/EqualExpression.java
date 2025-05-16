@@ -20,7 +20,6 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.BranchLabel;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
@@ -914,17 +913,14 @@ public class EqualExpression extends BinaryExpression {
 			scope.problemReporter().uninternedIdentityComparison(this, originalLeftType, originalRightType, scope.referenceCompilationUnit());
 
 		// autoboxing support
-		boolean use15specifics = compilerOptions.sourceLevel >= ClassFileConstants.JDK1_5;
 		TypeBinding leftType = originalLeftType, rightType = originalRightType;
-		if (use15specifics) {
-			if (leftType != TypeBinding.NULL && leftType.isBaseType()) {
-				if (!rightType.isBaseType()) {
-					rightType = scope.environment().computeBoxingType(rightType);
-				}
-			} else {
-				if (rightType != TypeBinding.NULL && rightType.isBaseType()) {
-					leftType = scope.environment().computeBoxingType(leftType);
-				}
+		if (leftType != TypeBinding.NULL && leftType.isBaseType()) {
+			if (!rightType.isBaseType()) {
+				rightType = scope.environment().computeBoxingType(rightType);
+			}
+		} else {
+			if (rightType != TypeBinding.NULL && rightType.isBaseType()) {
+				leftType = scope.environment().computeBoxingType(leftType);
 			}
 		}
 		// both base type

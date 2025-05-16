@@ -49,6 +49,9 @@ public interface ProblemReasons {
 	final int NoSuchMethodOnArray = 26;
 	final int InferredApplicableMethodInapplicable = 27; // 18.5.1 ignores arguments not pertinent to applicability. When these are taken into consideration method could fail applicability
 	final int NoProperEnclosingInstance = 28;
+
+	/** @deprecated - problem no longer generated in 1.8+ code */
+	@Deprecated(forRemoval = true)
 	final int InterfaceMethodInvocationNotBelow18 = 29;
 	final int NotAccessible = 30; // JLS 6.6.1 - module aspects
 	final int ErrorAlreadyReported = 31;

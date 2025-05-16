@@ -15,7 +15,6 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
 import junit.framework.Test;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -773,7 +772,6 @@ public void test025() {
 		"----------\n");
 }
 public void testBug361039() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return; // to leverage autounboxing
 	runNegativeTest(
 		new String[] {
 			"Bug361039.java",
@@ -793,7 +791,6 @@ public void testBug361039() {
 		"----------\n");
 }
 public void testBug568959_001() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // lambda
 	runNegativeTest(
 		new String[] {
 			"X.java",

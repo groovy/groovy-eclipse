@@ -742,6 +742,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			int modifiers = reader.getModifiers();
 			switch (TypeDeclaration.kind(modifiers)) {
 				case TypeDeclaration.CLASS_DECL :
+				case TypeDeclaration.RECORD_DECL:
 					char[] superclass = replace('/', '.', reader.getSuperclassName());
 					addClassDeclaration(modifiers, packageName, name, enclosingTypeNames, superclass, superinterfaces, typeParameterSignatures, false);
 					break;
@@ -754,10 +755,6 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 					break;
 				case TypeDeclaration.ANNOTATION_TYPE_DECL :
 					addAnnotationTypeDeclaration(modifiers, packageName, name, enclosingTypeNames, false);
-					break;
-				case TypeDeclaration.RECORD_DECL :
-					superclass = replace('/', '.', reader.getSuperclassName());
-					addClassDeclaration(modifiers, packageName, name, enclosingTypeNames, superclass, superinterfaces, typeParameterSignatures, false);
 					break;
 			}
 

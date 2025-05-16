@@ -574,9 +574,14 @@ public class EclipseCompilerImpl extends Main {
 			havePlatformPaths = true;
 		}
 		if (eclipseJavaFileManager != null) {
-			if ((eclipseJavaFileManager.flags & EclipseFileManager.HAS_EXT_DIRS) == 0
-					&& (eclipseJavaFileManager.flags & EclipseFileManager.HAS_BOOTCLASSPATH) != 0) {
-				fileSystemClasspaths.addAll(this.handleExtdirs(null));
+			if ((eclipseJavaFileManager.flags & EclipseFileManager.HAS_EXT_DIRS) == 0) {
+				if ((eclipseJavaFileManager.flags & EclipseFileManager.HAS_BOOTCLASSPATH) != 0) {
+					fileSystemClasspaths.addAll(this.handleExtdirs(null));
+				}
+			} else {
+				if (CompilerOptions.versionToJdkLevel(this.options.get(CompilerOptions.OPTION_TargetPlatform)) >= ClassFileConstants.JDK9) {
+					throw new IllegalArgumentException();
+				}
 			}
 		}
 		if (standardJavaFileManager != null) {

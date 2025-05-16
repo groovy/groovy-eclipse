@@ -37,7 +37,6 @@ import static org.eclipse.jdt.internal.compiler.ast.ExpressionContext.INVOCATION
 
 import java.util.Arrays;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.Opcodes;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
@@ -260,7 +259,7 @@ public class ExplicitConstructorCall extends Statement implements Invocation {
 					this.accessMode != ExplicitConstructorCall.This) {
 				ReferenceBinding declaringClass = codegenBinding.declaringClass;
 				// from 1.4 on, local type constructor can lose their private flag to ease emulation
-				if ((declaringClass.tagBits & TagBits.IsLocalType) != 0 && currentScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4) {
+				if ((declaringClass.tagBits & TagBits.IsLocalType) != 0) {
 					// constructor will not be dumped as private, no emulation required thus
 					codegenBinding.tagBits |= TagBits.ClearPrivateModifier;
 				} else {
@@ -329,7 +328,9 @@ public class ExplicitConstructorCall extends Statement implements Invocation {
 				}
 			}
 			if (hasError) {
-				if (!methodDeclaration.isCompactConstructor()) {// already flagged for CCD
+				if (methodDeclaration == null) {
+					scope.problemReporter().invalidExplicitConstructorCall(this);
+				} else if (!methodDeclaration.isCompactConstructor()) {// already flagged for CCD
 					if (JavaFeature.FLEXIBLE_CONSTRUCTOR_BODIES.isSupported(scope.compilerOptions())) {
 						boolean isTopLevel = Arrays.stream(methodDeclaration.statements).anyMatch(this::equals);
 						if (isTopLevel)
@@ -402,9 +403,8 @@ public class ExplicitConstructorCall extends Statement implements Invocation {
 				}
 			}
 			// resolve type arguments (for generic constructor call)
-			long sourceLevel = scope.compilerOptions().sourceLevel;
 			if (this.typeArguments != null) {
-				boolean argHasError = sourceLevel < ClassFileConstants.JDK1_5;
+				boolean argHasError = false;
 				int length = this.typeArguments.length;
 				this.genericTypeArguments = new TypeBinding[length];
 				for (int i = 0; i < length; i++) {

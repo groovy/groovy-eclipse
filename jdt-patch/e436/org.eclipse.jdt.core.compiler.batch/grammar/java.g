@@ -1143,7 +1143,7 @@ InterfaceMemberDeclaration -> RecordDeclaration
 -----------------------------------------------
 
 RecordDeclaration ::= RecordHeaderPart ClassBody
-/.$putCase consumeRecordDeclaration(); $break ./
+/.$putCase consumeClassDeclaration(); $break ./
 /:$readableName RecordDeclaration:/
 /:$compliance 16:/
 
@@ -1172,10 +1172,7 @@ RecordComponentHeaderRightParen ::= ')'
 /:$recovery_template ):/
 /:$compliance 16:/
 
-RecordHeader ::= '(' RecordComponentListOpt RecordComponentHeaderRightParen
-/.$putCase consumeRecordHeader(); $break ./
-/:$readableName RecordHeader:/
-/:$compliance 16:/
+RecordHeader -> '(' RecordComponentListOpt RecordComponentHeaderRightParen
 
 RecordComponentListOpt ::= $empty
 /.$putCase consumeRecordComponentsopt(); $break ./
@@ -3122,4 +3119,3 @@ UNDERSCORE ::= '_'
 
 $end
 -- need a carriage return after the $end
-

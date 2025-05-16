@@ -25,7 +25,10 @@ import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
+import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.core.search.processing.JobManager;
@@ -160,25 +163,52 @@ public void acceptUnknownReference(char[] name, int sourcePosition) {
 }
 
 private void addDefaultConstructorIfNecessary(TypeInfo typeInfo) {
-	boolean hasConstructor = false;
-
 	TypeDeclaration typeDeclaration = typeInfo.node;
+	boolean needDefaultConstructor = !typeDeclaration.isRecord();
+	boolean needCanonicalConstructor = typeDeclaration.isRecord();
+
 	AbstractMethodDeclaration[] methods = typeDeclaration.methods;
 	int methodCounter = methods == null ? 0 : methods.length;
-	done : for (int i = 0; i < methodCounter; i++) {
+	for (int i = 0; i < methodCounter; i++) {
 		AbstractMethodDeclaration method = methods[i];
-		if (method.isConstructor() && !method.isDefaultConstructor()) {
-			hasConstructor = true;
-			break done;
+		if (method.isConstructor()) {
+			if (!method.isDefaultConstructor() && !typeDeclaration.isRecord()) {
+				needDefaultConstructor = false;
+				break;
+			}
+			if (method.isCanonicalConstructor() && typeDeclaration.isRecord()) {
+				needCanonicalConstructor = false;
+				break;
+			}
 		}
 	}
 
-	if (!hasConstructor) {
-		this.indexer.addDefaultConstructorDeclaration(
+	if (needCanonicalConstructor) {
+		int argCount = typeDeclaration.recordComponents.length;
+		char [][] parameterTypes = new char[argCount][];
+		char [][] parameterNames = new char[argCount][];
+		for (int i = 0; i < argCount; i++) {
+			final TypeReference type = typeDeclaration.recordComponents[i].type;
+			parameterTypes[i] = type instanceof SingleTypeReference str ? str.token : CharOperation.concatWith(((QualifiedTypeReference)type).tokens, '.');
+			parameterNames[i] = typeDeclaration.recordComponents[i].name;
+		}
+		this.indexer.addConstructorDeclaration(
 				typeInfo.name,
+				argCount,
+				null, // a la enterConstructor(MethodInfo)
+				parameterTypes,
+				parameterNames,
+				typeInfo.modifiers,
 				this.packageName == null ? CharOperation.NO_CHAR : this.packageName,
 				typeInfo.modifiers,
+				CharOperation.NO_CHAR_CHAR,
 				getMoreExtraFlags(typeInfo.extraFlags));
+	} else if (needDefaultConstructor) {
+		this.indexer.addDefaultConstructorDeclaration(
+		typeInfo.name,
+		this.packageName == null ? CharOperation.NO_CHAR : this.packageName,
+		typeInfo.modifiers,
+		getMoreExtraFlags(typeInfo.extraFlags));
 	}
 }
 /*
@@ -210,7 +240,6 @@ private void enterAnnotationType(TypeInfo typeInfo) {
 
 private void enterRecord(TypeInfo typeInfo) {
 	enterClass(typeInfo);
-	// TODO : Need to handle Compact Constructor here
 }
 
 private void enterClass(TypeInfo typeInfo) {
@@ -536,13 +565,5 @@ public void pushTypeName(char[] typeName) {
 	if (this.depth == this.enclosingTypeNames.length)
 		System.arraycopy(this.enclosingTypeNames, 0, this.enclosingTypeNames = new char[this.depth*2][], 0, this.depth);
 	this.enclosingTypeNames[this.depth++] = typeName;
-}
-@Override
-public void enterCompactConstructor(MethodInfo methodInfo) {
-	this.enterConstructor(methodInfo);
-}
-@Override
-public void exitCompactConstructor(int declarationEnd) {
-	this.exitConstructor(declarationEnd);
 }
 }

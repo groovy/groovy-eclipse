@@ -7015,9 +7015,6 @@ public void test175() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=285701
 public void test176() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -7075,9 +7072,6 @@ public void test176() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=285701
 public void test177() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -7144,9 +7138,6 @@ public void test177() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=285701
 // static local enums are not allowed. Removing static is the same as test177
 public void _NA_test178() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -7192,9 +7183,6 @@ public void _NA_test178() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=285701
 public void test179() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_Process_Annotations, CompilerOptions.ENABLED);
 	this.runConformTest(
@@ -7337,9 +7325,6 @@ public void test180a() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=300133
 public void test181() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	this.runConformTest(
 		new String[] {
 				"B.java",
@@ -7367,9 +7352,6 @@ public void test181() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=328519
 public void test182() throws Exception {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.ERROR);
 	customOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
@@ -7410,9 +7392,6 @@ public void test182() throws Exception {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=328519
 public void test183() throws Exception {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.ERROR);
 	customOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
@@ -7453,9 +7432,6 @@ public void test183() throws Exception {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=328519
 public void test184() throws Exception {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.ERROR);
 	customOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
@@ -7496,9 +7472,6 @@ public void test184() throws Exception {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=
 public void test185() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -7526,9 +7499,6 @@ public void test185() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=374605
 public void test186() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	Map options = getCompilerOptions();
 	options.put(JavaCore.COMPILER_PB_MISSING_ENUM_CASE_DESPITE_DEFAULT, JavaCore.ENABLED);
 	this.runNegativeTest(
@@ -7566,9 +7536,6 @@ public void test186() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=374605
 public void test187() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	Map options = getCompilerOptions();
 	options.put(JavaCore.COMPILER_PB_MISSING_ENUM_CASE_DESPITE_DEFAULT, JavaCore.ENABLED);
 	options.put(JavaCore.COMPILER_PB_INCOMPLETE_ENUM_SWITCH, JavaCore.ERROR);
@@ -7599,9 +7566,6 @@ public void test187() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=374605
 public void test187a() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	Map options = getCompilerOptions();
 	options.put(JavaCore.COMPILER_PB_MISSING_ENUM_CASE_DESPITE_DEFAULT, JavaCore.ENABLED);
 	this.runNegativeTest(
@@ -7639,9 +7603,6 @@ public void test187a() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=374605
 public void test187b() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	Map options = getCompilerOptions();
 	options.put(JavaCore.COMPILER_PB_SWITCH_MISSING_DEFAULT_CASE, JavaCore.ERROR);
 	options.put(JavaCore.COMPILER_PB_SUPPRESS_OPTIONAL_ERRORS, JavaCore.ENABLED);
@@ -7670,9 +7631,6 @@ public void test187b() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=374605
 public void test188() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	Map options = getCompilerOptions();
 	options.put(JavaCore.COMPILER_PB_SWITCH_MISSING_DEFAULT_CASE, JavaCore.WARNING);
 	this.runNegativeTest(
@@ -7710,9 +7668,6 @@ public void test188() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=374605
 public void test189() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	Map options = getCompilerOptions();
 	//options.put(JavaCore.COMPILER_PB_MISSING_DEFAULT_CASE, JavaCore.WARNING);
 	this.runNegativeTest(
@@ -7744,9 +7699,6 @@ public void test189() {
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=433060 [1.8][compiler] enum E<T>{I;} causes NPE in AllocationExpression.checkTypeArgumentRedundancy
 public void test433060() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	Map options = getCompilerOptions();
 	options.put(JavaCore.COMPILER_PB_REDUNDANT_TYPE_ARGUMENTS, JavaCore.ERROR);
 	this.runNegativeTest(
@@ -7772,9 +7724,6 @@ public void test433060() {
 		options);
 }
 public void test434442() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	this.runConformTest(new String[] {
 			"Y.java",
 			"public class Y {\n" +
@@ -7809,9 +7758,6 @@ public void test434442() {
 	}, "A");
 }
 public void test476281() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	this.runConformTest(new String[] {
 			"Y.java",
 			"public class Y {\n" +
@@ -7836,9 +7782,6 @@ public void test476281() {
 			"Success");
 }
 public void test476281a() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	this.runConformTest(new String[] {
 			"Y.java",
 			"public class Y {\n" +
@@ -7867,9 +7810,6 @@ public void test476281a() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=566758
 public void test566758() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	this.runNegativeTest(
 		new String[] {
 			"X.java",

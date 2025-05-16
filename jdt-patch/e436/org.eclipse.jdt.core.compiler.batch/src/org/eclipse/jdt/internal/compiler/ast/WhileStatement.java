@@ -20,7 +20,6 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.BranchLabel;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
@@ -83,8 +82,7 @@ public class WhileStatement extends Statement {
 		LoopingFlowContext loopingContext;
 		FlowInfo actionInfo;
 		FlowInfo exitBranch;
-		if (this.action == null
-			|| (this.action.isEmptyBlock() && currentScope.compilerOptions().complianceLevel <= ClassFileConstants.JDK1_3)) {
+		if (this.action == null) {
 			condLoopContext.complainOnDeferredFinalChecks(currentScope,
 					condInfo);
 			condLoopContext.complainOnDeferredNullChecks(currentScope,

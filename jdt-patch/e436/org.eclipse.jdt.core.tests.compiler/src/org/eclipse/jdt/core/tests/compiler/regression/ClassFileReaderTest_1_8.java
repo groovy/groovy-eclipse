@@ -17,7 +17,6 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import java.io.File;
 import junit.framework.Test;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.codegen.AnnotationTargetTypeConstants;
 import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
@@ -25,6 +24,7 @@ import org.eclipse.jdt.internal.compiler.env.IBinaryElementValuePair;
 import org.eclipse.jdt.internal.compiler.env.IBinaryField;
 import org.eclipse.jdt.internal.compiler.env.IBinaryMethod;
 import org.eclipse.jdt.internal.compiler.env.IBinaryTypeAnnotation;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "rawtypes" })
 public class ClassFileReaderTest_1_8 extends AbstractRegressionTest {
@@ -47,7 +47,7 @@ public class ClassFileReaderTest_1_8 extends AbstractRegressionTest {
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
-		this.complianceLevel = ClassFileConstants.JDK1_8;
+		this.complianceLevel = CompilerOptions.getFirstSupportedJdkLevel();
 	}
 
 	public void test001_classTypeParameter() throws Exception {
@@ -124,7 +124,7 @@ public class ClassFileReaderTest_1_8 extends AbstractRegressionTest {
 	}
 
 	public void test003_classExtends() throws Exception {
-		this.complianceLevel = ClassFileConstants.JDK1_8;
+		this.complianceLevel = CompilerOptions.getFirstSupportedJdkLevel();
 		String source =
 			"import java.lang.annotation.*;\n" +
 			"public class X extends @Foo @Bar(iii=34) Object implements java.io.@Bar(iii=1) Serializable {\n" +

@@ -104,7 +104,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 					FlowInfo.DEAD_END);
 
 			// nullity, owning and mark as assigned
-			analyseArguments(classScope.environment(), flowInfo, flowContext, this.arguments, this.binding);
+			analyseArguments(classScope.environment(), flowInfo, flowContext, this.arguments, this.binding, this.scope);
 
 			BiPredicate<TypeBinding, ReferenceBinding> condition = (argType, declClass) -> {
 				ReferenceBinding enclosingType = argType.enclosingType();
@@ -237,20 +237,12 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 	public RecordComponent getRecordComponent() {
 		if (this.arguments != null && this.arguments.length != 0)
 			return null;
-		ClassScope skope = this.scope.classScope();
-		TypeDeclaration typeDecl = skope.referenceContext;
-		if (!typeDecl.isRecord())
-			return null;
-		if (!(skope.referenceContext.isRecord()))
-			return null;
-		RecordComponent[] recComps = typeDecl.recordComponents;
-		if (recComps == null || recComps.length == 0)
-			return null;
-		for (RecordComponent recComp : recComps) {
-			if (recComp == null || recComp.name == null)
-				continue;
-			if (CharOperation.equals(this.selector, recComp.name)) {
-				return recComp;
+		TypeDeclaration typeDecl = this.scope.referenceType();
+		if (typeDecl.isRecord()) {
+			for (RecordComponent component : typeDecl.recordComponents) {
+				if (CharOperation.equals(this.selector, component.name)) {
+					return component;
+				}
 			}
 		}
 		return null;
@@ -278,16 +270,18 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 		}
 		RecordComponent recordComponent = getRecordComponent();
 		if (recordComponent != null) {
-			/* JLS 14 Records Sec 8.10.3 */
 			if (this.returnType != null && TypeBinding.notEquals(this.returnType.resolvedType, recordComponent.type.resolvedType))
 				this.scope.problemReporter().recordIllegalAccessorReturnType(this.returnType, recordComponent.type.resolvedType);
 			if (this.typeParameters != null)
 				this.scope.problemReporter().recordAccessorMethodShouldNotBeGeneric(this);
 			if (this.binding != null) {
-				if (!(this.binding.isPublic()))
+				if (!this.binding.isPublic())
 					this.scope.problemReporter().recordAccessorMethodShouldBePublic(this);
 				if (this.binding.isStatic())
 					this.scope.problemReporter().recordAccessorMethodShouldNotBeStatic(this);
+				if ((this.binding.modifiers & ExtraCompilerModifiers.AccOverriding) == 0) {
+					this.scope.problemReporter().recordAccessorMissingOverrideAnnotation(this);
+				}
 			}
 			if (this.thrownExceptions != null)
 				this.scope.problemReporter().recordAccessorMethodHasThrowsClause(this);
@@ -314,10 +308,9 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 		// check @Override annotation
 		final CompilerOptions compilerOptions = this.scope.compilerOptions();
 		checkOverride: {
-			// For a record component accessor method, don't bother with checking for override (JLS 15 9.6.4.4)
+			// For a record component accessor method, don't bother with checking for override
 			if (this.binding == null || recordComponent != null) break checkOverride;
 			long complianceLevel = compilerOptions.complianceLevel;
-			if (complianceLevel < ClassFileConstants.JDK1_5) break checkOverride;
 			int bindingModifiers = this.binding.modifiers;
 			boolean hasOverrideAnnotation = (this.binding.tagBits & TagBits.AnnotationOverride) != 0;
 			boolean hasUnresolvedArguments = (this.binding.tagBits & TagBits.HasUnresolvedArguments) != 0;
@@ -327,8 +320,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 					break checkOverride;
 				//	in 1.5, strictly for overriding superclass method
 				//	in 1.6 and above, also tolerate implementing interface method
-				if (complianceLevel >= ClassFileConstants.JDK1_6
-						&& ((bindingModifiers & (ClassFileConstants.AccStatic|ExtraCompilerModifiers.AccImplementing)) == ExtraCompilerModifiers.AccImplementing))
+				if ((bindingModifiers & (ClassFileConstants.AccStatic|ExtraCompilerModifiers.AccImplementing)) == ExtraCompilerModifiers.AccImplementing)
 					break checkOverride;
 				// claims to override, and doesn't actually do so
 				this.scope.problemReporter().methodMustOverride(this, complianceLevel);
@@ -339,8 +331,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 						if((bindingModifiers & (ClassFileConstants.AccStatic|ExtraCompilerModifiers.AccOverriding)) == ExtraCompilerModifiers.AccOverriding) {
 							this.scope.problemReporter().missingOverrideAnnotation(this);
 						} else {
-							if(complianceLevel >= ClassFileConstants.JDK1_6
-								&& compilerOptions.reportMissingOverrideAnnotationForInterfaceMethodImplementation
+							if(compilerOptions.reportMissingOverrideAnnotationForInterfaceMethodImplementation
 								&& this.binding.isImplementing()) {
 									// actually overrides, but did not claim to do so
 									this.scope.problemReporter().missingOverrideAnnotationForInterfaceMethodImplementation(this);
@@ -351,8 +342,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 				else {	//For 1.6 and above only
 					//In case of a interface class method, we have to check if it overrides a method (isImplementing returns true in case it overrides)
 					//Also check if the method has a signature that is override-equivalent to that of any public method declared in Object.
-					if(complianceLevel >= ClassFileConstants.JDK1_6
-							&& compilerOptions.reportMissingOverrideAnnotationForInterfaceMethodImplementation
+					if(compilerOptions.reportMissingOverrideAnnotationForInterfaceMethodImplementation
 							&& (((bindingModifiers & (ClassFileConstants.AccStatic|ExtraCompilerModifiers.AccOverriding)) == ExtraCompilerModifiers.AccOverriding) || this.binding.isImplementing())){
 						// actually overrides, but did not claim to do so
 						this.scope.problemReporter().missingOverrideAnnotationForInterfaceMethodImplementation(this);
@@ -385,8 +375,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 				}
 				break;
 			case TypeDeclaration.INTERFACE_DECL :
-				if (compilerOptions.sourceLevel >= ClassFileConstants.JDK1_8
-						&& (this.modifiers & (ExtraCompilerModifiers.AccSemicolonBody | ClassFileConstants.AccAbstract)) == ExtraCompilerModifiers.AccSemicolonBody) {
+				if ((this.modifiers & (ExtraCompilerModifiers.AccSemicolonBody | ClassFileConstants.AccAbstract)) == ExtraCompilerModifiers.AccSemicolonBody) {
 					boolean isPrivateMethod = compilerOptions.sourceLevel >= ClassFileConstants.JDK9 && (this.modifiers & ClassFileConstants.AccPrivate) != 0;
 					if (isPrivateMethod || ((this.modifiers & (ClassFileConstants.AccStatic | ExtraCompilerModifiers.AccDefaultMethod)) != 0)) {
 							this.scope.problemReporter().methodNeedBody(this);

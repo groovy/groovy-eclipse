@@ -30,7 +30,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
@@ -52,7 +51,7 @@ public final class JavaConventions {
 	private static final char DOT= '.';
     private static final Pattern DOT_DOT = Pattern.compile("(\\.)(\\1)+"); //$NON-NLS-1$
     private static final Pattern PREFIX_JAVA = Pattern.compile("java$"); //$NON-NLS-1$
-	private static final Scanner SCANNER = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_3 /*sourceLevel*/, null/*taskTag*/, null/*taskPriorities*/, true /*taskCaseSensitive*/);
+	private static final Scanner SCANNER = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, CompilerOptions.getFirstSupportedJdkLevel() /*sourceLevel*/, null/*taskTag*/, null/*taskPriorities*/, true /*taskCaseSensitive*/);
 	private static Map<String, Set<String>> restrictedIdentifiersMap, restrictedIdentifierPreviewMap;
 	private static List<String> javaVersions;
 	private static String VAR_ID = "var"; //$NON-NLS-1$
@@ -126,8 +125,8 @@ public final class JavaConventions {
 			return null;
 		}
 		// Set scanner for given source and compliance levels
-		SCANNER.sourceLevel = sourceLevel == null ? ClassFileConstants.JDK1_3 : CompilerOptions.versionToJdkLevel(sourceLevel);
-		SCANNER.complianceLevel = complianceLevel == null ? ClassFileConstants.JDK1_3 : CompilerOptions.versionToJdkLevel(complianceLevel);
+		SCANNER.sourceLevel = sourceLevel == null ? CompilerOptions.getFirstSupportedJdkLevel() : CompilerOptions.versionToJdkLevel(sourceLevel);
+		SCANNER.complianceLevel = complianceLevel == null ? CompilerOptions.getFirstSupportedJdkLevel() : CompilerOptions.versionToJdkLevel(complianceLevel);
 		SCANNER.previewEnabled = previewEnabled == null ? false : JavaCore.ENABLED.equals(previewEnabled);
 
 		try {

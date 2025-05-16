@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2024 IBM Corporation and others.
+ * Copyright (c) 2016, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -144,7 +144,6 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 	private SimpleSetOfCharArray packageNames;
 	public int modifiers;
 	public LookupEnvironment environment;
-	public long tagBits;
 	public int defaultNullness = NO_NULL_DEFAULT;
 	ModuleBinding[] requiredModules = null;
 	boolean isAuto = false;

@@ -183,10 +183,10 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 	}
 
 	@Override
-	protected void notifySourceElementRequestor(FieldDeclaration fieldDeclaration, TypeDeclaration declaringType) {
-		if (fieldDeclaration instanceof CompletionOnFieldType) return;
-		if (fieldDeclaration instanceof CompletionOnFieldName) return;
-		super.notifySourceElementRequestor(fieldDeclaration, declaringType);
+	protected void notifySourceElementRequestor(AbstractVariableDeclaration variableDeclaration, TypeDeclaration declaringType) {
+		if (variableDeclaration instanceof CompletionOnFieldType) return;
+		if (variableDeclaration instanceof CompletionOnFieldName) return;
+		super.notifySourceElementRequestor(variableDeclaration, declaringType);
 	}
 
 	@Override

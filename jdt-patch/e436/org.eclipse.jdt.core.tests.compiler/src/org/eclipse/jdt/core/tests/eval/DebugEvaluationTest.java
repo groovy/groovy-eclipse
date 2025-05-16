@@ -2750,7 +2750,6 @@ public void testNegative004() throws InstallException {
  * https://bugs.eclipse.org/bugs/show_bug.cgi?id=102778
  */
 public void test063() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	try {
 		String sourceA63 =
 			"public class A63 {\n" +
@@ -2800,7 +2799,6 @@ public void test063() throws Exception {
 	}
 }
 public void test065() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	try {
 		String sourceA65 =
 			"public class A65<T> {\n"
@@ -2850,7 +2848,6 @@ public void test065() {
 	}
 }
 public void test066() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	try {
 		String sourceA66 =
 			"public class A66 {\n"
@@ -2900,7 +2897,6 @@ public void test066() {
 	}
 }
 public void test067() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	try {
 		String sourceA67 =
 			"import java.util.List;\n" +
@@ -2957,7 +2953,6 @@ public void test067() {
 	}
 }
 public void test068() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	try {
 		String sourceSuperA68 =
 			"public class SuperA68 {\n"
@@ -3017,7 +3012,6 @@ public void test068() {
 	}
 }
 public void test069() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	try {
 		String sourceA69 =
 			"public enum A69 {\n"

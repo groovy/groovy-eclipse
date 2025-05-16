@@ -16,8 +16,6 @@ package org.eclipse.jdt.internal.core.search;
 
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IOrdinaryClassFile;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
@@ -25,9 +23,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.Openable;
 import org.eclipse.jdt.internal.core.PackageFragmentRoot;
 import org.eclipse.jdt.internal.core.util.HandleFactory;
@@ -50,8 +46,7 @@ public abstract class NameMatchRequestorWrapper {
 	 * Cache package handles to optimize memory.
 	 */
 	private HashtableOfArrayToObject packageHandles;
-	private Object lastProject;
-	private long complianceValue;
+
 
 public NameMatchRequestorWrapper(IJavaSearchScope scope) {
 	this.scope = scope;
@@ -128,14 +123,7 @@ private IType createTypeFromJar(String resourcePath, int separatorIndex) throws 
 		// filter org.apache.commons.lang.enum package for projects above 1.5
 		// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=317264
 		if (length == 5 && pkgName[4].equals("enum")) { //$NON-NLS-1$
-			IJavaProject proj = (IJavaProject)pkgFragment.getAncestor(IJavaElement.JAVA_PROJECT);
-			if (!proj.equals(this.lastProject)) {
-				String complianceStr = proj.getOption(CompilerOptions.OPTION_Source, true);
-				this.complianceValue = CompilerOptions.versionToJdkLevel(complianceStr);
-				this.lastProject = proj;
-			}
-			if (this.complianceValue >= ClassFileConstants.JDK1_5)
-				return null;
+			return null;
 		}
 		this.packageHandles.put(pkgName, pkgFragment);
 	}

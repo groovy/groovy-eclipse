@@ -22,7 +22,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.Argument;
+import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Initializer;
@@ -95,7 +95,7 @@ public class ASTNodeFinder {
 			int parameterCount = parameterTypeSignatures.length;
 			nextMethod: for (AbstractMethodDeclaration method : methods) {
 				if (CharOperation.equals(selector, method.selector)) {
-					Argument[] args = method.arguments;
+					AbstractVariableDeclaration[] args = method.arguments(true);
 					int argsLength = args == null ? 0 : args.length;
 					if (argsLength == parameterCount) {
 						for (int j = 0; j < parameterCount; j++) {

@@ -13,8 +13,6 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
-import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameEOF;
-
 import junit.framework.Test;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
@@ -546,7 +544,7 @@ public class ScannerTest extends AbstractRegressionTest {
 		char[] source = ("class Test {\n" +
 				"  char  C = \"\\u005Cn\";\n" +
 				"}").toCharArray();
-		Scanner scanner = new Scanner(false, false, false, ClassFileConstants.JDK1_4, null, null, false);
+		Scanner scanner = new Scanner(false, false, false, ClassFileConstants.JDK1_8, null, null, false);
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
 		try {
@@ -575,7 +573,7 @@ public class ScannerTest extends AbstractRegressionTest {
 		char[] source = ("class Test {\n" +
 				"  char  C = \'\\u005Cn\';\n" +
 				"}").toCharArray();
-		Scanner scanner = new Scanner(false, false, false, ClassFileConstants.JDK1_4, null, null, false);
+		Scanner scanner = new Scanner(false, false, false, ClassFileConstants.JDK1_8, null, null, false);
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
 		try {
@@ -607,7 +605,7 @@ public class ScannerTest extends AbstractRegressionTest {
 		char[] source = ("class Test {\n" +
 				"  char  C = \"\\n\";\n" +
 				"}").toCharArray();
-		Scanner scanner = new Scanner(false, false, false, ClassFileConstants.JDK1_4, null, null, false);
+		Scanner scanner = new Scanner(false, false, false, ClassFileConstants.JDK1_8, null, null, false);
 		scanner.setSource(source);
 		scanner.resetTo(0, source.length - 1);
 		try {
@@ -1166,31 +1164,7 @@ public class ScannerTest extends AbstractRegressionTest {
 			assertTrue(false);
 		}
 	}
-	/*
-	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=340513
-	 */
-	public void test056() {
-		IScanner scanner = ToolFactory.createScanner(false, false, false, JavaCore.VERSION_1_6, JavaCore.VERSION_1_6);
-		char[] source =
-				("class X {\n" +
-				"	public static void main(String[] args) {\n" +
-				"		String \u20B9 = \"Rupee symbol\";\n" +
-				"		System.out.println(\u20B9);\n" +
-				"	}\n" +
-				"}").toCharArray();
-		scanner.setSource(source);
-		scanner.resetTo(0, source.length - 1);
-		try {
-			int token;
-			boolean foundError = false;
-			while ((token = scanner.getNextToken()) != ITerminalSymbols.TokenNameEOF) {
-				foundError |= token == ITerminalSymbols.TokenNameERROR;
-			}
-			assertTrue("Did not find error token", foundError);
-		} catch (InvalidInputException e) {
-			assertTrue(false);
-		}
-	}
+
 	/*
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=340513
 	 */
@@ -1222,26 +1196,17 @@ public class ScannerTest extends AbstractRegressionTest {
 				"		int a\\u1369b;\n" +
 				"	}\n" +
 				"}";
-		if (this.complianceLevel <= ClassFileConstants.JDK1_6) {
-			this.runConformTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"");
-		} else {
-			this.runNegativeTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 3)\n" +
-				"	int a\\u1369b;\n" +
-				"	     ^^^^^^\n" +
-				"Syntax error on token \"Invalid Character\", = expected\n" +
-				"----------\n");
-		}
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				source
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	int a\\u1369b;\n" +
+			"	     ^^^^^^\n" +
+			"Syntax error on token \"Invalid Character\", = expected\n" +
+			"----------\n");
 	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=352553
 	public void test059() {
@@ -1251,26 +1216,12 @@ public class ScannerTest extends AbstractRegressionTest {
 				"		int a\\u200B;\n" +
 				"	}\n" +
 				"}";
-		if (this.complianceLevel > ClassFileConstants.JDK1_6) {
-			this.runConformTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"");
-		} else {
-			this.runNegativeTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 3)\n" +
-				"	int a\\u200B;\n" +
-				"	     ^^^^^^\n" +
-				"Syntax error on token \"Invalid Character\", delete this token\n" +
-				"----------\n");
-		}
+		this.runConformTest(
+			new String[] {
+				"X.java",
+				source
+			},
+			"");
 	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=352553
 	public void test060() {
@@ -1362,24 +1313,22 @@ public class ScannerTest extends AbstractRegressionTest {
 				"		System.out.println(Character.isJavaIdentifierPart('\\u205f')); // false\n" +
 				"	}\n" +
 				"}";
-		if (this.complianceLevel > ClassFileConstants.JDK1_5) {
-			this.runNegativeTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 2)\n" +
-				"	Hello\\u205fworld;\n" +
-				"	     ^^^^^^\n" +
-				"Syntax error on token \"Invalid Character\", , expected\n" +
-				"----------\n" +
-				"2. ERROR in X.java (at line 4)\n" +
-				"	System.out.println(Hello\\u205fworld);\n" +
-				"	                        ^^^^^^\n" +
-				"Syntax error on token \"Invalid Character\", invalid AssignmentOperator\n" +
-				"----------\n");
-		}
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				source
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 2)\n" +
+			"	Hello\\u205fworld;\n" +
+			"	     ^^^^^^\n" +
+			"Syntax error on token \"Invalid Character\", , expected\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 4)\n" +
+			"	System.out.println(Hello\\u205fworld);\n" +
+			"	                        ^^^^^^\n" +
+			"Syntax error on token \"Invalid Character\", invalid AssignmentOperator\n" +
+			"----------\n");
 	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=458795
 	public void test065() {
@@ -1387,70 +1336,62 @@ public class ScannerTest extends AbstractRegressionTest {
 				"public class X {\n" +
 				"	double d = 0XP00;\n" +
 				"}";
-		if (this.complianceLevel > ClassFileConstants.JDK1_4) {
-			this.runNegativeTest(
-					new String[] {
-							"X.java",
-							source
-					},
-					"----------\n" +
-							"1. ERROR in X.java (at line 2)\n" +
-							"	double d = 0XP00;\n" +
-							"	           ^^^\n" +
-							"Invalid hex literal number\n" +
-					"----------\n");
-		}
+		this.runNegativeTest(
+				new String[] {
+						"X.java",
+						source
+				},
+				"----------\n" +
+						"1. ERROR in X.java (at line 2)\n" +
+						"	double d = 0XP00;\n" +
+						"	           ^^^\n" +
+						"Invalid hex literal number\n" +
+				"----------\n");
 	}
 	public void test066() {
 		String source =
 				"public class X {\n" +
 				"	double d = 0X.p02d;\n" +
 				"}";
-		if (this.complianceLevel > ClassFileConstants.JDK1_4) {
-			this.runNegativeTest(
-					new String[] {
-							"X.java",
-							source
-					},
-					"----------\n" +
-							"1. ERROR in X.java (at line 2)\n" +
-							"	double d = 0X.p02d;\n" +
-							"	           ^^^\n" +
-							"Invalid hex literal number\n" +
-					"----------\n");
-		}
+		this.runNegativeTest(
+				new String[] {
+						"X.java",
+						source
+				},
+				"----------\n" +
+						"1. ERROR in X.java (at line 2)\n" +
+						"	double d = 0X.p02d;\n" +
+						"	           ^^^\n" +
+						"Invalid hex literal number\n" +
+				"----------\n");
 	}
 	public void test067() {
 		String source =
 				"public class X {\n" +
 				"	float f = 0Xp02f;\n" +
 				"}";
-		if (this.complianceLevel > ClassFileConstants.JDK1_4) {
-			this.runNegativeTest(
-					new String[] {
-							"X.java",
-							source
-					},
-					"----------\n" +
-					"1. ERROR in X.java (at line 2)\n" +
-					"	float f = 0Xp02f;\n" +
-					"	          ^^^\n" +
-					"Invalid hex literal number\n" +
-					"----------\n");
-		}
+		this.runNegativeTest(
+				new String[] {
+						"X.java",
+						source
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 2)\n" +
+				"	float f = 0Xp02f;\n" +
+				"	          ^^^\n" +
+				"Invalid hex literal number\n" +
+				"----------\n");
 	}
 	public void test068() {
 		String source =
 				"public class X {\n" +
 				"	float f = 0X0p02f;\n" +
 				"}";
-		if (this.complianceLevel > ClassFileConstants.JDK1_4) {
-			this.runConformTest(
-					new String[] {
-							"X.java",
-							source
-					});
-		}
+		this.runConformTest(
+				new String[] {
+						"X.java",
+						source
+				});
 	}
 	public void testBug531716_001_since_13() {
 		char[] source = ("class X {\n" +
@@ -1572,7 +1513,7 @@ public class ScannerTest extends AbstractRegressionTest {
 		try {
 			TerminalToken token;
 			StringBuilder buffer = new StringBuilder();
-			while ((token = scanner.getNextToken()) != TokenNameEOF) {
+			while ((token = scanner.getNextToken()) != TerminalToken.TokenNameEOF) {
 				try {
 					switch(token) {
 						case TokenNameTextBlock :

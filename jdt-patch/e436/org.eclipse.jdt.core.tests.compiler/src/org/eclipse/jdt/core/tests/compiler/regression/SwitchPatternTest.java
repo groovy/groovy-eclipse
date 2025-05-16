@@ -4116,8 +4116,8 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"Bootstrap methods:\n" +
 				"  0 : # 95 invokestatic java/lang/runtime/SwitchBootstraps.typeSwitch:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\n" +
 				"	Method arguments:\n" +
-				"		#32 p/Rec$MyInterface$MyClass1\n" +
-				"		#34 p/Rec$MyInterface$MyClass2,\n" +
+				"		#22 p/Rec$MyInterface$MyClass1\n" +
+				"		#24 p/Rec$MyInterface$MyClass2,\n" +
 				"  1 : # 102 invokestatic java/lang/runtime/ObjectMethods.bootstrap:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/TypeDescriptor;Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/invoke/MethodHandle;)Ljava/lang/Object;\n" +
 				"	Method arguments:\n" +
 				"		#1 p/Rec\n" +
@@ -7257,17 +7257,12 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 					""",
 				},
 				"----------\n"
-				+ "1. ERROR in X.java (at line 1)\n"
-				+ "	public class X {\n"
-				+ "	^\n"
-				+ "Data cannot be resolved to a type\n"
-				+ "----------\n"
-				+ "2. ERROR in X.java (at line 7)\n"
+				+ "1. ERROR in X.java (at line 7)\n"
 				+ "	record WrapperRec(ExhaustiveSwitch.Data data) {}\n"
 				+ "	                  ^^^^^^^^^^^^^^^^\n"
 				+ "ExhaustiveSwitch cannot be resolved to a type\n"
 				+ "----------\n"
-				+ "3. ERROR in X.java (at line 12)\n"
+				+ "2. ERROR in X.java (at line 12)\n"
 				+ "	case WrapperRec(var data) when data.name.isEmpty() -> { }\n"
 				+ "	                ^^^^^^^^\n"
 				+ "Data cannot be resolved to a type\n"
@@ -7299,17 +7294,12 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 					""",
 				},
 				"----------\n"
-				+ "1. ERROR in X.java (at line 1)\n"
-				+ "	public class X {\n"
-				+ "	^\n"
-				+ "Data cannot be resolved to a type\n"
-				+ "----------\n"
-				+ "2. ERROR in X.java (at line 7)\n"
+				+ "1. ERROR in X.java (at line 7)\n"
 				+ "	record WrapperRec(ExhaustiveSwitch.Data data) {}\n"
 				+ "	                  ^^^^^^^^^^^^^^^^\n"
 				+ "ExhaustiveSwitch cannot be resolved to a type\n"
 				+ "----------\n"
-				+ "3. ERROR in X.java (at line 12)\n"
+				+ "2. ERROR in X.java (at line 12)\n"
 				+ "	case WrapperRec(ExhaustiveSwitch.Data data) when data.name.isEmpty() -> { }\n"
 				+ "	                ^^^^^^^^^^^^^^^^\n"
 				+ "ExhaustiveSwitch cannot be resolved to a type\n"

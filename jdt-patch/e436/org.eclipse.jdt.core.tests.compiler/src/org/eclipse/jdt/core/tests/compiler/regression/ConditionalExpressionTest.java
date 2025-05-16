@@ -79,8 +79,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=426078, Bug 426078 - [1.8] VerifyError when conditional expression passed as an argument
 	public void test003() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5)
-			return;
 		this.runConformTest(
 			new String[] {
 				"X.java",
@@ -102,11 +100,8 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=423685, - [1.8] poly conditional expression must not use lub
 	public void test004() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5)
-			return;
-		if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-			this.runNegativeTest(
-					new String[] {
+		this.runConformTest(
+				new String[] {
 						"X.java",
 						"class A{/**/}\n" +
 						"class B extends A {/**/}\n" +
@@ -120,91 +115,27 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 						"		System.out.println(\"OK\");\n" +
 						"	}\n" +
 						"}\n",
-					},
-					"----------\n" +
-					"1. ERROR in X.java (at line 6)\n" +
-					"	G<? super B> l = (true)? gsa : gb;\n" +
-					"	                 ^^^^^^^^^^^^^^^^\n" +
-					"Type mismatch: cannot convert from G<capture#2-of ? extends Object> to G<? super B>\n" +
-					"----------\n"
+				},
+				"OK"
 				);
-		} else {
-			this.runConformTest(
-					new String[] {
-							"X.java",
-							"class A{/**/}\n" +
-							"class B extends A {/**/}\n" +
-							"class G<T> {\n" +
-							"	G<B> gb=null;\n" +
-							"	G<? super A> gsa=null;\n" +
-							"	G<? super B> l = (true)? gsa : gb;\n" +
-							"}\n" +
-							"public class X {\n" +
-							"	public static void main(String[] args) {\n" +
-							"		System.out.println(\"OK\");\n" +
-							"	}\n" +
-							"}\n",
-					},
-					"OK"
-					);
-		}
 	}
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=425181, - Cast expression in ternary operation reported as incompatible
 	public void test005() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5)
-			return;
-		if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-			this.runNegativeTest(
-					new String[] {
-						"X.java",
-						"public class X {\n" +
-						"    public static void main(String args[]) {\n" +
-						"    	I<? super J> i = true ? (I<I>) null : (I<J>) null; // Type mismatch reported\n" +
-						"       System.out.println(\"OK\");\n" +
-						"    }\n" +
-						"}\n" +
-						"interface I<T> {}\n" +
-						"interface J<T> extends I<T> {}\n",
-					},
-					"----------\n" +
-					"1. WARNING in X.java (at line 3)\n" +
-					"	I<? super J> i = true ? (I<I>) null : (I<J>) null; // Type mismatch reported\n" +
-					"	          ^\n" +
-					"J is a raw type. References to generic type J<T> should be parameterized\n" +
-					"----------\n" +
-					"2. ERROR in X.java (at line 3)\n" +
-					"	I<? super J> i = true ? (I<I>) null : (I<J>) null; // Type mismatch reported\n" +
-					"	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-					"Type mismatch: cannot convert from I<capture#1-of ? extends I> to I<? super J>\n" +
-					"----------\n" +
-					"3. WARNING in X.java (at line 3)\n" +
-					"	I<? super J> i = true ? (I<I>) null : (I<J>) null; // Type mismatch reported\n" +
-					"	                           ^\n" +
-					"I is a raw type. References to generic type I<T> should be parameterized\n" +
-					"----------\n" +
-					"4. WARNING in X.java (at line 3)\n" +
-					"	I<? super J> i = true ? (I<I>) null : (I<J>) null; // Type mismatch reported\n" +
-					"	                                         ^\n" +
-					"J is a raw type. References to generic type J<T> should be parameterized\n" +
-					"----------\n"
+		this.runConformTest(
+				new String[] {
+				"X.java",
+				"public class X {\n" +
+				"    public static void main(String args[]) {\n" +
+				"    	I<? super J> i = true ? (I<I>) null : (I<J>) null; // Type mismatch reported\n" +
+				"       System.out.println(\"OK\");\n" +
+				"    }\n" +
+				"}\n" +
+				"interface I<T> {}\n" +
+				"interface J<T> extends I<T> {}\n",
+				},
+				"OK"
 				);
-		} else {
-			this.runConformTest(
-					new String[] {
-					"X.java",
-					"public class X {\n" +
-					"    public static void main(String args[]) {\n" +
-					"    	I<? super J> i = true ? (I<I>) null : (I<J>) null; // Type mismatch reported\n" +
-					"       System.out.println(\"OK\");\n" +
-					"    }\n" +
-					"}\n" +
-					"interface I<T> {}\n" +
-					"interface J<T> extends I<T> {}\n",
-					},
-					"OK"
-					);
-		}
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=426315, - [1.8][compiler] UnsupportedOperationException with conditional expression
 	public void test006() {
@@ -229,8 +160,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=426680, - [1.8][compiler] Incorrect handling of poly conditional leads to CCE
 	public void test007() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		this.runNegativeTest(
 				new String[] {
 						"X.java",
@@ -259,8 +188,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=426680, - [1.8][compiler] Incorrect handling of poly conditional leads to CCE
 	public void test008() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		this.runNegativeTest(
 				new String[] {
 						"X.java",
@@ -290,8 +217,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427207, - [1.8][bytecode] Runtime type problem: Instruction type does not match stack map
 	// Reference poly conditional in assignment context
 	public void test009() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		this.runConformTest(
 				new String[] {
 						"X.java",
@@ -320,8 +245,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427207, - [1.8][bytecode] Runtime type problem: Instruction type does not match stack map
 	// Reference poly conditional in poly invocation context
 	public void test010() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		this.runConformTest(
 				new String[] {
 						"X.java",
@@ -353,8 +276,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427207, - [1.8][bytecode] Runtime type problem: Instruction type does not match stack map
 	// Reference poly conditional in assignment context, order reversed.
 	public void test011() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		this.runConformTest(
 				new String[] {
 						"X.java",
@@ -387,8 +308,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427207, - [1.8][bytecode] Runtime type problem: Instruction type does not match stack map
 	// Reference poly conditional in poly invocation context, order reversed.
 	public void test012() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		this.runConformTest(
 				new String[] {
 						"X.java",
@@ -424,8 +343,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427207, - [1.8][bytecode] Runtime type problem: Instruction type does not match stack map
 	// Reference poly conditional in poly invocation context, interface types
 	public void test013() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		this.runConformTest(
 				new String[] {
 						"X.java",
@@ -473,7 +390,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 						"	}\n" +
 						"}\n",
 				},
-				this.complianceLevel < ClassFileConstants.JDK1_5 ? "" :
 					"----------\n" +
 					"1. WARNING in X.java (at line 2)\n" +
 					"	public X(Class clazz) {\n" +
@@ -500,7 +416,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 						"	}\n" +
 						"}\n",
 				},
-				this.complianceLevel < ClassFileConstants.JDK1_5 ? "" :
 					"----------\n" +
 					"1. WARNING in X.java (at line 2)\n" +
 					"	public X(Class clazz) {\n" +
@@ -510,8 +425,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=427625, - NPE at org.eclipse.jdt.internal.compiler.ast.ConditionalExpression.generateCode
 	public void test427625() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5)
-			return;
 		Map<String,String> options = getCompilerOptions();
 		options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.IGNORE);
 		this.runNegativeTest(
@@ -561,8 +474,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=437444#c113, - Error building JRE8
 	public void test437444_c113() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		this.runNegativeTest(
 			new String[] {
 					"X.java",
@@ -580,8 +491,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 			"");
 	}
 	public void test437444_2() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		this.runNegativeTest(
 			new String[] {
 					"X.java",
@@ -600,8 +509,6 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=484425: [bytecode] Bad type on operand stack - compiler omitted instructions for unboxing null Boolean
 	public void test484425() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5)
-			return;
 		this.runConformTest(
 				new String[] {
 						"Main.java",

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -53,6 +53,7 @@ public class TypeParameter extends AbstractVariableDeclaration {
 		}
 	}
 
+	@Override
 	public void getAllAnnotationContexts(int targetType, int typeParameterIndex, List<AnnotationContext> allAnnotationContexts) {
 		AnnotationCollector collector = new AnnotationCollector(this, targetType, typeParameterIndex, allAnnotationContexts);
 		if (this.annotations != null) {
@@ -163,7 +164,7 @@ public class TypeParameter extends AbstractVariableDeclaration {
 				}
 			}
 			if (this.binding != null)
-				this.binding.tagBits |= TagBits.AnnotationResolved;
+				this.binding.extendedTagBits |= ExtendedTagBits.AnnotationResolved;
 		}
 	}
 
@@ -234,7 +235,7 @@ public class TypeParameter extends AbstractVariableDeclaration {
 	}
 
 	public void updateWithAnnotations(ClassScope scope) {
-		if (this.binding == null || (this.binding.tagBits & TagBits.AnnotationResolved) != 0)
+		if (this.binding == null || (this.binding.extendedTagBits & ExtendedTagBits.AnnotationResolved) != 0)
 			return;
 		if (this.type != null) {
 			TypeBinding prevType = this.type.resolvedType;
@@ -265,5 +266,15 @@ public class TypeParameter extends AbstractVariableDeclaration {
 			}
 		}
 		resolveAnnotations(scope);
+	}
+
+	@Override
+	public TypeVariableBinding getBinding() {
+		return this.binding;
+	}
+
+	@Override
+	public void setBinding(Binding binding) {
+		this.binding = (TypeVariableBinding) binding;
 	}
 }

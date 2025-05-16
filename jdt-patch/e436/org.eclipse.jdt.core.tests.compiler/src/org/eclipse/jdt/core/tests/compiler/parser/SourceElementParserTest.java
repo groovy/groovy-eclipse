@@ -5418,4 +5418,76 @@ public void test81() {
 		expectedUnitToString,
 		this.currentType.toString());
 }
+
+public void test82() {
+	Map options = getCompilerOptions();
+	options.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getLatestVersion());
+	options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getLatestVersion());
+	options.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getLatestVersion());
+	options.put(CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
+
+	String fileContent = """
+				public enum Test {
+					/**
+					 * Javadoc always ok on the following Instance...
+					 */
+					BUG( // TODO ...but THIS COMMENT suppresses "MouseOver" on the next field.
+					);
+					/**
+					 *
+					 * This Javadoc is not shown on "MouseOver" if the above comment is present.<br>
+					 * <br>
+					 * Eclipse IDE for RCP and RAP Developers (includes Incubating components)<br>
+					 * Version: 2024-09 (4.33.0)<br>
+					 * Build id: 20240905-0614
+					 */
+					public final int bug = 0;
+					/**
+					 * ...but from here on its OK again...
+					 */
+					public final int ok  = 0;
+				}
+			""";
+
+	String testName = "test82: full parse";
+	fullParse(fileContent,testName, options);
+	assertEquals(22, this.currentType.getFields()[0].getDeclarationSourceStart());
+	assertEquals(164, this.currentType.getFields()[0].getDeclarationSourceEnd());
+	assertEquals(168, this.currentType.getFields()[1].getDeclarationSourceStart());
+	assertEquals(447, this.currentType.getFields()[1].getDeclarationSourceEnd());
+	assertEquals(451, this.currentType.getFields()[2].getDeclarationSourceStart());
+	assertEquals(528, this.currentType.getFields()[2].getDeclarationSourceEnd());
+}
+public void test83() {
+	Map options = getCompilerOptions();
+	options.put(JavaCore.COMPILER_SOURCE, CompilerOptions.getLatestVersion());
+	options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.getLatestVersion());
+	options.put(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.getLatestVersion());
+	options.put(CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
+	options.put(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, JavaCore.ENABLED);
+
+	String fileContent = """
+			public enum Test {
+				/// Javadoc always ok on the following Instance...
+				BUG( // TODO ...but THIS COMMENT suppresses "MouseOver" on the next field.
+				);
+				/// This Javadoc is not shown on "MouseOver" if the above comment is present.
+				///
+				/// **Eclipse IDE for RCP and RAP Developers** (includes Incubating components)
+				/// *Version*: 2024-09 (4.33.0)
+				/// *Build id*: 20240905-0614
+				public final int bug = 0;
+				/// ...but from here on its OK again...
+				public final int ok  = 0;
+			}
+				""";
+	String testName = "test83: full parse";
+	fullParse(fileContent,testName, options);
+	assertEquals(20, this.currentType.getFields()[0].getDeclarationSourceStart());
+	assertEquals(149, this.currentType.getFields()[0].getDeclarationSourceEnd());
+	assertEquals(152, this.currentType.getFields()[1].getDeclarationSourceStart());
+	assertEquals(405, this.currentType.getFields()[1].getDeclarationSourceEnd());
+	assertEquals(408, this.currentType.getFields()[2].getDeclarationSourceStart());
+	assertEquals(473, this.currentType.getFields()[2].getDeclarationSourceEnd());
+}
 }

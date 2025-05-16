@@ -241,35 +241,33 @@ public void test0004_unread_parameters() {
 
 // disabling the reporting of unread parameters using SuppressWarnings
 public void test0005_unread_parameters() {
-	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		runTest(
-			new String[] {
-				"X.java",
-				"public class X {\n" +
-				"@SuppressWarnings(\"unused\")\n" + // most specific token
-				"  public void foo(boolean b) {\n" +
-				"  }\n" +
-				"@SuppressWarnings(\"all\")\n" + // least specific token
-				"  public void foo(int i) {\n" +
-				"  }\n" +
-				"}\n"
-				},
-			null /* errorOptions */,
-			new String[] {
-				CompilerOptions.OPTION_ReportUnusedParameter
-				} /* warningOptions */,
-			null /* ignoreOptions */,
-			false /* expectingCompilerErrors */,
-			"" /* expectedCompilerLog */,
-			"" /* expectedOutputString */,
-			false /* forceExecution */,
-			null /* classLib */,
-			true /* shouldFlushOutputDirectory */,
-			null /* vmArguments */,
-			null /* customOptions */,
-			null /* clientRequestor */,
-			true /* skipJavac */);
-	}
+	runTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+			"@SuppressWarnings(\"unused\")\n" + // most specific token
+			"  public void foo(boolean b) {\n" +
+			"  }\n" +
+			"@SuppressWarnings(\"all\")\n" + // least specific token
+			"  public void foo(int i) {\n" +
+			"  }\n" +
+			"}\n"
+			},
+		null /* errorOptions */,
+		new String[] {
+			CompilerOptions.OPTION_ReportUnusedParameter
+			} /* warningOptions */,
+		null /* ignoreOptions */,
+		false /* expectingCompilerErrors */,
+		"" /* expectedCompilerLog */,
+		"" /* expectedOutputString */,
+		false /* forceExecution */,
+		null /* classLib */,
+		true /* shouldFlushOutputDirectory */,
+		null /* vmArguments */,
+		null /* customOptions */,
+		null /* clientRequestor */,
+		true /* skipJavac */);
 }
 
 // reporting unread paramaters as error
@@ -443,33 +441,31 @@ public void test0010_declared_thrown_checked_exceptions() {
 // disabling the reporting of unnecessary declaration of thrown checked
 // exceptions using SuppressWarnings
 public void test0011_declared_thrown_checked_exceptions() {
-	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		runTest(
-			new String[] {
-				"X.java",
-				"import java.io.IOException;\n" +
-				"public class X {\n" +
-				"@SuppressWarnings(\"all\")\n" + // no specific token
-				"  public void foo() throws IOException {\n" +
-				"  }\n" +
-				"}\n"
-				},
-			null /* errorOptions */,
-			new String[] {
-				CompilerOptions.OPTION_ReportUnusedDeclaredThrownException
-				} /* warningOptions */,
-			null /* ignoreOptions */,
-			false /* expectingCompilerErrors */,
-			"" /* expectedCompilerLog */,
-			"" /* expectedOutputString */,
-			false /* forceExecution */,
-			null /* classLib */,
-			true /* shouldFlushOutputDirectory */,
-			null /* vmArguments */,
-			null /* customOptions */,
-			null /* clientRequestor */,
-			true /* skipJavac */);
-	}
+	runTest(
+		new String[] {
+			"X.java",
+			"import java.io.IOException;\n" +
+			"public class X {\n" +
+			"@SuppressWarnings(\"all\")\n" + // no specific token
+			"  public void foo() throws IOException {\n" +
+			"  }\n" +
+			"}\n"
+			},
+		null /* errorOptions */,
+		new String[] {
+			CompilerOptions.OPTION_ReportUnusedDeclaredThrownException
+			} /* warningOptions */,
+		null /* ignoreOptions */,
+		false /* expectingCompilerErrors */,
+		"" /* expectedCompilerLog */,
+		"" /* expectedOutputString */,
+		false /* forceExecution */,
+		null /* classLib */,
+		true /* shouldFlushOutputDirectory */,
+		null /* vmArguments */,
+		null /* customOptions */,
+		null /* clientRequestor */,
+		true /* skipJavac */);
 }
 
 // reporting unnecessary declaration of thrown checked exceptions as error
@@ -1063,35 +1059,33 @@ public void test0028_declared_thrown_checked_exceptions() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=219461
 // suppressed the warning for unchecked exceptions, using Exception instead
 public void test0029_declared_thrown_checked_exceptions() {
-	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		Map customOptions = new HashMap();
-		customOptions.put(CompilerOptions.OPTION_ReportUnusedDeclaredThrownExceptionExemptExceptionAndThrowable,
-				CompilerOptions.DISABLED);
-		runTest(
-			new String[] {
-				"X.java",
-				"public class X {\n" +
-				"@SuppressWarnings(\"all\")\n" + // no specific token
-				"  public void foo() throws Exception {\n" +
-				"  }\n" +
-				"}\n"
-				},
-			null /* errorOptions */,
-			new String[] {
-				CompilerOptions.OPTION_ReportUnusedDeclaredThrownException
-				} /* warningOptions */,
-			null /* ignoreOptions */,
-			false /* expectingCompilerErrors */,
-			"" /* expectedCompilerLog */,
-			"" /* expectedOutputString */,
-			false /* forceExecution */,
-			null /* classLib */,
-			true /* shouldFlushOutputDirectory */,
-			null /* vmArguments */,
-			customOptions,
-			null /* clientRequestor */,
-			true /* skipJavac */);
-	}
+	Map customOptions = new HashMap();
+	customOptions.put(CompilerOptions.OPTION_ReportUnusedDeclaredThrownExceptionExemptExceptionAndThrowable,
+			CompilerOptions.DISABLED);
+	runTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+			"@SuppressWarnings(\"all\")\n" + // no specific token
+			"  public void foo() throws Exception {\n" +
+			"  }\n" +
+			"}\n"
+			},
+		null /* errorOptions */,
+		new String[] {
+			CompilerOptions.OPTION_ReportUnusedDeclaredThrownException
+			} /* warningOptions */,
+		null /* ignoreOptions */,
+		false /* expectingCompilerErrors */,
+		"" /* expectedCompilerLog */,
+		"" /* expectedOutputString */,
+		false /* forceExecution */,
+		null /* classLib */,
+		true /* shouldFlushOutputDirectory */,
+		null /* vmArguments */,
+		customOptions,
+		null /* clientRequestor */,
+		true /* skipJavac */);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=100278
 // reporting unnecessary declaration of thrown unchecked exceptions as error
@@ -1598,9 +1592,6 @@ public void test0041() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=248897
 public void test0042() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
 	runTest(
 			new String[] {
 				"Test.java",
@@ -1698,8 +1689,6 @@ public void test0045() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=185682
 public void test0046() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.WARNING);
 	this.runNegativeTest(
@@ -1738,8 +1727,6 @@ public void test0046() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=185682
 // variant with private fields instead of locals
 public void test0046_field() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.WARNING);
 	this.runNegativeTest(
@@ -1777,8 +1764,6 @@ public void test0046_field() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=185682
 // variant with private fields instead of locals - this-qualified access
 public void test0046_field_this_qualified() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.WARNING);
 	this.runNegativeTest(
@@ -1817,8 +1802,6 @@ public void test0046_field_this_qualified() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=185682
 // variant with private fields instead of locals - regular qualified access
 public void test0046_field_qualified() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.WARNING);
 	this.runNegativeTest(
@@ -1857,8 +1840,6 @@ public void test0046_field_qualified() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=185682
 // variant with fields inside a private type
 public void test0046_field_in_private_type() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.WARNING);
 	this.runNegativeTest(
@@ -1899,8 +1880,6 @@ public void test0046_field_in_private_type() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=185682
 public void test0047() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedParameter, CompilerOptions.WARNING);
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.WARNING);
@@ -1944,8 +1923,6 @@ public void test0047() {
 // To verify that unused parameter warning is not shown for an implementing method's parameter when
 // CompilerOptions.OPTION_ReportUnusedParameterWhenImplementingAbstract is disabled
 public void test0048() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedParameter, CompilerOptions.WARNING);
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedParameterWhenImplementingAbstract, CompilerOptions.DISABLED);
@@ -2009,8 +1986,6 @@ public void test0048() {
 // To verify that unused parameter warning is not shown for an overriding method's parameter when
 // CompilerOptions.OPTION_ReportUnusedParameterWhenOverridingConcrete is disabled
 public void test0049() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedParameter, CompilerOptions.WARNING);
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedParameterWhenOverridingConcrete, CompilerOptions.DISABLED);
@@ -2067,8 +2042,6 @@ public void test0049() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=185682
 // To verify that unused local warning is not shown for locals declared in unreachable code
 public void test0050() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.WARNING);
 	this.runNegativeTest(
@@ -2708,8 +2681,6 @@ public void test0063() throws Exception {
 }
 // Collection: contains & remove & get
 public void testBug410218a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	runNegativeTest(
 		new String[] {
 			"X.java",
@@ -2758,8 +2729,6 @@ public void testBug410218a() {
 }
 // HashSet vs. TreeSet
 public void testBug410218b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	runNegativeTest(
 		new String[] {
 			"X.java",
@@ -2789,8 +2758,6 @@ public void testBug410218b() {
 }
 // HashSet vs. TreeSet or: strict
 public void testBug410218b2() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(JavaCore.COMPILER_PB_UNLIKELY_COLLECTION_METHOD_ARGUMENT_TYPE_STRICT, JavaCore.ENABLED);
 	runNegativeTest(
@@ -2835,8 +2802,6 @@ public void testBug410218b2() {
 }
 // Map: contains* & remove & get
 public void testBug410218c() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	runNegativeTest(
 		new String[] {
 			"X.java",
@@ -2887,8 +2852,6 @@ public void testBug410218c() {
 }
 // Collection: {contains,remove,retain}All, non-generic sub type of Collection, configured to be ERROR
 public void testBug410218d() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(JavaCore.COMPILER_PB_UNLIKELY_COLLECTION_METHOD_ARGUMENT_TYPE, JavaCore.ERROR);
 	runNegativeTest(
@@ -2919,8 +2882,6 @@ public void testBug410218d() {
 }
 // List.indexOf: w/ and w/o @SuppressWarnings
 public void testBug410218e() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(JavaCore.COMPILER_PB_UNLIKELY_COLLECTION_METHOD_ARGUMENT_TYPE, JavaCore.WARNING);
 	runNegativeTest(
@@ -2952,8 +2913,6 @@ public void testBug410218e() {
 
 // Method references, equals, wildcards
 public void testBug410218f() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(JavaCore.COMPILER_PB_UNLIKELY_COLLECTION_METHOD_ARGUMENT_TYPE, JavaCore.WARNING);
 	customOptions.put(JavaCore.COMPILER_PB_UNLIKELY_EQUALS_ARGUMENT_TYPE, JavaCore.INFO);
@@ -3224,8 +3183,6 @@ public void testBug410218f() {
 		customOptions);
 }
 public void testBug514956a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(JavaCore.COMPILER_PB_UNLIKELY_COLLECTION_METHOD_ARGUMENT_TYPE, JavaCore.WARNING);
 	customOptions.put(JavaCore.COMPILER_PB_UNNECESSARY_TYPE_CHECK, JavaCore.ERROR);
@@ -3301,8 +3258,6 @@ public void testBug514956c() {
 }
 // mixture of raw type an parametrized type
 public void testBug513310() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	runConformTest(
 		new String[] {
 			"test/Test.java",

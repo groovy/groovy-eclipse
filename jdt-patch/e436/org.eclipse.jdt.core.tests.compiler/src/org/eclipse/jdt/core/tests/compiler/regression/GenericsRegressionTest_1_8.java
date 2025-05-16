@@ -465,8 +465,7 @@ public void testBug424403() {
 public void testBug401850a() {
 	runNegativeTest(
 		false /* skipJavac */,
-		this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		null : JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings,
+		JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings,
 		new String[] {
 			"X.java",
 			"import java.util.List;\n" +
@@ -6987,7 +6986,7 @@ public void testBug472851() {
 		"1. ERROR in Test.java (at line 10)\n" +
 		"	test(type);\n" +
 		"	^^^^\n" +
-		"The method test(List<L>) in the type Test is not applicable for the arguments (List<capture#1-of ? extends List<?>>)\n" +
+		"The method test(List<L>) in the type Test is not applicable for the arguments (List<capture#2-of ? extends List<?>>)\n" +
 		"----------\n");
 }
 public void testBug502350() {

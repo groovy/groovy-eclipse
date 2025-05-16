@@ -15,7 +15,6 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
 import junit.framework.Test;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -1035,9 +1034,6 @@ public class JavadocTestForField extends JavadocTest {
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=451418, [1.8][compiler] NPE at ParameterizedGenericMethodBinding.computeCompatibleMethod18
 	public void test451418() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5)
-			return;
-
 		runNegativeTest(
 			new String[] {
 				"X.java",

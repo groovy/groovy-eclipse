@@ -15,7 +15,6 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
 import junit.framework.Test;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -786,8 +785,6 @@ public void test023() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=443456, [1.8][compiler][lambda] $NON-NLS$ in lambda statement used as argument does not work
 public void test443456() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportNonExternalizedStringLiteral, CompilerOptions.ERROR);
 	this.runNegativeTest(

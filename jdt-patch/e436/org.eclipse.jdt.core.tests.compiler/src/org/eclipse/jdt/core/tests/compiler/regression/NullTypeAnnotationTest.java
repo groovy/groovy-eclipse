@@ -19482,4 +19482,43 @@ public void testErrorPosition() {
 		----------
 		""");
 }
+public void testGH3461() {
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.testFiles = new String[] {
+			"AbstractClassInAnnotation.java",
+			"""
+			public abstract class AbstractClassInAnnotation { }
+			""",
+			"AnnotationWithClassType.java",
+			"""
+			import java.lang.annotation.ElementType;
+			import java.lang.annotation.Retention;
+			import java.lang.annotation.RetentionPolicy;
+			import java.lang.annotation.Target;
+
+			@Target({ ElementType.TYPE })
+			@Retention(RetentionPolicy.RUNTIME)
+			public @interface AnnotationWithClassType {
+			            Class<? extends AbstractClassInAnnotation> value();
+			}
+			""",
+			"AnotherType.java",
+			"""
+			class AnotherType { }
+			""",
+			"ErrorClass.java",
+			"""
+			@AnnotationWithClassType(ImplementationClass.class)
+			abstract class ErrorClass<A extends AnotherType> { // notice: removing "<A extends AnotherType>" makes the error also disappear
+			}
+			""",
+			"ImplementationClass.java",
+			"""
+			public final class ImplementationClass extends AbstractClassInAnnotation { }
+			"""
+	};
+	runner.classLibraries = this.LIBS;
+	runner.runConformTest();
+}
 }

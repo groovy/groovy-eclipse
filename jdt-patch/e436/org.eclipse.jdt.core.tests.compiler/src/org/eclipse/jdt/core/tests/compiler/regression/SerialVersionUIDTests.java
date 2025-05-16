@@ -20,7 +20,6 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import java.util.Map;
 import junit.framework.Test;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -236,7 +235,6 @@ public void test011() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=341475
 public void test012() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	Map options = getCompilerOptions();
 	options.put(JavaCore.COMPILER_PB_UNUSED_PRIVATE_MEMBER, JavaCore.ERROR);
 	this.runNegativeTest(
@@ -259,7 +257,6 @@ public void test012() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=341475
 public void test013() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	Map options = getCompilerOptions();
 	options.put(JavaCore.COMPILER_PB_UNUSED_PRIVATE_MEMBER, JavaCore.ERROR);
 	this.runNegativeTest(
@@ -304,7 +301,6 @@ public void test014() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=341475
 public void test015() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	Map options = getCompilerOptions();
 	options.put(JavaCore.COMPILER_PB_UNUSED_PRIVATE_MEMBER, JavaCore.ERROR);
 	this.runNegativeTest(

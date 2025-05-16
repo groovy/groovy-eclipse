@@ -442,9 +442,9 @@ public class CompilerOptions {
 	public boolean produceMethodParameters;
 	/** Indicates whether generic signature should be generated for lambda expressions */
 	public boolean generateGenericSignatureForLambdaExpressions;
-	/** Compliance level for the compiler, refers to a JDK version, e.g. {@link ClassFileConstants#JDK1_4} */
+	/** Compliance level for the compiler, refers to a JDK version, e.g. {@link ClassFileConstants#JDK1_8} */
 	public long complianceLevel;
-	/** Java source level, refers to a JDK version, e.g. {@link ClassFileConstants#JDK1_4} */
+	/** Java source level, refers to a JDK version, e.g. {@link ClassFileConstants#JDK1_8} */
 	public long sourceLevel;
 	/**
 	 * Use <code>-release</code> setting to pass compliance version and enable checking for
@@ -459,7 +459,7 @@ public class CompilerOptions {
 	 * <p>May be {@code null}.</p>
 	 */
 	public String requestedSourceVersion;
-	/** VM target level, refers to a JDK version, e.g. {@link ClassFileConstants#JDK1_4} */
+	/** VM target level, refers to a JDK version, e.g. {@link ClassFileConstants#JDK1_8} */
 	public long targetJDK;
 	/** Source encoding format */
 	public String defaultEncoding;

@@ -110,21 +110,40 @@ public abstract class AbstractMethodDeclaration
 		}
 	}
 
+	public Argument [] arguments () {
+		return this.arguments;
+	}
+
+	public AbstractVariableDeclaration [] arguments (boolean includedElided) {
+		return this.arguments; // overridden in compact constructor.
+	}
+
+	public LocalVariableBinding [] argumentBindings() {
+		int length = this.arguments == null ? 0 : this.arguments.length;
+		LocalVariableBinding [] argumentBindings = new LocalVariableBinding[length];
+		for(int i = 0; i < length; i++)
+			argumentBindings[i] = this.arguments[i].binding;
+		return argumentBindings;
+	}
+
 	/**
 	 * When a method is accessed via SourceTypeBinding.resolveTypesFor(MethodBinding)
 	 * we create the argument binding and resolve annotations in order to compute null annotation tagbits.
 	 */
 	public void createArgumentBindings() {
-		createArgumentBindings(this.arguments, this.binding, this.scope);
+		createArgumentBindings(this.arguments(true), this.binding, this.scope);
 	}
 	// version for invocation from LambdaExpression:
-	static void createArgumentBindings(Argument[] arguments, MethodBinding binding, MethodScope scope) {
+	static void createArgumentBindings(AbstractVariableDeclaration[] arguments, MethodBinding binding, MethodScope scope) {
 		boolean useTypeAnnotations = scope.environment().usesNullTypeAnnotations();
 		if (arguments != null && binding != null) {
-			for (int i = 0, length = arguments.length; i < length; i++) {
-				Argument argument = arguments[i];
-				binding.parameters[i] = argument.createBinding(scope, binding.parameters[i]);
-				long argumentTagBits = argument.binding.tagBits;
+			LocalVariableBinding [] argumentBindings = binding.isCompactConstructor() ? scope.argumentBindings() : new LocalVariableBinding[arguments.length];
+			int length = Math.min(binding.parameters.length, arguments.length);
+			for (int i = 0; i < length; i++) {
+				if (arguments[i] instanceof Argument argument)
+					argumentBindings[i] = argument.createBinding(scope, binding.parameters[i]);
+				binding.parameters[i] = argumentBindings[i].type;
+				long argumentTagBits = argumentBindings[i].tagBits;
 				if ((argumentTagBits & TagBits.AnnotationOwning) != 0) {
 					if (binding.parameterFlowBits == null) {
 						binding.parameterFlowBits = new byte[arguments.length];
@@ -181,17 +200,9 @@ public abstract class AbstractMethodDeclaration
 					paramAnnotations[i] = Binding.NO_ANNOTATIONS;
 				}
 			}
-			if (paramAnnotations == null) {
-				paramAnnotations = getPropagatedRecordComponentAnnotations();
-			}
-
 			if (paramAnnotations != null)
 				this.binding.setParameterAnnotations(paramAnnotations);
 		}
-	}
-
-	protected AnnotationBinding[][] getPropagatedRecordComponentAnnotations() {
-		return null;
 	}
 
 	/**
@@ -245,15 +256,16 @@ public abstract class AbstractMethodDeclaration
 	 * <li>NotOwning - for resource leak analysis
 	 * </ul>
 	 */
-	static void analyseArguments(LookupEnvironment environment, FlowInfo flowInfo, FlowContext flowContext, Argument[] methodArguments, MethodBinding methodBinding) {
+	static void analyseArguments(LookupEnvironment environment, FlowInfo flowInfo, FlowContext flowContext, AbstractVariableDeclaration[] methodArguments, MethodBinding methodBinding, MethodScope scope) {
 		if (methodArguments != null) {
 			boolean usesNullTypeAnnotations = environment.usesNullTypeAnnotations();
 			boolean usesOwningAnnotations = environment.usesOwningAnnotations();
 
+			LocalVariableBinding [] methodArgumentBindings = scope.argumentBindings();
 			int length = Math.min(methodBinding.parameters.length, methodArguments.length);
 			for (int i = 0; i < length; i++) {
 				TypeBinding parameterBinding = methodBinding.parameters[i];
-				LocalVariableBinding local = methodArguments[i].binding;
+				LocalVariableBinding local = methodArgumentBindings[i];
 				if (usesNullTypeAnnotations) {
 					// leverage null type annotations:
 					long tagBits = parameterBinding.tagBits & TagBits.AnnotationNullMASK;
@@ -482,7 +494,6 @@ public abstract class AbstractMethodDeclaration
 	}
 
 	public boolean isCanonicalConstructor() {
-
 		return false;
 	}
 
@@ -561,7 +572,9 @@ public abstract class AbstractMethodDeclaration
 			output.append('>');
 		}
 
-		printReturnType(0, output).append(this.selector).append('(');
+		printReturnType(0, output).append(this.selector);
+		if (!this.isCompactConstructor())
+			output.append('(');
 		if (this.receiver != null) {
 			this.receiver.print(0, output);
 		}
@@ -571,7 +584,8 @@ public abstract class AbstractMethodDeclaration
 				this.arguments[i].print(0, output);
 			}
 		}
-		output.append(')');
+		if (!this.isCompactConstructor())
+			output.append(')');
 		if (this.thrownExceptions != null) {
 			output.append(" throws "); //$NON-NLS-1$
 			for (int i = 0; i < this.thrownExceptions.length; i++) {
@@ -611,27 +625,16 @@ public abstract class AbstractMethodDeclaration
 			this.ignoreFurtherInvestigation = true;
 		}
 
-		if (this.isCompactConstructor() && !upperScope.referenceContext.isRecord()) {
-			upperScope.problemReporter().compactConstructorsOnlyInRecords(this);
-			return;
-		}
-
 		try {
 			bindArguments();
 			resolveReceiver();
 			bindThrownExceptions();
 			resolveAnnotations(this.scope, this.annotations, this.binding, this.isConstructor());
-
-			long sourceLevel = this.scope.compilerOptions().sourceLevel;
-			if (sourceLevel < ClassFileConstants.JDK1_8) // otherwise already checked via Argument.createBinding
-				validateNullAnnotations(this.scope.environment().usesNullTypeAnnotations());
-
 			resolveStatements();
 			// check @Deprecated annotation presence
 			if (this.binding != null
 					&& (this.binding.getAnnotationTagBits() & TagBits.AnnotationDeprecated) == 0
-					&& (this.binding.modifiers & ClassFileConstants.AccDeprecated) != 0
-					&& sourceLevel >= ClassFileConstants.JDK1_5) {
+					&& (this.binding.modifiers & ClassFileConstants.AccDeprecated) != 0) {
 				this.scope.problemReporter().missingDeprecatedAnnotationForMethod(this);
 			}
 		} catch (AbortMethod e) {

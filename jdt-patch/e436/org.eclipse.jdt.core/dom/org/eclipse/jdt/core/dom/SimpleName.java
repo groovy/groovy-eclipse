@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.parser.TerminalToken;
 
@@ -230,8 +231,8 @@ public class SimpleName extends Name {
 		long complianceLevel = scanner.complianceLevel;
 
 		try {
-			scanner.sourceLevel = ClassFileConstants.JDK1_3;
-			scanner.complianceLevel = ClassFileConstants.JDK1_5;
+			scanner.sourceLevel = CompilerOptions.getFirstSupportedJdkLevel();
+			scanner.complianceLevel = CompilerOptions.getFirstSupportedJdkLevel();
 			char[] source = identifier.toCharArray();
 			scanner.setSource(source);
 			final int length = source.length;

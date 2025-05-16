@@ -22,7 +22,6 @@ import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.codeassist.ISelectionRequestor;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 /**
  * Maps back and forth a code snippet to a compilation unit.
@@ -148,9 +147,7 @@ private void buildCUSource(String lineSeparator) {
 		}
 	}
 	// run() method declaration
-	if (this.complianceVersion >= ClassFileConstants.JDK1_5) {
-		buffer.append("@Override "); //$NON-NLS-1$
-	}
+	buffer.append("@Override "); //$NON-NLS-1$
 	buffer.append("public void run() throws Throwable {").append(lineSeparator); //$NON-NLS-1$
 	this.lineNumberOffset++;
 	this.startPosOffset = buffer.length();

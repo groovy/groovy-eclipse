@@ -340,7 +340,6 @@ public void test014() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=157379
 public void test015() {
 	Map options = getCompilerOptions();
-	if (this.complianceLevel == ClassFileConstants.JDK1_3) return;
 	options.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
 	this.runConformTest(
 			new String[] {
@@ -787,8 +786,6 @@ public void test412119b() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=412119, Optional warning for unused throwable variable in catch block
 //Multi-catch parameters.
 public void test412119c() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedExceptionParameter, CompilerOptions.ERROR);
@@ -834,8 +831,6 @@ public void test412119c() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=412119, Optional warning for unused throwable variable in catch block
 //Suppress Warnings.
 public void test412119d() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnusedParameter, CompilerOptions.WARNING);
 	options.put(CompilerOptions.OPTION_ReportUnusedExceptionParameter, CompilerOptions.WARNING);
@@ -863,8 +858,6 @@ public void test412119d() {
 			options);
 }
 public void testBug537033() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	runNegativeTest(
 		new String[] {
 			"ShowBug.java",

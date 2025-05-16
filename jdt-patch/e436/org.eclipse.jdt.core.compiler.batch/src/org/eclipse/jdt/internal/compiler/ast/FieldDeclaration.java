@@ -57,7 +57,6 @@ public class FieldDeclaration extends AbstractVariableDeclaration {
 
 	public int endPart1Position;
 	public int endPart2Position;
-	public boolean isARecordComponent; // used in record components
 
 public FieldDeclaration() {
 	// for subtypes or conversion
@@ -75,8 +74,7 @@ public FieldDeclaration(	char[] name, int sourceStart, int sourceEnd) {
 public FlowInfo analyseCode(MethodScope initializationScope, FlowContext flowContext, FlowInfo flowInfo) {
 	if (this.binding != null && !this.binding.isUsed() && this.binding.isOrEnclosedByPrivateType()) {
 		if (!initializationScope.referenceCompilationUnit().compilationResult.hasSyntaxError) {
-			if (!this.isARecordComponent) // record component used by implicit methods
-				initializationScope.problemReporter().unusedPrivateField(this);
+			initializationScope.problemReporter().unusedPrivateField(this);
 		}
 	}
 	// cannot define static non-constant field inside nested class
@@ -103,10 +101,8 @@ public FlowInfo analyseCode(MethodScope initializationScope, FlowContext flowCon
 	CompilerOptions options = initializationScope.compilerOptions();
 	if (this.initialization != null && this.binding != null) {
 		if (options.isAnnotationBasedNullAnalysisEnabled) {
-			if (this.binding.isNonNull() || options.sourceLevel >= ClassFileConstants.JDK1_8) {
-				int nullStatus = this.initialization.nullStatus(flowInfo, flowContext);
-				NullAnnotationMatching.checkAssignment(initializationScope, flowContext, this.binding, flowInfo, nullStatus, this.initialization, this.initialization.resolvedType);
-			}
+			int nullStatus = this.initialization.nullStatus(flowInfo, flowContext);
+			NullAnnotationMatching.checkAssignment(initializationScope, flowContext, this.binding, flowInfo, nullStatus, this.initialization, this.initialization.resolvedType);
 		}
 		this.initialization.checkNPEbyUnboxing(initializationScope, flowContext, flowInfo);
 	}
@@ -172,6 +168,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 //	}
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
+@Override
 public void getAllAnnotationContexts(int targetType, List<AnnotationContext> allAnnotationContexts) {
 	AnnotationCollector collector = new AnnotationCollector(this.type, targetType, allAnnotationContexts);
 	for (Annotation annotation : this.annotations) {
@@ -199,8 +196,6 @@ public boolean isFinal() {
 }
 @Override
 public StringBuilder print(int indent, StringBuilder output) {
-	if (this.isARecordComponent)
-		output.append("/* Implicit */"); //$NON-NLS-1$
 	return super.print(indent, output);
 }
 
@@ -232,8 +227,10 @@ public void resolve(MethodScope initializationScope) {
 	ClassScope classScope = initializationScope.enclosingClassScope();
 
 	if (classScope != null) {
+		SourceTypeBinding declaringType = classScope.enclosingSourceType();
+		if (declaringType.isRecord() && !this.isStatic())
+			classScope.problemReporter().recordNonStaticFieldDeclarationInRecord(this);
 		checkHiding: {
-			SourceTypeBinding declaringType = classScope.enclosingSourceType();
 			checkHidingSuperField: {
 				if (declaringType.superclass == null) break checkHidingSuperField;
 				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=318171, find field skipping visibility checks
@@ -290,8 +287,7 @@ public void resolve(MethodScope initializationScope) {
 
 		// check @Deprecated annotation presence
 		if ((this.binding.getAnnotationTagBits() & TagBits.AnnotationDeprecated) == 0
-				&& (this.binding.modifiers & ClassFileConstants.AccDeprecated) != 0
-				&& initializationScope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5) {
+				&& (this.binding.modifiers & ClassFileConstants.AccDeprecated) != 0) {
 			initializationScope.problemReporter().missingDeprecatedAnnotationForField(this);
 		}
 		// the resolution of the initialization hasn't been done
@@ -382,6 +378,16 @@ public void resolveJavadoc(MethodScope initializationScope) {
 			reporter.javadocMissing(this.sourceStart, this.sourceEnd, severity, javadocModifiers);
 		}
 	}
+}
+
+@Override
+public FieldBinding getBinding() {
+	return this.binding;
+}
+
+@Override
+public void setBinding(Binding binding) {
+	this.binding = (FieldBinding) binding;
 }
 
 public void traverse(ASTVisitor visitor, MethodScope scope) {

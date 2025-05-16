@@ -438,14 +438,14 @@ public interface IMethodBinding extends IBinding {
 	public IVariableBinding[] getSyntheticOuterLocals();
 
 	/**
-	 * Returns if this is a compiler generated  equals(), hashCode(), toString() or any accessor
-	 * method of a Record or not.
-	 * Methods equals(), hashCode() and toString() and accessor methods of a Record do not have
+	 * Answers if this is a compiler generated canonical constructor or equals(), hashCode(), toString() or any accessor
+	 * method of a record class or not.
+	 * Methods equals(), hashCode() and toString(), the canonical constructor and accessor methods of a record class do not have
 	 * AccSynthetic flag set for them even if they are compiler generated methods. To differentiate
 	 * between these above compiler generated methods and user created methods equals(), hashCode()
 	 * and toString() or accessor methods in a Record, this function can be used.
 	 *
-	 * @return <code>true</code> for compiler generated  equals(), hashCode() and toString() or any
+	 * @return <code>true</code> for compiler generated canonical constructor, equals(), hashCode() and toString() or any
 	 * accessor method of a Record, else it returns <code>false</code>.
 	 * @since 3.26
 	 */

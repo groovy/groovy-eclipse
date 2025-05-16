@@ -18,7 +18,6 @@ import junit.framework.Test;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 @SuppressWarnings({ "rawtypes" })
 public class BooleanTest extends AbstractRegressionTest {
@@ -1150,36 +1149,8 @@ public void test031() throws Exception {
 		},
 		"true");
 	// 	ensure optimized boolean codegen sequence
-	String expectedOutput = this.complianceLevel == ClassFileConstants.JDK1_3
-		?	"  // Method descriptor #17 ([Ljava/lang/String;)V\n" +
-			"  // Stack: 2, Locals: 4\n" +
-			"  public static void main(java.lang.String[] args);\n" +
-			"     0  ldc2_w <Long -26> [18]\n" +
-			"     3  lstore_1 [l11]\n" +
-			"     4  new X [1]\n" +
-			"     7  dup\n" +
-			"     8  invokespecial X() [20]\n" +
-			"    11  astore_3 [x]\n" +
-			"    12  getstatic java.lang.System.out : java.io.PrintStream [21]\n" +
-			"    15  aload_3 [x]\n" +
-			"    16  invokevirtual java.lang.Object.getClass() : java.lang.Class [27]\n" +
-			"    19  pop\n" +
-			"    20  iconst_1\n" +
-			"    21  invokevirtual java.io.PrintStream.println(boolean) : void [31]\n" +
-			"    24  return\n" +
-			"      Line numbers:\n" +
-			"        [pc: 0, line: 6]\n" +
-			"        [pc: 4, line: 7]\n" +
-			"        [pc: 12, line: 8]\n" +
-			"        [pc: 15, line: 9]\n" +
-			"        [pc: 21, line: 8]\n" +
-			"        [pc: 24, line: 10]\n" +
-			"      Local variable table:\n" +
-			"        [pc: 0, pc: 25] local: args index: 0 type: java.lang.String[]\n" +
-			"        [pc: 4, pc: 25] local: l11 index: 1 type: long\n" +
-			"        [pc: 12, pc: 25] local: x index: 3 type: X\n"
-
-		:	"  // Method descriptor #17 ([Ljava/lang/String;)V\n" +
+	String expectedOutput =
+		    "  // Method descriptor #17 ([Ljava/lang/String;)V\n" +
 			"  // Stack: 2, Locals: 4\n" +
 			"  public static void main(java.lang.String[] args);\n" +
 			"     0  ldc2_w <Long -26> [18]\n" +

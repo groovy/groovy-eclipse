@@ -942,9 +942,9 @@ public static SearchPattern createAndPattern(SearchPattern leftPattern, SearchPa
 }
 
 private static SearchPattern createFieldPattern(String patternString, int limitTo, int matchRule) {
-	// use 1.7 as the source level as there are more valid tokens in 1.7 mode
+	// use ClassFileConstants.getLatestJDKLevel() as the source level as there are more valid tokens in latest JLS mode
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=376673
-	Scanner scanner = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_7/*sourceLevel*/, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/);
+	Scanner scanner = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.getLatestJDKLevel()/*sourceLevel*/, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/);
 	scanner.setSource(patternString.toCharArray());
 	final int InsideDeclaringPart = 1;
 	final int InsideType = 2;
@@ -1059,9 +1059,9 @@ private static SearchPattern createFieldPattern(String patternString, int limitT
 }
 
 private static SearchPattern createMethodOrConstructorPattern(String patternString, int limitTo, int matchRule, boolean isConstructor) {
-	// use 1.7 as the source level as there are more valid tokens in 1.7 mode
+	// use ClassFileConstants.getLatestJDKLevel() as the source level as there are more valid tokens in latest JLS mode
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=376673
-	Scanner scanner = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_7/*sourceLevel*/, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/);
+	Scanner scanner = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.getLatestJDKLevel()/*sourceLevel*/, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/);
 	scanner.setSource(patternString.toCharArray());
 	final int InsideSelector = 1;
 	final int InsideTypeArguments = 2;
@@ -2321,9 +2321,9 @@ private static SearchPattern createTypePattern(String patternString, int limitTo
 		patternString = arr[1];
 	}
 	char[] patModName = moduleName != null ? moduleName.toCharArray() : null;
-	// use 1.7 as the source level as there are more valid tokens in 1.7 mode
+	// use ClassFileConstants.getLatestJDKLevel() as the source level as there are more valid tokens in latest JLS mode
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=376673
-	Scanner scanner = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_7/*sourceLevel*/, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/);
+	Scanner scanner = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.getLatestJDKLevel()/*sourceLevel*/, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/);
 	scanner.setSource(patternString.toCharArray());
 	String type = null;
 	TerminalToken token;

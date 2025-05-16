@@ -20,6 +20,7 @@ import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.JavadocParser;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
@@ -69,7 +70,7 @@ public class CompletionJavadocParser extends JavadocParser {
 
 	public CompletionJavadocParser(CompletionParser sourceParser) {
 		super(sourceParser);
-		this.scanner = new CompletionScanner(ClassFileConstants.JDK1_3);
+		this.scanner = new CompletionScanner(CompilerOptions.getFirstSupportedJdkLevel());
 		this.kind = COMPLETION_PARSER | TEXT_PARSE;
 		initLevelTags();
 		setSourceComplianceLevel();

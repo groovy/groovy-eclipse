@@ -1334,8 +1334,6 @@ public void testWrappingTwoResources() {
 		null);
 }
 public void testConsumingMethod_nok() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	runLeakTestWithAnnotations(
 		new String[] {
 			"F.java",
@@ -1362,8 +1360,6 @@ public void testConsumingMethod_nok() {
 		null);
 }
 public void testConsumingMethodUse() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	runLeakTestWithAnnotations(
 		new String[] {
 			"F.java",
@@ -1391,8 +1387,6 @@ public void testConsumingMethodUse() {
 		null);
 }
 public void testConsumingMethodUse_binary() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	runLeakTestWithAnnotations(
 			new String[] {
 				"p1/F.java",
@@ -1433,8 +1427,6 @@ public void testConsumingMethodUse_binary() {
 			false);
 }
 public void testGH2207_2() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	Map<String, String> options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
@@ -1478,8 +1470,6 @@ public void testGH2207_2() {
 		options);
 }
 public void testGH2207_3() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	Map<String, String> options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
@@ -1519,8 +1509,6 @@ public void testGH2207_3() {
 		options);
 }
 public void testGH2207_4() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	Map<String, String> options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);

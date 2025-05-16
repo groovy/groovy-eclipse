@@ -53,6 +53,11 @@ public class SourceElementNotifier {
 			return (TypeDeclaration) this.declaringTypes.get(size-1);
 		}
 		@Override
+		public boolean visit(Block block, BlockScope scope) {
+			notifySourceElementRequestor(null, block);
+			return false; // don't visit members as this was done during notifySourceElementRequestor(...)
+		}
+		@Override
 		public boolean visit(TypeDeclaration typeDeclaration, BlockScope scope) {
 			notifySourceElementRequestor(null, typeDeclaration, true, peekDeclaringType(), this.currentPackage);
 			return false; // don't visit members as this was done during notifySourceElementRequestor(...)
@@ -86,13 +91,13 @@ public SourceElementNotifier(ISourceElementRequestor requestor, boolean reportLo
 	this.superTypeNames = new char[4][];
 	this.nestedTypeIndex = 0;
 }
-protected Object[][] getArgumentInfos(Argument[] arguments) {
+protected Object[][] getArgumentInfos(AbstractVariableDeclaration[] arguments) {
 	int argumentLength = arguments.length;
 	char[][] argumentTypes = new char[argumentLength][];
 	char[][] argumentNames = new char[argumentLength][];
 	ParameterInfo[] parameterInfos = new ParameterInfo[argumentLength];
 	for (int i = 0; i < argumentLength; i++) {
-		Argument argument = arguments[i];
+		AbstractVariableDeclaration argument = arguments[i];
 		argumentTypes[i] = CharOperation.concatWith(argument.type.getParameterizedTypeName(), '.');
 		char[] name = argument.name;
 		argumentNames[i] = name;
@@ -263,8 +268,6 @@ protected void notifySourceElementRequestor(AbstractMethodDeclaration methodDecl
 		return;
 	}
 
-	final boolean isImplicit = (methodDeclaration.bits & org.eclipse.jdt.internal.compiler.ast.ASTNode.IsImplicit) != 0;
-
 	if (methodDeclaration.isDefaultConstructor()) {
 		if (this.reportReferenceInfo) {
 			ConstructorDeclaration constructorDeclaration = (ConstructorDeclaration) methodDeclaration;
@@ -292,7 +295,7 @@ protected void notifySourceElementRequestor(AbstractMethodDeclaration methodDecl
 	char[][] argumentTypes = null;
 	char[][] argumentNames = null;
 	boolean isVarArgs = false;
-	Argument[] arguments = methodDeclaration.arguments;
+	AbstractVariableDeclaration[] arguments = methodDeclaration.arguments(true);
 	ParameterInfo[] parameterInfos = null;
 	ISourceElementRequestor.MethodInfo methodInfo = new ISourceElementRequestor.MethodInfo();
 	methodInfo.typeAnnotated = ((methodDeclaration.bits & ASTNode.HasTypeAnnotations) != 0);
@@ -336,11 +339,8 @@ protected void notifySourceElementRequestor(AbstractMethodDeclaration methodDecl
 			methodInfo.declaringTypeModifiers = declaringType.modifiers;
 			methodInfo.extraFlags = ExtraFlags.getExtraFlags(declaringType);
 			methodInfo.node = methodDeclaration;
-			if(isImplicit) {
-				this.requestor.enterCompactConstructor(methodInfo);
-			} else {
-				this.requestor.enterConstructor(methodInfo);
-			}
+			methodInfo.enclosingType = declaringType;
+			this.requestor.enterConstructor(methodInfo);
 		}
 		if (this.reportReferenceInfo) {
 			ConstructorDeclaration constructorDeclaration = (ConstructorDeclaration) methodDeclaration;
@@ -365,11 +365,7 @@ protected void notifySourceElementRequestor(AbstractMethodDeclaration methodDecl
 		}
 		this.visitIfNeeded(methodDeclaration);
 		if (isInRange){
-			if(isImplicit) {
-				this.requestor.exitCompactConstructor(methodDeclaration.declarationSourceEnd);
-			} else {
-				this.requestor.exitConstructor(methodDeclaration.declarationSourceEnd);
-			}
+			this.requestor.exitConstructor(methodDeclaration.declarationSourceEnd);
 		}
 		return;
 	}
@@ -511,7 +507,7 @@ public void notifySourceElementRequestor(
 /*
 * Update the bodyStart of the corresponding parse node
 */
-protected void notifySourceElementRequestor(FieldDeclaration fieldDeclaration, TypeDeclaration declaringType) {
+protected void notifySourceElementRequestor(AbstractVariableDeclaration fieldDeclaration, TypeDeclaration declaringType) {
 
 	// range check
 	boolean isInRange =
@@ -531,6 +527,7 @@ protected void notifySourceElementRequestor(FieldDeclaration fieldDeclaration, T
 				}
 			}
 			// $FALL-THROUGH$
+		case AbstractVariableDeclaration.RECORD_COMPONENT:
 		case AbstractVariableDeclaration.FIELD:
 			int fieldEndPosition = this.sourceEnds.get(fieldDeclaration);
 			if (fieldEndPosition == -1) {
@@ -557,8 +554,7 @@ protected void notifySourceElementRequestor(FieldDeclaration fieldDeclaration, T
 				fieldInfo.declarationStart = fieldDeclaration.declarationSourceStart;
 				fieldInfo.name = fieldDeclaration.name;
 				fieldInfo.modifiers = deprecated ? (currentModifiers & ExtraCompilerModifiers.AccJustFlag) | ClassFileConstants.AccDeprecated : currentModifiers & ExtraCompilerModifiers.AccJustFlag;
-				if (fieldDeclaration.isARecordComponent) {
-					fieldInfo.modifiers |= ExtraCompilerModifiers.AccRecord;
+				if (fieldDeclaration.getKind() == AbstractVariableDeclaration.RECORD_COMPONENT) {
 					fieldInfo.isRecordComponent = true;
 				}
 				fieldInfo.type = typeName;
@@ -684,6 +680,16 @@ protected void notifySourceElementRequestor(ModuleDeclaration moduleDeclaration)
 //	}
 //
 //}
+protected void notifySourceElementRequestor(CompilationUnitDeclaration parsedUnit, Block block) {
+	boolean isInRange =
+			this.initialPosition <= block.sourceStart
+			&& this.eofPosition >= block.sourceEnd;
+	if (isInRange) {
+		this.requestor.enterBlock(block.sourceStart);
+		this.visitIfNeeded(block);
+		this.requestor.exitBlock(block.sourceEnd);
+	}
+}
 protected void notifySourceElementRequestor(CompilationUnitDeclaration parsedUnit, TypeDeclaration typeDeclaration, boolean notifyTypePresence, TypeDeclaration declaringType, ImportReference currentPackage) {
 
 	if (CharOperation.equals(TypeConstants.PACKAGE_INFO_NAME, typeDeclaration.name)) return;
@@ -693,10 +699,10 @@ protected void notifySourceElementRequestor(CompilationUnitDeclaration parsedUni
 		this.initialPosition <= typeDeclaration.declarationSourceStart
 		&& this.eofPosition >= typeDeclaration.declarationSourceEnd;
 
-	FieldDeclaration[] fields = typeDeclaration.fields;
+	AbstractVariableDeclaration[] variableDeclarartions = typeDeclaration.protoFieldDeclarations();
 	AbstractMethodDeclaration[] methods = typeDeclaration.methods;
 	TypeDeclaration[] memberTypes = typeDeclaration.memberTypes;
-	int fieldCounter = fields == null ? 0 : fields.length;
+	int fieldCounter = variableDeclarartions.length;
 	int methodCounter = methods == null ? 0 : methods.length;
 	int memberTypeCounter = memberTypes == null ? 0 : memberTypes.length;
 	int fieldIndex = 0;
@@ -782,14 +788,14 @@ protected void notifySourceElementRequestor(CompilationUnitDeclaration parsedUni
 	while ((fieldIndex < fieldCounter)
 			|| (memberTypeIndex < memberTypeCounter)
 			|| (methodIndex < methodCounter)) {
-		FieldDeclaration nextFieldDeclaration = null;
+		AbstractVariableDeclaration nextFieldDeclaration = null;
 		AbstractMethodDeclaration nextMethodDeclaration = null;
 		TypeDeclaration nextMemberDeclaration = null;
 
 		int position = Integer.MAX_VALUE;
 		int nextDeclarationType = -1;
 		if (fieldIndex < fieldCounter) {
-			nextFieldDeclaration = fields[fieldIndex];
+			nextFieldDeclaration = variableDeclarartions[fieldIndex];
 			if (nextFieldDeclaration.declarationSourceStart < position) {
 				position = nextFieldDeclaration.declarationSourceStart;
 				nextDeclarationType = 0; // FIELD
@@ -962,7 +968,7 @@ private void visitIfNeeded(AbstractMethodDeclaration method) {
 	}
 }
 
-private void visitIfNeeded(FieldDeclaration field, TypeDeclaration declaringType) {
+private void visitIfNeeded(AbstractVariableDeclaration field, TypeDeclaration declaringType) {
 	if (this.localDeclarationVisitor != null
 		&& (field.bits & ASTNode.HasLocalType) != 0) {
 			if (field.initialization != null) {
@@ -982,6 +988,15 @@ private void visitIfNeeded(Initializer initializer) {
 			if (initializer.block != null) {
 				initializer.block.traverse(this.localDeclarationVisitor, null);
 			}
+	}
+}
+private void visitIfNeeded(Block block) {
+	if (this.localDeclarationVisitor != null) {
+		if (block.statements != null) {
+			int statementsLength = block.statements.length;
+			for (int i = 0; i < statementsLength; i++)
+				block.statements[i].traverse(this.localDeclarationVisitor, block.scope);
+		}
 	}
 }
 }

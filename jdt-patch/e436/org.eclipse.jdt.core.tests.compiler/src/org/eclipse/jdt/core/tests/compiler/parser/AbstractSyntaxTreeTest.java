@@ -36,7 +36,6 @@ import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
@@ -72,9 +71,9 @@ public class AbstractSyntaxTreeTest extends AbstractCompilerTest implements IDoc
 	public void checkParse(int parserToCheck, char[] source, String expectedSyntaxErrorDiagnosis,
 			String testName, String expectedUnitToString, ASTVisitor visitor) throws IOException {
 		CompilerOptions options = new CompilerOptions(getCompilerOptions());
-		options.complianceLevel = ClassFileConstants.JDK1_8;
-		options.sourceLevel = ClassFileConstants.JDK1_8;
-		options.targetJDK = ClassFileConstants.JDK1_8;
+		options.complianceLevel = CompilerOptions.getFirstSupportedJdkLevel();
+		options.sourceLevel = CompilerOptions.getFirstSupportedJdkLevel();
+		options.targetJDK = CompilerOptions.getFirstSupportedJdkLevel();
 		checkParse(parserToCheck, source, expectedSyntaxErrorDiagnosis, testName, expectedUnitToString, visitor, options);
 	}
 	public void checkParse(int parserToCheck, char[] source, String expectedSyntaxErrorDiagnosis,

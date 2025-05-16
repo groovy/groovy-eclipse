@@ -6505,9 +6505,6 @@ public void test175() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=285701
 public void test176() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -6548,9 +6545,6 @@ public void test176() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=285701
 public void test177() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -6595,9 +6589,6 @@ public void test177() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=285701
 public void test178() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -6643,9 +6634,6 @@ public void test178() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=285701
 public void test179() {
-	if(this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -7194,8 +7182,6 @@ public void test433060() {
 		options);
 }
 public void test434442() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	this.runConformTest(new String[] {
 			"X.java",
 			"interface I {\n" +
@@ -7229,8 +7215,6 @@ public void test434442() {
 	});
 }
 public void test476281() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	this.runConformTest(new String[] {
 			"LambdaEnumLocalClassBug.java",
 			"public enum LambdaEnumLocalClassBug {\n" +
@@ -7328,8 +7312,6 @@ public void testBug388314() throws Exception {
 	}
 }
 public void testGHIssue2398() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	this.runNegativeTest(new String[] {
 			"com/test/X.java",
 			"""

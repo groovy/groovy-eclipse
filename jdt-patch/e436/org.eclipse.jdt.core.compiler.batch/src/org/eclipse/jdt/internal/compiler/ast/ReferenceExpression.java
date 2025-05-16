@@ -577,7 +577,7 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
     		this.lhs.computeConversion(scope, lhsType, lhsType);
     		if (this.typeArguments != null) {
     			int length = this.typeArguments.length;
-    			this.typeArgumentsHaveErrors = compilerOptions.sourceLevel < ClassFileConstants.JDK1_5;
+    			this.typeArgumentsHaveErrors = false;
     			this.resolvedTypeArguments = new TypeBinding[length];
     			for (int i = 0; i < length; i++) {
     				TypeReference typeReference = this.typeArguments[i];

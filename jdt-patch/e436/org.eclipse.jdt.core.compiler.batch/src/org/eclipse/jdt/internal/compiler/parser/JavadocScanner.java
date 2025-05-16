@@ -17,7 +17,7 @@ import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameSi
 import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameStringLiteral;
 
 import org.eclipse.jdt.core.compiler.InvalidInputException;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class JavadocScanner extends Scanner{
 
@@ -26,7 +26,7 @@ public class JavadocScanner extends Scanner{
 	public boolean considerRegexInStringLiteral = false;
 
 	public JavadocScanner() {
-		this(false /*comment*/, false /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_3 /*sourceLevel*/, null/*taskTag*/, null/*taskPriorities*/, true /*taskCaseSensitive*/);
+		this(false /*comment*/, false /*whitespace*/, false /*nls*/, CompilerOptions.getFirstSupportedJdkLevel() /*sourceLevel*/, null/*taskTag*/, null/*taskPriorities*/, true /*taskCaseSensitive*/);
 	}
 
 	public JavadocScanner(

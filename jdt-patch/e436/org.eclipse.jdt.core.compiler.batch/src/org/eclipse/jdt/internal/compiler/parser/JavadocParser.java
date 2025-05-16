@@ -890,24 +890,8 @@ public class JavadocParser extends AbstractCommentParser {
 			case 'v':
 				if (length == TAG_VALUE_LENGTH && CharOperation.equals(TAG_VALUE, tagName, 0, length)) {
 					this.tagValue = TAG_VALUE_VALUE;
-					if (this.sourceLevel >= ClassFileConstants.JDK1_5) {
-						if (this.inlineTagStarted) {
-							valid = parseReference();
-						}
-					} else {
-						if (this.validValuePositions == -1) {
-							if (this.invalidValuePositions != -1) {
-								if (this.reportProblems) this.sourceParser.problemReporter().javadocUnexpectedTag((int) (this.invalidValuePositions>>>32), (int) this.invalidValuePositions);
-							}
-							if (valid) {
-								this.validValuePositions = (((long) this.tagSourceStart) << 32) + this.tagSourceEnd;
-								this.invalidValuePositions = -1;
-							} else {
-								this.invalidValuePositions = (((long) this.tagSourceStart) << 32) + this.tagSourceEnd;
-							}
-						} else {
-							if (this.reportProblems) this.sourceParser.problemReporter().javadocUnexpectedTag(this.tagSourceStart, this.tagSourceEnd);
-						}
+					if (this.inlineTagStarted) {
+						valid = parseReference();
 					}
 				} else if (length == TAG_VERSION_LENGTH && CharOperation.equals(TAG_VERSION, tagName, 0, length)) {
 					this.tagValue = TAG_VERSION_VALUE;

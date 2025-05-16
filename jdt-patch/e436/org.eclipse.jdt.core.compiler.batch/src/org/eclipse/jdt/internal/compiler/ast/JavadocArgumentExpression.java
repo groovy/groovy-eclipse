@@ -52,13 +52,7 @@ public class JavadocArgumentExpression extends Expression {
 				if (this.resolvedType == null) {
 					return null;
 				}
-				if (typeRef instanceof SingleTypeReference &&
-						this.resolvedType.leafComponentType().enclosingType() != null &&
-						scope.compilerOptions().complianceLevel <= ClassFileConstants.JDK1_4) {
-					scope.problemReporter().javadocInvalidMemberTypeQualification(this.sourceStart, this.sourceEnd, scope.getDeclarationModifiers());
-					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=228648
-					// do not return now but report unresolved reference as expected depending on compliance settings
-				} else if (typeRef instanceof QualifiedTypeReference) {
+				if (typeRef instanceof QualifiedTypeReference) {
 					TypeBinding enclosingType = this.resolvedType.leafComponentType().enclosingType();
 					if (enclosingType != null) {
 						// https://bugs.eclipse.org/bugs/show_bug.cgi?id=233187

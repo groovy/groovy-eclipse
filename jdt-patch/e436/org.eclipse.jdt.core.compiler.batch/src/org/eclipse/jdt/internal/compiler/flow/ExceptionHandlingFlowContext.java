@@ -60,7 +60,6 @@ public class ExceptionHandlingFlowContext extends FlowContext {
 	// for dealing with anonymous constructor thrown exceptions
 	public List<TypeBinding> extendedExceptions;
 
-	private static final Argument[] NO_ARGUMENTS = new Argument[0];
 	public  Argument [] catchArguments;
 
 	private final int[] exceptionToCatchBlockMap;
@@ -72,7 +71,7 @@ public ExceptionHandlingFlowContext(
 			FlowContext initializationParent,
 			BlockScope scope,
 			UnconditionalFlowInfo flowInfo) {
-	this(parent, associatedNode, handledExceptions, null, NO_ARGUMENTS, initializationParent, scope, flowInfo);
+	this(parent, associatedNode, handledExceptions, null, ASTNode.NO_ARGUMENTS, initializationParent, scope, flowInfo);
 }
 public ExceptionHandlingFlowContext(
 		FlowContext parent,

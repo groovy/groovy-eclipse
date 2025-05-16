@@ -17,7 +17,6 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.JavadocSingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
@@ -144,18 +143,14 @@ public class CompletionOnJavadocTag extends JavadocSingleNameReference implement
 						if (possibleTag == TAG_PARAM) {
 							switch (scope.kind) {
 								case Scope.CLASS_SCOPE:
-									if (scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5) {
-										TypeDeclaration typeDecl = ((ClassScope)scope).referenceContext;
-										boolean isRecordWithComponent = typeDecl.isRecord() && typeDecl.nRecordComponents >0 ;
-										if (((ClassScope)scope).referenceContext.binding.isGenericType() || isRecordWithComponent) {
-											filteredTags[size++] = possibleTag;
-										}
+									TypeDeclaration typeDecl = ((ClassScope)scope).referenceContext;
+									boolean isRecordWithComponent = typeDecl.isRecord() && typeDecl.recordComponents.length > 0;
+									if (((ClassScope)scope).referenceContext.binding.isGenericType() || isRecordWithComponent) {
+										filteredTags[size++] = possibleTag;
 									}
 									break;
 								case Scope.COMPILATION_UNIT_SCOPE:
-									if (scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5) {
-										filteredTags[size++] = possibleTag;
-									}
+									filteredTags[size++] = possibleTag;
 									break;
 								default:
 									filteredTags[size++] = possibleTag;

@@ -163,6 +163,8 @@ public class InferenceContext18 {
 	// during reduction we ignore missing types but record that fact here:
 	TypeBinding missingType;
 
+	private static ThreadLocal<InferenceContext18> instance = new ThreadLocal<>();
+
 	public static boolean isSameSite(InvocationSite site1, InvocationSite site2) {
 		if (site1 == site2)
 			return true;
@@ -1023,30 +1025,35 @@ public class InferenceContext18 {
 	 * @throws InferenceFailureException a compile error has been detected during inference
 	 */
 	private /*@Nullable*/ BoundSet solve(boolean inferringApplicability, boolean isRecordPatternTypeInference) throws InferenceFailureException {
+		instance.set(this);
 
-		if (!reduce())
-			return null;
-		if (!this.currentBounds.incorporate(this))
-			return null;
-		if (inferringApplicability)
-			this.b2 = this.currentBounds.copy(); // Preserve the result after reduction, without effects of resolve() for later use in invocation type inference.
+		try {
+			if (!reduce())
+				return null;
+			if (!this.currentBounds.incorporate(this))
+				return null;
+			if (inferringApplicability)
+				this.b2 = this.currentBounds.copy(); // Preserve the result after reduction, without effects of resolve() for later use in invocation type inference.
 
-		BoundSet solution = resolve(this.inferenceVariables, isRecordPatternTypeInference);
+			BoundSet solution = resolve(this.inferenceVariables, isRecordPatternTypeInference);
 
-		/* If inferring applicability make a final pass over the initial constraints preserved as final constraints to make sure they hold true at a macroscopic level.
-		   See https://bugs.eclipse.org/bugs/show_bug.cgi?id=426537#c55 onwards.
-		*/
-		if (inferringApplicability && solution != null && this.finalConstraints != null) {
-			for (ConstraintExpressionFormula constraint: this.finalConstraints) {
-				if (constraint.left.isPolyExpression())
-					continue; // avoid redundant re-inference, inner poly's own constraints get validated in its own context & poly invocation type inference proved compatibility against target.
-				constraint.applySubstitution(solution, this.inferenceVariables);
-				if (!this.currentBounds.reduceOneConstraint(this, constraint)) {
-					return null;
+			/* If inferring applicability make a final pass over the initial constraints preserved as final constraints to make sure they hold true at a macroscopic level.
+			   See https://bugs.eclipse.org/bugs/show_bug.cgi?id=426537#c55 onwards.
+			*/
+			if (inferringApplicability && solution != null && this.finalConstraints != null) {
+				for (ConstraintExpressionFormula constraint: this.finalConstraints) {
+					if (constraint.left.isPolyExpression())
+						continue; // avoid redundant re-inference, inner poly's own constraints get validated in its own context & poly invocation type inference proved compatibility against target.
+					constraint.applySubstitution(solution, this.inferenceVariables);
+					if (!this.currentBounds.reduceOneConstraint(this, constraint)) {
+						return null;
+					}
 				}
 			}
+			return solution;
+		} finally {
+			instance.remove();
 		}
-		return solution;
 	}
 
 	public /*@Nullable*/ BoundSet solve() throws InferenceFailureException {
@@ -2203,5 +2210,21 @@ public class InferenceContext18 {
 			}
 		}
 		return false;
+	}
+	public static TypeBinding maybeCapture(TypeBinding type) {
+		InferenceContext18 inst = instance.get();
+		if (inst != null) {
+			InvocationSite inv = inst.currentInvocation;
+			return type.capture(inst.scope, inv.sourceStart(), inv.sourceEnd());
+		}
+		return type;
+	}
+
+	public static TypeBinding maybeUncapture(CaptureBinding capture) {
+		InferenceContext18 inst = instance.get();
+		if (inst != null) {
+			return capture.uncapture(inst.scope);
+		}
+		return capture;
 	}
 }

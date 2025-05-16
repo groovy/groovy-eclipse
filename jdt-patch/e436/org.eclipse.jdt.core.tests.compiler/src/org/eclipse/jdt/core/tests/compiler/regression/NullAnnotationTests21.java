@@ -794,11 +794,6 @@ public class NullAnnotationTests21 extends AbstractNullAnnotationTest {
 				"	public record X(@NonNull String ca1, String ca2, @Nullable String ca2) {}\n" +
 				"	                                                                  ^^^\n" +
 				"Duplicate component ca2 in record\n" +
-				"----------\n" +
-				"3. ERROR in X.java (at line 2)\n" +
-				"	public record X(@NonNull String ca1, String ca2, @Nullable String ca2) {}\n" +
-				"	                                                                  ^^^\n" +
-				"Duplicate parameter ca2\n" +
 				"----------\n";
 		runner.runNegativeTest();
 	}

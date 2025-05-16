@@ -243,7 +243,6 @@ public void test004() {
 		"	                   ^\n" +
 		"The blank final field o may not have been initialized\n" +
 		"----------\n" +
-		(this.complianceLevel >= ClassFileConstants.JDK1_7 ?
 		"4. ERROR in X.java (at line 35)\n" +
 		"	System.out.println(this.o); // legal\n" +
 		"	                        ^\n" +
@@ -274,32 +273,7 @@ public void test004() {
 		"	      ^\n" +
 		"The final field X.Test6.o cannot be assigned\n" +
 		"----------\n"
-		:
-		"4. WARNING in X.java (at line 42)\n" +
-		"	private final Object o;\n" +
-		"	                     ^\n" +
-		"The value of the field X.Test5.o is not used\n" +
-		"----------\n" +
-		"5. ERROR in X.java (at line 44)\n" +
-		"	Test5() {\n" +
-		"	^^^^^^^\n" +
-		"The blank final field o may not have been initialized\n" +
-		"----------\n" +
-		"6. ERROR in X.java (at line 46)\n" +
-		"	other.o = new Object(); // illegal!  other.o is not assignable\n" +
-		"	      ^\n" +
-		"The final field X.Test5.o cannot be assigned\n" +
-		"----------\n" +
-		"7. WARNING in X.java (at line 52)\n" +
-		"	private final Object o;\n" +
-		"	                     ^\n" +
-		"The value of the field X.Test6.o is not used\n" +
-		"----------\n" +
-		"8. ERROR in X.java (at line 59)\n" +
-		"	other.o = new Object(); // illegal!  other.o is not assignable\n" +
-		"	      ^\n" +
-		"The final field X.Test6.o cannot be assigned\n" +
-		"----------\n"));
+		);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=190391
 public void test005() {
@@ -2027,38 +2001,7 @@ public void test068() {
 			"	}\n" +
 			"}\n"
 		},
-		this.complianceLevel < ClassFileConstants.JDK1_5 ?
-		"----------\n" +
-		"1. ERROR in X.java (at line 2)\n" +
-		"	Integer f = \'a\'; // Field declaration.\n" +
-		"	            ^^^\n" +
-		"Type mismatch: cannot convert from char to Integer\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 4)\n" +
-		"	Integer i = \'a\'; // local declaration with initialization.\n" +
-		"	            ^^^\n" +
-		"Type mismatch: cannot convert from char to Integer\n" +
-		"----------\n" +
-		"3. ERROR in X.java (at line 5)\n" +
-		"	i = \'a\'; // assignment\n" +
-		"	    ^^^\n" +
-		"Type mismatch: cannot convert from char to Integer\n" +
-		"----------\n" +
-		"4. ERROR in X.java (at line 6)\n" +
-		"	Integer [] ia = new Integer [] { \'a\' }; // array initializer.\n" +
-		"	                                 ^^^\n" +
-		"Type mismatch: cannot convert from char to Integer\n" +
-		"----------\n" +
-		"5. ERROR in X.java (at line 7)\n" +
-		"	return \'a\'; // return statement.\n" +
-		"	       ^^^\n" +
-		"Type mismatch: cannot convert from char to Integer\n" +
-		"----------\n" +
-		"6. ERROR in X.java (at line 8)\n" +
-		"	switch (i) {\n" +
-		"	        ^\n" +
-		"Cannot switch on a value of type Integer. Only convertible int values or enum variables are permitted\n" +
-		"----------\n" :
+
 			"----------\n" +
 			"1. ERROR in X.java (at line 2)\n" +
 			"	Integer f = \'a\'; // Field declaration.\n" +
@@ -2108,31 +2051,20 @@ public void testbug480989() {
 			"        new SubClass(\"Hello World!\");\n" +
 			"    }\n" +
 			"}\n";
-	if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
-			new String[] {
-				"Unassigned.java",
-				src
-			},
-			"----------\n" +
-			"1. ERROR in Unassigned.java (at line 6)\n" +
-			"	System.out.println(this.test);\n" +
-			"	                        ^^^^\n" +
-			"The blank final field test may not have been initialized\n" +
-			"----------\n");
-	} else {
-		this.runConformTest(
-			new String[] {
-				"Unassigned.java",
-				src
-			},
-			"null\n" +
-			"Hello World!");
-	}
+	this.runNegativeTest(
+		new String[] {
+			"Unassigned.java",
+			src
+		},
+		"----------\n" +
+		"1. ERROR in Unassigned.java (at line 6)\n" +
+		"	System.out.println(this.test);\n" +
+		"	                        ^^^^\n" +
+		"The blank final field test may not have been initialized\n" +
+		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=486908
 public void testBug486908_A(){
-	if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
 	this.runConformTest(new String[] {
 			"Random.java",
 			"import java.util.ArrayList;\n" +
@@ -2157,7 +2089,6 @@ public void testBug486908_A(){
 			"	}\n" +
 			"}\n"
 	});
-}
 }
 public void testBug486908_B() {
 	this.runConformTest(new String[] {

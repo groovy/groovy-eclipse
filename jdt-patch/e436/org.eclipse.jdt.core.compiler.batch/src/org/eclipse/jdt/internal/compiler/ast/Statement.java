@@ -44,12 +44,10 @@ package org.eclipse.jdt.internal.compiler.ast;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching.CheckMode;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.BranchLabel;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public abstract class Statement extends ASTNode {
@@ -113,8 +111,7 @@ protected void analyseArguments(BlockScope currentScope, FlowContext flowContext
 {
 	// compare actual null-status against parameter annotations of the called method:
 	if (arguments != null) {
-		CompilerOptions compilerOptions = currentScope.compilerOptions();
-		if (compilerOptions.sourceLevel >= ClassFileConstants.JDK1_7 && methodBinding.isPolymorphic())
+		if (methodBinding.isPolymorphic())
 			return;
 		boolean considerTypeAnnotations = currentScope.environment().usesNullTypeAnnotations();
 		boolean hasJDK15FlowAnnotations = methodBinding.parameterFlowBits != null;
@@ -454,7 +451,6 @@ public boolean isBoxingCompatible(TypeBinding expressionType, TypeBinding target
 	return expressionType.isBaseType()  // narrowing then boxing ? Only allowed for some target types see 362279
 		&& !targetType.isBaseType()
 		&& !targetType.isTypeVariable()
-		&& scope.compilerOptions().sourceLevel >= org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants.JDK1_5 // autoboxing
 		&& (targetType.id == TypeIds.T_JavaLangByte || targetType.id == TypeIds.T_JavaLangShort || targetType.id == TypeIds.T_JavaLangCharacter)
 		&& expression.isConstantValueOfTypeAssignableToType(expressionType, scope.environment().computeBoxingType(targetType));
 }

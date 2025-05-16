@@ -30,8 +30,6 @@ import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class SwitchTest extends AbstractRegressionTest {
 
-	private static final long JDKLevelSupportingStringSwitch = ClassFileConstants.JDK1_7;
-
 static {
 //	TESTS_NUMBERS = new int[] { 22 };
 //	TESTS_NAMES = new String[] { "testFor356002", "testFor356002_2", "testFor356002_3" };
@@ -247,28 +245,6 @@ public void test010() {
 			"	^^^^\n" +
 			"Zork cannot be resolved to a type\n" +
 			"----------\n";
-	String oldMessage =
-			"----------\n" +
-			"1. ERROR in X.java (at line 4)\n" +
-			"	switch(this){\n" +
-			"	       ^^^^\n" +
-			"Cannot switch on a value of type X. Only convertible int values or enum variables are permitted\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 6)\n" +
-			"	Zork z;\n" +
-			"	^^^^\n" +
-			"Zork cannot be resolved to a type\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 11)\n" +
-			"	switch(x){\n" +
-			"	       ^\n" +
-			"x cannot be resolved to a variable\n" +
-			"----------\n" +
-			"4. ERROR in X.java (at line 13)\n" +
-			"	Zork z;\n" +
-			"	^^^^\n" +
-			"Zork cannot be resolved to a type\n" +
-			"----------\n";
 	String java21Plus = "----------\n" +
 			"1. ERROR in X.java (at line 4)\n" +
 			"	switch(this){\n" +
@@ -314,8 +290,7 @@ public void test010() {
 		"	}	\n" +
 		"}\n",
 	},
-	this.complianceLevel >= JDKLevelSupportingStringSwitch ? (this.complianceLevel >= ClassFileConstants.JDK21 ? java21Plus : newMessage) : oldMessage);
-
+	this.complianceLevel >= ClassFileConstants.JDK21 ? java21Plus : newMessage);
 }
 public void test011() {
 	this.runConformTest(new String[] {
@@ -448,83 +423,7 @@ public void test013() throws Exception {
 	},
 	"333332323232323");
 
-	String expectedOutput = new CompilerOptions(getCompilerOptions()).complianceLevel < ClassFileConstants.JDK1_6
-		?	"  // Method descriptor #15 ([Ljava/lang/String;)V\n" +
-			"  // Stack: 2, Locals: 5\n" +
-			"  public static void main(java.lang.String[] args);\n" +
-			"      0  aconst_null\n" +
-			"      1  astore_2 [o]\n" +
-			"      2  iconst_0\n" +
-			"      3  istore_3 [i]\n" +
-			"      4  goto 103\n" +
-			"      7  iload_3 [i]\n" +
-			"      8  bipush 90\n" +
-			"     10  if_icmpge 100\n" +
-			"     13  new X [1]\n" +
-			"     16  dup\n" +
-			"     17  invokespecial X() [16]\n" +
-			"     20  astore_1 [x]\n" +
-			"     21  iload_3 [i]\n" +
-			"     22  iconst_4\n" +
-			"     23  if_icmple 37\n" +
-			"     26  new java.lang.Object [3]\n" +
-			"     29  dup\n" +
-			"     30  invokespecial java.lang.Object() [8]\n" +
-			"     33  astore_2 [o]\n" +
-			"     34  goto 39\n" +
-			"     37  aconst_null\n" +
-			"     38  astore_2 [o]\n" +
-			"     39  iconst_2\n" +
-			"     40  tableswitch default: 76\n" +
-			"          case 0: 60\n" +
-			"     60  aload_2 [o]\n" +
-			"     61  instanceof java.lang.String [17]\n" +
-			"     64  ifeq 92\n" +
-			"     67  getstatic java.lang.System.out : java.io.PrintStream [19]\n" +
-			"     70  ldc <String \"1\"> [25]\n" +
-			"     72  invokevirtual java.io.PrintStream.print(java.lang.String) : void [27]\n" +
-			"     75  return\n" +
-			"     76  aload_2 [o]\n" +
-			"     77  astore 4 [diff]\n" +
-			"     79  aload 4 [diff]\n" +
-			"     81  ifnull 92\n" +
-			"     84  getstatic java.lang.System.out : java.io.PrintStream [19]\n" +
-			"     87  ldc <String \"2\"> [33]\n" +
-			"     89  invokevirtual java.io.PrintStream.print(java.lang.String) : void [27]\n" +
-			"     92  getstatic java.lang.System.out : java.io.PrintStream [19]\n" +
-			"     95  ldc <String \"3\"> [35]\n" +
-			"     97  invokevirtual java.io.PrintStream.print(java.lang.String) : void [27]\n" +
-			"    100  iinc 3 1 [i]\n" +
-			"    103  iload_3 [i]\n" +
-			"    104  bipush 10\n" +
-			"    106  if_icmplt 7\n" +
-			"    109  return\n" +
-			"      Line numbers:\n" +
-			"        [pc: 0, line: 5]\n" +
-			"        [pc: 2, line: 6]\n" +
-			"        [pc: 7, line: 7]\n" +
-			"        [pc: 13, line: 8]\n" +
-			"        [pc: 21, line: 9]\n" +
-			"        [pc: 26, line: 10]\n" +
-			"        [pc: 34, line: 11]\n" +
-			"        [pc: 37, line: 12]\n" +
-			"        [pc: 39, line: 14]\n" +
-			"        [pc: 60, line: 16]\n" +
-			"        [pc: 67, line: 17]\n" +
-			"        [pc: 75, line: 18]\n" +
-			"        [pc: 76, line: 23]\n" +
-			"        [pc: 79, line: 24]\n" +
-			"        [pc: 84, line: 25]\n" +
-			"        [pc: 92, line: 30]\n" +
-			"        [pc: 100, line: 6]\n" +
-			"        [pc: 109, line: 33]\n" +
-			"      Local variable table:\n" +
-			"        [pc: 0, pc: 110] local: args index: 0 type: java.lang.String[]\n" +
-			"        [pc: 21, pc: 100] local: x index: 1 type: X\n" +
-			"        [pc: 2, pc: 110] local: o index: 2 type: java.lang.Object\n" +
-			"        [pc: 4, pc: 109] local: i index: 3 type: int\n" +
-			"        [pc: 79, pc: 92] local: diff index: 4 type: java.lang.Object\n"
-		:
+	String expectedOutput =
 			"  // Method descriptor #15 ([Ljava/lang/String;)V\n" +
 			"  // Stack: 2, Locals: 5\n" +
 			"  public static void main(java.lang.String[] args);\n" +
@@ -789,7 +688,6 @@ public void test018() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=314830
 public void test019() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	this.runConformTest(new String[] {
 		"X.java",
 		"public class X {\n" +
@@ -807,7 +705,6 @@ public void test019() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=314830
 public void test020() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	this.runConformTest(new String[] {
 		"X.java",
 		"public class X {\n" +
@@ -828,7 +725,6 @@ public void test020() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=314830
 public void test021() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	this.runConformTest(new String[] {
 		"X.java",
 		"public class X {\n" +
@@ -847,7 +743,6 @@ public void test021() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=314830
 public void test022() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	this.runConformTest(new String[] {
 		"X.java",
 		"public class X {\n" +
@@ -866,7 +761,6 @@ public void test022() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=314830
 public void test023() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	this.runConformTest(new String[] {
 		"X.java",
 		"public class X {\n" +
@@ -894,19 +788,6 @@ public void testStringSwitchAtJDK6() {
 			"	         ^^^^^^^^^^^^\n" +
 			"Void methods cannot return a value\n" +
 			"----------\n";
-		String oldMessage =
-			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
-			"	switch(args[0]) {\n" +
-			"	       ^^^^^^^\n" +
-			"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 4)\n" +
-			"	default: return args;\n" +
-			"	         ^^^^^^^^^^^^\n" +
-			"Void methods cannot return a value\n" +
-			"----------\n";
-
 		this.runNegativeTest(new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -917,7 +798,7 @@ public void testStringSwitchAtJDK6() {
 			"	}\n" +
 			"}\n",
 		},
-		this.complianceLevel >= JDKLevelSupportingStringSwitch ? newMessage : oldMessage);
+		newMessage);
 }
 
 //JDK7: Strings in Switch.
@@ -974,19 +855,6 @@ public void testCaseTypeMismatch() {
 		"	     ^^^^^^^^^^^\n" +
 		"Case constant of type boolean is incompatible with switch selector type String\n" +
 		"----------\n";
-	String oldMessage =
-			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
-			"	switch(args[0]) {\n" +
-			"	       ^^^^^^^\n" +
-			"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 12)\n" +
-			"	case (boolean) 8: break;\n" +
-			"	     ^^^^^^^^^^^\n" +
-			"Cannot cast from int to boolean\n" +
-			"----------\n";
-
 		this.runNegativeTest(new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -1005,13 +873,10 @@ public void testCaseTypeMismatch() {
 			"	}\n" +
 			"}\n",
 		},
-		this.complianceLevel >= JDKLevelSupportingStringSwitch ? newMessage : oldMessage);
+		newMessage);
 }
 // JDK7: Strings in Switch.
 public void testCaseTypeMismatch2() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
 	String newMessage =
 		"----------\n" +
 		"1. ERROR in X.java (at line 7)\n" +
@@ -1019,13 +884,6 @@ public void testCaseTypeMismatch2() {
 		"	     ^^^^^^^^^^^\n" +
 		"Case constant of type Days is incompatible with switch selector type String\n" +
 		"----------\n";
-		String oldMessage =
-			"----------\n" +
-			"1. ERROR in X.java (at line 6)\n" +
-			"	switch (\"Sunday\") {\n" +
-			"	        ^^^^^^^^\n" +
-			"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-			"----------\n";
 
 		this.runNegativeTest(new String[] {
 			"X.java",
@@ -1040,13 +898,10 @@ public void testCaseTypeMismatch2() {
 			"    }\n" +
 			"}\n",
 		},
-		this.complianceLevel >= JDKLevelSupportingStringSwitch ? newMessage : oldMessage);
+		newMessage);
 }
 // JDK7: Strings in Switch.
 public void testCaseTypeMismatch3() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
 	String newMessage =
 		"----------\n" +
 		"1. ERROR in X.java (at line 7)\n" +
@@ -1223,14 +1078,6 @@ public void testVariableCase() {
 			"case expressions must be constant expressions\n" +
 			"----------\n";
 
-		String oldMessage =
-			"----------\n" +
-			"1. ERROR in X.java (at line 6)\n" +
-			"	switch(args[0]) {\n" +
-			"	       ^^^^^^^\n" +
-			"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-			"----------\n";
-
 		this.runNegativeTest(new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -1248,7 +1095,7 @@ public void testVariableCase() {
 			"    }\n" +
 			"}\n"
 		},
-		this.complianceLevel >= JDKLevelSupportingStringSwitch ? newMessage : oldMessage);
+		newMessage);
 }
 // JDK7: Strings in Switch.
 public void testVariableCaseFinal() {
@@ -1263,14 +1110,6 @@ public void testVariableCaseFinal() {
 			"	case argument: break;\n" +
 			"	     ^^^^^^^^\n" +
 			"case expressions must be constant expressions\n" +
-			"----------\n";
-
-		String oldMessage =
-			"----------\n" +
-			"1. ERROR in X.java (at line 6)\n" +
-			"	switch(args[0]) {\n" +
-			"	       ^^^^^^^\n" +
-			"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
 			"----------\n";
 
 		this.runNegativeTest(new String[] {
@@ -1290,7 +1129,7 @@ public void testVariableCaseFinal() {
 			"    }\n" +
 			"}\n"
 		},
-		this.complianceLevel >= JDKLevelSupportingStringSwitch ? newMessage : oldMessage);
+		newMessage);
 }
 //JDK7: Strings in Switch.
 public void testNullCase() {
@@ -1420,14 +1259,6 @@ public void testDuplicateCase3() {
 }
 
 public void testDuplicateHashCode() {
-	String errorMsg =
-		"----------\n" +
-		"1. ERROR in testDuplicateHashCode.java (at line 5)\n" +
-		"	switch (dispatcher) {\n" +
-		"	        ^^^^^^^^^^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"testDuplicateHashCode.java",
@@ -1469,21 +1300,9 @@ public void testDuplicateHashCode() {
 		"	}\n" +
 		"}\n",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		this.runConformTest(sourceFiles, "1 2 3 4 5 6 7 8 Default");
-	}
+	this.runConformTest(sourceFiles, "1 2 3 4 5 6 7 8 Default");
 }
 public void testDuplicateHashCode2() {
-	String errorMsg =
-		"----------\n" +
-		"1. ERROR in testDuplicateHashCode.java (at line 5)\n" +
-		"	switch (dispatcher) {\n" +
-		"	        ^^^^^^^^^^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"testDuplicateHashCode.java",
@@ -1532,41 +1351,9 @@ public void testDuplicateHashCode2() {
 		"	}\n" +
 		"}\n",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		this.runConformTest(sourceFiles, "1 3 5 7 8 6 4 2 Default");
-	}
+	this.runConformTest(sourceFiles, "1 3 5 7 8 6 4 2 Default");
 }
 public void testSwitchOnNull() {
-	String errorMsg =
-		"----------\n" +
-		"1. ERROR in testSwitchOnNull.java (at line 13)\n" +
-		"	switch (s) {\n" +
-		"	        ^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n" +
-		"2. ERROR in testSwitchOnNull.java (at line 23)\n" +
-		"	switch ((String) null) {\n" +
-		"	        ^^^^^^^^^^^^^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n" +
-		"3. ERROR in testSwitchOnNull.java (at line 33)\n" +
-		"	switch (someMethod()) {\n" +
-		"	        ^^^^^^^^^^^^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n" +
-		"4. ERROR in testSwitchOnNull.java (at line 40)\n" +
-		"	switch (nullString) {\n" +
-		"	        ^^^^^^^^^^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n" +
-		"5. ERROR in testSwitchOnNull.java (at line 47)\n" +
-		"	switch (someMethod()) {\n" +
-		"	        ^^^^^^^^^^^^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"testSwitchOnNull.java",
@@ -1628,21 +1415,9 @@ public void testSwitchOnNull() {
 		"    }\n" +
 		"}\n",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		this.runConformTest(sourceFiles, "NPE1NPE2NPE3NPE4NPE5");
-	}
+	this.runConformTest(sourceFiles, "NPE1NPE2NPE3NPE4NPE5");
 }
 public void testSideEffect() {
-	String errorMsg =
-		"----------\n" +
-		"1. ERROR in testSideEffect.java (at line 11)\n" +
-		"	switch(dispatcher()) {\n" +
-		"	       ^^^^^^^^^^^^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"testSideEffect.java",
@@ -1666,21 +1441,9 @@ public void testSideEffect() {
 		"    }\n" +
 		"}\n",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		this.runConformTest(sourceFiles, "DONE");
-	}
+	this.runConformTest(sourceFiles, "DONE");
 }
 public void testFallThrough() {
-	String errorMsg =
-		"----------\n" +
-		"1. ERROR in testFallThrough.java (at line 11)\n" +
-		"	switch(s = dispatcher()) {\n" +
-		"	       ^^^^^^^^^^^^^^^^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"testFallThrough.java",
@@ -1716,21 +1479,9 @@ public void testFallThrough() {
 		"    }\n" +
 		"}\n",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		this.runConformTest(sourceFiles, "0(even) 1(odd) 2(even) 3(odd) 4(even) 5(odd) 6(even) 7(odd) 8(even) 9(odd) DONE");
-	}
+	this.runConformTest(sourceFiles, "0(even) 1(odd) 2(even) 3(odd) 4(even) 5(odd) 6(even) 7(odd) 8(even) 9(odd) DONE");
 }
 public void testFallThrough2() {
-	String errorMsg =
-		"----------\n" +
-		"1. ERROR in testFallThrough.java (at line 11)\n" +
-		"	switch(s = dispatcher()) {\n" +
-		"	       ^^^^^^^^^^^^^^^^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"testFallThrough.java",
@@ -1757,25 +1508,9 @@ public void testFallThrough2() {
 		"    }\n" +
 		"}\n",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		this.runConformTest(sourceFiles, "1 22 333 4444 DONE");
-	}
+	this.runConformTest(sourceFiles, "1 22 333 4444 DONE");
 }
 public void testMarysLamb() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
-
-	String errorMsg =
-		"----------\n" +
-		"1. ERROR in testMarysLamb.java (at line 4)\n" +
-		"	switch(s) {\n" +
-		"	       ^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"testMarysLamb.java",
@@ -1789,21 +1524,9 @@ public void testMarysLamb() {
 		"    }\n" +
 		"}\n",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		this.runConformTest(sourceFiles, "Mary Had A Little Lamb");
-	}
+	this.runConformTest(sourceFiles, "Mary Had A Little Lamb");
 }
 public void testBreakOut() {
-	String errorMsg =
-		"----------\n" +
-		"1. ERROR in testBreakOut.java (at line 5)\n" +
-		"	switch(s) {\n" +
-		"	       ^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"testBreakOut.java",
@@ -1822,34 +1545,9 @@ public void testBreakOut() {
 		"    }\n" +
 		"}\n",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		this.runConformTest(sourceFiles, "DONE");
-	}
+	this.runConformTest(sourceFiles, "DONE");
 }
 public void testMultipleSwitches() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
-	String errorMsg =
-		"----------\n" +
-		"1. ERROR in X.java (at line 6)\n" +
-		"	switch (s) {\n" +
-		"	        ^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 35)\n" +
-		"	switch (s) {\n" +
-		"	        ^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n" +
-		"3. ERROR in X.java (at line 51)\n" +
-		"	switch (s) {\n" +
-		"	        ^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"X.java",
@@ -1924,34 +1622,9 @@ public void testMultipleSwitches() {
 		"\n" +
 		"}\n",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		this.runConformTest(sourceFiles, "SundayMondayTuesdayWednesdayThursdayFridaySaturday ---- SundayMondayTuesdayWednesdayThursdayFridaySaturday ---- HolidayWorkdayWorkdayWorkdayWorkdayWorkdayHoliday DONE");
-	}
+	this.runConformTest(sourceFiles, "SundayMondayTuesdayWednesdayThursdayFridaySaturday ---- SundayMondayTuesdayWednesdayThursdayFridaySaturday ---- HolidayWorkdayWorkdayWorkdayWorkdayWorkdayHoliday DONE");
 }
 public void testNestedSwitches() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
-	String errorMsg =
-		"----------\n" +
-		"1. ERROR in X.java (at line 4)\n" +
-		"	switch (s) {\n" +
-		"	        ^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 7)\n" +
-		"	switch (s) {\n" +
-		"	        ^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n" +
-		"3. ERROR in X.java (at line 18)\n" +
-		"	switch (s) {\n" +
-		"	        ^\n" +
-		"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-		"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"X.java",
@@ -1989,10 +1662,7 @@ public void testNestedSwitches() {
 		"	}\n" +
 		"}\n",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		this.runConformTest(sourceFiles, "Sunday is a holiday\n" +
+	this.runConformTest(sourceFiles, "Sunday is a holiday\n" +
 										 "Monday is a workday\n" +
 										 "Tuesday is a workday\n" +
 										 "Wednesday is a workday\n" +
@@ -2000,17 +1670,8 @@ public void testNestedSwitches() {
 										 "Friday is a workday\n" +
 										 "Saturday is a holiday\n" +
 										 "DONE");
-	}
 }
 public void testFor356002() {
-	String errorMsg =
-			"----------\n" +
-			"1. ERROR in X.java (at line 6)\n" +
-			"	switch (foo()) {\n" +
-			"	        ^^^^^\n" +
-			"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-			"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"X.java",
@@ -2030,21 +1691,9 @@ public void testFor356002() {
 		"	}\n" +
 		"}",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		this.runConformTest(sourceFiles, "DONE");
-	}
+	this.runConformTest(sourceFiles, "DONE");
 }
 public void testFor356002_2() {
-	String errorMsg =
-			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
-			"	switch (\"\") {\n" +
-			"	        ^^\n" +
-			"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-			"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"X.java",
@@ -2061,21 +1710,9 @@ public void testFor356002_2() {
 		"	}\n" +
 		"}",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		this.runConformTest(sourceFiles, "DONE");
-	}
+	this.runConformTest(sourceFiles, "DONE");
 }
 public void testFor356002_3() {
-	String errorMsg =
-			"----------\n" +
-			"1. ERROR in X.java (at line 7)\n" +
-			"	switch (foo()) {\n" +
-			"	        ^^^^^\n" +
-			"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-			"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"X.java",
@@ -2099,11 +1736,7 @@ public void testFor356002_3() {
 		"	}\n" +
 		"}",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		this.runConformTest(sourceFiles, "DONE");
-	}
+	this.runConformTest(sourceFiles, "DONE");
 }
 public void testBug374605() {
 	Map options = getCompilerOptions();
@@ -2223,8 +1856,6 @@ public void testBug380927b() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=380927
 public void testBug380927c() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	this.runConformTest(
 			new String[] {
 				"X.java",
@@ -2338,8 +1969,6 @@ public void testBug380927f() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=380927
 public void testBug380927g() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	this.runNegativeTest(
 			new String[] {
 				"X.java",
@@ -2393,9 +2022,7 @@ public void testBug383629() throws Exception {
 			"}",
 		}); // custom requestor
 
-	String expectedOutput = this.complianceLevel < ClassFileConstants.JDK1_6 ?
-			"      Local variable table:\n" +
-			"        [pc: 0, pc: 61] local: args index: 0 type: java.lang.String[]\n":
+	String expectedOutput =
 				"      Local variable table:\n" +
 				"        [pc: 0, pc: 61] local: args index: 0 type: java.lang.String[]\n" +
 				"      Stack map table: number of frames 4\n" +
@@ -2454,10 +2081,7 @@ public void testBug381172() throws Exception {
 			"}",
 		}); // custom requestor
 
-	String expectedOutput = this.complianceLevel < ClassFileConstants.JDK1_6 ?
-			"      Local variable table:\n" +
-			"        [pc: 0, pc: 1] local: this index: 0 type: X\n" +
-			"        [pc: 0, pc: 1] local: rc index: 1 type: int\n":
+	String expectedOutput =
 				"      Local variable table:\n" +
 				"        [pc: 0, pc: 63] local: this index: 0 type: X\n" +
 				"        [pc: 30, pc: 38] local: rc index: 1 type: int\n" +
@@ -2587,14 +2211,6 @@ public void test387146b() {
 }
 //JDK7: Strings in Switch.
 public void test393537() {
-	String errorMsg =
-			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
-			"	switch (\"\") {\n" +
-			"	        ^^\n" +
-			"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-			"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"X.java",
@@ -2607,22 +2223,10 @@ public void test393537() {
 		"	}\n" +
 		"}",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		this.runConformTest(sourceFiles, "");
-	}
+	this.runConformTest(sourceFiles, "");
 }
 //JDK7: Strings in Switch.
 public void test410892() {
-	String errorMsg =
-			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
-			"	switch (s) {\n" +
-			"	        ^\n" +
-			"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-			"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"X.java",
@@ -2638,24 +2242,12 @@ public void test410892() {
 		"   }\n" +
 		"}",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
-		this.runConformTest(sourceFiles, options);
-	}
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
+	this.runConformTest(sourceFiles, options);
 }
 //JDK7: Strings in Switch.
 public void test410892_2() {
-	String errorMsg =
-			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
-			"	switch (s) {\n" +
-			"	        ^\n" +
-			"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-			"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"X.java",
@@ -2671,24 +2263,12 @@ public void test410892_2() {
 		"   }\n" +
 		"}",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
-		this.runConformTest(sourceFiles, options);
-	}
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
+	this.runConformTest(sourceFiles, options);
 }
 //JDK7: Strings in Switch.
 public void test410892_3() {
-	String errorMsg =
-			"----------\n" +
-			"1. ERROR in X.java (at line 6)\n" +
-			"	switch (s) {\n" +
-			"	        ^\n" +
-			"Cannot switch on a value of type String for source level below 1.7. Only convertible int values or enum variables are permitted\n" +
-			"----------\n";
-
 	String [] sourceFiles =
 		new String[] {
 		"X.java",
@@ -2705,13 +2285,9 @@ public void test410892_3() {
 		"   }\n" +
 		"}",
 	};
-	if (this.complianceLevel < JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles, errorMsg);
-	} else {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
-		this.runConformTest(sourceFiles, options);
-	}
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
+	this.runConformTest(sourceFiles, options);
 }
 //JDK7: Strings in Switch.
 public void test410892_4() {
@@ -2740,13 +2316,11 @@ public void test410892_4() {
 		"   }\n" +
 		"}",
 	};
-	if (this.complianceLevel >= JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles,
-			errorMsg,
-			null,
-			true,
-			options);
-	}
+	this.runNegativeTest(sourceFiles,
+		errorMsg,
+		null,
+		true,
+		options);
 }
 //JDK7: Strings in Switch.
 public void test410892_5() {
@@ -2775,13 +2349,11 @@ public void test410892_5() {
 		"   }\n" +
 		"}",
 	};
-	if (this.complianceLevel >= JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles,
-			errorMsg,
-			null,
-			true,
-			options);
-	}
+	this.runNegativeTest(sourceFiles,
+		errorMsg,
+		null,
+		true,
+		options);
 }
 //JDK7: Strings in Switch.
 public void test410892_6() {
@@ -2811,13 +2383,11 @@ public void test410892_6() {
 		"   }\n" +
 		"}",
 	};
-	if (this.complianceLevel >= JDKLevelSupportingStringSwitch) {
-		this.runNegativeTest(sourceFiles,
-			errorMsg,
-			null,
-			true,
-			options);
-	}
+	this.runNegativeTest(sourceFiles,
+		errorMsg,
+		null,
+		true,
+		options);
 }
 public void test526911() {
 	String [] sourceFiles =
@@ -2921,9 +2491,7 @@ public void test526911() {
 		"   }\n" +
 		"}",
 	};
-	if (this.complianceLevel >= ClassFileConstants.JDK1_8) {
-		this.runConformTest(sourceFiles, "1 11");
-	}
+	this.runConformTest(sourceFiles, "1 11");
 }
 public void test526911a() {
 	// target 1.8, run with 9, should work fine
@@ -3035,8 +2603,6 @@ public void test526911a() {
 	this.runConformTest(sourceFiles, "1 11", options);
 }
 public void testBug533475() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	runConformTest(
 		new String[] {
 			"SwitchBug.java",
@@ -3069,7 +2635,7 @@ public void testBug533475() {
 		});
 }
 public void testBug545518() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8 || this.complianceLevel >= ClassFileConstants.JDK12)
+	if (this.complianceLevel >= ClassFileConstants.JDK12)
 		return;
 	String message =
 			"----------\n" +
@@ -3094,9 +2660,6 @@ public void testBug545518() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=576093
 public void testBug576093a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		return;
-	}
 	this.runConformTest(
 			new String[] {
 					"X.java",
@@ -3124,9 +2687,6 @@ public void testBug576093a() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=576093
 public void testBug576093b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		return;
-	}
 	this.runConformTest(
 			new String[] {
 				"X2.java",

@@ -129,8 +129,7 @@ public class ForeachStatement extends Statement {
 			}
 		}
 		FlowInfo exitBranch;
-		if (!(this.action == null || (this.action.isEmptyBlock()
-				&& currentScope.compilerOptions().complianceLevel <= ClassFileConstants.JDK1_3))) {
+		if (!(this.action == null)) {
 
 			if (this.action.complainIfUnreachable(actionInfo, this.scope, initialComplaintLevel, true) < Statement.COMPLAINED_UNREACHABLE) {
 				actionInfo = this.action.analyseCode(this.scope, loopingContext, actionInfo).unconditionalCopy();
@@ -431,7 +430,6 @@ public class ForeachStatement extends Statement {
 	public static TypeBinding getCollectionElementType(BlockScope scope, TypeBinding collectionType) {
 		if (collectionType == null) return null;
 
-		boolean isTargetJsr14 = scope.compilerOptions().targetJDK == ClassFileConstants.JDK1_4;
 		if (collectionType.isCapture()) {
 			TypeBinding upperBound = ((CaptureBinding)collectionType).firstBound;
 			if (upperBound != null && upperBound.isArrayType())
@@ -441,9 +439,6 @@ public class ForeachStatement extends Statement {
 			return ((ArrayBinding) collectionType).elementsType();
 		} else if (collectionType instanceof ReferenceBinding) {
 			ReferenceBinding iterableType = collectionType.findSuperTypeOriginatingFrom(T_JavaLangIterable, false /*Iterable is not a class*/);
-			if (iterableType == null && isTargetJsr14) {
-				iterableType = collectionType.findSuperTypeOriginatingFrom(T_JavaUtilCollection, false /*Iterable is not a class*/);
-			}
 			if (iterableType == null) return null;
 
 			TypeBinding[] arguments = null;
@@ -513,7 +508,6 @@ public class ForeachStatement extends Statement {
 
 		TypeBinding expectedCollectionType = null;
 		if (elementType != null && collectionType != null) {
-			boolean isTargetJsr14 = this.scope.compilerOptions().targetJDK == ClassFileConstants.JDK1_4;
 			if (collectionType.isCapture()) {
 				TypeBinding upperBound = ((CaptureBinding)collectionType).firstBound;
 				if (upperBound != null && upperBound.isArrayType())
@@ -554,21 +548,11 @@ public class ForeachStatement extends Statement {
 				}
 			} else if (collectionType instanceof ReferenceBinding) {
 				ReferenceBinding iterableType = collectionType.findSuperTypeOriginatingFrom(T_JavaLangIterable, false /*Iterable is not a class*/);
-				if (iterableType == null && isTargetJsr14) {
-					iterableType = collectionType.findSuperTypeOriginatingFrom(T_JavaUtilCollection, false /*Iterable is not a class*/);
-				}
 				checkIterable: {
 					if (iterableType == null) break checkIterable;
 
 					this.iteratorReceiverType = collectionType.erasure();
-					if (isTargetJsr14) {
-						if (this.iteratorReceiverType.findSuperTypeOriginatingFrom(T_JavaUtilCollection, false) == null) {
-							this.iteratorReceiverType = iterableType; // handle indirect inheritance thru variable secondary bound
-							this.collection.computeConversion(this.scope, iterableType, collectionType);
-						} else {
-							this.collection.computeConversion(this.scope, collectionType, collectionType);
-						}
-					} else if (this.iteratorReceiverType.findSuperTypeOriginatingFrom(T_JavaLangIterable, false) == null) {
+					if (this.iteratorReceiverType.findSuperTypeOriginatingFrom(T_JavaLangIterable, false) == null) {
 						this.iteratorReceiverType = iterableType; // handle indirect inheritance thru variable secondary bound
 						this.collection.computeConversion(this.scope, iterableType, collectionType);
 					} else {
@@ -655,11 +639,7 @@ public class ForeachStatement extends Statement {
 					this.indexVariable.setConstant(Constant.NotAConstant); // not inlinable
 					break;
 				default :
-					if (isTargetJsr14) {
-						this.scope.problemReporter().invalidTypeForCollectionTarget14(this.collection);
-					} else {
-						this.scope.problemReporter().invalidTypeForCollection(this.collection);
-					}
+					this.scope.problemReporter().invalidTypeForCollection(this.collection);
 			}
 		}
 		if (this.action != null) {

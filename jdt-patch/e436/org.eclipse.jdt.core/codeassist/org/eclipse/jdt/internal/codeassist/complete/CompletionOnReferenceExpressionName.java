@@ -16,8 +16,6 @@ package org.eclipse.jdt.internal.codeassist.complete;
 import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
@@ -32,7 +30,6 @@ public class CompletionOnReferenceExpressionName extends ReferenceExpression imp
 	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 
-		final CompilerOptions compilerOptions = scope.compilerOptions();
 		TypeBinding lhsType;
 		boolean typeArgumentsHaveErrors;
 
@@ -40,7 +37,7 @@ public class CompletionOnReferenceExpressionName extends ReferenceExpression imp
 		lhsType = this.lhs.resolveType(scope);
 		if (this.typeArguments != null) {
 			int length = this.typeArguments.length;
-			typeArgumentsHaveErrors = compilerOptions.sourceLevel < ClassFileConstants.JDK1_5;
+			typeArgumentsHaveErrors = false;
 			this.resolvedTypeArguments = new TypeBinding[length];
 			for (int i = 0; i < length; i++) {
 				TypeReference typeReference = this.typeArguments[i];

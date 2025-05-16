@@ -17,7 +17,6 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.BranchLabel;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
@@ -244,11 +243,8 @@ public class UnaryExpression extends OperatorExpression {
 		}
 		int expressionTypeID = expressionType.id;
 		// autoboxing support
-		boolean use15specifics = scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5;
-		if (use15specifics) {
-			if (!expressionType.isBaseType()) {
-				expressionTypeID = scope.environment().computeBoxingType(expressionType).id;
-			}
+		if (!expressionType.isBaseType()) {
+			expressionTypeID = scope.environment().computeBoxingType(expressionType).id;
 		}
 		if (expressionTypeID > 15) {
 			this.constant = Constant.NotAConstant;

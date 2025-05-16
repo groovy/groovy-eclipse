@@ -452,7 +452,6 @@ public void test004() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 public void test005() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	this.runConformTest(
 			new String[] {
 					"p/OtherFoo.java", //-----------------------------------------------------------------------
@@ -510,7 +509,6 @@ public void test005() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 public void test006() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	this.runConformTest(
 			new String[] {
 					"p/OtherFoo.java", //-----------------------------------------------------------------------
@@ -568,7 +566,6 @@ public void test006() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 public void test007() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	this.runConformTest(
 			new String[] {
 					"p/OtherFoo.java", //-----------------------------------------------------------------------
@@ -823,63 +820,43 @@ public void test011() {
 }
 public void test012() {
 	String expectedResult;
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		expectedResult =
-			"----------\n" +
-			"1. ERROR in X.java (at line 2)\n" +
-			"	Class c1 = java[].class;\n" +
-			"	           ^^^^\n" +
-			"java cannot be resolved to a type\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 3)\n" +
-			"	Class c2 = java.lang[].class;\n" +
-			"	           ^^^^^^^^^\n" +
-			"java.lang cannot be resolved to a type\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 5)\n" +
-			"	Class c4 = void[].class;\n" +
-			"	           ^^^^^^\n" +
-			"void[] is an invalid type\n" +
-			"----------\n";
-	} else {
-		expectedResult =
-			"----------\n" +
-			"1. WARNING in X.java (at line 2)\n" +
-			"	Class c1 = java[].class;\n" +
-			"	^^^^^\n" +
-			"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 2)\n" +
-			"	Class c1 = java[].class;\n" +
-			"	           ^^^^\n" +
-			"java cannot be resolved to a type\n" +
-			"----------\n" +
-			"3. WARNING in X.java (at line 3)\n" +
-			"	Class c2 = java.lang[].class;\n" +
-			"	^^^^^\n" +
-			"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
-			"----------\n" +
-			"4. ERROR in X.java (at line 3)\n" +
-			"	Class c2 = java.lang[].class;\n" +
-			"	           ^^^^^^^^^\n" +
-			"java.lang cannot be resolved to a type\n" +
-			"----------\n" +
-			"5. WARNING in X.java (at line 4)\n" +
-			"	Class c3 = void.class;\n" +
-			"	^^^^^\n" +
-			"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
-			"----------\n" +
-			"6. WARNING in X.java (at line 5)\n" +
-			"	Class c4 = void[].class;\n" +
-			"	^^^^^\n" +
-			"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
-			"----------\n" +
-			"7. ERROR in X.java (at line 5)\n" +
-			"	Class c4 = void[].class;\n" +
-			"	           ^^^^^^\n" +
-			"void[] is an invalid type\n" +
-			"----------\n";
-	}
+	expectedResult =
+		"----------\n" +
+		"1. WARNING in X.java (at line 2)\n" +
+		"	Class c1 = java[].class;\n" +
+		"	^^^^^\n" +
+		"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 2)\n" +
+		"	Class c1 = java[].class;\n" +
+		"	           ^^^^\n" +
+		"java cannot be resolved to a type\n" +
+		"----------\n" +
+		"3. WARNING in X.java (at line 3)\n" +
+		"	Class c2 = java.lang[].class;\n" +
+		"	^^^^^\n" +
+		"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
+		"----------\n" +
+		"4. ERROR in X.java (at line 3)\n" +
+		"	Class c2 = java.lang[].class;\n" +
+		"	           ^^^^^^^^^\n" +
+		"java.lang cannot be resolved to a type\n" +
+		"----------\n" +
+		"5. WARNING in X.java (at line 4)\n" +
+		"	Class c3 = void.class;\n" +
+		"	^^^^^\n" +
+		"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
+		"----------\n" +
+		"6. WARNING in X.java (at line 5)\n" +
+		"	Class c4 = void[].class;\n" +
+		"	^^^^^\n" +
+		"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
+		"----------\n" +
+		"7. ERROR in X.java (at line 5)\n" +
+		"	Class c4 = void[].class;\n" +
+		"	           ^^^^^^\n" +
+		"void[] is an invalid type\n" +
+		"----------\n";
 	this.runNegativeTest(new String[] {
 			"X.java",
 			"public class  X {\n" +
@@ -894,28 +871,18 @@ public void test012() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 public void test013() {
 	String expectedResult;
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		expectedResult =
-			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
-			"	Class c2 = java.lang[].class;\n" +
-			"	           ^^^^^^^^^\n" +
-			"java.lang cannot be resolved to a type\n" +
-			"----------\n";
-	} else {
-		expectedResult =
-			"----------\n" +
-			"1. WARNING in X.java (at line 3)\n" +
-			"	Class c2 = java.lang[].class;\n" +
-			"	^^^^^\n" +
-			"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 3)\n" +
-			"	Class c2 = java.lang[].class;\n" +
-			"	           ^^^^^^^^^\n" +
-			"java.lang cannot be resolved to a type\n" +
-			"----------\n";
-	}
+	expectedResult =
+		"----------\n" +
+		"1. WARNING in X.java (at line 3)\n" +
+		"	Class c2 = java.lang[].class;\n" +
+		"	^^^^^\n" +
+		"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 3)\n" +
+		"	Class c2 = java.lang[].class;\n" +
+		"	           ^^^^^^^^^\n" +
+		"java.lang cannot be resolved to a type\n" +
+		"----------\n";
 	this.runNegativeTest(new String[] {
 			"X.java",
 			"public class  X {\n" +
@@ -928,28 +895,18 @@ public void test013() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 public void test014() {
 	String expectedResult;
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		expectedResult =
-			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
-			"	Class c2 = java.lang[].class;\n" +
-			"	           ^^^^^^^^^\n" +
-			"java.lang cannot be resolved to a type\n" +
-			"----------\n";
-	} else {
-		expectedResult =
-			"----------\n" +
-			"1. WARNING in X.java (at line 3)\n" +
-			"	Class c2 = java.lang[].class;\n" +
-			"	^^^^^\n" +
-			"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 3)\n" +
-			"	Class c2 = java.lang[].class;\n" +
-			"	           ^^^^^^^^^\n" +
-			"java.lang cannot be resolved to a type\n" +
-			"----------\n";
-	}
+	expectedResult =
+		"----------\n" +
+		"1. WARNING in X.java (at line 3)\n" +
+		"	Class c2 = java.lang[].class;\n" +
+		"	^^^^^\n" +
+		"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 3)\n" +
+		"	Class c2 = java.lang[].class;\n" +
+		"	           ^^^^^^^^^\n" +
+		"java.lang cannot be resolved to a type\n" +
+		"----------\n";
 	this.runNegativeTest(new String[] {
 			"X.java",
 			"public class  X {\n" +
@@ -962,73 +919,48 @@ public void test014() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 public void test015() {
 	String expectedResult;
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		expectedResult =
-			"----------\n" +
-			"1. ERROR in X.java (at line 2)\n" +
-			"	Class a = zork1[].class;\n" +
-			"	          ^^^^^\n" +
-			"zork1 cannot be resolved to a type\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 3)\n" +
-			"	Class x = zork1.zork2[].class;	// compile time error\n" +
-			"	          ^^^^^\n" +
-			"zork1 cannot be resolved to a type\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 5)\n" +
-			"	Class a2 = zork1.class;\n" +
-			"	           ^^^^^\n" +
-			"zork1 cannot be resolved to a type\n" +
-			"----------\n" +
-			"4. ERROR in X.java (at line 6)\n" +
-			"	Class x2 = zork1.zork2.class;	// compile time error	\n" +
-			"	           ^^^^^\n" +
-			"zork1 cannot be resolved to a type\n" +
-			"----------\n";
-	} else {
-		expectedResult =
-			"----------\n" +
-			"1. WARNING in X.java (at line 2)\n" +
-			"	Class a = zork1[].class;\n" +
-			"	^^^^^\n" +
-			"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 2)\n" +
-			"	Class a = zork1[].class;\n" +
-			"	          ^^^^^\n" +
-			"zork1 cannot be resolved to a type\n" +
-			"----------\n" +
-			"3. WARNING in X.java (at line 3)\n" +
-			"	Class x = zork1.zork2[].class;	// compile time error\n" +
-			"	^^^^^\n" +
-			"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
-			"----------\n" +
-			"4. ERROR in X.java (at line 3)\n" +
-			"	Class x = zork1.zork2[].class;	// compile time error\n" +
-			"	          ^^^^^\n" +
-			"zork1 cannot be resolved to a type\n" +
-			"----------\n" +
-			"5. WARNING in X.java (at line 5)\n" +
-			"	Class a2 = zork1.class;\n" +
-			"	^^^^^\n" +
-			"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
-			"----------\n" +
-			"6. ERROR in X.java (at line 5)\n" +
-			"	Class a2 = zork1.class;\n" +
-			"	           ^^^^^\n" +
-			"zork1 cannot be resolved to a type\n" +
-			"----------\n" +
-			"7. WARNING in X.java (at line 6)\n" +
-			"	Class x2 = zork1.zork2.class;	// compile time error	\n" +
-			"	^^^^^\n" +
-			"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
-			"----------\n" +
-			"8. ERROR in X.java (at line 6)\n" +
-			"	Class x2 = zork1.zork2.class;	// compile time error	\n" +
-			"	           ^^^^^\n" +
-			"zork1 cannot be resolved to a type\n" +
-			"----------\n";
-	}
+	expectedResult =
+		"----------\n" +
+		"1. WARNING in X.java (at line 2)\n" +
+		"	Class a = zork1[].class;\n" +
+		"	^^^^^\n" +
+		"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 2)\n" +
+		"	Class a = zork1[].class;\n" +
+		"	          ^^^^^\n" +
+		"zork1 cannot be resolved to a type\n" +
+		"----------\n" +
+		"3. WARNING in X.java (at line 3)\n" +
+		"	Class x = zork1.zork2[].class;	// compile time error\n" +
+		"	^^^^^\n" +
+		"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
+		"----------\n" +
+		"4. ERROR in X.java (at line 3)\n" +
+		"	Class x = zork1.zork2[].class;	// compile time error\n" +
+		"	          ^^^^^\n" +
+		"zork1 cannot be resolved to a type\n" +
+		"----------\n" +
+		"5. WARNING in X.java (at line 5)\n" +
+		"	Class a2 = zork1.class;\n" +
+		"	^^^^^\n" +
+		"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
+		"----------\n" +
+		"6. ERROR in X.java (at line 5)\n" +
+		"	Class a2 = zork1.class;\n" +
+		"	           ^^^^^\n" +
+		"zork1 cannot be resolved to a type\n" +
+		"----------\n" +
+		"7. WARNING in X.java (at line 6)\n" +
+		"	Class x2 = zork1.zork2.class;	// compile time error	\n" +
+		"	^^^^^\n" +
+		"Class is a raw type. References to generic type Class<T> should be parameterized\n" +
+		"----------\n" +
+		"8. ERROR in X.java (at line 6)\n" +
+		"	Class x2 = zork1.zork2.class;	// compile time error	\n" +
+		"	           ^^^^^\n" +
+		"zork1 cannot be resolved to a type\n" +
+		"----------\n";
 	this.runNegativeTest(new String[] {
 			"X.java",
 			"public class  X {\n" +
@@ -1679,9 +1611,6 @@ public void test032() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 public void test033() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		return;
-	}
 	this.runNegativeTest(
 			new String[] {
 				"Y.java", //-----------------------------------------------------------------------
@@ -3149,8 +3078,6 @@ public void test066() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 public void test067() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4)
-		return;
 	this.runNegativeTest(
 			new String[] {
 				"E.java", //-----------------------------------------------------------------------
@@ -3177,8 +3104,6 @@ public void test067() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 public void test068() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4)
-		return;
 	this.runNegativeTest(
 			new String[] {
 				"E.java", //-----------------------------------------------------------------------
@@ -3364,69 +3289,8 @@ public void test073() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 public void test074() {
-	String expected = this.complianceLevel <= ClassFileConstants.JDK1_4
-		? 		"----------\n" +
-				"1. ERROR in X.java (at line 4)\n" +
-				"	bar1().foo();\n" +
-				"	^^^^\n" +
-				"The method bar1() from the type X refers to the missing type Zork\n" +
+	String expected =
 				"----------\n" +
-				"2. ERROR in X.java (at line 5)\n" +
-				"	bar2();\n" +
-				"	^^^^\n" +
-				"The method bar2() from the type X refers to the missing type Zork\n" +
-				"----------\n" +
-				"3. ERROR in X.java (at line 6)\n" +
-				"	bar3(null);\n" +
-				"	^^^^\n" +
-				"The method bar3(Zork) from the type X refers to the missing type Zork\n" +
-				"----------\n" +
-				"4. ERROR in X.java (at line 7)\n" +
-				"	bar4(null,null);\n" +
-				"	^^^^\n" +
-				"The method bar4(Zork) from the type X refers to the missing type Zork\n" +
-				"----------\n" +
-				"5. ERROR in X.java (at line 9)\n" +
-				"	Zork<String> bar1() {}\n" +
-				"	^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
-				"----------\n" +
-				"6. ERROR in X.java (at line 9)\n" +
-				"	Zork<String> bar1() {}\n" +
-				"	     ^^^^^^\n" +
-				"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-				"----------\n" +
-				"7. ERROR in X.java (at line 10)\n" +
-				"	List<Zork> bar2() {}\n" +
-				"	     ^^^^\n" +
-				"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-				"----------\n" +
-				"8. ERROR in X.java (at line 10)\n" +
-				"	List<Zork> bar2() {}\n" +
-				"	     ^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
-				"----------\n" +
-				"9. ERROR in X.java (at line 11)\n" +
-				"	void bar3(Zork<String> z) {}\n" +
-				"	          ^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
-				"----------\n" +
-				"10. ERROR in X.java (at line 11)\n" +
-				"	void bar3(Zork<String> z) {}\n" +
-				"	               ^^^^^^\n" +
-				"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-				"----------\n" +
-				"11. ERROR in X.java (at line 12)\n" +
-				"	void bar4(Zork<String,String> z) {}\n" +
-				"	          ^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
-				"----------\n" +
-				"12. ERROR in X.java (at line 12)\n" +
-				"	void bar4(Zork<String,String> z) {}\n" +
-				"	               ^^^^^^^^^^^^^\n" +
-				"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-				"----------\n"
-		: 		"----------\n" +
 				"1. ERROR in X.java (at line 4)\n" +
 				"	bar1().foo();\n" +
 				"	^^^^\n" +
@@ -3489,44 +3353,8 @@ public void test074() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 public void test075() {
-	String expected = this.complianceLevel <= ClassFileConstants.JDK1_4
-		? 		"----------\n" +
-				"1. ERROR in X.java (at line 3)\n" +
-				"	Zork<?,?> z = (Zork<?, ? extends Number>) o;\n" +
-				"	^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
+	String expected =
 				"----------\n" +
-				"2. ERROR in X.java (at line 3)\n" +
-				"	Zork<?,?> z = (Zork<?, ? extends Number>) o;\n" +
-				"	     ^^^\n" +
-				"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-				"----------\n" +
-				"3. ERROR in X.java (at line 3)\n" +
-				"	Zork<?,?> z = (Zork<?, ? extends Number>) o;\n" +
-				"	               ^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
-				"----------\n" +
-				"4. ERROR in X.java (at line 3)\n" +
-				"	Zork<?,?> z = (Zork<?, ? extends Number>) o;\n" +
-				"	                    ^^^^^^^^^^^^^^^^^^^\n" +
-				"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-				"----------\n" +
-				"5. ERROR in X.java (at line 4)\n" +
-				"	String s = (Zork<?, ? extends Number>) o;\n" +
-				"	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
-				"----------\n" +
-				"6. ERROR in X.java (at line 4)\n" +
-				"	String s = (Zork<?, ? extends Number>) o;\n" +
-				"	            ^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
-				"----------\n" +
-				"7. ERROR in X.java (at line 4)\n" +
-				"	String s = (Zork<?, ? extends Number>) o;\n" +
-				"	                 ^^^^^^^^^^^^^^^^^^^\n" +
-				"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-				"----------\n"
-		: 		"----------\n" +
 				"1. ERROR in X.java (at line 3)\n" +
 				"	Zork<?,?> z = (Zork<?, ? extends Number>) o;\n" +
 				"	^^^^\n" +
@@ -3572,44 +3400,8 @@ public void test075() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 public void test076() {
-	String expected = this.complianceLevel <= ClassFileConstants.JDK1_4
-		? 		"----------\n" +
-				"1. ERROR in X.java (at line 3)\n" +
-				"	Zork<?,?> z = (Zork<?, ? super Number>) o;\n" +
-				"	^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
+	String expected =
 				"----------\n" +
-				"2. ERROR in X.java (at line 3)\n" +
-				"	Zork<?,?> z = (Zork<?, ? super Number>) o;\n" +
-				"	     ^^^\n" +
-				"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-				"----------\n" +
-				"3. ERROR in X.java (at line 3)\n" +
-				"	Zork<?,?> z = (Zork<?, ? super Number>) o;\n" +
-				"	               ^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
-				"----------\n" +
-				"4. ERROR in X.java (at line 3)\n" +
-				"	Zork<?,?> z = (Zork<?, ? super Number>) o;\n" +
-				"	                    ^^^^^^^^^^^^^^^^^\n" +
-				"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-				"----------\n" +
-				"5. ERROR in X.java (at line 4)\n" +
-				"	String s = (Zork<?, ? super Number>) o;\n" +
-				"	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
-				"----------\n" +
-				"6. ERROR in X.java (at line 4)\n" +
-				"	String s = (Zork<?, ? super Number>) o;\n" +
-				"	            ^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
-				"----------\n" +
-				"7. ERROR in X.java (at line 4)\n" +
-				"	String s = (Zork<?, ? super Number>) o;\n" +
-				"	                 ^^^^^^^^^^^^^^^^^\n" +
-				"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-				"----------\n"
-		: 		"----------\n" +
 				"1. ERROR in X.java (at line 3)\n" +
 				"	Zork<?,?> z = (Zork<?, ? super Number>) o;\n" +
 				"	^^^^\n" +
@@ -3655,44 +3447,8 @@ public void test076() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 public void test077() {
-	String expected = this.complianceLevel <= ClassFileConstants.JDK1_4
-		? 		"----------\n" +
-				"1. ERROR in X.java (at line 3)\n" +
-				"	Zork<?,?> z = (Zork<?, ? super Number[]>) o;\n" +
-				"	^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
+	String expected =
 				"----------\n" +
-				"2. ERROR in X.java (at line 3)\n" +
-				"	Zork<?,?> z = (Zork<?, ? super Number[]>) o;\n" +
-				"	     ^^^\n" +
-				"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-				"----------\n" +
-				"3. ERROR in X.java (at line 3)\n" +
-				"	Zork<?,?> z = (Zork<?, ? super Number[]>) o;\n" +
-				"	               ^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
-				"----------\n" +
-				"4. ERROR in X.java (at line 3)\n" +
-				"	Zork<?,?> z = (Zork<?, ? super Number[]>) o;\n" +
-				"	                    ^^^^^^^^^^^^^^^^^^^\n" +
-				"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-				"----------\n" +
-				"5. ERROR in X.java (at line 4)\n" +
-				"	String s = (Zork<?, ? extends Number[]>) o;\n" +
-				"	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
-				"----------\n" +
-				"6. ERROR in X.java (at line 4)\n" +
-				"	String s = (Zork<?, ? extends Number[]>) o;\n" +
-				"	            ^^^^\n" +
-				"Zork cannot be resolved to a type\n" +
-				"----------\n" +
-				"7. ERROR in X.java (at line 4)\n" +
-				"	String s = (Zork<?, ? extends Number[]>) o;\n" +
-				"	                 ^^^^^^^^^^^^^^^^^^^^^\n" +
-				"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-				"----------\n"
-		: 		"----------\n" +
 				"1. ERROR in X.java (at line 3)\n" +
 				"	Zork<?,?> z = (Zork<?, ? super Number[]>) o;\n" +
 				"	^^^^\n" +
@@ -3799,7 +3555,6 @@ public void test080() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=239758
 public void test081() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(	CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
@@ -3894,7 +3649,6 @@ public void test081() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=239758 - variation
 public void test082() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	this.runConformTest(
 			new String[] {
 				"com/ost/util/report/Matrix.java", // =================
@@ -4056,7 +3810,6 @@ public void test086() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=239758 - variation
 public void test087() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	this.runNegativeTest(
 			new String[] {
 				"p/X.java", // =================
@@ -4089,7 +3842,6 @@ public void test087() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=239758 - variation
 public void test088() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	this.runNegativeTest(
 			new String[] {
 				"p/X.java", // =================
@@ -4122,7 +3874,6 @@ public void test088() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=245304
 public void test089() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
 	this.runConformTest(
@@ -4157,7 +3908,6 @@ public void test089() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=247666
 public void test090() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	this.runNegativeTest(
 			new String[] {
 				"X.java", // =================
@@ -4182,7 +3932,6 @@ public void test090() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=252288
 public void test091()  throws Exception {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	this.runNegativeTest(
 		new String[] {
 			"TypeUtils.java",
@@ -4834,7 +4583,6 @@ public void test092() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=250297 - variation
 public void test093() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	this.runNegativeTest(
 			new String[] {
 				"X.java", // =================
@@ -4857,7 +4605,6 @@ public void test093() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=250297 - variation
 public void test094() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	this.runNegativeTest(
 			new String[] {
 				"X.java", // =================
@@ -4884,7 +4631,6 @@ public void test094() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=250297 - variation
 public void test095() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	this.runNegativeTest(
 			new String[] {
 				"X.java", // =================
@@ -4960,7 +4706,6 @@ public void test096() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=258248
 public void test097() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	this.runNegativeTest(
 		new String[] {
 			"X.java", // =================
@@ -5697,7 +5442,6 @@ public void test107() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=321414
 public void test108() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	String errMessage = isMinimumCompliant(ClassFileConstants.JDK11) ?
 			"----------\n" +
 			"1. WARNING in SyntheticConstructorTooManyArgs.java (at line 23)\n" +
@@ -5796,7 +5540,6 @@ public void test108() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=321414
 public void test109() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	this.runConformTest(
 		new String[] {
 			"SyntheticConstructorTooManyArgs.java", //-----------------------------------------------------------------------
@@ -5879,7 +5622,6 @@ public void test109() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=321414
 public void test110() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	this.runConformTest(
 		new String[] {
 			"SyntheticConstructorTooManyArgs.java", //-----------------------------------------------------------------------
@@ -5962,7 +5704,6 @@ public void test110() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=321414
 public void test111() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	String errMessage = isMinimumCompliant(ClassFileConstants.JDK11) ?
 			"----------\n" +
 			"1. WARNING in SyntheticConstructorTooManyArgs.java (at line 23)\n" +
@@ -6061,7 +5802,6 @@ public void test111() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=321414
 public void test112() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
 	this.runConformTest(
 		new String[] {
 			"SyntheticConstructorTooManyArgs.java", //-----------------------------------------------------------------------
@@ -6806,8 +6546,6 @@ public void test119() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 // Method using type parameters declared by enclosing class can't be static, so don't warn
 public void test120() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -6937,8 +6675,6 @@ public void test122() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 // If method returns type parameter not declared by it, it cannot be static
 public void test123() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -7209,8 +6945,6 @@ public void testBug335845g() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=335780
 // For this reference as an argument of a message send, method can't be static
 public void test124a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -7239,8 +6973,6 @@ public void test124a() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=335780
 // For this reference as an argument of a message send, method can't be static
 public void test124b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -7274,8 +7006,6 @@ public void test124b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=354502
 // Anonymous class instantiation of a non-static member type, method can't be static
 public void test354502() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -7309,7 +7039,6 @@ public void test354502() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=360164
 public void test360164() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	this.runConformTest(
 			new String[] {
 					"p/B.java",
@@ -7388,8 +7117,6 @@ public void test360164() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // SingleNameReference, assignment of instance field inside a local class method
 public void test376550_1a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -7420,8 +7147,6 @@ public void test376550_1a() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // SingleNameReference, assignment of instance field of local class inside a local class method
 public void test376550_1b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	new Runner() {{
 	  this.customOptions = getCompilerOptions();
 	  this.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -7458,8 +7183,6 @@ public void test376550_1b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // LocalDeclaration with type as a type variable binding
 public void test376550_2a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -7494,8 +7217,6 @@ public void test376550_2a() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // LocalDeclaration with type as a type variable binding
 public void test376550_2b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -7524,8 +7245,6 @@ public void test376550_2b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // MessageSend, calling outer class method inside a local class method
 public void test376550_3a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -7555,8 +7274,6 @@ public void test376550_3a() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // MessageSend, calling local class method inside a local class method
 public void test376550_3b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -7592,8 +7309,6 @@ public void test376550_3b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // Local class instance field is an argument in messageSend in local class method
 public void test376550_4a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -7630,8 +7345,6 @@ public void test376550_4a() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // Outerclass instance field is an argument in messageSend in local class method
 public void test376550_4b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -7662,8 +7375,6 @@ public void test376550_4b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // QualifiedNameReference, accessing local class instance field
 public void test376550_5a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -7700,8 +7411,6 @@ public void test376550_5a() {
 // https://bugs.eclispe.org/379784 - [compiler] "Method can be static" is not getting reported
 // Variation of the above
 public void test376550_5aa() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -7739,8 +7448,6 @@ public void test376550_5aa() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // QualifiedNameReference, accessing outer class instance field
 public void test376550_5b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -7770,8 +7477,6 @@ public void test376550_5b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // QualifiedNameRef.analyseCode()
 public void test376550_6a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -7807,8 +7512,6 @@ public void test376550_6a() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // QualifiedNameRef.analyseCode()
 public void test376550_6b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -7839,8 +7542,6 @@ public void test376550_6b() {
 // QualifiedAllocationExpression, allocating an anonymous type without an enclosing instance of parent type
 // anon. type is declared in local class
 public void test376550_7a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -7877,8 +7578,6 @@ public void test376550_7a() {
 // QualifiedAllocationExpression, allocating an anonymous type without an enclosing instance of parent type
 // anon. type is declared in outer class
 public void test376550_7b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -7908,8 +7607,6 @@ public void test376550_7b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // FieldRef, from object of a class in outer class
 public void test376550_8a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -7945,8 +7642,6 @@ public void test376550_8a() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 //FieldRef, from object of a class in local class
 public void test376550_8b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -7976,8 +7671,6 @@ public void test376550_8b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // QualifiedNameRef, accessing a field from local class field
 public void test376550_9a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -8015,8 +7708,6 @@ public void test376550_9a() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // QualifiedNameRef, accessing a field from local class field
 public void test376550_9b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -8048,8 +7739,6 @@ public void test376550_9b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // QualifiedNameRef, accessing a field from local class field
 public void test376550_10a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -8087,8 +7776,6 @@ public void test376550_10a() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // QualifiedNameRef, accessing a field from local class field
 public void test376550_10b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -8120,8 +7807,6 @@ public void test376550_10b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // bug test case
 public void test376550_11() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -8167,8 +7852,6 @@ public void test376550_11() {
 // https://bugs.eclipse.org/379784 - [compiler] "Method can be static" is not getting reported
 // bug test case
 public void test376550_11a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -8207,8 +7890,6 @@ public void test376550_11a() {
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 public void test376550_12() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
@@ -8248,8 +7929,6 @@ public void test376550_12() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 // https://bugs.eclipse.org/379834 - Wrong "method can be static" in presence of qualified super and different staticness of nested super class.
 public void test376550_13() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -8282,8 +7961,6 @@ public void test376550_13() {
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=379530
 public void test379530() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -8358,8 +8035,6 @@ public void test393781() {
 	}
 }
 private void runStaticWarningConformTest(String fileName, String body) {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
@@ -8680,8 +8355,6 @@ public void test406396a() {
 	runner.runNegativeTest();
 }
 public void testBug542829() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7) return;
-
 	// m.Issing is a type that comes and goes:
 	String nameMissing = "m/Issing.java";
 	String contentMissing =
@@ -8766,8 +8439,6 @@ public void testBug542829() {
 	runner.runConformTest();
 }
 public void testBug576735() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
-
 	String path = getCompilerTestsPluginDirectoryPath() + File.separator + "workspace" + File.separator + "lib576735.jar";
 	String[] libs = getDefaultClassPaths();
 	int len = libs.length;
@@ -8811,7 +8482,6 @@ public void testBug576735() {
 	runner.runNegativeTest();
 }
 public void testMissingClassNeededForOverloadResolution() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -8874,7 +8544,6 @@ public void testMissingClassNeededForOverloadResolution() {
 	runner.runNegativeTest();
 }
 public void testMissingClassNeededForOverloadResolution_pickByLateArg() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/MissingType.java",
@@ -8913,7 +8582,6 @@ public void testMissingClassNeededForOverloadResolution_pickByLateArg() {
 	runner.runConformTest();
 }
 public void testMissingClassNeededForOverloadResolution_ctor() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -8977,7 +8645,6 @@ public void testMissingClassNeededForOverloadResolution_ctor() {
 }
 public void testMissingClassNeededForOverloadResolution_varargs1a() {
 	// varargs arg: B vs Missing
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.testFiles = new String[] {
@@ -9057,7 +8724,6 @@ public void testMissingClassNeededForOverloadResolution_varargs1a() {
 }
 public void testMissingClassNeededForOverloadResolution_varargs1a_ctor() {
 	// varargs arg: B vs Missing
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.testFiles = new String[] {
@@ -9137,7 +8803,6 @@ public void testMissingClassNeededForOverloadResolution_varargs1a_ctor() {
 }
 public void testMissingClassNeededForOverloadResolution_varargs1b() {
 	// like testMissingClassNeededForOverloadResolution_varargs1a, but no preceding regular parameter
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.testFiles = new String[] {
@@ -9230,7 +8895,6 @@ public void testMissingClassNeededForOverloadResolution_varargs1b() {
 }
 public void testMissingClassNeededForOverloadResolution_varargs1c() {
 	// varargs arg: only missing types competing
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.testFiles = new String[] {
@@ -9309,7 +8973,6 @@ public void testMissingClassNeededForOverloadResolution_varargs1c() {
 }
 public void testMissingClassNeededForOverloadResolution_varargs1d() {
 	// like testMissingClassNeededForOverloadResolution_varargs1c, but no preceding regular parameter
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.testFiles = new String[] {
@@ -9388,7 +9051,6 @@ public void testMissingClassNeededForOverloadResolution_varargs1d() {
 }
 public void testMissingClassNeededForOverloadResolution_varargs2() {
 	// different arities
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.testFiles = new String[] {
@@ -9461,7 +9123,6 @@ public void testMissingClassNeededForOverloadResolution_varargs2() {
 }
 public void testMissingClassNeededForOverloadResolution_varargs2_ctorOK() {
 	// different arities
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.testFiles = new String[] {
@@ -9503,7 +9164,6 @@ public void testMissingClassNeededForOverloadResolution_varargs2_ctorOK() {
 }
 public void testMissingClassNeededForOverloadResolution_varargs2_qualCtorOK() {
 	// different arities
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.testFiles = new String[] {
@@ -9547,7 +9207,6 @@ public void testMissingClassNeededForOverloadResolution_varargs2_qualCtorOK() {
 }
 public void testMissingClassNeededForOverloadResolution_varargs2_ctorNOK() {
 	// different arities
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.testFiles = new String[] {
@@ -9604,7 +9263,6 @@ public void testMissingClassNeededForOverloadResolution_varargs2_ctorNOK() {
 }
 public void testMissingClassNeededForOverloadResolution_varargs3() {
 	// missing type in non-varargs position
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -9653,7 +9311,6 @@ public void testMissingClassNeededForOverloadResolution_varargs3() {
 }
 public void testMissingClassNeededForOverloadResolution_varargs3_ctor() {
 	// missing type in non-varargs position
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -9702,7 +9359,6 @@ public void testMissingClassNeededForOverloadResolution_varargs3_ctor() {
 }
 public void testMissingClass_varargs4_noArg() {
 	// missing type in non-varargs position
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -9741,7 +9397,6 @@ public void testMissingClass_varargs4_noArg() {
 	runner.runConformTest();
 }
 public void testMissingClass_returnType_OK() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -9806,7 +9461,6 @@ public void testMissingClass_returnType_OK() {
 	runner.runConformTest();
 }
 public void testMissingClass_returnType_NOK() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -9897,7 +9551,6 @@ public void testMissingClass_returnType_NOK() {
 	runner.runNegativeTest();
 }
 public void testMissingClass_exception() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -9943,7 +9596,6 @@ public void testMissingClass_exception() {
 	runner.runNegativeTest();
 }
 public void testMissingClass_exception_ctor() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -9989,7 +9641,6 @@ public void testMissingClass_exception_ctor() {
 	runner.runNegativeTest();
 }
 public void testMissingClass_typeVariableBound() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -10036,7 +9687,6 @@ public void testMissingClass_typeVariableBound() {
 	runner.runNegativeTest();
 }
 public void testMissingClass_typeVariableBound_OK() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -10083,7 +9733,6 @@ public void testMissingClass_typeVariableBound_OK() {
 	runner.runNegativeTest();
 }
 public void testMissingClass_typeVariableBound2() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -10134,7 +9783,6 @@ public void testMissingClass_typeVariableBound2() {
 	runner.runNegativeTest();
 }
 public void testMissingClass_typeVariableBound2_ctor() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -10190,7 +9838,6 @@ public void testMissingClass_typeVariableBound2_ctor() {
 	runner.runNegativeTest();
 }
 public void testMissingClass_samMissingParameterType_OK() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -10236,7 +9883,6 @@ public void testMissingClass_samMissingParameterType_OK() {
 	runner.runNegativeTest();
 }
 public void testMissingClass_samMissingParameterType_NOK() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",
@@ -10283,7 +9929,6 @@ public void testMissingClass_samMissingParameterType_NOK() {
 	runner.runNegativeTest();
 }
 public void testMissingClass_samMissingReturnType() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // ignore different outcome below 1.8 since PR 2543
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/A.java",

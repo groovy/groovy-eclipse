@@ -32,7 +32,7 @@ public class StatementRecoveryTest extends AbstractCompilerTest {
 	public static final boolean ONLY_DIET_PLUS_BODY_WITH_STATEMENT_RECOVERY = false;
 
 	public static boolean optimizeStringLiterals = false;
-	public static long sourceLevel = ClassFileConstants.JDK1_3; //$NON-NLS-1$
+	public static long sourceLevel = CompilerOptions.getFirstSupportedJdkLevel(); //$NON-NLS-1$
 
 static {
 //	TESTS_NAMES = new String[] { "test0037"};

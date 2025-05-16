@@ -234,35 +234,33 @@ public void test006() {
 // [compiler] warning on fall through
 // SuppressWarnings effect - explicit fallthrough token
 public void test007() {
-	if (this.complianceLevel == ClassFileConstants.JDK1_5) {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTION_ReportFallthroughCase, CompilerOptions.WARNING);
-		this.runNegativeTest(
-			new String[] {
-				"X.java",
-				"public class X {\n" +
-				"    @SuppressWarnings(\"fallthrough\")\n" +
-				"    public void test(int p) {\n" +
-				"        switch (p) {\n" +
-				"        case 0:\n" +
-				"            System.out.println(0); // silent because first case\n" +
-				"        case 1:\n" +
-				"            System.out.println(1); // silent because of SuppressWarnings\n" +
-				"        }\n" +
-				"    }\n" +
-				"    void foo() {\n" +
-				"		Zork z;\n" +
-				"    }\n" +
-				"}\n"
-			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 12)\n" +
-			"	Zork z;\n" +
-			"	^^^^\n" +
-			"Zork cannot be resolved to a type\n" +
-			"----------\n",
-			null, true, options);
-	}
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportFallthroughCase, CompilerOptions.WARNING);
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+			"    @SuppressWarnings(\"fallthrough\")\n" +
+			"    public void test(int p) {\n" +
+			"        switch (p) {\n" +
+			"        case 0:\n" +
+			"            System.out.println(0); // silent because first case\n" +
+			"        case 1:\n" +
+			"            System.out.println(1); // silent because of SuppressWarnings\n" +
+			"        }\n" +
+			"    }\n" +
+			"    void foo() {\n" +
+			"		Zork z;\n" +
+			"    }\n" +
+			"}\n"
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 12)\n" +
+		"	Zork z;\n" +
+		"	^^^^\n" +
+		"Zork cannot be resolved to a type\n" +
+		"----------\n",
+		null, true, options);
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=67836
@@ -372,33 +370,31 @@ public void test010() {
 // [compiler] warning on fall through
 // SuppressWarnings effect - implicit, using all token
 public void test011() {
-	if (this.complianceLevel == ClassFileConstants.JDK1_5) {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTION_ReportFallthroughCase, CompilerOptions.WARNING);
-		this.runNegativeTest(
-			new String[] {
-				"X.java",
-				"public class X {\n" +
-				"    @SuppressWarnings(\"all\")\n" +
-				"    public void test(int p) {\n" +
-				"        switch (p) {\n" +
-				"        case 0:\n" +
-				"            System.out.println(0); // silent because first case\n" +
-				"        case 1:\n" +
-				"            System.out.println(1); // silent because of SuppressWarnings\n" +
-				"        }\n" +
-				"    }\n" +
-				"	Zork z;\n" + // complain on Zork (unknown type)
-				"}"
-			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 11)\n" +
-			"	Zork z;\n" +
-			"	^^^^\n" +
-			"Zork cannot be resolved to a type\n" +
-			"----------\n",
-			null, true, options);
-	}
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportFallthroughCase, CompilerOptions.WARNING);
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+			"    @SuppressWarnings(\"all\")\n" +
+			"    public void test(int p) {\n" +
+			"        switch (p) {\n" +
+			"        case 0:\n" +
+			"            System.out.println(0); // silent because first case\n" +
+			"        case 1:\n" +
+			"            System.out.println(1); // silent because of SuppressWarnings\n" +
+			"        }\n" +
+			"    }\n" +
+			"	Zork z;\n" + // complain on Zork (unknown type)
+			"}"
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 11)\n" +
+		"	Zork z;\n" +
+		"	^^^^\n" +
+		"Zork cannot be resolved to a type\n" +
+		"----------\n",
+		null, true, options);
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=127730
@@ -1164,27 +1160,17 @@ public void test036() {
 		"    }\n" +
 		"  }\n" +
 		"}";
-	if (this.complianceLevel <= ClassFileConstants.JDK1_3) {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					src
-				},
-				""
-			);
-	} else {
-		this.runNegativeTest(
-			new String[] {
-				"X.java",
-				src
-			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 9)\n" +
-			"	new Local();\n" +
-			"	    ^^^^^\n" +
-			"Local cannot be resolved to a type\n" +
-			"----------\n");
-	}
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			src
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 9)\n" +
+		"	new Local();\n" +
+		"	    ^^^^^\n" +
+		"Local cannot be resolved to a type\n" +
+		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=166641
 public void test037() {
@@ -1704,44 +1690,6 @@ public void test055() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=48399 - variation
 public void test056() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_4) {
-		runNegativeTest(
-			new String[] { /* test files */
-				"X.java",
-				"public class X {\n" +
-				"	void bar() {\n" +
-				"		return;\n" +
-				"		{\n" +
-				"			return; // 3\n" +
-				"		}\n" +
-				"	}\n" +
-				"	void baz() {\n" +
-				"		return;\n" +
-				"		{\n" +
-				"		}\n" +
-				"	}	\n" +
-				"	void baz2() {\n" +
-				"		return;\n" +
-				"		; // 4\n" +
-				"	}	\n" +
-				"}	\n"
-			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 4)\n" +
-			"	{\n" +
-			"			return; // 3\n" +
-			"		}\n" +
-			"	^^^^^^^^^^^^^^^^^^^^^\n" +
-			"Unreachable code\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 10)\n" +
-			"	{\n" +
-			"		}\n" +
-			"	^^^^^\n" +
-			"Unreachable code\n" +
-			"----------\n");
-		return;
-	}
 	runNegativeTest(
 			new String[] { /* test files */
 				"X.java",
@@ -2095,7 +2043,6 @@ public void test064() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=236385
 // warning suppressed
 public void test065() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedObjectAllocation, CompilerOptions.WARNING);
 	runConformTest(
@@ -2516,8 +2463,6 @@ public void testLocalClassInInitializer2() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=380313
 // Verify that the code runs fine with all compliance levels.
 public void testBug380313() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	this.runConformTest(
 			new String[] {
 				"X.java",
@@ -2562,8 +2507,6 @@ public void testBug380313() {
 // try with resources
 // Verify that the code runs fine with all compliance levels.
 public void testBug380313b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	this.runConformTest(
 			new String[] {
 				"X.java",
@@ -2599,8 +2542,6 @@ public void testBug380313b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=380750
 // verify that s0 is not reported as uninitialized
 public void testBug380750() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	this.runConformTest(
 			new String[] {
 				"X.java",
@@ -2761,8 +2702,6 @@ public void testBug499809a() {
 }
 //Bug 506315 - ASTParser.createASTs() in StackMapFrame.addStackItem throws IllegalArgumentException
 public void testBug506315() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	this.runNegativeTest(
 		new String[] {
 			"Test.java",
@@ -2809,7 +2748,6 @@ public void _testBug533435() {
         });
 }
 public void testBug537804_comment0() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return; // uses an annotation
 	runConformTest(
 		new String[] {
 			"Test.java",

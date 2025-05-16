@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -70,7 +70,7 @@ public void initializeDeprecatedAnnotationTagBits() {
 		this.prototype.initializeDeprecatedAnnotationTagBits();
 		return;
 	}
-	if ((this.tagBits & TagBits.DeprecatedAnnotationResolved) == 0) {
+	if ((this.extendedTagBits & ExtendedTagBits.DeprecatedAnnotationResolved) == 0) {
 		super.initializeDeprecatedAnnotationTagBits();
 		if ((this.tagBits & TagBits.AnnotationDeprecated) == 0) {
 			// check enclosing type
@@ -81,7 +81,7 @@ public void initializeDeprecatedAnnotationTagBits() {
 
 public void updateDeprecationFromEnclosing() {
 	ReferenceBinding enclosing = enclosingType();
-	if ((enclosing.tagBits & TagBits.DeprecatedAnnotationResolved) == 0) {
+	if ((enclosing.extendedTagBits & ExtendedTagBits.DeprecatedAnnotationResolved) == 0) {
 		enclosing.initializeDeprecatedAnnotationTagBits();
 	}
 	if (enclosing.isViewedAsDeprecated()) {

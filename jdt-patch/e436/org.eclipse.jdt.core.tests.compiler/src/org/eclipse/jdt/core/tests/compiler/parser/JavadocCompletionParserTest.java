@@ -101,12 +101,7 @@ protected Map getCompilerOptions() {
 }
 public static char[][] getAdditionalTagsPerLevels(long complianceLevel) {
 	char[][] additionalTags = null;
-	if (complianceLevel == ClassFileConstants.JDK1_4) {
-		additionalTags = new char[][] {
-			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE
-		};
-	} else if (complianceLevel > ClassFileConstants.JDK1_4
-			&& complianceLevel < ClassFileConstants.JDK9) {
+	if (complianceLevel == ClassFileConstants.JDK1_8) {
 		additionalTags = new char[][] {
 			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE,
 			TAG_CODE, TAG_LITERAL
@@ -278,9 +273,7 @@ public void test003() {
 		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "@v");
-	char[][] allTags = this.complianceLevel == ClassFileConstants.JDK1_3
-		? new char[][] { TAG_VERSION }
-		: new char[][] { TAG_VERSION, TAG_VALUE };
+	char[][] allTags = new char[][] { TAG_VERSION, TAG_VALUE };
 	verifyCompletionOnJavadocTag(new char[] { 'v' }, allTags, false);
 }
 
@@ -303,9 +296,7 @@ public void test005() {
 		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "@link");
-	char[][] allTags = this.complianceLevel == ClassFileConstants.JDK1_3
-		? new char[][] { TAG_LINK }
-		: new char[][] { TAG_LINK, TAG_LINKPLAIN };
+	char[][] allTags = new char[][] { TAG_LINK, TAG_LINKPLAIN };
 	verifyCompletionOnJavadocTag("link".toCharArray(), allTags, false);
 }
 
@@ -571,11 +562,7 @@ public void test026() {
 		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "{@li");
-	char[][] allTags = this.complianceLevel == ClassFileConstants.JDK1_3
-		? new char[][] { TAG_LINK }
-		: (this.complianceLevel == ClassFileConstants.JDK1_4
-				? new char[][] { TAG_LINK, TAG_LINKPLAIN }
-				: new char[][] { TAG_LINK, TAG_LINKPLAIN, TAG_LITERAL });
+	char[][] allTags = new char[][] { TAG_LINK, TAG_LINKPLAIN, TAG_LITERAL };
 	verifyCompletionOnJavadocTag("li".toCharArray(), allTags, false);
 	CompletionOnJavadocTag completionTag = (CompletionOnJavadocTag) this.javadoc.getCompletionNode();
 	int start = source.indexOf("{@");
@@ -591,9 +578,7 @@ public void test027() {
 		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "{@link");
-	char[][] allTags = this.complianceLevel == ClassFileConstants.JDK1_3
-		? new char[][] { TAG_LINK }
-		: new char[][] { TAG_LINK, TAG_LINKPLAIN  };
+	char[][] allTags = new char[][] { TAG_LINK, TAG_LINKPLAIN  };
 	verifyCompletionOnJavadocTag("link".toCharArray(), allTags, false);
 	CompletionOnJavadocTag completionTag = (CompletionOnJavadocTag) this.javadoc.getCompletionNode();
 	int start = source.indexOf("{@");
@@ -634,11 +619,7 @@ public void test029() {
 		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "{@li");
-	char[][] allTags = this.complianceLevel == ClassFileConstants.JDK1_3
-		? new char[][] { TAG_LINK }
-		: (this.complianceLevel == ClassFileConstants.JDK1_4
-				? new char[][] { TAG_LINK, TAG_LINKPLAIN }
-				: new char[][] { TAG_LINK, TAG_LINKPLAIN, TAG_LITERAL });
+	char[][] allTags = new char[][] { TAG_LINK, TAG_LINKPLAIN, TAG_LITERAL };
 	verifyCompletionOnJavadocTag("li".toCharArray(), allTags, false);
 	CompletionOnJavadocTag completionTag = (CompletionOnJavadocTag) this.javadoc.getCompletionNode();
 	int start = source.indexOf("{@");
@@ -654,9 +635,7 @@ public void test030() {
 		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "{@link");
-	char[][] allTags = this.complianceLevel == ClassFileConstants.JDK1_3
-		? new char[][] { TAG_LINK }
-		: new char[][] { TAG_LINK, TAG_LINKPLAIN  };
+	char[][] allTags = new char[][] { TAG_LINK, TAG_LINKPLAIN  };
 	verifyCompletionOnJavadocTag("link".toCharArray(), allTags, false);
 	CompletionOnJavadocTag completionTag = (CompletionOnJavadocTag) this.javadoc.getCompletionNode();
 	int start = source.indexOf("{@");
@@ -709,8 +688,7 @@ public void test033() {
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "@s");
 
-	char[][] allTags = this.complianceLevel == ClassFileConstants.JDK1_3
-			? null : (this.complianceLevel < ClassFileConstants.JDK10
+	char[][] allTags = (this.complianceLevel < ClassFileConstants.JDK10
 			? null : (this.complianceLevel < ClassFileConstants.JDK12 ? new char[][] { TAG_SUMMARY }
 			: (this.complianceLevel < ClassFileConstants.JDK18 ? new char[][] { TAG_SUMMARY , TAG_SYSTEM_PROPERTY }
 			: new char[][] { TAG_SUMMARY,  TAG_SYSTEM_PROPERTY, TAG_SNIPPET  })));

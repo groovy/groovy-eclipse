@@ -42,11 +42,11 @@ public abstract class BinaryContainer extends IndexRequest {
 		if (className.substring(0, className.length() - (SuffixConstants.SUFFIX_CLASS.length)).equals(new String(IIndexConstants.MODULE_INFO)))
 			return true;
 		char[] classNameArray = className.toCharArray();
-		// use 1.7 as the source level as there are more valid identifiers in 1.7 mode
+		// use ClassFileConstants.getLatestJDKLevel() as the source level as there are more valid tokens in latest JLS mode
 		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=376673
 		if (this.scanner == null)
 			this.scanner = new Scanner(false /* comment */, true /* whitespace */, false /* nls */,
-					ClassFileConstants.JDK1_7/* sourceLevel */, null/* taskTag */, null/* taskPriorities */, true /* taskCaseSensitive */);
+					ClassFileConstants.getLatestJDKLevel()/* sourceLevel */, null/* taskTag */, null/* taskPriorities */, true /* taskCaseSensitive */);
 
 		this.scanner.setSource(classNameArray);
 		this.scanner.eofPosition = classNameArray.length - SuffixConstants.SUFFIX_CLASS.length;

@@ -119,9 +119,18 @@ public class ExecutableElementImpl extends ElementImpl implements
 			AbstractMethodDeclaration methodDeclaration = binding.sourceMethod();
 			List<VariableElement> params = new ArrayList<>(length);
 			if (methodDeclaration != null) {
-				for (Argument argument : methodDeclaration.arguments) {
-					VariableElement param = new VariableElementImpl(this._env, argument.binding);
-					params.add(param);
+				if (methodDeclaration.arguments != null) {
+					for (Argument argument : methodDeclaration.arguments) {
+						VariableElement param = new VariableElementImpl(this._env, argument.binding);
+						params.add(param);
+					}
+				} else if (methodDeclaration.isCompactConstructor()) { // can't fold if-else into one as normal argument bindings are not added to scope yet
+					for (LocalVariableBinding local : methodDeclaration.scope.locals) {
+						if (local == null || !local.isParameter())
+							continue;
+						VariableElement param = new VariableElementImpl(this._env, local);
+						params.add(param);
+					}
 				}
 			} else {
 				// binary method

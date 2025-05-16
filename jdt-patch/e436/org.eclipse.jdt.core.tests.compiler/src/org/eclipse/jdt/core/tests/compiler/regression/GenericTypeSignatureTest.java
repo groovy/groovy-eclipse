@@ -31,7 +31,6 @@ import org.eclipse.jdt.core.util.ILocalVariableTypeTableAttribute;
 import org.eclipse.jdt.core.util.ILocalVariableTypeTableEntry;
 import org.eclipse.jdt.core.util.IMethodInfo;
 import org.eclipse.jdt.core.util.ISignatureAttribute;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.IBinaryField;
@@ -1324,9 +1323,6 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 	}
 
 	public void testGenericVarargsMethodReferenceLambdasHaveNoSignature() {
-		// uses lambdas
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		final String[] testsSource = new String[] {
 				"X.java",
 				"import java.util.Optional;\n" +

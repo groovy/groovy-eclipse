@@ -18,8 +18,6 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
@@ -90,10 +88,8 @@ public TypeBinding resolveType(BlockScope scope) {
 int findCompatibleEnclosing(ReferenceBinding enclosingType, TypeBinding type, BlockScope scope) {
 	if (type.isInterface()) {
 		// super call to an overridden default method? (not considering outer enclosings)
-		CompilerOptions compilerOptions = scope.compilerOptions();
 		ReferenceBinding[] supers = enclosingType.superInterfaces();
 		int length = supers.length;
-		boolean isJava8 = compilerOptions.complianceLevel >= ClassFileConstants.JDK1_8;
 		boolean isLegal = true; // false => compoundName != null && closestMatch != null
 		char[][] compoundName = null;
 		ReferenceBinding closestMatch = null;
@@ -108,14 +104,14 @@ int findCompatibleEnclosing(ReferenceBinding enclosingType, TypeBinding type, Bl
 				// keep looking to ensure we always find the referenced type (even if illegal)
 			}
 		}
-		if (!isLegal || !isJava8) {
+		if (!isLegal) {
 			this.currentCompatibleType = null;
 			// Please note the slightly unconventional use of the ProblemReferenceBinding:
 			// we use the problem's compoundName to report the type being illegally bypassed,
 			// whereas the closestMatch denotes the resolved (though illegal) target type
 			// for downstream resolving.
 			this.resolvedType =  new ProblemReferenceBinding(compoundName,
-					closestMatch, isJava8 ? ProblemReasons.AttemptToBypassDirectSuper : ProblemReasons.InterfaceMethodInvocationNotBelow18);
+					closestMatch, ProblemReasons.AttemptToBypassDirectSuper);
 		}
 		return 0; // never an outer enclosing type
 	}

@@ -66,14 +66,11 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 	// determine the rank until which we now we do not need any actual value for the field access
 	int otherBindingsCount = this.otherBindings == null ? 0 : this.otherBindings.length;
 	boolean needValue = otherBindingsCount == 0 || !this.otherBindings[0].isStatic();
-	boolean complyTo14 = currentScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4;
 	FieldBinding lastFieldBinding = null;
 	switch (this.bits & ASTNode.RestrictiveFlagMASK) {
 		case Binding.FIELD : // reading a field
 			lastFieldBinding = (FieldBinding) this.binding;
-			if (needValue || complyTo14) {
-				manageSyntheticAccessIfNecessary(currentScope, lastFieldBinding, 0, flowInfo);
-			}
+			manageSyntheticAccessIfNecessary(currentScope, lastFieldBinding, 0, flowInfo);
 			// check if final blank field
 			if (lastFieldBinding.isBlankFinal()
 				    && this.otherBindings != null // the last field binding is only assigned
@@ -116,9 +113,7 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 		for (int i = 0; i < otherBindingsCount-1; i++) {
 			lastFieldBinding = this.otherBindings[i];
 			needValue = !this.otherBindings[i+1].isStatic();
-			if (needValue || complyTo14) {
-				manageSyntheticAccessIfNecessary(currentScope, lastFieldBinding, i + 1, flowInfo);
-			}
+			manageSyntheticAccessIfNecessary(currentScope, lastFieldBinding, i + 1, flowInfo);
 		}
 		lastFieldBinding = this.otherBindings[otherBindingsCount-1];
 	}
@@ -181,12 +176,9 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	int otherBindingsCount = this.otherBindings == null ? 0 : this.otherBindings.length;
 
 	boolean needValue = otherBindingsCount == 0 ? valueRequired : !this.otherBindings[0].isStatic();
-	boolean complyTo14 = currentScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4;
 	switch (this.bits & ASTNode.RestrictiveFlagMASK) {
 		case Binding.FIELD : // reading a field
-			if (needValue || complyTo14) {
-				manageSyntheticAccessIfNecessary(currentScope, (FieldBinding) this.binding, 0, flowInfo);
-			}
+			manageSyntheticAccessIfNecessary(currentScope, (FieldBinding) this.binding, 0, flowInfo);
 			FieldBinding fieldBinding = (FieldBinding) this.binding;
 			if (this.indexOfFirstFieldBinding == 1) { // was an implicit reference to the first field binding
 				// check if reading a final blank field
@@ -223,9 +215,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	if (this.otherBindings != null) {
 		for (int i = 0; i < otherBindingsCount; i++) {
 			needValue = i < otherBindingsCount-1 ? !this.otherBindings[i+1].isStatic() : valueRequired;
-			if (needValue || complyTo14) {
-				manageSyntheticAccessIfNecessary(currentScope, this.otherBindings[i], i + 1, flowInfo);
-			}
+			manageSyntheticAccessIfNecessary(currentScope, this.otherBindings[i], i + 1, flowInfo);
 		}
 	}
 	return flowInfo;
@@ -364,7 +354,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 												&& this.otherBindings == null; // could be dup: next.next.next
 				TypeBinding requiredGenericCast = getGenericCast(this.otherBindings == null ? 0 : this.otherBindings.length);
 				if (valueRequired
-						|| (!isFirst && currentScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4)
+						|| (!isFirst)
 						|| ((this.implicitConversion & TypeIds.UNBOXING) != 0)
 						|| requiredGenericCast != null) {
 					int lastFieldPc = codeStream.position;
@@ -554,7 +544,6 @@ public FieldBinding generateReadSequence(BlockScope currentScope, CodeStream cod
 	FieldBinding lastFieldBinding;
 	TypeBinding lastGenericCast;
 	TypeBinding lastReceiverType;
-	boolean complyTo14 = currentScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4;
 
 	switch (this.bits & ASTNode.RestrictiveFlagMASK) {
 		case Binding.FIELD :
@@ -624,7 +613,7 @@ public FieldBinding generateReadSequence(BlockScope currentScope, CodeStream cod
 						codeStream.generateConstant(fieldConstant, 0);
 					}
 				} else {
-					if (needValue || (i > 0 && complyTo14) || lastGenericCast != null) {
+					if (needValue || (i > 0) || lastGenericCast != null) {
 						MethodBinding accessor = this.syntheticReadAccessors == null ? null : this.syntheticReadAccessors[i];
 						if (accessor == null) {
 							TypeBinding constantPoolDeclaringClass = CodeStream.getConstantPoolDeclaringClass(currentScope, lastFieldBinding, lastReceiverType, i == 0 && this.indexOfFirstFieldBinding == 1);

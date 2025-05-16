@@ -15,7 +15,6 @@ package org.eclipse.jdt.core.tests.compiler.parser;
 
 import junit.framework.Test;
 import org.eclipse.jdt.internal.codeassist.complete.InvalidCursorLocation;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 public class CompletionParserTest extends AbstractCompletionTest {
 public CompletionParserTest(String testName) {
@@ -8699,8 +8698,6 @@ public void testBug310423(){
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=338789
 public void testBug338789(){
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	String str =
 		"public class Test {\n" +
 		"	public void throwing() throws IZZBException, IZZException {}\n" +
@@ -8768,8 +8765,6 @@ public void testBug338789(){
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=338789
 // Qualified assist type reference
 public void testBug338789b(){
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	String str =
 		"public class Test {\n" +
 		"	public void throwing() throws java.lang.IllegalArgumentException, java.lang.IndexOutOfBoundsException {}\n" +
@@ -8819,8 +8814,6 @@ public void testBug338789b(){
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=343637
 // Check that the whole union type ref is part of the completion node parent
 public void testBug343637(){
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	String str =
 		"public class Test {\n" +
 		"	public void throwing() throws java.lang.IllegalArgumentException, java.lang.IndexOutOfBoundsException, java.lang.IOException {}\n" +
@@ -8873,8 +8866,6 @@ public void testBug343637(){
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=346454
 public void testBug346454(){
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	String str =
 		"public class Test<T> {\n" +
 		"	public void foo() {\n" +
@@ -8908,8 +8899,6 @@ public void testBug346454(){
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=346454
 public void testBug346454b(){
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	String str =
 		"public class Test<T> {\n" +
 		"	public class T2<Z>{}\n" +
@@ -8949,8 +8938,6 @@ public void testBug346454b(){
 public void testBug346454b2(){
 	// TODO: unsuccessful attempt to show that completion would work right after "<>" but for that
 	// CompletionParser.checkClassInstanceCreation would need to handle parameterized types, which it never did
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	String str =
 		"public class Test<T> {\n" +
 		"	public class T2<Z>{}\n" +
@@ -8989,8 +8976,6 @@ public void testBug346454b2(){
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=346415
 // To make sure that all catch blocks before the one in which we're invoking assist are avaiable in the ast.
 public void testBug346415(){
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	String str =
 		"public class Test {\n" +
 		"	public void throwing() throws java.lang.IllegalArgumentException, java.lang.IndexOutOfBoundsException, java.lang.IOException {}\n" +

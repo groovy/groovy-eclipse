@@ -120,14 +120,10 @@ public class AnnotationTest extends AbstractComparableTest {
 	protected void setUp() throws Exception {
 		super.setUp();
 		this.reportMissingJavadocComments = null;
-		this.repeatableIntroText = this.complianceLevel >= ClassFileConstants.JDK1_8 ?
-		"Duplicate annotation of non-repeatable type "
-		:
-		"Duplicate annotation ";
-		this.repeatableTrailerText = this.complianceLevel >= ClassFileConstants.JDK1_8 ?
-		". Only annotation types marked @Repeatable can be used multiple times at one target.\n"
-		:
-		". Repeated annotations are allowed only at source level 1.8 or above\n";
+		this.repeatableIntroText =
+		"Duplicate annotation of non-repeatable type ";
+		this.repeatableTrailerText =
+		". Only annotation types marked @Repeatable can be used multiple times at one target.\n";
 		this.javaClassLib = null; // use only in selected tests
 	}
 
@@ -2379,19 +2375,8 @@ public class AnnotationTest extends AbstractComparableTest {
 	}
 	// check @Override annotation - strictly for superclasses (overrides) and not interfaces (implements)
 	public void test077() {
-		String expectedOutput = new CompilerOptions(getCompilerOptions()).sourceLevel < ClassFileConstants.JDK1_6
-			?	"----------\n" +
-				"1. ERROR in X.java (at line 14)\n" +
-				"	void foo() {}\n" +
-				"	     ^^^^^\n" +
-				"The method foo() of type X must override a superclass method\n" +
+		String expectedOutput =
 				"----------\n" +
-				"2. ERROR in X.java (at line 18)\n" +
-				"	public void baz() {}\n" +
-				"	            ^^^^^\n" +
-				"The method baz() of type X must override a superclass method\n" +
-				"----------\n"
-			:	"----------\n" +
 				"1. ERROR in X.java (at line 14)\n" +
 				"	void foo() {}\n" +
 				"	     ^^^^^\n" +
@@ -2970,42 +2955,6 @@ public class AnnotationTest extends AbstractComparableTest {
 				"}"
 			},
 			"class X");
-
-		ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
-		byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(new File(OUTPUT_DIR + File.separator  +"X.class"));
-		String actualOutput =
-			disassembler.disassemble(
-				classFileBytes,
-				"\n",
-				ClassFileBytesDisassembler.DETAILED);
-
-		CompilerOptions options = new CompilerOptions(getCompilerOptions());
-		String expectedOutput = null;
-		if (options.targetJDK == ClassFileConstants.JDK1_5) {
-			expectedOutput =
-				"  Inner classes:\n" +
-				"    [inner class info: #66 X$I, outer class info: #1 X\n" +
-				"     inner name: #68 I, accessflags: 1545 public abstract static],\n" +
-				"    [inner class info: #27 X$MyAnon, outer class info: #1 X\n" +
-				"     inner name: #69 MyAnon, accessflags: 9737 public abstract static]\n";
-		} else if (options.targetJDK == ClassFileConstants.JDK1_6) {
-			expectedOutput =
-				"  Inner classes:\n" +
-				"    [inner class info: #70 X$I, outer class info: #1 X\n" +
-				"     inner name: #72 I, accessflags: 1545 public abstract static],\n" +
-				"    [inner class info: #27 X$MyAnon, outer class info: #1 X\n" +
-				"     inner name: #73 MyAnon, accessflags: 9737 public abstract static]\n";
-		} else {
-			return;
-		}
-
-		int index = actualOutput.indexOf(expectedOutput);
-		if (index == -1 || expectedOutput.length() == 0) {
-			System.out.println(Util.displayString(actualOutput, 3));
-		}
-		if (index == -1) {
-			assertEquals("unexpected bytecode sequence", expectedOutput, actualOutput);
-		}
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=80544
 	public void test100() {
@@ -4452,14 +4401,8 @@ public class AnnotationTest extends AbstractComparableTest {
     }
     // https://bugs.eclipse.org/bugs/show_bug.cgi?id=90111 - variation
     public void test140() {
-    	String expectedOutput = new CompilerOptions(getCompilerOptions()).sourceLevel < ClassFileConstants.JDK1_6
-		?	"----------\n" +
-    		"1. ERROR in X.java (at line 6)\n" +
-    		"	static void foo(){}	\n" +
-    		"	            ^^^^^\n" +
-    		"The method foo() of type Bar must override a superclass method\n" +
-    		"----------\n"
-		:	"----------\n" +
+    	String expectedOutput =
+    		"----------\n" +
 			"1. ERROR in X.java (at line 6)\n" +
 			"	static void foo(){}	\n" +
 			"	            ^^^^^\n" +
@@ -5612,19 +5555,8 @@ public void test143() {
     }
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=94759
     public void test168() {
-    	String expectedOutput = new CompilerOptions(getCompilerOptions()).sourceLevel < ClassFileConstants.JDK1_6
-			?	"----------\n" +
-				"1. ERROR in X.java (at line 2)\n" +
-				"	@Override I clone();\n" +
-				"	            ^^^^^^^\n" +
-				"The method clone() of type I must override a superclass method\n" +
-				"----------\n" +
-				"2. ERROR in X.java (at line 7)\n" +
-				"	@Override void foo();\n" +
-				"	               ^^^^^\n" +
-				"The method foo() of type J must override a superclass method\n" +
-				"----------\n"
-			:	"----------\n" +
+    	String expectedOutput =
+    			"----------\n" +
 				"1. ERROR in X.java (at line 2)\n" +
 				"	@Override I clone();\n" +
 				"	            ^^^^^^^\n" +
@@ -6511,19 +6443,8 @@ public void test193() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=130017
 public void test194() {
-	String expectedOutput = new CompilerOptions(getCompilerOptions()).sourceLevel < ClassFileConstants.JDK1_6
-	?	"----------\n" +
-		"1. ERROR in X.java (at line 5)\n" +
-		"	@Override\n" +
-		"	^^^^^^^^^\n" +
-		"The annotation @Override is disallowed for this location\n" +
+	String expectedOutput =
 		"----------\n" +
-		"2. ERROR in X.java (at line 9)\n" +
-		"	public static void foo() {}\n" +
-		"	                   ^^^^^\n" +
-		"The method foo() of type X must override a superclass method\n" +
-		"----------\n"
-	:	"----------\n" +
 		"1. ERROR in X.java (at line 5)\n" +
 		"	@Override\n" +
 		"	^^^^^^^^^\n" +
@@ -6599,19 +6520,8 @@ public void test196() {
 }
 // no override between package private methods
 public void test197() {
-	String expectedOutput = new CompilerOptions(getCompilerOptions()).sourceLevel < ClassFileConstants.JDK1_6
-	?	"----------\n" +
-		"1. WARNING in p\\X.java (at line 4)\n" +
-		"	void foo() {\n" +
-		"	     ^^^^^\n" +
-		"The method X.foo() does not override the inherited method from OldStuff since it is private to a different package\n" +
+	String expectedOutput =
 		"----------\n" +
-		"2. ERROR in p\\X.java (at line 4)\n" +
-		"	void foo() {\n" +
-		"	     ^^^^^\n" +
-		"The method foo() of type X must override a superclass method\n" +
-		"----------\n"
-	:	"----------\n" +
 		"1. WARNING in p\\X.java (at line 4)\n" +
 		"	void foo() {\n" +
 		"	     ^^^^^\n" +
@@ -7144,24 +7054,8 @@ public void test214() {
 			CompilerOptions.OPTION_ReportMissingOverrideAnnotationForInterfaceMethodImplementation,
 			CompilerOptions.DISABLED);
 
-	String expectedOutput = new CompilerOptions(getCompilerOptions()).sourceLevel < ClassFileConstants.JDK1_6
-		?	"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
-			"	void foo();\n" +
-			"	     ^^^^^\n" +
-			"The method foo() of type I must override a superclass method\n" +
+	String expectedOutput =
 			"----------\n" +
-			"2. ERROR in X.java (at line 8)\n" +
-			"	public void foo() {}\n" +
-			"	            ^^^^^\n" +
-			"The method foo() of type X must override a superclass method\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 13)\n" +
-			"	void foo();\n" +
-			"	     ^^^^^\n" +
-			"The method foo() of type J must override a superclass method\n" +
-			"----------\n"
-		:	"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
 			"	void foo();\n" +
 			"	     ^^^^^\n" +
@@ -7207,18 +7101,7 @@ public void test215() {
 		"  @Override\n" +
 		"  public void foo() {}\n" +
 		"}\n"};
-	if (new CompilerOptions(getCompilerOptions()).sourceLevel < ClassFileConstants.JDK1_6) {
-		this.runNegativeTest(sources,
-			"----------\n" +
-			"1. ERROR in Y.java (at line 3)\n" +
-			"	public void foo() {}\n" +
-			"	            ^^^^^\n" +
-			"The method foo() of type Y must override a superclass method\n" +
-			"----------\n");
-	} else {
-		this.runConformTest(sources,
-			"");
-	}
+	this.runConformTest(sources, "");
 }
 // extending java.lang.annotation.Annotation
 public void test216() {
@@ -8300,9 +8183,6 @@ public void test246() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=211609
 public void test247() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_6) {
-		return;
-	}
 	// only enable in 1.6 mode
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_Process_Annotations, CompilerOptions.ENABLED);
@@ -8644,30 +8524,6 @@ public void test256() throws Exception {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=216570
 public void test257() {
-	if (new CompilerOptions(getCompilerOptions()).sourceLevel < ClassFileConstants.JDK1_6) {
-		this.runNegativeTest(
-				new String[] {
-					"X.java",
-					"public class X {\n" +
-					"    static interface IFoo {\n" +
-					"        public boolean eval(String s);\n" +
-					"    }\n" +
-					"    static class Foo implements IFoo {\n" +
-					"        @Override\n" +
-					"        public boolean eval(String s) {\n" +
-					"            return true;\n" +
-					"        }\n" +
-					"    }\n" +
-					"}\n"
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 7)\n" +
-				"	public boolean eval(String s) {\n" +
-				"	               ^^^^^^^^^^^^^^\n" +
-				"The method eval(String) of type X.Foo must override a superclass method\n" +
-				"----------\n");
-		return;
-	}
 	this.runConformTest(
 			new String[] {
 				"X.java",
@@ -8687,19 +8543,8 @@ public void test257() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=167262
 public void test258() {
-	String expectedOutput = new CompilerOptions(getCompilerOptions()).sourceLevel < ClassFileConstants.JDK1_6
-	?	"----------\n" +
-		"1. ERROR in X.java (at line 9)\n" +
-		"	void bar();//3\n" +
-		"	     ^^^^^\n" +
-		"The method bar() of type Bar must override a superclass method\n" +
+	String expectedOutput =
 		"----------\n" +
-		"2. ERROR in X.java (at line 13)\n" +
-		"	public void bar() {}//4\n" +
-		"	            ^^^^^\n" +
-		"The method bar() of type BarImpl must override a superclass method\n" +
-		"----------\n"
-	:	"----------\n" +
 		"1. ERROR in X.java (at line 9)\n" +
 		"	void bar();//3\n" +
 		"	     ^^^^^\n" +
@@ -9126,39 +8971,7 @@ public void test271() throws Exception {
 
 	checkDisassembledClassFile(OUTPUT_DIR + File.separator  +"X.class", "X", expectedOutput, ClassFileBytesDisassembler.DETAILED);
 }
-//https://bugs.eclipse.org/bugs/show_bug.cgi?id=289516
-public void test272() throws Exception {
-	if (this.complianceLevel != ClassFileConstants.JDK1_5) {
-		return;
-	}
-	Map options = getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getFirstSupportedJavaVersion());
-	this.runConformTest(
-		new String[] {
-			"X.java",
-			"@interface A {}\n" +
-			"public class X {\n" +
-			"	@SuppressWarnings(\"unused\")\n" +
-			"	private void foo(@A Object o) {}\n" +
-			"}"
-		},
-		"",
-		null,
-		true,
-		null,
-		options,
-		null,
-		true);
 
-	String expectedOutput =
-		"  // Method descriptor #15 (Ljava/lang/Object;)V\n" +
-		"  // Stack: 0, Locals: 2\n" +
-		"  private void foo(@A java.lang.Object o);\n";
-
-	checkDisassembledClassFile(OUTPUT_DIR + File.separator  +"X.class", "X", expectedOutput, ClassFileBytesDisassembler.DETAILED);
-}
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=289576
 public void test273() throws Exception {
 	this.runConformTest(
@@ -9201,29 +9014,19 @@ public void test274a() {
 	customOptions.put(
 			CompilerOptions.OPTION_ReportMissingOverrideAnnotationForInterfaceMethodImplementation,
 			CompilerOptions.ENABLED);
-	if (new CompilerOptions(customOptions).sourceLevel >= ClassFileConstants.JDK1_6) {
-		String expectedOutput =
-				"----------\n" +
-				"1. ERROR in T.java (at line 7)\n" +
-				"	public void m() {}\n" +
-				"	            ^^^\n" +
-				"The method m() of type B should be tagged with @Override since it actually overrides a superinterface method\n" +
-				"----------\n";
-		this.runNegativeTest(
-				true,
-				testString,
-				null, customOptions,
-				expectedOutput,
-				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
-	} else {
-		this.runConformTest(
-				true, testString,
-				null,
-				customOptions,
-				null,
-				null, null,
-				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
-	}
+	String expectedOutput =
+			"----------\n" +
+			"1. ERROR in T.java (at line 7)\n" +
+			"	public void m() {}\n" +
+			"	            ^^^\n" +
+			"The method m() of type B should be tagged with @Override since it actually overrides a superinterface method\n" +
+			"----------\n";
+	this.runNegativeTest(
+			true,
+			testString,
+			null, customOptions,
+			expectedOutput,
+			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=163194
@@ -9246,29 +9049,19 @@ public void test274b() {
 	customOptions.put(
 			CompilerOptions.OPTION_ReportMissingOverrideAnnotationForInterfaceMethodImplementation,
 			CompilerOptions.ENABLED);
-	if (new CompilerOptions(customOptions).sourceLevel >= ClassFileConstants.JDK1_6) {
-		String expectedOutput =
-			"----------\n" +
-			"1. ERROR in Over.java (at line 5)\n" +
-			"	public void m() {}\n" +
-			"	            ^^^\n" +
-			"The method m() of type Over should be tagged with @Override since it actually overrides a superinterface method\n" +
-			"----------\n";
-		this.runNegativeTest(
-				true,
-				testString,
-				null, customOptions,
-				expectedOutput,
-				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
-	} else {
-		this.runConformTest(
-				true, testString,
-				null,
-				customOptions,
-				null,
-				null, null,
-				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
-	}
+	String expectedOutput =
+		"----------\n" +
+		"1. ERROR in Over.java (at line 5)\n" +
+		"	public void m() {}\n" +
+		"	            ^^^\n" +
+		"The method m() of type Over should be tagged with @Override since it actually overrides a superinterface method\n" +
+		"----------\n";
+	this.runNegativeTest(
+			true,
+			testString,
+			null, customOptions,
+			expectedOutput,
+			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=163194
@@ -9290,29 +9083,19 @@ public void test274c() {
 	customOptions.put(
 			CompilerOptions.OPTION_ReportMissingOverrideAnnotationForInterfaceMethodImplementation,
 			CompilerOptions.ENABLED);
-	if (new CompilerOptions(customOptions).sourceLevel >= ClassFileConstants.JDK1_6) {
-		String expectedOutput =
-				"----------\n" +
-				"1. ERROR in B.java (at line 5)\n" +
-				"	void m();\n" +
-				"	     ^^^\n" +
-				"The method m() of type B should be tagged with @Override since it actually overrides a superinterface method\n" +
-				"----------\n";
-		this.runNegativeTest(
-				true,
-				testString,
-				null, customOptions,
-				expectedOutput,
-				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
-	} else {
-		this.runConformTest(
-				true, testString,
-				null,
-				customOptions,
-				null,
-				null, null,
-				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
-	}
+	String expectedOutput =
+			"----------\n" +
+			"1. ERROR in B.java (at line 5)\n" +
+			"	void m();\n" +
+			"	     ^^^\n" +
+			"The method m() of type B should be tagged with @Override since it actually overrides a superinterface method\n" +
+			"----------\n";
+	this.runNegativeTest(
+			true,
+			testString,
+			null, customOptions,
+			expectedOutput,
+			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=163194
@@ -9332,29 +9115,19 @@ public void test274d() {
 	customOptions.put(
 			CompilerOptions.OPTION_ReportMissingOverrideAnnotationForInterfaceMethodImplementation,
 			CompilerOptions.ENABLED);
-	if (new CompilerOptions(customOptions).sourceLevel >= ClassFileConstants.JDK1_6) {
-		String expectedOutput =
-			"----------\n" +
-			"1. ERROR in A.java (at line 2)\n" +
-			"	String toString();\n" +
-			"	       ^^^^^^^^^^\n" +
-			"The method toString() of type A should be tagged with @Override since it actually overrides a superinterface method\n" +
-			"----------\n";
-		this.runNegativeTest(
-				true,
-				testString,
-				null, customOptions,
-				expectedOutput,
-				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
-	} else {
-		this.runConformTest(
-				true, testString,
-				null,
-				customOptions,
-				null,
-				null, null,
-				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
-	}
+	String expectedOutput =
+		"----------\n" +
+		"1. ERROR in A.java (at line 2)\n" +
+		"	String toString();\n" +
+		"	       ^^^^^^^^^^\n" +
+		"The method toString() of type A should be tagged with @Override since it actually overrides a superinterface method\n" +
+		"----------\n";
+	this.runNegativeTest(
+			true,
+			testString,
+			null, customOptions,
+			expectedOutput,
+			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=282770.
 public void test275() {
@@ -9984,20 +9757,18 @@ public void test297() {
 		"Comparing identical expressions\n" +
 		"----------\n";
 
-	if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
-		runner.expectedCompilerLog =
-			"----------\n" +
-			"1. ERROR in A.java (at line 10)\n" +
-			"	public final Object build(Class<? super Object>... objects) {\n" +
-			"	                                                   ^^^^^^^\n" +
-			"Type safety: Potential heap pollution via varargs parameter objects\n" +
-			"----------\n" +
-			"2. ERROR in A.java (at line 15)\n" +
-			"	return i == i;\n" +
-			"	       ^^^^^^\n" +
-			"Comparing identical expressions\n" +
-			"----------\n";
-	}
+	runner.expectedCompilerLog =
+		"----------\n" +
+		"1. ERROR in A.java (at line 10)\n" +
+		"	public final Object build(Class<? super Object>... objects) {\n" +
+		"	                                                   ^^^^^^^\n" +
+		"Type safety: Potential heap pollution via varargs parameter objects\n" +
+		"----------\n" +
+		"2. ERROR in A.java (at line 15)\n" +
+		"	return i == i;\n" +
+		"	       ^^^^^^\n" +
+		"Comparing identical expressions\n" +
+		"----------\n";
 	runner.testFiles = new String[] {
 			"A.java",
 			"public class A {\n" +
@@ -10430,7 +10201,6 @@ public void testBug365437b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=365437
 // @SafeVarargs
 public void testBug365437c() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7) return;
 	Map customOptions = getCompilerOptions();
 	enableAllWarningsForIrritants(customOptions, IrritantSet.NULL);
 	customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.ERROR);
@@ -11007,82 +10777,7 @@ public void testBug386356_2() {
 		this.javaClassLib = save;
 	}
 }
-//https://bugs.eclipse.org/bugs/show_bug.cgi?id=398657
-public void test398657() throws Exception {
-	if (this.complianceLevel != ClassFileConstants.JDK1_5) {
-		return;
-	}
-	Map options = getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getFirstSupportedJavaVersion());
-	this.runConformTest(
-		new String[] {
-			"p/Annot.java",
-			"package p;\n" +
-			"public @interface Annot {\n" +
-			"   static public enum E { A }\n" +
-			"   E getEnum();\n" +
-			"}",
-			"X.java",
-			"import static p.Annot.E.*;\n" +
-			"import p.Annot;" +
-			"@Annot(getEnum=A)\n" +
-			"public class X {}"
-		},
-		"",
-		null,
-		true,
-		null,
-		options,
-		null,
-		true);
 
-	String expectedOutput =
-		"  Inner classes:\n" +
-		"    [inner class info: #22 p/Annot$E, outer class info: #24 p/Annot\n" +
-		"     inner name: #26 E, accessflags: 16409 public static final]\n";
-
-	checkDisassembledClassFile(OUTPUT_DIR + File.separator  +"X.class", "X", expectedOutput, ClassFileBytesDisassembler.DETAILED);
-}
-//https://bugs.eclipse.org/bugs/show_bug.cgi?id=398657
-public void test398657_2() throws Exception {
-	if (this.complianceLevel != ClassFileConstants.JDK1_5) {
-		return;
-	}
-	Map options = getCompilerOptions();
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.getFirstSupportedJavaVersion());
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.getFirstSupportedJavaVersion());
-	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.getFirstSupportedJavaVersion());
-	this.runConformTest(
-		new String[] {
-			"p/Y.java",
-			"package p;\n" +
-			"public class Y {\n" +
-			"	static public @interface Annot {\n" +
-			"		int id();\n" +
-			"	}\n" +
-			"}",
-			"X.java",
-			"import p.Y.Annot;\n" +
-			"@Annot(id=4)\n" +
-			"public class X {}"
-		},
-		"",
-		null,
-		true,
-		null,
-		options,
-		null,
-		true);
-
-	String expectedOutput =
-			"  Inner classes:\n" +
-			"    [inner class info: #21 p/Y$Annot, outer class info: #23 p/Y\n" +
-			"     inner name: #25 Annot, accessflags: 9737 public abstract static]\n";
-
-	checkDisassembledClassFile(OUTPUT_DIR + File.separator  +"X.class", "X", expectedOutput, ClassFileBytesDisassembler.DETAILED);
-}
 // check invalid and annotations on package
 public void test384567() {
 	this.runNegativeTest(
@@ -11295,8 +10990,6 @@ public void test376977() throws Exception {
 // on enum constants interpreted only as type annotations if the annotation type
 // specifies ElementType.TYPE_USE in @Target along with others.
 public void test438437() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	runNegativeTest(
 		new String[] {
 			"X.java",
@@ -11422,10 +11115,6 @@ public void test433747() throws Exception {
 			"	String value();\n" +
 			"}\n"
 	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_6) {
-		this.runConformTest(src, "");
-		checkDisassembledClassFile(OUTPUT_DIR + File.separator + "p/package-info.class", "", "p123456");
-	} else {
 	this.runNegativeTest(
 			src,
 			"----------\n" +
@@ -11440,7 +11129,6 @@ public void test433747() throws Exception {
 			true, // generate output
 			false,
 			false);
-	}
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=456960 - Broken classfile generated for incorrect annotation usage - case 2
 public void test456960() throws Exception {
@@ -11509,18 +11197,13 @@ public void test449330() throws Exception {
 		"@X(name=\"HELLO\")\n" +
 		"package p;\n"
 	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_6) {
-		this.runConformTest(testFiles);
-		checkDisassembledClassFile(OUTPUT_DIR + File.separator + "p/package-info.class", "", "HELLO");
-	} else {
-		this.runNegativeTest(testFiles,
-			"----------\n" +
-			"1. ERROR in p\\package-info.java (at line 1)\n" +
-			"	@X(name=\"HELLO\")\n" +
-			"	^^\n" +
-			"The annotation @X is disallowed for this location\n" +
-			"----------\n");
-	}
+	this.runNegativeTest(testFiles,
+		"----------\n" +
+		"1. ERROR in p\\package-info.java (at line 1)\n" +
+		"	@X(name=\"HELLO\")\n" +
+		"	^^\n" +
+		"The annotation @X is disallowed for this location\n" +
+		"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=449330 - [1.6]Eclipse compiler doesn't compile annotations in class files
 //Retention Policy set to RUNTIME
@@ -11535,18 +11218,13 @@ public void test449330a() throws Exception {
 		"@X(name=\"HELLO\")\n" +
 		"package p;\n"
 	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_6) {
-		this.runConformTest(testFiles, "");
-		checkDisassembledClassFile(OUTPUT_DIR + File.separator + "p/package-info.class", "", "HELLO");
-	} else {
-		this.runNegativeTest(testFiles,
-			"----------\n" +
-			"1. ERROR in p\\package-info.java (at line 1)\n" +
-			"	@X(name=\"HELLO\")\n" +
-			"	^^\n" +
-			"The annotation @X is disallowed for this location\n" +
-			"----------\n");
-	}
+	this.runNegativeTest(testFiles,
+		"----------\n" +
+		"1. ERROR in p\\package-info.java (at line 1)\n" +
+		"	@X(name=\"HELLO\")\n" +
+		"	^^\n" +
+		"The annotation @X is disallowed for this location\n" +
+		"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=449330 - [1.6]Eclipse compiler doesn't compile annotations in class files
 //Annotation target not set
@@ -11596,7 +11274,7 @@ public void testBug386692() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=464977
 public void testBug464977() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_6 || this.complianceLevel > ClassFileConstants.JDK1_8) {
+	if (this.complianceLevel > ClassFileConstants.JDK1_8) {
 		return; // Enough to run in 3 levels rather!
 	}
 	boolean apt = this.enableAPT;
@@ -11606,10 +11284,6 @@ public void testBug464977() throws Exception {
 	String version = "";
 	if  (this.complianceLevel == ClassFileConstants.JDK1_8) {
 		version = "1.8 : 52.0";
-	} else if  (this.complianceLevel == ClassFileConstants.JDK1_7) {
-		version = "1.7 : 51.0";
-	} else if  (this.complianceLevel == ClassFileConstants.JDK1_6) {
-		version = "1.6 : 50.0";
 	}
 	String expectedOutput = "// Compiled from DeprecatedClass.java (version " + version + ", super bit, deprecated)\n" +
 							"@Deprecated\n" +
@@ -11654,9 +11328,6 @@ public void testBug469584() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=472178
 public void test472178() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		return; // Enough to run in 3 levels rather!
-	}
 	String source =
 			"import java.lang.annotation.ElementType;\n" +
 			"import java.lang.annotation.Retention;\n" +
@@ -11770,9 +11441,6 @@ public void test472178() throws Exception {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=470665
 public void testBug470665() throws Exception {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_7) {
-		return; // Enough to run in the last two levels!
-	}
 	boolean apt = this.enableAPT;
 	String errMessage = isMinimumCompliant(ClassFileConstants.JDK11) ?
 			"----------\n" +
@@ -11832,9 +11500,6 @@ public void testBug470665() throws Exception {
 	}
 }
 public void testBug506888a() throws Exception {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_5) {
-		return;
-	}
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedWarningToken, CompilerOptions.ERROR);
@@ -11861,9 +11526,6 @@ public void testBug506888a() throws Exception {
 	runner.runWarningTest();
 }
 public void testBug506888b() throws Exception {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_5) {
-		return;
-	}
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnusedWarningToken, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportIncompleteEnumSwitch, CompilerOptions.WARNING);
@@ -11884,9 +11546,6 @@ public void testBug506888b() throws Exception {
 		options);
 }
 public void testBug506888c() throws Exception {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_5) {
-		return;
-	}
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedWarningToken, CompilerOptions.WARNING);
@@ -11917,9 +11576,6 @@ public void testBug506888c() throws Exception {
 	runner.runWarningTest();
 }
 public void testBug506888d() throws Exception {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_5) {
-		return;
-	}
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnusedWarningToken, CompilerOptions.IGNORE);
 	options.put(CompilerOptions.OPTION_ReportIncompleteEnumSwitch, CompilerOptions.IGNORE);
@@ -11937,9 +11593,6 @@ public void testBug506888d() throws Exception {
 		null, true, options);
 }
 public void testBug506888e() throws Exception {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_5) {
-		return;
-	}
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnusedWarningToken, CompilerOptions.IGNORE);
 	options.put(CompilerOptions.OPTION_ReportUnusedLabel, CompilerOptions.WARNING);
@@ -11972,9 +11625,6 @@ public void testBug506888f() throws Exception {
 		}
 	}
 
-	if (this.complianceLevel <= ClassFileConstants.JDK1_5) {
-		return;
-	}
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnusedWarningToken, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnusedDeclaredThrownException, CompilerOptions.IGNORE);
@@ -12010,8 +11660,6 @@ public void testBug506888f() throws Exception {
 	assertEquals(JavaCore.COMPILER_PB_UNUSED_PARAMETER, requestor.problemArguments[0]);
 }
 public void testBug537593_001() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	class MyCompilerRequestor implements ICompilerRequestor {
 		String[] problemArguments = null;
 
@@ -12027,9 +11675,6 @@ public void testBug537593_001() {
 		}
 	}
 
-	if (this.complianceLevel <= ClassFileConstants.JDK1_5) {
-		return;
-	}
 	String[] files = new String[] {
 			"X.java",
 			"\n" +

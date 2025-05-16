@@ -1698,9 +1698,9 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 			if(selectDeclaration(memberTypes[i], assistIdentifier, packageName))
 				return true;
 		}
-		FieldDeclaration[] fields = typeDeclaration.fields;
-		for (int i = 0, length = fields == null ? 0 : fields.length; i < length; i++){
-			if (fields[i].name == assistIdentifier){
+		AbstractVariableDeclaration[] variables = typeDeclaration.protoFieldDeclarations();
+		for (int i = 0, length = variables.length; i < length; i++){
+			if (variables[i].name == assistIdentifier){
 				char[] qualifiedSourceName = null;
 
 				TypeDeclaration enclosingType = typeDeclaration;
@@ -1708,13 +1708,13 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 					qualifiedSourceName = CharOperation.concat(enclosingType.name, qualifiedSourceName, '.');
 					enclosingType = enclosingType.enclosingType;
 				}
-				FieldDeclaration field = fields[i];
+				AbstractVariableDeclaration variable = variables[i];
 				this.requestor.acceptField(
 					packageName,
 					qualifiedSourceName,
-					field.name,
+					variable.name,
 					true,
-					field.binding != null ? field.binding.computeUniqueKey() : null,
+					variable.getBinding() != null ? variable.getBinding().computeUniqueKey() : null,
 					this.actualSelectionStart,
 					this.actualSelectionEnd);
 

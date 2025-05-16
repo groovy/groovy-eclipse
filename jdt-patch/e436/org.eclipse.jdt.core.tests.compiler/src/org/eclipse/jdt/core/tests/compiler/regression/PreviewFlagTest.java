@@ -28,7 +28,7 @@ public class PreviewFlagTest extends AbstractRegressionTest9 {
 	static {
 //		TESTS_NUMBERS = new int [] { 1 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "testIssue3614_001" };
+//		TESTS_NAMES = new String[] { "testIssue3943_001" };
 //		TESTS_NAMES = new String[] { "testIssue3614_001" };
 	}
 	private String extraLibPath;
@@ -151,15 +151,21 @@ public class PreviewFlagTest extends AbstractRegressionTest9 {
 							ScopedValue<Integer> si = ScopedValue.newInstance();
 							System.out.println(si == null ? "hello" : "world");
 						}
+						public int foo() {}
 					}
 					"""
 			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
-			"	ScopedValue<Integer> si = ScopedValue.newInstance();\n" +
-			"	                          ^^^^^^^^^^^\n" +
-			"This API is part of the preview feature 'Scoped Values' which is disabled by default. Use --enable-preview to enable\n" +
-			"----------\n",
+				"----------\n" +
+				"1. ERROR in X.java (at line 3)\n" +
+				"	ScopedValue<Integer> si = ScopedValue.newInstance();\n" +
+				"	                          ^^^^^^^^^^^\n" +
+				"This API is part of the preview feature 'Scoped Values' which is disabled by default. Use --enable-preview to enable\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 6)\n" +
+				"	public int foo() {}\n" +
+				"	           ^^^^^\n" +
+				"This method must return a result of type int\n" +
+				"----------\n",
 			null,
 			true,
 			options);
@@ -181,12 +187,12 @@ public class PreviewFlagTest extends AbstractRegressionTest9 {
 				"""
 			};
 		runner.expectedCompilerLog =
-			"----------\n" +
-			"1. WARNING in X.java (at line 4)\n" +
-			"	return tree.isModule();\n" +
-			"	       ^^^^^^^^^^^^^^^\n" +
-			"This API is part of the preview feature 'Module Import Declarations' which is disabled by default. Use --enable-preview to enable\n" +
-			"----------\n";
+				"----------\n" +
+				"1. WARNING in X.java (at line 4)\n" +
+				"	return tree.isModule();\n" +
+				"	       ^^^^^^^^^^^^^^^\n" +
+				"This API is part of the preview feature 'Module Import Declarations' which is disabled by default. Use --enable-preview to enable\n" +
+				"----------\n";
 		runner.runConformTest();
 	}
 	public void testIssue3614_003_enabled() throws Exception {
@@ -217,5 +223,75 @@ public class PreviewFlagTest extends AbstractRegressionTest9 {
 			"----------\n";
 		runner.expectedOutputString = "42";
 		runner.runConformTest();
+	}
+	public void testIssue3943_001() throws IOException, ClassFormatException {
+		Map<String, String> options = getCompilerOptions();
+		String str = options.get(CompilerOptions.OPTION_Compliance);
+		options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_23);
+		options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_23);
+		options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_23);
+		options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.DISABLED);
+		runNegativeTest(new String[] {
+				"X.java",
+				"""
+				public class X {
+					public static void main(String[] args) {
+						ScopedValue<Integer> si = ScopedValue.newInstance();
+						System.out.println(si == null ? "hello" : "world");
+					}
+					public int foo() {}
+				}
+				"""},
+				"----------\n" +
+				"1. WARNING in X.java (at line 3)\n" +
+				"	ScopedValue<Integer> si = ScopedValue.newInstance();\n" +
+				"	                          ^^^^^^^^^^^\n" +
+				"You are using an API that is part of the preview feature \'Scoped Values\' and may be removed in future\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 6)\n" +
+				"	public int foo() {}\n" +
+				"	           ^^^^^\n" +
+				"This method must return a result of type int\n" +
+				"----------\n",
+			null,
+			true,
+			options);
+		options.put(CompilerOptions.OPTION_Compliance, str);
+		options.put(CompilerOptions.OPTION_Source, str);
+		options.put(CompilerOptions.OPTION_TargetPlatform, str);
+		options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.ENABLED);
+	}
+	public void testIssue3943_002() throws IOException, ClassFormatException {
+		Map<String, String> options = getCompilerOptions();
+		String str = options.get(CompilerOptions.OPTION_Compliance);
+		options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_23);
+		options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_23);
+		options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_23);
+		options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.DISABLED);
+		runNegativeTest(new String[] {
+				"X.java",
+				"""
+				public class X {
+					@SuppressWarnings("preview")
+					public static void main(String[] args) {
+						ScopedValue<Integer> si = ScopedValue.newInstance();
+						System.out.println(si == null ? "hello" : "world");
+					}
+					public int foo() {}
+				}
+				"""},
+				"----------\n" +
+				"1. ERROR in X.java (at line 7)\n" +
+				"	public int foo() {}\n" +
+				"	           ^^^^^\n" +
+				"This method must return a result of type int\n" +
+				"----------\n",
+			null,
+			true,
+			options);
+		options.put(CompilerOptions.OPTION_Compliance, str);
+		options.put(CompilerOptions.OPTION_Source, str);
+		options.put(CompilerOptions.OPTION_TargetPlatform, str);
+		options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.ENABLED);
 	}
 }

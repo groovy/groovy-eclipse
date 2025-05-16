@@ -19,7 +19,6 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
@@ -76,12 +75,7 @@ public StringBuilder printStatement(int indent, StringBuilder output) {
 public void resolve(BlockScope scope) {
 	this.exceptionType = this.exception.resolveType(scope);
 	if (this.exceptionType != null && this.exceptionType.isValidBinding()) {
-		if (this.exceptionType == TypeBinding.NULL) {
-			if (scope.compilerOptions().complianceLevel <= ClassFileConstants.JDK1_3){
-				// if compliant with 1.4, this problem will not be reported
-				scope.problemReporter().cannotThrowNull(this.exception);
-			}
-	 	} else if (this.exceptionType.findSuperTypeOriginatingFrom(TypeIds.T_JavaLangThrowable, true) == null) {
+		if (this.exceptionType != TypeBinding.NULL && this.exceptionType.findSuperTypeOriginatingFrom(TypeIds.T_JavaLangThrowable, true) == null) {
 			scope.problemReporter().cannotThrowType(this.exception, this.exceptionType);
 		}
 		this.exception.computeConversion(scope, this.exceptionType, this.exceptionType);

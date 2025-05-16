@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -70,6 +70,8 @@ public abstract class Binding {
 	public static final ElementValuePair[] NO_ELEMENT_VALUE_PAIRS = new ElementValuePair[0];
 	public static final char[][] NO_PARAMETER_NAMES = new char[0][];
 	public static final RecordComponentBinding[] NO_COMPONENTS = new RecordComponentBinding[0];
+	public static final LocalVariableBinding[] NO_ARGUMENT_BINDINGS = new LocalVariableBinding[0];
+
 
 	public static final RecordComponentBinding[] UNINITIALIZED_COMPONENTS = new RecordComponentBinding[0];
 	public static final FieldBinding[] UNINITIALIZED_FIELDS = new FieldBinding[0];
@@ -123,6 +125,10 @@ public abstract class Binding {
 			NULL_UNSPECIFIED_BY_DEFAULT | // included to terminate search up the parent chain
 			DefaultLocationParameter | DefaultLocationReturnType | DefaultLocationField |
 			DefaultLocationTypeArgument | DefaultLocationTypeParameter | DefaultLocationTypeBound | DefaultLocationArrayContents;
+
+
+	public long tagBits = 0; // See values in the interface TagBits
+	public int extendedTagBits; // See values in the interface ExtendedTagBits
 
 	/*
 	* Answer the receiver's binding type from Binding.BindingID.

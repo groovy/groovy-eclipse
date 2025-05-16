@@ -2992,39 +2992,35 @@ public void testBug70892b() {
 		"	void foo() {}\n" +
 		"}\n"
 	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runConformTest(testFiles);
-	} else {
-		runNegativeTest(testFiles,
-			"----------\n" +
-			"1. ERROR in X.java (at line 3)\r\n" +
-			"	* {@value \"invalid\"}\r\n" +
-			"	          ^^^^^^^^^\n" +
-			"Javadoc: Only static field reference is allowed for @value tag\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 7)\r\n" +
-			"	* {@value <a href=\"invalid\">invalid</a>} invalid\r\n" +
-			"	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"Javadoc: Only static field reference is allowed for @value tag\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 11)\r\n" +
-			"	* {@value #field}\r\n" +
-			"	           ^^^^^\n" +
-			"Javadoc: field cannot be resolved or is not a field\n" +
-			"----------\n" +
-			"4. ERROR in X.java (at line 15)\r\n" +
-			"	* {@value #foo}\r\n" +
-			"	           ^^^\n" +
-			"Javadoc: Only static field reference is allowed for @value tag\n" +
-			"----------\n" +
-			"5. ERROR in X.java (at line 19)\r\n" +
-			"	* {@value #foo()}\r\n" +
-			"	           ^^^^^\n" +
-			"Javadoc: Only static field reference is allowed for @value tag\n" +
-			"----------\n",
-			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
-		);
-	}
+	runNegativeTest(testFiles,
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\r\n" +
+		"	* {@value \"invalid\"}\r\n" +
+		"	          ^^^^^^^^^\n" +
+		"Javadoc: Only static field reference is allowed for @value tag\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 7)\r\n" +
+		"	* {@value <a href=\"invalid\">invalid</a>} invalid\r\n" +
+		"	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Javadoc: Only static field reference is allowed for @value tag\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 11)\r\n" +
+		"	* {@value #field}\r\n" +
+		"	           ^^^^^\n" +
+		"Javadoc: field cannot be resolved or is not a field\n" +
+		"----------\n" +
+		"4. ERROR in X.java (at line 15)\r\n" +
+		"	* {@value #foo}\r\n" +
+		"	           ^^^\n" +
+		"Javadoc: Only static field reference is allowed for @value tag\n" +
+		"----------\n" +
+		"5. ERROR in X.java (at line 19)\r\n" +
+		"	* {@value #foo()}\r\n" +
+		"	           ^^^^^\n" +
+		"Javadoc: Only static field reference is allowed for @value tag\n" +
+		"----------\n",
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
+	);
 }
 
 /**
@@ -4781,25 +4777,7 @@ public void testBug103304a_public() {
 			"	IAFAState.ValidationException valid2;\n" +
 			"}\n"
 		};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(units,
-			//boden\TestValid.java:8: warning - Tag @see: reference not found: ValidationException
-			"----------\n" +
-			"1. ERROR in boden\\TestValid.java (at line 4)\n" +
-			"	* @see ValidationException\n" +
-			"	       ^^^^^^^^^^^^^^^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n" +
-			"2. ERROR in boden\\TestValid.java (at line 9)\n" +
-			"	* @see ValidationException#IAFAState.ValidationException(String, IAFAState)\n" +
-			"	       ^^^^^^^^^^^^^^^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n",
-			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
-		);
-	} else {
-		runConformTest(units);
-	}
+	runConformTest(units);
 }
 
 public void testBug103304a_private() {
@@ -4842,26 +4820,8 @@ public void testBug103304a_private() {
 			"	IAFAState.ValidationException valid2;\n" +
 			"}\n"
 		};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(units,
-			//boden\TestValid.java:8: warning - Tag @see: reference not found: ValidationException
-			//boden\TestValid.java:12: warning - Tag @see: reference not found: ValidationException#IAFAState.ValidationException(String, IAFAState)
-			"----------\n" +
-			"1. ERROR in boden\\TestValid.java (at line 4)\n" +
-			"	* @see ValidationException\n" +
-			"	       ^^^^^^^^^^^^^^^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n" +
-			"2. ERROR in boden\\TestValid.java (at line 9)\n" +
-			"	* @see ValidationException#IAFAState.ValidationException(String, IAFAState)\n" +
-			"	       ^^^^^^^^^^^^^^^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n",
-			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
-		);
-	} else {
-		runConformTest(units);
-	}
+
+	runConformTest(units);
 }
 
 public void testBug103304b() {
@@ -4914,46 +4874,6 @@ public void testBug103304b() {
 			"	IAFAState.ValidationException invalid;\n" +
 			"}\n"
 		};
-	String errors_14 = new String (
-			//boden\TestInvalid1.java:7: warning - Tag @see: reference not found: ValidationException#ValidationException(String, IAFAState)
-			//boden\TestInvalid1.java:8: warning - Tag @see: reference not found: ValidationException#IAFAState.ValidationException(String, IAFAState)
-			//boden\TestInvalid2.java:6: warning - Tag @see: can't find ValidationException(String, IAFAState) in boden.IAFAState.ValidationException => bug ID: 4288720
-			//boden\TestInvalid3.java:6: warning - Tag @see: can't find IAFA.State.ValidationException(String, IAFAState) in boden.IAFAState.ValidationException
-			//boden\TestInvalid4.java:6: warning - Tag @see: can't find IAFAState in boden.IAFAState.ValidationException
-			"----------\n" +
-			"1. ERROR in boden\\TestInvalid1.java (at line 5)\n" +
-			"	* @see ValidationException#ValidationException(String, IAFAState)\n" +
-			"	       ^^^^^^^^^^^^^^^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n" +
-			"2. ERROR in boden\\TestInvalid1.java (at line 6)\n" +
-			"	* @see ValidationException#IAFAState.ValidationException(String, IAFAState)\n" +
-			"	       ^^^^^^^^^^^^^^^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n" +
-			"----------\n" +
-			"1. ERROR in boden\\TestInvalid3.java (at line 2)\n"+
-			"	import boden.IAFAState.ValidationException;\n"+
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"The import boden.IAFAState.ValidationException is never used\n"+
-			"----------\n"+
-			"2. ERROR in boden\\TestInvalid3.java (at line 5)\n" +
-			"	* @see IAFAState.ValidationException#IAFA.State.ValidationException(String, IAFAState)\n" +
-			"	                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n" +
-			"----------\n" +
-			"1. ERROR in boden\\TestInvalid4.java (at line 2)\n"+
-			"	import boden.IAFAState.ValidationException;\n"+
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"The import boden.IAFAState.ValidationException is never used\n"+
-			"----------\n"+
-			"2. ERROR in boden\\TestInvalid4.java (at line 5)\n" +
-			"	* @see IAFAState.ValidationException#IAFAState .ValidationException(String, IAFAState)\n" +
-			"	                                     ^^^^^^^^^\n" +
-			"Javadoc: IAFAState cannot be resolved or is not a field\n" +
-			"----------\n"
-	);
 	String errors_50 = new String (
 			//boden\TestInvalid1.java:7: warning - Tag @see: reference not found: ValidationException#ValidationException(String, IAFAState)
 			//boden\TestInvalid2.java:6: warning - Tag @see: can't find ValidationException(String, IAFAState) in boden.IAFAState.ValidationException => bug ID: 4288720
@@ -4982,11 +4902,8 @@ public void testBug103304b() {
 			"Javadoc: IAFAState cannot be resolved or is not a field\n" +
 			"----------\n"
 	);
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(units, errors_14);
-	} else {
-		runNegativeTest(units, errors_50, JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
-	}
+
+	runNegativeTest(units, errors_50, JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 
 }
 public void testBug103304c() {
@@ -5827,23 +5744,7 @@ public void testBug153399a() {
 		"	class Sub {} \n" +
 		"}\n"
 	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(testFiles,
-			"----------\n" +
-			"1. ERROR in X.java (at line 7)\n" +
-			"	* {@value #MY_VALUE}\n" +
-			"	    ^^^^^\n" +
-			"Javadoc: Unexpected tag\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 11)\n" +
-			"	* {@value #MY_VALUE}\n" +
-			"	    ^^^^^\n" +
-			"Javadoc: Unexpected tag\n" +
-			"----------\n"
-		);
-	} else {
-		runConformTest(testFiles);
-	}
+	runConformTest(testFiles);
 }
 public void testBug153399b() {
 	String[] testFiles = new String[] {
@@ -5863,23 +5764,8 @@ public void testBug153399b() {
 		"	class Sub {} \n" +
 		"}\n"
 	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(testFiles,
-			"----------\n" +
-			"1. ERROR in X.java (at line 7)\n" +
-			"	* {@value}\n" +
-			"	    ^^^^^\n" +
-			"Javadoc: Unexpected tag\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 11)\n" +
-			"	* {@value}\n" +
-			"	    ^^^^^\n" +
-			"Javadoc: Unexpected tag\n" +
-			"----------\n"
-		);
-	} else {
-		runConformTest(testFiles);
-	}
+
+	runConformTest(testFiles);
 }
 public void testBug153399c() {
 	String[] testFiles = new String[] {
@@ -5908,31 +5794,15 @@ public void testBug153399d() {
 		"	public final static int MY_VALUE = 0; \n" +
 		"}\n"
 	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(testFiles,
-			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
-			"	* {@value #MY_VALUE}\n" +
-			"	    ^^^^^\n" +
-			"Javadoc: Unexpected tag\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 4)\n" +
-			"	* {@value}\n" +
-			"	    ^^^^^\n" +
-			"Javadoc: Unexpected tag\n" +
-			"----------\n"
-		);
-	} else {
-		runNegativeTest(testFiles,
-			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
-			"	* {@value Invalid}\n" +
-			"	          ^^^^^^^^\n" +
-			"Javadoc: Invalid reference\n" +
-			"----------\n",
-			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
-		);
-	}
+	runNegativeTest(testFiles,
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	* {@value Invalid}\n" +
+		"	          ^^^^^^^^\n" +
+		"Javadoc: Invalid reference\n" +
+		"----------\n",
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
+	);
 }
 public void testBug153399e() {
 	String[] testFiles = new String[] {
@@ -5945,26 +5815,15 @@ public void testBug153399e() {
 		"	public final static int MY_VALUE = 0; \n" +
 		"}\n"
 	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(testFiles,
-			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
-			"	* {@value Invalid}\n" +
-			"	    ^^^^^\n" +
-			"Javadoc: Unexpected tag\n" +
-			"----------\n"
-		);
-	} else {
-		runNegativeTest(testFiles,
-			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
-			"	* {@value Invalid}\n" +
-			"	          ^^^^^^^^\n" +
-			"Javadoc: Invalid reference\n" +
-			"----------\n",
-			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
-		);
-	}
+	runNegativeTest(testFiles,
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	* {@value Invalid}\n" +
+		"	          ^^^^^^^^\n" +
+		"Javadoc: Invalid reference\n" +
+		"----------\n",
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
+	);
 }
 
 /**
@@ -6030,46 +5889,6 @@ public void testBug163659() {
 	);
 }
 
-/**
- * bug 165794: [javadoc] Should not report ambiguous on method with parameterized types as parameters
- * test Ensure that no warning are raised when ambiguous parameterized methods are present in javadoc comments
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=165794"
- */
-public void _testBug165794() {
-	String[] testFiles = new String[] {
-		"X.java",
-		"/**\n" +
-		" * No reasonable hint for resolving the {@link #getMax(A)}.\n" +
-		" */\n" +
-		"public class X {\n" +
-		"    /**\n" +
-		"     * Extends Number method.\n" +
-		"     * @see #getMax(A ipZ)\n" +
-		"     */\n" +
-		"    public <T extends Y> T getMax(final A<T> ipY) {\n" +
-		"        return ipY.t();\n" +
-		"    }\n" +
-		"    \n" +
-		"    /**\n" +
-		"     * Extends Exception method.\n" +
-		"     * @see #getMax(A ipY)\n" +
-		"     */\n" +
-		"    public <T extends Z> T getMax(final A<T> ipZ) {\n" +
-		"        return ipZ.t();\n" +
-		"    }\n" +
-		"}\n" +
-		"class A<T> {\n" +
-		"	T t() { return null; }\n" +
-		"}\n" +
-		"class Y {}\n" +
-		"class Z {}"
-	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4
-			|| this.complianceLevel >= ClassFileConstants.JDK1_7) {
-		return;
-	}
-	runConformTest(testFiles);
-}
 /**
  * bug 166365: [javadoc] severity level of malformed javadoc comments did not work properly
  * test Ensure that no warning is raised when visibility is lower than the javadoc option one
@@ -6144,51 +5963,25 @@ public void testBug166436() {
 		"}\n"
 	};
 	this.reportInvalidJavadocVisibility = CompilerOptions.PUBLIC;
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(testFiles,
-			"----------\n" +
-			"1. ERROR in X.java (at line 9)\n" +
-			"	* 	<li>{@value #PUBLIC_CONST}</li>\n" +
-			"	  	      ^^^^^\n" +
-			"Javadoc: Unexpected tag\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 10)\n" +
-			"	* 	<li>{@value #PROTECTED_CONST}</li>\n" +
-			"	  	      ^^^^^\n" +
-			"Javadoc: Unexpected tag\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 11)\n" +
-			"	* 	<li>{@value #DEFAULT_CONST}</li>\n" +
-			"	  	      ^^^^^\n" +
-			"Javadoc: Unexpected tag\n" +
-			"----------\n" +
-			"4. ERROR in X.java (at line 12)\n" +
-			"	* 	<li>{@value #PRIVATE_CONST}</li>\n" +
-			"	  	      ^^^^^\n" +
-			"Javadoc: Unexpected tag\n" +
-			"----------\n"
-		);
-	} else {
-		runNegativeTest(testFiles,
-			"----------\n" +
-			"1. ERROR in X.java (at line 10)\n" +
-			"	* 	<li>{@value #PROTECTED_CONST}</li>\n" +
-			"	  	            ^^^^^^^^^^^^^^^^\n" +
-			"Javadoc: \'public\' visibility for malformed doc comments hides this \'protected\' reference\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 11)\n" +
-			"	* 	<li>{@value #DEFAULT_CONST}</li>\n" +
-			"	  	            ^^^^^^^^^^^^^^\n" +
-			"Javadoc: \'public\' visibility for malformed doc comments hides this \'default\' reference\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 12)\n" +
-			"	* 	<li>{@value #PRIVATE_CONST}</li>\n" +
-			"	  	            ^^^^^^^^^^^^^^\n" +
-			"Javadoc: \'public\' visibility for malformed doc comments hides this \'private\' reference\n" +
-			"----------\n",
-			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
-		);
-	}
+	runNegativeTest(testFiles,
+		"----------\n" +
+		"1. ERROR in X.java (at line 10)\n" +
+		"	* 	<li>{@value #PROTECTED_CONST}</li>\n" +
+		"	  	            ^^^^^^^^^^^^^^^^\n" +
+		"Javadoc: \'public\' visibility for malformed doc comments hides this \'protected\' reference\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 11)\n" +
+		"	* 	<li>{@value #DEFAULT_CONST}</li>\n" +
+		"	  	            ^^^^^^^^^^^^^^\n" +
+		"Javadoc: \'public\' visibility for malformed doc comments hides this \'default\' reference\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 12)\n" +
+		"	* 	<li>{@value #PRIVATE_CONST}</li>\n" +
+		"	  	            ^^^^^^^^^^^^^^\n" +
+		"Javadoc: \'public\' visibility for malformed doc comments hides this \'private\' reference\n" +
+		"----------\n",
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
+	);
 }
 
 /**
@@ -6737,20 +6530,7 @@ public void testBug176027a() {
 		"      void m() { }\n" +
 		"}\n"
 	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(units,
-			//somepkg/MemberTypeDocTest.java:6: warning - Tag @link: reference not found: Inner
-			"----------\n" +
-			"1. ERROR in somepkg\\MemberTypeDocTest.java (at line 4)\n" +
-			"	* {@link Inner} -- error/warning \n" +
-			"	         ^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n"
-		);
-	}
-	else {
-		runConformTest(units);
-	}
+	runConformTest(units);
 }
 
 public void testBug176027b() {
@@ -6772,20 +6552,7 @@ public void testBug176027b() {
 		"      void m() { }\n" +
 		"}\n"
 	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(units,
-			//somepkg/MemberTypeDocTest.java:6: warning - Tag @link: reference not found: Inner
-			"----------\n" +
-			"1. ERROR in somepkg\\MemberTypeDocTest.java (at line 4)\n" +
-			"	* {@link Inner} -- error/warning \n" +
-			"	         ^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n"
-		);
-	}
-	else {
-		runConformTest(units);
-	}
+	runConformTest(units);
 }
 
 public void testBug176027c() {
@@ -6807,20 +6574,7 @@ public void testBug176027c() {
 		"      void m() { }\n" +
 		"}\n"
 	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(units,
-			//somepkg/MemberTypeDocTest.java:6: warning - Tag @link: reference not found: Inner
-			"----------\n" +
-			"1. ERROR in somepkg\\MemberTypeDocTest.java (at line 4)\n" +
-			"	* {@link Inner} -- error/warning \n" +
-			"	         ^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n"
-		);
-	}
-	else {
-		runConformTest(units);
-	}
+	runConformTest(units);
 }
 
 public void testBug176027d() {
@@ -6842,20 +6596,7 @@ public void testBug176027d() {
 		"      void m() { }\n" +
 		"}\n"
 	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(units,
-			//somepkg/MemberTypeDocTest.java:6: warning - Tag @link: reference not found: Inner
-			"----------\n" +
-			"1. ERROR in somepkg\\MemberTypeDocTest.java (at line 4)\n" +
-			"	* {@link Inner} -- error/warning \n" +
-			"	         ^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n"
-		);
-	}
-	else {
-		runConformTest(units);
-	}
+	runConformTest(units);
 }
 
 public void testBug176027f() {
@@ -6877,20 +6618,7 @@ public void testBug176027f() {
 		"      void m() { }\n" +
 		"}\n"
 	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(units,
-			//somepkg/MemberTypeDocTest.java:6: warning - Tag @link: reference not found: Inner
-			"----------\n" +
-			"1. ERROR in somepkg\\MemberTypeDocTest.java (at line 4)\n" +
-			"	* {@link Inner} -- error/warning \n" +
-			"	         ^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n"
-		);
-	}
-	else {
-		runConformTest(units);
-	}
+	runConformTest(units);
 }
 
 public void testBug176027g() {
@@ -6912,20 +6640,7 @@ public void testBug176027g() {
 		"      void m() { }\n" +
 		"}\n"
 	};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(units,
-			//somepkg/MemberTypeDocTest.java:6: warning - Tag @link: reference not found: Inner
-			"----------\n" +
-			"1. ERROR in somepkg\\MemberTypeDocTest.java (at line 4)\n" +
-			"	* {@link Inner} -- error/warning \n" +
-			"	         ^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n"
-		);
-	}
-	else {
-		runConformTest(units);
-	}
+	runConformTest(units);
 }
 
 public void testBug176027h_public() {
@@ -6985,34 +6700,6 @@ public void testBug176027h_public() {
 			"}\n"
 	};
 
-	String error14 = new String (
-		//pkg1\Valid1.java:12: warning - Tag @link: reference not found: MostInner
-		//pkg2\Valid2.java:12: warning - Tag @link: reference not found: MostInner
-		//pkg3\Invalid3.java:12: warning - Tag @link: reference not found: MostInner
-		"----------\n" +
-		"1. ERROR in pkg1\\Valid1.java (at line 6)\n" +
-		"	* {@link MostInner}\n" +
-		"	         ^^^^^^^^^\n" +
-		"Javadoc: Invalid member type qualification\n" +
-		"----------\n" +
-		"----------\n" +
-		"1. ERROR in pkg2\\Valid2.java (at line 6)\n" +
-		"	* {@link MostInner}\n" +
-		"	         ^^^^^^^^^\n" +
-		"Javadoc: Invalid member type qualification\n" +
-		"----------\n" +
-		"----------\n" +
-		"1. ERROR in pkg3\\Invalid3.java (at line 2)\n" +
-		"	import mainpkg.Outer.*;\n"+
-		"	       ^^^^^^^^^^^^^\n"+
-		"The import mainpkg.Outer is never used\n" +
-		"----------\n" +
-		"2. ERROR in pkg3\\Invalid3.java (at line 6)\n" +
-		"	* {@link MostInner} -- error/warning  \n" +
-		"	         ^^^^^^^^^\n" +
-		"Javadoc: MostInner cannot be resolved to a type\n" +
-		"----------\n");
-
 	String error50 = new String (
 			//pkg3\Invalid3.java:12: warning - Tag @link: reference not found: MostInner
 			"----------\n" +
@@ -7028,12 +6715,7 @@ public void testBug176027h_public() {
 			"----------\n");
 
 	this.reportInvalidJavadocVisibility = CompilerOptions.PUBLIC;
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(units,error14);
-	}
-	else {
-		runNegativeTest(units,error50, JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
-	}
+	runNegativeTest(units,error50, JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 }
 
 public void testBug176027h_private() {
@@ -7093,40 +6775,6 @@ public void testBug176027h_private() {
 			"}\n"
 	};
 
-	String error14 = new String(
-			//pkg1\Valid1.java:12: warning - Tag @link: reference not found: MostInner
-			//pkg1\Valid1.java:17: warning - Tag @link: reference not found: MostInner
-			//pkg2\Valid2.java:12: warning - Tag @link: reference not found: MostInner
-			//pkg3\Invalid3.java:12: warning - Tag @link: reference not found: MostInner
-			"----------\n" +
-			"1. ERROR in pkg1\\Valid1.java (at line 6)\n" +
-			"	* {@link MostInner}\n" +
-			"	         ^^^^^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n" +
-			"2. ERROR in pkg1\\Valid1.java (at line 11)\n" +
-			"	* {@link MostInner} \n" +
-			"	         ^^^^^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n" +
-			"----------\n" +
-			"1. ERROR in pkg2\\Valid2.java (at line 6)\n" +
-			"	* {@link MostInner}\n" +
-			"	         ^^^^^^^^^\n" +
-			"Javadoc: Invalid member type qualification\n" +
-			"----------\n" +
-			"----------\n" +
-			"1. ERROR in pkg3\\Invalid3.java (at line 2)\n" +
-			"	import mainpkg.Outer.*;\n"+
-			"	       ^^^^^^^^^^^^^\n"+
-			"The import mainpkg.Outer is never used\n" +
-			"----------\n" +
-			"2. ERROR in pkg3\\Invalid3.java (at line 6)\n" +
-			"	* {@link MostInner} -- error/warning  \n" +
-			"	         ^^^^^^^^^\n" +
-			"Javadoc: MostInner cannot be resolved to a type\n" +
-	"----------\n");
-
 	String error50 = new String(
 			//pkg3\Invalid3.java:12: warning - Tag @link: reference not found: MostInner
 			"----------\n" +
@@ -7142,12 +6790,7 @@ public void testBug176027h_private() {
 			"----------\n");
 
 	this.reportInvalidJavadocVisibility = CompilerOptions.PRIVATE;
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(units,error14);
-	}
-	else {
-		runNegativeTest(units,error50, JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
-	}
+	runNegativeTest(units,error50, JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 }
 
 /**
@@ -7537,21 +7180,8 @@ public void testBug195374() {
 		"}\n"
 	};
 
-	String error14 = new String(
-		// warning - Tag @link: can't find setParams(Param[]) in X
-		"----------\n" +
-		"1. ERROR in X.java (at line 4)\n" +
-		"	* warning expected when compliance < 1.5 {@link X#setParams(Param[])}\n" +
-		"	                                                            ^^^^^^^\n" +
-		"Javadoc: Invalid member type qualification\n" +
-		"----------\n");
 	this.reportInvalidJavadocVisibility = CompilerOptions.PUBLIC;
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4) {
-		runNegativeTest(units,error14);
-	}
-	else {
-		runConformTest(units);
-	}
+	runConformTest(units);
 }
 
 /**
@@ -7970,14 +7600,7 @@ public void testBug233187c() {
  * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=233887"
  */
 public void testBug233887() {
-	String expectedError = this.complianceLevel <= ClassFileConstants.JDK1_4 ?
-		"----------\n" +
-		"1. ERROR in NPETest.java (at line 5)\n" +
-		"	* @param <name> <description>\n" +
-		"	         ^^^^^^\n" +
-		"Javadoc: Invalid param tag name\n" +
-		"----------\n"
-	:
+	String expectedError =
 		"----------\n" +
 		"1. ERROR in NPETest.java (at line 5)\n" +
 		"	* @param <name> <description>\n" +
@@ -8216,69 +7839,63 @@ public void testBug258798_2a() {
 }
 public void testBug258798_2b() {
 	this.reportMissingJavadocTags = CompilerOptions.WARNING;
-	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		runNegativeTest(
-			new String[] {
-				"X.java",
-				"import java.util.*;\n" +
-				"public class X<T> {\n" +
-				"X(ArrayList<T> alt) {}\n" +
-				"}\n" +
-				"class Y<U> extends X<U> {\n" +
-				"/** @see X#X(ArrayList) */\n" +
-				"Y(List<U> lu) { super(null); }\n" +
-				"}\n"
-			},
-			"----------\n" +
-			"1. WARNING in X.java (at line 7)\n" +
-			"	Y(List<U> lu) { super(null); }\n" +
-			"	          ^^\n" +
-			"Javadoc: Missing tag for parameter lu\n" +
-			"----------\n"
-		);
-	}
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"import java.util.*;\n" +
+			"public class X<T> {\n" +
+			"X(ArrayList<T> alt) {}\n" +
+			"}\n" +
+			"class Y<U> extends X<U> {\n" +
+			"/** @see X#X(ArrayList) */\n" +
+			"Y(List<U> lu) { super(null); }\n" +
+			"}\n"
+		},
+		"----------\n" +
+		"1. WARNING in X.java (at line 7)\n" +
+		"	Y(List<U> lu) { super(null); }\n" +
+		"	          ^^\n" +
+		"Javadoc: Missing tag for parameter lu\n" +
+		"----------\n"
+	);
 }
 public void testBug258798_2c() {
 	this.reportMissingJavadocTags = CompilerOptions.WARNING;
-	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		runNegativeTest(
-			new String[] {
-				"X.java",
-				"import java.util.*;\n" +
-				"public class X<T> {\n" +
-				"X(Object o) {}\n" +
-				"}\n" +
-				"class Y<U> extends X<U> {\n" +
-				"/** @see X#X(Object) */\n" +
-				"Y(List<U> lu) { super(lu); }\n" +
-				"}\n"
-			},
-			"----------\n" +
-			"1. WARNING in X.java (at line 7)\n" +
-			"	Y(List<U> lu) { super(lu); }\n" +
-			"	          ^^\n" +
-			"Javadoc: Missing tag for parameter lu\n" +
-			"----------\n"
-		);
-	}
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"import java.util.*;\n" +
+			"public class X<T> {\n" +
+			"X(Object o) {}\n" +
+			"}\n" +
+			"class Y<U> extends X<U> {\n" +
+			"/** @see X#X(Object) */\n" +
+			"Y(List<U> lu) { super(lu); }\n" +
+			"}\n"
+		},
+		"----------\n" +
+		"1. WARNING in X.java (at line 7)\n" +
+		"	Y(List<U> lu) { super(lu); }\n" +
+		"	          ^^\n" +
+		"Javadoc: Missing tag for parameter lu\n" +
+		"----------\n"
+	);
 }
 public void testBug258798_3() {
 	this.reportMissingJavadocTags = CompilerOptions.WARNING;
-	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		runConformTest(
-			new String[] {
-				"X.java",
-				"import java.util.*;\n" +
-				"public class X<T> {\n" +
-				"X(List<T> lt) {}\n" +
-				"}\n" +
-				"class Y<U> extends X<U> {\n" +
-				"/** @see X#X(List) */\n" +
-				"Y(List<U> lu) { super(null); }\n" +
-				"}\n"
-			}
-		);
-	}
+	runConformTest(
+		new String[] {
+			"X.java",
+			"import java.util.*;\n" +
+			"public class X<T> {\n" +
+			"X(List<T> lt) {}\n" +
+			"}\n" +
+			"class Y<U> extends X<U> {\n" +
+			"/** @see X#X(List) */\n" +
+			"Y(List<U> lu) { super(null); }\n" +
+			"}\n"
+		}
+	);
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=247037, make sure that we complain when @inheritdoc
@@ -8807,9 +8424,6 @@ public void testBug292510() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=316782
 // Test to verify that turning on process annotations doesn't turn on javadoc check
 public void testBug316782() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
 	this.processAnnotations = CompilerOptions.ENABLED;
 	this.docCommentSupport = CompilerOptions.DISABLED;
 	runConformTest(

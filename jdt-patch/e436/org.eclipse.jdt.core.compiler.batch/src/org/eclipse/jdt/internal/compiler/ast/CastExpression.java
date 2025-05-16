@@ -34,7 +34,6 @@ package org.eclipse.jdt.internal.compiler.ast;
 import static org.eclipse.jdt.internal.compiler.ast.ExpressionContext.CASTING_CONTEXT;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
@@ -597,12 +596,10 @@ public TypeBinding resolveType(BlockScope scope) {
 	boolean exprContainCast = false;
 
 	TypeBinding castType = this.resolvedType = this.type.resolveType(scope);
-	if (scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_8) {
-		this.expression.setExpressionContext(CASTING_CONTEXT);
-		if (this.expression instanceof FunctionalExpression) {
-			this.expression.setExpectedType(this.resolvedType);
-			this.bits |= ASTNode.DisableUnnecessaryCastCheck;
-		}
+	this.expression.setExpressionContext(CASTING_CONTEXT);
+	if (this.expression instanceof FunctionalExpression) {
+		this.expression.setExpectedType(this.resolvedType);
+		this.bits |= ASTNode.DisableUnnecessaryCastCheck;
 	}
 	if (this.expression instanceof CastExpression) {
 		this.expression.bits |= ASTNode.DisableUnnecessaryCastCheck;

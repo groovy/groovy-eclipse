@@ -29,7 +29,6 @@ import org.eclipse.jdt.internal.codeassist.complete.CompletionNodeDetector;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionParser;
 import org.eclipse.jdt.internal.codeassist.impl.AssistCompilationUnit;
 import org.eclipse.jdt.internal.compiler.ast.*;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.IElementInfo;
 import org.eclipse.jdt.internal.compiler.env.ITypeAnnotationWalker;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
@@ -877,8 +876,6 @@ public class InternalExtendedCompletionContext {
 	public boolean canUseDiamond(String[] parameterTypes, char[] fullyQualifiedTypeName) {
 		TypeBinding guessedType = null;
 		char[][] cn = CharOperation.splitOn('.', fullyQualifiedTypeName);
-		Scope scope = this.assistScope;
-		if (scope.compilerOptions().sourceLevel < ClassFileConstants.JDK1_7) return false;
 		// If no LHS or return type expected, then we can safely use diamond
 		char[][] expectedTypekeys= this.completionContext.getExpectedTypesKeys();
 		if (expectedTypekeys == null || expectedTypekeys.length == 0)
@@ -891,6 +888,7 @@ public class InternalExtendedCompletionContext {
 		} else {
 			ref = new QualifiedTypeReference(cn,new long[cn.length]);
 		}
+		Scope scope = this.assistScope;
 		switch (scope.kind) {
 			case Scope.METHOD_SCOPE :
 			case Scope.BLOCK_SCOPE :
@@ -916,9 +914,6 @@ public class InternalExtendedCompletionContext {
 	}
 
 	public boolean canUseDiamond(String[] parameterTypes, char[][] typeVariables) {
-		Scope scope = this.assistScope;
-		if (scope.compilerOptions().sourceLevel < ClassFileConstants.JDK1_7)
-			return false;
 		// If no LHS or return type expected, then we can safely use diamond
 		char[][] expectedTypekeys = this.completionContext.getExpectedTypesKeys();
 		if (expectedTypekeys == null || expectedTypekeys.length == 0)

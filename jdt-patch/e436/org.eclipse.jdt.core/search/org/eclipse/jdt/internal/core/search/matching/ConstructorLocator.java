@@ -182,7 +182,7 @@ protected int matchLevelForDeclarations(ConstructorDeclaration constructor) {
 
 	if (this.pattern.parameterSimpleNames != null) {
 		int length = this.pattern.parameterSimpleNames.length;
-		Argument[] args = constructor.arguments;
+		AbstractVariableDeclaration[] args = constructor.arguments(true);
 		int argsLength = args == null ? 0 : args.length;
 		if (length != argsLength) return IMPOSSIBLE_MATCH;
 	}

@@ -17,6 +17,7 @@ package org.eclipse.jdt.core;
 
 import java.util.Collections;
 import java.util.Map;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -845,4 +846,19 @@ CompilationUnit reconcile(int astLevel, int reconcileFlags, WorkingCopyOwner own
  */
 @Override
 void restore() throws JavaModelException;
+
+/**
+ * Can be used to synchronize the internally used modification stamp to its corresponding {@link IResource}s
+ * modification stamp. <br>
+ * Default implementation does nothing.
+ *
+ * @throws JavaModelException
+ *                                can be thrown if the last modification stamp of the corresponding {@link IResource}
+ *                                object isn't set.
+ * @see IResource#getModificationStamp()
+ * @since 3.42
+ */
+default void updateTimeStamp() throws JavaModelException {
+	// does nothing by default
+}
 }

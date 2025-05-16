@@ -356,16 +356,8 @@ public boolean canBeSeenBy(ReferenceBinding receiverType, ReferenceBinding invoc
 	if (isPrivate()) {
 		// answer true if the receiverType is the receiver or its enclosingType
 		// AND the invocationType and the receiver have a common enclosingType
-		receiverCheck: {
-			if (!(TypeBinding.equalsEquals(receiverType, this) || TypeBinding.equalsEquals(receiverType, enclosingType()))) {
-				// special tolerance for type variable direct bounds, but only if compliance <= 1.6, see: https://bugs.eclipse.org/bugs/show_bug.cgi?id=334622
-				if (receiverType.isTypeVariable()) {
-					TypeVariableBinding typeVariable = (TypeVariableBinding) receiverType;
-					if (typeVariable.environment.globalOptions.complianceLevel <= ClassFileConstants.JDK1_6 && (typeVariable.isErasureBoundTo(erasure()) || typeVariable.isErasureBoundTo(enclosingType().erasure())))
-						break receiverCheck;
-				}
-				return false;
-			}
+		if (!(TypeBinding.equalsEquals(receiverType, this) || TypeBinding.equalsEquals(receiverType, enclosingType()))) {
+			return false;
 		}
 
 		if (TypeBinding.notEquals(invocationType, this)) {
@@ -1116,13 +1108,7 @@ public MethodBinding getExactMethod(char[] selector, TypeBinding[] argumentTypes
 public FieldBinding getField(char[] fieldName, boolean needResolve) {
 	return null;
 }
-public RecordComponentBinding getComponent(char[] componentName, boolean needResolve) {
-	return null;
-}
-// adding this since we don't use sorting for components
-public RecordComponentBinding getRecordComponent(char[] name) {
-	return null;
-}
+
 /**
  * @see org.eclipse.jdt.internal.compiler.env.IDependent#getFileName()
  */
@@ -1404,6 +1390,11 @@ public final boolean isBinaryBinding() {
 @Override
 public boolean isClass() {
 	return (this.modifiers & (ClassFileConstants.AccInterface | ClassFileConstants.AccAnnotation | ClassFileConstants.AccEnum)) == 0;
+}
+
+@Override
+public boolean isRecord() {
+	return (this.modifiers & ExtraCompilerModifiers.AccRecord) != 0;
 }
 
 private static SourceTypeBinding getSourceTypeBinding(ReferenceBinding ref) {
@@ -1729,6 +1720,7 @@ public final boolean isStrictfp() {
  */
 public boolean isSuperclassOf(ReferenceBinding otherType) {
 	while ((otherType = otherType.superclass()) != null) {
+		otherType = (ReferenceBinding) InferenceContext18.maybeCapture(otherType);
 		if (otherType.isEquivalentTo(this)) return true;
 	}
 	return false;
@@ -2119,9 +2111,6 @@ public FieldBinding[] unResolvedFields() {
 	return Binding.NO_FIELDS;
 }
 
-public RecordComponentBinding[] unResolvedComponents() {
-	return Binding.NO_COMPONENTS;
-}
 /*
  * If a type - known to be a Closeable - is mentioned in one of our white lists
  * answer the typeBit for the white list (BitWrapperCloseable or BitResourceFreeCloseable).

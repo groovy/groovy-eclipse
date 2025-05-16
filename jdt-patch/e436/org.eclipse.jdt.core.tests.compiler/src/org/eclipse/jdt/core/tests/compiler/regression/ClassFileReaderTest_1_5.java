@@ -22,7 +22,6 @@ import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.core.util.IClassFileReader;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 @SuppressWarnings({ "rawtypes" })
 public class ClassFileReaderTest_1_5 extends AbstractRegressionTest {
@@ -422,10 +421,8 @@ public class ClassFileReaderTest_1_5 extends AbstractRegressionTest {
 		String expectedOutput =
 			"abstract interface p.package-info {\n" +
 			"}";
-		if (this.complianceLevel > ClassFileConstants.JDK1_5) {
-			expectedOutput = "abstract synthetic interface p.package-info {\n" +
-			"}";
-		}
+		expectedOutput = "abstract synthetic interface p.package-info {\n" +
+		"}";
 		checkClassFile("p", "package-info", source, expectedOutput, ClassFileBytesDisassembler.DEFAULT);
 	}
 	/**

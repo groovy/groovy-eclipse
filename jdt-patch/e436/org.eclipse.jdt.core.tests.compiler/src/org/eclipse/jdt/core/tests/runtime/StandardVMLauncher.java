@@ -114,12 +114,8 @@ public String[] getCommandLine() {
 		if (vmVersion < ClassFileConstants.JDK13) { // FailOverToOldVerifier deprecated from 13
 			commandLine.add("-XX:-FailOverToOldVerifier");
 		}
-		if (vmVersion >= ClassFileConstants.JDK1_6) {
-			commandLine.add("-Xverify:all");
-		}
-		if (vmVersion >= ClassFileConstants.JDK1_7) {
-			commandLine.add("-XX:+UnlockExperimentalVMOptions");
-		}
+		commandLine.add("-Xverify:all");
+		commandLine.add("-XX:+UnlockExperimentalVMOptions");
 	}
 
 	// debug mode

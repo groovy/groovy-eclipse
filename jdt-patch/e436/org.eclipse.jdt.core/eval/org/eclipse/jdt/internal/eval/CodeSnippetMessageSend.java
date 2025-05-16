@@ -28,7 +28,6 @@ import org.eclipse.jdt.internal.compiler.ast.CastExpression;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.MessageSend;
 import org.eclipse.jdt.internal.compiler.ast.NameReference;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.Opcodes;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
@@ -257,7 +256,7 @@ public TypeBinding resolveType(BlockScope scope) {
 		this.resolvedType = this.binding.returnType.capture(scope, this.sourceStart, this.sourceEnd);
 		return methodType;
 	}
-	
+
 	if (!this.binding.isValidBinding()) {
 		if (this.binding instanceof ProblemMethodBinding
 			&& ((ProblemMethodBinding) this.binding).problemId() == ProblemReasons.NotVisible) {
@@ -338,7 +337,6 @@ public TypeBinding resolveType(BlockScope scope) {
 	// from 1.5 compliance on, array#clone() returns the array type (but binding still shows Object)
 	if (this.actualReceiverType.isArrayType()
 			&& this.binding.parameters == Binding.NO_PARAMETERS
-			&& scope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_5
 			&& CharOperation.equals(this.binding.selector, CLONE)) {
 		this.resolvedType = this.actualReceiverType;
 	} else {

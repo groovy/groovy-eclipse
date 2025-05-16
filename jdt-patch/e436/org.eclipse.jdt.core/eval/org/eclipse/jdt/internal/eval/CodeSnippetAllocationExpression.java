@@ -155,7 +155,7 @@ public TypeBinding resolveType(BlockScope scope) {
 	// resolve type arguments (for generic constructor call)
 	if (this.typeArguments != null) {
 		int length = this.typeArguments.length;
-		this.argumentsHaveErrors = scope.compilerOptions().sourceLevel < ClassFileConstants.JDK1_5;
+		this.argumentsHaveErrors = false;
 		this.genericTypeArguments = new TypeBinding[length];
 		for (int i = 0; i < length; i++) {
 			TypeReference typeReference = this.typeArguments[i];

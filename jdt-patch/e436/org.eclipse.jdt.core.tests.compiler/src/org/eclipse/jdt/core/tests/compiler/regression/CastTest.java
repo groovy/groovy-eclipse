@@ -995,32 +995,6 @@ public void test025() {
  */
 public void test026() {
 
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
-	if (options.sourceLevel < ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(
-			new String[] {
-				"X.java",
-				"public class X {\n" +
-				"  public static void main(String[] args) {\n" +
-				"    A a = null;\n" +
-				"    B b = (B) a;\n" +
-				"  }\n" +
-				"}\n" +
-				"interface A {\n" +
-				"  void doSomething();\n" +
-				"}\n" +
-				"interface B {\n" +
-				"  int doSomething();\n" +
-				"}",
-			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 4)\n" +
-			"	B b = (B) a;\n" +
-			"	      ^^^^^\n" +
-			"Cannot cast from A to B\n" +
-			"----------\n");
-		return;
-	}
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -1044,32 +1018,6 @@ public void test026() {
  * https://bugs.eclipse.org/bugs/show_bug.cgi?id=47074
  */
 public void test027() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
-	if (options.sourceLevel < ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(
-			new String[] {
-				"X.java",
-				"public class X {\n" +
-				"  public static void main(String[] args) {\n" +
-				"    A a = null;\n" +
-				"    boolean b = a instanceof B;\n" +
-				"  }\n" +
-				"}\n" +
-				"interface A {\n" +
-				"  void doSomething();\n" +
-				"}\n" +
-				"interface B {\n" +
-				"  int doSomething();\n" +
-				"}",
-			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 4)\n" +
-			"	boolean b = a instanceof B;\n" +
-			"	            ^^^^^^^^^^^^^^\n" +
-			"Incompatible conditional operand types A and B\n" +
-			"----------\n");
-		return;
-	}
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -1092,33 +1040,6 @@ public void test027() {
  * https://bugs.eclipse.org/bugs/show_bug.cgi?id=47074
  */
 public void test028() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
-	if (options.sourceLevel < ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(
-			new String[] {
-				"X.java",
-				"public class X {\n" +
-				"  public static void main(String[] args) {\n" +
-				"    A a = null;\n" +
-				"    B b = null;\n" +
-				"    boolean c = a == b;\n" +
-				"  }\n" +
-				"}\n" +
-				"interface A {\n" +
-				"  void doSomething();\n" +
-				"}\n" +
-				"interface B {\n" +
-				"  int doSomething();\n" +
-				"}",
-			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
-			"	boolean c = a == b;\n" +
-			"	            ^^^^^^\n" +
-			"Incompatible operand types A and B\n" +
-			"----------\n");
-		return;
-	}
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -1781,8 +1702,6 @@ public void test046() {
 // Test to make sure that an unnecessary cast warning is produced in case of
 // wrapper types like Integer, Character, Short, Byte, etc.
 public void test047() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
-	if (options.sourceLevel < ClassFileConstants.JDK1_5) return;
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -1816,7 +1735,6 @@ public void test047() {
 	);
 }
 public void testBug418795() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return; // uses autoboxing
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.ERROR);
 	runConformTest(
@@ -1849,7 +1767,6 @@ public void testBug418795() {
 		options);
 }
 public void testBug329437() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return; // uses autoboxing
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.ERROR);
 	runConformTest(
@@ -1890,8 +1807,6 @@ public void testBug521778() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=302919
 public void test048() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
-	if (options.sourceLevel < ClassFileConstants.JDK1_5) return;
 	this.runNegativeTest(
 		new String[] {
 			"A.java",
@@ -1919,8 +1834,6 @@ public void test048() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=302919
 public void test049() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
-	if (options.sourceLevel < ClassFileConstants.JDK1_5) return;
 	Runner runner = new Runner();
 	runner.testFiles =
 		new String[] {
@@ -1953,8 +1866,6 @@ public void test049() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=302919
 public void test050() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
-	if (options.sourceLevel < ClassFileConstants.JDK1_5) return;
 	this.runNegativeTest(
 		new String[] {
 			"A.java",
@@ -1982,7 +1893,6 @@ public void test050() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=353085
 public void test051() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
 	String source =
 			"public class X {\n" +
 			"	public static void main(String[] args) {\n" +
@@ -1994,32 +1904,16 @@ public void test051() {
 			"		return Boolean.TRUE;\n" +
 			"	}\n" +
 			"}";
-	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 4)\n" +
-				"	boolean y = (boolean) x;\n" +
-				"	            ^^^^^^^^^^^\n" +
-				"Cannot cast from Object to boolean\n" +
-				"----------\n"
-			);
-	} else {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"true"
-			);
-	}
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				source
+			},
+			"true"
+		);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=353085
 public void test052() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
 	String source =
 			"public class X {\n" +
 			"	public static void main(String[] args) {\n" +
@@ -2031,32 +1925,16 @@ public void test052() {
 			"		return Byte.valueOf((byte)1);\n" +
 			"	}\n" +
 			"}";
-	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 4)\n" +
-				"	byte y = (byte) x;\n" +
-				"	         ^^^^^^^^\n" +
-				"Cannot cast from Object to byte\n" +
-				"----------\n"
-			);
-	} else {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"1"
-			);
-	}
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				source
+			},
+			"1"
+		);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=353085
 public void test053() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
 	String source =
 			"public class X {\n" +
 			"	public static void main(String[] args) {\n" +
@@ -2068,33 +1946,17 @@ public void test053() {
 			"		return Character.valueOf('d');\n" +
 			"	}\n" +
 			"}";
-	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 4)\n" +
-				"	char y = (char) x;\n" +
-				"	         ^^^^^^^^\n" +
-				"Cannot cast from Object to char\n" +
-				"----------\n"
-			);
-	} else {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"d"
-			);
-	}
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				source
+			},
+			"d"
+		);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=353085
 // Also confirm that a check cast and unboxing conversion are generated.
 public void test054() throws Exception {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
 	String source =
 			"public class X {\n" +
 			"	public static void main(String[] args) {\n" +
@@ -2106,67 +1968,51 @@ public void test054() throws Exception {
 			"		return Integer.valueOf(1);\n" +
 			"	}\n" +
 			"}";
-	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 4)\n" +
-				"	int y = (int) x;\n" +
-				"	        ^^^^^^^\n" +
-				"Cannot cast from Object to int\n" +
-				"----------\n"
-			);
-	} else {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"1"
-			);
-		String expectedOutput =
-				"  // Method descriptor #15 ([Ljava/lang/String;)V\n" +
-				"  // Stack: 2, Locals: 3\n" +
-				"  public static void main(java.lang.String[] args);\n" +
-				"     0  invokestatic X.foo() : java.lang.Object [16]\n" +
-				"     3  astore_1 [x]\n" +
-				"     4  aload_1 [x]\n" +
-				"     5  checkcast java.lang.Integer [20]\n" +
-				"     8  invokevirtual java.lang.Integer.intValue() : int [22]\n" +
-				"    11  istore_2 [y]\n" +
-				"    12  getstatic java.lang.System.out : java.io.PrintStream [26]\n" +
-				"    15  iload_2 [y]\n" +
-				"    16  invokevirtual java.io.PrintStream.println(int) : void [32]\n" +
-				"    19  return\n" +
-				"      Line numbers:\n" +
-				"        [pc: 0, line: 3]\n" +
-				"        [pc: 4, line: 4]\n" +
-				"        [pc: 12, line: 5]\n" +
-				"        [pc: 19, line: 6]\n" +
-				"      Local variable table:\n" +
-				"        [pc: 0, pc: 20] local: args index: 0 type: java.lang.String[]\n" +
-				"        [pc: 4, pc: 20] local: x index: 1 type: java.lang.Object\n" +
-				"        [pc: 12, pc: 20] local: y index: 2 type: int\n" +
-				"  \n";
-		File f = new File(OUTPUT_DIR + File.separator + "X.class");
-		byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(f);
-		ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
-		String result = disassembler.disassemble(classFileBytes, "\n", ClassFileBytesDisassembler.DETAILED);
-		int index = result.indexOf(expectedOutput);
-		if (index == -1 || expectedOutput.length() == 0) {
-			System.out.println(Util.displayString(result, 3));
-		}
-		if (index == -1) {
-			assertEquals("Wrong contents", expectedOutput, result);
-		}
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				source
+			},
+			"1"
+		);
+	String expectedOutput =
+			"  // Method descriptor #15 ([Ljava/lang/String;)V\n" +
+			"  // Stack: 2, Locals: 3\n" +
+			"  public static void main(java.lang.String[] args);\n" +
+			"     0  invokestatic X.foo() : java.lang.Object [16]\n" +
+			"     3  astore_1 [x]\n" +
+			"     4  aload_1 [x]\n" +
+			"     5  checkcast java.lang.Integer [20]\n" +
+			"     8  invokevirtual java.lang.Integer.intValue() : int [22]\n" +
+			"    11  istore_2 [y]\n" +
+			"    12  getstatic java.lang.System.out : java.io.PrintStream [26]\n" +
+			"    15  iload_2 [y]\n" +
+			"    16  invokevirtual java.io.PrintStream.println(int) : void [32]\n" +
+			"    19  return\n" +
+			"      Line numbers:\n" +
+			"        [pc: 0, line: 3]\n" +
+			"        [pc: 4, line: 4]\n" +
+			"        [pc: 12, line: 5]\n" +
+			"        [pc: 19, line: 6]\n" +
+			"      Local variable table:\n" +
+			"        [pc: 0, pc: 20] local: args index: 0 type: java.lang.String[]\n" +
+			"        [pc: 4, pc: 20] local: x index: 1 type: java.lang.Object\n" +
+			"        [pc: 12, pc: 20] local: y index: 2 type: int\n" +
+			"  \n";
+	File f = new File(OUTPUT_DIR + File.separator + "X.class");
+	byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(f);
+	ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
+	String result = disassembler.disassemble(classFileBytes, "\n", ClassFileBytesDisassembler.DETAILED);
+	int index = result.indexOf(expectedOutput);
+	if (index == -1 || expectedOutput.length() == 0) {
+		System.out.println(Util.displayString(result, 3));
+	}
+	if (index == -1) {
+		assertEquals("Wrong contents", expectedOutput, result);
 	}
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=353085
 public void test055() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
 	String source =
 			"public class X {\n" +
 			"	public static void main(String[] args) {\n" +
@@ -2178,32 +2024,16 @@ public void test055() {
 			"		return Long.valueOf(Long.MAX_VALUE);\n" +
 			"	}\n" +
 			"}";
-	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 4)\n" +
-				"	long y = (long) x;\n" +
-				"	         ^^^^^^^^\n" +
-				"Cannot cast from Object to long\n" +
-				"----------\n"
-			);
-	} else {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"9223372036854775807"
-			);
-	}
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				source
+			},
+			"9223372036854775807"
+		);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=353085
 public void test056() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
 	String source =
 			"public class X {\n" +
 			"	public static void main(String[] args) {\n" +
@@ -2215,32 +2045,16 @@ public void test056() {
 			"		return Short.valueOf((short) 1);\n" +
 			"	}\n" +
 			"}";
-	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 4)\n" +
-				"	short y = (short) x;\n" +
-				"	          ^^^^^^^^^\n" +
-				"Cannot cast from Object to short\n" +
-				"----------\n"
-			);
-	} else {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"1"
-			);
-	}
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				source
+			},
+			"1"
+		);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=353085
 public void test057() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
 	String source =
 			"public class X {\n" +
 			"	public static void main(String[] args) {\n" +
@@ -2252,32 +2066,16 @@ public void test057() {
 			"		return Double.valueOf(1.0);\n" +
 			"	}\n" +
 			"}";
-	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 4)\n" +
-				"	double y = (double) x;\n" +
-				"	           ^^^^^^^^^^\n" +
-				"Cannot cast from Object to double\n" +
-				"----------\n"
-			);
-	} else {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"1.0"
-			);
-	}
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				source
+			},
+			"1.0"
+		);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=353085
 public void test058() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
 	String source =
 			"public class X {\n" +
 			"	public static void main(String[] args) {\n" +
@@ -2289,32 +2087,16 @@ public void test058() {
 			"		return Float.valueOf(1.0f);\n" +
 			"	}\n" +
 			"}";
-	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 4)\n" +
-				"	float y = (float) x;\n" +
-				"	          ^^^^^^^^^\n" +
-				"Cannot cast from Object to float\n" +
-				"----------\n"
-			);
-	} else {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"1.0"
-			);
-	}
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				source
+			},
+			"1.0"
+		);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=353085
 public void test059() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
 	String source =
 			"public class X {\n" +
 			"	public static void main(String[] args) {\n" +
@@ -2331,32 +2113,16 @@ public void test059() {
 			"		return Float.valueOf(1.0f);\n" +
 			"	}\n" +
 			"}";
-	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 5)\n" +
-				"	int y = (int) x;\n" +
-				"	        ^^^^^^^\n" +
-				"Cannot cast from Object to int\n" +
-				"----------\n"
-			);
-	} else {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"SUCCESS"
-			);
-	}
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				source
+			},
+			"SUCCESS"
+		);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=353085
 public void test059b() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
 	String source =
 			"public class X {\n" +
 			"	public static void main(String[] args) {\n" +
@@ -2373,32 +2139,16 @@ public void test059b() {
 			"		return Boolean.TRUE;\n" +
 			"	}\n" +
 			"}";
-	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 5)\n" +
-				"	int y = (int) x;\n" +
-				"	        ^^^^^^^\n" +
-				"Cannot cast from Object to int\n" +
-				"----------\n"
-			);
-	} else {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"SUCCESS"
-			);
-	}
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				source
+			},
+			"SUCCESS"
+		);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=353085
 public void test059c() {
-	CompilerOptions options = new CompilerOptions(getCompilerOptions());
 	String source =
 			"public class X {\n" +
 			"	public static void main(String[] args) {\n" +
@@ -2415,28 +2165,13 @@ public void test059c() {
 			"		return Boolean.TRUE;\n" +
 			"	}\n" +
 			"}";
-	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"----------\n" +
-				"1. ERROR in X.java (at line 5)\n" +
-				"	char y = (char) x;\n" +
-				"	         ^^^^^^^^\n" +
-				"Cannot cast from Object to char\n" +
-				"----------\n"
-			);
-	} else {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					source
-				},
-				"SUCCESS"
-			);
-	}
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				source
+			},
+			"SUCCESS"
+		);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=353085
 public void test060() {
@@ -2535,36 +2270,6 @@ public void test061b() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=420283, [1.8] Wrong error "Type is not visible" for cast to intersection type
 public void test420283() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		this.runNegativeTest(
-				new String[] {
-					"X.java",
-					"import java.io.Serializable;\n" +
-					"import java.util.List;\n" +
-					"public class X {\n" +
-					"    void foo(List<Integer> l) {\n" +
-					"        Integer i = (Integer & Serializable) l.get(0);\n" +
-					"    }\n" +
-					"    public static void main(String [] args) {\n" +
-					"        System.out.println(\"SUCCESS\");\n" +
-					"    }\n" +
-					"}\n"
-				},
-				"----------\n" +
-				"1. WARNING in X.java (at line 5)\n" +
-				"	Integer i = (Integer & Serializable) l.get(0);\n" +
-				"	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-				"Unnecessary cast from Integer to Integer & Serializable\n" +
-				"----------\n" +
-				"2. ERROR in X.java (at line 5)\n" +
-				"	Integer i = (Integer & Serializable) l.get(0);\n" +
-				"	             ^^^^^^^^^^^^^^^^^^^^^^\n" +
-				"Additional bounds are not allowed in cast operator at source levels below 1.8\n" +
-				"----------\n");
-		return;
-	}
 	this.runConformTest(
 			new String[] {
 				"X.java",
@@ -2595,30 +2300,14 @@ public void testBug428274() {
 			"		setValue(Double.valueOf(3.7));\n" +
 			"	}\n" +
 			"}\n";
-	if (this.complianceLevel < ClassFileConstants.JDK1_7) {
-		runNegativeTest(
-			new String[] {
-				"Junk4.java",
-				source
-			},
-			"----------\n" +
-			"1. ERROR in Junk4.java (at line 3)\n" +
-			"	int rounded = (int) Math.round((double) n);\n" +
-			"	                               ^^^^^^^^^^\n" +
-			"Cannot cast from Number to double\n" +
-			"----------\n");
-	} else {
-		runConformTest(
-			new String[] {
-				"Junk4.java",
-				source
-			},
-			"3\n4");
-	}
+	runConformTest(
+		new String[] {
+			"Junk4.java",
+			source
+		},
+		"3\n4");
 }
 public void testBug428274b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return; // uses generics
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"Junk4.java",
@@ -2634,21 +2323,10 @@ public void testBug428274b() {
 			"	}\n" +
 			"}\n"
 	};
-	if (this.complianceLevel < ClassFileConstants.JDK1_7) {
-		runner.expectedCompilerLog =
-			"----------\n" +
-			"1. ERROR in Junk4.java (at line 3)\n" +
-			"	int rounded = (int) Math.round((double) n);\n" +
-			"	                               ^^^^^^^^^^\n" +
-			"Cannot cast from T to double\n" +
-			"----------\n";
-		runner.runNegativeTest();
-	} else {
-		runner.expectedOutputString =
-			"3\n4";
-		runner.javacTestOptions = JavacTestOptions.JavacHasABug.JavacBug8144832;
-		runner.runConformTest();
-	}
+	runner.expectedOutputString =
+		"3\n4";
+	runner.javacTestOptions = JavacTestOptions.JavacHasABug.JavacBug8144832;
+	runner.runConformTest();
 }
 // note: spec allows all reference types, but neither javac nor common sense accept arrays :)
 public void testBug428274c() {
@@ -2694,9 +2372,6 @@ public void test428388() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428388, [1.8][compiler] Casting to primitives is over tolerant - probable regression since bug 428274
 public void test428388a() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
-
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -2776,8 +2451,6 @@ public void test428388b() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428388, [1.8][compiler] Casting to primitives is over tolerant - probable regression since bug 428274
 public void test428388c() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -2800,8 +2473,6 @@ public void test428388c() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428388, [1.8][compiler] Casting to primitives is over tolerant - probable regression since bug 428274
 public void test428388d() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -2825,8 +2496,6 @@ public void test428388d() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428388, [1.8][compiler] Casting to primitives is over tolerant - probable regression since bug 428274
 public void test428388e() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -2850,8 +2519,6 @@ public void test428388e() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428388, [1.8][compiler] Casting to primitives is over tolerant - probable regression since bug 428274
 public void test428388f() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -2875,8 +2542,6 @@ public void test428388f() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428388, [1.8][compiler] Casting to primitives is over tolerant - probable regression since bug 428274
 public void test428388g() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -2911,8 +2576,6 @@ public void test428388g() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428388, [1.8][compiler] Casting to primitives is over tolerant - probable regression since bug 428274
 public void test428388h() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return; // uses intersection cast
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -2941,8 +2604,6 @@ public void test428388h() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428388, [1.8][compiler] Casting to primitives is over tolerant - probable regression since bug 428274
 public void test428388i() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -2996,8 +2657,6 @@ public void test428388i() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428388, [1.8][compiler] Casting to primitives is over tolerant - probable regression since bug 428274
 public void test428388j() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return; // uses intersection cast
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -3016,8 +2675,6 @@ public void test428388j() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428522,  [1.8] VerifyError when a non primitive type cast to primitive type
 public void test428522() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
 	this.runConformTest(
@@ -3069,8 +2726,6 @@ public void test428522() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428522,  [1.8] VerifyError when a non primitive type cast to primitive type
 public void test428522a() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.PRESERVE);
 	this.runConformTest(
@@ -3123,8 +2778,6 @@ public void test428522a() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428522,  [1.8] VerifyError when a non primitive type cast to primitive type
 public void test428522b() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
 	this.runConformTest(
@@ -3145,8 +2798,6 @@ public void test428522b() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428522,  [1.8] VerifyError when a non primitive type cast to primitive type
 public void test428522c() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
 	this.runConformTest(
@@ -3199,8 +2850,6 @@ public void test428522c() throws Exception {
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=441731 JDT reports unnecessary cast, using the Quickfix to remove it creates syntax error
 public void test441731() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.ERROR);
 	this.runConformTest(
@@ -3221,8 +2870,6 @@ public void test441731() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=448112, [compiler] Compiler crash (ArrayIndexOutOfBoundsException at StackMapFrame.addStackItem()) with unused variable
 public void test448112() throws Exception {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
 	this.runConformTest(
@@ -3290,8 +2937,6 @@ public void test448112() throws Exception {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=461706 [1.8][compiler] "Unnecessary cast" problems for necessary cast in lambda expression
 public void test461706() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.ERROR);
 	this.runConformTest(
@@ -3326,8 +2971,6 @@ public void test461706() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=461706 [1.8][compiler] "Unnecessary cast" problems for necessary cast in lambda expression
 public void test461706a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.WARNING);
@@ -3395,8 +3038,6 @@ public void testAnonymous_bug520727() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=543727 False positive "Unnecessary cast"
 public void test543727() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.ERROR);
 	this.runConformTest(
@@ -3417,8 +3058,6 @@ public void test543727() {
 		"SUCCESS");
 }
 public void test543727_notequals() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.ERROR);
 	this.runConformTest(
@@ -3440,8 +3079,6 @@ public void test543727_notequals() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=548647 JDT reports unnecessary cast, using the Quickfix to remove it creates syntax error
 public void test548647() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.ERROR);
 	this.runConformTest(
@@ -3469,8 +3106,6 @@ public void test548647() {
 		customOptions);
 }
 public void test548647a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.WARNING);
@@ -3515,8 +3150,6 @@ public void test548647a() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=472466 [compiler] bogus warning "unnecessary cast"
 public void test472466() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.WARNING);
@@ -3648,7 +3281,6 @@ public void testBug572534() {
 }
 
 public void testGH2470() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_6) return;
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"UnnecessaryCasts.java",
@@ -3693,7 +3325,6 @@ public void testGH2470() {
 }
 
 public void testGH2470_generic() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.ERROR);
@@ -3724,7 +3355,6 @@ public void testGH2470_generic() {
 }
 
 public void testGH2470_generic2() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) return;
 	Runner runner = new Runner();
 	runner.customOptions = getCompilerOptions();
 	runner.customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.ERROR);

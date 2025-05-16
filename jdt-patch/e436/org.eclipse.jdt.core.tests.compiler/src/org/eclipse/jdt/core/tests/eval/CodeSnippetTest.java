@@ -17,7 +17,6 @@ import java.util.Map;
 import junit.framework.Test;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.eval.EvaluationResult;
@@ -893,7 +892,6 @@ public void testRunMethodInAnonymous8() {
  * https://bugs.eclipse.org/bugs/show_bug.cgi?id=89632
  */
 public void testFor89632() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	try {
 		this.context.setImports(new char[][] {"java.util.*".toCharArray()});
 		evaluateWithExpectedDisplayString(
@@ -920,12 +918,8 @@ public void testFor89632() {
  */
 public void testBug345334() {
 	Map options = getCompilerOptions();
-	if (this.complianceLevel == ClassFileConstants.JDK1_5) {
-		options.put(CompilerOptions.OPTION_ReportMissingOverrideAnnotation, CompilerOptions.ERROR);
-	} else if (this.complianceLevel >= ClassFileConstants.JDK1_6) {
-		options.put(CompilerOptions.OPTION_ReportMissingOverrideAnnotation, CompilerOptions.ERROR);
-		options.put(CompilerOptions.OPTION_ReportMissingOverrideAnnotationForInterfaceMethodImplementation, CompilerOptions.ERROR);
-	}
+	options.put(CompilerOptions.OPTION_ReportMissingOverrideAnnotation, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportMissingOverrideAnnotationForInterfaceMethodImplementation, CompilerOptions.ERROR);
 	evaluateWithExpectedDisplayString(
 			options,
 			buildCharArray(new String[] {
@@ -937,9 +931,6 @@ public void testBug345334() {
  * https://bugs.eclipse.org/bugs/show_bug.cgi?id=343693
  */
 public void testDiamond() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_7) {
-		return;
-	}
 	evaluateWithExpectedDisplayString(buildCharArray(new String[] {
 			"class X<T> {",
 			"	T field;",
@@ -957,9 +948,6 @@ public void testDiamond() {
  * https://bugs.eclipse.org/bugs/show_bug.cgi?id=464656
  */
 public void testBug464656() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		return;
-	}
 	evaluateWithExpectedDisplayString(buildCharArray(new String[] {
 			"java.util.stream.Stream<String> s = java.util.stream.Stream.of(\"a\",\"b\");\n" +
 			"return s.findFirst();"}),
@@ -967,9 +955,6 @@ public void testBug464656() {
 }
 
 public void testBug571310_ThisReciever() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		return;
-	}
 	evaluateWithExpectedDisplayString(buildCharArray(new String[] {
 			"class Outer {",
 			"	public int outerFoo() {",
@@ -985,9 +970,6 @@ public void testBug571310_ThisReciever() {
 }
 
 public void testBug571310_LocalVarReciever() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		return;
-	}
 	evaluateWithExpectedDisplayString(buildCharArray(new String[] {
 			"class Outer {",
 			"	public int outerFoo(){",
@@ -1004,9 +986,6 @@ public void testBug571310_LocalVarReciever() {
 }
 
 public void testBug571310_QualifiedReciever() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		return;
-	}
 	evaluateWithExpectedDisplayString(buildCharArray(new String[] {
 			"class Outer {",
 			"	public int outerFoo(){",
@@ -1025,9 +1004,6 @@ public void testBug571310_QualifiedReciever() {
 			"15".toCharArray());
 }
 public void testBug571310_SynthVarReciever() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		return;
-	}
 	evaluateWithExpectedDisplayString(buildCharArray(new String[] {
 			"class Outer {",
 			"	Integer intField = 10;",
@@ -1047,9 +1023,6 @@ public void testBug571310_SynthVarReciever() {
 // https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1060
 // NPE when inspecting scrapbook expression that uses Java 8 features
 public void testGH1060() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		return;
-	}
 	evaluateWithExpectedDisplayString(buildCharArray(new String[] {
 			"return java.time.format.DateTimeFormatter\r\n"
 			+ "				.ofPattern(\"yyyyMMddHHmmss.SSS000\")\r\n"

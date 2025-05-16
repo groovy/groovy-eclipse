@@ -23,7 +23,6 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
@@ -33,7 +32,7 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 
 public class DualParseSyntaxErrorTest extends AbstractCompilerTest {
 	public static boolean optimizeStringLiterals = false;
-	public static long sourceLevel = ClassFileConstants.JDK1_3; //$NON-NLS-1$
+	public static long sourceLevel = CompilerOptions.getFirstSupportedJdkLevel(); //$NON-NLS-1$
 
 public DualParseSyntaxErrorTest(String testName){
 	super(testName);

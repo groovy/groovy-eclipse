@@ -711,29 +711,36 @@ public TypeDeclaration updatedTypeDeclaration(int depth, Set<TypeDeclaration> kn
 public void updateFromParserState(){
 
 	// anymous type and enum constant doesn't need to be updated
-	if(bodyStartsAtHeaderEnd() && this.typeDeclaration.allocation == null){
+	if (bodyStartsAtHeaderEnd() && this.typeDeclaration.allocation == null) {
 		Parser parser = parser();
-		/* might want to recover implemented interfaces */
+		/* might want to recover implemented interfaces or record components */
 		// protection for bugs 15142
-		if (parser.listLength > 0 && parser.astLengthPtr > 0){ // awaiting interface type references
+		if (parser.listLength > 0 && parser.astLengthPtr > 0) { // awaiting interface type references or record components
 			int length = parser.astLengthStack[parser.astLengthPtr];
 			int astPtr = parser.astPtr - length;
 			boolean canConsume = astPtr >= 0;
-			if(canConsume) {
-				if((!(parser.astStack[astPtr] instanceof TypeDeclaration))) {
-					canConsume = false;
-				}
+			TypeDeclaration typeDecl = canConsume && parser.astStack[astPtr] instanceof TypeDeclaration td ? td : null;
+			boolean needUpdateRParenPos = parser.rParenPos < parser.lParenPos;
+			if (typeDecl != null) {
 				for (int i = 1, max = length + 1; i < max; i++) {
-					if(!(parser.astStack[astPtr + i ] instanceof TypeReference)) {
+					if (typeDecl.isRecord() && parser.parsingRecordComponents && parser.astStack[astPtr + i ] instanceof RecordComponent component) {
+						if (needUpdateRParenPos)
+							parser.rParenPos = component.sourceEnd + 1;
+						continue; // so far so good
+					} else if (parser.astStack[astPtr + i ] instanceof TypeReference) {
+						continue; // so far so good
+					} else {
 						canConsume = false;
 						break;
 					}
 				}
-			}
-			if(canConsume) {
-				parser.consumeClassHeaderImplements();
-				// will reset typeListLength to zero
-				// thus this check will only be performed on first errorCheck after class X implements Y,Z,
+				if (canConsume) {
+					if (typeDecl.isRecord() && parser.parsingRecordComponents)
+						parser.consumeRecordComponentHeaderRightParen();
+					else
+						parser.consumeClassHeaderImplements();
+					// will reset listLength to zero; thus this check will only be performed on first errorCheck after class X implements Y,Z, or record X(int x,)
+				}
 			}
 		} else if (parser.listTypeParameterLength > 0) {
 			int length = parser.listTypeParameterLength;
@@ -805,12 +812,14 @@ public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 		}
 	}
 	// might be an initializer
-	if (this.bracketBalance == 1){
+	NonInit: if (this.bracketBalance == 1){
 		Block block = new Block(0);
 		Parser parser = parser();
 		block.sourceStart = parser.scanner.startPosition;
 		Initializer init;
-		if (parser.recoveredStaticInitializerStart == 0){
+		if (parser.recoveredStaticInitializerStart == 0) {
+			if (this.typeDeclaration.isRecord())
+				break NonInit;
 			init = new Initializer(block, ClassFileConstants.AccDefault);
 		} else {
 			init = new Initializer(block, ClassFileConstants.AccStatic);

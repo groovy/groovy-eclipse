@@ -570,7 +570,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 
 		// nullity, owning and mark as assigned
 		MethodBinding methodWithParameterDeclaration = argumentsTypeElided() ? this.descriptor : this.binding;
-		AbstractMethodDeclaration.analyseArguments(currentScope.environment(), lambdaInfo, flowContext, this.arguments, methodWithParameterDeclaration);
+		AbstractMethodDeclaration.analyseArguments(currentScope.environment(), lambdaInfo, flowContext, this.arguments, methodWithParameterDeclaration, this.scope);
 
 		if (this.arguments != null) {
 			for (Argument argument : this.arguments) {

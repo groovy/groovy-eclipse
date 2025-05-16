@@ -443,7 +443,7 @@ public void test013() {
 		"	             ^^^^^^\n" +
 		"The type A.aClass must implement the inherited abstract method A.B.C.anotherMethod(int)\n" +
 		"----------\n" +
-		(this.complianceLevel < ClassFileConstants.JDK16 // GROOVY edit
+		(this.complianceLevel < ClassFileConstants.JDK16
 		?
 		"2. ERROR in p1\\A.java (at line 11)\n" +
 		"	public void anotherMethod(int A) {};	\n" +
@@ -2434,25 +2434,19 @@ public void test074() {
 		"	} \n"+
 		"} \n"
 	};
-	if (this.complianceLevel == ClassFileConstants.JDK1_3) {
-		runConformTest(
-			sources,
-			"SUCCESS");
-	} else {
-		runNegativeTest(
-			sources,
-			"----------\n" +
-			"1. ERROR in p1\\Test.java (at line 2)\n" +
-			"	import Test2;	\n" +
-			"	       ^^^^^\n" +
-			"The import Test2 cannot be resolved\n" +
-			"----------\n" +
-			"2. ERROR in p1\\Test.java (at line 3)\n" +
-			"	import Test2.Member;	\n" +
-			"	       ^^^^^\n" +
-			"The import Test2 cannot be resolved\n" +
-			"----------\n");
-	}
+	runNegativeTest(
+		sources,
+		"----------\n" +
+		"1. ERROR in p1\\Test.java (at line 2)\n" +
+		"	import Test2;	\n" +
+		"	       ^^^^^\n" +
+		"The import Test2 cannot be resolved\n" +
+		"----------\n" +
+		"2. ERROR in p1\\Test.java (at line 3)\n" +
+		"	import Test2.Member;	\n" +
+		"	       ^^^^^\n" +
+		"The import Test2 cannot be resolved\n" +
+		"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=150758
 public void test075() {
@@ -2487,33 +2481,31 @@ public void test075() {
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=159543
 public void test076() {
-	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(
-			new String[] {
-				"p/Y.java",	//===================
-				"package p;\n" +
-				"public class Y {\n" +
-				"  public static void foo(String s) {\n" +
-				"  }\n" +
-				"}\n",		//===================
-				"q/X.java",	//===================
-				"package q;\n" +
-				"import static p.Y.foo;\n" +
-				"public class X {\n" +
-				"        void foo() {\n" +
-				"        }\n" +
-				"        void bar() {\n" +
-				"          foo(\"\");\n" +
-				"        }\n" +
-				"}", 		// =================
-			},
-			"----------\n" +
-			"1. ERROR in q\\X.java (at line 7)\n" +
-			"	foo(\"\");\n" +
-			"	^^^\n" +
-			"The method foo() in the type X is not applicable for the arguments (String)\n" +
-			"----------\n");
-	}
+	this.runNegativeTest(
+		new String[] {
+			"p/Y.java",	//===================
+			"package p;\n" +
+			"public class Y {\n" +
+			"  public static void foo(String s) {\n" +
+			"  }\n" +
+			"}\n",		//===================
+			"q/X.java",	//===================
+			"package q;\n" +
+			"import static p.Y.foo;\n" +
+			"public class X {\n" +
+			"        void foo() {\n" +
+			"        }\n" +
+			"        void bar() {\n" +
+			"          foo(\"\");\n" +
+			"        }\n" +
+			"}", 		// =================
+		},
+		"----------\n" +
+		"1. ERROR in q\\X.java (at line 7)\n" +
+		"	foo(\"\");\n" +
+		"	^^^\n" +
+		"The method foo() in the type X is not applicable for the arguments (String)\n" +
+		"----------\n");
 }
 
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=159893
@@ -2741,25 +2733,9 @@ public void test083() {
 			"  void set(long value);\n" +
 			"}\n",
 		};
-	if (this.complianceLevel <= ClassFileConstants.JDK1_3) {
-		this.runNegativeTest(
-			src,
-			"----------\n" +
-			"1. ERROR in X.java (at line 12)\r\n" +
-			"	set((int)value);\r\n" +
-			"	^^^\n" +
-			"The method set(long) is ambiguous for the type Z\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 15)\r\n" +
-			"	set((int)value);\r\n" +
-			"	^^^\n" +
-			"The method set(long) is ambiguous for the type Z\n" +
-			"----------\n");
-	} else {
-		this.runConformTest(
-			src,
-			"set(1)");
-	}
+	this.runConformTest(
+		src,
+		"set(1)");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=174588
 // variant
@@ -3252,9 +3228,6 @@ public void test102() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=316956
 public void test103() {
-	Map options = getCompilerOptions();
-	CompilerOptions compOptions = new CompilerOptions(options);
-	if (compOptions.complianceLevel < ClassFileConstants.JDK1_4) return;
 	String errMessage = isMinimumCompliant(ClassFileConstants.JDK11) ?
 			"----------\n" +
 			"1. WARNING in A.java (at line 2)\n" +
@@ -3336,9 +3309,6 @@ public void test103() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=316956
 public void test104() {
-	Map options = getCompilerOptions();
-	CompilerOptions compOptions = new CompilerOptions(options);
-	if (compOptions.complianceLevel < ClassFileConstants.JDK1_4) return;
 	Runner runner = new Runner();
 	runner.testFiles =
 		new String[] {
@@ -3385,9 +3355,6 @@ public void test104() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=316956
 public void test105() {
-	Map options = getCompilerOptions();
-	CompilerOptions compOptions = new CompilerOptions(options);
-	if (compOptions.complianceLevel < ClassFileConstants.JDK1_4) return;
 	String errMessage =	isMinimumCompliant(ClassFileConstants.JDK11) ?
 			"----------\n" +
 			"1. WARNING in A.java (at line 2)\n" +
@@ -3457,8 +3424,6 @@ public void test105() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=350738
 public void test106() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.testFiles =
 		new String[] {
@@ -3491,9 +3456,6 @@ public void test106() {
 }
 
 public void testBug537828() {
-	Map options = getCompilerOptions();
-	CompilerOptions compOptions = new CompilerOptions(options);
-	if (compOptions.complianceLevel < ClassFileConstants.JDK1_4) return;
 	this.runConformTest(
 		new String[] {
 			"FieldBug.java",//------------------------------

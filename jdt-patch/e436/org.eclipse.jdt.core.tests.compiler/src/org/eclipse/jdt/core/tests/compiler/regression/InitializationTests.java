@@ -18,7 +18,6 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
 import junit.framework.Test;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -444,8 +443,6 @@ public void testBug324178c() {
 // Bug 324178 - [null] ConditionalExpression.nullStatus(..) doesn't take into account the analysis of condition itself
 // must detect that b2 may be uninitialized, no special semantics for Boolean
 public void testBug324178d() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	this.runNegativeTest(
 		new String[] {
 			"Bug324178.java",

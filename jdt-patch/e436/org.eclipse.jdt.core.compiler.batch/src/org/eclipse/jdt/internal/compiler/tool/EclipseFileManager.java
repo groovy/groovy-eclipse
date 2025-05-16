@@ -39,7 +39,6 @@ import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
 import org.eclipse.jdt.internal.compiler.batch.Main;
 import org.eclipse.jdt.internal.compiler.batch.Main.ResourceBundleFactory;
 import org.eclipse.jdt.internal.compiler.batch.ModuleFinder;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.AccessRule;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
@@ -217,6 +216,7 @@ public class EclipseFileManager implements StandardJavaFileManager {
 	private Iterable<? extends File> concatFiles(Iterable<? extends File> iterable, Iterable<? extends File> iterable2) {
 		ArrayList<File> list = new ArrayList<>();
 		if (iterable2 == null) return iterable;
+		if (iterable == null) return iterable2;
 		for (File file : iterable) {
 			list.add(file);
 		}
@@ -322,15 +322,6 @@ public class EclipseFileManager implements StandardJavaFileManager {
 
 	Iterable<? extends File> getDefaultBootclasspath() {
 		List<File> files = new ArrayList<>();
-		String javaversion = System.getProperty("java.version");//$NON-NLS-1$
-		if(javaversion.length() > 3)
-			javaversion = javaversion.substring(0, 3);
-		long jdkLevel = CompilerOptions.versionToJdkLevel(javaversion);
-		if (jdkLevel < ClassFileConstants.JDK1_6) {
-			// wrong jdk - 1.6 or above is required
-			return null;
-		}
-
 		for (FileSystem.Classpath classpath : org.eclipse.jdt.internal.compiler.util.Util.collectFilesNames()) {
 			files.add(new File(classpath.getPath()));
 		}
@@ -795,10 +786,6 @@ public class EclipseFileManager implements StandardJavaFileManager {
 						throw new IllegalArgumentException();
 					}
 				case "-extdirs": //$NON-NLS-1$
-					if (this.isOnJvm9) {
-						// XXX this should check -target == 8, not the running JVM version!
-						throw new IllegalArgumentException();
-					}
 					if (remaining.hasNext()) {
 						Iterable<? extends File> iterable = getLocation(StandardLocation.PLATFORM_CLASS_PATH);
 						setLocation(StandardLocation.PLATFORM_CLASS_PATH,

@@ -15,7 +15,6 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
@@ -31,16 +30,6 @@ public class EmptyStatement extends Statement {
 	@Override
 	public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 		return flowInfo;
-	}
-
-	// Report an error if necessary
-	@Override
-	public int complainIfUnreachable(FlowInfo flowInfo, BlockScope scope, int complaintLevel, boolean endOfBlock) {
-		// before 1.4, empty statements are tolerated anywhere
-		if (scope.compilerOptions().complianceLevel < ClassFileConstants.JDK1_4) {
-			return complaintLevel;
-		}
-		return super.complainIfUnreachable(flowInfo, scope, complaintLevel, endOfBlock);
 	}
 
 	@Override

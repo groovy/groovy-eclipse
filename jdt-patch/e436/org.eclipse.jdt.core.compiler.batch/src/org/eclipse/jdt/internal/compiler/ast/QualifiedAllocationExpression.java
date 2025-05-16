@@ -292,8 +292,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 					}
 				}
 			}
-			if (compilerOptions.sourceLevel >= ClassFileConstants.JDK1_8 &&
-					this.binding.getTypeAnnotations() != Binding.NO_ANNOTATIONS) {
+			if (this.binding.getTypeAnnotations() != Binding.NO_ANNOTATIONS) {
 				this.resolvedType = scope.environment().createAnnotatedType(this.resolvedType, this.binding.getTypeAnnotations());
 			}
 		}
@@ -379,7 +378,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 			// resolve type arguments (for generic constructor call)
 			if (this.typeArguments != null) {
 				int length = this.typeArguments.length;
-				this.argumentsHaveErrors = sourceLevel < ClassFileConstants.JDK1_5;
+				this.argumentsHaveErrors = false;
 				this.genericTypeArguments = new TypeBinding[length];
 				for (int i = 0; i < length; i++) {
 					TypeReference typeReference = this.typeArguments[i];
@@ -504,7 +503,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 				scope.problemReporter().cannotInferElidedTypes(this);
 				return this.resolvedType = null;
 			}
-			if (this.typeExpected == null && sourceLevel >= ClassFileConstants.JDK1_8 && this.expressionContext.definesTargetType()) {
+			if (this.typeExpected == null && this.expressionContext.definesTargetType()) {
 				return new PolyTypeBinding(this);
 			}
 			this.resolvedType = this.type.resolvedType = receiverType = this.binding.declaringClass;

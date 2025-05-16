@@ -311,7 +311,7 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo f
 			TypeBinding.notEquals(currentScope.enclosingSourceType(), (declaringClass = codegenBinding.declaringClass))) {
 
 		// from 1.4 on, local type constructor can lose their private flag to ease emulation
-		if ((declaringClass.tagBits & TagBits.IsLocalType) != 0 && currentScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4) {
+		if ((declaringClass.tagBits & TagBits.IsLocalType) != 0) {
 			// constructor will not be dumped as private, no emulation required thus
 			codegenBinding.tagBits |= TagBits.ClearPrivateModifier;
 		} else {
@@ -354,7 +354,6 @@ public TypeBinding resolveType(BlockScope scope) {
 	// Propagate the type checking to the arguments, and check if the constructor is defined.
 	final boolean isDiamond = this.type != null && (this.type.bits & ASTNode.IsDiamond) != 0;
 	final CompilerOptions compilerOptions = scope.compilerOptions();
-	long sourceLevel = compilerOptions.sourceLevel;
 	if (this.constant != Constant.NotAConstant) {
 		this.constant = Constant.NotAConstant;
 		if (this.type == null) {
@@ -394,7 +393,7 @@ public TypeBinding resolveType(BlockScope scope) {
 		// resolve type arguments (for generic constructor call)
 		if (this.typeArguments != null) {
 			int length = this.typeArguments.length;
-			this.argumentsHaveErrors = sourceLevel < ClassFileConstants.JDK1_5;
+			this.argumentsHaveErrors = false;
 			this.genericTypeArguments = new TypeBinding[length];
 			for (int i = 0; i < length; i++) {
 				TypeReference typeReference = this.typeArguments[i];
@@ -488,7 +487,7 @@ public TypeBinding resolveType(BlockScope scope) {
 			scope.problemReporter().cannotInferElidedTypes(this);
 			return this.resolvedType = null;
 		}
-		if (this.typeExpected == null && compilerOptions.sourceLevel >= ClassFileConstants.JDK1_8 && this.expressionContext.definesTargetType()) {
+		if (this.typeExpected == null && this.expressionContext.definesTargetType()) {
 			return new PolyTypeBinding(this);
 		}
 		this.resolvedType = this.type.resolvedType = this.binding.declaringClass;
@@ -540,8 +539,7 @@ public TypeBinding resolveType(BlockScope scope) {
 			this.resolvedType = scope.environment().createNonNullAnnotatedType(this.resolvedType);
 		}
 	}
-	if (compilerOptions.sourceLevel >= ClassFileConstants.JDK1_8 &&
-			this.binding.getTypeAnnotations() != Binding.NO_ANNOTATIONS) {
+	if (this.binding.getTypeAnnotations() != Binding.NO_ANNOTATIONS) {
 		this.resolvedType = scope.environment().createAnnotatedType(this.resolvedType, this.binding.getTypeAnnotations());
 	}
 	checkEarlyConstructionContext(scope);
@@ -637,8 +635,7 @@ public MethodBinding inferConstructorOfElidedParameterizedType(final Scope scope
 	MethodBinding constructor = inferDiamondConstructor(scope, this, this.type.resolvedType, this.argumentTypes, inferredReturnTypeOut);
 	if (constructor != null) {
 		this.inferredReturnType = inferredReturnTypeOut[0];
-		if (scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_8
-				&& this.expressionContext == INVOCATION_CONTEXT && this.typeExpected == null) { // not ready for invocation type inference
+		if (this.expressionContext == INVOCATION_CONTEXT && this.typeExpected == null) { // not ready for invocation type inference
 			if (constructor instanceof PolyParameterizedGenericMethodBinding) {
 				return constructor; // keep this placeholder binding, which also serves as a key into #inferenceContexts
 			} else if (constructor instanceof ParameterizedGenericMethodBinding) {
@@ -704,7 +701,7 @@ public TypeBinding[] inferElidedTypes(ParameterizedTypeBinding parameterizedType
 public void checkTypeArgumentRedundancy(ParameterizedTypeBinding allocationType, final BlockScope scope) {
 	if (scope.enclosingClassScope().resolvingPolyExpressionArguments) // express arguments may end up influencing the target type
 		return;                                                       // so, conservatively shut off diagnostic.
-	if ((scope.problemReporter().computeSeverity(IProblem.RedundantSpecificationOfTypeArguments) == ProblemSeverities.Ignore) || scope.compilerOptions().sourceLevel < ClassFileConstants.JDK1_7) return;
+	if ((scope.problemReporter().computeSeverity(IProblem.RedundantSpecificationOfTypeArguments) == ProblemSeverities.Ignore)) return;
 	if (allocationType.arguments == null) return;  // raw binding
 	if (this.genericTypeArguments != null) return; // diamond can't occur with explicit type args for constructor
 	if (this.type == null) return;

@@ -20,7 +20,6 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
@@ -148,19 +147,16 @@ public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
 		// autoboxing support
 		LookupEnvironment env = scope.environment();
 		TypeBinding lhsType = originalLhsType, expressionType = originalExpressionType;
-		boolean use15specifics = scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5;
 		boolean unboxedLhs = false;
-		if (use15specifics) {
-			if (!lhsType.isBaseType() && expressionType.id != T_JavaLangString && expressionType.id != T_null) {
-				TypeBinding unboxedType = env.computeBoxingType(lhsType);
-				if (TypeBinding.notEquals(unboxedType, lhsType)) {
-					lhsType = unboxedType;
-					unboxedLhs = true;
-				}
+		if (!lhsType.isBaseType() && expressionType.id != T_JavaLangString && expressionType.id != T_null) {
+			TypeBinding unboxedType = env.computeBoxingType(lhsType);
+			if (TypeBinding.notEquals(unboxedType, lhsType)) {
+				lhsType = unboxedType;
+				unboxedLhs = true;
 			}
-			if (!expressionType.isBaseType() && lhsType.id != T_JavaLangString  && lhsType.id != T_null) {
-				expressionType = env.computeBoxingType(expressionType);
-			}
+		}
+		if (!expressionType.isBaseType() && lhsType.id != T_JavaLangString  && lhsType.id != T_null) {
+			expressionType = env.computeBoxingType(expressionType);
 		}
 
 		if (restrainUsageToNumericTypes() && !lhsType.isNumericType()) {
@@ -189,16 +185,10 @@ public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
 			return null;
 		}
 		if (this.operator == PLUS){
-			if(lhsID == T_JavaLangObject && (scope.compilerOptions().complianceLevel < ClassFileConstants.JDK1_7)) {
-				// <Object> += <String> is illegal (39248) for compliance < 1.7
+			// <int | boolean> += <String> is illegal
+			if ((lhsType.isNumericType() || lhsID == T_boolean) && !expressionType.isNumericType()){
 				scope.problemReporter().invalidOperator(this, lhsType, expressionType);
 				return null;
-			} else {
-				// <int | boolean> += <String> is illegal
-				if ((lhsType.isNumericType() || lhsID == T_boolean) && !expressionType.isNumericType()){
-					scope.problemReporter().invalidOperator(this, lhsType, expressionType);
-					return null;
-				}
 			}
 		}
 		TypeBinding resultType = TypeBinding.wellKnownType(scope, result & 0x0000F);

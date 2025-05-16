@@ -144,8 +144,7 @@ public void test001c_1() {
 		"----------\n");
 }
 public void test001d() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		this.runNegativeTest(
+	this.runConformTest(
 			new String[] {
 				"X.java",
 				"import java.util.ArrayList;\n" +
@@ -159,33 +158,10 @@ public void test001d() {
 				"	}\n" +
 				"}",
 			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 7)\n" +
-			"	x.ab(new ArrayList<>());\n" +
-			"	  ^^\n" +
-			"The method ab(ArrayList<String>) in the type X<String> is not applicable for the arguments (ArrayList<Object>)\n" +
-			"----------\n");
-	} else {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					"import java.util.ArrayList;\n" +
-					"public class X<T> {" +
-					"	public void ab(ArrayList<String> al){\n" +
-					"		System.out.println(\"SUCCESS\");\n" +
-					"	}\n" +
-					"	public static void main(String[] args) {\n" +
-					"		X<String> x = new X<>();\n" +
-					"		x.ab(new ArrayList<>());\n" +
-					"	}\n" +
-					"}",
-				},
-				"SUCCESS");
-	}
+			"SUCCESS");
 }
 public void test001e() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		this.runNegativeTest(
+	this.runConformTest(
 			new String[] {
 				"X.java",
 				"import java.util.ArrayList;\n" +
@@ -199,29 +175,7 @@ public void test001e() {
 				"	}\n" +
 				"}",
 			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 7)\n" +
-			"	x.ab(new ArrayList<>());\n" +
-			"	  ^^\n" +
-			"The method ab(ArrayList<String>) in the type X<String> is not applicable for the arguments (ArrayList<Object>)\n" +
-			"----------\n");
-	} else {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					"import java.util.ArrayList;\n" +
-					"public class X<T> {" +
-					"	public void ab(ArrayList<T> al){\n" +
-					"		System.out.println(\"SUCCESS\");\n" +
-					"	}\n" +
-					"	public static void main(String[] args) {\n" +
-					"		X<String> x = new X<>();\n" +
-					"		x.ab(new ArrayList<>());\n" +
-					"	}\n" +
-					"}",
-				},
-				"SUCCESS");
-	}
+			"SUCCESS");
 }
 public void test001f() {
 	this.runNegativeTest(
@@ -248,11 +202,7 @@ public void test001f() {
 		"2. ERROR in X.java (at line 8)\n" +
 		"	X<String>.X2<String> x = new X<>().new X2<>();\n" +
 		"	                         ^^^^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<Object>.X2<String> to X<String>.X2<String>\n"
-		:
-		"Cannot infer type arguments for X2<>\n"
-		) +
+		"Cannot infer type arguments for X2<>\n" +
 		"----------\n");
 }
 // fields
@@ -297,11 +247,7 @@ public void test001g() {
 		"1. ERROR in X.java (at line 9)\n" +
 		"	X<String>.X2<Integer> x = new X<>().new X2<>();\n" +
 		"	                          ^^^^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<Object>.X2<Integer> to X<String>.X2<Integer>\n"
-		:
-		"Cannot infer type arguments for X2<>\n"
-		) +
+		"Cannot infer type arguments for X2<>\n" +
 		"----------\n");
 }
 public void test001g_1() {
@@ -350,11 +296,7 @@ public void test001h() {
 		"2. ERROR in X.java (at line 8)\n" +
 		"	X<String>.X2<String> x = new X<>().new X2<>();\n" +
 		"	                         ^^^^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<Object>.X2<String> to X<String>.X2<String>\n"
-		:
-		"Cannot infer type arguments for X2<>\n"
-		) +
+		"Cannot infer type arguments for X2<>\n" +
 		"----------\n" +
 		"3. ERROR in X.java (at line 9)\n" +
 		"	x.methodx(1);\n" +
@@ -450,11 +392,7 @@ public void test001i() {
 		"1. ERROR in X.java (at line 10)\n" +
 		"	X<String> test = new X<>();		X<String>.X2<Integer>.X22<X<String>> x = new X<>().new X2<>().new X22<>();\n" +
 		"	                           		                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<Object>.X2<Object>.X22<X<String>> to X<String>.X2<Integer>.X22<X<String>>\n"
-		:
-		"Cannot infer type arguments for X22<>\n"
-		) +
+		"Cannot infer type arguments for X22<>\n" +
 		"----------\n");
 }
 public void test002() {
@@ -602,8 +540,7 @@ public void test007() {
 		"2");
 }
 public void test007a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		this.runNegativeTest(
+	this.runConformTest(
 			new String[] {
 				"X.java",
 				"public class X<T> {\n" +
@@ -621,50 +558,9 @@ public void test007a() {
 				"	}\n" +
 				"}",
 			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 11)\n" +
-			"	X.testFunction(new X<>());\n" +
-			"	  ^^^^^^^^^^^^\n" +
-			"The method testFunction(X<String>) in the type X is not applicable for the arguments (X<Object>)\n" +
-			"----------\n" +
-			"2. WARNING in X.java (at line 12)\n" +
-			"	X.testFunction(new X(\"hello\"));\n" +
-			"	               ^^^^^^^^^^^^^^\n" +
-			"Type safety: The constructor X(Object) belongs to the raw type X. References to generic type X<T> should be parameterized\n" +
-			"----------\n" +
-			"3. WARNING in X.java (at line 12)\n" +
-			"	X.testFunction(new X(\"hello\"));\n" +
-			"	               ^^^^^^^^^^^^^^\n" +
-			"Type safety: The expression of type X needs unchecked conversion to conform to X<String>\n" +
-			"----------\n" +
-			"4. WARNING in X.java (at line 12)\n" +
-			"	X.testFunction(new X(\"hello\"));\n" +
-			"	                   ^\n" +
-			"X is a raw type. References to generic type X<T> should be parameterized\n" +
-			"----------\n");
-	} else {
-		this.runConformTest(
-				new String[] {
-					"X.java",
-					"public class X<T> {\n" +
-					"	public X(){\n" +
-					"	}\n" +
-					"	public X(T param){\n" +
-					"		System.out.println(param);\n" +
-					"	}\n" +
-					"	public static void testFunction(X<String> param){\n" +
-					"		System.out.println(\"SUCCESS\");\n" +
-					"	}\n" +
-					"	public static void main(String[] args) {\n" +
-					"		X.testFunction(new X<>());\n" +
-					"		X.testFunction(new X(\"hello\"));\n" +
-					"	}\n" +
-					"}",
-				},
-				"SUCCESS\n" +
-				"hello\n" +
-				"SUCCESS");
-	}
+			"SUCCESS\n" +
+			"hello\n" +
+			"SUCCESS");
 }
 //shows the difference between using <> and the raw type - different semantics
 public void test008() {
@@ -1014,8 +910,7 @@ public void test0020() {
 }
 //check inference at method argument position.
 public void test0021() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		this.runNegativeTest(
+	this.runNegativeTest(
 			new String[] {
 				"X.java",
 				"import java.util.List;\n" +
@@ -1026,26 +921,7 @@ public void test0021() {
 				"  int x = f(new ArrayList<>());\n" +
 				"}\n",
 			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 6)\n" +
-			"	int x = f(new ArrayList<>());\n" +
-			"	        ^\n" +
-			"The method f(List<String>) in the type X<T> is not applicable for the arguments (ArrayList<Object>)\n" +
-			"----------\n");
-	} else {
-		this.runNegativeTest(
-				new String[] {
-					"X.java",
-					"import java.util.List;\n" +
-					"import java.util.ArrayList;\n" +
-					"class X<T> {\n" +
-					"  public X(T t) {}\n" +
-					"  int f(List<String> p) {return 0;}\n" +
-					"  int x = f(new ArrayList<>());\n" +
-					"}\n",
-				},
-				"");
-	}
+			"");
 }
 public void test0022() {
 	this.runConformTest(
@@ -1163,34 +1039,12 @@ public void test0026() {
 			"   X<?> x6 = new X<>(list);\n" +
 			"}\n"
 		},
-		this.complianceLevel < ClassFileConstants.JDK1_8 ?
 		"----------\n" +
-		"1. ERROR in X.java (at line 8)\n" +
-		"	X<Number> x = new X<>(1);\n" +
-		"	              ^^^^^^^^^^\n" +
-		"Type mismatch: cannot convert from X<Integer> to X<Number>\n" +
-		"----------\n" +
-		"2. ERROR in X.java (at line 12)\n" +
+		"1. ERROR in X.java (at line 12)\n" +
 		"	X<Object> x4 = new X<>(1).idem();\n" +
 		"	               ^^^^^^^^^^^^^^^^^\n" +
 		"Type mismatch: cannot convert from X<Integer> to X<Object>\n" +
-		"----------\n" +
-		"3. ERROR in X.java (at line 13)\n" +
-		"	X<Object> x5 = new X<>(1);\n" +
-		"	               ^^^^^^^^^^\n" +
-		"Type mismatch: cannot convert from X<Integer> to X<Object>\n" +
-		"----------\n" +
-		"4. ERROR in X.java (at line 15)\n" +
-		"	int i = m(new X<>(\"\"));\n" +
-		"	        ^\n" +
-		"The method m(X<String>) in the type X<T> is not applicable for the arguments (X<Object>)\n" +
-		"----------\n" :
-			"----------\n" +
-			"1. ERROR in X.java (at line 12)\n" +
-			"	X<Object> x4 = new X<>(1).idem();\n" +
-			"	               ^^^^^^^^^^^^^^^^^\n" +
-			"Type mismatch: cannot convert from X<Integer> to X<Object>\n" +
-			"----------\n");
+		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=344655
 public void test0027() {
@@ -1417,20 +1271,12 @@ public void test0034() {
 		"6. ERROR in X.java (at line 19)\n" +
 		"	X<Integer>.Y<String> y6 = new X<>().new Y<>(1,\"\");\n" +
 		"	                          ^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<Object>.Y<String> to X<Integer>.Y<String>\n"
-		:
-		"Cannot infer type arguments for Y<>\n"
-		) +
+		"Cannot infer type arguments for Y<>\n" +
 		"----------\n" +
 		"7. ERROR in X.java (at line 20)\n" +
 		"	X<Integer>.Y<String> y7 = new X<>().new Y<>(1,1);\n" +
 		"	                          ^^^^^^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<Object>.Y<Integer> to X<Integer>.Y<String>\n"
-		:
-		"Cannot infer type arguments for Y<>\n"
-		) +
+		"Cannot infer type arguments for Y<>\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=345559
@@ -1505,11 +1351,7 @@ public void test0035() {
 		"2. ERROR in X.java (at line 18)\n" +
 		"	X<Integer> x5 = new X<>(\"\",\"\",\"\");\n" +
 		"	                ^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<String> to X<Integer>\n"
-		:
-		"Cannot infer type arguments for X<>\n"
-		) +
+		"Cannot infer type arguments for X<>\n" +
 		"----------\n" +
 		"3. ERROR in X.java (at line 20)\n" +
 		"	X<Integer>.Y<String> y1 = new X<>(1,1).new Y<>();\n" +
@@ -1529,20 +1371,12 @@ public void test0035() {
 		"6. ERROR in X.java (at line 25)\n" +
 		"	X<Integer>.Y<String> y6 = new X<>().new Y<>(1,\"\",1);\n" +
 		"	                          ^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<Object>.Y<Integer> to X<Integer>.Y<String>\n"
-		:
-		"Cannot infer type arguments for Y<>\n"
-		) +
+		"Cannot infer type arguments for Y<>\n" +
 		"----------\n" +
 		"7. ERROR in X.java (at line 26)\n" +
 		"	X<Integer>.Y<String> y7 = new X<>().new Y<>(\"\",\"\",1);\n" +
 		"	                          ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<Object>.Y<Integer> to X<Integer>.Y<String>\n"
-		:
-		"Cannot infer type arguments for Y<>\n"
-		) +
+		"Cannot infer type arguments for Y<>\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=345559
@@ -1586,11 +1420,7 @@ public void test0036() {
 		"2. ERROR in X.java (at line 17)\n" +
 		"	X<Integer> x5 = new X<>(\"\",\"\",\"\");\n" +
 		"	                ^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<String> to X<Integer>\n"
-		:
-		"Cannot infer type arguments for X<>\n"
-		) +
+		"Cannot infer type arguments for X<>\n" +
 		"----------\n" +
 		"3. ERROR in X.java (at line 19)\n" +
 		"	X<Integer>.Y<String> y1 = new X<>(1,1).new Y<>();\n" +
@@ -1610,20 +1440,12 @@ public void test0036() {
 		"6. ERROR in X.java (at line 24)\n" +
 		"	X<Integer>.Y<String> y6 = new X<>().new Y<>(1,\"\",1);\n" +
 		"	                          ^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<Object>.Y<Integer> to X<Integer>.Y<String>\n"
-		:
-		"Cannot infer type arguments for Y<>\n"
-		) +
+		"Cannot infer type arguments for Y<>\n" +
 		"----------\n" +
 		"7. ERROR in X.java (at line 25)\n" +
 		"	X<Integer>.Y<String> y7 = new X<>().new Y<>(\"\",\"\",1);\n" +
 		"	                          ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<Object>.Y<Integer> to X<Integer>.Y<String>\n"
-		:
-		"Cannot infer type arguments for Y<>\n"
-		) +
+		"Cannot infer type arguments for Y<>\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=345559
@@ -1683,11 +1505,7 @@ public void test0035a() {
 		"2. ERROR in X.java (at line 14)\n" +
 		"	X<Integer> x5 = new X<>(\"\",\"\",\"\");\n" +
 		"	                ^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<String> to X<Integer>\n"
-		:
-		"Cannot infer type arguments for X<>\n"
-		) +
+		"Cannot infer type arguments for X<>\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=345559
@@ -1720,11 +1538,7 @@ public void test0036a() {
 		"2. ERROR in X.java (at line 13)\n" +
 		"	X<Integer> x5 = new X<>(\"\",\"\",\"\");\n" +
 		"	                ^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<String> to X<Integer>\n"
-		:
-		"Cannot infer type arguments for X<>\n"
-		) +
+		"Cannot infer type arguments for X<>\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=345559
@@ -1862,11 +1676,7 @@ public void test0044() {
 		"1. ERROR in X.java (at line 7)\n" +
 		"	X<String>.Y<String> x = new X<>().new Y<>(\"\",\"\");\n" +
 		"	                        ^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"Type mismatch: cannot convert from X<Object>.Y<String> to X<String>.Y<String>\n"
-		:
-		"Cannot infer type arguments for Y<>\n"
-		) +
+		"Cannot infer type arguments for Y<>\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=345968
@@ -2027,96 +1837,53 @@ public void test0052() {
 			"}\n" +
 			"class AX<T>{}\n"
 		},
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-			"----------\n" +
-			"1. ERROR in X.java (at line 6)\n" +
-			"	X<String> x2 = new X<String>(\"SUCCESS\");\n" +
-			"	                   ^\n" +
-			"Redundant specification of type arguments <String>\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 7)\n" +
-			"	X<Integer> x3 = new X<Integer>(1);\n" +
-			"	                    ^\n" +
-			"Redundant specification of type arguments <Integer>\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 8)\n" +
-			"	X<AX> x4 = new X<AX>(new AX());\n" +
-			"	               ^\n" +
-			"Redundant specification of type arguments <AX>\n" +
-			"----------\n" +
-			"4. ERROR in X.java (at line 9)\n" +
-			"	X<? extends AX> x5 = new X<AX<String>>(new AX<String>());\n" +
-			"	                         ^\n" +
-			"Redundant specification of type arguments <AX<String>>\n" +
-			"----------\n" +
-			"5. ERROR in X.java (at line 9)\n" +
-			"	X<? extends AX> x5 = new X<AX<String>>(new AX<String>());\n" +
-			"	                                           ^^\n" +
-			"Redundant specification of type arguments <String>\n" +
-			"----------\n" +
-			"6. ERROR in X.java (at line 10)\n" +
-			"	X<?> x6 = new X<AX<String>>(new AX<String>());\n" +
-			"	              ^\n" +
-			"Redundant specification of type arguments <AX<String>>\n" +
-			"----------\n" +
-			"7. ERROR in X.java (at line 10)\n" +
-			"	X<?> x6 = new X<AX<String>>(new AX<String>());\n" +
-			"	                                ^^\n" +
-			"Redundant specification of type arguments <String>\n" +
-			"----------\n" +
-			"8. ERROR in X.java (at line 11)\n" +
-			"	X<Class<? extends Object>> x7 = new X<Class<? extends Object>>();\n" +
-			"	                                    ^\n" +
-			"Redundant specification of type arguments <Class<? extends Object>>\n" +
-			"----------\n"
-		: // additional error at line 5 due to better inference:
-			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
-			"	X<Number> x = new X<Number>(1);\n" +
-			"	                  ^\n" +
-			"Redundant specification of type arguments <Number>\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 6)\n" +
-			"	X<String> x2 = new X<String>(\"SUCCESS\");\n" +
-			"	                   ^\n" +
-			"Redundant specification of type arguments <String>\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 7)\n" +
-			"	X<Integer> x3 = new X<Integer>(1);\n" +
-			"	                    ^\n" +
-			"Redundant specification of type arguments <Integer>\n" +
-			"----------\n" +
-			"4. ERROR in X.java (at line 8)\n" +
-			"	X<AX> x4 = new X<AX>(new AX());\n" +
-			"	               ^\n" +
-			"Redundant specification of type arguments <AX>\n" +
-			"----------\n" +
-			"5. ERROR in X.java (at line 9)\n" +
-			"	X<? extends AX> x5 = new X<AX<String>>(new AX<String>());\n" +
-			"	                         ^\n" +
-			"Redundant specification of type arguments <AX<String>>\n" +
-			"----------\n" +
-			"6. ERROR in X.java (at line 9)\n" +
-			"	X<? extends AX> x5 = new X<AX<String>>(new AX<String>());\n" +
-			"	                                           ^^\n" +
-			"Redundant specification of type arguments <String>\n" +
-			"----------\n" +
-			"7. ERROR in X.java (at line 10)\n" +
-			"	X<?> x6 = new X<AX<String>>(new AX<String>());\n" +
-			"	              ^\n" +
-			"Redundant specification of type arguments <AX<String>>\n" +
-			"----------\n" +
-			"8. ERROR in X.java (at line 10)\n" +
-			"	X<?> x6 = new X<AX<String>>(new AX<String>());\n" +
-			"	                                ^^\n" +
-			"Redundant specification of type arguments <String>\n" +
-			"----------\n" +
-			"9. ERROR in X.java (at line 11)\n" +
-			"	X<Class<? extends Object>> x7 = new X<Class<? extends Object>>();\n" +
-			"	                                    ^\n" +
-			"Redundant specification of type arguments <Class<? extends Object>>\n" +
-			"----------\n"
-		),
+		// additional error at line 5 due to better inference:
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	X<Number> x = new X<Number>(1);\n" +
+		"	                  ^\n" +
+		"Redundant specification of type arguments <Number>\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 6)\n" +
+		"	X<String> x2 = new X<String>(\"SUCCESS\");\n" +
+		"	                   ^\n" +
+		"Redundant specification of type arguments <String>\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 7)\n" +
+		"	X<Integer> x3 = new X<Integer>(1);\n" +
+		"	                    ^\n" +
+		"Redundant specification of type arguments <Integer>\n" +
+		"----------\n" +
+		"4. ERROR in X.java (at line 8)\n" +
+		"	X<AX> x4 = new X<AX>(new AX());\n" +
+		"	               ^\n" +
+		"Redundant specification of type arguments <AX>\n" +
+		"----------\n" +
+		"5. ERROR in X.java (at line 9)\n" +
+		"	X<? extends AX> x5 = new X<AX<String>>(new AX<String>());\n" +
+		"	                         ^\n" +
+		"Redundant specification of type arguments <AX<String>>\n" +
+		"----------\n" +
+		"6. ERROR in X.java (at line 9)\n" +
+		"	X<? extends AX> x5 = new X<AX<String>>(new AX<String>());\n" +
+		"	                                           ^^\n" +
+		"Redundant specification of type arguments <String>\n" +
+		"----------\n" +
+		"7. ERROR in X.java (at line 10)\n" +
+		"	X<?> x6 = new X<AX<String>>(new AX<String>());\n" +
+		"	              ^\n" +
+		"Redundant specification of type arguments <AX<String>>\n" +
+		"----------\n" +
+		"8. ERROR in X.java (at line 10)\n" +
+		"	X<?> x6 = new X<AX<String>>(new AX<String>());\n" +
+		"	                                ^^\n" +
+		"Redundant specification of type arguments <String>\n" +
+		"----------\n" +
+		"9. ERROR in X.java (at line 11)\n" +
+		"	X<Class<? extends Object>> x7 = new X<Class<? extends Object>>();\n" +
+		"	                                    ^\n" +
+		"Redundant specification of type arguments <Class<? extends Object>>\n" +
+		"----------\n",
 		null,
 		false,
 		customOptions);
@@ -2147,66 +1914,38 @@ public void test0052b() {
 			"    }\n" +
 			"}\n"
 		},
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-			"----------\n" +
-			"1. ERROR in X.java (at line 8)\n" +
-			"	X<String> x2 = new X<String>(\"SUCCESS\");\n" +
-			"	                   ^\n" +
-			"Redundant specification of type arguments <String>\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 9)\n" +
-			"	X<String> x22 = new X<String>(1,\"SUCCESS\");\n" +
-			"	                    ^\n" +
-			"Redundant specification of type arguments <String>\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 10)\n" +
-			"	X<Integer> x3 = new X<Integer>(1);\n" +
-			"	                    ^\n" +
-			"Redundant specification of type arguments <Integer>\n" +
-			"----------\n" +
-			"4. ERROR in X.java (at line 11)\n" +
-			"	String s = foo(new X<String>(\"aaa\"));\n" +
-			"	                   ^\n" +
-			"Redundant specification of type arguments <String>\n" +
-			"----------\n" +
-			"5. ERROR in X.java (at line 12)\n" +
-			"	String s2 = foo(new X<String>(1,\"aaa\"));\n" +
-			"	                    ^\n" +
-			"Redundant specification of type arguments <String>\n" +
-			"----------\n"
-		: // additional error at line 7 due to better inference
-			"----------\n" +
-			"1. ERROR in X.java (at line 7)\n" +
-			"	X<Number> x = new X<Number>(1);\n" +
-			"	                  ^\n" +
-			"Redundant specification of type arguments <Number>\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 8)\n" +
-			"	X<String> x2 = new X<String>(\"SUCCESS\");\n" +
-			"	                   ^\n" +
-			"Redundant specification of type arguments <String>\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 9)\n" +
-			"	X<String> x22 = new X<String>(1,\"SUCCESS\");\n" +
-			"	                    ^\n" +
-			"Redundant specification of type arguments <String>\n" +
-			"----------\n" +
-			"4. ERROR in X.java (at line 10)\n" +
-			"	X<Integer> x3 = new X<Integer>(1);\n" +
-			"	                    ^\n" +
-			"Redundant specification of type arguments <Integer>\n" +
-			"----------\n" +
-			"5. ERROR in X.java (at line 11)\n" +
-			"	String s = foo(new X<String>(\"aaa\"));\n" +
-			"	                   ^\n" +
-			"Redundant specification of type arguments <String>\n" +
-			"----------\n" +
-			"6. ERROR in X.java (at line 12)\n" +
-			"	String s2 = foo(new X<String>(1,\"aaa\"));\n" +
-			"	                    ^\n" +
-			"Redundant specification of type arguments <String>\n" +
-			"----------\n"
-		),
+		// additional error at line 7 due to better inference
+		"----------\n" +
+		"1. ERROR in X.java (at line 7)\n" +
+		"	X<Number> x = new X<Number>(1);\n" +
+		"	                  ^\n" +
+		"Redundant specification of type arguments <Number>\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 8)\n" +
+		"	X<String> x2 = new X<String>(\"SUCCESS\");\n" +
+		"	                   ^\n" +
+		"Redundant specification of type arguments <String>\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 9)\n" +
+		"	X<String> x22 = new X<String>(1,\"SUCCESS\");\n" +
+		"	                    ^\n" +
+		"Redundant specification of type arguments <String>\n" +
+		"----------\n" +
+		"4. ERROR in X.java (at line 10)\n" +
+		"	X<Integer> x3 = new X<Integer>(1);\n" +
+		"	                    ^\n" +
+		"Redundant specification of type arguments <Integer>\n" +
+		"----------\n" +
+		"5. ERROR in X.java (at line 11)\n" +
+		"	String s = foo(new X<String>(\"aaa\"));\n" +
+		"	                   ^\n" +
+		"Redundant specification of type arguments <String>\n" +
+		"----------\n" +
+		"6. ERROR in X.java (at line 12)\n" +
+		"	String s2 = foo(new X<String>(1,\"aaa\"));\n" +
+		"	                    ^\n" +
+		"Redundant specification of type arguments <String>\n" +
+		"----------\n",
 		null,
 		false,
 		customOptions);
@@ -2268,8 +2007,6 @@ public void test0052d() {
 			"}\n" +
 			"class AX<T>{}\n"
 		},
-		this.complianceLevel < ClassFileConstants.JDK1_8 ?
-		"" :
 		"----------\n" +
 		"1. ERROR in X.java (at line 5)\n" +
 		"	X<Number> x = new X<Number>(1);\n" +
@@ -2452,26 +2189,18 @@ public void test0056b() {
 			"	X1<Number> x2 = new X.X1<Number>(1);\n" +
 			"}\n"
 		},
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
-			"	X1<Integer> x1 = new X.X1<Integer>(1);\n" +
-			"	                       ^^\n" +
-			"Redundant specification of type arguments <Integer>\n" +
-			"----------\n"
-		: // additional error at line 6 due to better inference:
-			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
-			"	X1<Integer> x1 = new X.X1<Integer>(1);\n" +
-			"	                       ^^\n" +
-			"Redundant specification of type arguments <Integer>\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 6)\n" +
-			"	X1<Number> x2 = new X.X1<Number>(1);\n" +
-			"	                      ^^\n" +
-			"Redundant specification of type arguments <Number>\n" +
-			"----------\n"
-		),
+		// additional error at line 6 due to better inference:
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	X1<Integer> x1 = new X.X1<Integer>(1);\n" +
+		"	                       ^^\n" +
+		"Redundant specification of type arguments <Integer>\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 6)\n" +
+		"	X1<Number> x2 = new X.X1<Number>(1);\n" +
+		"	                      ^^\n" +
+		"Redundant specification of type arguments <Number>\n" +
+		"----------\n",
 		null,
 		false,
 		customOptions);
@@ -2493,26 +2222,18 @@ public void test0056c() {
 			"	X<Integer>.X1<Number> x1 = new X<Integer>(1).new X1<Number>(1);\n" +
 			"}\n"
 		},
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-			"----------\n" +
-			"1. ERROR in X.java (at line 6)\n" +
-			"	X<Integer>.X1<Number> x1 = new X<Integer>(1).new X1<Number>(1);\n" +
-			"	                               ^\n" +
-			"Redundant specification of type arguments <Integer>\n" +
-			"----------\n"
-		: // additional error (2.) at inner allocation due to better inference:
-			"----------\n" +
-			"1. ERROR in X.java (at line 6)\n" +
-			"	X<Integer>.X1<Number> x1 = new X<Integer>(1).new X1<Number>(1);\n" +
-			"	                               ^\n" +
-			"Redundant specification of type arguments <Integer>\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 6)\n" +
-			"	X<Integer>.X1<Number> x1 = new X<Integer>(1).new X1<Number>(1);\n" +
-			"	                                                 ^^\n" +
-			"Redundant specification of type arguments <Number>\n" +
-			"----------\n"
-		),
+		// additional error (2.) at inner allocation due to better inference:
+		"----------\n" +
+		"1. ERROR in X.java (at line 6)\n" +
+		"	X<Integer>.X1<Number> x1 = new X<Integer>(1).new X1<Number>(1);\n" +
+		"	                               ^\n" +
+		"Redundant specification of type arguments <Integer>\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 6)\n" +
+		"	X<Integer>.X1<Number> x1 = new X<Integer>(1).new X1<Number>(1);\n" +
+		"	                                                 ^^\n" +
+		"Redundant specification of type arguments <Number>\n" +
+		"----------\n",
 		null,
 		false,
 		customOptions);
@@ -2611,26 +2332,19 @@ public void test0061() {
 			"	 }\n" +
 			"}\n"
 		},
-		(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
-			"	FileSystems.<String, Object>newFileSystem(uri, Collections.emptyMap());\n" +
-			"	                            ^^^^^^^^^^^^^\n" +
-			"The method newFileSystem(URI, Map<String,?>) in the type FileSystems is not applicable for the arguments (URI, Map<Object,Object>)\n" +
-			"----------\n"
-		: // with better inference, method is applicable, but then we have another problem:
-			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
-			"	FileSystems.<String, Object>newFileSystem(uri, Collections.emptyMap());\n" +
-			"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"Unhandled exception type IOException\n" +
-			"----------\n" +
-			"2. WARNING in X.java (at line 5)\n" +
-			"	FileSystems.<String, Object>newFileSystem(uri, Collections.emptyMap());\n" +
-			"	             ^^^^^^^^^^^^^^\n" +
-			"Unused type arguments for the non generic method newFileSystem(URI, Map<String,?>) of type FileSystems; it should not be parameterized with arguments <String, Object>\n" +
-			"----------\n"
-		));
+		// with better inference, method is applicable, but then we have another problem:
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	FileSystems.<String, Object>newFileSystem(uri, Collections.emptyMap());\n" +
+		"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Unhandled exception type IOException\n" +
+		"----------\n" +
+		"2. WARNING in X.java (at line 5)\n" +
+		"	FileSystems.<String, Object>newFileSystem(uri, Collections.emptyMap());\n" +
+		"	             ^^^^^^^^^^^^^^\n" +
+		"Unused type arguments for the non generic method newFileSystem(URI, Map<String,?>) of type FileSystems; it should not be parameterized with arguments <String, Object>\n" +
+		"----------\n"
+		);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428220, [1.8][compiler] Javadoc processing interferes with type inference.
 public void test428220() {
@@ -2813,25 +2527,12 @@ public void test449619() {
 			   "		foo(new X().new Y<>());\n" +
 			   "	}\n" +
 			   "}\n";
-	if (this.complianceLevel >= ClassFileConstants.JDK1_8)
 		this.runConformTest(
 		   new String[] {
 			   "X.java",
 			   source,
 		   },
 		   "");
-	else
-		this.runNegativeTest(
-		   new String[] {
-			   "X.java",
-			   source,
-		   },
-		   "----------\n" +
-			"1. ERROR in X.java (at line 7)\n" +
-			"	foo(new X().new Y<>());\n" +
-			"	^^^\n" +
-			"The method foo(X.Y<String>) in the type X is not applicable for the arguments (X.Y<Object>)\n" +
-			"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=429733, [1.8][bytecode] Bad type on operand stack
 public void test429733() {
@@ -3009,19 +2710,14 @@ public void testBug469653() {
 		"      Iterator<String> reverseServices = ImmutableList.copyOf(services).reverse().iterator();\n" +
 		"  }\n" +
 		"}";
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		runConformTest(
-			new String[] { "Code.java", codeContent });
-	} else {
-		runNegativeTest(
-			new String[] { "Code.java", codeContent },
-			"----------\n" +
-			"1. ERROR in Code.java (at line 11)\n" +
-			"	Iterator<String> reverseServices = ImmutableList.copyOf(services).reverse().iterator();\n" +
-			"	                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"Type mismatch: cannot convert from Iterator<capture#1-of ? extends String> to Iterator<String>\n" +
-			"----------\n");
-	}
+	runNegativeTest(
+		new String[] { "Code.java", codeContent },
+		"----------\n" +
+		"1. ERROR in Code.java (at line 11)\n" +
+		"	Iterator<String> reverseServices = ImmutableList.copyOf(services).reverse().iterator();\n" +
+		"	                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Type mismatch: cannot convert from Iterator<capture#1-of ? extends String> to Iterator<String>\n" +
+		"----------\n");
 }
 public void testBug488649_JDK6791481_ex1() {
 	int count = 1;
@@ -3034,16 +2730,11 @@ public void testBug488649_JDK6791481_ex1() {
 			"}\n"
 		},
 		"----------\n" +
-		(this.complianceLevel >= ClassFileConstants.JDK1_8
-			?
 		(count++)+". ERROR in Test.java (at line 3)\n" +
 		"	X x = m((Class)String.class);\n" +
 		"	      ^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Type mismatch: cannot convert from Object to X\n" + // <- want to see this error, but at 1.7- we keep javac compatibility
-		"----------\n"
-			:
-		""
-		)+
+		"----------\n" +
 		(count++)+". WARNING in Test.java (at line 3)\n" +
 		"	X x = m((Class)String.class);\n" +
 		"	        ^^^^^^^^^^^^^^^^^^^\n" +
@@ -3094,28 +2785,12 @@ public void testGH1326_alt() {
 		"""
 	};
 	runner.expectedCompilerLog =
-			this.complianceLevel >= ClassFileConstants.JDK1_8
-			?
 			"""
 			----------
 			1. ERROR in Foo.java (at line 8)
 				Outer<Inner<String>> x = new Outer<>(new Inner<String>(), inner).self();
 				                                         ^^^^^
 			Redundant specification of type arguments <String>
-			----------
-			"""
-			: // 1.7 inference is less capable:
-			"""
-			----------
-			1. ERROR in Foo.java (at line 8)
-				Outer<Inner<String>> x = new Outer<>(new Inner<String>(), inner).self();
-				                                         ^^^^^
-			Redundant specification of type arguments <String>
-			----------
-			2. ERROR in Foo.java (at line 9)
-				Outer<Inner<String>> xok = new Outer<>(new Inner<>(), inner).self();
-				                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-			Cannot infer type arguments for Outer<>
 			----------
 			""";
 	runner.runNegativeTest();

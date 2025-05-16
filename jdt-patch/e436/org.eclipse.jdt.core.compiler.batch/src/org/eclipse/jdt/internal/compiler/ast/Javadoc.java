@@ -235,7 +235,7 @@ public class Javadoc extends ASTNode {
 		// @param tags
 		int paramTagsSize = this.paramReferences == null ? 0 : this.paramReferences.length;
 		for (int i = 0; i < paramTagsSize; i++) {
-			if(scope.referenceContext.nRecordComponents > 0) {
+			if(scope.referenceContext.recordComponents.length > 0) {
 				break;
 			}
 			JavadocSingleNameReference param = this.paramReferences[i];
@@ -272,12 +272,6 @@ public class Javadoc extends ASTNode {
 		int seeTagsLength = this.seeReferences == null ? 0 : this.seeReferences.length;
 		for (int i = 0; i < seeTagsLength; i++) {
 			resolveReference(this.seeReferences[i], scope);
-		}
-
-		// @value tag
-		boolean source15 = scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5;
-		if (!source15 && this.valuePositions != -1) {
-			scope.problemReporter().javadocUnexpectedTag((int)(this.valuePositions>>>32), (int) this.valuePositions);
 		}
 	}
 
@@ -365,8 +359,7 @@ public class Javadoc extends ASTNode {
 							if (superConstructor.isValidBinding() && superConstructor.original() == allocationExpr.binding.original()) {
 								MethodBinding current = methDecl.binding;
 								// work 'against' better inference in 1.8 (otherwise comparing (G<T> with G<Object>) would fail):
-								if (methScope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_8
-									&& current.typeVariables != Binding.NO_TYPE_VARIABLES)
+								if (current.typeVariables != Binding.NO_TYPE_VARIABLES)
 								{
 									current = current.asRawMethod(methScope.environment());
 								}
@@ -422,12 +415,6 @@ public class Javadoc extends ASTNode {
 		// @throws/@exception tags
 		resolveThrowsTags(methScope, reportMissing);
 
-		// @value tag
-		boolean source15 = compilerOptions.sourceLevel >= ClassFileConstants.JDK1_5;
-		if (!source15 && methDecl != null && this.valuePositions != -1) {
-			methScope.problemReporter().javadocUnexpectedTag((int)(this.valuePositions>>>32), (int) this.valuePositions);
-		}
-
 		// Resolve param tags with invalid syntax
 		int length = this.invalidParameters == null ? 0 : this.invalidParameters.length;
 		for (int i = 0; i < length; i++) {
@@ -450,7 +437,6 @@ public class Javadoc extends ASTNode {
 		boolean hasProblems = scope.referenceContext().compilationResult().problemCount > problemCount;
 
 		// Verify field references
-		boolean source15 = scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5;
 		int scopeModifiers = -1;
 		if (reference instanceof JavadocFieldReference) {
 			JavadocFieldReference fieldRef = (JavadocFieldReference) reference;
@@ -477,7 +463,7 @@ public class Javadoc extends ASTNode {
 			}
 
 			// Verify whether field ref should be static or not (for @value tags)
-			else if (source15 && fieldRef.binding != null && fieldRef.binding.isValidBinding()) {
+			else if (fieldRef.binding != null && fieldRef.binding.isValidBinding()) {
 				if (fieldRef.tagValue == JavadocTagConstants.TAG_VALUE_VALUE && !fieldRef.binding.isStatic()) {
 					if (scopeModifiers == -1) scopeModifiers = scope.getDeclarationModifiers();
 					scope.problemReporter().javadocInvalidValueReference(fieldRef.sourceStart, fieldRef.sourceEnd, scopeModifiers);
@@ -487,7 +473,7 @@ public class Javadoc extends ASTNode {
 			// Verify type references
 			if (!hasProblems && fieldRef.binding != null && fieldRef.binding.isValidBinding() && fieldRef.actualReceiverType instanceof ReferenceBinding) {
 				ReferenceBinding resolvedType = (ReferenceBinding) fieldRef.actualReceiverType;
-				verifyTypeReference(fieldRef, fieldRef.receiver, scope, source15, resolvedType, fieldRef.binding.modifiers);
+				verifyTypeReference(fieldRef, fieldRef.receiver, scope, resolvedType, fieldRef.binding.modifiers);
 			}
 
 			// That's it for field references
@@ -497,7 +483,7 @@ public class Javadoc extends ASTNode {
 		// Verify type references
 		if (!hasProblems && (reference instanceof JavadocSingleTypeReference || reference instanceof JavadocQualifiedTypeReference) && reference.resolvedType instanceof ReferenceBinding) {
 			ReferenceBinding resolvedType = (ReferenceBinding) reference.resolvedType;
-			verifyTypeReference(reference, reference, scope, source15, resolvedType, resolvedType.modifiers);
+			verifyTypeReference(reference, reference, scope, resolvedType, resolvedType.modifiers);
 		}
 
 		if (!hasProblems && (reference instanceof JavadocModuleReference)) {
@@ -506,11 +492,11 @@ public class Javadoc extends ASTNode {
 			ModuleReference mRef = ref.getModuleReference();
 			if (mRef != null) {
 				ModuleBinding mType = mRef.resolve(scope);
-				if (mType != null && verifyModuleReference(reference, reference, scope, source15, mType, mType.modifiers)) {
+				if (mType != null && verifyModuleReference(reference, reference, scope, mType, mType.modifiers)) {
 					TypeReference tRef= ref.getTypeReference();
 					if ((tRef instanceof JavadocSingleTypeReference || tRef instanceof JavadocQualifiedTypeReference) && tRef.resolvedType instanceof ReferenceBinding) {
 						ReferenceBinding resolvedType = (ReferenceBinding) tRef.resolvedType;
-						verifyTypeReference(reference, reference, scope, source15, resolvedType, resolvedType.modifiers);
+						verifyTypeReference(reference, reference, scope, resolvedType, resolvedType.modifiers);
 					}
 				}
 			}
@@ -521,7 +507,7 @@ public class Javadoc extends ASTNode {
 			JavadocMessageSend msgSend = (JavadocMessageSend) reference;
 
 			// tag value
-			if (source15 && msgSend.tagValue == JavadocTagConstants.TAG_VALUE_VALUE) { // cannot refer to method for @value tag
+			if (msgSend.tagValue == JavadocTagConstants.TAG_VALUE_VALUE) { // cannot refer to method for @value tag
 				if (scopeModifiers == -1) scopeModifiers = scope.getDeclarationModifiers();
 				scope.problemReporter().javadocInvalidValueReference(msgSend.sourceStart, msgSend.sourceEnd, scopeModifiers);
 			}
@@ -529,7 +515,7 @@ public class Javadoc extends ASTNode {
 			// Verify type references
 			if (!hasProblems && msgSend.binding != null && msgSend.binding.isValidBinding() && msgSend.actualReceiverType instanceof ReferenceBinding) {
 				ReferenceBinding resolvedType = (ReferenceBinding) msgSend.actualReceiverType;
-				verifyTypeReference(msgSend, msgSend.receiver, scope, source15, resolvedType, msgSend.binding.modifiers);
+				verifyTypeReference(msgSend, msgSend.receiver, scope, resolvedType, msgSend.binding.modifiers);
 			}
 		}
 
@@ -538,7 +524,7 @@ public class Javadoc extends ASTNode {
 			JavadocAllocationExpression alloc = (JavadocAllocationExpression) reference;
 
 			// tag value
-			if (source15 && alloc.tagValue == JavadocTagConstants.TAG_VALUE_VALUE) { // cannot refer to method for @value tag
+			if (alloc.tagValue == JavadocTagConstants.TAG_VALUE_VALUE) { // cannot refer to method for @value tag
 				if (scopeModifiers == -1) scopeModifiers = scope.getDeclarationModifiers();
 				scope.problemReporter().javadocInvalidValueReference(alloc.sourceStart, alloc.sourceEnd, scopeModifiers);
 			}
@@ -546,7 +532,7 @@ public class Javadoc extends ASTNode {
 			// Verify type references
 			if (!hasProblems && alloc.binding != null && alloc.binding.isValidBinding() && alloc.resolvedType instanceof ReferenceBinding) {
 				ReferenceBinding resolvedType = (ReferenceBinding) alloc.resolvedType;
-				verifyTypeReference(alloc, alloc.type, scope, source15, resolvedType, alloc.binding.modifiers);
+				verifyTypeReference(alloc, alloc.type, scope, resolvedType, alloc.binding.modifiers);
 			}
 		}
 
@@ -574,11 +560,12 @@ public class Javadoc extends ASTNode {
 		}
 
 		// If no param tags then report a problem for each method argument
-		int argumentsSize = methodDecl.arguments == null ? 0 : methodDecl.arguments.length;
+		AbstractVariableDeclaration [] arguments = methodDecl.arguments(true);
+		int argumentsSize = arguments == null ? 0 : arguments.length;
 		if (paramTagsSize == 0) {
-			if (reportMissing) {
+			if (reportMissing && !methodDecl.isCompactConstructor()) {
 				for (int i = 0; i < argumentsSize; i++) {
-					Argument arg = methodDecl.arguments[i];
+					AbstractVariableDeclaration arg = arguments[i];
 					scope.problemReporter().javadocMissingParamTag(arg.name, arg.sourceStart, arg.sourceEnd, methodDecl.binding.modifiers);
 				}
 			}
@@ -608,11 +595,12 @@ public class Javadoc extends ASTNode {
 			// Look for undocumented arguments
 			if (reportMissing) {
 				for (int i = 0; i < argumentsSize; i++) {
-					Argument arg = methodDecl.arguments[i];
+					AbstractVariableDeclaration arg = arguments[i];
+					LocalVariableBinding argBinding = arg instanceof Argument argument ? argument.binding : scope.findVariable(arg.name);
 					boolean found = false;
 					for (int j = 0; j < maxBindings; j++) {
 						LocalVariableBinding binding = bindings[j];
-						if (arg.binding == binding) {
+						if (argBinding == binding) {
 							found = true;
 							break;
 						}
@@ -815,7 +803,6 @@ public class Javadoc extends ASTNode {
 
 		// If no param tags then report a problem for each record parameter
 		if (recordParameters != null) {
-			reportMissing = reportMissing && scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5;
 			int recordParametersLength = recordParameters.length;
 			String argNames[] = new String[paramReferencesLength];
 			if (paramReferencesLength == 0) {
@@ -877,8 +864,6 @@ public class Javadoc extends ASTNode {
 
 		// If no param tags then report a problem for each declaration type parameter
 		if (parameters != null) {
-			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=324850, avoid secondary errors when <= 1.4
-			reportMissing = reportMissing && scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5;
 			int typeParametersLength = parameters.length;
 			if (paramTypeParamLength == 0) {
 				if (reportMissing) {
@@ -1049,7 +1034,7 @@ public class Javadoc extends ASTNode {
 		}
 	}
 
-	private void verifyTypeReference(Expression reference, Expression typeReference, Scope scope, boolean source15, ReferenceBinding resolvedType, int modifiers) {
+	private void verifyTypeReference(Expression reference, Expression typeReference, Scope scope, ReferenceBinding resolvedType, int modifiers) {
 		if (resolvedType.isValidBinding()) {
 			int scopeModifiers = -1;
 
@@ -1094,42 +1079,36 @@ public class Javadoc extends ASTNode {
 						topLevelScope = topLevelScope.outerMostClassScope();
 						if (typeReference instanceof JavadocSingleTypeReference) {
 							// inner class single reference can only be done in same unit
-							if ((!source15 && depth == 1) || TypeBinding.notEquals(topLevelType, topLevelScope.referenceContext.binding)) {
+							if (TypeBinding.notEquals(topLevelType, topLevelScope.referenceContext.binding)) {
 								// search for corresponding import
 								boolean hasValidImport = false;
-								if (source15) {
-									CompilationUnitScope unitScope = topLevelScope.compilationUnitScope();
-									ImportBinding[] imports = unitScope.imports;
-									int length = imports == null ? 0 : imports.length;
-									mainLoop: for (int i=0; i<length; i++) {
-										char[][] compoundName = imports[i].compoundName;
-										int compoundNameLength = compoundName.length;
-										if ((imports[i].onDemand && compoundNameLength == computedCompoundName.length-1)
-												|| (compoundNameLength == computedCompoundName.length)) {
-											for (int j = compoundNameLength; --j >= 0;) {
-												if (CharOperation.equals(imports[i].compoundName[j], computedCompoundName[j])) {
-													if (j == 0) {
-														hasValidImport = true;
-														ImportReference importReference = imports[i].reference;
-														if (importReference != null) {
-															importReference.bits |= ASTNode.Used;
-														}
-														break mainLoop;
+								CompilationUnitScope unitScope = topLevelScope.compilationUnitScope();
+								ImportBinding[] imports = unitScope.imports;
+								int length = imports == null ? 0 : imports.length;
+								mainLoop: for (int i=0; i<length; i++) {
+									char[][] compoundName = imports[i].compoundName;
+									int compoundNameLength = compoundName.length;
+									if ((imports[i].onDemand && compoundNameLength == computedCompoundName.length-1)
+											|| (compoundNameLength == computedCompoundName.length)) {
+										for (int j = compoundNameLength; --j >= 0;) {
+											if (CharOperation.equals(imports[i].compoundName[j], computedCompoundName[j])) {
+												if (j == 0) {
+													hasValidImport = true;
+													ImportReference importReference = imports[i].reference;
+													if (importReference != null) {
+														importReference.bits |= ASTNode.Used;
 													}
-												} else {
-													break;
+													break mainLoop;
 												}
+											} else {
+												break;
 											}
 										}
 									}
-									if (!hasValidImport) {
-										if (scopeModifiers == -1) scopeModifiers = scope.getDeclarationModifiers();
-										scope.problemReporter().javadocInvalidMemberTypeQualification(typeReference.sourceStart, typeReference.sourceEnd, scopeModifiers);
-									}
-								} else {
+								}
+								if (!hasValidImport) {
 									if (scopeModifiers == -1) scopeModifiers = scope.getDeclarationModifiers();
 									scope.problemReporter().javadocInvalidMemberTypeQualification(typeReference.sourceStart, typeReference.sourceEnd, scopeModifiers);
-									return;
 								}
 							}
 						}
@@ -1180,7 +1159,7 @@ public class Javadoc extends ASTNode {
 		}
 	}
 
-	private boolean verifyModuleReference(Expression reference, Expression typeReference, Scope scope, boolean source15, ModuleBinding moduleType, int modifiers) {
+	private boolean verifyModuleReference(Expression reference, Expression typeReference, Scope scope, ModuleBinding moduleType, int modifiers) {
 		boolean bindingFound = false;
 		if (moduleType!= null && moduleType.isValidBinding()) {
 			int scopeModifiers = -1;

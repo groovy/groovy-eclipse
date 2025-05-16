@@ -27,7 +27,6 @@ import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.*;
  */
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 import org.eclipse.jdt.internal.compiler.parser.TerminalToken;
@@ -737,9 +736,6 @@ protected TerminalToken getNextToken0() throws InvalidInputException {
 					}
 					boolean isJavaIdStart;
 					if (c >= HIGH_SURROGATE_MIN_VALUE && c <= HIGH_SURROGATE_MAX_VALUE) {
-						if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-							throw invalidUnicodeEscape();
-						}
 						// Unicode 4 detection
 						char low = (char) getNextChar();
 						if (low < LOW_SURROGATE_MIN_VALUE || low > LOW_SURROGATE_MAX_VALUE) {
@@ -749,9 +745,6 @@ protected TerminalToken getNextToken0() throws InvalidInputException {
 						isJavaIdStart = ScannerHelper.isJavaIdentifierStart(this.complianceLevel, c, low);
 					}
 					else if (c >= LOW_SURROGATE_MIN_VALUE && c <= LOW_SURROGATE_MAX_VALUE) {
-						if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-							throw invalidUnicodeEscape();
-						}
 						throw invalidHighSurrogate();
 					} else {
 						// optimized case already checked

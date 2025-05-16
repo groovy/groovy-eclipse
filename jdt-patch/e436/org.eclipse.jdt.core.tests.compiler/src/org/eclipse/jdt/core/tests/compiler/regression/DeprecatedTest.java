@@ -25,7 +25,6 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class DeprecatedTest extends AbstractRegressionTest {
@@ -400,10 +399,6 @@ public void test008a() throws IOException {
 		"	      ^\n" +
 		"The type X is deprecated\n" +
 		"----------\n";
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-		// simulate we were running on a JRE without java.lang.Deprecated
-		this.invisibleType = TypeConstants.JAVA_LANG_DEPRECATED;
-	}
 	runner.runWarningTest();
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=88124 - variation
@@ -550,46 +545,44 @@ public void test012() {
 // JLS3 9.6
 // @Deprecated variant
 public void test013() {
-	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		Map customOptions = getCompilerOptions();
-		customOptions.put(CompilerOptions.OPTION_ReportDeprecation,
-			CompilerOptions.ERROR);
-		customOptions.put(CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode,
-			CompilerOptions.IGNORE);
-		runNegativeTest(
-			// test directory preparation
-			true /* flush output directory */,
-			new String[] { /* test files */
-	            "X.java",
-				"public class X {\n" +
-				"    void foo() {\n" +
-				"        @Deprecated\n" +
-				"        int i1 = Y.m;\n" +
-				"    }\n" +
-				"    @Deprecated\n" +
-				"    void bar() {\n" +
-				"        int i1 = Y.m;\n" +
-				"    }\n" +
-				"}\n",
-	            "Y.java",
-				"public class Y {\n" +
-				"    @Deprecated\n" +
-				"    static int m;\n" +
-				"}\n",
-			},
-			// compiler options
-			null /* no class libraries */,
-			customOptions /* custom options */,
-			// compiler results
-			"----------\n" + /* expected compiler log */
-			"1. ERROR in X.java (at line 4)\n" +
-			"	int i1 = Y.m;\n" +
-			"	           ^\n" +
-			"The field Y.m is deprecated\n" +
-			"----------\n",
-			// javac options
-			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);
-	}
+	Map customOptions = getCompilerOptions();
+	customOptions.put(CompilerOptions.OPTION_ReportDeprecation,
+		CompilerOptions.ERROR);
+	customOptions.put(CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode,
+		CompilerOptions.IGNORE);
+	runNegativeTest(
+		// test directory preparation
+		true /* flush output directory */,
+		new String[] { /* test files */
+	        "X.java",
+			"public class X {\n" +
+			"    void foo() {\n" +
+			"        @Deprecated\n" +
+			"        int i1 = Y.m;\n" +
+			"    }\n" +
+			"    @Deprecated\n" +
+			"    void bar() {\n" +
+			"        int i1 = Y.m;\n" +
+			"    }\n" +
+			"}\n",
+	        "Y.java",
+			"public class Y {\n" +
+			"    @Deprecated\n" +
+			"    static int m;\n" +
+			"}\n",
+		},
+		// compiler options
+		null /* no class libraries */,
+		customOptions /* custom options */,
+		// compiler results
+		"----------\n" + /* expected compiler log */
+		"1. ERROR in X.java (at line 4)\n" +
+		"	int i1 = Y.m;\n" +
+		"	           ^\n" +
+		"The field Y.m is deprecated\n" +
+		"----------\n",
+		// javac options
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=159243
 public void test014() {
@@ -967,8 +960,6 @@ public void test020() {
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);
 }
 public void testJEP211_1() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	Runner runner = new Runner();
 	runner.testFiles = new String[] {
 			"p1/C1.java",

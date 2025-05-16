@@ -35,7 +35,6 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
@@ -97,17 +96,13 @@ public static boolean areReturnTypesCompatible(MethodBinding one, MethodBinding 
 	// GROOVY add
 	if (one.returnType == null || two.returnType == null) return false;
 	// GROOVY end
-	if (environment.globalOptions.sourceLevel >= ClassFileConstants.JDK1_5) {
-		// short is compatible with int, but as far as covariance is concerned, its not
-		if (one.returnType.isBaseType()) return false;
+	// short is compatible with int, but as far as covariance is concerned, its not
+	if (one.returnType.isBaseType()) return false;
 
-		if (!one.declaringClass.isInterface() && one.declaringClass.id == TypeIds.T_JavaLangObject)
-			return two.returnType.isCompatibleWith(one.returnType); // interface methods inherit from Object
+	if (!one.declaringClass.isInterface() && one.declaringClass.id == TypeIds.T_JavaLangObject)
+		return two.returnType.isCompatibleWith(one.returnType); // interface methods inherit from Object
 
-		return one.returnType.isCompatibleWith(two.returnType);
-	} else {
-		return areTypesEqual(one.returnType.erasure(), two.returnType.erasure());
-	}
+	return one.returnType.isCompatibleWith(two.returnType);
 }
 boolean canSkipInheritedMethods() {
 	if (this.type.superclass() != null && this.type.superclass().isAbstract())

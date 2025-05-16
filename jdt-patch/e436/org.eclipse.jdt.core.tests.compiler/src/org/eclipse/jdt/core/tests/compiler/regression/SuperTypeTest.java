@@ -15,7 +15,6 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
 import junit.framework.Test;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -94,20 +93,9 @@ public void test002() {
 		"	class M {} \n" +
 		"} \n"
 	};
-	if (this.complianceLevel == ClassFileConstants.JDK1_3) {
-		runNegativeTest(
-			sources,
-			"----------\n" +
-			"1. ERROR in p1\\Test.java (at line 10)\n" +
-			"	M m; \n" +
-			"	^\n" +
-			"The type M is defined in an inherited type and an enclosing scope\n" +
-			"----------\n");
-	} else {
-		runConformTest(
-			sources,
-			"SUCCESS");
-	}
+	runConformTest(
+		sources,
+		"SUCCESS");
 }
 
 // was Compliance_1_x#test002
@@ -133,20 +121,9 @@ public void test003() {
 		"	String bar(){ return \"SUCCESS\"; } \n" +
 		"} \n"
 	};
-	if (this.complianceLevel == ClassFileConstants.JDK1_3) {
-		runNegativeTest(
-			sources,
-			"----------\n" +
-			"1. ERROR in p1\\Test.java (at line 11)\n" +
-			"	String z = bar();	\n" +
-			"	           ^^^\n" +
-			"The method bar is defined in an inherited type and an enclosing scope\n" +
-			"----------\n");
-	} else {
-		runConformTest(
-			sources,
-			"SUCCESS");
-	}
+	runConformTest(
+		sources,
+		"SUCCESS");
 }
 
 // was Compliance_1_x#test003
@@ -170,20 +147,9 @@ public void test004() {
 		"	String bar = \"SUCCESS\"; \n" +
 		"} \n"
 	};
-	if (this.complianceLevel == ClassFileConstants.JDK1_3) {
-		runNegativeTest(
-			sources,
-			"----------\n" +
-			"1. ERROR in p1\\Test.java (at line 8)\n" +
-			"	String z = bar; \n" +
-			"	           ^^^\n" +
-			"The field bar is defined in an inherited type and an enclosing scope \n" +
-			"----------\n");
-	} else {
-		runConformTest(
-			sources,
-			"SUCCESS");
-	}
+	runConformTest(
+		sources,
+		"SUCCESS");
 }
 
 // was Compliance_1_x#test004
@@ -392,7 +358,6 @@ public void test012() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=288749
 public void test013() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportRedundantSuperinterface,  CompilerOptions.ERROR);
 	runNegativeTest(

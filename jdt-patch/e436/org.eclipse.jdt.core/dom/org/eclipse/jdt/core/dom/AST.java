@@ -662,7 +662,7 @@ public final class AST {
 		long sourceLevel = CompilerOptions.versionToJdkLevel(sourceModeSetting);
 		if (sourceLevel == 0) {
 			// unknown sourceModeSetting
-			sourceLevel = ClassFileConstants.JDK1_3;
+			sourceLevel = CompilerOptions.getFirstSupportedJdkLevel();
 		}
 		ast.scanner.sourceLevel = sourceLevel;
 		String compliance = (String) options.get(JavaCore.COMPILER_COMPLIANCE);
@@ -1262,14 +1262,14 @@ public final class AST {
 
 	private static Map<String, Long> getLevelMapTable() {
         Map<String, Long> t = new HashMap<>();
-        t.put(null, ClassFileConstants.JDK1_8);
-        t.put(JavaCore.VERSION_1_2, ClassFileConstants.JDK1_8);
-        t.put(JavaCore.VERSION_1_3, ClassFileConstants.JDK1_8);
-        t.put(JavaCore.VERSION_1_4, ClassFileConstants.JDK1_8);
-        t.put(JavaCore.VERSION_1_5, ClassFileConstants.JDK1_8);
-        t.put(JavaCore.VERSION_1_6, ClassFileConstants.JDK1_8);
-        t.put(JavaCore.VERSION_1_7, ClassFileConstants.JDK1_8);
-        t.put(JavaCore.VERSION_1_8, ClassFileConstants.JDK1_8);
+        t.put(null, CompilerOptions.getFirstSupportedJdkLevel());
+        t.put(JavaCore.VERSION_1_2, CompilerOptions.getFirstSupportedJdkLevel());
+        t.put(JavaCore.VERSION_1_3, CompilerOptions.getFirstSupportedJdkLevel());
+        t.put(JavaCore.VERSION_1_4, CompilerOptions.getFirstSupportedJdkLevel());
+        t.put(JavaCore.VERSION_1_5, CompilerOptions.getFirstSupportedJdkLevel());
+        t.put(JavaCore.VERSION_1_6, CompilerOptions.getFirstSupportedJdkLevel());
+        t.put(JavaCore.VERSION_1_7, CompilerOptions.getFirstSupportedJdkLevel());
+        t.put(JavaCore.VERSION_1_8, CompilerOptions.getFirstSupportedJdkLevel());
         t.put(JavaCore.VERSION_9, ClassFileConstants.JDK9);
         t.put(JavaCore.VERSION_10, ClassFileConstants.JDK10);
         t.put(JavaCore.VERSION_11, ClassFileConstants.JDK11);

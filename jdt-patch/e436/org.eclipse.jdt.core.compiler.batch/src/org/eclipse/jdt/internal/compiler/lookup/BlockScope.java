@@ -435,12 +435,11 @@ public void emulateOuterAccess(LocalVariableBinding outerLocalVariable) {
  * where we only want to deal with ONE enclosing instance for C (could not figure out an A for C)
  */
 public final ReferenceBinding findLocalType(char[] name) {
-	long compliance = compilerOptions().complianceLevel;
 	for (int i = this.subscopeCount-1; i >= 0; i--) {
 		if (this.subscopes[i] instanceof ClassScope) {
 			LocalTypeBinding sourceType = (LocalTypeBinding)((ClassScope) this.subscopes[i]).referenceContext.binding;
 			// from 1.4 on, local types should not be accessed across switch case blocks (52221)
-			if (compliance >= ClassFileConstants.JDK1_4 && sourceType.enclosingCase != null) {
+			if (sourceType.enclosingCase != null) {
 				if (!isInsideCase(sourceType.enclosingCase)) {
 					continue;
 				}
@@ -1277,8 +1276,7 @@ public void checkUnclosedCloseables(FlowInfo flowInfo, FlowContext flowContext, 
 			reportResourceLeak(trackingVar, locToBlame, status, exitAtEndOfMethod);
 		} else if (status == FlowInfo.NON_NULL) {
 			// properly closed but not managed by t-w-r: lowest priority
-			if (environment().globalOptions.complianceLevel >= ClassFileConstants.JDK1_7)
-				trackingVar.reportExplicitClosing(problemReporter());
+			trackingVar.reportExplicitClosing(problemReporter());
 		}
 	}
 	if (location == null || exitAtEndOfMethod) {

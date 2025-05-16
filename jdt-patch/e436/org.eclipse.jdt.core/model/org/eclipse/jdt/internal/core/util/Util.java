@@ -62,6 +62,7 @@ import org.eclipse.jdt.core.util.IComponentInfo;
 import org.eclipse.jdt.core.util.IFieldInfo;
 import org.eclipse.jdt.core.util.IMethodInfo;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.IntersectionCastTypeReference;
@@ -2701,12 +2702,12 @@ public class Util {
 	 * e.g. {"QString;", "[int", "[[Qjava.util.Vector;"}
 	 */
 	public static String[] typeParameterSignatures(AbstractMethodDeclaration method) {
-		Argument[] args = method.arguments;
+		AbstractVariableDeclaration[] args = method.arguments(true);
 		if (args != null) {
 			int length = args.length;
 			String[] signatures = new String[length];
 			for (int i = 0; i < args.length; i++) {
-				Argument arg = args[i];
+				AbstractVariableDeclaration arg = args[i];
 				signatures[i] = typeSignature(arg.type);
 			}
 			return signatures;

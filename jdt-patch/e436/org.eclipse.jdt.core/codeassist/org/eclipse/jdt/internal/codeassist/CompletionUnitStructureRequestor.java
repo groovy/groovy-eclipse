@@ -99,10 +99,11 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 				return true;
 			}
 		};
-		FieldDeclaration decl = (FieldDeclaration) (compInfo.node);
-		if (decl.binding != null) {
-			this.bindingCache.put(comp, decl.binding);
-			this.elementCache.put(decl.binding, comp);
+
+		Binding binding = compInfo.node.getBinding();
+		if (binding != null) {
+			this.bindingCache.put(comp, binding);
+			this.elementCache.put(binding, comp);
 		} else {
 			this.elementWithProblemCache.put(compInfo.node, comp);
 		}

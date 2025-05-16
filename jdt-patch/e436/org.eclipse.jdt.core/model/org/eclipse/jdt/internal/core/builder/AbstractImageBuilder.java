@@ -61,7 +61,6 @@ import org.eclipse.jdt.internal.compiler.DefaultCompilerFactory;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ICompilerFactory;
 import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
@@ -689,8 +688,7 @@ protected Compiler newCompiler() {
 	// enable the compiler reference info support
 	options.produceReferenceInfo = true;
 
-	if (options.complianceLevel >= ClassFileConstants.JDK1_6
-			&& options.processAnnotations) {
+	if (options.processAnnotations) {
 		// support for Java 6 annotation processors
 		initializeAnnotationProcessorManager(newCompiler);
 	}

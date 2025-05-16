@@ -41,13 +41,7 @@ public void runComplianceParserTest(
 	String expected13ProblemLog,
 	String expected14ProblemLog,
 	String expected15ProblemLog){
-	if(this.complianceLevel == ClassFileConstants.JDK1_3) {
-		this.runNegativeTest(testFiles, expected13ProblemLog);
-	} else if(this.complianceLevel == ClassFileConstants.JDK1_4) {
-		this.runNegativeTest(testFiles, expected14ProblemLog);
-	} else if(this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(testFiles, expected15ProblemLog);
-	}
+	this.runNegativeTest(testFiles, expected15ProblemLog);
 }
 public void runComplianceParserTest(
 		String[] testFiles,
@@ -55,35 +49,9 @@ public void runComplianceParserTest(
 		String expected14ProblemLog,
 		String expected15ProblemLog,
 		String expected17ProblemLog){
-		if(this.complianceLevel == ClassFileConstants.JDK1_3) {
-			this.runNegativeTest(testFiles, expected13ProblemLog);
-		} else if(this.complianceLevel == ClassFileConstants.JDK1_4) {
-			this.runNegativeTest(testFiles, expected14ProblemLog);
-		} else if(this.complianceLevel < ClassFileConstants.JDK1_7) {
-			this.runNegativeTest(testFiles, expected15ProblemLog);
-		} else {
-			this.runNegativeTest(testFiles, expected17ProblemLog);
-		}
+		this.runNegativeTest(testFiles, expected17ProblemLog);
 	}
-public void runComplianceParserTest(
-		String[] testFiles,
-		String expected13ProblemLog,
-		String expected14ProblemLog,
-		String expected15ProblemLog,
-		String expected16ProblemLog,
-		String expected17ProblemLog){
-		if (this.complianceLevel == ClassFileConstants.JDK1_3) {
-			this.runNegativeTest(testFiles, expected13ProblemLog);
-		} else if(this.complianceLevel == ClassFileConstants.JDK1_4) {
-			this.runNegativeTest(testFiles, expected14ProblemLog);
-		} else if(this.complianceLevel == ClassFileConstants.JDK1_5) {
-			this.runNegativeTest(testFiles, expected15ProblemLog);
-		} else if(this.complianceLevel == ClassFileConstants.JDK1_6) {
-			this.runNegativeTest(testFiles, expected16ProblemLog);
-		} else if(this.complianceLevel < ClassFileConstants.JDK1_8) {
-			this.runNegativeTest(testFiles, expected17ProblemLog);
-		}
-	}
+
 public void runComplianceParserTest(
 		String[] testFiles,
 		String expected13ProblemLog,
@@ -92,19 +60,7 @@ public void runComplianceParserTest(
 		String expected16ProblemLog,
 		String expected17ProblemLog,
 		String expected18ProblemLog){
-		if (this.complianceLevel == ClassFileConstants.JDK1_3) {
-			this.runNegativeTest(testFiles, expected13ProblemLog);
-		} else if(this.complianceLevel == ClassFileConstants.JDK1_4) {
-			this.runNegativeTest(testFiles, expected14ProblemLog);
-		} else if(this.complianceLevel == ClassFileConstants.JDK1_5) {
-			this.runNegativeTest(testFiles, expected15ProblemLog);
-		} else if(this.complianceLevel == ClassFileConstants.JDK1_6) {
-			this.runNegativeTest(testFiles, expected16ProblemLog);
-		} else if(this.complianceLevel < ClassFileConstants.JDK1_8) {
-			this.runNegativeTest(testFiles, expected17ProblemLog);
-		} else {
-			this.runNegativeTest(testFiles, expected18ProblemLog);
-		}
+		this.runNegativeTest(testFiles, expected18ProblemLog);
 	}
 public void runComplianceParserTest(
 		String[] testFiles,
@@ -129,17 +85,7 @@ public void runComplianceParserTest(
 		String expected20ProblemLog,
 		String expected22ProblemLog
 		){
-		if (this.complianceLevel == ClassFileConstants.JDK1_3) {
-			this.runNegativeTest(testFiles, expected1_3ProblemLog);
-		} else if(this.complianceLevel == ClassFileConstants.JDK1_4) {
-			this.runNegativeTest(testFiles, expected1_4ProblemLog);
-		} else if(this.complianceLevel == ClassFileConstants.JDK1_5) {
-			this.runNegativeTest(testFiles, expected1_5ProblemLog);
-		} else if(this.complianceLevel == ClassFileConstants.JDK1_6) {
-			this.runNegativeTest(testFiles, expected1_6ProblemLog);
-		} else if(this.complianceLevel == ClassFileConstants.JDK1_7) {
-			this.runNegativeTest(testFiles, expected1_7ProblemLog);
-		} else if(this.complianceLevel == ClassFileConstants.JDK1_8) {
+		if(this.complianceLevel == ClassFileConstants.JDK1_8) {
 			this.runNegativeTest(testFiles, expected1_8ProblemLog);
 		} else if(this.complianceLevel == ClassFileConstants.JDK9) {
 			this.runNegativeTest(testFiles, expected9ProblemLog);
@@ -488,14 +434,6 @@ public void test0009() {
 		"}\n"
 	};
 
-	String expected13ProblemLog =
-		"----------\n" +
-		"1. ERROR in X.java (at line 2)\n" +
-		"	public <T1 extends String, T2> X(){\n" +
-		"	        ^^^^^^^^^^^^^^^^^^^^^\n" +
-		"Syntax error, type parameters are only available if source level is 1.5 or greater\n" +
-		"----------\n";
-
 	String expected15ProblemLog =
 		"----------\n" +
 		"1. WARNING in X.java (at line 2)\n" +
@@ -504,16 +442,12 @@ public void test0009() {
 		"The type parameter T1 should not be bounded by the final type String. Final types cannot be further extended\n" +
 		"----------\n";
 
-	if(this.complianceLevel < ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(testFiles, expected13ProblemLog);
-	} else {
-		runConformTest(
-			true,
-			testFiles,
-			expected15ProblemLog,
-			null, null,
-			JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings);
-	}
+	runConformTest(
+		true,
+		testFiles,
+		expected15ProblemLog,
+		null, null,
+		JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings);
 }
 
 public void testPatternsInCase() {
@@ -533,74 +467,6 @@ public void testPatternsInCase() {
 	    }
 		"""
 	};
-
-	String expectedProblemLogFrom1_1_6 =
-					"----------\n" +
-					"1. ERROR in X.java (at line 4)\n" +
-					"	switch (o) {\n" +
-					"	        ^\n" +
-					"Cannot switch on a value of type Object. Only convertible int values or enum variables are permitted\n" +
-					"----------\n" +
-					"2. ERROR in X.java (at line 5)\n" +
-					"	case X x, null:\n" +
-					"	^^^^^^^^^^^^^^\n" +
-					"Multi-constant case labels supported from Java 14 onwards only\n" +
-					"----------\n" +
-					"3. ERROR in X.java (at line 5)\n" +
-					"	case X x, null:\n" +
-					"	     ^^^\n" +
-					"The Java feature 'Type Patterns' is only available with source level 16 and above\n" +
-					"----------\n" +
-					"4. ERROR in X.java (at line 5)\n" +
-					"	case X x, null:\n" +
-					"	     ^^^\n" +
-					"The Java feature 'Pattern Matching in Switch' is only available with source level 21 and above\n" +
-					"----------\n" +
-					"5. ERROR in X.java (at line 5)\n" +
-					"	case X x, null:\n" +
-					"	          ^^^^\n" +
-					"The Java feature 'Pattern Matching in Switch' is only available with source level 21 and above\n" +
-					"----------\n" +
-					"6. ERROR in X.java (at line 5)\n" +
-					"	case X x, null:\n" +
-					"	          ^^^^\n" +
-					"Cannot mix pattern with other case labels\n" +
-					"----------\n" +
-					"7. ERROR in X.java (at line 5)\n" +
-					"	case X x, null:\n" +
-					"	          ^^^^\n" +
-					"A null case label has to be either the only expression in a case label or the first expression followed only by a default\n" +
-					"----------\n" +
-					"8. ERROR in X.java (at line 7)\n" +
-					"	case String s, default :\n" +
-					"	^^^^^^^^^^^^^^^^^^^^^^\n" +
-					"Multi-constant case labels supported from Java 14 onwards only\n" +
-					"----------\n" +
-					"9. ERROR in X.java (at line 7)\n" +
-					"	case String s, default :\n" +
-					"	     ^^^^^^^^\n" +
-					"The Java feature 'Type Patterns' is only available with source level 16 and above\n" +
-					"----------\n" +
-					"10. ERROR in X.java (at line 7)\n" +
-					"	case String s, default :\n" +
-					"	     ^^^^^^^^\n" +
-					"The Java feature 'Pattern Matching in Switch' is only available with source level 21 and above\n" +
-					"----------\n" +
-					"11. ERROR in X.java (at line 7)\n" +
-					"	case String s, default :\n" +
-					"	               ^^^^^^^\n" +
-					"The Java feature 'Pattern Matching in Switch' is only available with source level 21 and above\n" +
-					"----------\n" +
-					"12. ERROR in X.java (at line 7)\n" +
-					"	case String s, default :\n" +
-					"	               ^^^^^^^\n" +
-					"Cannot mix pattern with other case labels\n" +
-					"----------\n" +
-					"13. ERROR in X.java (at line 7)\n" +
-					"	case String s, default :\n" +
-					"	               ^^^^^^^\n" +
-					"A 'default' can occur after 'case' only as a second case label expression and that too only if 'null' precedes  in 'case null, default' \n" +
-					"----------\n";
 
 	String expectedProblemLogFrom7_13 =
 			"----------\n" +
@@ -799,12 +665,7 @@ public void testPatternsInCase() {
 			"A 'default' can occur after 'case' only as a second case label expression and that too only if 'null' precedes  in 'case null, default' \n" +
 			"----------\n";
 
-	if (this.complianceLevel < ClassFileConstants.JDK1_7) {  // before switching on strings
-		runNegativeTest(
-			testFiles,
-			expectedProblemLogFrom1_1_6);
-	}
-	else if (this.complianceLevel < ClassFileConstants.JDK14) { // before multi case
+	if (this.complianceLevel < ClassFileConstants.JDK14) { // before multi case
 		runNegativeTest(
 				testFiles,
 				expectedProblemLogFrom7_13);
@@ -2916,47 +2777,7 @@ public void test0054() {
 		expected17ProblemLog
 	);
 }
-// test that use of multi-catch is flagged accordingly
-public void test0055() {
-	if(this.complianceLevel >= ClassFileConstants.JDK1_7) {
-		return;
-	}
-	String[] testFiles = new String[] {
-		"X.java",
-		"import java.io.*;\n" +
-		"public class X {\n" +
-		"	public static void main(String[] args) {\n" +
-		"		try {\n" +
-		"			System.out.println();\n" +
-		"			Reader r = new FileReader(args[0]);\n" +
-		"			r.read();\n" +
-		"		} catch(IOException | RuntimeException e) {\n" +
-		"			e.printStackTrace();\n" +
-		"		}\n" +
-		"	}\n" +
-		"}\n"
-	};
 
-	String expected13ProblemLog =
-			"----------\n" +
-			"1. ERROR in X.java (at line 8)\n" +
-			"	} catch(IOException | RuntimeException e) {\n" +
-			"	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"Multi-catch parameters are not allowed for source level below 1.7\n" +
-			"----------\n";
-	String expected14ProblemLog =
-		expected13ProblemLog;
-
-	String expected15ProblemLog =
-		expected14ProblemLog;
-
-	runComplianceParserTest(
-		testFiles,
-		expected13ProblemLog,
-		expected14ProblemLog,
-		expected15ProblemLog
-	);
-}
 // rethrow should not be precisely computed in 1.6-
 public void test0056() {
 	String[] testFiles = new String[] {
@@ -3032,411 +2853,9 @@ public void test0056() {
 		expected17ProblemLog
 	);
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383714
-public void test0057() {
-	if(this.complianceLevel >= ClassFileConstants.JDK1_8) {
-		return;
-	}
-	String[] testFiles = new String[] {
-		"X.java",
-		"interface I {\n" +
-		"  public default void foo() { System.out.println(); }\n" +
-		"}\n"
-	};
 
-	String expectedProblemLog =
-			"----------\n" +
-			"1. ERROR in X.java (at line 2)\n" +
-			"	public default void foo() { System.out.println(); }\n" +
-			"	                    ^^^^^\n" +
-			"Default methods are allowed only at source level 1.8 or above\n" +
-			"----------\n";
-
-	runComplianceParserTest(
-		testFiles,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog
-	);
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383714
-public void test0058() {
-	if(this.complianceLevel >= ClassFileConstants.JDK1_8) {
-		return;
-	}
-	String[] testFiles = new String[] {
-		"X.java",
-		"interface I {\n" +
-		"  void foo(int p);\n" +
-		"}\n" +
-		"public class X {\n" +
-		"  I i = System::exit;\n" +
-		"}\n"
-	};
-
-	String expectedProblemLog =
-			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
-			"	I i = System::exit;\n" +
-			"	      ^^^^^^^^^^^^\n" +
-			"Method references are allowed only at source level 1.8 or above\n" +
-			"----------\n";
-
-	runComplianceParserTest(
-		testFiles,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog
-	);
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383714
-public void test0059() {
-	if(this.complianceLevel >= ClassFileConstants.JDK1_8) {
-		return;
-	}
-	String[] testFiles = new String[] {
-		"X.java",
-		"interface I {\n" +
-		"  void foo(int p);\n" +
-		"}\n" +
-		"class Y {\n" +
-		"   static void goo(int x) {\n" +
-		"   }\n" +
-		"}\n" +
-		"public class X extends Y {\n" +
-		"  I i = super::goo;\n" +
-		"}\n"
-	};
-
-	String expectedProblemLog =
-			"----------\n" +
-			"1. ERROR in X.java (at line 9)\n" +
-			"	I i = super::goo;\n" +
-			"	      ^^^^^^^^^^\n" +
-			"Method references are allowed only at source level 1.8 or above\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 9)\n" +
-			"	I i = super::goo;\n" +
-			"	      ^^^^^^^^^^\n" +
-			"The method goo(int) from the type Y should be accessed in a static way \n" +
-			"----------\n";
-
-	runComplianceParserTest(
-		testFiles,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog
-	);
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383714
-public void test0060() {
-	if(this.complianceLevel >= ClassFileConstants.JDK1_8) {
-		return;
-	}
-	String[] testFiles = new String[] {
-		"X.java",
-		"interface I {\n" +
-		"  void foo(int p);\n" +
-		"}\n" +
-		"class Y {\n" +
-		"   void goo(int x) {\n" +
-		"   }\n" +
-		"}\n" +
-		"public class X extends Y {\n" +
-		"  I i = new Y()::goo;\n" +
-		"}\n"
-	};
-
-	String expectedProblemLog =
-			"----------\n" +
-			"1. ERROR in X.java (at line 9)\n" +
-			"	I i = new Y()::goo;\n" +
-			"	      ^^^^^^^^^^^^\n" +
-			"Method references are allowed only at source level 1.8 or above\n" +
-			"----------\n";
-
-	runComplianceParserTest(
-		testFiles,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog
-	);
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383714
-public void test0061() {
-	if(this.complianceLevel >= ClassFileConstants.JDK1_8) {
-		return;
-	}
-	String[] testFiles = new String[] {
-		"X.java",
-		"interface I {\n" +
-		"  void foo(int p);\n" +
-		"}\n" +
-		"class Y {\n" +
-		"   void goo(int x) {\n" +
-		"   }\n" +
-		"   Y() {}\n" +
-		"   Y(int x) {}\n" +
-		"}\n" +
-		"public class X extends Y {\n" +
-		"  I i = Y::new;\n" +
-		"}\n"
-	};
-
-	String expectedProblemLog =
-			"----------\n" +
-			"1. ERROR in X.java (at line 11)\n" +
-			"	I i = Y::new;\n" +
-			"	      ^^^^^^\n" +
-			"Constructor references are allowed only at source level 1.8 or above\n" +
-			"----------\n";
-
-	runComplianceParserTest(
-		testFiles,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog
-	);
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383714
-public void test0062() {
-	if(this.complianceLevel >= ClassFileConstants.JDK1_8) {
-		return;
-	}
-	String[] testFiles = new String[] {
-		"X.java",
-		"interface I {\n" +
-		"  int foo(int p);\n" +
-		"}\n" +
-		"public class X {\n" +
-		"  I i = p -> 10 + 20 + 30;\n" +
-		"}\n"
-	};
-
-	String expectedProblemLog =
-			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
-			"	I i = p -> 10 + 20 + 30;\n" +
-			"	      ^^^^^^^^^^^^^^^^^\n" +
-			"Lambda expressions are allowed only at source level 1.8 or above\n" +
-			"----------\n";
-
-	runComplianceParserTest(
-		testFiles,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog
-	);
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=381358
-public void test0063() {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_4 || this.complianceLevel >= ClassFileConstants.JDK1_8) {
-		return;
-	}
-	String[] testFiles = new String[] {
-		"X.java",
-		"interface I {\n" +
-		"  int foo(int p);\n" +
-		"}\n" +
-		"public class X<T> {\n" +
-		"  I i = X<String>::foo;\n" +
-		"  I i2 = (p) -> 10;\n" +
-		"  public static int foo(int p) {\n" +
-		"	return p;\n" +
-		"  }\n" +
-		"}\n"
-	};
-
-	String expectedProblemLog =
-			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
-			"	I i = X<String>::foo;\n" +
-			"	      ^^^^^^^^^^^^^^\n" +
-			"Method references are allowed only at source level 1.8 or above\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 5)\n" +
-			"	I i = X<String>::foo;\n" +
-			"	      ^^^^^^^^^^^^^^\n" +
-			"The method foo(int) from the type X<String> should be accessed in a static way \n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 6)\n" +
-			"	I i2 = (p) -> 10;\n" +
-			"	       ^^^^^^^^^\n" +
-			"Lambda expressions are allowed only at source level 1.8 or above\n" +
-			"----------\n";
-
-	runComplianceParserTest(
-		testFiles,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog
-	);
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383913#c22
-public void test0064() {
-	if (this.complianceLevel >= ClassFileConstants.JDK1_8) {
-		return;
-	}
-	String[] source = new String[] {
-		"X.java",
-		"class X {\n" +
-		"	void foo(X this){}\n" +
-		"}"
-	};
-	String expectedProblemLog =
-			"----------\n" +
-			"1. ERROR in X.java (at line 2)\n" +
-			"	void foo(X this){}\n" +
-			"	           ^^^^\n" +
-			"Explicit declaration of 'this' parameter is allowed only at source level 1.8 or above\n" +
-			"----------\n";
-	runComplianceParserTest(
-			source,
-			expectedProblemLog,
-			expectedProblemLog,
-			expectedProblemLog,
-			expectedProblemLog,
-			expectedProblemLog
-		);
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=391201
-public void testBug391201() {
-	if(this.complianceLevel >= ClassFileConstants.JDK1_8 || this.complianceLevel < ClassFileConstants.JDK1_5) {
-		return;
-	}
-	String[] testFiles = new String[] {
-		"X.java",
-		"public class X {\n" +
-		"	@Marker int foo(@Marker int p) {\n" +
-		"		@Marker int i = 0;\n" +
-		"		return i;\n" +
-		"	}\n" +
-		"	@Marker\n" +
-		"	class Y {}\n" +
-		"	@java.lang.annotation.Target (java.lang.annotation.ElementType.TYPE_USE)\n" +
-		"	@interface Marker {}" +
-		"}",
-		"java/lang/annotation/ElementType.java",
-		"package java.lang.annotation;\n" +
-		"public enum ElementType {\n" +
-		"    TYPE,\n" +
-		"    FIELD,\n" +
-		"    METHOD,\n" +
-		"    PARAMETER,\n" +
-		"    CONSTRUCTOR,\n" +
-		"    LOCAL_VARIABLE,\n" +
-		"    ANNOTATION_TYPE,\n" +
-		"    PACKAGE,\n" +
-		"    TYPE_PARAMETER,\n" +
-		"    TYPE_USE\n" +
-		"}\n"
-	};
-
-	String expectedProblemLog =
-			"----------\n" +
-			"1. ERROR in X.java (at line 2)\n" +
-			"	@Marker int foo(@Marker int p) {\n" +
-			"	^^^^^^^\n" +
-			"Syntax error, type annotations are available only when source level is at least 1.8\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 2)\n" +
-			"	@Marker int foo(@Marker int p) {\n" +
-			"	                ^^^^^^^\n" +
-			"Syntax error, type annotations are available only when source level is at least 1.8\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 3)\n" +
-			"	@Marker int i = 0;\n" +
-			"	^^^^^^^\n" +
-			"Syntax error, type annotations are available only when source level is at least 1.8\n" +
-			"----------\n" +
-			"4. ERROR in X.java (at line 6)\n" +
-			"	@Marker\n" +
-			"	^^^^^^^\n" +
-			"Syntax error, type annotations are available only when source level is at least 1.8\n" +
-			"----------\n";
-
-	runComplianceParserTest(
-		testFiles,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog
-	);
-}
-public void testBug399773() {
-	if (this.complianceLevel >= ClassFileConstants.JDK1_8)
-		return;
-	String[] testFiles = new String[] {
-		"X.java",
-		"interface I {\n" +
-		"	void doit();\n" +
-		"	default void doitalso () {}\n" +
-		"}\n" +
-		"interface J {\n" +
-		"	void doit();\n" +
-		"	default void doitalso () {}\n" +
-		"}\n" +
-		"public class X {\n" +
-		"	Object p = (I & J) () -> {};\n" +
-		"}\n" ,
-	};
-
-	String expectedProblemLog =
-			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
-			"	default void doitalso () {}\n" +
-			"	             ^^^^^^^^^^^\n" +
-			"Default methods are allowed only at source level 1.8 or above\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 7)\n" +
-			"	default void doitalso () {}\n" +
-			"	             ^^^^^^^^^^^\n" +
-			"Default methods are allowed only at source level 1.8 or above\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 10)\n" +
-			"	Object p = (I & J) () -> {};\n" +
-			"	            ^^^^^\n" +
-			"Additional bounds are not allowed in cast operator at source levels below 1.8\n" +
-			"----------\n" +
-			"4. ERROR in X.java (at line 10)\n" +
-			"	Object p = (I & J) () -> {};\n" +
-			"	                   ^^^^^\n" +
-			"Lambda expressions are allowed only at source level 1.8 or above\n" +
-			"----------\n" +
-			"5. ERROR in X.java (at line 10)\n" +
-			"	Object p = (I & J) () -> {};\n" +
-			"	                   ^^^^^\n" +
-			"The target type of this expression must be a functional interface\n" +
-			"----------\n";
-
-	runComplianceParserTest(
-		testFiles,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog
-	);
-}
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=399778,  [1.8][compiler] Conditional operator expressions should propagate target types
 public void testBug399778() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	String[] testFiles = new String[] {
 		"X.java",
 		"import java.util.Arrays;\n" +
@@ -3466,8 +2885,6 @@ public void testBug399778() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=399778,  [1.8][compiler] Conditional operator expressions should propagate target types
 public void testBug399778a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_5)
-		return;
 	String[] testFiles = new String[] {
 		"X.java",
 		"import java.util.Arrays;\n" +
@@ -3495,53 +2912,7 @@ public void testBug399778a() {
 		expectedProblemLog   // 1.8 also issue type safety warning.
 	);
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=399780: static methods in interfaces.
-public void testBug399780() {
-	if(this.complianceLevel >= ClassFileConstants.JDK1_8) {
-		return;
-	}
-	String[] testFiles = new String[] {
-		"I.java",
-		"interface I {\n" +
-		"  public static void foo1() { System.out.println(); }\n" +
-		"  public static void foo2();\n" +
-		"  public abstract static void foo3();\n" +
-		"}\n"
-	};
 
-	String expectedProblemLog =
-			"----------\n" +
-			"1. ERROR in I.java (at line 2)\n" +
-			"	public static void foo1() { System.out.println(); }\n" +
-			"	                   ^^^^^^\n" +
-			"Static methods are allowed in interfaces only at source level 1.8 or above\n" +
-			"----------\n" +
-			"2. ERROR in I.java (at line 2)\n" +
-			"	public static void foo1() { System.out.println(); }\n" +
-			"	                   ^^^^^^\n" +
-			"Illegal modifier for the interface method foo1; only public & abstract are permitted\n" +
-			"----------\n" +
-			"3. ERROR in I.java (at line 3)\n" +
-			"	public static void foo2();\n" +
-			"	                   ^^^^^^\n" +
-			"Illegal modifier for the interface method foo2; only public & abstract are permitted\n" +
-			"----------\n" +
-			"4. ERROR in I.java (at line 4)\n" +
-			"	public abstract static void foo3();\n" +
-			"	                            ^^^^^^\n" +
-			"Illegal modifier for the interface method foo3; only public & abstract are permitted\n" +
-			"----------\n";
-
-	runComplianceParserTest(
-		testFiles,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog,
-		expectedProblemLog
-	);
-}
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=399769:  Use of '_' as identifier name should trigger a diagnostic
 public void testBug399781() {
 	String[] testFiles = new String[] {
@@ -3562,26 +2933,7 @@ public void testBug399781() {
 		"}\n",
 	};
 	String problemLog = null;
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		problemLog = """
-						----------
-						1. WARNING in X.java (at line 4)
-							int _   = 3;
-							    ^
-						The local variable _ is hiding a field from type X
-						----------
-						2. WARNING in X.java (at line 8)
-							void goo(int _) {}
-							             ^
-						The parameter _ is hiding a field from type X
-						----------
-						3. WARNING in X.java (at line 11)
-							} catch (Exception _) {
-							                   ^
-						The parameter _ is hiding a field from type X
-						----------
-						""";
-	} else if (this.complianceLevel == ClassFileConstants.JDK1_8) {
+	if (this.complianceLevel == ClassFileConstants.JDK1_8) {
 		problemLog = """
 					----------
 					1. WARNING in X.java (at line 2)
@@ -3682,106 +3034,10 @@ public void testBug399781() {
 //	(this.complianceLevel < ClassFileConstants.JDK22) ? "" : "";
 	runNegativeTest(testFiles, problemLog);
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=406846:  [1.8] compiler NPE for method reference/lambda code compiled with < 1.8 compliance
-public void test406846() {
 
-	if (this.complianceLevel >= ClassFileConstants.JDK1_8) // tested in LET.
-		return;
-
-	String[] testFiles = new String[] {
-		"X.java",
-		"import java.util.*;\n" +
-		"public class X {\n" +
-		"  public static <E> void printItem(E value, int index) {\n" +
-		"    String output = String.format(\"%d -> %s\", index, value);\n" +
-		"    System.out.println(output);\n" +
-		"  }\n" +
-		"  public static void main(String[] argv) {\n" +
-		"    List<String> list = Arrays.asList(\"A\",\"B\",\"C\");\n" +
-		"    eachWithIndex(list,X::printItem);\n" +
-		"  }\n" +
-		"  interface ItemWithIndexVisitor<E> {\n" +
-		"    public void visit(E item, int index);\n" +
-		"  }\n" +
-		"  public static <E> void eachWithIndex(List<E> list, ItemWithIndexVisitor<E> visitor) {\n" +
-		"    for (int i = 0; i < list.size(); i++) {\n" +
-		"         visitor.visit(list.get(i), i);\n" +
-		"    }\n" +
-		"  }\n" +
-		"}\n",
-	};
-
-	String expectedProblemLog =
-			"----------\n" +
-			"1. ERROR in X.java (at line 9)\n" +
-			"	eachWithIndex(list,X::printItem);\n" +
-			"	                   ^^^^^^^^^^^^\n" +
-			"Method references are allowed only at source level 1.8 or above\n" +
-			"----------\n";
-	String expected1314ProblemLog =
-			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
-			"	public static <E> void printItem(E value, int index) {\n" +
-			"	               ^\n" +
-			"Syntax error, type parameters are only available if source level is 1.5 or greater\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 4)\n" +
-			"	String output = String.format(\"%d -> %s\", index, value);\n" +
-			"	                       ^^^^^^\n" +
-			"The method format(String, Object[]) in the type String is not applicable for the arguments (String, int, E)\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 8)\n" +
-			"	List<String> list = Arrays.asList(\"A\",\"B\",\"C\");\n" +
-			"	     ^^^^^^\n" +
-			"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-			"----------\n" +
-			"4. ERROR in X.java (at line 8)\n" +
-			"	List<String> list = Arrays.asList(\"A\",\"B\",\"C\");\n" +
-			"	                           ^^^^^^\n" +
-			"The method asList(T[]) in the type Arrays is not applicable for the arguments (String, String, String)\n" +
-			"----------\n" +
-			"5. ERROR in X.java (at line 9)\n" +
-			"	eachWithIndex(list,X::printItem);\n" +
-			"	                   ^^^^^^^^^^^^\n" +
-			"Method references are allowed only at source level 1.8 or above\n" +
-			"----------\n" +
-			"6. ERROR in X.java (at line 11)\n" +
-			"	interface ItemWithIndexVisitor<E> {\n" +
-			"	                               ^\n" +
-			"Syntax error, type parameters are only available if source level is 1.5 or greater\n" +
-			"----------\n" +
-			"7. ERROR in X.java (at line 14)\n" +
-			"	public static <E> void eachWithIndex(List<E> list, ItemWithIndexVisitor<E> visitor) {\n" +
-			"	               ^\n" +
-			"Syntax error, type parameters are only available if source level is 1.5 or greater\n" +
-			"----------\n" +
-			"8. ERROR in X.java (at line 14)\n" +
-			"	public static <E> void eachWithIndex(List<E> list, ItemWithIndexVisitor<E> visitor) {\n" +
-			"	                                          ^\n" +
-			"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-			"----------\n" +
-			"9. ERROR in X.java (at line 14)\n" +
-			"	public static <E> void eachWithIndex(List<E> list, ItemWithIndexVisitor<E> visitor) {\n" +
-			"	                                                                        ^\n" +
-			"Syntax error, parameterized types are only available if source level is 1.5 or greater\n" +
-			"----------\n";
-
-	runComplianceParserTest(
-			testFiles,
-			expected1314ProblemLog,
-			expected1314ProblemLog,
-			expectedProblemLog,
-			expectedProblemLog,
-			expectedProblemLog,
-			expectedProblemLog
-	);
-}
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=401850: [1.8][compiler] Compiler fails to type poly allocation expressions in method invocation contexts
 // FAIL: sub-optimal overload picked
 public void test401850() {
-
-	if (this.complianceLevel < ClassFileConstants.JDK1_7)
-		return;
 	this.runConformTest(
 			new String[] {
 				"X.java",
@@ -3797,53 +3053,9 @@ public void test401850() {
 				"   } \n" +
 				"}\n",
 			},
-			this.complianceLevel == ClassFileConstants.JDK1_7 ? "foo(Object)" : "foo(X<String>)");
+			"foo(X<String>)");
 }
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=429110: [1.8][quick fix] Hovering over the error does not show the quick fix
-//FAIL: sub-optimal overload picked
-public void test429110() {
-	if (this.complianceLevel != ClassFileConstants.JDK1_7)
-		return;
-	this.runNegativeTest(
-			new String[] {
-				"java/lang/annotation/ElementType.java",
-				"package java.lang.annotation;\n" +
-				"public enum ElementType {\n" +
-				"    TYPE,\n" +
-				"    FIELD,\n" +
-				"    METHOD,\n" +
-				"    PARAMETER,\n" +
-				"    CONSTRUCTOR,\n" +
-				"    LOCAL_VARIABLE,\n" +
-				"    ANNOTATION_TYPE,\n" +
-				"    PACKAGE,\n" +
-				"    TYPE_PARAMETER,\n" +
-				"    TYPE_USE\n" +
-				"}\n",
-				"X.java",
-				"import java.lang.annotation.ElementType;\n" +
-				"import java.lang.annotation.Target;\n" +
-				"import java.util.List;\n" +
-				"public class X {\n" +
-				"	@Target(ElementType.TYPE_USE)\n" +
-				"	static @interface NonNull { }\n" +
-				"	List<@NonNull String> foo(List<@NonNull String> arg) {\n" +
-				"		return arg;\n" +
-				"	}\n" +
-				"}\n"
-			},
-			"----------\n" +
-			"1. ERROR in X.java (at line 7)\n" +
-			"	List<@NonNull String> foo(List<@NonNull String> arg) {\n" +
-			"	     ^^^^^^^^\n" +
-			"Syntax error, type annotations are available only when source level is at least 1.8\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 7)\n" +
-			"	List<@NonNull String> foo(List<@NonNull String> arg) {\n" +
-			"	                               ^^^^^^^^\n" +
-			"Syntax error, type annotations are available only when source level is at least 1.8\n" +
-			"----------\n");
-}
+
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=421477: [1.8][compiler] strange error message for default method in class
 public void test421477() {
 	this.runNegativeTest(
@@ -3859,9 +3071,7 @@ public void test421477() {
 			"1. ERROR in X.java (at line 2)\n" +
 			"	default void f() {\n" +
 			"	             ^^^\n" +
-			(this.complianceLevel >= ClassFileConstants.JDK1_8 ?
-			"Default methods are allowed only in interfaces.\n" :
-			"Illegal modifier for the method f; only public, protected, private, abstract, static, final, synchronized, native & strictfp are permitted\n")	+
+			"Default methods are allowed only in interfaces.\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 4)\n" +
 			"	default X() {}\n" +
@@ -3881,30 +3091,11 @@ public void test428605() {
 				"       }\n" +
 				"} \n"
 			},
-			(this.complianceLevel < ClassFileConstants.JDK1_8 ?
-			"----------\n" +
-			"1. ERROR in X.java (at line 2)\n" +
-			"	default void f() {\n" +
-			"	             ^^^\n" +
-			"Default methods are allowed only at source level 1.8 or above\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 4)\n" +
-			"	static void g() {\n" +
-			"	            ^^^\n" +
-			"Static methods are allowed in interfaces only at source level 1.8 or above\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 4)\n" +
-			"	static void g() {\n" +
-			"	            ^^^\n" +
-			"Illegal modifier for the interface method g; only public & abstract are permitted\n" +
-			"----------\n" :
-			""));
+			"");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=440285
 // [1.8] Compiler allows array creation reference with type arguments
 public void testBug440285() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_8)
-		return;
 	runNegativeTest(new String [] {
 		"X.java",
 		"import java.util.function.Function;\n" +
@@ -3979,6 +3170,7 @@ public void testBug531714_001() {
 		expectedProblemLog,
 		expectedProblemLog,
 		expectedProblemLog,
+		expectedProblemLog,
 		expectedProblemLog
 	);
 }
@@ -4003,25 +3195,43 @@ public void testBug531714_002() {
 	};
 
 	String expectedProblemLog =
-			"----------\n" +
-			"1. ERROR in X.java (at line 4)\n" +
-			"	case 0 -> i * 0;\n" +
-			"	^^^^^^\n" +
-			"Arrow in case statement supported from Java 14 onwards only\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 5)\n" +
-			"	case 1 -> 2;\n" +
-			"	^^^^^^\n" +
-			"Arrow in case statement supported from Java 14 onwards only\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 6)\n" +
-			"	default -> 3;\n" +
-			"	^^^^^^^\n" +
-			"Arrow in case statement supported from Java 14 onwards only\n" +
-			"----------\n";
+			"""
+			----------
+			1. ERROR in X.java (at line 4)
+				case 0 -> i * 0;
+				^^^^^^
+			Arrow in case statement supported from Java 14 onwards only
+			----------
+			2. ERROR in X.java (at line 4)
+				case 0 -> i * 0;
+				          ^^^^^
+			Invalid expression as statement
+			----------
+			3. ERROR in X.java (at line 5)
+				case 1 -> 2;
+				^^^^^^
+			Arrow in case statement supported from Java 14 onwards only
+			----------
+			4. ERROR in X.java (at line 5)
+				case 1 -> 2;
+				          ^
+			Invalid expression as statement
+			----------
+			5. ERROR in X.java (at line 6)
+				default -> 3;
+				^^^^^^^
+			Arrow in case statement supported from Java 14 onwards only
+			----------
+			6. ERROR in X.java (at line 6)
+				default -> 3;
+				           ^
+			Invalid expression as statement
+			----------
+			""";
 
 	runComplianceParserTest(
 		testFiles,
+		expectedProblemLog,
 		expectedProblemLog,
 		expectedProblemLog,
 		expectedProblemLog,
@@ -4048,7 +3258,6 @@ public void testIssue2008() {
 		"}\n"
 	};
 
-	String expectedProblemLogUpto1_7 = "";
 	String expected1_8ProblemLog = """
 			----------
 			1. WARNING in X.java (at line 4)
@@ -4109,14 +3318,7 @@ public void testIssue2008() {
 					Syntax error on token "_", Identifier expected
 					----------\n""";
 
-	if (this.complianceLevel < ClassFileConstants.JDK1_8) {
-		runConformTest(
-			true,
-			testFiles,
-			expectedProblemLogUpto1_7,
-			"OK", null,
-			JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings);
-	} else if(this.complianceLevel == ClassFileConstants.JDK1_8) {
+	if(this.complianceLevel == ClassFileConstants.JDK1_8) {
 		runConformTest(
 				true,
 				testFiles,

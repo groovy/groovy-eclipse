@@ -1064,6 +1064,21 @@ public class CompletionProposal {
 	}
 
 	/**
+	 * Returns the proposed sequence of characters to be displayed. In certain scenarios
+	 * where the code to be inserted cannot be displayed as is, for e.g. aesthetic reasons,
+	 * the implementor of this API may choose to return a different value other than {@link #getCompletion()}.
+	 * The other characteristics of the {@link #getCompletion()} also apply here.
+	 * <p>
+	 * The client must not modify the array returned.
+	 * </p>
+	 *
+	 * @return the completion string to be displayed in a pretty form
+	 * @since 3.42
+	 */
+	public char[] getDisplayString() {
+		return null;
+	}
+	/**
 	 * Sets the proposed sequence of characters to insert into the
 	 * source file buffer, replacing the characters at the specified
 	 * source range. The string can be arbitrary; for example, it might

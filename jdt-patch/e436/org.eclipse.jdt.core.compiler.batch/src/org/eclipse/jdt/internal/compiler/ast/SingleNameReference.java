@@ -168,9 +168,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo, boolean valueRequired) {
 	switch (this.bits & ASTNode.RestrictiveFlagMASK) {
 		case Binding.FIELD : // reading a field
-			if (valueRequired || currentScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4) {
-				manageSyntheticAccessIfNecessary(currentScope, flowInfo, true /*read-access*/);
-			}
+			manageSyntheticAccessIfNecessary(currentScope, flowInfo, true /*read-access*/);
 			// check if reading a final blank field
 			FieldBinding fieldBinding = (FieldBinding) this.binding;
 			if (fieldBinding.isBlankFinal() && currentScope.needBlankFinalFieldInitializationCheck(fieldBinding)) {

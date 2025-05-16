@@ -18,6 +18,10 @@ import junit.framework.Test;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
+/**
+ * Test class originally capturing issues specific to Java9, but meanwhile also just a continuation
+ * of GenericsRegressionTest_1_8.
+ */
 public class GenericsRegressionTest_9 extends AbstractRegressionTest9 {
 
 static {
@@ -1048,6 +1052,100 @@ public void testGH3501() {
 			----------
 			""";
 	runner.runNegativeTest();
+}
+public void testGH3457() {
+	runConformTest(new String[] {
+		"Test.java",
+		"""
+		public class Test {
+			public void test() {
+				this.error(new TypeToken<A2<?>>() {});
+			}
+
+			public <T extends B1> void error(TypeToken<? extends A1<? extends T>> type) {}
+			public static abstract class TypeToken<T> {}
+			public static class A1<T extends B1> {}
+			public static class A2<T extends B2> extends A1<T> {}
+
+			public static class B1 {}
+			public static class B2 extends B1 {}
+		}
+		"""
+	});
+}
+public void testGH3457b() {
+	runConformTest(new String[] {
+		"QueryUtil.java",
+		"""
+		import java.util.ArrayList;
+		import java.util.Collection;
+
+		interface IQuery<T> { }
+
+		public class QueryUtil {
+			public static <T> IQuery<T> createCompoundQuery(IQuery<? extends T> query1, IQuery<T> query2, boolean and) {
+				ArrayList<IQuery<? extends T>> queries = new ArrayList<>(2);
+				queries.add(query1);
+				queries.add(query2);
+				return createCompoundQuery(queries, and);
+			}
+			public static <T> IQuery<T> createCompoundQuery(Collection<? extends IQuery<? extends T>> queries, boolean and) {
+				return null;
+			}
+		}
+		"""
+	});
+}
+public void testGH3948() {
+	runNegativeTest(new String[] {
+			"Foo.java",
+			"""
+			import java.util.Collections;
+			import java.util.List;
+			import java.util.function.BiConsumer;
+			import java.util.function.Function;
+
+			public class Foo {
+			    private List<? extends Bar> value;
+
+			    public void set(List<? extends Bar> value) {
+			        this.value = value;
+			    }
+
+			    public List<Bar> get() {
+			        return Collections.unmodifiableList(value);
+			    }
+
+			    public static void main(String[] args) {
+			        test(Foo::get, Foo::set);
+			    }
+
+			    public static <U> void test(Function<Foo, List<U>> getter, BiConsumer<Foo, List<? extends U>> setter) {
+			        // noop
+			    }
+
+			    public static interface Bar{}
+			}
+			"""
+		},
+		"""
+		----------
+		1. ERROR in Foo.java (at line 18)
+			test(Foo::get, Foo::set);
+			^^^^
+		The method test(Function<Foo,List<U>>, BiConsumer<Foo,List<? extends U>>) in the type Foo is not applicable for the arguments (Foo::get, Foo::set)
+		----------
+		2. ERROR in Foo.java (at line 18)
+			test(Foo::get, Foo::set);
+			     ^^^^^^^^
+		The type of get() from the type Foo is List<Foo.Bar>, this is incompatible with the descriptor's return type: List<U>
+		----------
+		3. ERROR in Foo.java (at line 18)
+			test(Foo::get, Foo::set);
+			               ^^^^^^^^
+		The type Foo does not define set(Foo, List<capture#5-of ? extends U>) that is applicable here
+		----------
+		""");
 }
 public static Class<GenericsRegressionTest_9> testClass() {
 	return GenericsRegressionTest_9.class;

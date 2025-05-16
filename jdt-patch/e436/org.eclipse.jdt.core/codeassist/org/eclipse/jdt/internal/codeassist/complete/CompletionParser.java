@@ -655,8 +655,8 @@ protected void attachOrphanCompletionNode(){
 						|| (this.elementPtr >= 0 && stackHasInstanceOfExpression(this.elementObjectInfoStack, this.elementPtr))))
 				|| (expression instanceof AllocationExpression
 					&& ((AllocationExpression)expression).type == this.assistNode)
-				|| (expression instanceof AND_AND_Expression
-						&& (this.elementPtr >= 0 && this.elementObjectInfoStack[this.elementPtr] instanceof InstanceOfExpression))
+				|| (expression instanceof AND_AND_Expression // https://bugs.eclipse.org/bugs/show_bug.cgi?id=568934#c8
+					&& (this.elementPtr >= 0 && (this.elementObjectInfoStack[this.elementPtr] == null || this.elementObjectInfoStack[this.elementPtr] instanceof InstanceOfExpression)))
 				|| (expression instanceof ConditionalExpression
 						  && ((ConditionalExpression) expression).valueIfFalse == this.assistNode)){
 				buildMoreCompletionContext(expression);
@@ -676,21 +676,49 @@ protected void attachOrphanCompletionNode(){
 			}
 		}
 	}
-	if (this.astPtr > -1 && this.astStack[this.astPtr] instanceof LocalDeclaration) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=287939
-		// To take care of:  if (a instance of X)  int i = a.|
-		LocalDeclaration local = (LocalDeclaration) this.astStack[this.astPtr];
-		if (local.initialization == this.assistNode) {
-			Statement enclosing = buildMoreCompletionEnclosingContext(local);
-			if (enclosing instanceof IfStatement) {
-				if (this.currentElement instanceof RecoveredBlock) {
-					// RecoveredLocalVariable must be removed from its parent because the IfStatement will be added instead
-					RecoveredBlock recoveredBlock = (RecoveredBlock) this.currentElement;
-					recoveredBlock.statements[--recoveredBlock.statementCount] = null;
-					this.currentElement = this.currentElement.add(enclosing, 0);
+	LocalDeclaration local = getLocalDeclarationFromAstStack();
+	if (local != null) {
+		Statement enclosing = buildMoreCompletionEnclosingContext(local);
+		if (enclosing instanceof IfStatement ifStatement) {
+			if (this.currentElement instanceof RecoveredBlock recoveredBlock) {
+				// RecoveredLocalVariable must be removed from its parent because the IfStatement will be added instead
+				RecoveredStatement[] statements = new RecoveredStatement[recoveredBlock.statementCount - 1];
+				int j = 0;
+				for (int i = 0; i < recoveredBlock.statementCount; i++) {
+					RecoveredStatement statement = recoveredBlock.statements[i];
+					if ( !(statement instanceof RecoveredLocalVariable recoveredLocalVariable && recoveredLocalVariable.localDeclaration == local)) {
+						statements[j++] = statement;
+					}
 				}
+				for (int i = 0; i < statements.length; i++) {
+					recoveredBlock.statements[i] = statements[i];
+				}
+				recoveredBlock.statements[--recoveredBlock.statementCount] = null;
+				//  if (a instanceof List l) { l.is| Object // https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2106
+				if (ifStatement.condition instanceof InstanceOfExpression iof && iof.pattern instanceof TypePattern pattern) {
+					this.currentElement.add(pattern.local, 0);
+				}
+				this.currentElement = this.currentElement.add(ifStatement, 0);
 			}
 		}
 	}
+}
+private LocalDeclaration getLocalDeclarationFromAstStack() {
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=287939
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2106
+	int ptr = this.astPtr;
+	while (ptr > -1) {
+		// To take care of:  if (a instance of X)  int i = a.|
+		// if (a instanceof List l) { l.is| Object
+		//  if (a instanceof List l) { l.| Object // https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2106
+		if (this.astStack[ptr] instanceof LocalDeclaration local) {
+			if (local.initialization == this.assistNode || local.type == this.assistNode) {
+				return local;
+			}
+		}
+		ptr--;
+	}
+	return null;
 }
 
 private static class SavedState {
@@ -1703,9 +1731,7 @@ private boolean checkKeywordAndRestrictedIdentifiers() {
 				}
 
 				keywordsAndRestrictedIndentifiers[count++] = Keywords.CLASS;
-				if (this.options.complianceLevel >= ClassFileConstants.JDK1_5) {
-					keywordsAndRestrictedIndentifiers[count++] = Keywords.ENUM;
-				}
+				keywordsAndRestrictedIndentifiers[count++] = Keywords.ENUM;
 				if((this.lastModifiers & ClassFileConstants.AccFinal) == 0) {
 					keywordsAndRestrictedIndentifiers[count++] = Keywords.INTERFACE;
 				}
@@ -3972,12 +3998,6 @@ protected void consumeNormalAnnotation(boolean isTypeAnnotation) {
 					this.currentElement = ((RecoveredAnnotation)this.currentElement).addAnnotation(annotation, this.identifierPtr);
 				}
 			}
-
-			if(!this.statementRecoveryActivated &&
-					this.options.sourceLevel < ClassFileConstants.JDK1_5 &&
-					this.lastErrorEndPositionBeforeRecovery < this.scanner.currentPosition) {
-				problemReporter().invalidUsageOfAnnotation(annotation);
-			}
 			this.recordStringLiterals = true;
 			return;
 		}
@@ -5271,9 +5291,7 @@ boolean computeKeywords(int kind, List<char[]> keywords) {
 		if(this.canBeExplicitConstructor == YES) {
 			canBeExplicitConstructorCall = true;
 		}
-		if (this.options.complianceLevel >= ClassFileConstants.JDK1_4) {
-			keywords.add(Keywords.ASSERT);
-		}
+		keywords.add(Keywords.ASSERT);
 		keywords.add(Keywords.DO);
 		keywords.add(Keywords.FOR);
 		keywords.add(Keywords.IF);
@@ -5343,9 +5361,7 @@ boolean computeKeywords(int kind, List<char[]> keywords) {
 			keywords.add(Keywords.BREAK);
 			keywords.add(Keywords.CASE);
 			keywords.add(Keywords.YIELD);
-			if (this.options.complianceLevel >= ClassFileConstants.JDK1_4) {
-				keywords.add(Keywords.ASSERT);
-			}
+			keywords.add(Keywords.ASSERT);
 			keywords.add(Keywords.DO);
 			keywords.add(Keywords.FOR);
 			keywords.add(Keywords.IF);

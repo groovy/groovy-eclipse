@@ -338,8 +338,6 @@ public void test009() {
 }
 //Bug 408038 - Classes which implement Externalizable should not have an unused constructor warning
 public void test408038a() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_6)
-		return;
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -370,8 +368,6 @@ public void test408038a() {
 }
 //Bug 408038 - Classes which implement Externalizable should not have an unused constructor warning
 public void test408038b() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_6)
-		return;
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -402,8 +398,6 @@ public void test408038b() {
 }
 //Bug 408038 - Classes which implement Externalizable should not have an unused constructor warning
 public void test408038c() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_6)
-		return;
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -441,8 +435,6 @@ public void test408038c() {
 }
 //Bug 408038 - Classes which implement Externalizable should not have an unused constructor warning
 public void test408038d() {
-	if (this.complianceLevel < ClassFileConstants.JDK1_6)
-		return;
 	this.runNegativeTest(
 		new String[] {
 			"X.java",

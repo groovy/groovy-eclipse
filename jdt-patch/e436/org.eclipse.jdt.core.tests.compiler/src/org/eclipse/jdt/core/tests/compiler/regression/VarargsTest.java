@@ -58,9 +58,7 @@ public class VarargsTest extends AbstractComparableTest {
 
 	@Override
 	protected String intersection(String... types) {
-		if (this.complianceLevel >= ClassFileConstants.JDK1_8)
-			return String.join(" & ", types);
-		return String.join("&", types);
+		return String.join(" & ", types);
 	}
 	public void test001() {
 		this.runConformTest(
@@ -823,11 +821,9 @@ public class VarargsTest extends AbstractComparableTest {
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383780
 	public void test015_tolerate() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 		Map options = getCompilerOptions();
 		try {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "true");
-			if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
 			this.runNegativeTest(
 					new String[] {
 							"X.java",
@@ -848,23 +844,6 @@ public class VarargsTest extends AbstractComparableTest {
 				"The method count(int[], int[]) is ambiguous for the type Y\n" +
 				"----------\n",
 				null, true, options);
-			} else {
-				this.runConformTest(
-					new String[] {
-							"X.java",
-							"public class X {\n" +
-							"	public static void main(String[] s) {\n" +
-							"		Y.count(new int[0]);\n" + // for some reason this is not ambiguous
-							"	}\n" +
-							"}\n" +
-							"class Y {\n" +
-							"	public static void count(int[] array, int ... values) { System.out.print(1); }\n" +
-							"	public static void count(int[] array, int[] ... values) { System.out.print(2); }\n" +
-							"}\n",
-				},
-				"1",
-				null, true, null, options, null);
-			}
 		} finally {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "false");
 		}
@@ -1310,8 +1289,7 @@ public class VarargsTest extends AbstractComparableTest {
 	public void test033() {
 		this.runNegativeTest(
 			false /* skipJavac */,
-			this.complianceLevel < ClassFileConstants.JDK1_7 ?
-					JavacTestOptions.Excuse.JavacCompilesIncorrectSource : null,
+			null,
 			new String[] {
 				"X.java",
 				"public class X {\n" +
@@ -1378,58 +1356,37 @@ public class VarargsTest extends AbstractComparableTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383780
 	public void test033_tolerate() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 		Map options = getCompilerOptions();
 		try {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "true");
-			if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
-				this.runNegativeTest(
-				false /* skipJavac */,
-				this.complianceLevel < ClassFileConstants.JDK1_7 ?
-						JavacTestOptions.Excuse.JavacCompilesIncorrectSource : null,
-				new String[] {
-						"X.java",
-						"public class X {\n" +
-						"	void a(boolean b, Object... o) {System.out.print(1);}\n" +
-						"	void a(Object... o) {System.out.print(2);}\n" +
-						"	public static void main(String[] args) {\n" +
-						"		X x = new X();\n" +
-						"		x.a(true);\n" +
-						"		x.a(true, \"foobar\");\n" +
-						"		x.a(\"foo\", \"bar\");\n" +
-						"	}\n" +
-						"}\n",
-					},
-					"----------\n" +
-					"1. ERROR in X.java (at line 6)\n" +
-					"	x.a(true);\n" +
-					"	  ^\n" +
-					"The method a(boolean, Object[]) is ambiguous for the type X\n" +
-					"----------\n" +
-					"2. ERROR in X.java (at line 7)\n" +
-					"	x.a(true, \"foobar\");\n" +
-					"	  ^\n" +
-					"The method a(boolean, Object[]) is ambiguous for the type X\n" +
-					"----------\n",
-					null, true, options);
-			} else {
-				this.runConformTest(
-						new String[] {
-							"X.java",
-							"public class X {\n" +
-							"	void a(boolean b, Object... o) {System.out.print(1);}\n" +
-							"	void a(Object... o) {System.out.print(2);}\n" +
-							"	public static void main(String[] args) {\n" +
-							"		X x = new X();\n" +
-							"		x.a(true);\n" +
-							"		x.a(true, \"foobar\");\n" +
-							"		x.a(\"foo\", \"bar\");\n" +
-							"	}\n" +
-							"}\n",
-						},
-						"112",
-						null, true, null, options, null);
-			}
+			this.runNegativeTest(
+			false /* skipJavac */,
+			null,
+			new String[] {
+					"X.java",
+					"public class X {\n" +
+					"	void a(boolean b, Object... o) {System.out.print(1);}\n" +
+					"	void a(Object... o) {System.out.print(2);}\n" +
+					"	public static void main(String[] args) {\n" +
+					"		X x = new X();\n" +
+					"		x.a(true);\n" +
+					"		x.a(true, \"foobar\");\n" +
+					"		x.a(\"foo\", \"bar\");\n" +
+					"	}\n" +
+					"}\n",
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 6)\n" +
+				"	x.a(true);\n" +
+				"	  ^\n" +
+				"The method a(boolean, Object[]) is ambiguous for the type X\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 7)\n" +
+				"	x.a(true, \"foobar\");\n" +
+				"	  ^\n" +
+				"The method a(boolean, Object[]) is ambiguous for the type X\n" +
+				"----------\n",
+				null, true, options);
 		} finally {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "false");
 		}
@@ -1524,35 +1481,18 @@ public class VarargsTest extends AbstractComparableTest {
 				"    void foo3(String s, V v, String r, Object o, Object... obs) {System.out.print(2);}\n" +
 				"}\n",
 			},
-			(this.complianceLevel < ClassFileConstants.JDK1_8 ?
+			// one fewer ambiguity in 1.8:
 			"----------\n" +
-			"1. ERROR in V.java (at line 4)\r\n" +
-			"	v.foo2(null, \"\");\r\n" +
+			"1. ERROR in V.java (at line 4)\n" +
+			"	v.foo2(null, \"\");\n" +
 			"	  ^^^^\n" +
 			"The method foo2(String, Object[]) is ambiguous for the type V\n" +
 			"----------\n" +
-			"2. ERROR in V.java (at line 5)\r\n" +
-			"	v.foo2(null, \"\", \"\");\r\n" +
+			"2. ERROR in V.java (at line 5)\n" +
+			"	v.foo2(null, \"\", \"\");\n" +
 			"	  ^^^^\n" +
 			"The method foo2(String, Object[]) is ambiguous for the type V\n" +
-			"----------\n" +
-			"3. ERROR in V.java (at line 6)\r\n" +
-			"	v.foo3(\"\", v, null, \"\");\r\n" +
-			"	  ^^^^\n" +
-			"The method foo3(String, V, String[]) is ambiguous for the type V\n" +
 			"----------\n"
-			: // one fewer ambiguity in 1.8:
-				"----------\n" +
-				"1. ERROR in V.java (at line 4)\n" +
-				"	v.foo2(null, \"\");\n" +
-				"	  ^^^^\n" +
-				"The method foo2(String, Object[]) is ambiguous for the type V\n" +
-				"----------\n" +
-				"2. ERROR in V.java (at line 5)\n" +
-				"	v.foo2(null, \"\", \"\");\n" +
-				"	  ^^^^\n" +
-				"The method foo2(String, Object[]) is ambiguous for the type V\n" +
-				"----------\n")
 			);
 	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=105801
@@ -2317,15 +2257,13 @@ public class VarargsTest extends AbstractComparableTest {
 				"	^^^^\n" +
 				"Zork cannot be resolved to a type\n" +
 				"----------\n";
-		if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
-			expectedOutput =
-					"----------\n" +
-					"1. ERROR in X.java (at line 6)\n" +
-					"	Zork z;\n" +
-					"	^^^^\n" +
-					"Zork cannot be resolved to a type\n" +
-					"----------\n";
-		}
+		expectedOutput =
+				"----------\n" +
+				"1. ERROR in X.java (at line 6)\n" +
+				"	Zork z;\n" +
+				"	^^^^\n" +
+				"Zork cannot be resolved to a type\n" +
+				"----------\n";
 		this.runNegativeTest(
 				new String[] {
 					"X.java",
@@ -2370,7 +2308,6 @@ public class VarargsTest extends AbstractComparableTest {
 	}
 	//safe varargs support
 	public void test063() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_7) return;
 		this.runConformTest(
 			new String[] {
 				"Y.java",
@@ -2405,7 +2342,6 @@ public class VarargsTest extends AbstractComparableTest {
 			null);
 	}
 	public void test064() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_7) return;
 		Map options = getCompilerOptions();
 		options.put(JavaCore.COMPILER_PB_UNCHECKED_TYPE_OPERATION, JavaCore.ERROR);
 		this.runConformTest(
@@ -2431,7 +2367,6 @@ public class VarargsTest extends AbstractComparableTest {
 			null);
 	}
 	public void test065() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_7) return;
 		Map options = getCompilerOptions();
 		options.put(JavaCore.COMPILER_PB_UNCHECKED_TYPE_OPERATION, JavaCore.ERROR);
 		this.runConformTest(
@@ -2484,13 +2419,6 @@ public class VarargsTest extends AbstractComparableTest {
 					"    }\n" +
 					"}\n", // =================
 				},
-				this.complianceLevel < ClassFileConstants.JDK1_7 ?
-				"----------\n" +
-				"1. WARNING in X.java (at line 18)\n" +
-				"	new IteratorChain<Number>(null, null);\n" +
-				"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-				"Type safety: A generic array of Collection<? extends Number> is created for a varargs parameter\n" +
-				"----------\n":
 				"----------\n" +
 				"1. WARNING in X.java (at line 5)\n" +
 				"	public IteratorChain(Collection<? extends T> a, Collection<? extends T> b, Collection<? extends T> ... collections) {\n" +
@@ -2508,7 +2436,6 @@ public class VarargsTest extends AbstractComparableTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=337799
 	public void test067() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_7) return;
 		Map options = getCompilerOptions();
 		options.put(JavaCore.COMPILER_PB_UNCHECKED_TYPE_OPERATION, JavaCore.ERROR);
 		this.runNegativeTest(
@@ -2568,7 +2495,6 @@ public class VarargsTest extends AbstractComparableTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=337799
 	public void test067b() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_7) return;
 		Map options = getCompilerOptions();
 		options.put(JavaCore.COMPILER_PB_UNCHECKED_TYPE_OPERATION, JavaCore.ERROR);
 		this.runNegativeTest(
@@ -2593,7 +2519,6 @@ public class VarargsTest extends AbstractComparableTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=337795 (make sure there is no warning if vararg parameter is reifiable)
 	public void test068() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_7) return;
 		Map options = getCompilerOptions();
 		options.put(JavaCore.COMPILER_PB_UNCHECKED_TYPE_OPERATION, JavaCore.ERROR);
 		this.runNegativeTest(
@@ -2622,7 +2547,6 @@ public class VarargsTest extends AbstractComparableTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=337795 (make sure there is a warning if vararg parameter is not reifiable)
 	public void test068b() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_7) return;
 		Map options = getCompilerOptions();
 		options.put(JavaCore.COMPILER_PB_UNCHECKED_TYPE_OPERATION, JavaCore.ERROR);
 		this.runNegativeTest(
@@ -2666,7 +2590,6 @@ public class VarargsTest extends AbstractComparableTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=337795
 	public void test068c() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_7) return;
 		Map options = getCompilerOptions();
 		options.put(JavaCore.COMPILER_PB_UNCHECKED_TYPE_OPERATION, JavaCore.ERROR);
 		this.runNegativeTest(
@@ -2704,7 +2627,6 @@ public class VarargsTest extends AbstractComparableTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=337795
 	public void test068d() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_7) return;
 		Map options = getCompilerOptions();
 		options.put(JavaCore.COMPILER_PB_UNCHECKED_TYPE_OPERATION, JavaCore.ERROR);
 
@@ -2743,7 +2665,6 @@ public class VarargsTest extends AbstractComparableTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=337795 (test effect of SuppressWarnings (should suppress at declaration site, but not at call site)
 	public void test068e() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_7) return;
 		Map options = getCompilerOptions();
 		options.put(JavaCore.COMPILER_PB_UNCHECKED_TYPE_OPERATION, JavaCore.ERROR);
 		String[] bounds = new String[] { "Object","Serializable","Comparable<?>"};
@@ -2777,7 +2698,6 @@ public class VarargsTest extends AbstractComparableTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=346042
 	public void test069() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 		this.runNegativeTest(
 			new String[] {
 				"p1/B.java",
@@ -2807,7 +2727,6 @@ public class VarargsTest extends AbstractComparableTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=346038
 	public void test070() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 		this.runConformTest(
 			new String[] {
 				"X.java",
@@ -2825,12 +2744,10 @@ public class VarargsTest extends AbstractComparableTest {
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383780
 	public void test070_tolerate() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 		Map options = getCompilerOptions();
 		try {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "true");
-			if (this.complianceLevel < ClassFileConstants.JDK1_7) {
-				this.runNegativeTest(
+			this.runConformTest(
 					new String[] {
 						"X.java",
 						"public class X {\n" +
@@ -2842,29 +2759,8 @@ public class VarargsTest extends AbstractComparableTest {
 						"        }\n" +
 						"}\n"
 					},
-					"----------\n" +
-					"1. ERROR in X.java (at line 5)\n" +
-					"	foo(1, 2, 3);\n" +
-					"	^^^\n" +
-					"The method foo(int[]) is ambiguous for the type X\n" +
-					"----------\n",
-					null, true, options);
-			} else {
-				this.runConformTest(
-						new String[] {
-							"X.java",
-							"public class X {\n" +
-							"        public static void foo(int ...i) {}\n" +
-							"        public static void foo(double...d) {}\n" +
-							"        public static void main(String[] args) {\n" +
-							"            foo(1, 2, 3);\n" +
-							"            System.out.println (\"Done\");\n" +
-							"        }\n" +
-							"}\n"
-						},
-						"Done",
-						null, true, null, options, null);
-			}
+					"Done",
+					null, true, null, options, null);
 		} finally {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "false");
 		}
@@ -2873,53 +2769,32 @@ public class VarargsTest extends AbstractComparableTest {
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383780
 	public void test070_tolerate2() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 		Map options = getCompilerOptions();
 		try {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "true");
-			if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
-				this.runNegativeTest(
-					false /* skipJavac */,
-					this.complianceLevel == ClassFileConstants.JDK1_7 ?
-							JavacTestOptions.Excuse.JavacCompilesIncorrectSource : null,
-					new String[] {
-						"X.java",
-						"import java.util.Arrays;\n" +
-						"public class X {\n" +
-						"        public static void test(int... a) {\n" +
-						"			System.out.println(Arrays.toString(a));\n}\n" +
-						"        public static <T> void test(Object... a) {\n" +
-						"			System.out.println(Arrays.toString(a));\n}\n" +
-						"        public static void main(String[] args) {\n" +
-						"            test(1);\n" +
-						"        }\n" +
-						"}\n"
-					},
-					"----------\n" +
-					"1. ERROR in X.java (at line 10)\n" +
-					"	test(1);\n" +
-					"	^^^^\n" +
-					"The method test(int[]) is ambiguous for the type X\n" +
-					"----------\n",
-					null, true, options);
-			} else {
-				this.runConformTest(
-						new String[] {
-								"X.java",
-								"import java.util.Arrays;\n" +
-								"public class X {\n" +
-								"        public static void test(int... a) {\n" +
-								"			System.out.println(Arrays.toString(a));\n}\n" +
-								"        public static <T> void test(Object... a) {\n" +
-								"			System.out.println(Arrays.toString(a));\n}\n" +
-								"        public static void main(String[] args) {\n" +
-								"            test(1);\n" +
-								"        }\n" +
-								"}\n"
-						},
-						"[1]",
-						null, true, null, options, null);
-			}
+			this.runNegativeTest(
+				false /* skipJavac */,
+				null,
+				new String[] {
+					"X.java",
+					"import java.util.Arrays;\n" +
+					"public class X {\n" +
+					"        public static void test(int... a) {\n" +
+					"			System.out.println(Arrays.toString(a));\n}\n" +
+					"        public static <T> void test(Object... a) {\n" +
+					"			System.out.println(Arrays.toString(a));\n}\n" +
+					"        public static void main(String[] args) {\n" +
+					"            test(1);\n" +
+					"        }\n" +
+					"}\n"
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 10)\n" +
+				"	test(1);\n" +
+				"	^^^^\n" +
+				"The method test(int[]) is ambiguous for the type X\n" +
+				"----------\n",
+				null, true, options);
 		} finally {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "false");
 		}
@@ -2927,7 +2802,6 @@ public class VarargsTest extends AbstractComparableTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=346038
 	public void test070a() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 		this.runConformTest(
 			new String[] {
 				"X.java",
@@ -2944,12 +2818,10 @@ public class VarargsTest extends AbstractComparableTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383780
 	public void test070a_tolerate() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 		Map options = getCompilerOptions();
 		try {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "true");
-			if (this.complianceLevel < ClassFileConstants.JDK1_7) {
-				this.runNegativeTest(
+			this.runConformTest(
 					new String[] {
 						"X.java",
 						"public class X {\n" +
@@ -2961,36 +2833,14 @@ public class VarargsTest extends AbstractComparableTest {
 						"        }\n" +
 						"}\n"
 					},
-					"----------\n" +
-					"1. ERROR in X.java (at line 5)\n" +
-					"	foo(1, 2, 3);\n" +
-					"	^^^\n" +
-					"The method foo(int[]) is ambiguous for the type X\n" +
-					"----------\n",
-					null, true, options);
-			} else {
-				this.runConformTest(
-						new String[] {
-							"X.java",
-							"public class X {\n" +
-							"        public static <T> void foo(int ...i) {}\n" +
-							"        public static <T> void foo(double...d) {}\n" +
-							"        public static void main(String[] args) {\n" +
-							"            foo(1, 2, 3);\n" +
-							"            System.out.println (\"Done\");\n" +
-							"        }\n" +
-							"}\n"
-						},
-						"Done",
-						null, true, null, options, null);
-			}
+					"Done",
+					null, true, null, options, null);
 		} finally {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "false");
 		}
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=346038
 	public void test070b() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 		this.runConformTest(
 			new String[] {
 				"X.java",
@@ -3007,7 +2857,6 @@ public class VarargsTest extends AbstractComparableTest {
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383780
 	public void test070b_tolerate() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 		String[] src = new String[] {
 				"X.java",
 				"public class X {\n" +
@@ -3020,20 +2869,9 @@ public class VarargsTest extends AbstractComparableTest {
 			};
 		try {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "true");
-			if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
-				this.runConformTest(
-					src,
-					"");
-			} else {
-				this.runNegativeTest(
-						src,
-						"----------\n" +
-						"1. ERROR in X.java (at line 5)\n" +
-						"	foo(1, 2, 3);     // foo NOT flagged ambiguous\n" +
-						"	^^^\n" +
-						"The method foo(int[]) is ambiguous for the type X\n" +
-						"----------\n");
-			}
+			this.runConformTest(
+				src,
+				"");
 		} finally {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "false");
 		}
@@ -3125,7 +2963,6 @@ public class VarargsTest extends AbstractComparableTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=383780
 	public void test071_tolerate() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 		String[] src =
 			new String[] {
 				"X.java",
@@ -3147,20 +2984,9 @@ public class VarargsTest extends AbstractComparableTest {
 			};
 		try {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "true");
-			if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
-				this.runConformTest(
-					src,
-					"1");
-			} else {
-				this.runNegativeTest(
-						src,
-						"----------\n" +
-						"1. ERROR in X.java (at line 11)\n" +
-						"	X t2 = new X(c, t);     // incorrectly flagged ambiguous\n" +
-						"	       ^^^^^^^^^^^\n" +
-						"The constructor X(IClass, X, IType[]) is ambiguous\n" +
-						"----------\n");
-			}
+			this.runConformTest(
+				src,
+				"1");
 		} finally {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "false");
 		}
@@ -3243,7 +3069,6 @@ public class VarargsTest extends AbstractComparableTest {
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=382469
 	public void testBug382469() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 		String[] src =
 			new String[] {
 				"X.java",
@@ -3261,25 +3086,19 @@ public class VarargsTest extends AbstractComparableTest {
 			};
 		try {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "true");
-			if (this.complianceLevel < ClassFileConstants.JDK1_7) {
-				this.runConformTest(
+			this.runNegativeTest(
 					src,
-					"2");
-			} else {
-				this.runNegativeTest(
-						src,
-						"----------\n" +
-						"1. WARNING in X.java (at line 5)\n" +
-						"	private static void bar(int intValue, Object... objs) {\n" +
-						"	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-						"The method bar(int, Object...) from the type X is never used locally\n" +
-						"----------\n" +
-						"2. ERROR in X.java (at line 9)\n" +
-						"	bar(5);\n" +
-						"	^^^\n" +
-						"The method bar(Object[]) is ambiguous for the type X\n" +
-						"----------\n");
-			}
+					"----------\n" +
+					"1. WARNING in X.java (at line 5)\n" +
+					"	private static void bar(int intValue, Object... objs) {\n" +
+					"	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+					"The method bar(int, Object...) from the type X is never used locally\n" +
+					"----------\n" +
+					"2. ERROR in X.java (at line 9)\n" +
+					"	bar(5);\n" +
+					"	^^^\n" +
+					"The method bar(Object[]) is ambiguous for the type X\n" +
+					"----------\n");
 		} finally {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "false");
 		}
@@ -3287,7 +3106,6 @@ public class VarargsTest extends AbstractComparableTest {
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=386361
 	public void testBug386361() throws Exception {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) return;
 		String[] src =
 			new String[] {
 				"X.java",
@@ -3305,20 +3123,14 @@ public class VarargsTest extends AbstractComparableTest {
 			};
 		try {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "true");
-			if (this.complianceLevel < ClassFileConstants.JDK1_7) {
-				this.runConformTest(
+			this.runNegativeTest(
 					src,
-					"1");
-			} else {
-				this.runNegativeTest(
-						src,
-						"----------\n" +
-						"1. ERROR in X.java (at line 9)\n" +
-						"	test(1,\"test\");\n" +
-						"	^^^^\n" +
-						"The method test(int, Object[]) is ambiguous for the type X\n" +
-						"----------\n");
-			}
+					"----------\n" +
+					"1. ERROR in X.java (at line 9)\n" +
+					"	test(1,\"test\");\n" +
+					"	^^^^\n" +
+					"The method test(int, Object[]) is ambiguous for the type X\n" +
+					"----------\n");
 		} finally {
 			System.setProperty("tolerateIllegalAmbiguousVarargsInvocation", "false");
 		}
@@ -3464,8 +3276,6 @@ public class VarargsTest extends AbstractComparableTest {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=437973, [1.8][compiler] Missing implementation of JLS 15.12.2.5 Third Bullet - Part 2
 	public void test437973a() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		runConformTest(
 		new String[] {
 			"X.java",
@@ -3500,8 +3310,6 @@ public class VarargsTest extends AbstractComparableTest {
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=437973, [1.8][compiler] Missing implementation of JLS 15.12.2.5 Third Bullet - Part 2
 	//The parameter of one method is not a subtype of the other.
 	public void test437973b() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		runNegativeTest(
 		new String[] {
 			"X.java",
@@ -3526,8 +3334,6 @@ public class VarargsTest extends AbstractComparableTest {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=437973, [1.8][compiler] Missing implementation of JLS 15.12.2.5 Third Bullet - Part 2
 	// Lambda functions
 	public void test437973c() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_8)
-			return;
 		runNegativeTest(
 		new String[] {
 			"X.java",

@@ -500,8 +500,6 @@ private void cachePartsFrom2(IBinaryType binaryType, boolean needFieldsAndMethod
 		}
 		char[] typeSignature = binaryType.getGenericSignature(); // use generic signature even in 1.4
 		this.tagBits |= binaryType.getTagBits();
-		if (this.environment.globalOptions.complianceLevel < ClassFileConstants.JDK1_8)
-			this.tagBits &= ~TagBits.AnnotationForTypeUse; // avoid confusion with semantics that are not supported at 1.7-
 
 		char[][][] missingTypeNames = binaryType.getMissingTypeNames();
 		SignatureWrapper wrapper = null;
@@ -579,7 +577,7 @@ private void cachePartsFrom2(IBinaryType binaryType, boolean needFieldsAndMethod
 					this.permittedTypes[i] = this.environment.getTypeFromConstantPoolName(permittedSubtypesNames[i], 0, -1, false, missingTypeNames);
 			}
 		}
-		boolean canUseNullTypeAnnotations = this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled && this.environment.globalOptions.sourceLevel >= ClassFileConstants.JDK1_8;
+		boolean canUseNullTypeAnnotations = this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled;
 		if (canUseNullTypeAnnotations && this.externalAnnotationStatus.isPotentiallyUnannotatedLib()) {
 			if (this.superclass != null && this.superclass.hasNullTypeAnnotations()) {
 				this.externalAnnotationStatus = ExternalAnnotationStatus.TYPE_IS_ANNOTATED;
@@ -620,30 +618,21 @@ private void cachePartsFrom2(IBinaryType binaryType, boolean needFieldsAndMethod
 			if (this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
 				if (iComponents != null) {
 					for (int i = 0; i < iComponents.length; i++) {
-						// below 1.8 we still might use an annotation walker to discover external annotations:
 						ITypeAnnotationWalker fieldWalker = ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER;
-						if (sourceLevel < ClassFileConstants.JDK1_8)
-							fieldWalker = binaryType.enrichWithExternalAnnotationsFor(walker, iFields[i], this.environment);
 						scanFieldForNullAnnotation(iComponents[i], this.components[i], this.isEnum(), fieldWalker);
 					}
 				}
 				if (iFields != null) {
 					for (int i = 0; i < iFields.length; i++) {
-						// below 1.8 we still might use an annotation walker to discover external annotations:
 						ITypeAnnotationWalker fieldWalker = ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER;
-						if (sourceLevel < ClassFileConstants.JDK1_8)
-							fieldWalker = binaryType.enrichWithExternalAnnotationsFor(walker, iFields[i], this.environment);
 						scanFieldForNullAnnotation(iFields[i], this.fields[i], this.isEnum(), fieldWalker);
 					}
 				}
 				if (iMethods != null) {
 					for (int i = 0; i < iMethods.length; i++) {
-						// below 1.8 we still might use an annotation walker to discover external annotations:
 						// (not using walker, which has defaultNullness, because defaults on parameters & return will be applied
 						//  by ImplicitNullAnnotationVerifier, triggered per invocation via MessageSend.resolveType() et al)
 						ITypeAnnotationWalker methodWalker = ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER;
-						if (sourceLevel < ClassFileConstants.JDK1_8)
-							methodWalker = binaryType.enrichWithExternalAnnotationsFor(methodWalker, iMethods[i], this.environment);
 						scanMethodForNullAnnotation(iMethods[i], this.methods[i], methodWalker, canUseNullTypeAnnotations);
 					}
 				}
@@ -851,17 +840,14 @@ private void createFields(IBinaryField[] iFields, IBinaryType binaryType, long s
 			int size = iFields.length;
 			if (size > 0) {
 				VariableBinding[] fields1 = initialization.createResultArray(size);
-				boolean use15specifics = sourceLevel >= ClassFileConstants.JDK1_5;
 				boolean hasRestrictedAccess = hasRestrictedAccess();
 				int firstAnnotatedFieldIndex = -1;
 				for (int i = 0; i < size; i++) {
 					IBinaryField binaryField = iFields[i];
-					char[] fieldSignature = use15specifics ? binaryField.getGenericSignature() : null;
+					char[] fieldSignature = binaryField.getGenericSignature();
 					IBinaryAnnotation[] declAnnotations = binaryField.getAnnotations();
 					ITypeAnnotationWalker walker = getTypeAnnotationWalker(binaryField.getTypeAnnotations(), getNullDefaultFrom(declAnnotations));
-					if (sourceLevel >= ClassFileConstants.JDK1_8) { // below 1.8, external annotations will be attached later
-						walker = binaryType.enrichWithExternalAnnotationsFor(walker, iFields[i], this.environment);
-					}
+					walker = binaryType.enrichWithExternalAnnotationsFor(walker, iFields[i], this.environment);
 					walker = walker.toField();
 					TypeBinding type = fieldSignature == null
 						? this.environment.getTypeFromSignature(binaryField.getTypeName(), 0, -1, false, this, missingTypeNames, walker)
@@ -892,8 +878,7 @@ private void createFields(IBinaryField[] iFields, IBinaryType binaryType, long s
 							storedAnnotations(true, true); // for Java 9 @Deprecated we need to force storing annotations
 					}
 					field.id = i; // ordinal
-					if (use15specifics)
-						field.tagBits |= binaryField.getTagBits();
+					field.tagBits |= binaryField.getTagBits();
 					if (hasRestrictedAccess)
 						field.modifiers |= ExtraCompilerModifiers.AccRestrictedAccess;
 					if (fieldSignature != null)
@@ -922,8 +907,6 @@ private void createFields(IBinaryField[] iFields, IBinaryType binaryType, long s
 private MethodBinding createMethod(IBinaryMethod method, IBinaryType binaryType, long sourceLevel, char[][][] missingTypeNames) {
 	if (!isPrototype()) throw new IllegalStateException();
 	int methodModifiers = method.getModifiers() | ExtraCompilerModifiers.AccUnresolved;
-	if (sourceLevel < ClassFileConstants.JDK1_5)
-		methodModifiers &= ~ClassFileConstants.AccVarargs; // vararg methods are not recognized until 1.5
 	if (isInterface() && (methodModifiers & ClassFileConstants.AccAbstract) == 0) {
 		// see https://bugs.eclipse.org/388954 superseded by https://bugs.eclipse.org/390889
 		if (((methodModifiers & ClassFileConstants.AccStatic) == 0
@@ -941,7 +924,6 @@ private MethodBinding createMethod(IBinaryMethod method, IBinaryType binaryType,
 	char[][] argumentNames = method.getArgumentNames();
 
 	IBinaryAnnotation[] declAnnotations = method.getAnnotations();
-	final boolean use15specifics = sourceLevel >= ClassFileConstants.JDK1_5;
 	/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=324850, Since a 1.4 project can have a 1.5
 	   type as a super type and the 1.5 type could be generic, we must internalize usages of type
 	   variables properly in order to be able to apply substitutions and thus be able to detect
@@ -951,9 +933,7 @@ private MethodBinding createMethod(IBinaryMethod method, IBinaryType binaryType,
 	char[] methodSignature = method.getGenericSignature(); // always use generic signature, even in 1.4
 	if (methodSignature == null) { // no generics
 		char[] methodDescriptor = method.getMethodDescriptor();   // of the form (I[Ljava/jang/String;)V
-		if (sourceLevel >= ClassFileConstants.JDK1_8) { // below 1.8, external annotations will be attached later
-			walker = binaryType.enrichWithExternalAnnotationsFor(walker, method, this.environment);
-		}
+		walker = binaryType.enrichWithExternalAnnotationsFor(walker, method, this.environment);
 		int numOfParams = 0;
 		char nextChar;
 		int index = 0; // first character is always '(' so skip it
@@ -1029,16 +1009,14 @@ private MethodBinding createMethod(IBinaryMethod method, IBinaryType binaryType,
 
 	} else {
 		if (this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
-			if (sourceLevel >= ClassFileConstants.JDK1_8) { // below 1.8, external annotations will be attached later
-				walker = binaryType.enrichWithExternalAnnotationsFor(walker, method, this.environment);
-			}
+			walker = binaryType.enrichWithExternalAnnotationsFor(walker, method, this.environment);
 			if (walker == ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER) {
 				walker = provideSyntheticEEA(method, walker);
 			}
 		}
 		methodModifiers |= ExtraCompilerModifiers.AccGenericSignature;
 		// MethodTypeSignature = ParameterPart(optional) '(' TypeSignatures ')' return_typeSignature ['^' TypeSignature (optional)]
-		SignatureWrapper wrapper = new SignatureWrapper(methodSignature, use15specifics);
+		SignatureWrapper wrapper = new SignatureWrapper(methodSignature);
 		if (wrapper.signature[wrapper.start] == Util.C_GENERIC_START) {
 			// <A::Ljava/lang/annotation/Annotation;>(Ljava/lang/Class<TA;>;)TA;
 			// ParameterPart = '<' ParameterSignature(s) '>'
@@ -1138,8 +1116,7 @@ private MethodBinding createMethod(IBinaryMethod method, IBinaryType binaryType,
 
 	if (argumentNames != null) result.parameterNames = argumentNames;
 
-	if (use15specifics)
-		result.tagBits |= method.getTagBits();
+	result.tagBits |= method.getTagBits();
 	result.typeVariables = typeVars;
 	// fixup the declaring element of all type variables
 	for (TypeVariableBinding typeVar : typeVars)
@@ -1151,8 +1128,7 @@ private MethodBinding createMethod(IBinaryMethod method, IBinaryType binaryType,
 protected ITypeAnnotationWalker provideSyntheticEEA(IBinaryMethod method, ITypeAnnotationWalker walker) {
 	switch (this.id) {
 		case TypeIds.T_JavaUtilObjects:
-			if (this.environment.globalOptions.complianceLevel >= ClassFileConstants.JDK1_8
-					&& CharOperation.equals(method.getSelector(), TypeConstants.REQUIRE_NON_NULL))
+			if (CharOperation.equals(method.getSelector(), TypeConstants.REQUIRE_NON_NULL))
 			{
 				String eeaSource = switch(method.getParameterCount()) {
 					case 1 -> "<TT;>(T0T;)T1T;"; //$NON-NLS-1$
@@ -1182,12 +1158,9 @@ private IBinaryMethod[] createMethods(IBinaryMethod[] iMethods, IBinaryType bina
 		int[] toSkip = null;
 		if (iMethods != null) {
 			total = initialTotal = iMethods.length;
-			boolean keepBridgeMethods = sourceLevel < ClassFileConstants.JDK1_5; // https://bugs.eclipse.org/bugs/show_bug.cgi?id=330347
 			for (int i = total; --i >= 0;) {
 				IBinaryMethod method = iMethods[i];
 				if ((method.getModifiers() & ClassFileConstants.AccSynthetic) != 0) {
-					if (keepBridgeMethods && (method.getModifiers() & ClassFileConstants.AccBridge) != 0)
-						continue; // want to see bridge methods as real methods
 					// discard synthetics methods
 					if (toSkip == null) toSkip = new int[iMethods.length];
 					toSkip[i] = -1;
@@ -1327,13 +1300,14 @@ public ReferenceBinding enclosingType() {  // should not delegate to prototype.
 }
 @Override
 public RecordComponentBinding[] components() {
+	if (!this.isRecord())
+		return NO_COMPONENTS;
 	if (!isPrototype()) {
-		return this.components = this.prototype.components;
+		return this.components = this.prototype.components();
 	}
 	if ((this.extendedTagBits & ExtendedTagBits.AreRecordComponentsComplete) != 0)
 		return this.components;
 
-	// Should we sort?
 	for (int i = this.components.length; --i >= 0;) {
 		resolveTypeFor(this.components[i]);
 	}
@@ -1529,26 +1503,6 @@ public FieldBinding getField(char[] fieldName, boolean needResolve) {
 	}
 	FieldBinding field = ReferenceBinding.binarySearch(fieldName, this.fields);
 	return needResolve && field != null ? resolveTypeFor(field) : field;
-}
-
-@Override
-public RecordComponentBinding getRecordComponent(char[] name) {
-	if (this.components != null) {
-		for (RecordComponentBinding rcb : this.components) {
-			if (CharOperation.equals(name, rcb.name))
-				return rcb;
-		}
-	}
-	return null;
-}
-
-@Override
-public RecordComponentBinding getComponent(char[] componentName, boolean needResolve) {
-	if (!isPrototype())
-		return this.prototype.getComponent(componentName, needResolve);
-	// Note : components not sorted and hence not using binary search
-	RecordComponentBinding component = getRecordComponent(componentName);
-	return needResolve && component != null ? resolveTypeFor(component) : component;
 }
 
 /**
@@ -1909,10 +1863,6 @@ public TypeBinding prototype() {
 private boolean isPrototype() {
 	return this == this.prototype; //$IDENTITY-COMPARISON$
 }
-@Override
-public boolean isRecord() {
-	return (this.modifiers & ExtraCompilerModifiers.AccRecord) != 0;
-}
 
 @Override
 public MethodBinding getRecordComponentAccessor(char[] name) {
@@ -1973,7 +1923,7 @@ MethodBinding resolveTypesFor(MethodBinding method) {
 	if ((method.modifiers & ExtraCompilerModifiers.AccUnresolved) == 0)
 		return method;
 	boolean tolerateSave = this.environment.mayTolerateMissingType;
-	this.environment.mayTolerateMissingType |= this.environment.globalOptions.complianceLevel >= ClassFileConstants.JDK1_8; // tolerance only implemented for 1.8+
+	this.environment.mayTolerateMissingType = true; // tolerance only implemented for 1.8+
 	try {
 
 		if (!method.isConstructor()) {
@@ -2759,14 +2709,6 @@ public FieldBinding[] unResolvedFields() {
 
 	return this.fields;
 }
-
-@Override
-public RecordComponentBinding[] unResolvedComponents() {
-	if (!isPrototype())
-		return this.prototype.unResolvedComponents();
-	return this.components;
-}
-
 
 @Override
 public ModuleBinding module() {

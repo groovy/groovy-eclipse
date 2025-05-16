@@ -7116,4 +7116,59 @@ public class TypeAnnotationTest extends AbstractRegressionTest {
 			},
 			"0 @X.TestAnnFirst()");
 		}
+	public void testGH3932_1() throws Exception {
+		this.runConformTest(
+			new String[] {
+				"A.java",
+				"public interface A<T> {\n"
+				+ "	T getContent();\n"
+				+ "}\n",
+				"SourceAnnotation.java",
+				"import java.lang.annotation.Retention;\n"
+				+ "import java.lang.annotation.RetentionPolicy;\n"
+				+ "import java.lang.annotation.Target;\n"
+				+ "import java.lang.annotation.ElementType;\n"
+				+ "@Retention(RetentionPolicy.SOURCE)\n"
+				+ "@Target(ElementType.METHOD)\n"
+				+ "public @interface SourceAnnotation {}",
+				"ClassAnnotation.java",
+				"import java.lang.annotation.Retention;\n"
+				+ "import java.lang.annotation.RetentionPolicy;\n"
+				+ "import java.lang.annotation.Target;\n"
+				+ "import java.lang.annotation.ElementType;\n"
+				+ "@Retention(RetentionPolicy.CLASS)\n"
+				+ "@Target(ElementType.METHOD)\n"
+				+ "public @interface ClassAnnotation {}",
+				"RuntimeAnnotation.java",
+				"import java.lang.annotation.Retention;\n"
+				+ "import java.lang.annotation.RetentionPolicy;\n"
+				+ "import java.lang.annotation.Target;\n"
+				+ "import java.lang.annotation.ElementType;\n"
+				+ "@Retention(RetentionPolicy.RUNTIME)\n"
+				+ "@Target(ElementType.METHOD)\n"
+				+ "public @interface RuntimeAnnotation {}",
+				"B.java",
+				"public interface B extends A<String> {\n"
+				+ "	@RuntimeAnnotation @ClassAnnotation @SourceAnnotation\n"
+				+ "	default String getContent() {\n"
+				+ "		return \"the string\";\n"
+				+ "	}\n"
+				+ "}\n"
+		},
+		"");
+		String expectedOutput =
+			"  public bridge synthetic java.lang.Object getContent();\n"
+			+ "    0  aload_0 [this]\n"
+			+ "    1  invokeinterface B.getContent() : java.lang.String [21] [nargs: 1]\n"
+			+ "    6  areturn\n"
+			+ "      Line numbers:\n"
+			+ "        [pc: 0, line: 1]\n"
+			+ "    RuntimeVisibleAnnotations: \n"
+			+ "      #12 @RuntimeAnnotation(\n"
+			+ "      )\n"
+			+ "    RuntimeInvisibleAnnotations: \n"
+			+ "      #10 @ClassAnnotation(\n"
+			+ "      )\n";
+		checkDisassembledClassFile(OUTPUT_DIR + File.separator + "B.class", "B", expectedOutput, ClassFileBytesDisassembler.SYSTEM);
+	}
 }

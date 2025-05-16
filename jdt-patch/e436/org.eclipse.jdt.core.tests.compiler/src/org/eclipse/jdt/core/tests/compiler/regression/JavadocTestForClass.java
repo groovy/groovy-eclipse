@@ -15,7 +15,6 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
 import junit.framework.Test;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -1009,35 +1008,6 @@ public class JavadocTestForClass extends JavadocTest {
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=253750
 	public void test054() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-			runNegativeTest(
-					new String[] {
-						"X.java",
-						"import java.util.Map;\n" +
-						"import java.util.Map.Entry;\n" +
-						"\n" +
-						"/**\n" +
-						" * <ul>\n" +
-						" * <li> {@link Entry} </li>\n" +
-						" * </ul>\n" +
-						" */\n" +
-						"public interface X extends Map {\n" +
-						"	int i = 0;\n" +
-						"}\n",
-						},
-						"----------\n" +
-						"1. WARNING in X.java (at line 2)\n"+
-						"	import java.util.Map.Entry;\n"+
-						"	       ^^^^^^^^^^^^^^^^^^^\n"+
-						"The import java.util.Map.Entry is never used\n"+
-						"----------\n"+
-						"2. ERROR in X.java (at line 6)\n" +
-						"	* <li> {@link Entry} </li>\n" +
-						"	              ^^^^^\n" +
-						"Javadoc: Invalid member type qualification\n" +
-						"----------\n");
-			return;
-		}
 		runNegativeTest(
 			new String[] {
 				"X.java",
@@ -1086,35 +1056,6 @@ public class JavadocTestForClass extends JavadocTest {
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=253750
 	public void test056() {
-		if (this.complianceLevel < ClassFileConstants.JDK1_5) {
-			runNegativeTest(
-					new String[] {
-						"X.java",
-						"import java.util.Map;\n" +
-						"import java.util.Map.Entry;\n" +
-						"\n" +
-						"/**\n" +
-						" * <ul>\n" +
-						" * <li> {@link Entry} </li>\n" +
-						" * </ul>\n" +
-						" */\n" +
-						"public interface X extends Map {\n" +
-						"	Entry e = null;\n" +
-						"}\n",
-						},
-						"----------\n" +
-						"1. WARNING in X.java (at line 2)\n"+
-						"	import java.util.Map.Entry;\n"+
-						"	       ^^^^^^^^^^^^^^^^^^^\n"+
-						"The import java.util.Map.Entry is never used\n"+
-						"----------\n"+
-						"2. ERROR in X.java (at line 6)\n" +
-						"	* <li> {@link Entry} </li>\n" +
-						"	              ^^^^^\n" +
-						"Javadoc: Invalid member type qualification\n" +
-						"----------\n");
-			return;
-		}
 		runNegativeTest(
 			new String[] {
 				"X.java",

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -176,7 +176,7 @@ public class LocalVariableBinding extends VariableBinding {
 	@Override
 	public AnnotationBinding[] getAnnotations() {
 		if (this.declaringScope == null) {
-			if ((this.tagBits & TagBits.AnnotationResolved) != 0) {
+			if ((this.extendedTagBits & ExtendedTagBits.AnnotationResolved) != 0) {
 				// annotation are already resolved
 				if (this.declaration == null) {
 					return Binding.NO_ANNOTATIONS;
@@ -201,7 +201,7 @@ public class LocalVariableBinding extends VariableBinding {
 		if (sourceType == null)
 			return Binding.NO_ANNOTATIONS;
 
-		if ((this.tagBits & TagBits.AnnotationResolved) == 0) {
+		if ((this.extendedTagBits & ExtendedTagBits.AnnotationResolved) == 0) {
 			if (((this.tagBits & TagBits.IsArgument) != 0) && this.declaration != null) {
 				Annotation[] annotationNodes = this.declaration.annotations;
 				if (annotationNodes != null) {

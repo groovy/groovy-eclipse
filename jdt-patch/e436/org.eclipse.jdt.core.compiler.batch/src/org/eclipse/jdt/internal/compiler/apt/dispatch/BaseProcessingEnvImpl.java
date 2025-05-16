@@ -130,14 +130,7 @@ public abstract class BaseProcessingEnvImpl implements ProcessingEnvironment {
 	@Override
 	public SourceVersion getSourceVersion() {
 		final long sourceLevel = this._compiler.options.sourceLevel;
-		if (sourceLevel <= ClassFileConstants.JDK1_5) {
-			return SourceVersion.RELEASE_5;
-		}
-		if (sourceLevel == ClassFileConstants.JDK1_6) {
-			return SourceVersion.RELEASE_6;
-		} else if (sourceLevel == ClassFileConstants.JDK1_7) {
-			return SourceVersion.RELEASE_7;
-		} else if (sourceLevel == ClassFileConstants.JDK1_8) {
+		if (sourceLevel == ClassFileConstants.JDK1_8) {
 			return SourceVersion.RELEASE_8;
 		} else if (sourceLevel == ClassFileConstants.JDK9) {
 			return SourceVersion.RELEASE_9;
