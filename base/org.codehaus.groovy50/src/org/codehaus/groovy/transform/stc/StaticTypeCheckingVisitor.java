@@ -64,6 +64,7 @@ import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.ElvisOperatorExpression;
 import org.codehaus.groovy.ast.expr.EmptyExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.ExpressionTransformer;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.LambdaExpression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -156,6 +157,7 @@ import static org.codehaus.groovy.ast.ClassHelper.CLASS_Type;
 import static org.codehaus.groovy.ast.ClassHelper.CLOSURE_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Character_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Double_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.Enum_Type;
 import static org.codehaus.groovy.ast.ClassHelper.Float_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Integer_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Iterator_TYPE;
@@ -763,28 +765,39 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     @Override
     public void visitPropertyExpression(final PropertyExpression expression) {
-        if (existsProperty(expression, !typeCheckingContext.isTargetOfEnclosingAssignment(expression))) return;
-
-        if (!extension.handleUnresolvedProperty(expression)) {
-            var objectExpression = expression.getObjectExpression();
-            var objectExpressionType = (objectExpression instanceof ClassExpression
-                    ? objectExpression.getType() : wrapTypeIfNecessary(getType(objectExpression)));
-            objectExpressionType = findCurrentInstanceOfClass(objectExpression, objectExpressionType);
-            addStaticTypeError("No such property: " + expression.getPropertyAsString() + " for class: " + prettyPrintTypeName(objectExpressionType), expression);
+        boolean readOnly = !typeCheckingContext.isTargetOfEnclosingAssignment(expression);
+        if (existsProperty(expression, readOnly)
+                || extension.handleUnresolvedProperty(expression)) {
+            return; // resolved or excused
         }
+        recordMissingProperty(expression);
     }
 
     @Override
     public void visitAttributeExpression(final AttributeExpression expression) {
-        if (existsProperty(expression, true)) return;
-
-        if (!extension.handleUnresolvedAttribute(expression)) {
-            var objectExpression = expression.getObjectExpression();
-            var objectExpressionType = (objectExpression instanceof ClassExpression
-                    ? objectExpression.getType() : wrapTypeIfNecessary(getType(objectExpression)));
-            objectExpressionType = findCurrentInstanceOfClass(objectExpression, objectExpressionType);
-            addStaticTypeError("No such attribute: " + expression.getPropertyAsString() + " for class: " + prettyPrintTypeName(objectExpressionType), expression);
+        boolean readOnly = true;
+        if (existsProperty(expression, readOnly)
+                || extension.handleUnresolvedAttribute(expression)) {
+            return; // resolved or excused
         }
+        recordMissingProperty(expression);
+    }
+
+    private void recordMissingProperty(final PropertyExpression expression) {
+        var objectExpression = expression.getObjectExpression();
+        var objectExpressionType = findCurrentInstanceOfClass(objectExpression, getType(objectExpression));
+
+        String pattern;
+        if (!isClassClassNodeWrappingConcreteType(objectExpressionType)) {
+            pattern = "No such {0,choice,1#attribute|2#property}: {1} for class: {2}";
+        } else {
+            objectExpressionType = objectExpressionType.getGenericsTypes()[0].getType();
+            pattern = "No such {0,choice,1#attribute|2#property}: {1} for Class or static {0,choice,1#field|2#property} for class: {2}";
+        }
+
+        String error = java.text.MessageFormat.format(pattern, expression instanceof AttributeExpression ? 1 : 2, expression.getPropertyAsString(), prettyPrintTypeName(wrapTypeIfNecessary(objectExpressionType)));
+        ASTNode node = expression.getLineNumber() > 0 ? expression : expression.getProperty(); // GROOVY-11663
+        addStaticTypeError(error, node);
     }
 
     @Override
@@ -822,9 +835,29 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             Expression leftExpression = expression.getLeftExpression();
             Expression rightExpression = expression.getRightExpression();
 
+            if (isAssignment(op) && op != EQUAL) {
+                ExpressionTransformer cloneMaker = new ExpressionTransformer() {
+                    @Override
+                    public Expression transform(final Expression expr) {
+                        if (expr instanceof VariableExpression) {
+                            return ((VariableExpression) expr).clone();
+                        }
+                        return expr.transformExpression(this);
+                    }
+                };
+                // GROOVY-10628, GROOVY-11563: for "x op= y", find type as if it was "x = x op y"
+                rightExpression = (op == ELVIS_EQUAL ? elvisX(cloneMaker.transform(leftExpression), rightExpression) :
+                        binX(cloneMaker.transform(leftExpression), Token.newSymbol(TokenUtil.removeAssignment(op), expression.getOperation().getStartLine(), expression.getOperation().getStartColumn()), rightExpression));
+                rightExpression.setSourcePosition(expression);
+
+                visitBinaryExpression(assignX(leftExpression, rightExpression, expression));
+                expression.copyNodeMetaData(rightExpression);
+                return;
+            }
+
             leftExpression.visit(this);
-            SetterInfo setterInfo = removeSetterInfo(leftExpression);
-            ClassNode lType = null;
+            ClassNode lType = getType(leftExpression);
+            var setterInfo  = removeSetterInfo(leftExpression);
             if (setterInfo != null) {
                 if (ensureValidSetter(expression, leftExpression, rightExpression, setterInfo)) {
                     // GRECLIPSE add -- GROOVY-7971, GROOVY-8965
@@ -833,13 +866,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     // GRECLIPSE end
                     return;
                 }
-                lType = getType(leftExpression);
             } else {
-                if (op != EQUAL && op != ELVIS_EQUAL) {
-                    lType = getType(leftExpression);
-                } else {
+                if (op == EQUAL) {
                     lType = getOriginalDeclarationType(leftExpression);
-
                     applyTargetType(lType, rightExpression);
                 }
                 rightExpression.visit(this);
@@ -858,16 +887,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 storeTargetMethod(expression, reverseExpression.getNodeMetaData(DIRECT_METHOD_CALL_TARGET));
             } else {
                 resultType = getResultType(lType, op, rType, expression);
-                if (op == ELVIS_EQUAL) {
-                    // TODO: Should this transform and visit be done before left and right are visited above?
-                    Expression fullExpression = new ElvisOperatorExpression(leftExpression, rightExpression);
-                    fullExpression.setSourcePosition(expression);
-                    fullExpression.visit(this);
-
-                    resultType = getType(fullExpression);
-                }
                 // GRECLIPSE add -- GROOVY-7971, GROOVY-8965
-                else if (op == LOGICAL_OR)
+                if (op == LOGICAL_OR)
                     typeCheckingContext.popTemporaryTypeInfo();
                 // GRECLIPSE end
             }
@@ -886,12 +907,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         && enclosingBinaryExpression != null
                         && enclosingBinaryExpression.getLeftExpression() == expression
                         && isAssignment(enclosingBinaryExpression.getOperation().getType())) {
-                    // left hand side of a subscript assignment: map['foo'] = ...
+                    // left hand side of a subscript assignment: map['key'] = ...
                     Expression enclosingExpressionRHS = enclosingBinaryExpression.getRightExpression();
                     if (!(enclosingExpressionRHS instanceof ClosureExpression)) {
                         enclosingExpressionRHS.visit(this);
                     }
-                    ClassNode[] arguments = {rType, getType(enclosingExpressionRHS)};
+                    ClassNode[] arguments = {rType, isNullConstant(enclosingExpressionRHS) // GROOVY-11621
+                                ? UNKNOWN_PARAMETER_TYPE : getType(enclosingExpressionRHS)};
                     List<MethodNode> methods = findMethod(lType, "putAt", arguments);
                     if (methods.isEmpty()) {
                         addNoMatchingMethodError(lType, "putAt", arguments, enclosingBinaryExpression);
@@ -2124,6 +2146,9 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                 } else {
                     componentType = STRING_TYPE;
                 }
+            } else if (isClassType(collectionType) && collectionType.getGenericsTypes() != null
+                  && collectionType.getGenericsTypes()[0].getType().isDerivedFrom(Enum_Type)) {
+                componentType = collectionType.getGenericsTypes()[0].getType(); // GROOVY-11597
             } else {
                 componentType = inferComponentType(collectionType, null);
                 if (componentType == null) {
@@ -2138,11 +2163,11 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
             if (!isDynamicTyped(forLoopVariableType)) { // user-supplied type
                 componentType = forLoopVariableType;
             }
-            typeCheckingContext.controlStructureVariables.put(forLoop.getVariable(), componentType);
+            typeCheckingContext.controlStructureVariables.put(forLoop.getValueVariable(), componentType);
             try {
                 forLoop.getLoopBlock().visit(this);
             } finally {
-                typeCheckingContext.controlStructureVariables.remove(forLoop.getVariable());
+                typeCheckingContext.controlStructureVariables.remove(forLoop.getValueVariable());
             }
         }
         if (isSecondPassNeededForControlStructure(varTypes, oldTracker)) {
@@ -2427,6 +2452,8 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                 BinaryExpression dummy = assignX(varX("{target}", returnType), expression, statement);
                 ClassNode resultType = getResultType(returnType, ASSIGN, type, dummy); // GROOVY-10295
                 checkTypeGenerics(returnType, resultType, expression);
+            } else { // GROOVY-11623: check array items or number bounds
+                addPrecisionErrors(returnType.redirect(), returnType, type, expression);
             }
         }
         return null;
@@ -5290,7 +5317,10 @@ trying: for (ClassNode[] signature : signatures) {
 
         if (node instanceof SpreadExpression) {
             type = getType(((SpreadExpression) node).getExpression());
-            return inferComponentType(type, null); // for list literal
+            type = inferComponentType(type, null); // for list literal
+            if (type == null) // GROOVY-11572: not an iterable
+                type = UNKNOWN_PARAMETER_TYPE;
+            return type;
         }
 
         if (node instanceof UnaryPlusExpression) {
@@ -5635,7 +5665,7 @@ trying: for (ClassNode[] signature : signatures) {
                         }
 
                         connections.forEach((gtn, gt) -> resolvedPlaceholders.merge(gtn, gt, (gt1, gt2) -> {
-                            // GROOVY-10339: incorporate another witness
+                            // GROOVY-10339, GROOVY-11616: incorporate another type witness
                             return getCombinedGenericsType(gt1, gt2);
                         }));
                     }

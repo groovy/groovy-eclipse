@@ -325,15 +325,31 @@ variableInitializer
     :   enhancedStatementExpression
     ;
 
-emptyDims
-    :   (annotationsOpt LBRACK RBRACK)+
+type
+    :   annotationsOpt
+        (
+            VOID // error
+        |
+            primitiveType
+        |
+            referenceType
+        )
+        dim0*
     ;
 
-emptyDimsOpt
-    :   emptyDims?
+primitiveType
+    :   BuiltInPrimitiveType
     ;
 
-standardType
+referenceType
+    :   qualifiedClassName typeArguments?
+    ;
+
+matchingType // see: instanceof
+    :   standardType identifier?
+    ;
+
+standardType // see: returnType
 options { baseContext = type; }
     :   annotationsOpt
         (
@@ -341,42 +357,12 @@ options { baseContext = type; }
         |
             standardClassOrInterfaceType
         )
-        emptyDimsOpt
-    ;
-
-type
-    :   annotationsOpt
-        (
-            (
-                primitiveType
-            |
-                // !!! Error Alternative !!!
-                 VOID
-            )
-        |
-                generalClassOrInterfaceType
-        )
-        emptyDimsOpt
-    ;
-
-classOrInterfaceType
-    :   (   qualifiedClassName
-        |   qualifiedStandardClassName
-        ) typeArguments?
-    ;
-
-generalClassOrInterfaceType
-options { baseContext = classOrInterfaceType; }
-    :   qualifiedClassName typeArguments?
+        dim0*
     ;
 
 standardClassOrInterfaceType
-options { baseContext = classOrInterfaceType; }
+options { baseContext = referenceType; }
     :   qualifiedStandardClassName typeArguments?
-    ;
-
-primitiveType
-    :   BuiltInPrimitiveType
     ;
 
 typeArguments
@@ -397,7 +383,7 @@ qualifiedClassNameList
     ;
 
 formalParameters
-    :   LPAREN formalParameterList? rparen
+    :   LPAREN formalParameterList? RPAREN
     ;
 
 formalParameterList
@@ -524,7 +510,7 @@ annotationsOpt
     ;
 
 annotation
-    :   AT annotationName (nls LPAREN elementValues? rparen)?
+    :   AT annotationName (nls LPAREN elementValues? RPAREN)?
     ;
 
 elementValues
@@ -587,7 +573,7 @@ variableDeclaration[int t]
     ;
 
 typeNamePairs
-    :   LPAREN typeNamePair (COMMA typeNamePair)* rparen
+    :   LPAREN typeNamePair (COMMA typeNamePair)* RPAREN
     ;
 
 typeNamePair
@@ -595,7 +581,7 @@ typeNamePair
     ;
 
 variableNames
-    :   LPAREN variableDeclaratorId (COMMA variableDeclaratorId)+ rparen
+    :   LPAREN variableDeclaratorId (COMMA variableDeclaratorId)+ RPAREN
     ;
 
 conditionalStatement
@@ -612,7 +598,7 @@ switchStatement
     ;
 
 loopStatement
-    :   FOR LPAREN forControl rparen nls statement                                                            #forStmtAlt
+    :   FOR LPAREN forControl RPAREN nls statement                                                            #forStmtAlt
     |   WHILE expressionInPar nls statement                                                                   #whileStmtAlt
     |   DO nls statement nls WHILE expressionInPar                                                            #doWhileStmtAlt
     ;
@@ -662,7 +648,7 @@ statement
     ;
 
 catchClause
-    :   CATCH LPAREN variableModifiersOpt catchType? identifier rparen nls block
+    :   CATCH LPAREN variableModifiersOpt catchType? identifier RPAREN nls block
     ;
 
 catchType
@@ -674,7 +660,7 @@ finallyBlock
     ;
 
 resources
-    :   LPAREN nls resourceList sep? rparen
+    :   LPAREN nls resourceList sep? RPAREN
     ;
 
 resourceList
@@ -701,14 +687,18 @@ switchLabel
 
 forControl
     :   enhancedForControl
-    |   classicalForControl
+    |   originalForControl
     ;
 
 enhancedForControl
-    :   variableModifiersOpt type? variableDeclaratorId (COLON | IN) expression
+    :   (indexVariable COMMA)? variableModifiersOpt type? identifier (COLON | IN) expression
     ;
 
-classicalForControl
+indexVariable
+    :   (BuiltInPrimitiveType | DEF | VAR)? identifier
+    ;
+
+originalForControl
     :   forInit? SEMI expression? SEMI forUpdate?
     ;
 
@@ -725,7 +715,7 @@ forUpdate
 // EXPRESSIONS
 
 castParExpression
-    :   LPAREN type rparen
+    :   LPAREN type RPAREN
     ;
 
 parExpression
@@ -733,7 +723,7 @@ parExpression
     ;
 
 expressionInPar
-    :   LPAREN enhancedStatementExpression rparen
+    :   LPAREN enhancedStatementExpression RPAREN
     ;
 
 expressionList[boolean canSpread]
@@ -821,8 +811,9 @@ expression
         right=expression                                                                    #shiftExprAlt
 
     // boolean relational expressions (level 7)
-    |   left=expression nls op=(AS | INSTANCEOF | NOT_INSTANCEOF) nls type                  #relationalExprAlt
-    |   left=expression nls op=(LE | GE | GT | LT | IN | NOT_IN)  nls right=expression      #relationalExprAlt
+    |   left=expression nls op=INSTANCEOF nls matchingType                                  #relationalExprAlt
+    |   left=expression nls op=(AS | NOT_INSTANCEOF) nls type                               #relationalExprAlt
+    |   left=expression nls op=(LE | GE | GT | LT | IN | NOT_IN) nls right=expression       #relationalExprAlt
 
     // equality/inequality (==/!=) (level 8)
     |   left=expression nls
@@ -1187,7 +1178,7 @@ typeArgumentsOrDiamond
     ;
 
 arguments
-    :   LPAREN enhancedArgumentListInPar? COMMA? rparen
+    :   LPAREN enhancedArgumentListInPar? COMMA? RPAREN
     ;
 
 argumentList
@@ -1309,10 +1300,6 @@ keywords
     |   PUBLIC
     |   PROTECTED
     |   PRIVATE
-    ;
-
-rparen
-    :   RPAREN
     ;
 
 nls

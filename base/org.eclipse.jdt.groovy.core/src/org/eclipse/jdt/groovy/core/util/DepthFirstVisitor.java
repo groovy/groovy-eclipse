@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -330,7 +331,8 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     @Override
     public void visitForLoop(ForStatement statement) {
-        visitParameter(statement.getVariable());
+        Optional.ofNullable(statement.getIndexVariable()).ifPresent(this::visitParameter);
+        Optional.ofNullable(statement.getValueVariable()).ifPresent(this::visitParameter);
         visitIfPresent(statement.getCollectionExpression());
         visitIfPresent(statement.getLoopBlock());
         visitStatement(statement);
@@ -708,10 +710,10 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitIfPresent(expression.getNodeMetaData(ORIGINAL_EXPRESSION));
     }
 
-    protected void visitParameters(Parameter[] nodes) {
-        if (isNotEmpty(nodes)) {
-            for (Parameter node : nodes) {
-                visitParameter(node);
+    protected void visitParameters(Parameter[] params) {
+        if (isNotEmpty(params)) {
+            for (Parameter param : params) {
+                visitParameter(param);
             }
         }
     }

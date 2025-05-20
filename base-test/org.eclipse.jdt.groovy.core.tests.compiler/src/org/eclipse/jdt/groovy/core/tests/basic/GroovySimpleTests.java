@@ -3115,7 +3115,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\tpublic class Wibble implements Comparable<String> {\n" +
             "\t             ^^^^^^\n" +
             "Groovy:Can\'t have an abstract method in a non-abstract class. The class \'Wibble\'" +
-            " must be declared abstract or the method \'int compareTo(java.lang.Object)\' must be implemented.\n" +
+            " must be declared abstract or the method \'int compareTo(" + (isAtLeastGroovy(50) ? "T" : "java.lang.Object") + ")\' must be implemented.\n" +
             "----------\n");
     }
 

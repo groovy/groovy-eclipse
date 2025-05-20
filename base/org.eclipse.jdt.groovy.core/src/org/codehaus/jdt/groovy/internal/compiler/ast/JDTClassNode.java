@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -445,7 +445,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         Constant c = fieldBinding.constant();
 
         Expression initializerExpression = null;
-        // FIXASC for performance reasons could fetch the initializer lazily if a JDTFieldNode were created
         if (c == Constant.NotAConstant) {
             // if the field binding is for a real source field, we should be able to see any initializer in it
             if (typeDeclaration != null) {
@@ -455,21 +454,21 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 }
             }
         } else if (c instanceof BooleanConstant) {
-            initializerExpression = new ConstantExpression(((BooleanConstant) c).booleanValue());
+            initializerExpression = new ConstantExpression(((BooleanConstant) c).booleanValue(), true);
         } else if (c instanceof ByteConstant) {
-            initializerExpression = new ConstantExpression(((ByteConstant) c).byteValue());
+            initializerExpression = new ConstantExpression(((ByteConstant) c).byteValue(), true);
         } else if (c instanceof CharConstant) {
-            initializerExpression = new ConstantExpression(((CharConstant) c).charValue());
+            initializerExpression = new ConstantExpression(((CharConstant) c).charValue(), true);
         } else if (c instanceof DoubleConstant) {
-            initializerExpression = new ConstantExpression(((DoubleConstant) c).doubleValue());
+            initializerExpression = new ConstantExpression(((DoubleConstant) c).doubleValue(), true);
         } else if (c instanceof FloatConstant) {
-            initializerExpression = new ConstantExpression(((FloatConstant) c).floatValue());
+            initializerExpression = new ConstantExpression(((FloatConstant) c).floatValue(), true);
         } else if (c instanceof IntConstant) {
-            initializerExpression = new ConstantExpression(((IntConstant) c).intValue());
+            initializerExpression = new ConstantExpression(((IntConstant) c).intValue(), true);
         } else if (c instanceof LongConstant) {
-            initializerExpression = new ConstantExpression(((LongConstant) c).longValue());
+            initializerExpression = new ConstantExpression(((LongConstant) c).longValue(), true);
         } else if (c instanceof ShortConstant) {
-            initializerExpression = new ConstantExpression(((ShortConstant) c).shortValue());
+            initializerExpression = new ConstantExpression(((ShortConstant) c).shortValue(), true);
         } else if (c instanceof StringConstant) {
             initializerExpression = new ConstantExpression(((StringConstant) c).stringValue());
         }

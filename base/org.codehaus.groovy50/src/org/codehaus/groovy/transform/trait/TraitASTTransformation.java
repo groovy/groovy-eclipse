@@ -163,15 +163,12 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         }
     }
 
-    private void replaceExtendsByImplements(final ClassNode cNode) {
+    private static void replaceExtendsByImplements(final ClassNode cNode) {
         ClassNode superClass = cNode.getUnresolvedSuperClass(false);
         if (Traits.isTrait(superClass)) {
             // move from super class to interface
             cNode.setSuperClass(OBJECT_TYPE);
             cNode.addInterface(superClass);
-            // GRECLIPSE add
-            resolveScope(cNode);
-            // GRECLIPSE end
         }
     }
 
@@ -185,7 +182,8 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
     }
 
     private ClassNode createHelperClass(final ClassNode cNode) {
-        cNode.setModifiers(ACC_PUBLIC | ACC_ABSTRACT | ACC_INTERFACE);
+        cNode.setModifiers(ACC_PUBLIC | ACC_ABSTRACT | ACC_INTERFACE
+                | (cNode.getOuterClass() != null ? ACC_STATIC : 0)); // GROOVY-11600
 
         ClassNode helper = new InnerClassNode(
                 cNode,
@@ -195,6 +193,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
                 ClassNode.EMPTY_ARRAY,
                 null
         );
+        helper.setGenericsTypes(cNode.getGenericsTypes());
         helper.setStaticClass(true); // GROOVY-7242, GROOVY-7456, etc.
 
         MethodNode initializer = createInitMethod(false, helper);
@@ -227,6 +226,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
                     ACC_PUBLIC | ACC_STATIC | ACC_ABSTRACT | ACC_INTERFACE | ACC_SYNTHETIC,
                     OBJECT_TYPE
             );
+            fieldHelper.setGenericsTypes(cNode.getGenericsTypes());
             fieldHelper.setStaticClass(true);
             if (hasStatic) {
                 staticFieldHelper = new InnerClassNode(
@@ -385,13 +385,13 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
 
     /**
      * Copies annotations from the trait to the helper, excluding non-applicable
-     * items such as {@link Trait @Trait} and {@link Sealed @Sealed}.
+     * items such as {@link Trait @Trait}, {@link Sealed @Sealed} and logging transforms.
      */
     private static void copyClassAnnotations(final ClassNode helper) {
         for (AnnotationNode annotation : helper.getOuterClass().getAnnotations()) {
             ClassNode annotationType = annotation.getClassNode();
-            if (!annotationType.equals(Traits.TRAIT_CLASSNODE)
-                    && !annotationType.equals(SEALED_TYPE)) {
+            if (!annotationType.equals(Traits.TRAIT_CLASSNODE) && !annotationType.equals(SEALED_TYPE)
+                    && !annotationType.getName().startsWith("groovy.util.logging.")) { // GROOVY-7439
                 helper.addAnnotation(annotation);
             }
         }

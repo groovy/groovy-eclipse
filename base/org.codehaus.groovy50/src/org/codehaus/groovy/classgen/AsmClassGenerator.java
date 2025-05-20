@@ -264,10 +264,14 @@ public class AsmClassGenerator extends ClassGenerator {
 
     private final Map<String,ClassNode> referencedClasses = new HashMap<>();
 
+    /**
+     * Add marker in the bytecode to show source-bytecode relationship.
+     */
+    public static final boolean ASM_DEBUG = false;
     public static final boolean CREATE_DEBUG_INFO = true;
     public static final boolean CREATE_LINE_NUMBER_INFO = true;
-    public static final boolean ASM_DEBUG = false; // add marker in the bytecode to show source-bytecode relationship
-    public static final String MINIMUM_BYTECODE_VERSION = "_MINIMUM_BYTECODE_VERSION";
+    public static final String  ELIDE_EXPRESSION_VALUE = "_EXPR_VALUE_UNUSED";
+    public static final String  MINIMUM_BYTECODE_VERSION = "_MINIMUM_BYTECODE_VERSION";
 
     private WriterController controller;
     private ASTNode currentASTNode;
@@ -1139,11 +1143,12 @@ public class AsmClassGenerator extends ClassGenerator {
         String propertyName = pexp.getPropertyAsString();
         Expression objectExpression = pexp.getObjectExpression();
 
-        if (objectExpression instanceof ClassExpression && "this".equals(propertyName)) {
-            // we have something like A.B.this, and need to make it
-            // into this.this$0.this$0, where this.this$0 returns
-            // A.B and this.this$0.this$0 return A.
-            ClassNode type = objectExpression.getType();
+        ClassNode type = objectExpression.getType();
+        if (objectExpression instanceof ClassExpression && !type.isInterface()
+                && ("this".equals(propertyName) || "super".equals(propertyName))) {
+            // we have something like A.B.this and need to make it
+            // into this.this$0.this$0, where this.this$0 produces
+            // A.B and this.this$0.this$0 produces A.
             if (controller.getCompileStack().isInSpecialConstructorCall() && type.equals(classNode.getOuterClass())) {
                 // Outer.this in a special constructor call
                 ConstructorNode ctor = controller.getConstructorNode();
@@ -2232,7 +2237,7 @@ public class AsmClassGenerator extends ClassGenerator {
      * @param an the node with an annotation
      * @param av the visitor to use
      */
-    private void visitAnnotationAttributes(final AnnotationNode an, final AnnotationVisitor av) {
+    public void visitAnnotationAttributes(final AnnotationNode an, final AnnotationVisitor av) {
         Map<String, Object> constantAttrs = new HashMap<>();
         Map<String, PropertyExpression> enumAttrs = new HashMap<>();
         Map<String, Object> atAttrs = new HashMap<>();

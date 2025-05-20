@@ -49,6 +49,7 @@ import java.util.StringJoiner;
 
 import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
 import static org.apache.groovy.ast.tools.ClassNodeUtils.hasNoArgConstructor;
+import static org.apache.groovy.ast.tools.MethodNodeUtils.methodDescriptor;
 import static org.codehaus.groovy.ast.ClassHelper.int_TYPE;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*;
 import static org.codehaus.groovy.runtime.StreamGroovyMethods.stream;
@@ -116,8 +117,6 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
 
             addMethods(enumClass, values, minValue, maxValue);
 
-            // for now, inner enum is always static
-            if (isInnerClass) enumClass.setModifiers(enumClass.getModifiers() | ACC_STATIC);
             if (isAnyAbstract(enumClass)) enumClass.setModifiers(enumClass.getModifiers() | ACC_ABSTRACT);
             else if (isNotExtended(enumClass)) enumClass.setModifiers(enumClass.getModifiers() | ACC_FINAL);
         }
@@ -259,7 +258,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                             if (!methodNode.isAbstract()) continue;
                             MethodNode enumConstMethod = inner.getMethod(methodNode.getName(), methodNode.getParameters());
                             if (enumConstMethod == null || enumConstMethod.isAbstract()) {
-                                addError(field, "Can't have an abstract method in enum constant " + field.getName() + ". Implement method '" + methodNode.getTypeDescriptor() + "'.");
+                                addError(field, "Can't have an abstract method in enum constant " + field.getName() + ". Implement method '" + methodDescriptor(methodNode, true) + "'.");
                             }
                         }
                         if (inner.getVariableScope() == null) {

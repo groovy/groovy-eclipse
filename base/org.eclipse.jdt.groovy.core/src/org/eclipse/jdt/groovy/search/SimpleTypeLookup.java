@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -781,6 +781,16 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 field = type.getDeclaredField(name);
                 if (field != null && field.isFinal() && field.isStatic()) {
                     return field;
+                }
+                if (name.contains("__") && Traits.isTrait(type)) {
+                    ClassNode fh = Traits.findStaticFieldHelper(type);
+                    if (fh != null && fh.getMethod(name + "$get", Parameter.EMPTY_ARRAY) != null) {
+                        List<FieldNode> traitFields = type.redirect().getNodeMetaData("trait.fields");
+                        field = traitFields.stream().filter(tf -> name.endsWith("__" + tf.getName())).findFirst().orElse(null);
+                        if (field != null) {
+                            return field;
+                        }
+                    }
                 }
             }
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -586,7 +587,9 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             // Should have one method
             List<MethodNode> methods = classnode.getMethods();
             assertEquals(1, methods.size());
-            assertEquals("int compareTo(java.lang.Object)", methods.get(0).getTypeDescriptor());
+            assertEquals("compareTo", methods.get(0).getName());
+            assertEquals(1, methods.get(0).getParameters().length);
+            assertEquals("int", methods.get(0).getReturnType().toString(false));
 
             classnode.lazyClassInit();
         } finally {
@@ -640,7 +643,9 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             // Should have one method
             List<MethodNode> methods = classnode.getMethods();
             assertEquals(1, methods.size());
-            assertEquals("int compareTo(java.lang.Object)", methods.get(0).getTypeDescriptor());
+            assertEquals("compareTo", methods.get(0).getName());
+            assertEquals(1, methods.get(0).getParameters().length);
+            assertEquals("int", methods.get(0).getReturnType().toString(false));
         } finally {
             JDTResolver.instances.clear();
             JDTResolver.recordInstances = false;
@@ -1103,7 +1108,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Script.groovy (at line 3)\n" +
             "\tstatic final BEATS = [\n" +
             "\t             ^^^^^\n" +
-            "Groovy:Modifier 'static' not allowed here.\n" +
+            "Groovy:" + (isAtLeastGroovy(50) ? "The variable 'BEATS' has invalid modifier static" : "Modifier 'static' not allowed here") + ".\n" +
             "----------\n");
     }
 

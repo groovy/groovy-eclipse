@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 
@@ -2109,7 +2110,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "\tclass Foo implements Comparable<String> {\n" +
             "\t      ^^^\n" +
             "Groovy:Can't have an abstract method in a non-abstract class. The class 'Foo'" +
-            " must be declared abstract or the method 'int compareTo(java.lang.Object)' must be implemented.\n" +
+            " must be declared abstract or the method 'int compareTo(" + (isAtLeastGroovy(50) ? "T" : "java.lang.Object") + ")' must be implemented.\n" +
             "----------\n");
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -5712,6 +5712,30 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('that'), 4, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('sm'), 2, STATIC_METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('that'), 4, VARIABLE))
+    }
+
+    @Test
+    void testTraits15() {
+        String contents = '''\
+            |package p
+            |trait T {
+            |  public static final int X = 0
+            |}
+            |trait U extends T {
+            |  static sm() {
+            |    p_T__X
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('U'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.lastIndexOf('T '), 1, TRAIT),
+            new HighlightedTypedPosition(contents.lastIndexOf('sm'), 2, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('p_T__X'), 6, STATIC_VALUE))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1526

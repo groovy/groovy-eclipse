@@ -1424,8 +1424,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class D extends C {\n" +
             "  def m() { 'D' }\n" +
-            "}\n" +
-            "print new D().m()\n",
+            "}\n",
         };
         //@formatter:on
 
@@ -1542,7 +1541,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "1. ERROR in T.groovy (at line 2)\n" +
             "\tprotected int m() {}\n" +
             "\t^\n" +
-            "Groovy:Cannot have protected/package-private method in a trait (T#int m())\n" +
+            "Groovy:Cannot have protected/package-private method in a trait (T#" + (isAtLeastGroovy(50) ? "m():int" : "int m()") + ")\n" +
             "----------\n");
     }
 
@@ -2254,7 +2253,6 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "@groovy.transform.CompileStatic\n" +
             "interface Foo {\n" +
             "  String getBar()\n" +
             "}\n" +
@@ -2269,7 +2267,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
             "class C implements T {\n" +
-            "  Foo foo = { -> 'works' } as Foo\n" +
+            "  Foo foo = { -> 'works' }\n" +
             "}\n" +
             "print new C().m()\n",
         };
@@ -3167,10 +3165,11 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "@SelfType(C)\n" +
             "trait D {\n" +
             "  void test() {\n" +
-            "    String s = foo\n" +
-            "    print(m(s) {\n" +
-            "      s.toUpperCase()\n" +
-            "    })\n" +
+            "    String i = foo\n" +
+            "    String o = m(i) {\n" +
+            "      i.toUpperCase()\n" +
+            "    }\n" +
+            "    print(o)\n" +
             "  }\n" +
             "}\n" +
             "class X implements A, B, C, D {\n" +

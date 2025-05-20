@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -141,19 +141,10 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testDGMJavadoc() {
-        String contents = '[].so', target = 'so'
+        String contents = '((Collection) []).so', target = 'so'
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, target)))
 
-        // Java 8 adds default method sort(Comparator) to the List interface
-        boolean jdkListSort
-        try {
-            List.getDeclaredMethod('sort', Comparator)
-            jdkListSort = true
-        } catch (any) {
-            jdkListSort = false
-        }
-
-        String info = proposals[jdkListSort ? 1 : 0].proposalInfo.getInfo(null)
+        String info = proposals[0].proposalInfo.getInfo(null)
         assert info ==~ /(?s)Sorts the Collection\. .*/ : 'CategoryProposalCreator.CategoryMethodProposal.createJavaProposal locates javadoc'
     }
 

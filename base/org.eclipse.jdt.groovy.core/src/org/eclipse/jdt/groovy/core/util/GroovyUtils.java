@@ -184,7 +184,7 @@ public class GroovyUtils {
     }
 
     public static List<ClassNode> getParameterTypes(Parameter... params) {
-        final int n = params.length;
+        int n = params == null ? 0 : params.length;
         if (n == 0) return Collections.emptyList();
         List<ClassNode> types = new ArrayList<>(n);
         for (Parameter param : params) {

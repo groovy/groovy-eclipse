@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         vmArguments = new String[] {"-Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.SimpleLog"};
-        addRuntimeLibrary("commons-logging:commons-logging:1.2");
+        addRuntimeLibrary("commons-logging:commons-logging:1.3.5");
         runConformTest(sources, "", "[INFO] C - yay!");
     }
 
@@ -121,7 +121,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        addRuntimeLibrary("org.apache.logging.log4j:log4j-api:2.22.0", "org.apache.logging.log4j:log4j-core:2.22.0");
+        addRuntimeLibrary("org.apache.logging.log4j:log4j-api:2.24.3", "org.apache.logging.log4j:log4j-core:2.24.3");
         vmArguments = new String[] {"-Dorg.apache.logging.log4j.level=INFO", "-Dlog4j2.clock=T"};
         runConformTest(sources, "[main] INFO  C - yay!");
     }
@@ -149,7 +149,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        addRuntimeLibrary("org.apache.logging.log4j:log4j-api:2.22.0", "org.apache.logging.log4j:log4j-core:2.22.0", "org.apache.logging.log4j:log4j-jpl:2.22.0");
+        addRuntimeLibrary("org.apache.logging.log4j:log4j-api:2.24.3", "org.apache.logging.log4j:log4j-core:2.24.3", "org.apache.logging.log4j:log4j-jpl:2.24.3");
         vmArguments = new String[] {"-Dorg.apache.logging.log4j.level=INFO", "-Dlog4j2.clock=T"};
         runConformTest(sources, "[main] INFO  C - yay!");
     }
@@ -172,7 +172,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        addRuntimeLibrary("org.slf4j:slf4j-simple:1.7.36");
+        addRuntimeLibrary("org.slf4j:slf4j-simple:2.0.17");
         runConformTest(sources, "", "[Thread-0] INFO C - yay!");
     }
 
@@ -195,7 +195,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        addRuntimeLibrary("org.slf4j:slf4j-simple:1.7.36");
+        addRuntimeLibrary("org.slf4j:slf4j-simple:2.0.17");
         runConformTest(sources, "", "[Thread-0] INFO C - yay!");
     }
 
@@ -220,8 +220,8 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        addRuntimeLibrary("org.slf4j:slf4j-simple:1.7.36");
-        runConformTest(sources, "", "[Thread-0] INFO T$Trait$Helper - yay!");
+        addRuntimeLibrary("org.slf4j:slf4j-simple:2.0.17");
+        runConformTest(sources, "", "[Thread-0] INFO T - yay!");
     }
 
     @Test // GROOVY-5736

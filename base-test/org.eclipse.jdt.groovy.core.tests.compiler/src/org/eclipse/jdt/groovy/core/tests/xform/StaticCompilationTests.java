@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -4298,7 +4298,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in q\\Test.groovy (at line 5)\n" +
             "\tp.More.VALUE\n" +
             "\t^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - No such property: VALUE for class: p.More\n" +
+            "Groovy:[Static type checking] - No such property: VALUE " +
+                (isAtLeastGroovy(50) ? "for Class or static property " : "") + "for class: p.More\n" +
             "----------\n");
     }
 

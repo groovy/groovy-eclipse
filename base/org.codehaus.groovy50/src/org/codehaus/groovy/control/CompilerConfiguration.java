@@ -103,6 +103,8 @@ public class CompilerConfiguration {
     public static final String JDK23 = "23";
     /** This (<code>"24"</code>) is the value for targetBytecode to compile for a JDK 24. */
     public static final String JDK24 = "24";
+    /** This (<code>"25"</code>) is the value for targetBytecode to compile for a JDK 25. */
+    public static final String JDK25 = "25";
 
     /**
      * JDK version to bytecode version mapping.
@@ -121,7 +123,8 @@ public class CompilerConfiguration {
             JDK21, Opcodes.V21,
             JDK22, Opcodes.V22,
             JDK23, Opcodes.V23,
-            JDK24, Opcodes.V24
+            JDK24, Opcodes.V24,
+            JDK25, Opcodes.V25
     );
 
     /**

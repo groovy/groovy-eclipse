@@ -1,4 +1,4 @@
-// Generated from GroovyParser.g4 by ANTLR 4.13.2.6
+// Generated from GroovyParser.g4 by ANTLR 4.13.2.7
 package org.apache.groovy.parser.antlr4;
 
     import java.util.Map;
@@ -613,35 +613,29 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 */
 	Result visitVariableInitializer(@NotNull GroovyParser.VariableInitializerContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link GroovyParser#emptyDims}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	Result visitEmptyDims(@NotNull GroovyParser.EmptyDimsContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link GroovyParser#emptyDimsOpt}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	Result visitEmptyDimsOpt(@NotNull GroovyParser.EmptyDimsOptContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link GroovyParser#type}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	Result visitType(@NotNull GroovyParser.TypeContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link GroovyParser#classOrInterfaceType}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	Result visitClassOrInterfaceType(@NotNull GroovyParser.ClassOrInterfaceTypeContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link GroovyParser#primitiveType}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	Result visitPrimitiveType(@NotNull GroovyParser.PrimitiveTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link GroovyParser#referenceType}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitReferenceType(@NotNull GroovyParser.ReferenceTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link GroovyParser#matchingType}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitMatchingType(@NotNull GroovyParser.MatchingTypeContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link GroovyParser#typeArguments}.
 	 * @param ctx the parse tree
@@ -1009,11 +1003,17 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 */
 	Result visitEnhancedForControl(@NotNull GroovyParser.EnhancedForControlContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link GroovyParser#classicalForControl}.
+	 * Visit a parse tree produced by {@link GroovyParser#indexVariable}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	Result visitClassicalForControl(@NotNull GroovyParser.ClassicalForControlContext ctx);
+	Result visitIndexVariable(@NotNull GroovyParser.IndexVariableContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link GroovyParser#originalForControl}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitOriginalForControl(@NotNull GroovyParser.OriginalForControlContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link GroovyParser#forInit}.
 	 * @param ctx the parse tree
@@ -1284,12 +1284,6 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	Result visitKeywords(@NotNull GroovyParser.KeywordsContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link GroovyParser#rparen}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	Result visitRparen(@NotNull GroovyParser.RparenContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link GroovyParser#nls}.
 	 * @param ctx the parse tree

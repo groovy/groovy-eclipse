@@ -32,8 +32,6 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.typehandling.NumberMath;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.ListIterator;
@@ -117,7 +115,7 @@ public final class ExpressionUtils {
                     Object leftV = ((ConstantExpression) left).getValue();
                     if (leftV == null) leftV = "null";
                     if (leftV instanceof String) {
-                        return configure(be, new ConstantExpression(((String)leftV) + ((ConstantExpression) right).getValue()));
+                        return configure(be, new ConstantExpression(((String) leftV) + ((ConstantExpression) right).getValue()));
                     }
                 }
             }
@@ -210,7 +208,7 @@ public final class ExpressionUtils {
                 if (field != null && !field.isEnum() && field.isFinal() && field.isStatic()) {
                     Expression value = transformInlineConstants(field.getInitialValueExpression(), field.getType()); // GROOVY-10750, GROOVY-10068
                     if (value instanceof ConstantExpression) {
-                        return configure(exp, new ConstantExpression(((ConstantExpression) value).getValue()));
+                        return configure(exp, new ConstantExpression(((ConstantExpression) value).getValue(), true));
                     }
                 }
             }
@@ -221,7 +219,7 @@ public final class ExpressionUtils {
                 if (!field.isEnum() && field.isFinal() && field.isStatic()) {
                     Expression value = transformInlineConstants(field.getInitialValueExpression(), field.getType()); // GROOVY-11207, GROOVY-10068
                     if (value instanceof ConstantExpression) {
-                        return configure(exp, new ConstantExpression(((ConstantExpression) value).getValue()));
+                        return configure(exp, new ConstantExpression(((ConstantExpression) value).getValue(), true));
                     }
                 }
             }
@@ -258,6 +256,7 @@ public final class ExpressionUtils {
      *     <li>Binary expressions - string concatenation and numeric +, -, /, *</li>
      *     <li>List expressions - list of constants</li>
      * </ul>
+     *
      * @param exp the original expression
      * @param attrType the type that the final constant should be
      * @return the transformed type or the original if no transformation was possible
@@ -265,33 +264,35 @@ public final class ExpressionUtils {
     public static Expression transformInlineConstants(final Expression exp, final ClassNode attrType) {
         if (exp instanceof PropertyExpression) {
             PropertyExpression pe = (PropertyExpression) exp;
-            ClassNode type = pe.getObjectExpression().getType();
-            if (pe.getObjectExpression() instanceof ClassExpression && !type.isEnum()) {
-                if (type.isPrimaryClassNode()) {
-                    FieldNode fn = type.getField(pe.getPropertyAsString());
-                    if (fn != null && fn.isStatic() && fn.isFinal()) {
-                        Expression e = transformInlineConstants(fn.getInitialValueExpression(), attrType);
+            Expression e = pe.getObjectExpression();
+            ClassNode cn;
+            FieldNode fn;
+            if (e instanceof ClassExpression
+                    && !(cn = e.getType().redirect()).isEnum()
+                    && (cn.isPrimaryClassNode() || cn.isResolved())
+                    && (fn = ClassNodeUtils.getField(cn, pe.getPropertyAsString())) != null
+                    && fn.isStatic()
+                    && fn.isFinal()) {
+                if (fn.hasInitialExpression()) {
+                    e = transformInlineConstants(fn.getInitialValueExpression(), attrType);
+                    if (e instanceof ConstantExpression) {
                         // GRECLIPSE add
                         if (e instanceof ConstantExpression) {
                             return clone((ConstantExpression) e, exp);
                         }
                         // GRECLIPSE end
-                        if (e != null) {
-                            return e;
-                        }
+                        return e;
                     }
-                } else if (type.isResolved()) {
+                }/* else if (cn.isResolved()) { // GROOVY-9530
                     try {
-                        Field field = type.redirect().getTypeClass().getField(pe.getPropertyAsString());
-                        if (field != null && Modifier.isStatic(field.getModifiers()) && Modifier.isFinal(field.getModifiers())) {
-                            ConstantExpression ce = new ConstantExpression(field.get(null), true);
-                            configure(exp, ce);
-                            return ce;
+                        var field = cn.getTypeClass().getField(pe.getPropertyAsString());
+                        if (field != null) {
+                            return configure(exp, new ConstantExpression(field.get(null), true));
                         }
-                    } catch (Exception | LinkageError e) {
-                        // ignore, leave property expression in place and we'll report later
+                    } catch (Exception | LinkageError ignore) {
+                        // leave property expression and we will report later
                     }
-                }
+                }*/
             }
         } else if (exp instanceof VariableExpression) {
             VariableExpression ve = (VariableExpression) exp;
@@ -411,7 +412,7 @@ public final class ExpressionUtils {
 
     // GRECLIPSE add
     private static Expression clone(final ConstantExpression constX, final Expression origX) {
-        ConstantExpression newX = new ConstantExpression(constX.getValue());
+        ConstantExpression newX = new ConstantExpression(constX.getValue(), true);
         // TODO: Copy any other fields or metadata?
         configure(origX, newX);
         return newX;

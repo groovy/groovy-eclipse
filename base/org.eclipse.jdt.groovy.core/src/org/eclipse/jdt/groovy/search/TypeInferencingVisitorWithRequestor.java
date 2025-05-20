@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1332,14 +1332,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         // the loop has its own scope
         scopes.add(new VariableScope(scopes.getLast(), node, false));
         try {
-            // a three-part for loop, i.e. "for (_; _; _)", uses a dummy variable; skip it
+            // a traditional for loop, i.e. "for (_; _; _)", uses a dummy variable; skip it
             if (!(node.getCollectionExpression() instanceof ClosureListExpression)) {
-                Parameter param = node.getVariable();
-                if (param.isDynamicTyped()) {
+                Parameter var = node.getIndexVariable(); // GROOVY-10683
+                if (var != null) handleParameters(var);
+                var = node.getValueVariable();
+                if (var.isDynamicTyped()) {
                     // update the type of the parameter from the collection type
-                    scopes.getLast().addVariable(param.getName(), VariableScope.extractElementType(collectionType), null);
+                    scopes.getLast().addVariable(var.getName(), VariableScope.extractElementType(collectionType), null);
                 }
-                handleParameters(param);
+                handleParameters(var);
             }
 
             node.getLoopBlock().visit(this);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -665,9 +665,13 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
         preVisitStatement(forLoop);
         groovyCode.append("for ");
         //if its groovy for-loop
-        if (!forLoop.getVariable().getName().equals("forLoopDummyParameter")) {
+        if (forLoop.getValueVariable() != null) {
             groovyCode.append("(");
-            groovyCode.append(forLoop.getVariable().getName());
+            if (forLoop.getIndexVariable() != null) {
+                groovyCode.append(forLoop.getIndexVariable().getName());
+                groovyCode.append(", ");
+            }
+            groovyCode.append(forLoop.getValueVariable().getName());
             groovyCode.append(" in ");
             forLoop.getCollectionExpression().visit(this);
             groovyCode.append(")");
@@ -677,9 +681,9 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
             if (forLoop.getLoopBlock() instanceof BlockStatement) {
                 forLoop.getLoopBlock().visit(this);
             } else {
-                columnOffset++;
+                columnOffset += 1;
                 forLoop.getLoopBlock().visit(this);
-                columnOffset--;
+                columnOffset -= 1;
             }
         }
         postVisitStatement(forLoop);

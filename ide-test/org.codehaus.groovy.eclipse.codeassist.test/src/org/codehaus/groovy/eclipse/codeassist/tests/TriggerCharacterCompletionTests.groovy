@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -175,12 +175,11 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS , false)
 
-        String contents = '[].sort'; int offset = contents.length()
+        String contents = '((Collection) []).sort'; int offset = contents.length()
         List<ICompletionProposal> proposals = orderByRelevance(createProposalsAtOffset(contents, offset)).findAll {
             it.toString().startsWith('sort') && !it.toString().contains('()') // '{' is not a valid trigger
         }
         /* expecting:
-        sort(Comparator c) : void - List
         sort(Closure closure) : List - DefaultGroovyMethods
         sort(boolean mutate) : List - DefaultGroovyMethods
         sort(boolean mutate, Closure closure) : List - DefaultGroovyMethods
@@ -200,12 +199,11 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS , false)
 
-        String contents = '[].sort'; int offset = contents.length()
+        String contents = '((Collection) []).sort'; int offset = contents.length()
         List<ICompletionProposal> proposals = orderByRelevance(createProposalsAtOffset(contents, offset)).findAll {
             it.toString().startsWith('sort') && !it.toString().contains('()') // '{' is not a valid trigger
         }
         /* expecting:
-        sort(Comparator c) : void - List
         sort(Closure closure) : List - DefaultGroovyMethods
         sort(boolean mutate) : List - DefaultGroovyMethods
         sort(boolean mutate, Closure closure) : List - DefaultGroovyMethods
@@ -213,9 +211,6 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
         */
 
         for (proposal in proposals) {
-            if (proposal.toString().contains('()')) {
-                continue // '{' is not a valid trigger
-            }
             IDocument document = new Document(contents)
             proposal.apply(document, '{' as char, offset)
             def expected = getExpected(contents, proposal)
@@ -229,12 +224,11 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS , false)
 
-        String contents = '[].sort'; int offset = contents.length()
+        String contents = '((Collection) []).sort'; int offset = contents.length()
         List<ICompletionProposal> proposals = orderByRelevance(createProposalsAtOffset(contents, offset)).findAll {
             it.toString().startsWith('sort') && !it.toString().contains('()') // '{' is not a valid trigger
         }
         /* expecting:
-        sort(Comparator c) : void - List
         sort(Closure closure) : List - DefaultGroovyMethods
         sort(boolean mutate) : List - DefaultGroovyMethods
         sort(boolean mutate, Closure closure) : List - DefaultGroovyMethods
@@ -242,9 +236,6 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
         */
 
         for (proposal in proposals) {
-            if (proposal.toString().contains('()')) {
-                continue // '{' is not a valid trigger
-            }
             IDocument document = new Document(contents)
             proposal.apply(document, '{' as char, offset)
             def expected = getExpected(contents, proposal)
@@ -258,12 +249,11 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS , true)
 
-        String contents = '[].sort'; int offset = contents.length()
+        String contents = '((Collection) []).sort'; int offset = contents.length()
         List<ICompletionProposal> proposals = orderByRelevance(createProposalsAtOffset(contents, offset)).findAll {
             it.toString().startsWith('sort') && !it.toString().contains('()') // '{' is not a valid trigger
         }
         /* expecting:
-        sort(Comparator c) : void - List
         sort(Closure closure) : List - DefaultGroovyMethods
         sort(boolean mutate) : List - DefaultGroovyMethods
         sort(boolean mutate, Closure closure) : List - DefaultGroovyMethods
@@ -271,9 +261,6 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
         */
 
         for (proposal in proposals) {
-            if (proposal.toString().contains('()')) {
-                continue // '{' is not a valid trigger
-            }
             IDocument document = new Document(contents)
             proposal.apply(document, '{' as char, offset)
             def expected = getExpected(contents, proposal)

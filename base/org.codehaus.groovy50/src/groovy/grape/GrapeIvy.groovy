@@ -50,6 +50,7 @@ import org.codehaus.groovy.reflection.ReflectionUtils
 import org.codehaus.groovy.runtime.m12n.ExtensionModuleScanner
 import org.codehaus.groovy.runtime.metaclass.MetaClassRegistryImpl
 
+import java.text.ParseException
 import java.util.jar.JarFile
 import java.util.regex.Pattern
 import java.util.zip.ZipEntry
@@ -99,7 +100,7 @@ class GrapeIvy implements GrapeEngine {
         if (grapeConfig.exists()) {
             try {
                 settings.load(grapeConfig)
-            } catch (java.text.ParseException e) {
+            } catch (ParseException e) {
                 System.err.println("Local Ivy config file '${grapeConfig.getCanonicalPath()}' appears corrupt - ignoring it and using default config instead\nError was: ${e.getMessage()}")
                 settings.load(GrapeIvy.getResource('defaultGrapeConfig.xml'))
             }
@@ -636,7 +637,7 @@ class GrapeIvy implements GrapeEngine {
                 List<String> versions = []
                 moduleDir.eachFileMatch(ivyFilePattern) { File ivyFile ->
                     def m = ivyFilePattern.matcher(ivyFile.getName())
-                    if (m.matches()) versions += m.group(1)
+                    if (m.matches()) versions.add(m.group(1))
                 }
                 grapes[moduleDir.getName()] = versions
             }
@@ -702,8 +703,9 @@ class GrapeIvy implements GrapeEngine {
         List<URI> results = []
         for (ArtifactDownloadReport adl : report.getAllArtifactsReports()) {
             // TODO: check artifact type, jar vs library, etc.
-            if (adl.getLocalFile()) {
-                results += adl.getLocalFile().toURI()
+            def adlLocalFile = adl.getLocalFile()
+            if (adlLocalFile) {
+                results.add(adlLocalFile.toURI())
             }
         }
 

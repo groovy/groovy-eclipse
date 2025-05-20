@@ -29,9 +29,6 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.expr.AttributeExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -39,21 +36,19 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.classgen.VariableScopeVisitor;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.syntax.Token;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
 import static org.apache.groovy.ast.tools.VisibilityUtils.getVisibility;
 import static groovyjarjarasm.asm.Opcodes.ACC_FINAL;
 import static groovyjarjarasm.asm.Opcodes.ACC_PRIVATE;
-import static groovyjarjarasm.asm.Opcodes.ACC_PUBLIC;
 import static groovyjarjarasm.asm.Opcodes.ACC_STATIC;
 import static groovyjarjarasm.asm.Opcodes.ACC_TRANSIENT;
 
@@ -61,7 +56,7 @@ import static groovyjarjarasm.asm.Opcodes.ACC_TRANSIENT;
  * This class provides an AST Transformation to add a log field to a class.
  */
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
-public class LogASTTransformation extends AbstractASTTransformation implements CompilationUnitAware {
+public class LogASTTransformation extends AbstractASTTransformation implements CompilationUnitAware, TransformWithPriority {
 
     /**
      * This is just a dummy value used because String annotations values can not be null.
@@ -70,6 +65,11 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
     public static final String DEFAULT_CATEGORY_NAME = "##default-category-name##";
 
     public static final String DEFAULT_ACCESS_MODIFIER = "private";
+
+    @Override
+    public int priority() {
+        return 1; // GROOVY-7439
+    }
 
     private CompilationUnit compilationUnit;
 
@@ -133,15 +133,11 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
                         // support the old style but they won't be as configurable
                         logNode = loggingStrategy.addLoggerFieldToClass(node, logFieldName, categoryName);
                     }
-                    // GRECLIPSE add
-                    if (!logNode.getType().hasClass()) { // GROOVY-5736
+                    // GRECLIPSE add -- GROOVY-5736
+                    if (!logNode.getType().hasClass()) {
                         String span = String.valueOf(new char[nodes[0].getLength()]);
                         Token token = new Token(0, span, nodes[0].getLineNumber(), nodes[0].getColumnNumber());
                         sourceUnit.getErrorCollector().addWarning(1, "Unable to resolve class: " + logNode.getType(), token, sourceUnit);
-                    }
-                    if (node.getName().endsWith("$Trait$Helper")) { // GROOVY-7439
-                        addGeneratedMethod(node.getOuterClass(), "get" + logFieldName, ACC_PUBLIC, logNode.getType(), Parameter.EMPTY_ARRAY, null,
-                                           new ReturnStatement(new AttributeExpression(new ClassExpression(node), new ConstantExpression(logFieldName))));
                     }
                     // GRECLIPSE end
                 }

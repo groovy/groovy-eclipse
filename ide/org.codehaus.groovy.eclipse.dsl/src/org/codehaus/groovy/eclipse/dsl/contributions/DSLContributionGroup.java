@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -225,13 +225,14 @@ public class DSLContributionGroup extends ContributionGroup {
                     MethodNode mn = methods.get(method.getTypeDescriptor());
                     if (mn != null && (mn.getEnd() > 1 || mn.getDeclaringClass().equals(VariableScope.OBJECT_CLASS_NODE)))
                         continue;
-                    switch (method.getTypeDescriptor()) {
-                    case "groovy.lang.MetaClass getMetaClass()":
-                    case "void setMetaClass(groovy.lang.MetaClass)":
-                    case "java.lang.Object getProperty(java.lang.String)":
-                    case "void setProperty(java.lang.String, java.lang.Object)":
-                    case "java.lang.Object invokeMethod(java.lang.String, java.lang.Object)":
-                        continue;
+                    if ("getMetaClass".equals(name)) {
+                        if (GroovyUtils.getParameterTypes(method.getParameters()).isEmpty()) continue;
+                    } else if ("setMetaClass".equals(name)) {
+                        if (GroovyUtils.getParameterTypes(method.getParameters()).equals(List.of(ClassHelper.METACLASS_TYPE))) continue;
+                    } else if ("getProperty".equals(name)) {
+                        if (GroovyUtils.getParameterTypes(method.getParameters()).equals(List.of(VariableScope.STRING_CLASS_NODE))) continue;
+                    } else if ("setProperty".equals(name) || "invokeMethod".equals(name)) {
+                        if (GroovyUtils.getParameterTypes(method.getParameters()).equals(List.of(VariableScope.STRING_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE))) continue;
                     }
                     ParameterContribution[] params = null;
                     if (!asCategory) {
