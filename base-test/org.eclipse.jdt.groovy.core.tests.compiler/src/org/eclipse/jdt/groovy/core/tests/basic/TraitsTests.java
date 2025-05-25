@@ -1404,9 +1404,9 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         } else {
             runNegativeTest(sources,
                 "----------\n" +
-                "1. ERROR in Script.groovy (at line 1)\n" +
-                "\ttrait T {\n" +
-                "\t^\n" +
+                "1. ERROR in Script.groovy (at line 7)\n" +
+                "\tclass D extends C implements T {\n" +
+                "\t      ^\n" +
                 "Groovy:You are not allowed to override the final method m() from class 'C'.\n" +
                 "----------\n");
         }
