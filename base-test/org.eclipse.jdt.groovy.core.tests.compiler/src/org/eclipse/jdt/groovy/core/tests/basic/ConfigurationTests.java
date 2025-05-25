@@ -51,7 +51,7 @@ public final class ConfigurationTests {
         var x22x = isAtLeastGroovy(40) ? "22" : "17";
         var x23x = isAtLeastGroovy(40) ? "23" : "17";
         var x24x = isAtLeastGroovy(40) ? "24" : "17";
-        var x25x = isAtLeastGroovy(50) ? "25" : (isAtLeastGroovy(40) ? "24" : "17");
+        var x25x = isAtLeastGroovy(40) ? "25" : "17";
 
         String[] inputs = {"1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "5",   "6",   "7",   "8",   "9", "9.0", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26"};
         String[] expect = {"1.4", "1.4", "1.5", "1.6", "1.7", "1.8", "9",   "1.5", "1.6", "1.7", "1.8", "9", "9",   "10", "11", "12", "13", "14", "15", "16", "17", x18x, x19x, x20x, x21x, x22x, x23x, x24x, x25x, x25x};

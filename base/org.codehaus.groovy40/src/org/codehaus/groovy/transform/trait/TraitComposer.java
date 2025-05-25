@@ -53,6 +53,7 @@ import groovyjarjarasm.asm.Opcodes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -129,7 +130,11 @@ public abstract class TraitComposer {
         ClassNode staticFieldHelperClassNode = helpers.getStaticFieldHelper();
         Map<String, ClassNode> genericsSpec = GenericsUtils.createGenericsSpec(trait, GenericsUtils.createGenericsSpec(cNode));
 
-        for (MethodNode methodNode : helperClassNode.getMethods()) {
+        List<MethodNode> hMethods = helperClassNode.getMethods();
+        if (hMethods.size() > 1) { hMethods = new ArrayList<>(hMethods); // GRECLIPSE
+            hMethods.sort(Comparator.comparing(org.apache.groovy.ast.tools.MethodNodeUtils::methodDescriptorWithoutReturnType));
+        }
+        for (MethodNode methodNode : hMethods) {
             String name = methodNode.getName();
             Parameter[] helperMethodParams = methodNode.getParameters();
             int nParams = helperMethodParams.length;
@@ -178,7 +183,11 @@ public abstract class TraitComposer {
             // implementation of methods
             List<MethodNode> declaredMethods = new LinkedList<>();
             int pos = 0; // keep direct getters at start but in declaration order
-            for (MethodNode declaredMethod : fieldHelperClassNode.getMethods()) {
+            List<MethodNode> fhMethods = fieldHelperClassNode.getMethods();
+            if (fhMethods.size() > 1) { fhMethods = new ArrayList<>(fhMethods); // GRECLIPSE
+                fhMethods.sort(Comparator.comparing(org.apache.groovy.ast.tools.MethodNodeUtils::methodDescriptorWithoutReturnType));
+            }
+            for (MethodNode declaredMethod : fhMethods) {
                 if (declaredMethod.getName().endsWith(Traits.DIRECT_GETTER_SUFFIX)) {
                     declaredMethods.add(pos++, declaredMethod);
                 } else {
@@ -187,7 +196,11 @@ public abstract class TraitComposer {
             }
 
             if (staticFieldHelperClassNode != null) {
-                for (MethodNode declaredMethod : staticFieldHelperClassNode.getMethods()) {
+                List<MethodNode> sfhMethods = staticFieldHelperClassNode.getMethods();
+                if (sfhMethods.size() > 1) { sfhMethods = new ArrayList<>(sfhMethods); // GRECLIPSE
+                    sfhMethods.sort(Comparator.comparing(org.apache.groovy.ast.tools.MethodNodeUtils::methodDescriptorWithoutReturnType));
+                }
+                for (MethodNode declaredMethod : sfhMethods) {
                     if (declaredMethod.getName().endsWith(Traits.DIRECT_GETTER_SUFFIX)) {
                         declaredMethods.add(pos++, declaredMethod);
                     } else {

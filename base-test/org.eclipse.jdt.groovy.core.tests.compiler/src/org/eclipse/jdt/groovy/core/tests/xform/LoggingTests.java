@@ -201,7 +201,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testSlf4j_7439() {
-        assumeTrue(isAtLeastGroovy(40) && Boolean.getBoolean("eclipse.pde.launch"));
+        assumeTrue(isAtLeastGroovy(50) && Boolean.getBoolean("eclipse.pde.launch"));
 
         //@formatter:off
         String[] sources = {

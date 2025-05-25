@@ -1492,7 +1492,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     outerClass
             );
         } else if (asBoolean(outerClass)) {
-            if (outerClass.isInterface()) modifiers |= Opcodes.ACC_STATIC;
+            if (outerClass.isInterface() || isTrue(outerClass, IS_INTERFACE_WITH_DEFAULT_METHODS)) { // GROOVY-11613
+                modifiers |= Opcodes.ACC_STATIC;
+            }
             classNode = new InnerClassNode(
                     outerClass,
                     outerClass.getName() + "$" + className,
@@ -1610,7 +1612,14 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         this.visitClassBody(ctx.classBody());
         if (isRecord) {
             classNode.getFields().stream().filter(f -> !isTrue(f, IS_RECORD_GENERATED) && !f.isStatic()).findFirst()
-                    .ifPresent(fn -> this.createParsingFailedException("Instance field is not allowed in `record`", fn));
+                    .ifPresent(fn -> {
+                        throw this.createParsingFailedException("Instance field is not allowed in `record`", fn);
+                    });
+
+            final List<Statement> objectInitializerStatements = classNode.getObjectInitializerStatements();
+            if (asBoolean(objectInitializerStatements)) {
+                throw this.createParsingFailedException("Instance initializer is not allowed in `record`", objectInitializerStatements.get(0));
+            }
         }
         classNodeStack.pop();
 
@@ -1836,7 +1845,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         } else if (asBoolean(ctx.classDeclaration())) {
             ctx.classDeclaration().putNodeMetaData(TYPE_DECLARATION_MODIFIERS, this.visitModifiersOpt(ctx.modifiersOpt()));
             ctx.classDeclaration().putNodeMetaData(CLASS_DECLARATION_CLASS_NODE, classNode);
-            this.visitClassDeclaration(ctx.classDeclaration());
+            configureAST(this.visitClassDeclaration(ctx.classDeclaration()), ctx);
         }
 
         return null;
@@ -1942,7 +1951,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         // GRECLIPSE end
 
         if (classNode.getAnnotations().stream().noneMatch(a -> a.getClassNode().getName().equals(RECORD_TYPE_NAME))) {
-            createParsingFailedException("Only record can have compact constructor", ctx);
+            throw createParsingFailedException("Only record can have compact constructor", ctx);
         }
 
         if (new ModifierManager(this, ctx.getNodeMetaData(COMPACT_CONSTRUCTOR_DECLARATION_MODIFIERS)).containsAny(VAR)) {
@@ -1952,7 +1961,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         String methodName = this.visitMethodName(ctx.methodName());
         String className = classNode.getNodeMetaData(CLASS_NAME);
         if (!methodName.equals(className)) {
-            createParsingFailedException("Compact constructor should have the same name as record: " + className, ctx.methodName());
+            throw createParsingFailedException("Compact constructor should have the same name as record: " + className, ctx.methodName());
         }
 
         Parameter[] header = classNode.getNodeMetaData(RECORD_HEADER);
@@ -1963,7 +1972,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 String receiverText = expression.getObjectExpression().getText();
                 String propertyName = expression.getPropertyAsString();
                 if (THIS_STR.equals(receiverText) && Arrays.stream(header).anyMatch(p -> p.getName().equals(propertyName))) {
-                    createParsingFailedException("Cannot assign a value to final variable '" + propertyName + "'", expression.getProperty());
+                    throw createParsingFailedException("Cannot assign a value to final variable '" + propertyName + "'", expression.getProperty());
                 }
                 super.visitPropertyExpression(expression);
             }
@@ -2923,7 +2932,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 if (THIS_STR.equals(baseExprText) || SUPER_STR.equals(baseExprText)) { // e.g. this(...), super(...)
                     // class declaration is not allowed in the closure,
                     // so if this and super is inside the closure, it will not be constructor call.
-                    // e.g. src/test/org/codehaus/groovy/transform/MapConstructorTransformTest.groovy:
+                    // e.g. src/test/groovy/org/codehaus/groovy/transform/MapConstructorTransformTest.groovy:
                     // @MapConstructor(pre={ super(args?.first, args?.last); args = args ?: [:] }, post = { first = first?.toUpperCase() })
                     if (visitingClosureCount > 0) {
                         return configureAST(
@@ -3347,7 +3356,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     public CastExpression visitCastExprAlt(final CastExprAltContext ctx) {
         Expression expr = (Expression) this.visit(ctx.expression());
         if (expr instanceof VariableExpression && ((VariableExpression) expr).isSuperExpression()) {
-            this.createParsingFailedException("Cannot cast or coerce `super`", ctx); // GROOVY-9391
+            throw this.createParsingFailedException("Cannot cast or coerce `super`", ctx); // GROOVY-9391
         }
         CastExpression cast = new CastExpression(this.visitCastParExpression(ctx.castParExpression()), expr);
         // GRECLIPSE add
