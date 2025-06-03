@@ -95,7 +95,7 @@
         label="Eclipse 4.36 (2025-06)"/>
     <choice
         value="2025-03"
-        label="Eclipse 4.45 (2025-03)"/>
+        label="Eclipse 4.35 (2025-03)"/>
     <choice
         value="2024-12"
         label="Eclipse 4.34 (2024-12)"/>
@@ -311,7 +311,7 @@
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.36"/>
         <repository
-            url="https://download.eclipse.org/eclipse/updates/4.36-I-builds/I20250515-1800"/>
+            url="https://download.eclipse.org/eclipse/updates/4.36-I-builds/I20250528-1830"/>
       </repositoryList>
       <repositoryList
           name="2025-03">

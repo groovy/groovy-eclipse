@@ -377,7 +377,7 @@ public class ExplicitConstructorCall extends Statement implements Invocation {
 				}
 				if (!receiverType.isEnum() &&
 						this.accessMode <= ExplicitConstructorCall.Super &&
-						receiverType instanceof LocalTypeBinding local) {
+						receiverType instanceof LocalTypeBinding local) { // local cannot be a record class
 					MethodScope allocationStaticEnclosing = scope.parent.nearestEnclosingStaticScope(); // Constructor scope already has static, start from parent scope
 					MethodScope typesEnclosingStaticScope = local.scope.nearestEnclosingStaticScope();
 					if (allocationStaticEnclosing != null && typesEnclosingStaticScope != null && allocationStaticEnclosing != typesEnclosingStaticScope)

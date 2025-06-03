@@ -8432,4 +8432,30 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"The method state() is undefined for the type X\n" +
 				"----------\n");
 	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3920
+	// Java 24 switch expression and type inference generates wrong/unsecure bytecode
+	public void testIssue3920() {
+		this.runConformTest(
+				new String[] {
+				"X.java",
+				"""
+				import java.util.List;
+				import java.util.stream.Collectors;
+
+				public class X {
+					public static void main(String[] args) {
+						var l = List.of("A","B");
+						int i = 12;
+						var t = switch(i) {
+						case 1 -> l.stream().collect(Collectors.joining(" "));
+						default -> "Fixed!";
+						};
+						System.out.println(t);
+					}
+				}
+				"""
+				},
+				"Fixed!");
+	}
 }

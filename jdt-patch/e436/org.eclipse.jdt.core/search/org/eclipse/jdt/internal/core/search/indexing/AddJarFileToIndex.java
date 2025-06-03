@@ -22,7 +22,6 @@ import java.nio.charset.Charset;
 import java.nio.file.NoSuchFileException;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipError;
 import java.util.zip.ZipFile;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
@@ -281,7 +280,7 @@ class AddJarFileToIndex extends BinaryContainer {
 				}
 				monitor.exitWrite(); // free write lock
 			}
-		} catch (IOException | ZipError e) {
+		} catch (IOException e) {
 			if (e instanceof NoSuchFileException) {
 				org.eclipse.jdt.internal.core.util.Util.log(Status.info("Can not index not existing zip " + this.containerPath)); //$NON-NLS-1$
 			} else if ("zip file is empty".equals(e.getMessage())) { //$NON-NLS-1$

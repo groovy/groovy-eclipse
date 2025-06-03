@@ -37,7 +37,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 public class NegativeLambdaExpressionsTest extends AbstractRegressionTest {
 
 static {
-//	TESTS_NAMES = new String[] { "test404657_loop"};
+//	TESTS_NAMES = new String[] { "testIssue3956"};
 //	TESTS_NUMBERS = new int[] { 50 };
 //	TESTS_RANGE = new int[] { 11, -1 };
 }
@@ -10470,6 +10470,95 @@ public void testIssue3792_full() {
 			"	method.invoke(Object.class, o);\n" +
 			"	                            ^\n" +
 			"Local variable o defined in an enclosing scope must be final or effectively final\n" +
+			"----------\n");
+}
+
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3956
+// NPE in TypeBinding.getSingleAbstractMethod()
+public void testIssue3956() {
+	this.runNegativeTest(
+			new String[] {
+				"TestMe.java",
+				"""
+				import java.util.concurrent.CompletableFuture;
+
+				public class TestMe {
+					public  String id;
+					private CompletableFuture<Action> active;
+
+					public void test() {
+						CompletableFuture<Void> future;
+						if (id == null) {
+							future = active.thenAcceptAsync(recording -> {
+								recording.stop().run();
+								recording.process();
+							});
+						} else {
+							future = active.thenComposeAsync(recording -> {
+								recording.stop().run();
+				// This code (should) have compile errors but instead triggers ClassCastException
+
+								return update().handleAsync(() -> recording.process());
+
+				// Deleting the line and using this code would work
+				//				return update().handleAsync((a, b) -> {
+				//					recording.process();
+				//					return null;
+				//				});
+							});
+						}
+					}
+
+					public synchronized CompletableFuture<?> update() {
+						return null;
+					}
+
+					private static final class Action {
+
+						public Runnable stop() {
+							return () -> {
+							};
+						}
+
+						public void process() {
+
+						}
+
+					}
+				}
+				"""
+			},
+			"----------\n" +
+			"1. ERROR in TestMe.java (at line 15)\n" +
+			"	future = active.thenComposeAsync(recording -> {\n" +
+			"				recording.stop().run();\n" +
+			"// This code (should) have compile errors but instead triggers ClassCastException\n" +
+			"\n" +
+			"				return update().handleAsync(() -> recording.process());\n" +
+			"\n" +
+			"// Deleting the line and using this code would work\n" +
+			"//				return update().handleAsync((a, b) -> {\n" +
+			"//					recording.process();\n" +
+			"//					return null;\n" +
+			"//				});\n" +
+			"			});\n" +
+			"	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Type mismatch: cannot convert from CompletableFuture<Object> to CompletableFuture<Void>\n" +
+			"----------\n" +
+			"2. ERROR in TestMe.java (at line 19)\n" +
+			"	return update().handleAsync(() -> recording.process());\n" +
+			"	                ^^^^^^^^^^^\n" +
+			"The method handleAsync(BiFunction<? super capture#1-of ?,Throwable,? extends U>) in the type CompletableFuture<capture#1-of ?> is not applicable for the arguments (() -> {})\n" +
+			"----------\n" +
+			"3. ERROR in TestMe.java (at line 19)\n" +
+			"	return update().handleAsync(() -> recording.process());\n" +
+			"	                            ^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Lambda expression's signature does not match the signature of the functional interface method apply(? super capture#1-of ?, Throwable)\n" +
+			"----------\n" +
+			"4. ERROR in TestMe.java (at line 19)\n" +
+			"	return update().handleAsync(() -> recording.process());\n" +
+			"	                                  ^^^^^^^^^^^^^^^^^^^\n" +
+			"Cannot return a void result\n" +
 			"----------\n");
 }
 

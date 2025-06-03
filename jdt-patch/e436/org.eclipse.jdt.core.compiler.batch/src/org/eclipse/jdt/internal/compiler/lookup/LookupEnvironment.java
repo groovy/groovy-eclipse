@@ -1479,6 +1479,7 @@ public RawTypeBinding createRawType(ReferenceBinding genericType, ReferenceBindi
 }
 
 public WildcardBinding createWildcard(ReferenceBinding genericType, int rank, TypeBinding bound, TypeBinding[] otherBounds, int boundKind) {
+	bound = normalizeWildcardBound(bound, boundKind);
 	if (genericType != null) {
 		AnnotationBinding[] annotations = genericType.typeAnnotations;
 		if (annotations != Binding.NO_ANNOTATIONS)
@@ -1492,7 +1493,17 @@ public CaptureBinding createCapturedWildcard(WildcardBinding wildcard, Reference
 }
 
 public WildcardBinding createWildcard(ReferenceBinding genericType, int rank, TypeBinding bound, TypeBinding[] otherBounds, int boundKind, AnnotationBinding [] annotations) {
+	bound = normalizeWildcardBound(bound, boundKind);
 	return this.typeSystem.getWildcard(genericType, rank, bound, otherBounds, boundKind, annotations);
+}
+
+private TypeBinding normalizeWildcardBound(TypeBinding bound, int boundKind) {
+	if (boundKind == Wildcard.EXTENDS && bound.getClass() == CaptureBinding.class) {
+		CaptureBinding capture = (CaptureBinding) bound;
+		if (capture.firstBound != null && capture.otherUpperBounds() == Binding.NO_TYPES && capture.wildcard.boundKind() == Wildcard.EXTENDS)
+			return capture.firstBound;
+	}
+	return bound;
 }
 
 /**

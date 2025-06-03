@@ -2252,7 +2252,7 @@ public void generateOuterAccess(Object[] mappingSequence, ASTNode invocationSite
 		if (localBinding instanceof SyntheticArgumentBinding synth && synth.accessingScope != null) {
 			if (!isOuterLocalInInstanceScope(scope, synth.accessingScope)) {
 				if (invocationSite instanceof AllocationExpression alloc
-						&& alloc.resolvedType instanceof LocalTypeBinding localType) {
+						&& alloc.resolvedType instanceof LocalTypeBinding localType && !localType.isRecord()) {
 					scope.problemReporter().allocationInStaticContext(invocationSite, localType);
 					return;
 				} else {

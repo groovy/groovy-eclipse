@@ -73,7 +73,7 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 				TypeBinding uniformType = null;
 				for (Expression rExpression : this.rExpressions)
 					uniformType = uniformType == null ? rExpression.resolvedType : NullAnnotationMatching.moreDangerousType(uniformType, rExpression.resolvedType);
-				return uniformType;
+				return resolveAsType(uniformType);
 			}
 
 			if (this.allBoolean)

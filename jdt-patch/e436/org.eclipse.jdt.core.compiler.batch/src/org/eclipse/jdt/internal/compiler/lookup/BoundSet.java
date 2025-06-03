@@ -931,7 +931,7 @@ class BoundSet {
 		 */
 		// callers must ensure both relations are <: and both lefts are equal
 
-		// S4.10.2 requires the use of capture to find supertypes:
+		// Section 4.10.2 requires the use of capture to find supertypes:
 		int sourceStart = context.currentInvocation.sourceStart();
 		int sourceEnd = context.currentInvocation.sourceEnd();
 		TypeBinding s_cap = boundS.right.capture(context.scope, sourceStart, sourceEnd);

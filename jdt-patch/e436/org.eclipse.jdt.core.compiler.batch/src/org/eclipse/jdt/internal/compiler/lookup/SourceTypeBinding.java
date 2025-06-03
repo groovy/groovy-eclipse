@@ -1960,7 +1960,7 @@ nextMethod:
 		if (CharOperation.equals(method.selector, TypeConstants.EQUALS)) {
 			if (method.parameters != null && method.parameters.length == 1 && TypeBinding.equalsEquals(method.parameters[0], this.scope.getJavaLangObject()))
 				needEquals = false;
-			continue;
+			// fall through and check if method is an accessor; Unlike toString and hashCode, equals is a valid component name.
 		}
 
 		for (int j = 0; j < rcLength; j++) {

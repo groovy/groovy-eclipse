@@ -716,7 +716,7 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
         if (isMethodReference) {
         	someMethod = scope.getMethod(this.receiverType, this.selector, descriptorParameters, this);
         } else {
-        	if (this.receiverType instanceof LocalTypeBinding local) {
+        	if (this.receiverType instanceof LocalTypeBinding local && !local.isRecord()) { // local records are implicitly static and don't have enclosing instance
         		MethodScope enclosingMethodScope = local.scope.enclosingMethodScope();
         		if (enclosingMethodScope != null && !enclosingMethodScope.isStatic && scope.isInStaticContext()) {
         			scope.problemReporter().allocationInStaticContext(this, local);

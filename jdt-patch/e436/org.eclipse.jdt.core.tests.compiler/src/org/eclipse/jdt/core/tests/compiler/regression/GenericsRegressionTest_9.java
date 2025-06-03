@@ -1097,7 +1097,7 @@ public void testGH3457b() {
 	});
 }
 public void testGH3948() {
-	runNegativeTest(new String[] {
+	runConformTest(new String[] {
 			"Foo.java",
 			"""
 			import java.util.Collections;
@@ -1127,26 +1127,114 @@ public void testGH3948() {
 			    public static interface Bar{}
 			}
 			"""
-		},
-		"""
-		----------
-		1. ERROR in Foo.java (at line 18)
-			test(Foo::get, Foo::set);
-			^^^^
-		The method test(Function<Foo,List<U>>, BiConsumer<Foo,List<? extends U>>) in the type Foo is not applicable for the arguments (Foo::get, Foo::set)
-		----------
-		2. ERROR in Foo.java (at line 18)
-			test(Foo::get, Foo::set);
-			     ^^^^^^^^
-		The type of get() from the type Foo is List<Foo.Bar>, this is incompatible with the descriptor's return type: List<U>
-		----------
-		3. ERROR in Foo.java (at line 18)
-			test(Foo::get, Foo::set);
-			               ^^^^^^^^
-		The type Foo does not define set(Foo, List<capture#5-of ? extends U>) that is applicable here
-		----------
-		""");
+		});
 }
+public void testGH4022a() {
+	runConformTest(new String[] {
+			"Bug.java",
+			"""
+			import java.util.Collection;
+			import java.util.Set;
+
+			public abstract class Bug {
+				// real code uses some guava method, so method signature  cannot be changed
+				public abstract <T2> Collection<T2> toCollection(Iterable<? extends T2> elements);
+
+				public abstract <T> Set<Class<? extends T>> getSubTypesAsSet(Class<T> type);
+
+				public <T> Collection<Class<? extends T>> getSubTypesAsCollection(Class<T> superclassOrInterface)    {
+					// compiles on older eclipse and javac 21
+					// fails since d9d550f8ddeda45cf4d1b803a99afbd73abf57e4
+					return toCollection(getSubTypesAsSet(superclassOrInterface));
+				}
+
+				public <T> Collection<Class<? extends T>> getSubTypesAsCollectionFixed(Class<T> superclassOrInterface) {
+					// type as suggested by eclipse when using "extract local variable"
+					Set<Class<? extends T>> subTypesAsSet = getSubTypesAsSet(superclassOrInterface);
+
+					// compiles
+					return toCollection(subTypesAsSet);
+				}
+			}
+			"""
+		});
+}
+public void testGH4022b() {
+	runConformTest(new String[] {
+			"OtherExample.java",
+			"""
+			import java.util.Set;
+			import java.util.function.Function;
+
+			interface TaskDefinition {
+				public Set<String> getLabels();
+			}
+
+			abstract class FluentIterable<E> implements Iterable<E> {
+				public abstract <T> FluentIterable<T> transformAndConcat(
+						Function<? super E, ? extends Iterable<? extends T>> function);
+
+				public abstract Set<E> toSet();
+			}
+
+			public abstract class OtherExample {
+				public Set<String> getAllLabels(FluentIterable<TaskDefinition> from) {
+			                // doesn't compile since d9d550f8ddeda45cf4d1b803a99afbd73abf57e4
+					return from.transformAndConcat((TaskDefinition input) -> input.getLabels()).toSet();
+				}
+			}
+			"""
+		});
+}
+public void testGH4033() {
+	runConformTest(new String[] {
+			"Snippet.java",
+			"""
+			import java.util.Collection;
+			import java.util.Iterator;
+			
+			public class Snippet {
+				interface Apple {}
+				interface Banana<T1, T2> {}
+				interface Smoothie<T extends Apple, M extends Apple> extends Banana<T, String> {}
+			
+				public static void main(String[] args) {
+					Collection<Smoothie<? extends Apple, ? extends Apple>> c = null;
+					method(c);
+				}
+			
+				static final <S extends Banana<? extends T, ?>, T> Iterator<T> method(
+						Collection<S> c) {
+					return null;
+				}
+			}
+			"""
+		});
+}
+public void testGH4039() {
+	runConformTest(new String[] {
+		"CollectionsSortReproducer.java",
+		"""
+		import java.util.Collection;
+		import java.util.Collections;
+		import java.util.Iterator;
+		import java.util.List;
+
+		public class CollectionsSortReproducer {
+			class Cranberry<T_Value> implements Comparable<Cranberry<T_Value>> {
+				@Override
+				public int compareTo(Cranberry<T_Value> o) { return 0; }
+			}
+
+			public static void main(String[] args) {
+				List<Cranberry<?>> l = Collections.emptyList();
+			    Collections.sort(l);
+			}
+		}
+		"""
+	});
+}
+
 public static Class<GenericsRegressionTest_9> testClass() {
 	return GenericsRegressionTest_9.class;
 }

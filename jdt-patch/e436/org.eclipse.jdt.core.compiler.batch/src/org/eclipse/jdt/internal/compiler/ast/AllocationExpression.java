@@ -362,7 +362,7 @@ public TypeBinding resolveType(BlockScope scope) {
 		} else {
 			this.resolvedType = this.type.resolveType(scope, true /* check bounds*/);
 		}
-		if (this.resolvedType instanceof LocalTypeBinding local && this.enumConstant == null) {
+		if (this.resolvedType instanceof LocalTypeBinding local && !local.isRecord() && this.enumConstant == null) { // local records are implicitly static and don't have enclosing instance
 			MethodScope allocationStaticEnclosing = scope.nearestEnclosingStaticScope();
 			if (allocationStaticEnclosing != null && allocationStaticEnclosing != local.scope.nearestEnclosingStaticScope())
 				scope.problemReporter().allocationInStaticContext(this, local);
