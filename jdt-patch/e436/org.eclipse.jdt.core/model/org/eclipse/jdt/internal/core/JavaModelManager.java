@@ -5323,6 +5323,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		IEclipsePreferences instancePreferences = getInstancePreferences();
 
 		if (newOptions == null){
+			if (instancePreferences != null) // GROOVY add
 			try {
 				instancePreferences.clear();
 			} catch(BackingStoreException e) {
@@ -5348,6 +5349,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				}
 				storePreference(key, value, instancePreferences, newOptions);
 			}
+			if (instancePreferences != null) // GROOVY add
 			try {
 				// persist options
 				instancePreferences.flush();

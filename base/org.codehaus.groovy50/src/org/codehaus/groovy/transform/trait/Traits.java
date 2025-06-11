@@ -169,7 +169,9 @@ public abstract class Traits {
             }
         }
         GenericsType[] typeArguments = trait.getGenericsTypes();
-        helperClassNode = GenericsUtils.makeClassSafe0(helperClassNode, typeArguments);
+        if (helperClassNode != null) {
+            helperClassNode = GenericsUtils.makeClassSafe0(helperClassNode, typeArguments);
+        }
         if (fieldHelperClassNode != null) {
             fieldHelperClassNode = GenericsUtils.makeClassSafe0(fieldHelperClassNode, typeArguments);
         }

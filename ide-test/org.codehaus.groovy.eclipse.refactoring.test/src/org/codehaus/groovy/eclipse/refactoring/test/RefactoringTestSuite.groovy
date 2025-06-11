@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -392,14 +392,14 @@ abstract class RefactoringTestSuite {
 
     //--------------------------------------------------------------------------
 
-    protected static ICompilationUnit createCU(IPackageFragment pack, String name, String contents) {
+    protected final ICompilationUnit createCU(IPackageFragment pack, String name, String contents) {
         assert !pack.getCompilationUnit(name).exists()
         ICompilationUnit unit = pack.createCompilationUnit(name, contents, true, null)
         unit.save(null, true)
         return unit
     }
 
-    protected static String getFileContents(String fileName) {
+    protected final String getFileContents(String fileName) {
         def fileUrl = FrameworkUtil.getBundle(RefactoringTestSuite).getEntry('/resources/' + fileName)
         fileUrl.openConnection().with {
             useCaches = false
@@ -407,7 +407,7 @@ abstract class RefactoringTestSuite {
         }
     }
 
-    /*protected static IField[] getFields(IType type, String[] names) {
+    /*protected final IField[] getFields(IType type, String[] names) {
         if (names == null) return new IField[0]
         Set<IField> fields = new HashSet<IField>()
         for (int i = 0; i < names.length; i++) {
@@ -418,7 +418,7 @@ abstract class RefactoringTestSuite {
         return fields.toArray(new IField[fields.size()])
     }
 
-    protected static IType[] getMemberTypes(IType type, String[] names) {
+    protected final IType[] getMemberTypes(IType type, String[] names) {
         if (names == null) return new IType[0]
         Set<IType> memberTypes = new HashSet<IType>()
         for (int i = 0; i < names.length; i++) {
@@ -438,7 +438,7 @@ abstract class RefactoringTestSuite {
         return memberTypes.toArray(new IType[memberTypes.size()])
     }*/
 
-    protected static IMethod[] getMethods(IType type, String[] names, String[][] signatures) {
+    protected final IMethod[] getMethods(IType type, String[] names, String[][] signatures) {
         if (names == null || signatures == null)
             return new IMethod[0]
         List<IMethod> methods = []
@@ -452,7 +452,7 @@ abstract class RefactoringTestSuite {
         return methods as IMethod[]
     }
 
-    /*protected static IType[] findTypes(IType[] types, String[] namesOfTypesToPullUp) {
+    /*protected final IType[] findTypes(IType[] types, String[] namesOfTypesToPullUp) {
         List<IType> found = new ArrayList<IType>(types.length)
         for (int i = 0; i < types.length; i++) {
             IType type = types[i]
@@ -465,7 +465,7 @@ abstract class RefactoringTestSuite {
         return found.toArray(new IType[found.size()])
     }
 
-    protected static IField[] findFields(IField[] fields, String[] namesOfFieldsToPullUp) {
+    protected final IField[] findFields(IField[] fields, String[] namesOfFieldsToPullUp) {
         List<IField> found = new ArrayList<IField>(fields.length)
         for (int i = 0; i < fields.length; i++) {
             IField field = fields[i]
@@ -478,7 +478,7 @@ abstract class RefactoringTestSuite {
         return found.toArray(new IField[found.size()])
     }
 
-    protected static IMethod[] findMethods(IMethod[] selectedMethods, String[] namesOfMethods, String[][] signaturesOfMethods) {
+    protected final IMethod[] findMethods(IMethod[] selectedMethods, String[] namesOfMethods, String[][] signaturesOfMethods) {
         List<IMethod> found = new ArrayList<IMethod>(selectedMethods.length)
         for (int i = 0; i < selectedMethods.length; i++) {
             IMethod method = selectedMethods[i]
@@ -496,7 +496,7 @@ abstract class RefactoringTestSuite {
         return found.toArray(new IMethod[found.size()])
     }
 
-    private static boolean areSameSignatures(String[] s1, String[] s2) {
+    private boolean areSameSignatures(String[] s1, String[] s2) {
         if (s1.length != s2.length)
             return false
         for (int i = 0; i < s1.length; i++) {
@@ -514,7 +514,7 @@ abstract class RefactoringTestSuite {
      * @param expected the expected value
      * @param actual the actual value
      */
-    protected static void assertEqualLines(String expected, String actual) {
+    protected final void assertEqualLines(String expected, String actual) {
         assertEqualLines('', expected, actual)
     }
 
@@ -526,7 +526,7 @@ abstract class RefactoringTestSuite {
      * @param expected the expected value
      * @param actual the actual value
      */
-    protected static void assertEqualLines(String message, String expected, String actual) {
+    protected final void assertEqualLines(String message, String expected, String actual) {
         String[] expectedLines = Strings.convertIntoLines(expected)
         String[] actualLines = Strings.convertIntoLines(actual)
         String expected2 = (expectedLines == null ? null : Strings.concatenate(expectedLines, '\n'))
