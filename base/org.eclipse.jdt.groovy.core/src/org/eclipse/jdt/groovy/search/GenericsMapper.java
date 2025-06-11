@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -348,56 +348,55 @@ public class GenericsMapper {
                 ubt = ubt.getComponentType();
             }
 
-            if (ubt.isGenericsPlaceHolder() && ubt.getUnresolvedName().equals(unresolved.getName())) {
+            if (ubt.isGenericsPlaceHolder()) {
                 // ubt could be "T" or "T extends CharSequence" and rbt could be "String" or whatever
-                if (GroovyUtils.isAssignable(rbt, ubt))
+                if (ubt.getUnresolvedName().equals(unresolved.getName()) && GroovyUtils.isAssignable(rbt, ubt)) {
                     saveParameterType(resolved, unresolved.getName(), rbt, true);
-            } else {
-                // ubt could be "Foo<K, V>" and rbt could be "Foo<String, Object>" or "Closure<Object>"
+                }
+            } else if (ubt.redirect().isUsingGenerics()) {
+                // ubt could be "Foo<T,U>" and rbt could be "Foo<String,Object>" or "Closure<Object>"
                 GenericsType[] ubt_gts = GroovyUtils.getGenericsTypes(ubt);
 ubt_gts:        for (int j = 0; j < ubt_gts.length; j += 1) {
                     if (StaticTypeCheckingSupport.isUnboundedWildcard(ubt_gts[j])) continue;
                     ClassNode ubt_gt_t = GroovyUtils.getBaseType(ubt_gts[j].isWildcard() ? Optional.ofNullable(ubt_gts[j].getUpperBounds()).map(arr -> arr[0]).orElse(ubt_gts[j].getLowerBound()) : ubt_gts[j].getType());
-                    if (ubt_gt_t.isGenericsPlaceHolder() && ubt_gt_t.getUnresolvedName().equals(unresolved.getName()) && ubt.redirect().isUsingGenerics()) { // ubt_gt_t is "T" from "Foo<T>" or "Foo<T[]>" or "Foo<? super T>"
-                        if (rbt.equals(ClassHelper.CLOSURE_TYPE) && !ubt.equals(ClassHelper.CLOSURE_TYPE) && !ubt.isGenericsPlaceHolder()) {
-                            if (!rbt.isUsingGenerics()) continue;
-                            MethodNode sam = ClassHelper.findSAM(ubt);
-                            if (sam != null) {
-                                // read "T: A[]"
-                                GenericsMapper um = gatherGenerics(ubt);
-                                // read "T: String[]"
-                                Map<String, ClassNode> rm = new HashMap<>();
-                                readGenericsLinks(rm, rbt.getGenericsTypes()[0].getType(), sam.getReturnType());
+                    // ubt_gt_t is "T" from "Foo<T>" or "Foo<T[]>" or "Foo<? super T>"; or "Bar<T>" from "Foo<Bar<T>>"
+                    if (rbt.equals(ClassHelper.CLOSURE_TYPE) && !ubt.equals(ClassHelper.CLOSURE_TYPE)) {
+                        if (!rbt.isUsingGenerics()) continue; // rbt is raw type
+                        MethodNode sam = ClassHelper.findSAM(ubt);
+                        if (sam != null) {
+                            // read "T: A[]"
+                            GenericsMapper um = gatherGenerics(ubt);
+                            // read "T: String[]"
+                            Map<String, ClassNode> rm = new HashMap<>();
+                            readGenericsLinks(rm, rbt.getGenericsTypes()[0].getType(), sam.getReturnType());
 
-                                for (Map.Entry<String, ClassNode> entry : rm.entrySet()) {
-                                    ClassNode ut = um.findParameter(entry.getKey(), null);
-                                    if (ut != null) {
-                                        // find "A: String" from "A[]" and "String[]"
-                                        Map<String, ClassNode> map = new HashMap<>();
-                                        readGenericsLinks(map, entry.getValue(), ut);
+                            for (Map.Entry<String, ClassNode> entry : rm.entrySet()) {
+                                ClassNode ut = um.findParameter(entry.getKey(), null);
+                                if (ut != null) {
+                                    // find "A: String" from "A[]" and "String[]"
+                                    Map<String, ClassNode> map = new HashMap<>();
+                                    readGenericsLinks(map, entry.getValue(), ut);
 
-                                        ClassNode rt = map.get(unresolved.getName());
-                                        if (rt != null && GroovyUtils.isAssignable(rt, ubt_gt_t)) {
-                                            saveParameterType(resolved, unresolved.getName(), rt, false);
-                                            break ubt_gts;
-                                        }
+                                    ClassNode rt = map.get(unresolved.getName());
+                                    if (rt != null && GroovyUtils.isAssignable(rt, ubt_gt_t)) {
+                                        saveParameterType(resolved, unresolved.getName(), rt, false);
+                                        break ubt_gts;
                                     }
                                 }
                             }
-                        } else {
-                            // to resolve "T" follow "List<T> -> List<E>" then walk resolved type hierarchy to find "List<E>"
-                            String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName();
-                            GenericsMapper map = gatherGenerics(rbt, ubt);
-                            ClassNode rt = map.findParameter(key, null);
-
-                            if (rt != null && GroovyUtils.isAssignable(rt, ubt_gt_t)) {
-                                saveParameterType(resolved, unresolved.getName(), rt, false);
-                            }
-                            break ubt_gts; // ugt resolved; no need to look at more
                         }
+                    } else if (ubt_gt_t.isGenericsPlaceHolder() && ubt_gt_t.getUnresolvedName().equals(unresolved.getName())) {
+                        // to resolve "T" follow "List<T> -> List<E>" then walk resolved type hierarchy to find "List<E>"
+                        String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName();
+                        GenericsMapper map = gatherGenerics(rbt, ubt);
+                        ClassNode rt = map.findParameter(key, null);
+
+                        if (rt != null && GroovyUtils.isAssignable(rt, ubt_gt_t)) {
+                            saveParameterType(resolved, unresolved.getName(), rt, false);
+                        }
+                        break ubt_gts; // ugt resolved; no need to look at more
                     }
                 }
-                // TODO: What about "Foo<Bar<T>>"?
             }
         }
     }

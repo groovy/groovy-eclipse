@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1119,6 +1119,26 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "eStr", "java.util.stream.Stream<java.util.Map$Entry<java.lang.String,java.lang.String>>");
         assertType(contents, "kStr", "java.util.stream.Stream<java.lang.String>");
         assertType(contents, "kSet", "java.util.Set<java.lang.String>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1626
+    public void testClosure26() {
+        assumeTrue(isParrotParser());
+        String contents =
+            "@groovy.transform.TypeChecked\n" +
+            "void test(List<String> list_of_string) {\n" +
+            "  def stream_of_list_of_string = java.util.stream.Stream.of(list_of_string)\n" +
+            "  def stream_of_string = stream_of_list_of_string.flatMap(List::stream)\n" +
+            "  def stream_of_integer = stream_of_string.map(Integer::valueOf)\n" +
+            "  def list_of_integer = stream_of_integer.toList()\n" +
+            "}\n";
+        assertType(contents, "stream_of_list_of_string", "java.util.stream.Stream<java.util.List<java.lang.String>>");
+        assertType(contents, "flatMap",                  "java.util.stream.Stream<java.lang.String>"); // GROOVY-11683
+        assertType(contents, "stream_of_string",         "java.util.stream.Stream<java.lang.String>");
+        assertType(contents, "map",                      "java.util.stream.Stream<java.lang.Integer>");
+        assertType(contents, "stream_of_integer",        "java.util.stream.Stream<java.lang.Integer>");
+        assertType(contents, "toList",                   "java.util.List<java.lang.Integer>");
+        assertType(contents, "list_of_integer",          "java.util.List<java.lang.Integer>");
     }
 
     @Test
