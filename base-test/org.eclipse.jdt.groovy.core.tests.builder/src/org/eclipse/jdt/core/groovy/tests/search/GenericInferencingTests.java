@@ -1141,6 +1141,19 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "list_of_integer",          "java.util.List<java.lang.Integer>");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1627
+    public void testClosure27() {
+        String contents =
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  java.util.stream.Collectors.groupingBy(String.&trim)\n" +
+            "}\n";
+        assertType(contents, "groupingBy", "java.util.stream.Collector<java.lang.String,?,java.util.Map<java.lang.String,java.util.List<java.lang.String>>>");
+
+        contents = contents.replace("(String.&trim)", "{String s -> s.trim()}");
+        assertType(contents, "groupingBy", "java.util.stream.Collector<java.lang.String,?,java.util.Map<java.lang.String,java.util.List<java.lang.String>>>");
+    }
+
     @Test
     public void testArrayDGM() {
         String contents =

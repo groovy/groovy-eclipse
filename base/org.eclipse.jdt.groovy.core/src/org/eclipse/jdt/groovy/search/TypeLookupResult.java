@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -234,7 +234,12 @@ public class TypeLookupResult {
                         // do not return method type parameters; "def <T> T m()" returns Object if "T" unknown
                         for (GenericsType tp : method.getGenericsTypes()) {
                             if (unresolved.test(tp)) {
-                                mapper.allGenerics.getLast().put(tp.getName(), erasure(tp));
+                                GenericsMapper gm = GenericsMapper.gatherGenerics(singletonList(type), objectType, returnTypeStub(method));
+                                ClassNode cn = gm.findParameter(tp.getName(), null);
+                                if (cn == null || cn.isGenericsPlaceHolder()) {
+                                    cn = erasure(tp);
+                                }
+                                mapper.allGenerics.getLast().put(tp.getName(), cn);
                             }
                         }
 
