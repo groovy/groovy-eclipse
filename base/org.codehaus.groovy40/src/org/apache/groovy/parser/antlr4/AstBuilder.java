@@ -349,13 +349,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             }
         } else if (this.isBlankScript()) {
             // add "return null" if script has no statements/methods/classes
-            this.moduleNode.addStatement(ReturnStatement.RETURN_NULL_OR_VOID);
+            this.moduleNode.addStatement(this.createEmptyScriptStatement());
         }
 
         this.configureScriptClassNode();
 
         if (this.numberFormatError != null) {
-            throw createParsingFailedException(this.numberFormatError.getV2().getMessage(), this.numberFormatError.getV1());
+            throw this.createParsingFailedException(this.numberFormatError.getV2().getMessage(), this.numberFormatError.getV1());
         }
 
         // GRECLIPSE add
@@ -366,34 +366,28 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         moduleNode.setLastColumnNumber(locationSupport.getEndColumn());
         BlockStatement blockStatement = moduleNode.getStatementBlock();
         if (!blockStatement.isEmpty() || !moduleNode.getMethods().isEmpty()) {
-            ASTNode alpha = findAlpha(blockStatement, moduleNode.getMethods());
-            ASTNode omega = findOmega(blockStatement, moduleNode.getMethods());
-            if (!blockStatement.isEmpty()) {
-                blockStatement.setStart(alpha.getStart());
-                blockStatement.setLineNumber(alpha.getLineNumber());
-                blockStatement.setColumnNumber(alpha.getColumnNumber());
-                blockStatement.setEnd(omega.getEnd());
-                blockStatement.setLastLineNumber(omega.getLastLineNumber());
-                blockStatement.setLastColumnNumber(omega.getLastColumnNumber());
+            ASTNode alpha = getAlpha(blockStatement, moduleNode.getMethods());
+            ASTNode omega = getOmega(blockStatement, moduleNode.getMethods());
+
+            ClassNode theScript = moduleNode.getClasses().get(0);
+            blockStatement.setSourcePosition(theScript);
+            if (alpha instanceof MethodNode) {
+                theScript.setStart(alpha.getStart());
+                theScript.setLineNumber(alpha.getLineNumber());
+                theScript.setColumnNumber(alpha.getColumnNumber());
+            }
+            if (omega instanceof MethodNode) {
+                theScript.setEnd(omega.getEnd());
+                theScript.setLastLineNumber(omega.getLastLineNumber());
+                theScript.setLastColumnNumber(omega.getLastColumnNumber());
             }
 
-            ClassNode scriptClass = moduleNode.getClasses().get(0);
-            scriptClass.setStart(alpha.getStart());
-            scriptClass.setLineNumber(alpha.getLineNumber());
-            scriptClass.setColumnNumber(alpha.getColumnNumber());
-            scriptClass.setEnd(omega.getEnd());
-            scriptClass.setLastLineNumber(omega.getLastLineNumber());
-            scriptClass.setLastColumnNumber(omega.getLastColumnNumber());
-
             // fix the run method to contain the start and end locations of the statement block
-            MethodNode runMethod = scriptClass.getDeclaredMethod("run", Parameter.EMPTY_ARRAY);
-            runMethod.setStart(alpha.getStart());
-            runMethod.setLineNumber(alpha.getLineNumber());
-            runMethod.setColumnNumber(alpha.getColumnNumber());
-            runMethod.setEnd(omega.getEnd());
-            runMethod.setLastLineNumber(omega.getLastLineNumber());
-            runMethod.setLastColumnNumber(omega.getLastColumnNumber());
-            runMethod.addAnnotation(makeAnnotationNode(Override.class));
+            MethodNode runMethod = theScript.getDeclaredMethod("run", Parameter.EMPTY_ARRAY);
+            if (runMethod != null) {
+                runMethod.setSourcePosition(blockStatement);
+                runMethod.addAnnotation(makeAnnotationNode(Override.class));
+            }
         }
         moduleNode.putNodeMetaData(LocationSupport.class, locationSupport);
         sourceUnit.setComments(lexer.getComments());
@@ -403,29 +397,21 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     // GRECLIPSE add
     /** Returns the first method or statement node in the script. */
-    private ASTNode findAlpha(BlockStatement blockStatement, List<MethodNode> methods) {
-        MethodNode method = (!methods.isEmpty() ? methods.get(0) : null);
+    private ASTNode getAlpha(BlockStatement blockStatement, List<MethodNode> methods) {
         Statement statement = (!blockStatement.isEmpty() ? blockStatement.getStatements().get(0) : null);
-        if (method == null && (statement == null || (statement.getStart() == 0 && statement.getLength() == 0))) {
-            // a script with no methods or statements; use a synthetic statement after the end of the package declaration/import statements
-            statement = createEmptyScriptStatement();
-        }
+        MethodNode method = (!methods.isEmpty() ? methods.get(0) : null);
         int statementStart = (statement != null ? statement.getStart() : Integer.MAX_VALUE);
         int methodStart = (method != null ? method.getStart() : Integer.MAX_VALUE);
         return (statementStart <= methodStart ? statement : method);
     }
 
     /** Returns the final method or statement node in the script. */
-    private ASTNode findOmega(BlockStatement blockStatement, List<MethodNode> methods) {
-        MethodNode method = (!methods.isEmpty() ? last(methods) : null);
+    private ASTNode getOmega(BlockStatement blockStatement, List<MethodNode> methods) {
         Statement statement = (!blockStatement.isEmpty() ? last(blockStatement.getStatements()) : null);
-        if (method == null && (statement == null || (statement.getStart() == 0 && statement.getLength() == 0))) {
-            // a script with no methods or statements; add a synthetic statement after the end of the package declaration/import statements
-            statement = createEmptyScriptStatement();
-        }
-        int statementStart = (statement != null ? statement.getEnd() : Integer.MIN_VALUE);
+        MethodNode method = (!methods.isEmpty() ? last(methods) : null);
+        int statementEnd = (statement != null ? statement.getEnd() : Integer.MIN_VALUE);
         int methodStart = (method != null ? method.getStart() : Integer.MIN_VALUE);
-        return (statementStart >= methodStart ? statement : method);
+        return (statementEnd >= methodStart ? statement : method);
     }
 
     private Statement createEmptyScriptStatement() {
@@ -5168,11 +5154,12 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         List<Statement> statements = moduleNode.getStatementBlock().getStatements();
         if (!statements.isEmpty()) {
             Statement firstStatement = statements.get(0);
-            Statement lastStatement = statements.get(statements.size() - 1);
+            Statement lastStatement  = statements.get(statements.size() - 1);
 
             scriptClassNode.setSourcePosition(firstStatement);
-            scriptClassNode.setLastColumnNumber(lastStatement.getLastColumnNumber());
+            scriptClassNode.setEnd(lastStatement.getEnd()); // GRECLIPSE add
             scriptClassNode.setLastLineNumber(lastStatement.getLastLineNumber());
+            scriptClassNode.setLastColumnNumber(lastStatement.getLastColumnNumber());
         }
     }
 

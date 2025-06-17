@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -231,7 +231,7 @@ public final class LocationSupportTests {
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
         assertEquals(0, module.getStatementBlock().getStart());
-        assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}".length(), module.getStatementBlock().getEnd());
+        assertEquals("def x = 7\n  x++\n  def y = []".length(), module.getStatementBlock().getEnd());
         assertEquals("".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
         assertEquals("def x = 7".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
         assertEquals("def x = 7\n  ".length(), ((ASTNode) module.getStatementBlock().getStatements().get(1)).getStart());

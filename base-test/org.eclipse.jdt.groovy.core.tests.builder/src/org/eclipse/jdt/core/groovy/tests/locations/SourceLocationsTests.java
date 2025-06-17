@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceRange;
+import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
@@ -262,21 +263,14 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         assertEquals(body + "\nhas incorrect source end value", end, bodyEnd);
     }
 
-    private static void assertScript(String source, ICompilationUnit unit, String startText, String endText) throws Exception {
-        assertUnit(unit, source);
-        IType script = unit.getTypes()[0];
-        IMethod runMethod = script.getMethod("run", new String[0]);
-        int start = source.indexOf(startText);
-        int end = source.lastIndexOf(endText) + endText.length();
-        assertEquals("Wrong start for script class.  Text:\n" + source, start, script.getSourceRange().getOffset());
-        assertEquals("Wrong end for script class.  Text:\n" + source, end, script.getSourceRange().getOffset() + script.getSourceRange().getLength());
-        assertEquals("Wrong start for run method.  Text:\n" + source, start, runMethod.getSourceRange().getOffset());
-        assertEquals("Wrong end for run method.  Text:\n" + source, end, runMethod.getSourceRange().getOffset() + script.getSourceRange().getLength());
+    private static void assertRange(ISourceReference reference, int start, int until) throws Exception {
+        assertEquals("Wrong offset for source element;", start, reference.getSourceRange().getOffset());
+        assertEquals("Wrong end offset for source element;", until, reference.getSourceRange().getOffset() + reference.getSourceRange().getLength());
     }
 
     private static void assertUnit(ICompilationUnit unit, String source) throws Exception {
-        assertEquals(unit + "\nhas incorrect source start value", 0, unit.getSourceRange().getOffset());
-        assertEquals(unit + "\nhas incorrect source end value", source.length(), unit.getSourceRange().getLength());
+        assertEquals(unit + "\nhas incorrect source start value;", 0, unit.getSourceRange().getOffset());
+        assertEquals(unit + "\nhas incorrect source end value;", source.length(), unit.getSourceRange().getLength());
     }
 
     private ICompilationUnit createCompUnit(String pack, String name, String text) throws Exception {
@@ -533,11 +527,34 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     }
 
     @Test
+    public void testSourceLocationsForScript0() throws Exception {
+        String source =
+            "package p1\n";
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType script = unit.getTypes()[0];
+        assertRange(script, source.indexOf("\n"), source.indexOf("\n"));
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, source.indexOf("\n"), source.indexOf("\n"));
+    }
+
+    @Test
     public void testSourceLocationsForScript1() throws Exception {
         String source =
             "package p1\n" +
             "def x";
-        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "def x");
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType script = unit.getTypes()[0];
+        assertRange(script, source.indexOf("def"), source.length());
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, source.indexOf("def"), source.length());
     }
 
     @Test
@@ -545,7 +562,15 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "def x() {}";
-        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "{}");
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType script = unit.getTypes()[0];
+        assertRange(script, source.indexOf("def"), source.length());
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, 0, 0);
     }
 
     @Test
@@ -553,7 +578,15 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "x() \n def x() {}";
-        assertScript(source, createCompUnit("p1", "Hello", source), "x()", "{}");
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType script = unit.getTypes()[0];
+        assertRange(script, source.indexOf("x"), source.length());
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, source.indexOf("x"), source.indexOf("x") + (isParrotParser() ? 3 : 4));
     }
 
     @Test
@@ -561,7 +594,15 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "def x() {}\nx()";
-        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "x()");
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType script = unit.getTypes()[0];
+        assertRange(script, source.indexOf("def"), source.length());
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, source.lastIndexOf("x"), source.length());
     }
 
     @Test
@@ -569,7 +610,15 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "def x() {}\nx()\ndef y() {}";
-        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "def y() {}");
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType script = unit.getTypes()[0];
+        assertRange(script, source.indexOf("def"), source.length());
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, source.lastIndexOf("x"), source.lastIndexOf("x") + 3);
     }
 
     @Test
@@ -577,7 +626,37 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "x()\n def x() {}\n\ndef y() {}\ny()";
-        assertScript(source, createCompUnit("p1", "Hello", source), "x()", "\ny()");
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType script = unit.getTypes()[0];
+        assertRange(script, source.indexOf("x"), source.length());
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, source.indexOf("x"), source.length());
+    }
+
+    @Test
+    public void testSourceLocationsForScript7() throws Exception {
+        String source =
+            "package p1\n" +
+            "class C {}\n" +
+            "println()\n";
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType other = unit.getTypes()[0];
+        assertEquals("C", other.getElementName());
+        assertRange(other, source.indexOf("class"), source.indexOf("}") + 1);
+
+        IType script = unit.getTypes()[1];
+        assertEquals("Hello", script.getElementName());
+        assertRange(script, source.indexOf("println"), source.lastIndexOf("\n"));
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, source.indexOf("println"), source.lastIndexOf("\n"));
     }
 
     @Test
