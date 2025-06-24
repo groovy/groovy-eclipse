@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -153,6 +153,7 @@ import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Receiver;
+import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
 import org.eclipse.jdt.internal.compiler.ast.SingleMemberAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
@@ -1174,12 +1175,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 boolean isEnum = classNode.isEnum();
                 boolean isTrait = isTrait(classNode);
-                if (!isEnum && !isTrait) configureSuperClass(typeDeclaration,
-                    isRecord(classNode) ? ClassHelper.make("java.lang.Record") : classNode.getSuperClass());
+                boolean isRecord = isRecord(classNode);
+                if (!isEnum && !isTrait && !isRecord) {
+                    ClassNode superClass = classNode.getSuperClass();
+                    configureSuperClass(typeDeclaration, superClass);
+                }
                 configureSuperInterfaces(typeDeclaration, classNode);
-                if (isSealed(classNode))
+                if (isSealed(classNode)) {
                     configurePermittedSubtypes(typeDeclaration, classNode);
-
+                }
+                if (isRecord) {
+                    typeDeclaration.recordComponents = createRecordComponents(classNode);
+                    // prior to 3.42: typeDeclaration.nRecordComponents = typeDeclaration.recordComponents.length;
+                    if (!recordRefactor()) ReflectionUtils.setPrivateField(TypeDeclaration.class, "nRecordComponents", typeDeclaration, typeDeclaration.recordComponents.length);
+                }
                 typeDeclaration.fields  = isTrait?new FieldDeclaration[0]:createFieldDeclarations(classNode);
                 typeDeclaration.methods = createConstructorAndMethodDeclarations(classNode, typeDeclaration);
 
@@ -1318,14 +1327,40 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Build JDT representations of all the fields on the Groovy type.
+         * Builds JDT representation of a record header on the Groovy type.
+         */
+        private RecordComponent[] createRecordComponents(ClassNode classNode) {
+            RecordComponent[] recordComponents = ASTNode.NO_RECORD_COMPONENTS;
+            List<FieldNode> fieldNodes = classNode.getFields();
+            if (fieldNodes != null && !fieldNodes.isEmpty()) {
+                for (FieldNode fieldNode : fieldNodes) {
+                    if (Boolean.TRUE.equals(fieldNode.getNodeMetaData("_IS_RECORD_GENERATED"))) {
+                        RecordComponent recordComponent = new RecordComponent(fieldNode.getName().toCharArray(), -1, -1);
+                        recordComponent.annotations = createAnnotations(fieldNode.getAnnotations());
+                        recordComponent.declarationSourceStart = fieldNode.getStart();
+                        recordComponent.declarationSourceEnd = fieldNode.getEnd() - 1;
+                        recordComponent.sourceStart = fieldNode.getNameStart();
+                        recordComponent.sourceEnd = fieldNode.getNameEnd();
+                        recordComponent.type = createTypeReferenceForClassNode(fieldNode.getType());
+
+                        recordComponents = (RecordComponent[]) ArrayUtils.add(recordComponents, recordComponent);
+                    }
+                }
+            }
+            return recordComponents;
+        }
+
+        /**
+         * Builds JDT representations of all the fields on the Groovy type.
          */
         private FieldDeclaration[] createFieldDeclarations(ClassNode classNode) {
             List<FieldDeclaration> fieldDeclarations = new ArrayList<>();
             List<FieldNode> fieldNodes = classNode.getFields();
             if (fieldNodes != null && !fieldNodes.isEmpty()) {
                 for (FieldNode fieldNode : fieldNodes) {
-                    if (!GroovyUtils.isSynthetic(fieldNode) && !(fieldNode.getStart() == fieldNode.getNameStart() && fieldNode.getType().equals(ClassHelper.void_WRAPPER_TYPE))) {
+                    boolean isRecordComponent = Boolean.TRUE.equals(fieldNode.getNodeMetaData("_IS_RECORD_GENERATED"));
+                    if (!GroovyUtils.isSynthetic(fieldNode) && (!isRecordComponent || !recordRefactor()) && // no post-refactor duplication
+                            !(fieldNode.getStart() == fieldNode.getNameStart() && fieldNode.getType().equals(ClassHelper.void_WRAPPER_TYPE))) {
                         FieldDeclarationWithInitializer fieldDeclaration = new FieldDeclarationWithInitializer(fieldNode.getName().toCharArray(), fieldNode.getNameStart(), fieldNode.getNameEnd());
                         fieldDeclaration.annotations = createAnnotations(fieldNode.getAnnotations());
                         if (!fieldNode.isEnum()) {
@@ -1335,6 +1370,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                 // this needs to be set for static finals to correctly determine constant status
                                 fieldDeclaration.initialization = createInitializationExpression(fieldNode.getInitialExpression(), fieldNode.getType());
                             }
+                            // prior to 3.42: fieldDeclaration.isARecordComponent = isRecordComponent;
+                            if (isRecordComponent) ReflectionUtils.setPrivateField(FieldDeclaration.class, "isARecordComponent", fieldDeclaration, true);
+
                             ClassNode fieldType = fieldNode.getType();
                             if (fieldNode.getEnd() > 0 && fieldType.getEnd() < 1) { // 'def', 'var', primitive, modifier(s)
                                 assert fieldType.equals(ClassHelper.OBJECT_TYPE) || ClassHelper.isPrimitiveType(fieldType);
@@ -1383,7 +1421,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Build JDT representations of all the constructors and methods on the Groovy type.
+         * Builds JDT representations of all the constructors and methods on the Groovy type.
          */
         private AbstractMethodDeclaration[] createConstructorAndMethodDeclarations(ClassNode classNode,
                 GroovyTypeDeclaration typeDeclaration) {
@@ -1394,7 +1432,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Build JDT representations of all the constructors on the Groovy type.
+         * Builds JDT representations of all the constructors on the Groovy type.
          */
         private void createConstructorDeclarations(ClassNode classNode, List<AbstractMethodDeclaration> methodDeclarations) {
             List<ConstructorNode> constructorNodes = classNode.isInterface() ? Collections.emptyList() : getDeclaredAndGeneratedConstructors(classNode);
@@ -1414,7 +1452,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (!constructorNodes.stream().filter(cn -> ParameterUtils.parametersEqual(cn.getParameters(), components)).findFirst().isPresent()) {
                     ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult); // TODO: TypeDeclaration.createDefaultConstructorForRecord()
                     constructorDecl.arguments = createArguments(components);
-                    constructorDecl.bits |= ASTNode.Bit10;//ASTNode.IsCanonicalConstructor
+                    constructorDecl.bits |= ASTNode.IsCanonicalConstructor;
                   //constructorDecl.bits |= ASTNode.IsImplicit;
                   //constructorDecl.constructorCall = SuperReference.implicitSuperConstructorCall();
                     constructorDecl.modifiers = getModifiers(classNode) & ExtraCompilerModifiers.AccVisibilityMASK;
@@ -1500,7 +1538,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 constructorDecl.thrownExceptions = createTypeReferencesForClassNodes(constructorNode.getExceptions());
 
                 if (components != null && ParameterUtils.parametersEqual(components, constructorNode.getParameters())) {
-                    constructorDecl.bits |= ASTNode.Bit10;//ASTNode.IsCanonicalConstructor
+                    constructorDecl.bits |= ASTNode.IsCanonicalConstructor;
                     AnnotatedNode compactCtor = classNode.getNodeMetaData("compact.constructor");
                     if (compactCtor == null) {
                         constructorDecl.declarationSourceStart = constructorDecl.sourceStart = constructorDecl.bodyStart = classNode.getNameStart();
@@ -1530,7 +1568,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         variantDecl.annotations = createAnnotations(isGenerated(constructorNode) ? constructorNode.getAnnotations()
                             : plus(constructorNode.getAnnotations(), new AnnotationNode(ClassHelper.make(groovy.transform.Generated.class))));
                         variantDecl.arguments = variantArgs;
-                        variantDecl.bits = constructorDecl.bits;
+                        variantDecl.bits = (constructorDecl.bits & ~ASTNode.IsCanonicalConstructor);
                         variantDecl.javadoc = constructorDecl.javadoc;
                         variantDecl.modifiers = constructorDecl.modifiers;
                         variantDecl.receiver = constructorDecl.receiver;
@@ -1558,7 +1596,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Build JDT representations of all the methods on the Groovy type.
+         * Builds JDT representations of all the methods on the Groovy type.
          */
         private void createMethodDeclarations(ClassNode classNode, GroovyTypeDeclaration typeDeclaration, List<AbstractMethodDeclaration> methodDeclarations) {
             List<MethodNode> methodNodes = classNode.getMethods();
@@ -1631,7 +1669,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Create a JDT {@link MethodDeclaration} that represents a Groovy {@link MethodNode}.
+         * Creates a JDT {@link MethodDeclaration} that represents a Groovy {@link MethodNode}.
          */
         private AbstractMethodDeclaration createMethodDeclaration(ClassNode classNode, MethodNode methodNode) {
             if (classNode.isAnnotationDefinition()) {
@@ -1774,13 +1812,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             for (AnnotationNode annotation : classNode.getAnnotations()) {
                 if (isType("groovy.transform.Sealed", annotation.getClassNode().getName())) {
                     Expression permitsSpecification = annotation.getMember("permittedSubclasses");
-                    if (permitsSpecification instanceof ListExpression) { // typeDeclaration.permittedTypes = ...
-                        TypeReference[] permittedTypes = ((ListExpression) permitsSpecification).getExpressions()
+                    if (permitsSpecification instanceof ListExpression) {
+                        typeDeclaration.permittedTypes = ((ListExpression) permitsSpecification).getExpressions()
                                                 .stream().map(createTypeReference).toArray(TypeReference[]::new);
-                        ReflectionUtils.setPrivateField(TypeDeclaration.class, "permittedTypes", typeDeclaration, permittedTypes);
                     } else if (permitsSpecification != null) {
-                        TypeReference[] permittedTypes = {createTypeReference.apply(permitsSpecification)};
-                        ReflectionUtils.setPrivateField(TypeDeclaration.class, "permittedTypes", typeDeclaration, permittedTypes);
+                        typeDeclaration.permittedTypes = new TypeReference[] {createTypeReference.apply(permitsSpecification)};
                     }
                 }
             }
@@ -2580,7 +2616,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             return result;
         }
 
-        /** Check for trailing semicolons, spaces, tabs, etc. */
+        /** Checks for trailing semicolons, spaces, tabs, etc. */
         private int trailerLength(org.codehaus.groovy.ast.ASTNode node) {
             int length = 0;
 
@@ -2623,14 +2659,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private int getModifiers(ClassNode node) {
             int modifiers = node.getModifiers();
             if (isRecord(node)) {
-                modifiers |= ASTNode.Bit25; //3.26+:Flags.AccRecord
+                modifiers |= Flags.AccRecord;
             } else if (isTrait(node)) {
                 modifiers |= Flags.AccInterface;
             }
             if (isSealed(node)) {
-                modifiers |= ASTNode.Bit29; //3.24+:Flags.AccSealed
+                modifiers |= Flags.AccSealed;
             } else if (isNonSealed(node)) {
-                modifiers |= ASTNode.Bit27; //3.24+:Flags.AccNonSealed
+                modifiers |= Flags.AccNonSealed;
             }
             if (node.isInterface()) {
                 modifiers &= ~Flags.AccAbstract;
@@ -2653,7 +2689,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             // native and non-native (aka emulated) record fields are final
             if (node.getDeclaringClass().getAnnotations().stream().anyMatch(annotation ->
                     isType("groovy.transform.RecordType", annotation.getClassNode().getName()))) {
-                modifiers |= Flags.AccFinal;
+                modifiers |= Flags.AccFinal + ExtraCompilerModifiers.AccRecord;
             }
             if (node.getDeclaringClass().getProperty(node.getName()) != null && hasPackageScopeXform(node, PackageScopeTarget.FIELDS)) {
                 modifiers &= ~Flags.AccPrivate;
@@ -2838,7 +2874,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private static long NON_EXISTENT_POSITION = ((-1L << 32) | -2L);
 
         /**
-         * Pack start and end positions into a long - no adjustments are made to the values passed in, the caller must make any required
+         * Packs start and end positions into a long - no adjustments are made to the values passed in, the caller must make any required
          * adjustments.
          */
         private static long toPos(long start, long end) {
@@ -2851,7 +2887,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Find any javadoc that terminates on one of the two lines before the specified line, return the first bit encountered. A
+         * Finds any javadoc that terminates on one of the two lines before the specified line, return the first bit encountered. A
          * little crude but will cover a lot of common cases... <br>
          */
         // FIXASC when the parser correctly records javadoc for nodes alongside them during a parse, we will not have to search
@@ -2921,11 +2957,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 typeDeclaration.modifiersSourceStart = classNode.getStart();
                 // start of the modifiers if "record" exists or after name if "permits"
                 if (isRecord(classNode)) {
-                    //typeDeclaration.restrictedIdentifierStart = classNode.getStart();
-                    ReflectionUtils.setPrivateField(TypeDeclaration.class, "restrictedIdentifierStart", typeDeclaration, classNode.getStart());
+                    typeDeclaration.restrictedIdentifierStart = classNode.getStart();
                 } else if (isSealed(classNode)) {
-                    //typeDeclaration.restrictedIdentifierStart = classNode.getNameEnd()+2;
-                    ReflectionUtils.setPrivateField(TypeDeclaration.class, "restrictedIdentifierStart", typeDeclaration, classNode.getNameEnd()+2);
+                    typeDeclaration.restrictedIdentifierStart = classNode.getNameEnd() + 2;
                 }
             }
         }
@@ -3194,7 +3228,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Add the new declaration to the list of those already built unless it clashes with an existing one. This can happen where the
+         * Adds the new declaration to the list of those already built unless it clashes with an existing one. This can happen where the
          * default parameter mechanism causes creation of a variant that collides with an existing declaration. I'm not sure if Groovy
          * should be reporting an error when this occurs, but Grails does actually do it and gets no error.
          */
@@ -3229,6 +3263,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             return !isDuplicate ? methodDeclarations.add(newDeclaration) : false;
         }
 
+        private static boolean recordRefactor() {
+            return org.eclipse.jdt.core.JavaCore.getPlugin().getBundle().getVersion()
+                    .compareTo(org.osgi.framework.Version.parseVersion("3.42")) >= 0;
+        }
+
         private static int rparenOffset(MethodNode methodNode) {
             Integer rparenOffset = methodNode.getNodeMetaData("rparen.offset");
             if (rparenOffset != null) return rparenOffset.intValue();
@@ -3238,7 +3277,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Check the supplied TypeReference. If there are problems with the construction of a TypeReference then these may not surface
+         * Checks the supplied TypeReference. If there are problems with the construction of a TypeReference then these may not surface
          * until it is used later, perhaps when reconciling. The easiest way to check there will not be problems later is to check it at
          * construction time.
          *
