@@ -51,7 +51,7 @@
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
 
-   <feature id="org.codehaus.groovy50.feature" url="features/org.codehaus.groovy40.feature_5.8.0.qualifier.jar" version="5.8.0.qualifier">
+   <feature id="org.codehaus.groovy50.feature" url="features/org.codehaus.groovy50.feature_5.8.0.qualifier.jar" version="5.8.0.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
 
