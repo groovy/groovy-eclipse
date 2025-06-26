@@ -6724,6 +6724,9 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "    return \"works\";\n" +
             "  }\n" +
             "}\n",
+
+            "p/Empty.groovy",
+            "package p\n",
         };
         //@formatter:on
 

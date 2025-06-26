@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,7 +116,9 @@ public class JDTResolver extends ResolveVisitor {
     public static JDTClassNode getCachedNode(String name) {
         for (JDTResolver instance : instances) {
             JDTClassNode node = getCachedNode(instance, name);
-            if (node != null) return node;
+            if (node != null) {
+                return node;
+            }
         }
         return null;
     }
@@ -165,7 +167,10 @@ public class JDTResolver extends ResolveVisitor {
     }
 
     /**
-     * When recorded, the jdt resolver will be able to (later on) navigate from the classnode back to the JDT scope that should be used.
+     * Once recorded, the JDT resolver will be able to (later on) navigate from
+     * the ClassNode back to the JDT scope that should be used.
+     *
+     * @see #commencingResolution()
      */
     public void record(GroovyTypeDeclaration typeDecl) {
         typeDecl.getClassNode().putNodeMetaData(GroovyTypeDeclaration.class, typeDecl);
@@ -200,6 +205,7 @@ public class JDTResolver extends ResolveVisitor {
                 name = name.substring(name.lastIndexOf('$') + 1);
                 names.remove(name);
             }
+            compilationUnitScope = classNode.getNodeMetaData(GroovyCompilationUnitScope.class);
             super.startResolving(classNode, sourceUnit);
         } catch (AbortResolutionException ignore) {
             // probably syntax error(s)
@@ -218,44 +224,50 @@ public class JDTResolver extends ResolveVisitor {
     protected boolean commencingResolution() {
         GroovyTypeDeclaration typeDecl = currentClass.getNodeMetaData(GroovyTypeDeclaration.class);
         currentClass.removeNodeMetaData(GroovyTypeDeclaration.class); // TODO: remove returns value
-        if (typeDecl == null) {
-            if (resolvedClassNodes.contains(currentClass)) {
-                // already resolved
-                return false;
-            }
-            if (compilationUnitScope != null) {
-                for (TypeDeclaration t : compilationUnitScope.referenceContext.types) {
-                    if (currentClass == ((GroovyTypeDeclaration) t).getClassNode()) {
-                        return !t.hasErrors();
-                    }
+        if (typeDecl != null) {
+            currentClass.removeNodeMetaData(GroovyCompilationUnitScope.class);
+            compilationUnitScope= null;
+            if (typeDecl.scope == null) {
+                // scope may be null if there were errors in the code - let's not freak out the user here
+                if (typeDecl.hasErrors()) {
+                    return false;
                 }
+                throw new GroovyEclipseBug("commencingResolution failed: declaration found, but unexpectedly found no scope for " + currentClass.getName());
             }
-            throw new GroovyEclipseBug("commencingResolution failed: no declaration found for class " + currentClass);
+
+            compilationUnitScope = (GroovyCompilationUnitScope) typeDecl.scope.compilationUnitScope();
+            currentClass.putNodeMetaData(GroovyCompilationUnitScope.class, compilationUnitScope);
+            if (DEBUG) {
+                log("commencing resolution for " + currentClass.getName());
+            }
+            if (currentClass.getOuterClass() == null) {
+                // ensure JDT pre-resolve steps completed before Groovy resolve step
+                compilationUnitScope.verifyMethods(compilationUnitScope.environment.methodVerifier());
+                typeDecl.resolve(compilationUnitScope); // must come after verifyMethods
+            }
+            return true;
         }
 
-        compilationUnitScope = null;
-        if (typeDecl.scope == null) {
-            // scope may be null if there were errors in the code - let's not freak out the user here
-            if (typeDecl.hasErrors()) {
-                return false;
+        if (resolvedClassNodes.contains(currentClass)) {
+            // already resolved
+            return false;
+        }
+
+        if (compilationUnitScope != null) {
+            for (TypeDeclaration t : compilationUnitScope.referenceContext.types) {
+                if (currentClass == ((GroovyTypeDeclaration) t).getClassNode()) {
+                    return !t.hasErrors();
+                }
             }
-            throw new GroovyEclipseBug("commencingResolution failed: declaration found, but unexpectedly found no scope for " + currentClass.getName());
         }
-        compilationUnitScope = (GroovyCompilationUnitScope) typeDecl.scope.compilationUnitScope();
-        if (DEBUG) {
-            log("commencing resolution for " + currentClass.getName());
-        }
-        if (currentClass.getOuterClass() == null) {
-            // ensure JDT pre-resolve steps completed before Groovy resolve step
-            compilationUnitScope.verifyMethods(compilationUnitScope.environment.methodVerifier());
-            typeDecl.resolve(compilationUnitScope); // must come after verifyMethods
-        }
-        return true;
+
+        throw new GroovyEclipseBug("commencingResolution failed: no declaration found for class " + currentClass);
     }
 
     @Override
     protected void finishedResolution() {
         resolvedClassNodes.add(currentClass);
+        currentClass.removeNodeMetaData(GroovyCompilationUnitScope.class);
     }
 
     public synchronized void cleanUp() {
@@ -369,7 +381,7 @@ public class JDTResolver extends ResolveVisitor {
         if (resolved) {
             if (type.redirect() instanceof JDTClassNode && ((JDTClassNode) type.redirect()).getJdtBinding().hasRestrictedAccess()) {
                 TypeBinding binding = ((JDTClassNode) type.redirect()).getJdtBinding();
-                AccessRestriction restriction = compilationUnitScope.environment().getAccessRestriction(binding.erasure());
+                AccessRestriction restriction = compilationUnitScope.environment.getAccessRestriction(binding.erasure());
                 if (restriction != null) {
                     SingleTypeReference ref = new SingleTypeReference(type.getNameWithoutPackage().toCharArray(), ((long) type.getStart() << 32 | (long) type.getEnd() - 1));
                     compilationUnitScope.problemReporter().forbiddenReference(binding, ref, restriction.classpathEntryType, restriction.classpathEntryName, restriction.getProblemId());
