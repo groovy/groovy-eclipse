@@ -335,12 +335,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
     @Override
     public void generateCode() {
-        char[][] actualPackage = currentPackage != null
-                               ? currentPackage.tokens : CharOperation.NO_CHAR_CHAR;
-        char[][] expectPackage = compilationResult.compilationUnit.getPackageName();
-        if (expectPackage != null && !CharOperation.equals(actualPackage, expectPackage)) {
-            char[] folder = expectPackage.length == 0 ? new char[] {'.'} : CharOperation.concatWith(expectPackage, '/');
-            getModuleNode().putNodeMetaData("source.folder", new StringBuilder().append(folder).append('/').toString());
+        if (getModuleNode() != null) {
+            char[][] actualPackage = currentPackage != null
+                                   ? currentPackage.tokens : CharOperation.NO_CHAR_CHAR;
+            char[][] expectPackage = compilationResult.compilationUnit.getPackageName();
+            if (expectPackage != null && !CharOperation.equals(actualPackage, expectPackage)) {
+                char[] folder = expectPackage.length == 0 ? new char[] {'.'} : CharOperation.concatWith(expectPackage, '/');
+                getModuleNode().putNodeMetaData("source.folder", new StringBuilder().append(folder).append('/').toString());
+            }
         }
 
         boolean successful = processToPhase(Phases.ALL);
