@@ -4,6 +4,6 @@ Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.core.test;singleton:=true
 Bundle-Name: Groovy Core Tests
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 5.8.0.qualifier
+Bundle-Version: 5.9.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.core.test
-Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="5.8.0"
+Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="5.9.0"
