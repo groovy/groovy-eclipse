@@ -12,9 +12,9 @@
 
 	<properties>
 		<!-- See https://www.eclipse.org/tycho/sitedocs/index.html -->
-		<tycho-version>4.0.10</tycho-version>
+		<tycho-version>4.0.13</tycho-version>
 		<!-- See https://www.eclipse.org/tycho/sitedocs/tycho-extras/index.html -->
-		<tycho-extras-version>4.0.10</tycho-extras-version>
+		<tycho-extras-version>4.0.13</tycho-extras-version>
 
 		<!-- Versions of groovy compiler components to use for building. Some bundles,
 			mostly test related, have Groovy code that can't be compiled with standard
@@ -412,6 +412,7 @@
 							<arch>x86_64</arch>
 						</environment>
 					</environments>
+					<resolveWithExecutionEnvironmentConstraints>false</resolveWithExecutionEnvironmentConstraints>
 				</configuration>
 			</plugin>
 
