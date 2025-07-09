@@ -91,6 +91,9 @@
       storageURI="scope://Workspace"
       label="Target Platform">
     <choice
+        value="2025-09"
+        label="Eclipse 4.37 (2025-09)"/>
+    <choice
         value="2025-06"
         label="Eclipse 4.36 (2025-06)"/>
     <choice
@@ -105,9 +108,6 @@
     <choice
         value="2024-06"
         label="Eclipse 4.32 (2024-06)"/>
-    <choice
-        value="2024-03"
-        label="Eclipse 4.31 (2024-03)"/>
     <description>Choose the compatibility level of the target platform</description>
   </setupTask>
   <setupTask
@@ -144,7 +144,15 @@
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
-      filter="(| (scope.product.version.name=2025-06) (scope.product.version.name=latest) (scope.product.version.name=latest.released))">
+      filter="(| (scope.product.version.name=2025-09) (scope.product.version.name=latest))">
+    <requirement
+        name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
+    <repository
+        url="https://groovy.jfrog.io/artifactory/plugins-snapshot/e4.37"/>
+  </setupTask>
+  <setupTask
+      xsi:type="setup.p2:P2Task"
+      filter="(| (scope.product.version.name=2025-06) (scope.product.version.name=latest.released))">
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
@@ -164,7 +172,7 @@
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
-        url="https://groovy.jfrog.io/artifactory/plugins-snapshot/e4.34"/>
+        url="https://groovy.jfrog.io/artifactory/plugins-release/e4.34"/>
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
@@ -181,14 +189,6 @@
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
         url="https://groovy.jfrog.io/artifactory/plugins-release/e4.32"/>
-  </setupTask>
-  <setupTask
-      xsi:type="setup.p2:P2Task"
-      filter="(scope.product.version.name=2024-03)">
-    <requirement
-        name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
-    <repository
-        url="https://groovy.jfrog.io/artifactory/plugins-release/e4.31"/>
   </setupTask>
   <setupTask
       xsi:type="git:GitCloneTask"
@@ -245,6 +245,13 @@
   </setupTask>
   <setupTask
       xsi:type="projects:ProjectsImportTask"
+      filter="(eclipse.target.platform=2025-09)">
+    <sourceLocator
+        rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e437"
+        locateNestedProjects="true"/>
+  </setupTask>
+  <setupTask
+      xsi:type="projects:ProjectsImportTask"
       filter="(eclipse.target.platform=2025-06)">
     <sourceLocator
         rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e436"
@@ -279,13 +286,6 @@
         locateNestedProjects="true"/>
   </setupTask>
   <setupTask
-      xsi:type="projects:ProjectsImportTask"
-      filter="(eclipse.target.platform=2024-03)">
-    <sourceLocator
-        rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e431"
-        locateNestedProjects="true"/>
-  </setupTask>
-  <setupTask
       xsi:type="setup.targlets:TargletTask">
     <targlet
         name="Eclipse ${eclipse.target.platform}"
@@ -304,6 +304,15 @@
           name="org.eclipse.buildship.feature.group"/>
       <requirement
           name="org.eclipse.test.feature.group"/>
+      <repositoryList
+          name="2025-09">
+        <repository
+            url="https://download.eclipse.org/releases/2025-09"/>
+        <repository
+            url="https://download.eclipse.org/eclipse/updates/4.37"/>
+        <repository
+            url="https://download.eclipse.org/eclipse/updates/4.37-I-builds/I20250703-1800"/>
+      </repositoryList>
       <repositoryList
           name="2025-06">
         <repository
@@ -338,13 +347,6 @@
             url="https://download.eclipse.org/releases/2024-06"/>
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.32"/>
-      </repositoryList>
-      <repositoryList
-          name="2024-03">
-        <repository
-            url="https://download.eclipse.org/releases/2024-03"/>
-        <repository
-            url="https://download.eclipse.org/eclipse/updates/4.31"/>
       </repositoryList>
     </targlet>
   </setupTask>
