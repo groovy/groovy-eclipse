@@ -236,7 +236,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.thisPropX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
-import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe0;
 import static org.codehaus.groovy.ast.tools.ParameterUtils.isVargs;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isBigDecCategory;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isBigIntCategory;
@@ -1930,7 +1929,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                 switch (pexp.getPropertyAsString()) {
                   case "key":
                     pexp.putNodeMetaData(READONLY_PROPERTY,Boolean.TRUE); // GROOVY-10326
-                    return makeClassSafe0(LIST_TYPE, gts[0]);
+                    return GenericsUtils.makeClassSafe0(LIST_TYPE, gts[0]);
                   case "value":
                     GenericsType v = gts[1];
                     if (!v.isWildcard()
@@ -1938,7 +1937,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                             && typeCheckingContext.isTargetOfEnclosingAssignment(pexp)) {
                         v = GenericsUtils.buildWildcardType(v.getType()); // GROOVY-10325
                     }
-                    return makeClassSafe0(LIST_TYPE, v);
+                    return GenericsUtils.makeClassSafe0(LIST_TYPE, v);
                   default:
                     addStaticTypeError("Spread operator on map only allows one of [key,value]", pexp);
                 }
@@ -2194,7 +2193,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
 
         } else if (isOrImplements(collectionType, MAP_TYPE)) { // GROOVY-6240
             ClassNode col = GenericsUtils.parameterizeType(collectionType, MAP_TYPE);
-            componentType = makeClassSafe0(MAP_ENTRY_TYPE, col.getGenericsTypes());
+            componentType = GenericsUtils.makeClassSafe0(MAP_ENTRY_TYPE, col.getGenericsTypes());
 
         } else if (isOrImplements(collectionType, STREAM_TYPE)) { // GROOVY-10476
             ClassNode col = GenericsUtils.parameterizeType(collectionType, STREAM_TYPE);
@@ -2410,7 +2409,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
 
     protected ClassNode checkReturnType(final ReturnStatement statement) {
         Expression expression = statement.getExpression();
-        ClassNode type = getType(expression);
+        var type = statement.isReturningNullOrVoid() ? VOID_TYPE : getType(expression); // GROOVY-11685
 
         TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
         if (enclosingClosure != null) {
@@ -2432,7 +2431,8 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                 } else if (statement.isReturningNullOrVoid() ? !isPrimitiveType(inferredReturnType) // GROOVY-7713, GROOVY-8202
                      : GenericsUtils.buildWildcardType(wrapTypeIfNecessary(inferredReturnType)).isCompatibleWith(wrapTypeIfNecessary(type))) {
                     type = inferredReturnType; // GROOVY-8310, GROOVY-10082, GROOVY-10091, GROOVY-10128, GROOVY-10306: allow simple covariance
-                } else if (!isPrimitiveVoid(type) && !extension.handleIncompatibleReturnType(statement, type)) { // GROOVY-10277: incompatible
+                } else if ((statement.isReturningNullOrVoid() || !isPrimitiveVoid(type)) && !extension.handleIncompatibleReturnType(statement, type)) {
+                    // GROOVY-10277, GROOVY-11490: incompatible return statement (null for primitive or inconvertible type)
                     String value = (statement.isReturningNullOrVoid() ? "null" : "value of type " + prettyPrintType(type));
                     String which = (enclosingClosure.getClosureExpression() instanceof LambdaExpression ? "lambda" : "closure");
                     addStaticTypeError("Cannot return " + value + " for " + which + " expecting " + prettyPrintType(inferredReturnType), expression);
@@ -2687,7 +2687,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
 
             if (!candidates.isEmpty()) {
                 ClassNode[] arguments = expression.getNodeMetaData(CLOSURE_ARGUMENTS);
-                if (asBoolean(arguments) && asBoolean(receiverType.redirect().getGenericsTypes())
+                if (asBoolean(arguments) && missesGenericsTypes(receiverType) // GROOVY-10984
                                          && expression.getExpression() instanceof ClassExpression) {
                     receiverType = GenericsUtils.parameterizeType(arguments[0], receiverType); // GROOVY-11241
                 }
@@ -2697,7 +2697,8 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                         .peek(candidate -> checkOrMarkPrivateAccess(expression, candidate)) // GROOVY-11365
                         .map (candidate -> {
                             ClassNode returnType = candidate.getReturnType();
-                            if (!candidate.isStatic() && GenericsUtils.hasUnresolvedGenerics(returnType)) {
+                            if (!isStaticInContext(candidate) // GROOVY-11683
+                                    && GenericsUtils.hasUnresolvedGenerics(returnType)) {
                                 Map<GenericsTypeName, GenericsType> spec = new HashMap<>(); // GROOVY-11364
                                 extractGenericsConnections(spec, ownerType, candidate.getDeclaringClass());
                                 returnType = applyGenericsContext(spec, returnType);
@@ -2743,7 +2744,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
     }
 
     private static ClassNode wrapClosureType(final ClassNode returnType) {
-        return makeClassSafe0(CLOSURE_TYPE, wrapTypeIfNecessary(returnType).asGenericsType());
+        return GenericsUtils.makeClassSafe0(CLOSURE_TYPE, wrapTypeIfNecessary(returnType).asGenericsType());
     }
 
     private static MethodNode findPropertyMethod(final ClassNode type, final String name) {
@@ -2768,7 +2769,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
     private List<MethodNode> filterMethodCandidates(final List<MethodNode> candidates, final Expression objectOrType, /*@Nullable*/ ClassNode[] signature) {
         List<MethodNode> result = filterMethodsByVisibility(candidates, typeCheckingContext.getEnclosingClassNode());
         // assignment or parameter target type may help reduce the list
-        if (result.size() > 1 && signature != null) {
+        if (result.size() > 1) {
             ClassNode type = getType(objectOrType);
             if (!isClassClassNodeWrappingConcreteType(type)) {
                 result = chooseBestMethod(type, result, signature);
@@ -2779,7 +2780,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                 result = new ArrayList<>(result.size());
                 result.addAll(chooseBestMethod(type, staticAndNonStatic.get(Boolean.TRUE), signature));
                 if (result.isEmpty() && !staticAndNonStatic.get(Boolean.FALSE).isEmpty()) { // GROOVY-11009
-                    if (signature.length > 0) signature= Arrays.copyOfRange(signature, 1, signature.length);
+                    if (asBoolean(signature)) signature= Arrays.copyOfRange(signature, 1, signature.length);
                     result.addAll(chooseBestMethod(type, staticAndNonStatic.get(Boolean.FALSE), signature));
                 }
             }
@@ -3151,13 +3152,13 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
     private void checkNamedParamsAnnotation(final Parameter param, final MapExpression args) {
         if (!isOrImplements(param.getType(), MAP_TYPE)) return;
         List<MapEntryExpression> entryExpressions = args.getMapEntryExpressions();
-        Map<Object, Expression> entries = new LinkedHashMap<>();
+        Map<Object, MapEntryExpression> entries = new LinkedHashMap<>();
         for (MapEntryExpression entry : entryExpressions) {
             Object key = entry.getKeyExpression();
             if (key instanceof ConstantExpression) {
                 key = ((ConstantExpression) key).getValue();
             }
-            entries.put(key, entry.getValueExpression());
+            entries.put(key, entry);
         }
         List<String> collectedNames = new ArrayList<>();
         List<AnnotationNode> annotations = param.getAnnotations(NAMED_PARAMS_CLASSNODE);
@@ -3191,21 +3192,22 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
             }
         }
         if (!collectedNames.isEmpty()) {
-            for (Map.Entry<Object, Expression> entry : entries.entrySet()) {
-                if (!collectedNames.contains(entry.getKey())) {
-                    addStaticTypeError("unexpected named arg: " + entry.getKey(), args);
+            for (Map.Entry<Object, MapEntryExpression> entry : entries.entrySet()) {
+                Object name = entry.getKey();
+                if (!collectedNames.contains(name)) {
+                    addStaticTypeError("unexpected named arg: " + name, entry.getValue());
                 }
             }
         }
     }
 
-    private void processNamedParam(final AnnotationConstantExpression value, final Map<Object, Expression> entries, final Expression expression, final List<String> collectedNames) {
+    private void processNamedParam(final AnnotationConstantExpression value, final Map<Object, MapEntryExpression> entries, final MapExpression args, final List<String> collectedNames) {
         AnnotationNode namedParam = (AnnotationNode) value.getValue();
         if (!namedParam.getClassNode().getName().equals(NamedParam.class.getName())) return;
-        processNamedParam(namedParam, entries, expression, collectedNames);
+        processNamedParam(namedParam, entries, args, collectedNames);
     }
 
-    private void processNamedParam(final AnnotationNode namedParam, final Map<Object, Expression> entries, final Expression expression, final List<String> collectedNames) {
+    private void processNamedParam(final AnnotationNode namedParam, final Map<Object, MapEntryExpression> entries, final MapExpression args, final List<String> collectedNames) {
         String name = null;
         boolean required = false;
         ClassNode expectedType = null;
@@ -3224,12 +3226,13 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
         }
         if (!entries.containsKey(name)) {
             if (required) {
-                addStaticTypeError("required named param '" + name + "' not found.", expression);
+                addStaticTypeError("required named param '" + name + "' not found.", args);
             }
         } else if (expectedType != null) {
-            ClassNode argumentType = getDeclaredOrInferredType(entries.get(name));
+            MapEntryExpression entry = entries.get(name);
+            ClassNode argumentType = getDeclaredOrInferredType(entry.getValueExpression());
             if (!isAssignableTo(argumentType, expectedType)) {
-                addStaticTypeError("argument for named param '" + name + "' has type '" + prettyPrintType(argumentType) + "' but expected '" + prettyPrintType(expectedType) + "'.", expression);
+                addStaticTypeError("argument for named param '" + name + "' has type '" + prettyPrintType(argumentType) + "' but expected '" + prettyPrintType(expectedType) + "'.", entry);
             }
         }
     }
@@ -5218,7 +5221,7 @@ trying: for (ClassNode[] signature : signatures) {
 
         if (node instanceof ClassExpression) {
             type = ((ClassExpression) node).getType();
-            return makeClassSafe0(CLASS_Type, new GenericsType(type));
+            return GenericsUtils.makeClassSafe0(CLASS_Type, new GenericsType(type));
         }
 
         if (node instanceof VariableExpression) {
@@ -5243,14 +5246,12 @@ trying: for (ClassNode[] signature : signatures) {
             }
             if (variable instanceof Parameter) {
                 Parameter parameter = (Parameter) variable;
-                // check if param part of control structure - but not if inside instanceof
-                List<ClassNode> temporaryTypesForExpression = getTemporaryTypesForExpression(vexp);
-                if (temporaryTypesForExpression == null || temporaryTypesForExpression.isEmpty()) {
+                if (getTemporaryTypesForExpression(vexp).isEmpty()) { // not instanceof
+                    // check if the parameter is part of a control structure (for loop)
                     type = typeCheckingContext.controlStructureVariables.get(parameter);
-                }
-                // now check for closure override
-                if (type == null && temporaryTypesForExpression == null) {
-                    type = getTypeFromClosureArguments(parameter);
+                    if (type == null) { // else check closure metadata
+                        type = getTypeFromClosureArguments(parameter);
+                    }
                 }
                 if (type != null) {
                     storeType(vexp, type);
@@ -5312,7 +5313,7 @@ trying: for (ClassNode[] signature : signatures) {
             } else {
                 type = wrapTypeIfNecessary(lowestUpperBound(fromType, toType));
             }
-            return makeClassSafe0(RANGE_TYPE, new GenericsType(type));
+            return GenericsUtils.makeClassSafe0(RANGE_TYPE, new GenericsType(type));
         }
 
         if (node instanceof SpreadExpression) {
@@ -5661,7 +5662,7 @@ trying: for (ClassNode[] signature : signatures) {
                             }
                             extractGenericsConnections(connections, returnType, samParamsAndReturnType.getV2());
                         } else {
-                            extractGenericsConnections(connections, wrapTypeIfNecessary(argumentType), paramType);
+                            extractGenericsConnections(connections, applyKnownTypeArgs(argumentType, paramType), paramType);
                         }
 
                         connections.forEach((gtn, gt) -> resolvedPlaceholders.merge(gtn, gt, (gt1, gt2) -> {
@@ -5691,6 +5692,40 @@ trying: for (ClassNode[] signature : signatures) {
         }
 
         return resolvedPlaceholders;
+    }
+
+    /**
+     * For an expression like "list.stream().collect(Collectors.toSet())" the
+     * return type is dependent on the return type of {@code toSet} which can
+     * be partially resolved from the receiver type {@code Stream<SomeType>}.
+     * <p>
+     * {@code Collector<#T,?,Set<#T>> -> Collector<SomeType,?,Set<SomeType>>}
+     *
+     * @see #adjustForTargetType(ClassNode,ClassNode)
+     */
+    private static ClassNode applyKnownTypeArgs(final ClassNode sourceType, final ClassNode targetType) {
+        ClassNode resultType = wrapTypeIfNecessary(sourceType);
+
+        if (!targetType.isGenericsPlaceHolder()) {
+            // GROOVY-11615: receiver type arguments from target type
+            var spec = new HashMap<GenericsTypeName, GenericsType>();
+            extractGenericsConnections(spec, targetType, sourceType);
+
+            for (var iter = spec.entrySet().iterator(); iter.hasNext(); ) {
+                var entry = iter.next();
+                var value = entry.getValue();
+                if (!entry.getKey().getName().startsWith("#") // type that requires target information
+                        || GenericsUtils.hasUnresolvedGenerics(GenericsUtils.makeClassSafe0(CLASS_Type, value))) {
+                    iter.remove();
+                } else if (value.getLowerBound() != null) {
+                    entry.setValue(new GenericsType(value.getLowerBound()));
+                }
+            }
+
+            resultType = applyGenericsContext(spec, resultType);
+        }
+
+        return resultType;
     }
 
     /**
@@ -5787,7 +5822,7 @@ trying: for (ClassNode[] signature : signatures) {
         if (target instanceof ExtensionMethodNode && !((ExtensionMethodNode) target).isStaticExtension()) {
             params = ((ExtensionMethodNode) target).getExtensionMethodNode().getParameters();
         } else if (!target.isStatic() && source.getExpression() instanceof ClassExpression) {
-            ClassNode thisType = ((ClassExpression) source.getExpression()).getType();
+            ClassNode thisType = source.getExpression().getType();
             // there is an implicit parameter for "String::length"
             int n = target.getParameters().length;
             params = new Parameter[n + 1];
@@ -5949,7 +5984,7 @@ out:    for (ClassNode type : todo) {
             }
             Map<GenericsTypeName, GenericsType> spec = extractPlaceHoldersVisibleToDeclaration(r, m, null);
             GenericsType[] gt = applyGenericsContext(spec, m.getGenericsTypes()); // class params in bounds
-            GenericsUtils.extractPlaceholders(makeClassSafe0(OBJECT_TYPE, gt), spec);
+            GenericsUtils.extractPlaceholders(GenericsUtils.makeClassSafe0(OBJECT_TYPE, gt), spec);
 
             Parameter[] parameters = m.getParameters();
             ClassNode[] paramTypes = new ClassNode[parameters.length];

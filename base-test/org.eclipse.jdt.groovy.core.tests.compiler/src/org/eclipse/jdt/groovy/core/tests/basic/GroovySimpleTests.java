@@ -4424,8 +4424,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
-            "No signature of method: static C.m() is applicable for argument types: () values: []");
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of " + (isAtLeastGroovy(50) ? "static method: m for class: C" : "method: static C.m()") + " is applicable for argument types: () values: []");
     }
 
     @Test // GROOVY-9259
@@ -5653,7 +5652,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: static C.m() is applicable for argument types: () values: []");
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of " + (isAtLeastGroovy(50) ? "static method: m for class: C" : "method: static C.m()") + " is applicable for argument types: () values: []");
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-8311
@@ -6981,7 +6980,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         if (!isAtLeastGroovy(40)) {
             runConformTest(sources, "works");
         } else {
-            runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: A.m() is applicable for argument types: () values: []");
+            runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: m for class: A is applicable for argument types: () values: []");
         }
     }
 

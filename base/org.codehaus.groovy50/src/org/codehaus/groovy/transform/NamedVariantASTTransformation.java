@@ -155,11 +155,7 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
         boolean required = !fromParam.hasInitialExpression();
         if (hasDuplicates(xform, mNode, propNames, name)) return false;
 
-        AnnotationNode namedParam = new AnnotationNode(NAMED_PARAM_TYPE);
-        namedParam.addMember("value", constX(name));
-        namedParam.addMember("type", classX(type));
-        namedParam.addMember("required", constX(required, true));
-        mapParam.addAnnotation(namedParam);
+        mapParam.addAnnotation(createNamedParam(name, type, required));
 
         if (required) {
             inner.addStatement(new AssertStatement(boolX(containsKey(mapParam, name)),
@@ -172,6 +168,26 @@ public class NamedVariantASTTransformation extends AbstractASTTransformation {
         }
         args.addExpression(initExpr);
         return true;
+    }
+
+    public static AnnotationNode createNamedParam(String name, ClassNode type, boolean required) {
+        // GRECLIPSE add
+        int dims = 0;
+        while (type.isArray()) { dims += 1;
+            type = type.getComponentType();
+        }
+        var placeholder = type.isGenericsPlaceHolder();
+        type = type.getPlainNodeReference(false);
+        type.setGenericsPlaceHolder(placeholder);
+        while (dims > 0) { dims -= 1;
+            type = type.makeArray();
+        }
+        // GRECLIPSE end
+        AnnotationNode namedParam = new AnnotationNode(NAMED_PARAM_TYPE);
+        namedParam.addMember("value", constX(name));
+        namedParam.addMember("type", classX(type));
+        namedParam.addMember("required", constX(required, true));
+        return namedParam;
     }
 
     private boolean processExplicitNamedParam(final MethodNode mNode, final Parameter mapParam, final BlockStatement inner, final ArgumentListExpression args, final List<String> propNames, final Parameter fromParam, final boolean coerce, Map<Parameter, Expression> seen) {

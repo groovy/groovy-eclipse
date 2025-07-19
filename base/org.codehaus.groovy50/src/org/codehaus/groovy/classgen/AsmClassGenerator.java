@@ -132,6 +132,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 
 import static org.apache.groovy.ast.tools.ClassNodeUtils.getField;
@@ -1144,8 +1145,8 @@ public class AsmClassGenerator extends ClassGenerator {
         Expression objectExpression = pexp.getObjectExpression();
 
         ClassNode type = objectExpression.getType();
-        if (objectExpression instanceof ClassExpression && !type.isInterface()
-                && ("this".equals(propertyName) || "super".equals(propertyName))) {
+        if (objectExpression instanceof ClassExpression
+                && ("this".equals(propertyName) || ("super".equals(propertyName) && !type.isInterface()))) {
             // we have something like A.B.this and need to make it
             // into this.this$0.this$0, where this.this$0 produces
             // A.B and this.this$0.this$0 produces A.
@@ -2238,10 +2239,11 @@ public class AsmClassGenerator extends ClassGenerator {
      * @param av the visitor to use
      */
     public void visitAnnotationAttributes(final AnnotationNode an, final AnnotationVisitor av) {
-        Map<String, Object> constantAttrs = new HashMap<>();
-        Map<String, PropertyExpression> enumAttrs = new HashMap<>();
-        Map<String, Object> atAttrs = new HashMap<>();
-        Map<String, ListExpression> arrayAttrs = new HashMap<>();
+        // GROOVY-11715 TODO If we can determine what was causing the issues mentioned on that ticket, we should change these back to LinkedHashMap
+        Map<String, Object> constantAttrs = new TreeMap<>();
+        Map<String, PropertyExpression> enumAttrs = new TreeMap<>();
+        Map<String, Object> atAttrs = new TreeMap<>();
+        Map<String, ListExpression> arrayAttrs = new TreeMap<>();
 
         for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
             String name = member.getKey();

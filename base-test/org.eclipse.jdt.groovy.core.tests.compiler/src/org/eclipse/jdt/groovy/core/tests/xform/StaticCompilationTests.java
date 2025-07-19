@@ -8476,4 +8476,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "xx");
     }
+
+    @Test
+    public void testCompileStatic11694() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "print(new q.C().m())\n",
+            "p/A.groovy",
+            "package p\n" +
+            "abstract class A {\n" +
+            "  protected static pm() { 'xx' }\n" +
+            "}\n",
+            "q/C.groovy",
+            "package q\n" +
+            "class C extends p.A {\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  def m() {\n" +
+            "    pm()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "xx");
+    }
 }

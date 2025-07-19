@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,12 +40,12 @@ public class GroovyShellLaunchShortcut extends AbstractGroovyLaunchShortcut {
     @Override
     protected String mainArgs(final IType runType, final IJavaProject javaProject) {
         StringBuilder mainArgs = new StringBuilder();
-        if (isAtLeastGroovy(3, 0, 0)) {
-            mainArgs.append("org.apache.groovy.groovysh.Main");
+        mainArgs.append("org.apache.groovy.groovysh.Main");
+        if (isAtLeastGroovy(5, 0, 0)) {
+            // TODO
         } else {
-            mainArgs.append("org.codehaus.groovy.tools.shell.Main");
+            mainArgs.append(" --define jline.terminal=jline.UnsupportedTerminal");
         }
-        mainArgs.append(" --define jline.terminal=jline.UnsupportedTerminal");
 
         CompilerOptions compilerOptions = new CompilerOptions(javaProject.getOptions(true));
         if (compilerOptions.produceMethodParameters) {

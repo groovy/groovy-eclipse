@@ -59,10 +59,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static groovy.transform.DefaultsMode.OFF;
 import static groovy.transform.DefaultsMode.ON;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.IntStream.rangeClosed;
 import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedConstructor;
 import static org.apache.groovy.ast.tools.ClassNodeUtils.hasExplicitConstructor;
 import static org.apache.groovy.ast.tools.ConstructorNodeUtils.checkPropNamesS;
@@ -207,8 +209,7 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
         if (pre != null) {
             superInPre = copyStatementsWithSuperAdjustment(pre, preBody);
             if (superInPre && callSuper) {
-                xform.addError("Error during " + MY_TYPE_NAME + " processing, can't have a super call in 'pre' " +
-                        "closure and also 'callSuper' enabled", cNode);
+                xform.addError("Error during " + MY_TYPE_NAME + " processing, can't have a super call in 'pre' closure and also 'callSuper' enabled", cNode);
             }
         }
 
@@ -267,7 +268,7 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
         }
 
         int modifiers = getVisibility(anno, cNode, ConstructorNode.class, ACC_PUBLIC);
-        Parameter[] signature = params.toArray(Parameter.EMPTY_ARRAY);
+        Parameter[] signature = params.toArray(Parameter[]::new);
         if (cNode.getDeclaredConstructor(signature) != null) {
             if (sourceUnit != null) {
                 String warning = String.format(
@@ -287,17 +288,22 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
                 // GRECLIPSE end
             }
             if (namedVariant) {
+                var pType = ClassHelper.MAP_TYPE.getPlainNodeReference();
+                // GROOVY-11644: check if named-param constructor would clash
+                if (cNode.getDeclaredConstructor(params(param(pType, "map"))) != null
+                        || variants(signature).anyMatch(types -> types.length == 1 && types[0].equals(pType))) {
+                    xform.addError(String.format("%s(namedVariant=true) specifies duplicate constructor: %s(%s)",
+                            xform.getAnnotationName(), cNode.getNameWithoutPackage(), ClassNodeUtils.formatTypeName(pType)), anno.getLineNumber() > 0 ? anno : cNode);
+                }
                 BlockStatement inner = new BlockStatement();
-                Parameter mapParam = param(ClassHelper.MAP_TYPE.getPlainNodeReference(), NAMED_ARGS);
-                List<Parameter> genParams = new ArrayList<>();
-                genParams.add(mapParam);
+                Parameter mapParam = param(pType, NAMED_ARGS);
                 ArgumentListExpression args = new ArgumentListExpression();
                 List<String> propNames = new ArrayList<>();
                 Map<Parameter, Expression> seen = new HashMap<>();
                 for (Parameter p : params) {
                     if (!processImplicitNamedParam(xform, tupleCtor, mapParam, inner, args, propNames, p, false, seen)) return;
                 }
-                NamedVariantASTTransformation.createMapVariant(xform, tupleCtor, anno, mapParam, genParams, cNode, inner, args, propNames);
+                NamedVariantASTTransformation.createMapVariant(xform, tupleCtor, anno, mapParam, List.of(mapParam), cNode, inner, args, propNames);
             }
 
             if (sourceUnit != null && !body.isEmpty()) {
@@ -412,5 +418,24 @@ public class TupleConstructorASTTransformation extends AbstractASTTransformation
             }
         }
         return null;
+    }
+
+    private static Stream<ClassNode[]> variants(final Parameter[] parameters) {
+        int n = (int) Stream.of(parameters).filter(Parameter::hasInitialExpression).count();
+
+        return rangeClosed(0, n).mapToObj(i -> {
+            // drop parameters with value from right to left
+            ClassNode[] signature = new ClassNode[parameters.length - i];
+            int j = 1, index = 0;
+            for (Parameter parameter : parameters) {
+                if (j > n - i && parameter.hasInitialExpression()) {
+                    // skip parameter with default argument
+                } else {
+                    signature[index++] = parameter.getType();
+                }
+                if (parameter.hasInitialExpression()) j += 1;
+            }
+            return signature;
+        });
     }
 }

@@ -19,6 +19,7 @@
 package org.codehaus.groovy.transform.trait;
 
 import groovy.transform.CompileStatic;
+import org.apache.groovy.ast.tools.MethodNodeUtils;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -132,7 +133,7 @@ public abstract class TraitComposer {
 
         List<MethodNode> hMethods = helperClassNode.getMethods();
         if (hMethods.size() > 1) { hMethods = new ArrayList<>(hMethods); // GRECLIPSE
-            hMethods.sort(Comparator.comparing(org.apache.groovy.ast.tools.MethodNodeUtils::methodDescriptorWithoutReturnType));
+            hMethods.sort(Comparator.comparing(MethodNodeUtils::methodDescriptorWithoutReturnType));
         }
         for (MethodNode methodNode : hMethods) {
             String name = methodNode.getName();
@@ -185,7 +186,7 @@ public abstract class TraitComposer {
             int pos = 0; // keep direct getters at start but in declaration order
             List<MethodNode> fhMethods = fieldHelperClassNode.getMethods();
             if (fhMethods.size() > 1) { fhMethods = new ArrayList<>(fhMethods); // GRECLIPSE
-                fhMethods.sort(Comparator.comparing(org.apache.groovy.ast.tools.MethodNodeUtils::methodDescriptorWithoutReturnType));
+                fhMethods.sort(Comparator.comparing(MethodNodeUtils::methodDescriptorWithoutReturnType));
             }
             for (MethodNode declaredMethod : fhMethods) {
                 if (declaredMethod.getName().endsWith(Traits.DIRECT_GETTER_SUFFIX)) {
@@ -198,7 +199,7 @@ public abstract class TraitComposer {
             if (staticFieldHelperClassNode != null) {
                 List<MethodNode> sfhMethods = staticFieldHelperClassNode.getMethods();
                 if (sfhMethods.size() > 1) { sfhMethods = new ArrayList<>(sfhMethods); // GRECLIPSE
-                    sfhMethods.sort(Comparator.comparing(org.apache.groovy.ast.tools.MethodNodeUtils::methodDescriptorWithoutReturnType));
+                    sfhMethods.sort(Comparator.comparing(MethodNodeUtils::methodDescriptorWithoutReturnType));
                 }
                 for (MethodNode declaredMethod : sfhMethods) {
                     if (declaredMethod.getName().endsWith(Traits.DIRECT_GETTER_SUFFIX)) {
@@ -582,7 +583,7 @@ public abstract class TraitComposer {
         if (!getter && params.length!=1) {
             return false;
         }
-        if (propertyName.length()==0) {
+        if (propertyName.isEmpty()) {
             return false;
         }
         propertyName = MetaClassHelper.convertPropertyName(propertyName);

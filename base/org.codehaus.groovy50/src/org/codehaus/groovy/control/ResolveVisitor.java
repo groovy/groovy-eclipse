@@ -94,8 +94,8 @@ import static org.codehaus.groovy.ast.tools.ClosureUtils.getParametersSafe;
  */
 public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
-    public static final String[] DEFAULT_IMPORTS = {"java.lang.", "java.util.", "java.io.", "java.net.", "groovy.lang.", "groovy.util."};
-    public static final String[] EMPTY_STRING_ARRAY = new String[0];
+    public static final String[] DEFAULT_IMPORTS = {"java.lang.", "java.util.", "java.io.", "java.net.", "java.time.", "groovy.lang.", "groovy.util."};
+    public static final String[] EMPTY_STRING_ARRAY = {};
     public static final String QUESTION_MARK = "?";
 
     // GRECLIPSE private->public
@@ -108,7 +108,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private MethodNode currentMethod;
     private VariableScope currentScope;
 
-    private Map<GenericsTypeName, GenericsType> genericParameterNames = Collections.EMPTY_MAP;
+    private Map<GenericsTypeName, GenericsType> genericParameterNames = new HashMap<>();
     private Set<FieldNode> fieldTypesChecked;
     // GRECLIPSE add
     private Set<String> resolutionFailed;
@@ -1187,7 +1187,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     private static boolean testVanillaNameForClass(final String name) {
-        if (name == null || name.length() == 0) return false;
+        if (name == null || name.isEmpty()) return false;
         return !Character.isLowerCase(name.charAt(0));
     }
 
@@ -1437,8 +1437,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         if (phase < 2) node.putNodeMetaData(AnnotationNode[].class, new LinkedHashSet<>());
 
-        if (!(node instanceof InnerClassNode) || Modifier.isStatic(node.getModifiers())) {
+        Map<GenericsTypeName, GenericsType> outerNames = null;
+        if (node instanceof InnerClassNode) {
+            outerNames = genericParameterNames;
             genericParameterNames = new HashMap<>();
+            if (!Modifier.isStatic(node.getModifiers()))
+                genericParameterNames.putAll(outerNames); // outer names visible
+        } else {
+            genericParameterNames.clear(); // outer class: new generic namespace
         }
         resolveGenericsHeader(node.getGenericsTypes());
         switch (phase) { // GROOVY-9866, GROOVY-10466
@@ -1490,6 +1496,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             finishedResolution();
             // GRECLIPSE end
         }
+        if (outerNames != null) genericParameterNames = outerNames;
         // GRECLIPSE add
         } finally {
         if (currentClass == node)
