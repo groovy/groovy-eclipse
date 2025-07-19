@@ -1124,11 +1124,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/1626
     public void testClosure26() {
         assumeTrue(isParrotParser());
+        String function = isAtLeastGroovy(50) ? "List::stream" : "List<String>::stream";
         String contents =
             "@groovy.transform.TypeChecked\n" +
             "void test(List<String> list_of_string) {\n" +
             "  def stream_of_list_of_string = java.util.stream.Stream.of(list_of_string)\n" +
-            "  def stream_of_string = stream_of_list_of_string.flatMap(List::stream)\n" +
+            "  def stream_of_string = stream_of_list_of_string.flatMap(" + function + ")\n" +
             "  def stream_of_integer = stream_of_string.map(Integer::valueOf)\n" +
             "  def list_of_integer = stream_of_integer.toList()\n" +
             "}\n";

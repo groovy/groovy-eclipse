@@ -858,12 +858,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         && enclosingBinaryExpression != null
                         && enclosingBinaryExpression.getLeftExpression() == expression
                         && isAssignment(enclosingBinaryExpression.getOperation().getType())) {
-                    // left hand side of a subscript assignment: map['foo'] = ...
+                    // left hand side of a subscript assignment: map['key'] = ...
                     Expression enclosingExpressionRHS = enclosingBinaryExpression.getRightExpression();
                     if (!(enclosingExpressionRHS instanceof ClosureExpression)) {
                         enclosingExpressionRHS.visit(this);
                     }
-                    ClassNode[] arguments = {rType, getType(enclosingExpressionRHS)};
+                    ClassNode[] arguments = {rType, isNullConstant(enclosingExpressionRHS) // GROOVY-11621
+                                ? UNKNOWN_PARAMETER_TYPE : getType(enclosingExpressionRHS)};
                     List<MethodNode> methods = findMethod(lType, "putAt", arguments);
                     if (methods.isEmpty()) {
                         addNoMatchingMethodError(lType, "putAt", arguments, enclosingBinaryExpression);
@@ -2582,7 +2583,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 candidates.stream()
                         .map(candidate -> {
                             ClassNode returnType = candidate.getReturnType();
-                            if (!candidate.isStatic() && GenericsUtils.hasUnresolvedGenerics(returnType)) {
+                            if (!isStaticInContext(candidate) // GROOVY-11683
+                                    && GenericsUtils.hasUnresolvedGenerics(returnType)) {
                                 Map<GenericsTypeName, GenericsType> spec = new HashMap<>(); // GROOVY-11364
                                 extractGenericsConnections(spec, ownerType, candidate.getDeclaringClass());
                                 returnType = applyGenericsContext(spec, returnType);
@@ -2630,7 +2632,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     private List<MethodNode> filterMethodCandidates(final List<MethodNode> candidates, final Expression objectOrType, /*@Nullable*/ ClassNode[] signature) {
         List<MethodNode> result = filterMethodsByVisibility(candidates, typeCheckingContext.getEnclosingClassNode());
         // assignment or parameter target type may help reduce the list
-        if (result.size() > 1 && signature != null) {
+        if (result.size() > 1) {
             ClassNode type = getType(objectOrType);
             if (!isClassClassNodeWrappingConcreteType(type)) {
                 result = chooseBestMethod(type, result, signature);
@@ -2641,7 +2643,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 result = new ArrayList<>(result.size());
                 result.addAll(chooseBestMethod(type, staticAndNonStatic.get(Boolean.TRUE), signature));
                 if (result.isEmpty() && !staticAndNonStatic.get(Boolean.FALSE).isEmpty()) { // GROOVY-11009
-                    if (signature.length > 0) signature= Arrays.copyOfRange(signature, 1, signature.length);
+                    if (asBoolean(signature)) signature= Arrays.copyOfRange(signature, 1, signature.length);
                     result.addAll(chooseBestMethod(type, staticAndNonStatic.get(Boolean.FALSE), signature));
                 }
             }
@@ -5247,14 +5249,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
             if (variable instanceof Parameter) {
                 Parameter parameter = (Parameter) variable;
-                // check if param part of control structure - but not if inside instanceof
-                List<ClassNode> temporaryTypesForExpression = getTemporaryTypesForExpression(vexp);
-                if (temporaryTypesForExpression == null || temporaryTypesForExpression.isEmpty()) {
+                if (getTemporaryTypesForExpression(vexp).isEmpty()) { // not instanceof
+                    // check if the parameter is part of a control structure (for loop)
                     type = typeCheckingContext.controlStructureVariables.get(parameter);
-                }
-                // now check for closure override
-                if (type == null && temporaryTypesForExpression == null) {
-                    type = getTypeFromClosureArguments(parameter);
+                    if (type == null) { // else check closure metadata
+                        type = getTypeFromClosureArguments(parameter);
+                    }
                 }
                 if (type != null) {
                     storeType(vexp, type);

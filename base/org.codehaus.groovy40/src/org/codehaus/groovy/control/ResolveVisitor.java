@@ -106,7 +106,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private MethodNode currentMethod;
     private VariableScope currentScope;
 
-    private Map<GenericsTypeName, GenericsType> genericParameterNames = Collections.EMPTY_MAP;
+    private Map<GenericsTypeName, GenericsType> genericParameterNames = new HashMap<>();
     private Set<FieldNode> fieldTypesChecked;
     // GRECLIPSE add
     private Set<String> resolutionFailed;
@@ -1416,8 +1416,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         //
 
-        if (!(node instanceof InnerClassNode) || Modifier.isStatic(node.getModifiers())) {
+        Map<GenericsTypeName, GenericsType> outerNames = null;
+        if (node instanceof InnerClassNode) {
+            outerNames = genericParameterNames;
             genericParameterNames = new HashMap<>();
+            if (!Modifier.isStatic(node.getModifiers()))
+                genericParameterNames.putAll(outerNames); // outer names visible
+        } else {
+            genericParameterNames.clear(); // outer class: new generic namespace
         }
         resolveGenericsHeader(node.getGenericsTypes());
         switch (phase) { // GROOVY-9866, GROOVY-10466
@@ -1465,6 +1471,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             finishedResolution();
             // GRECLIPSE end
         }
+
+        if (outerNames != null) genericParameterNames = outerNames;
         // GRECLIPSE add
         } finally {
         if (currentClass == node)

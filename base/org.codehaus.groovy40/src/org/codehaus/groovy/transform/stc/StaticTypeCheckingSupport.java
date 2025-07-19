@@ -127,6 +127,7 @@ import static org.codehaus.groovy.ast.tools.WideningCategories.isFloatingCategor
 import static org.codehaus.groovy.ast.tools.WideningCategories.isLongCategory;
 import static org.codehaus.groovy.ast.tools.WideningCategories.lowestUpperBound;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asList;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethodsSupport.closeQuietly;
 import static org.codehaus.groovy.syntax.Types.BITWISE_AND;
 import static org.codehaus.groovy.syntax.Types.BITWISE_AND_EQUAL;
@@ -1052,11 +1053,16 @@ public abstract class StaticTypeCheckingSupport {
             return Collections.emptyList();
         }
 
-        int bestDist = Integer.MAX_VALUE;
-        List<MethodNode> bestChoices = new LinkedList<>();
         boolean duckType = receiver instanceof UnionTypeClassNode; // GROOVY-8965: type disjunction
         boolean noCulling = methods.size() <= 1 || "<init>".equals(methods.iterator().next().getName());
         Iterable<MethodNode> candidates = noCulling ? methods : removeCovariantsAndInterfaceEquivalents(methods, duckType);
+
+        if (argumentTypes == null) {
+            return asList(candidates); // GROOVY-11683: methods without covariants and equivalents
+        }
+
+        int bestDist = Integer.MAX_VALUE;
+        List<MethodNode> bestChoices = new LinkedList<>();
 
         for (MethodNode candidate : candidates) {
             MethodNode  safeNode = candidate;
@@ -1776,7 +1782,7 @@ public abstract class StaticTypeCheckingSupport {
                     extractGenericsConnections(spec, type, type.redirect());
                 } else if (type.redirect().getGenericsTypes() != null) {
                     for (GenericsType tp : type.redirect().getGenericsTypes()) {
-                        spec.put(new GenericsTypeName(tp.getName()), new GenericsType(getCombinedBoundType(tp))); //GROOVY-10651
+                        spec.put(new GenericsTypeName(tp.getName()), new GenericsType(extractType(tp))); //GROOVY-10651
                     }
                 }
                 superClass = applyGenericsContext(spec, superClass);

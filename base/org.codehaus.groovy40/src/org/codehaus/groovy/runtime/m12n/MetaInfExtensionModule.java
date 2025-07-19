@@ -20,23 +20,21 @@ package org.codehaus.groovy.runtime.m12n;
 
 import groovy.lang.GroovyRuntimeException;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toList;
 
 /**
- * A {@link SimpleExtensionModule} implementation which reads extension classes
+ * A {@link SimpleExtensionModule} implementation which reads extension class
  * metadata from META-INF.
  *
  * @since 2.0.0
  */
 public class MetaInfExtensionModule extends SimpleExtensionModule {
-    /* GRECLIPSE edit
-    private static final Logger LOG = Logger.getLogger(MetaInfExtensionModule.class.getName());
-    */
-    public static final String MODULE_INSTANCE_CLASSES_KEY = "extensionClasses";
-    public static final String MODULE_STATIC_CLASSES_KEY = "staticExtensionClasses";
 
     private final List<Class> instanceExtensionClasses;
     private final List<Class> staticExtensionClasses;
@@ -57,43 +55,46 @@ public class MetaInfExtensionModule extends SimpleExtensionModule {
         this.staticExtensionClasses = staticExtensionClasses;
     }
 
+    //-----------------------------------------------------------------------
+
+    public static final String MODULE_INSTANCE_CLASSES_KEY = "extensionClasses";
+    public static final String MODULE_STATIC_CLASSES_KEY   = "staticExtensionClasses";
+
     public static MetaInfExtensionModule newModule(final Properties properties, final ClassLoader loader) {
         String name = properties.getProperty(PropertiesModuleFactory.MODULE_NAME_KEY);
-        if (name == null)
-            throw new GroovyRuntimeException("Module file hasn't set the module name using key [" + PropertiesModuleFactory.MODULE_NAME_KEY + "]");
-        String version = properties.getProperty(PropertiesModuleFactory.MODULE_VERSION_KEY);
-        if (version == null)
-            throw new GroovyRuntimeException("Module file hasn't set the module version using key [" + PropertiesModuleFactory.MODULE_VERSION_KEY + "]");
-        String[] extensionClasses = properties.getProperty(MODULE_INSTANCE_CLASSES_KEY, "").trim().split("[,; ]");
-        String[] staticExtensionClasses = properties.getProperty(MODULE_STATIC_CLASSES_KEY, "").trim().split("[,; ]");
-        List<Class> instanceClasses = new ArrayList<Class>(extensionClasses.length);
-        List<Class> staticClasses = new ArrayList<Class>(staticExtensionClasses.length);
-        List<String> errors = new LinkedList<String>();
-        loadExtensionClass(loader, extensionClasses, instanceClasses, errors);
-        loadExtensionClass(loader, staticExtensionClasses, staticClasses, errors);
-        if (!errors.isEmpty()) {
-            /* GRECLIPSE edit
-            for (String error : errors) {
-                LOG.warning("Module [" + name + "] - Unable to load extension class [" + error + "]");
-            }
-            */
-            org.codehaus.groovy.eclipse.GroovyLogManager.manager.log(org.codehaus.groovy.eclipse.TraceCategory.CLASSPATH,
-                "Module [" + name + "] - Unable to load extension class" + (errors.size() > 1 ? "es" : "") + " " + errors);
-            // GRECLIPSE end
+        if (name == null) {
+            throw new GroovyRuntimeException("Module file has not set the module name using key: " + PropertiesModuleFactory.MODULE_NAME_KEY);
         }
-        return new MetaInfExtensionModule(name, version, instanceClasses, staticClasses);
-    }
+        String version = properties.getProperty(PropertiesModuleFactory.MODULE_VERSION_KEY);
+        if (version == null) {
+            throw new GroovyRuntimeException("Module file has not set the module version using key: " + PropertiesModuleFactory.MODULE_VERSION_KEY);
+        }
 
-    private static void loadExtensionClass(ClassLoader loader, String[] extensionClasses, List<Class> instanceClasses, List<String> errors) {
-        for (String extensionClass : extensionClasses) {
+        Function<String, Class> load = (extensionClass) -> {
             try {
                 extensionClass = extensionClass.trim();
-                if (extensionClass.length() > 0) {
-                    instanceClasses.add(loader.loadClass(extensionClass));
+                if (!extensionClass.isEmpty()) {
+                    return loader.loadClass(extensionClass);
                 }
-            } catch (ClassNotFoundException | NoClassDefFoundError | UnsupportedClassVersionError e) {
-                errors.add(extensionClass);
+            } catch (ClassNotFoundException | RuntimeException | LinkageError error) {
+                /* GRECLIPSE edit
+                Logger logger = Logger.getLogger(MetaInfExtensionModule.class.getName());
+                logger.log(WARNING, "Module [" + name + "] - Unable to load extension class: " + extensionClass, error);
+                */
+                String message = "Module [" + name + "] - Unable to load extension class: " + extensionClass;
+                org.codehaus.groovy.eclipse.GroovyLogManager.manager.log(org.codehaus.groovy.eclipse.TraceCategory.CLASSPATH, message);
+                org.codehaus.groovy.eclipse.GroovyLogManager.manager.logException(org.codehaus.groovy.eclipse.TraceCategory.CLASSPATH, error);
+                // GRECLIPSE end
             }
-        }
+            return null;
+        };
+
+        String[] objectExtensionClasses = properties.getProperty(MODULE_INSTANCE_CLASSES_KEY, "").trim().split("[,; ]");
+        String[] staticExtensionClasses = properties.getProperty(  MODULE_STATIC_CLASSES_KEY, "").trim().split("[,; ]");
+
+        List<Class> objectClasses = Stream.of(objectExtensionClasses).map(load).filter(Objects::nonNull).collect(toList());
+        List<Class> staticClasses = Stream.of(staticExtensionClasses).map(load).filter(Objects::nonNull).collect(toList());
+
+        return new MetaInfExtensionModule(name, version, objectClasses, staticClasses);
     }
 }
