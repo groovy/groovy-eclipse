@@ -321,7 +321,7 @@ public class ClassHelper {
      * @param name of the class the ClassNode is representing
      */
     public static ClassNode make(String name) {
-        if (name == null || name.length() == 0) return dynamicType();
+        if (name == null || name.isEmpty()) return dynamicType();
 
         /* GRECLIPSE edit
         for (int i = 0; i < primitiveClassNames.length; i++) {

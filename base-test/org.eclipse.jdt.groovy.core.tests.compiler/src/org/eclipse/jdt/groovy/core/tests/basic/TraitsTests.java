@@ -601,7 +601,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
-            "No signature of method: C.methodFromA() is applicable for argument types: () values: []");
+            "No signature of method: " + (isAtLeastGroovy(50) ? "methodFromA for class: C" : "C.methodFromA()") + " is applicable for argument types: () values: []");
     }
 
     @Test // Implementing multiple traits at once - positive
@@ -1696,7 +1696,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
-            "No signature of method: static T.m() is applicable for argument types: () values: []");
+            "No signature of " + (isAtLeastGroovy(50) ? "static method: m for class: T" : "method: static T.m()") + " is applicable for argument types: () values: []");
     }
 
     @Test
@@ -1801,7 +1801,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
-            "No signature of method: C.Ttrait$super$bar() is applicable for argument types: () values: []");
+            "No signature of method: " + (isAtLeastGroovy(50) ? "Ttrait$super$bar for class: C" : "C.Ttrait$super$bar()") + " is applicable for argument types: () values: []");
     }
 
     @Test
@@ -2245,7 +2245,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
-            "No signature of method: java.lang.Object.m() is applicable for argument types: () values: []");
+            "No signature of method: " + (isAtLeastGroovy(50) ? "m for class: java.lang.Object" : "java.lang.Object.m()") + " is applicable for argument types: () values: []");
     }
 
     @Test
@@ -2496,7 +2496,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
-            "No signature of method: C.baz() is applicable for argument types: () values: []");
+            "No signature of method: " + (isAtLeastGroovy(50) ? "baz for class: C" : "C.baz()") + " is applicable for argument types: () values: []");
     }
 
     @Test
@@ -2538,18 +2538,21 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
 
+        java.util.function.Function<String, String> values = (desc) ->
+            isAtLeastGroovy(50)
+                ? "desc=\"" + desc + "\",\n    traitClass=Trait9031"
+                : "traitClass=Trait9031,\n    desc=\"" + desc + "\"";
+
         checkDisassemblyFor("Class9031.class",
             "  public bridge synthetic java.lang.Object getValue();\n");
         checkDisassemblyFor("Class9031.class",
-            "  @org.codehaus.groovy.transform.trait.Traits.TraitBridge(traitClass=Trait9031,\n" +
-            "    desc=\"()Ljava/lang/Object;\")\n" +
+            "  @org.codehaus.groovy.transform.trait.Traits.TraitBridge(" + values.apply("()Ljava/lang/Object;") + ")\n" +
             "  public java.lang.String getValue();\n");
 
         checkDisassemblyFor("Class9031.class",
             "  public bridge synthetic void setValue(java.lang.Object arg0);\n");
         checkDisassemblyFor("Class9031.class",
-            "  @org.codehaus.groovy.transform.trait.Traits.TraitBridge(traitClass=Trait9031,\n" +
-            "    desc=\"(Ljava/lang/Object;)V\")\n" +
+            "  @org.codehaus.groovy.transform.trait.Traits.TraitBridge(" + values.apply("(Ljava/lang/Object;)V") + ")\n" +
             "  public void setValue(java.lang.String value);\n");
     }
 

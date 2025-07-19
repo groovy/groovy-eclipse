@@ -35,6 +35,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -702,11 +703,7 @@ public class CompilerConfiguration {
      */
     @Deprecated
     public void setOutput(final PrintWriter output) {
-        if (output == null) {
-            this.output = new PrintWriter(NullWriter.DEFAULT);
-        } else {
-            this.output = output;
-        }
+        this.output = Objects.requireNonNullElseGet(output, () -> new PrintWriter(NullWriter.DEFAULT));
     }
 
     /**
@@ -724,7 +721,7 @@ public class CompilerConfiguration {
     }
 
     private void setTargetDirectorySafe(final String directory) {
-        if (directory != null && directory.length() > 0) {
+        if (directory != null && !directory.isEmpty()) {
             this.targetDirectory = new File(directory);
         } else {
             this.targetDirectory = null;

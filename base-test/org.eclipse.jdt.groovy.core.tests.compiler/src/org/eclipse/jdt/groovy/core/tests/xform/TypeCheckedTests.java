@@ -313,7 +313,14 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\tList<CharSequence> yyy = ['y'].stream().toList()\n" +
             "\t                         ^^^^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign java.util.List<java.lang.String> to: java.util.List<java.lang.CharSequence>\n" +
-            "----------\n");
+            "----------\n" +
+            (!isAtLeastGroovy(50) ? "" :
+            "3. ERROR in Main.groovy (at line 6)\n" +
+            "\tList<CharSequence> zzz = ['z'].stream().collect(toList())\n" +
+            "\t                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign java.util.List<java.lang.String> to: java.util.List<java.lang.CharSequence>\n" +
+            "----------\n"
+            ));
     }
 
     @Test
