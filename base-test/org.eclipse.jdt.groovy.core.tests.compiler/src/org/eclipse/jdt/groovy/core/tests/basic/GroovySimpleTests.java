@@ -6980,7 +6980,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         if (!isAtLeastGroovy(40)) {
             runConformTest(sources, "works");
         } else {
-            runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: m for class: A is applicable for argument types: () values: []");
+            String signature = isAtLeastGroovy(50) ? "m for class: A" : "A.m()";
+            runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: " + signature + " is applicable for argument types: () values: []");
         }
     }
 

@@ -2539,7 +2539,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
 
         java.util.function.Function<String, String> values = (desc) ->
-            isAtLeastGroovy(50)
+            isAtLeastGroovy(40)
                 ? "desc=\"" + desc + "\",\n    traitClass=Trait9031"
                 : "traitClass=Trait9031,\n    desc=\"" + desc + "\"";
 
