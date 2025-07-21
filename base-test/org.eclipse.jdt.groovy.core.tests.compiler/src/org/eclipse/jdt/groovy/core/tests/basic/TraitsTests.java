@@ -2538,8 +2538,9 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
 
+        // GROOVY-11715: stabilize attribute order
         java.util.function.Function<String, String> values = (desc) ->
-            isAtLeastGroovy(40)
+            isAtLeastGroovy(40) && !isAtLeastGroovy(50)
                 ? "desc=\"" + desc + "\",\n    traitClass=Trait9031"
                 : "traitClass=Trait9031,\n    desc=\"" + desc + "\"";
 

@@ -39,17 +39,14 @@ public class GroovyShellLaunchShortcut extends AbstractGroovyLaunchShortcut {
 
     @Override
     protected String mainArgs(final IType runType, final IJavaProject javaProject) {
-        StringBuilder mainArgs = new StringBuilder();
-        mainArgs.append("org.apache.groovy.groovysh.Main");
-        if (isAtLeastGroovy(5, 0, 0)) {
-            // TODO
-        } else {
-            mainArgs.append(" --define jline.terminal=jline.UnsupportedTerminal");
-        }
+        var mainArgs = new StringBuilder("org.apache.groovy.groovysh.Main");
 
-        CompilerOptions compilerOptions = new CompilerOptions(javaProject.getOptions(true));
-        if (compilerOptions.produceMethodParameters) {
-            mainArgs.append(" --parameters");
+        if (!isAtLeastGroovy(5, 0, 0)) {
+            var compilerOptions = new CompilerOptions(javaProject.getOptions(true));
+            if (compilerOptions.produceMethodParameters) {
+                mainArgs.append(" --parameters");
+            }
+            mainArgs.append(" --terminal=none");
         }
 
         return mainArgs.toString();
