@@ -109,8 +109,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private boolean isTopLevelProperty = true;
     private boolean inPropertyExpression;
     private boolean inClosure;
-
-    private Map<GenericsTypeName, GenericsType> genericParameterNames = Collections.EMPTY_MAP;
+    /* GRECLIPSE edit
+    private final Map<ClassNode, ClassNode> possibleOuterClassNodeMap = new HashMap<>();
+    */
+    private Map<GenericsTypeName, GenericsType> genericParameterNames = new HashMap<>();
     private Set<FieldNode> fieldTypesChecked;
     // GRECLIPSE add
     private Set<String> resolutionFailed;
@@ -290,13 +292,20 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (!canSeeTypeVars(node.getModifiers(), node.getDeclaringClass())) {
             genericParameterNames = Collections.emptyMap();
         }
-
+        // GRECLIPSE add
+        try {
+        // GRECLIPSE end
         if (!fieldTypesChecked.contains(node)) {
             resolveOrFail(node.getType(), node);
         }
         super.visitField(node);
-
+        // GRECLIPSE add
+        } finally {
+        // GRECLIPSE end
         genericParameterNames = oldNames;
+        // GRECLIPSE add
+        }
+        // GRECLIPSE end
     }
 
     @Override
@@ -305,13 +314,20 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (!canSeeTypeVars(node.getModifiers(), node.getDeclaringClass())) {
             genericParameterNames = Collections.emptyMap();
         }
-
+        // GRECLIPSE add
+        try {
+        // GRECLIPSE end
         resolveOrFail(node.getType(), node);
         fieldTypesChecked.add(node.getField());
 
         super.visitProperty(node);
-
+        // GRECLIPSE add
+        } finally {
+        // GRECLIPSE end
         genericParameterNames = oldNames;
+        // GRECLIPSE add
+        }
+        // GRECLIPSE end
     }
 
     private static boolean canSeeTypeVars(final int mods, final ClassNode node) {
@@ -326,7 +342,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         genericParameterNames =
                 canSeeTypeVars(node.getModifiers(), node.getDeclaringClass())
                     ? new HashMap<>(genericParameterNames) : new HashMap<>();
-
+        // GRECLIPSE add
+        MethodNode oldCurrentMethod = currentMethod;
+        try {
+        // GRECLIPSE end
         resolveGenericsHeader(node.getGenericsTypes());
 
         resolveOrFail(node.getReturnType(), node);
@@ -341,15 +360,21 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 resolveOrFail(t, t);
             }
         }
-
+        /* GRECLIPSE edit
         MethodNode oldCurrentMethod = currentMethod;
+        */
         currentMethod = node;
 
         super.visitConstructorOrMethod(node, isConstructor);
-
+        // GRECLIPSE add
+        } finally {
+        // GRECLIPSE end
         currentMethod = oldCurrentMethod;
         genericParameterNames = oldNames;
         currentScope = oldScope;
+        // GRECLIPSE add
+        }
+        // GRECLIPSE end
     }
 
     private void resolveOrFail(final ClassNode type, final ASTNode node) {
@@ -530,11 +555,11 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return constructedOuterNestedClassNode;
     }
     */
-    // GRECLIPSE add
     public ClassNode resolve(final String name) {
         return null;
     }
     // GRECLIPSE end
+
     protected boolean resolve(final ClassNode type) {
         return resolve(type, true, true, true);
     }
@@ -1516,7 +1541,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     @Override
     protected void visitAnnotation(final AnnotationNode node) {
         resolveOrFail(node.getClassNode(), " for annotation", node);
-
         for (Map.Entry<String, Expression> member : node.getMembers().entrySet()) {
             Expression value = transformInlineConstants(transform(member.getValue()));
             member.setValue(value);
@@ -1559,27 +1583,28 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     @Override
     public void visitClass(final ClassNode node) {
-        ClassNode oldNode = currentClass;
-
-        currentClass = node;
+        ClassNode oldNode = currentClass; currentClass = node;
+        Map<GenericsTypeName, GenericsType> outerNames = null;
         // GRECLIPSE add
         if (phase == 2 || commencingResolution()) try {
         // GRECLIPSE end
         if (node instanceof InnerClassNode) {
-            if (Modifier.isStatic(node.getModifiers())) {
-                genericParameterNames = new HashMap<>();
+            outerNames = genericParameterNames;
+            genericParameterNames = new HashMap<>();
+            if (!Modifier.isStatic(node.getModifiers())) {
+                genericParameterNames.putAll(outerNames); // outer names visible
             }
             /* GRECLIPSE edit -- GROOVY-4386, et al.
-            InnerClassNode innerClassNode = (InnerClassNode) node;
-            if (innerClassNode.isAnonymous()) {
-                MethodNode enclosingMethod = innerClassNode.getEnclosingMethod();
-                if (null != enclosingMethod) {
+            InnerClassNode innerClass = (InnerClassNode) node;
+            if (innerClass.isAnonymous()) {
+                MethodNode enclosingMethod = innerClass.getEnclosingMethod();
+                if (enclosingMethod != null) {
                     resolveGenericsHeader(enclosingMethod.getGenericsTypes());
                 }
             }
             */
         } else {
-            genericParameterNames = new HashMap<>();
+            genericParameterNames.clear(); // outer class: new generic namespace
         }
 
         resolveGenericsHeader(node.getGenericsTypes());
@@ -1677,13 +1702,15 @@ if (phase == 1) break; // resolve other class headers before members, et al.
         super.visitClass(node);
         // GRECLIPSE add
         finishedResolution();
-}
+} // phase switch
         } finally {
-        if (currentClass == node)
         // GRECLIPSE end
         /* GRECLIPSE edit
         resolveOuterNestedClassFurther(node);
         */
+        if (outerNames != null) // GROOVY-11711
+            genericParameterNames = outerNames;
+
         currentClass = oldNode;
         // GRECLIPSE add
         }
@@ -1787,8 +1814,17 @@ if (phase == 1) break; // resolve other class headers before members, et al.
     public void visitBlockStatement(final BlockStatement block) {
         VariableScope oldScope = currentScope;
         currentScope = block.getVariableScope();
+        // GRECLIPSE add
+        try {
+        // GRECLIPSE end
         super.visitBlockStatement(block);
+        // GRECLIPSE add
+        } finally {
+        // GRECLIPSE end
         currentScope = oldScope;
+        // GRECLIPSE add
+        }
+        // GRECLIPSE end
     }
 
     private boolean resolveGenericsTypes(final GenericsType[] types) {

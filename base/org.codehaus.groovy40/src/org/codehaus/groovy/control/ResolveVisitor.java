@@ -287,13 +287,20 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (!canSeeTypeVars(node.getModifiers(), node.getDeclaringClass())) {
             genericParameterNames = Collections.emptyMap();
         }
-
+        // GRECLIPSE add
+        try {
+        // GRECLIPSE end
         if (!fieldTypesChecked.contains(node)) {
             resolveOrFail(node.getType(), node);
         }
         super.visitField(node);
-
+        // GRECLIPSE add
+        } finally {
+        // GRECLIPSE end
         genericParameterNames = oldNames;
+        // GRECLIPSE add
+        }
+        // GRECLIPSE end
     }
 
     @Override
@@ -302,13 +309,20 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (!canSeeTypeVars(node.getModifiers(), node.getDeclaringClass())) {
             genericParameterNames = Collections.emptyMap();
         }
-
+        // GRECLIPSE add
+        try {
+        // GRECLIPSE end
         resolveOrFail(node.getType(), node);
         fieldTypesChecked.add(node.getField());
 
         super.visitProperty(node);
-
+        // GRECLIPSE add
+        } finally {
+        // GRECLIPSE end
         genericParameterNames = oldNames;
+        // GRECLIPSE add
+        }
+        // GRECLIPSE end
     }
 
     private static boolean canSeeTypeVars(final int mods, final ClassNode node) {
@@ -323,7 +337,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         genericParameterNames =
                 canSeeTypeVars(node.getModifiers(), node.getDeclaringClass())
                     ? new HashMap<>(genericParameterNames) : new HashMap<>();
-
+        // GRECLIPSE add
+        MethodNode oldCurrentMethod = currentMethod;
+        try {
+        // GRECLIPSE end
         resolveGenericsHeader(node.getGenericsTypes());
 
         resolveOrFail(node.getReturnType(), node);
@@ -340,15 +357,20 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         /* GRECLIPSE edit
         checkGenericsCyclicInheritance(node.getGenericsTypes());
-        */
         MethodNode oldCurrentMethod = currentMethod;
+        */
         currentMethod = node;
 
         super.visitConstructorOrMethod(node, isConstructor);
-
+        // GRECLIPSE add
+        } finally {
+        // GRECLIPSE end
         currentMethod = oldCurrentMethod;
         genericParameterNames = oldNames;
         currentScope = oldScope;
+        // GRECLIPSE add
+        }
+        // GRECLIPSE end
     }
 
     private void resolveOrFail(final ClassNode type, final ASTNode node) {
@@ -1356,9 +1378,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     @Override
     public void visitClass(final ClassNode node) {
-        ClassNode oldNode = currentClass;
-        currentClass = node;
+        ClassNode oldNode = currentClass; currentClass = node;
         // GRECLIPSE add
+        Map<GenericsTypeName, GenericsType> outerNames = null;
         if (phase == 2 || commencingResolution()) try {
         // GRECLIPSE end
         ModuleNode module = node.getModule();
@@ -1416,7 +1438,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         //
 
-        Map<GenericsTypeName, GenericsType> outerNames = null;
         if (node instanceof InnerClassNode) {
             outerNames = genericParameterNames;
             genericParameterNames = new HashMap<>();
@@ -1471,11 +1492,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             finishedResolution();
             // GRECLIPSE end
         }
-
-        if (outerNames != null) genericParameterNames = outerNames;
         // GRECLIPSE add
         } finally {
-        if (currentClass == node)
+        if (outerNames != null) genericParameterNames = outerNames;
         // GRECLIPSE end
         currentClass = oldNode;
         // GRECLIPSE add
@@ -1569,8 +1588,17 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     public void visitBlockStatement(final BlockStatement block) {
         VariableScope oldScope = currentScope;
         currentScope = block.getVariableScope();
+        // GRECLIPSE add
+        try {
+        // GRECLIPSE end
         super.visitBlockStatement(block);
+        // GRECLIPSE add
+        } finally {
+        // GRECLIPSE end
         currentScope = oldScope;
+        // GRECLIPSE add
+        }
+        // GRECLIPSE end
     }
 
     private boolean resolveGenericsTypes(final GenericsType[] types) {
