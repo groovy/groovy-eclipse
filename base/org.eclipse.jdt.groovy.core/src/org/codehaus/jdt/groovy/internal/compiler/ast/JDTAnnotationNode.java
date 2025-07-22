@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -117,12 +117,15 @@ public class JDTAnnotationNode extends AnnotationNode {
     }
 
     private Expression createExpressionFor(TypeBinding b, Object value) {
+        if (value == null) {
+            return ConstantExpression.NULL;
+        }
+
         if (b.isArrayType()) {
             ListExpression listExpression = new ListExpression();
             if (value.getClass().isArray()) {
                 for (Object v : (Object[]) value) {
-                    if (v != null) // TODO: Why did null values start appearing in Java 9?
-                        listExpression.addExpression(createExpressionFor(b.leafComponentType(), v));
+                    listExpression.addExpression(createExpressionFor(b.leafComponentType(), v));
                 }
             } else {
                 listExpression.addExpression(createExpressionFor(b.leafComponentType(), value));
