@@ -8479,4 +8479,85 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				},
 				"NPE!");
 	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4165
+	// [LVTI][Switch Expressions] ECJ crashes with NPE compiling faulty program
+	public void testIssue4165() {
+		this.runConformTest(
+				new String[] {
+						"X.java",
+						"""
+						interface I {
+						    int foo(int x);
+						}
+
+						public class X {
+
+						    static int foo(int x) {
+						        return x;
+						    }
+
+							public static void main(String [] args) {
+
+								for (int integer : new Integer[] { 0, 1 }) {
+									I b = switch (integer) {
+										case 0 -> X::foo;
+										default ->  (int i) -> 42;
+									};
+									System.out.println(b.foo(100));
+								}
+							}
+						}
+						"""
+				},
+				"100\n42");
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4165
+	// [LVTI][Switch Expressions] ECJ crashes with NPE compiling faulty program
+	public void testIssue4165_2() {
+		this.runNegativeTest(
+				new String[] {
+						"X.java",
+						"""
+						interface I {
+						    int foo(int x);
+						}
+
+						public class X {
+
+						    static int foo(int x) {
+						        return x;
+						    }
+
+							public static void main(String [] args) {
+
+								for (int integer : new Integer[] { 0, 1 }) {
+									var b = switch (integer) {
+										case 0 -> X::foo;
+										default ->  (int i) -> 42;
+									};
+									System.out.println(b.foo(100));
+								}
+							}
+						}
+						"""
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 15)\r\n" +
+				"	case 0 -> X::foo;\r\n" +
+				"	          ^^^^^^\n" +
+				"The target type of this expression must be a functional interface\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 16)\r\n" +
+				"	default ->  (int i) -> 42;\r\n" +
+				"	            ^^^^^^^^^^^^^\n" +
+				"The target type of this expression must be a functional interface\n" +
+				"----------\n" +
+				"3. ERROR in X.java (at line 18)\r\n" +
+				"	System.out.println(b.foo(100));\r\n" +
+				"	                     ^^^\n" +
+				"The method foo(int) is undefined for the type Object\n" +
+				"----------\n");
+	}
 }

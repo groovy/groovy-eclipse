@@ -36,12 +36,6 @@ public class CompletionOnLocalName extends LocalDeclaration implements Completio
 	}
 
 	@Override
-	public void resolve(BlockScope scope, boolean isPatternVariable) {
-		super.resolve(scope, isPatternVariable);
-		throw new CompletionNodeFound(this, scope);
-	}
-
-	@Override
 	public StringBuilder printAsExpression(int indent, StringBuilder output) {
 		printIndent(indent, output);
 		output.append("<CompleteOnLocalName:"); //$NON-NLS-1$

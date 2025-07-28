@@ -423,51 +423,12 @@ public abstract class Scope {
 				if (isMalformedPair(iType, jType, scope)) {
 					return null;
 				}
-				if (iType.isCompatibleWith(jType, scope)) { // if Vi <: Vj, Vj is removed
+				if (iType.isSubtypeOf(jType, false)) { // if Vi <: Vj, Vj is removed
 					if (result == types) { // defensive copy
 						System.arraycopy(result, 0, result = new TypeBinding[length], 0, length);
 					}
 					result[j] = null;
 					removed ++;
-				} else if (!jType.isCompatibleWith(iType, scope)) {
-					// avoid creating unsatisfiable intersection types (see https://bugs.eclipse.org/405706):
-					if (iType.isParameterizedType() && jType.isParameterizedType()) {
-						// if the wider of the two types (judged by originals) has type variables
-						// substitute those with their upper bounds and re-check (see https://bugs.eclipse.org/413958):
-						ParameterizedTypeBinding wideType, narrowType;
-						if (iType.original().isCompatibleWith(jType.original(), scope)) {
-							wideType = (ParameterizedTypeBinding) jType;
-							narrowType = (ParameterizedTypeBinding) iType;
-						} else if (jType.original().isCompatibleWith(iType.original(), scope)) {
-							wideType = (ParameterizedTypeBinding) iType;
-							narrowType = (ParameterizedTypeBinding) jType;
-						} else {
-							continue;
-						}
-						if (wideType.arguments == null)
-							continue; // assume we already have an error here
-						// Skip the following check if inference variables or CaptureBinding18 are involved,
-						// hopefully during inference a contradictory glb will simply not produce a solution
-						// (should essentially be detected beforehand in CaptureBinding18.setUpperBounds()):
-						if (!narrowType.isProperType(false) || !wideType.isProperType(false))
-							continue;
-						int numTypeArgs = wideType.arguments.length;
-						TypeBinding[] bounds = new TypeBinding[numTypeArgs];
-						for (int k = 0; k < numTypeArgs; k++) {
-							TypeBinding argument = wideType.arguments[k];
-							bounds[k] = argument.isTypeVariable() ? ((TypeVariableBinding)argument).upperBound() : argument;
-						}
-						ReferenceBinding wideOriginal = (ReferenceBinding) wideType.original();
-						TypeBinding substitutedWideType =
-								environment.createParameterizedType(wideOriginal, bounds, wideOriginal.enclosingType());
-						// if the narrow type is compatible with the substituted wide type, we keep silent,
-						// substituting type variables with proper types can still satisfy all constraints,
-						// otherwise ...
-						if (!narrowType.isCompatibleWith(substitutedWideType, scope)) {
-							// ... parameterized types are incompatible due to incompatible type arguments => unsatisfiable
-							return null;
-						}
-					}
 				}
 			}
 		}
@@ -1142,15 +1103,6 @@ public abstract class Scope {
 		}
 	}
 
-	public final ClassScope enclosingTopMostClassScope() {
-		Scope scope = this;
-		while (scope != null) {
-			Scope t = scope.parent;
-			if (t instanceof CompilationUnitScope) break;
-			scope = t;
-		}
-		return scope instanceof ClassScope ? ((ClassScope) scope) : null;
-	}
 	public final MethodScope enclosingMethodScope() {
 		Scope scope = this;
 		while ((scope = scope.parent) != null) {
@@ -4928,14 +4880,14 @@ public abstract class Scope {
 	}
 
 	public final ClassScope outerMostClassScope() {
-		ClassScope lastClassScope = null;
+		ClassScope outerMostClassScope = null;
 		Scope scope = this;
 		do {
-			if (scope instanceof ClassScope)
-				lastClassScope = (ClassScope) scope;
+			if (scope instanceof ClassScope classScope)
+				outerMostClassScope = classScope;
 			scope = scope.parent;
 		} while (scope != null);
-		return lastClassScope; // may answer null if no class around
+		return outerMostClassScope; // may answer null if no class around
 	}
 
 	public final MethodScope outerMostMethodScope() {

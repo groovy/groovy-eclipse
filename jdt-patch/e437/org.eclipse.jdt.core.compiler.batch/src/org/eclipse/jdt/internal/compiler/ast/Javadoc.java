@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
+import java.util.function.Function;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -241,6 +242,7 @@ public class Javadoc extends ASTNode {
 			JavadocSingleNameReference param = this.paramReferences[i];
 			scope.problemReporter().javadocUnexpectedTag(param.tagSourceStart, param.tagSourceEnd);
 		}
+		resolveParamTags(scope, true);
 		resolveTypeParameterTags(scope, true);
 
 		// @return tags
@@ -542,9 +544,32 @@ public class Javadoc extends ASTNode {
 			scope.problemReporter().javadocInvalidReference(reference.sourceStart, reference.sourceEnd);
 		}
 	}
-
 	/*
-	 * Resolve @param tags while method scope
+	 * Resolve @param tags for records
+	 */
+	private void resolveParamTags(ClassScope scope, boolean reportMissing) {
+		TypeDeclaration typeDecl = scope.referenceContext;
+		if (!typeDecl.isRecord())
+			return;
+		Function<JavadocSingleNameReference, Binding>  resolveNameRef =
+						(nameRef) -> {
+							nameRef.resolve(scope);
+							return nameRef.binding;
+						};
+		Function<AbstractVariableDeclaration, Binding>  resolveArgumentOrComponent =
+						(arg) -> {
+							return typeDecl.binding.getField(arg.name, false);
+						};
+		resolveParamTags(typeDecl.initializerScope,
+				reportMissing,
+				typeDecl.recordComponents,
+				true,
+				typeDecl.modifiers, // not used
+				resolveNameRef,
+				resolveArgumentOrComponent);
+	}
+	/*
+	 * Resolve @param tags for methods
 	 */
 	private void resolveParamTags(MethodScope scope, boolean reportMissing, boolean considerParamRefAsUsage) {
 		AbstractMethodDeclaration methodDecl = scope.referenceMethod();
@@ -558,36 +583,62 @@ public class Javadoc extends ASTNode {
 			}
 			return;
 		}
+		Function<JavadocSingleNameReference, Binding>  resolveNameRef =
+						(nameRef) -> {
+							nameRef.resolve(scope, true, considerParamRefAsUsage);
+							return nameRef.binding;
+						};
+		Function<AbstractVariableDeclaration, Binding>  resolveArgumentOrComponent =
+						(arg) -> {
+							return arg instanceof Argument argument ? argument.binding : scope.findVariable(arg.name);
+						};
+		resolveParamTags(scope,
+				reportMissing,
+				methodDecl.arguments(),
+				!methodDecl.isCompactConstructor(),
+				methodDecl.binding.modifiers,
+				resolveNameRef,
+				resolveArgumentOrComponent);
+	}
+	private void resolveParamTags(MethodScope scope,
+			boolean reportMissing,
+			AbstractVariableDeclaration[] arguments,
+			boolean reportAllUndocumented,
+			int modifiers,
+			Function<JavadocSingleNameReference, Binding>  resolveNameRef,
+			Function<AbstractVariableDeclaration, Binding>  resolveArgumentOrComponent) {
 
+		int paramTagsSize = this.paramReferences == null ? 0 : this.paramReferences.length;
 		// If no param tags then report a problem for each method argument
-		AbstractVariableDeclaration [] arguments = methodDecl.arguments(true);
 		int argumentsSize = arguments == null ? 0 : arguments.length;
 		if (paramTagsSize == 0) {
-			if (reportMissing && !methodDecl.isCompactConstructor()) {
+			if (reportMissing && reportAllUndocumented) {
 				for (int i = 0; i < argumentsSize; i++) {
 					AbstractVariableDeclaration arg = arguments[i];
-					scope.problemReporter().javadocMissingParamTag(arg.name, arg.sourceStart, arg.sourceEnd, methodDecl.binding.modifiers);
+					scope.problemReporter().javadocMissingParamTag(arg.name, arg.sourceStart, arg.sourceEnd, modifiers);
 				}
 			}
+			return;
 		} else {
-			LocalVariableBinding[] bindings = new LocalVariableBinding[paramTagsSize];
+			VariableBinding[] bindings = new VariableBinding[paramTagsSize];
 			int maxBindings = 0;
 
 			// Scan all @param tags
 			for (int i = 0; i < paramTagsSize; i++) {
 				JavadocSingleNameReference param = this.paramReferences[i];
-				param.resolve(scope, true, considerParamRefAsUsage);
-				if (param.binding != null && param.binding.isValidBinding()) {
+
+				Binding lBinding = resolveNameRef.apply(param);
+				if (lBinding instanceof VariableBinding varBinding) {
 					// Verify duplicated tags
 					boolean found = false;
 					for (int j = 0; j < maxBindings && !found; j++) {
 						if (bindings[j] == param.binding) {
-							scope.problemReporter().javadocDuplicatedParamTag(param.token, param.sourceStart, param.sourceEnd, methodDecl.binding.modifiers);
+							scope.problemReporter().javadocDuplicatedParamTag(param.token, param.sourceStart, param.sourceEnd, modifiers);
 							found = true;
 						}
 					}
 					if (!found) {
-						bindings[maxBindings++] = (LocalVariableBinding) param.binding;
+						bindings[maxBindings++] = varBinding;
 					}
 				}
 			}
@@ -596,17 +647,19 @@ public class Javadoc extends ASTNode {
 			if (reportMissing) {
 				for (int i = 0; i < argumentsSize; i++) {
 					AbstractVariableDeclaration arg = arguments[i];
-					LocalVariableBinding argBinding = arg instanceof Argument argument ? argument.binding : scope.findVariable(arg.name);
-					boolean found = false;
-					for (int j = 0; j < maxBindings; j++) {
-						LocalVariableBinding binding = bindings[j];
-						if (argBinding == binding) {
-							found = true;
-							break;
+					Binding lBinding = resolveArgumentOrComponent.apply(arg);
+					if (lBinding instanceof VariableBinding argBinding) {
+						boolean found = false;
+						for (int j = 0; j < maxBindings; j++) {
+							VariableBinding binding = bindings[j];
+							if (argBinding == binding) {
+								found = true;
+								break;
+							}
 						}
-					}
-					if (!found) {
-						scope.problemReporter().javadocMissingParamTag(arg.name, arg.sourceStart, arg.sourceEnd, methodDecl.binding.modifiers);
+						if (!found) {
+							scope.problemReporter().javadocMissingParamTag(arg.name, arg.sourceStart, arg.sourceEnd, modifiers);
+						}
 					}
 				}
 			}
@@ -760,12 +813,10 @@ public class Javadoc extends ASTNode {
 	 */
 	private void resolveTypeParameterTags(Scope scope, boolean reportMissing) {
 		int paramTypeParamLength = this.paramTypeParameters == null ? 0 : this.paramTypeParameters.length;
-		int paramReferencesLength = this.paramReferences == null ? 0 : this.paramReferences.length;
 
 		// Get declaration infos
 		TypeParameter[] parameters = null;
 		TypeVariableBinding[] typeVariables = null;
-		RecordComponent[] recordParameters = null;
 		int modifiers = -1;
 		switch (scope.kind) {
 			case Scope.METHOD_SCOPE:
@@ -787,81 +838,17 @@ public class Javadoc extends ASTNode {
 				parameters = typeDeclaration.typeParameters;
 				typeVariables = typeDeclaration.binding.typeVariables;
 				modifiers = typeDeclaration.binding.modifiers;
-				recordParameters = typeDeclaration.recordComponents;
 				break;
 		}
 
 		// If no type variables then report a problem for each param type parameter tag
-		if ((recordParameters == null || recordParameters.length == 0)
-				&& (typeVariables == null || typeVariables.length == 0)) {
+		if ((typeVariables == null || typeVariables.length == 0)) {
 			for (int i = 0; i < paramTypeParamLength; i++) {
 				JavadocSingleTypeReference param = this.paramTypeParameters[i];
 				scope.problemReporter().javadocUnexpectedTag(param.tagSourceStart, param.tagSourceEnd);
 			}
 			return;
 		}
-
-		// If no param tags then report a problem for each record parameter
-		if (recordParameters != null) {
-			int recordParametersLength = recordParameters.length;
-			String argNames[] = new String[paramReferencesLength];
-			if (paramReferencesLength == 0) {
-				if (reportMissing) {
-					for (int i = 0, l=recordParametersLength; i<l; i++) {
-						scope.problemReporter().javadocMissingParamTag(recordParameters[i].name, recordParameters[i].sourceStart, recordParameters[i].sourceEnd, modifiers);
-					}
-				}
-			} else {
-				// Otherwise verify that all param tags match record args
-				// Scan all @param tags
-				for (int i = 0; i < paramReferencesLength; ++i) {
-					JavadocSingleNameReference param = this.paramReferences[i];
-					String paramName = new String(param.getName()[0]);
-					// Verify duplicated tags
-					boolean duplicate = false;
-					for (int j = 0; j < i && !duplicate; j++) {
-						if (paramName.equals(argNames[j])) {
-							scope.problemReporter().javadocDuplicatedParamTag(param.token, param.sourceStart, param.sourceEnd, modifiers);
-							duplicate = true;
-						}
-					}
-					if (!duplicate) {
-						argNames[i] = paramName;
-					}
-				}
-				// Look for undocumented arguments
-				if (reportMissing) {
-					for (RecordComponent component : recordParameters) {
-						boolean found = false;
-						for (int j = 0; j < paramReferencesLength && !found; j++) {
-							JavadocSingleNameReference param = this.paramReferences[j];
-							String paramName = new String(param.getName()[0]);
-							if (paramName.equals(new String(component.name))) {
-								found = true;
-							}
-						}
-						if (!found) {
-							scope.problemReporter().javadocMissingParamTag(component.name, component.sourceStart, component.sourceEnd, modifiers);
-						}
-					}
-				}
-				// Look for param tags that specify non-existent arguments
-				for (int i = 0; i < paramReferencesLength; i++) {
-					JavadocSingleNameReference param = this.paramReferences[i];
-					String paramName = new String(param.getName()[0]);
-					boolean found = false;
-					for (RecordComponent component : recordParameters) {
-						if (paramName.equals(new String(component.name))) {
-							found = true;
-						}
-					}
-					if (!found) {
-						scope.problemReporter().javadocInvalidParamTagName(param.sourceStart, param.sourceEnd);
-					}
-				}
-			}
-		}
-
 		// If no param tags then report a problem for each declaration type parameter
 		if (parameters != null) {
 			int typeParametersLength = parameters.length;

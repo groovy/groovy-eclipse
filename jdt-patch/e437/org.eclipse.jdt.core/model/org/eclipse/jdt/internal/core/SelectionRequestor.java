@@ -417,7 +417,7 @@ public void acceptLocalVariable(LocalVariableBinding binding, org.eclipse.jdt.in
 	LocalVariable localVar = null;
 	if(parent != null) {
 		String typeSig = null;
-		if (local.type == null || (local.type.isTypeNameVar(binding.declaringScope) && !binding.type.isAnonymousType())) {
+		if (local.type == null || (local.type.isTypeNameVar(binding.declaringScope) && binding.type != null && !binding.type.isAnonymousType())) {
 			if (local.initialization instanceof CastExpression) {
 				typeSig = Util.typeSignature(((CastExpression) local.initialization).type);
 			} else {

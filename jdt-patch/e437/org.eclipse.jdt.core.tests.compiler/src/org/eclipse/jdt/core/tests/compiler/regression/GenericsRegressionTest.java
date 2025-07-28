@@ -5393,6 +5393,11 @@ public void testBug456459a() {
 		"	EnumSet<? extends T> set = EnumSet.allOf(enumType);\n" +
 		"	                                         ^^^^^^^^\n" +
 		"Type safety: The expression of type Class needs unchecked conversion to conform to Class<Enum<Enum<E>>>\n" +
+		"----------\n" +
+		"6. ERROR in EnumTest.java (at line 10)\n" +
+		"	return set.iterator().next();\n" +
+		"	       ^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Type mismatch: cannot convert from capture#1-of ? extends T to T\n" +
 		"----------\n");
 }
 // simple conflict introduced by additional wildcard bound
@@ -6736,6 +6741,135 @@ public void testIssue3897() {
 			"Zork cannot be resolved to a type\n" +
 			"----------\n"
 		);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2523
+// Compilation error on ecj but not javac due to usage of incorrect super interface
+public void testIssue2523() {
+        this.runConformTest(
+            new String[] {
+                "X.java",
+                """
+                public class X {
+                    public void test() {
+                        C<? extends D> c = null;
+                        optional(c, null);
+                    }
+
+                    private <I extends F, T extends E<I>> void optional(C<T> l, I i) {}
+
+                    public static interface C<T extends E<?>> {}
+                    public static class D implements E<F> {}
+                    public static interface E<I extends F> {}
+                    public static class F {}
+                }
+                """
+            }
+        );
+}
+public void testGH4214() {
+	runConformTest(new String[] {
+		"C.java",
+		"""
+		class C {
+			class A<T> {}
+			public class B<T extends B<? extends A<?>>> extends A<T> {
+				void foo() {
+					bar((T)this);
+				}
+			}
+			<T extends B<?>> void bar(T t) {}
+		}
+		"""
+	});
+}
+public void testGH4235() {
+	runConformTest(new String[] {
+			"repro/AssertJStubs.java",
+			"""
+			package repro;
+			import java.util.List;
+			public class AssertJStubs {
+				interface Descriptable<SELF> {}
+				interface ExtensionPoints<SELF extends ExtensionPoints<SELF, ACTUAL>, ACTUAL> {}
+
+				public interface Assert<SELF extends Assert<SELF, ACTUAL>, ACTUAL> extends Descriptable<SELF>, ExtensionPoints<SELF, ACTUAL> { }
+				public static abstract class AbstractAssert<SELF extends AbstractAssert<SELF, ACTUAL>, ACTUAL> implements Assert<SELF, ACTUAL> {
+					protected ACTUAL actual;
+					protected SELF myself;
+				}
+				interface AssertFactory<T, ASSERT extends Assert<?, ?>> {
+					  ASSERT createAssert(T actual);
+				}
+
+				public static class FactoryBasedNavigableListAssert<SELF extends FactoryBasedNavigableListAssert<SELF, ACTUAL, ELEMENT, ELEMENT_ASSERT>,
+				    											ACTUAL extends List<? extends ELEMENT>,
+				    											ELEMENT,
+				    											ELEMENT_ASSERT extends AbstractAssert<ELEMENT_ASSERT, ELEMENT>>
+					extends AbstractAssert<SELF, ACTUAL> {
+					public boolean isEmpty() { return true; }
+				}
+
+				public static class Assertions {
+					public static <ACTUAL extends List<? extends ELEMENT>, ELEMENT, ELEMENT_ASSERT extends AbstractAssert<ELEMENT_ASSERT, ELEMENT>>
+					FactoryBasedNavigableListAssert<?, ACTUAL, ELEMENT, ELEMENT_ASSERT> assertThat(List<? extends ELEMENT> actual,
+							AssertFactory<ELEMENT, ELEMENT_ASSERT> assertFactory) {
+						return null;
+					}
+				}
+			}
+			""",
+			"repro/SourceType.java",
+			"""
+			package repro;
+			import java.util.List;
+
+			public interface SourceType {
+				List<TargetType> getTargets();
+			}
+			""",
+			"repro/SourceTypeAssert.java",
+			"""
+			package repro;
+			import java.util.List;
+			import repro.AssertJStubs.*;
+
+			public class SourceTypeAssert extends AbstractAssert<SourceTypeAssert, SourceType> {
+				protected SourceTypeAssert(SourceType actual, Class<?> selfType) {
+				}
+				public final FactoryBasedNavigableListAssert<?, List<? extends TargetType>, TargetType, ? extends AbstractTargetTypeAssert<?>> targets() {
+					return Assertions.assertThat(actual.getTargets(), TargetTypeAssert::new);
+				}
+				public final SourceTypeAssert hasNoTargets() {
+					targets().isEmpty();
+					return myself;
+				}
+			}
+			""",
+			"repro/TargetType.java",
+			"""
+			package repro;
+			public interface TargetType { }
+			""",
+			"repro/AbstractTargetTypeAssert.java",
+			"""
+			package repro;
+			import repro.AssertJStubs.AbstractAssert;
+
+			public abstract class AbstractTargetTypeAssert<S extends AbstractTargetTypeAssert<S>> extends AbstractAssert<S, TargetType> {
+				protected AbstractTargetTypeAssert(TargetType actual, Class<?> selfType) {
+				}
+			}
+			""",
+			"repro/TargetTypeAssert.java",
+			"""
+			package repro;
+			public class TargetTypeAssert extends AbstractTargetTypeAssert<TargetTypeAssert> {
+				protected TargetTypeAssert(TargetType actual) {
+					super(actual, TargetTypeAssert.class);
+				}
+			}
+			"""
+		});
 }
 }
 

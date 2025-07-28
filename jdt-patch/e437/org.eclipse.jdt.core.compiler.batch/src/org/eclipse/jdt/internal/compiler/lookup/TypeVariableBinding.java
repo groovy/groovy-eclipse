@@ -1226,15 +1226,4 @@ public class TypeVariableBinding extends ReferenceBinding {
 				&& this.environment.globalOptions.pessimisticNullAnalysisForFreeTypeVariablesEnabled
 				&& (this.tagBits & TagBits.AnnotationNullMASK) == 0;
 	}
-
-	@Override
-	public TypeBinding upwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
-		return this;
-	}
-
-	@Override
-	public TypeBinding downwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
-		return this;
-	}
-
 }

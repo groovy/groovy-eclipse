@@ -3044,15 +3044,14 @@ protected void consumeExitVariableWithInitialization() {
 		}
 	}
 
-	// does not keep the initialization if completion is not inside
+	// do not keep the initialization if completion is not inside, except for var typed local where initializer must be preserved for LVTI
 	AbstractVariableDeclaration variable = (AbstractVariableDeclaration) this.astStack[this.astPtr];
 	if (this.cursorLocation + 1 < variable.initialization.sourceStart ||
 		this.cursorLocation > variable.initialization.sourceEnd) {
-		if (!variable.type.isTypeNameVar(null)) {
-			if (! (variable instanceof LocalDeclaration && variable.isTypeNameVar(this.compilationUnit.scope))) {
-				variable.initialization = null;
-			}
-		}
+
+		if (! (variable instanceof LocalDeclaration && variable.isVarTyped(this.compilationUnit.scope)))
+			variable.initialization = null;
+
 	} else if (this.assistNode != null && this.assistNode == variable.initialization) {
 			this.assistNodeParent = variable;
 	}

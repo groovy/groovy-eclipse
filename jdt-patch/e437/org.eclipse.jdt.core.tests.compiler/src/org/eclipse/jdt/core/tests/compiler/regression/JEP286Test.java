@@ -341,12 +341,12 @@ public void test0011_array_type() throws IOException {
 			"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
 			"	var myArray[] = new int[42];\n" +
-			"	    ^^^^^^^\n" +
+			"	^^^\n" +
 			"'var' is not allowed as an element type of an array\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 4)\n" +
 			"	var[] moreArray = new int[1337];\n" +
-			"	      ^^^^^^^^^\n" +
+			"	^^^^^\n" +
 			"'var' is not allowed as an element type of an array\n" +
 			"----------\n");
 }
@@ -379,12 +379,12 @@ public void test0012_self_reference() throws IOException {
 			"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
 			"	var a = 42 + a;\n" +
-			"	    ^\n" +
+			"	             ^\n" +
 			"Declaration using 'var' may not contain references to itself\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 4)\n" +
 			"	var b = ((java.util.concurrent.Callable<Integer>)(() -> true ? 1 : b)).call();\n" +
-			"	    ^\n" +
+			"	                                                                   ^\n" +
 			"Declaration using 'var' may not contain references to itself\n" +
 			"----------\n" +
 			"3. WARNING in X.java (at line 7)\n" +
@@ -392,7 +392,7 @@ public void test0012_self_reference() throws IOException {
 			"	    ^\n" +
 		    "The local variable c is hiding another local variable defined in an enclosing scope\n" +
 		    	"----------\n"+
-			"3. WARNING in X.java (at line 10)\n" +
+			"4. WARNING in X.java (at line 10)\n" +
 			"	int d = 42;\n" +
 			"	    ^\n" +
 		    "The field new Callable<Integer>(){}.d is hiding another local variable defined in an enclosing scope\n" +
@@ -411,8 +411,8 @@ public void test0013_lambda() throws IOException {
 			"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
 			"	var a = (int i) -> 42;\n" +
-			"	    ^\n" +
-			"Lambda expression needs an explicit target-type\n" +
+			"	        ^^^^^^^^^^^^^\n" +
+			"The target type of this expression must be a functional interface\n" +
 			"----------\n");
 }
 public void test0014_method_reference() throws IOException {
@@ -428,11 +428,11 @@ public void test0014_method_reference() throws IOException {
 			"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
 			"	var a = X::main;\n" +
-			"	    ^\n" +
-			"Method reference needs an explicit target-type\n" +
+			"	        ^^^^^^^\n" +
+			"The target type of this expression must be a functional interface\n" +
 			"----------\n");
 }
-public void test0015_complain_over_first_poly_encountered() throws Exception {
+public void test0015_complain_over_all_poly_encountered() throws Exception {
 
 	this.runNegativeTest(
 			new String[] {
@@ -446,8 +446,13 @@ public void test0015_complain_over_first_poly_encountered() throws Exception {
 			"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
 			"	var a = args.length > 1 ? X::main : (int i) -> 42;\n" +
-			"	    ^\n" +
-			"Method reference needs an explicit target-type\n" +
+			"	                          ^^^^^^^\n" +
+			"The target type of this expression must be a functional interface\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 3)\n" +
+			"	var a = args.length > 1 ? X::main : (int i) -> 42;\n" +
+			"	                                    ^^^^^^^^^^^^^\n" +
+			"The target type of this expression must be a functional interface\n" +
 			"----------\n");
 }
 public void test0016_dont_capture_deep_poly_expressions() throws IOException {
@@ -673,7 +678,7 @@ public void testBug531832() throws IOException {
 			"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
 			"	for (var[] v : args) { }\n" +
-			"	           ^\n" +
+			"	     ^^^^^\n" +
 			"'var' is not allowed as an element type of an array\n" +
 			"----------\n");
 }
@@ -691,11 +696,6 @@ public void testBug530879() throws IOException {
 			"----------\n" +
 			"1. ERROR in X.java (at line 4)\n" +
 			"	for (var v : foo()) { }\n" +
-			"	         ^\n" +
-			"Variable initializer is 'void' -- cannot infer variable type\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 4)\n" +
-			"	for (var v : foo()) { }\n" +
 			"	             ^^^^^\n" +
 			"Can only iterate over an array or an instance of java.lang.Iterable\n" +
 			"----------\n");
@@ -712,11 +712,6 @@ public void testBug530879a() throws IOException {
 			},
 			"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
-			"	for (var v : null) { }\n" +
-			"	         ^\n" +
-			"Cannot infer type for local variable initialized to 'null'\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 3)\n" +
 			"	for (var v : null) { }\n" +
 			"	             ^^^^\n" +
 			"Can only iterate over an array or an instance of java.lang.Iterable\n" +

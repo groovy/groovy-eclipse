@@ -610,12 +610,7 @@ public void generateCode(ClassFile enclosingClassFile) {
 			enclosingClassFile.recordInnerClasses(this.binding);
 			classFile.recordInnerClasses(this.binding);
 		}
-		SourceTypeBinding nestHost = this.binding.getNestHost();
-		if (nestHost != null && !TypeBinding.equalsEquals(nestHost, this.binding)) {
-			ClassFile ocf = enclosingClassFile.outerMostEnclosingClassFile();
-			if (ocf != null)
-				ocf.recordNestMember(this.binding);
-		}
+
 		TypeVariableBinding[] typeVariables = this.binding.typeVariables();
 		for (TypeVariableBinding typeVariableBinding : typeVariables) {
 			if ((typeVariableBinding.tagBits & TagBits.ContainsNestedTypeReferences) != 0) {
@@ -1268,6 +1263,7 @@ public void resolve() {
 		boolean needSerialVersion =
 						this.scope.compilerOptions().getSeverity(CompilerOptions.MissingSerialVersion) != ProblemSeverities.Ignore
 						&& sourceType.isClass()
+						&& !sourceType.isAnonymousType()
 						&& !sourceType.isRecord()
 						&& sourceType.findSuperTypeOriginatingFrom(TypeIds.T_JavaIoExternalizable, false /*Externalizable is not a class*/) == null
 						&& sourceType.findSuperTypeOriginatingFrom(TypeIds.T_JavaIoSerializable, false /*Serializable is not a class*/) != null;
@@ -1470,7 +1466,7 @@ public void resolve() {
 				reporter.close();
 			}
 		}
-		updateNestHost();
+		updateNestRelations();
 		FieldDeclaration[] fieldsDecls = this.fields;
 		if (fieldsDecls != null) {
 			for (FieldDeclaration fieldDeclaration : fieldsDecls)
@@ -1796,19 +1792,37 @@ void updateMaxFieldCount() {
 	}
 }
 
-private SourceTypeBinding findNestHost() {
-	ClassScope classScope = this.scope.enclosingTopMostClassScope();
-	return classScope != null ? classScope.referenceContext.binding : null;
-}
+private final void updateNestRelations() {
 
-void updateNestHost() {
-	if (this.binding == null)
-		return;
-	SourceTypeBinding nestHost = findNestHost();
-	if (nestHost != null && !this.binding.equals(nestHost)) {// member
+	ClassScope outerMostClassScope = this.scope;
+	Scope skope = this.scope;
+	boolean concreteType = true;
+	while (skope != null && skope.kind != Scope.COMPILATION_UNIT_SCOPE) {
+		switch (skope.kind) {
+			case Scope.METHOD_SCOPE :
+				ReferenceContext context = ((MethodScope) skope).referenceContext;
+				if (context instanceof LambdaExpression lambdaExpression) {
+					if (lambdaExpression != lambdaExpression.original) // transient unreal universe.
+						concreteType = false;
+				}
+				break;
+			case Scope.CLASS_SCOPE:
+				outerMostClassScope = (ClassScope) skope;
+				break;
+		}
+		skope = skope.parent;
+	}
+
+	SourceTypeBinding nestHost =  outerMostClassScope != null ? outerMostClassScope.referenceContext.binding : null;
+	if (nestHost != null && !this.binding.equals(nestHost)) {
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=572190 && https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4204:
+		// The nest host is valid even for a transient type, but a transient type from a lambda copy is not a member of the nest host (its non-transient original is/will be)
 		this.binding.setNestHost(nestHost);
+		if (concreteType)
+			nestHost.addNestMember(this.binding);
 	}
 }
+
 public boolean isPackageInfo() {
 	return CharOperation.equals(this.name,  TypeConstants.PACKAGE_INFO_NAME);
 }

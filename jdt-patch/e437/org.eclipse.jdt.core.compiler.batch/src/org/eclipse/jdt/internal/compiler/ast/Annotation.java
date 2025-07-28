@@ -1273,7 +1273,7 @@ public abstract class Annotation extends Expression {
 				} else if ((annotationType.tagBits & TagBits.AnnotationForLocalVariable) != 0) {
 					return AnnotationTargetAllowed.YES;
 				} else if ((metaTagBits & TagBits.AnnotationForTypeUse) != 0) {
-					if (localVariableBinding.declaration.isTypeNameVar(scope)) {
+					if (localVariableBinding.declaration.isVarTyped(scope)) {
 						return AnnotationTargetAllowed.NO;
 					} else if (isTypeUseCompatible(localVariableBinding.declaration.type, scope)) {
 						return AnnotationTargetAllowed.YES;

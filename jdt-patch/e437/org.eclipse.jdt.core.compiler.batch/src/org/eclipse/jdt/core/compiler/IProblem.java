@@ -2356,9 +2356,13 @@ void setSourceStart(int sourceStart);
 	int VarLocalInitializedToVoid = TypeRelated + 1505; // Variable initializer is ''void'' -- cannot infer variable type
 	/** @since 3.14 */
 	int VarLocalCannotBeArrayInitalizers = TypeRelated + 1506; // Array initializer needs an explicit target-type
-	/** @since 3.14 */
+	/** @since 3.14
+	 *  @deprecated no longer issued - will be removed
+	 * */
 	int VarLocalCannotBeLambda = TypeRelated + 1507; // Lambda expression needs an explicit target-type
-	/** @since 3.14 */
+	/** @since 3.14
+	 *  @deprecated no longer issued - will be removed
+	 * */
 	int VarLocalCannotBeMethodReference = TypeRelated + 1508; // Method reference needs an explicit target-type
 	/** @since 3.14 */
 	int VarIsReserved = Syntax + 1509; // ''var'' is not a valid type name

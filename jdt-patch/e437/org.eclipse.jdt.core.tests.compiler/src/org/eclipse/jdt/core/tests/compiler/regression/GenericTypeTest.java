@@ -31059,11 +31059,6 @@ public void test0962() {
 		"	throw new Exception(\"Bug134645\") {\n" +
 		"	          ^^^^^^^^^\n" +
 		"The generic class new Exception(){} may not subclass java.lang.Throwable\n" +
-		"----------\n" +
-		"2. WARNING in X.java (at line 3)\n" +
-		"	throw new Exception(\"Bug134645\") {\n" +
-		"	          ^^^^^^^^^^^^^^^^^^^^^^\n" +
-		"The serializable class  does not declare a static final serialVersionUID field of type long\n" +
 		"----------\n",
 		// javac options
 		JavacTestOptions.JavacHasABug.JavacBugFixed_6_10 /* javac test options */);

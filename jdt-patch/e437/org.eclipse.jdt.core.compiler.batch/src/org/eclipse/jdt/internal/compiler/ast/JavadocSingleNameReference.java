@@ -16,6 +16,7 @@ package org.eclipse.jdt.internal.compiler.ast;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
+import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
@@ -29,6 +30,25 @@ public class JavadocSingleNameReference extends SingleNameReference {
 		this.tagSourceStart = tagStart;
 		this.tagSourceEnd = tagEnd;
 		this.bits |= InsideJavadoc;
+	}
+
+	public void resolve(ClassScope scope) {
+		TypeDeclaration type = scope.referenceContext;
+		if (type != null && type.isRecord()) {
+			FieldBinding field = type.binding.getField(this.token, false);
+			if (field != null && field.isValidBinding()) {
+				this.binding = field;
+				return;
+			}
+			if (scope.compilerOptions().reportUnusedParameterIncludeDocCommentReference) {
+				try {
+					scope.problemReporter().javadocUndeclaredParamTagName(this.token, this.sourceStart, this.sourceEnd, type.modifiers);
+				}
+				catch (Exception e) {
+					scope.problemReporter().javadocUndeclaredParamTagName(this.token, this.sourceStart, this.sourceEnd, -1);
+				}
+			}
+		}
 	}
 
 	@Override

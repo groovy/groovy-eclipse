@@ -2340,11 +2340,11 @@ public void generateStringConcatenationAppend(BlockScope blockScope, Expression 
 			// Operand is already on the stack
 			invokeStringValueOf(TypeIds.T_JavaLangObject);
 			arguments.add(blockScope.getJavaLangString());
-			recipe.append(TypeConstants.STRING_CONCAT_MARKER_1);
+			recipe.append(TypeConstants.STRING_CONCAT_FACTORY_TAG_ARG);
 		} else {
-			oper1.buildStringForConcatation(blockScope, this, oper1.implicitConversion & TypeIds.COMPILE_TYPE_MASK, recipe, arguments);
+			oper1.buildStringForConcatenation(blockScope, this, oper1.implicitConversion & TypeIds.COMPILE_TYPE_MASK, recipe, arguments);
 		}
-		oper2.buildStringForConcatation(blockScope, this, oper2.implicitConversion & TypeIds.COMPILE_TYPE_MASK, recipe, arguments);
+		oper2.buildStringForConcatenation(blockScope, this, oper2.implicitConversion & TypeIds.COMPILE_TYPE_MASK, recipe, arguments);
 		invokeDynamicForStringConcat(recipe, arguments);
 	} else {
 		int pc;

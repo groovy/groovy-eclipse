@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2023 Mateusz Matela and others.
+ * Copyright (c) 2014, 2025 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -17,7 +17,16 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.formatter;
 
-import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.*;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameCOMMENT_BLOCK;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameCOMMENT_JAVADOC;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameCOMMENT_LINE;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameCOMMENT_MARKDOWN;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameNotAToken;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameStringLiteral;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameTextBlock;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameWHITESPACE;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNamepackage;
+import static org.eclipse.jdt.internal.formatter.TokenManager.ANY;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -637,7 +646,7 @@ public class CommentsPreparator extends ASTVisitor {
 
 		} else if (node.isNested() && (IMMUTABLE_TAGS.contains(tagName) || TagElement.TAG_SNIPPET.equals(tagName))) {
 			int endPos = node.getStartPosition() + node.getLength() - 1;
-			int endIndex = this.ctm.findIndex(endPos, TokenNameInvalid, false);
+			int endIndex = this.ctm.findIndex(endPos, ANY, false);
 			if (this.ctm.get(endIndex).originalEnd > endPos)
 				endIndex = tokenEndingAt(endPos);
 			if (TagElement.TAG_SNIPPET.equals(tagName)) {
@@ -822,7 +831,7 @@ public class CommentsPreparator extends ASTVisitor {
 			}
 			if (this.options.comment_format_html) {
 				if (TagElement.TAG_PARAM.equals(node.getTagName())
-						&& this.ctm.findIndex(startPos, TokenNameInvalid, false) == 1 + this.ctm.firstIndexIn(node, TokenNameInvalid)) {
+						&& this.ctm.findIndex(startPos, ANY, false) == 1 + this.ctm.firstIndexIn(node, ANY)) {
 					continue; // it's a generic class parameter name, not an HTML tag
 				}
 
@@ -896,9 +905,9 @@ public class CommentsPreparator extends ASTVisitor {
 		if (matcher.start(group) == matcher.end(group))
 			return;
 		int startPosition = textStartPosition + matcher.start(group);
-		int startIndex = this.ctm.findIndex(startPosition, TokenNameInvalid, false);
+		int startIndex = this.ctm.findIndex(startPosition, ANY, false);
 		int endPosition = textStartPosition + matcher.end(group) - 1;
-		int endIndex = this.ctm.findIndex(endPosition, TokenNameInvalid, false);
+		int endIndex = this.ctm.findIndex(endPosition, ANY, false);
 		if (startIndex != endIndex) {
 			startIndex = tokenStartingAt(startPosition);
 			endIndex = tokenEndingAt(endPosition);
@@ -1045,7 +1054,7 @@ public class CommentsPreparator extends ASTVisitor {
 				disableFormattingExclusively(this.formatCodeOpenTagEndIndex, startIndex);
 			}
 			this.formatCodeOpenTagEndIndex = -1;
-			this.lastFormatCodeClosingTagIndex = this.ctm.findIndex(startPos, TokenNameInvalid, true);
+			this.lastFormatCodeClosingTagIndex = this.ctm.findIndex(startPos, ANY, true);
 		}
 //		if (!isOpeningTag) {
 //			if (this.options.comment_javadoc_do_not_separate_block_tags) {
@@ -1077,7 +1086,7 @@ public class CommentsPreparator extends ASTVisitor {
 
 		List<ASTNode> fragments = node.fragments();
 		if (isInline && !fragments.isEmpty()) {
-			int openingIndex = this.ctm.firstIndexBefore(fragments.get(0), TokenNameInvalid);
+			int openingIndex = this.ctm.firstIndexBefore(fragments.get(0), ANY);
 			int closingIndex = tokenStartingAt(endToken.originalEnd);
 			this.ctm.get(closingIndex).breakBefore();
 			boolean formatted = (lang == null || lang.matches("['\"]?java['\"]?")) //$NON-NLS-1$
@@ -1160,7 +1169,7 @@ public class CommentsPreparator extends ASTVisitor {
 	}
 
 	private int tokenStartingAt(int start) {
-		int tokenIndex = this.ctm.findIndex(start, TokenNameInvalid, false);
+		int tokenIndex = this.ctm.findIndex(start, ANY, false);
 		Token token = this.ctm.get(tokenIndex);
 		if (token.originalStart == start)
 			return tokenIndex;
@@ -1171,7 +1180,7 @@ public class CommentsPreparator extends ASTVisitor {
 	}
 
 	private int tokenEndingAt(int end) {
-		int tokenIndex = this.ctm.findIndex(end, TokenNameInvalid, true);
+		int tokenIndex = this.ctm.findIndex(end, ANY, true);
 		Token token = this.ctm.get(tokenIndex);
 		if (token.originalEnd == end)
 			return tokenIndex;

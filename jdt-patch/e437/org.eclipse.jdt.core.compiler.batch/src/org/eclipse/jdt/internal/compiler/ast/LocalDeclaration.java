@@ -213,72 +213,41 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	public boolean isReceiver() {
 		return false;
 	}
-	public TypeBinding patchType(TypeBinding newType) {
+
+	public TypeBinding patchType(BlockScope scope, TypeBinding newType) {
+		if (TypeBinding.equalsEquals(TypeBinding.NULL, newType))
+			scope.problemReporter().varLocalInitializedToNull(this);
+		else if (TypeBinding.equalsEquals(TypeBinding.VOID, newType))
+			scope.problemReporter().varLocalInitializedToVoid(this);
 		// Perform upwards projection on type wrt mentioned type variables
-		TypeBinding[] mentionedTypeVariables= newType != null ? newType.syntheticTypeVariablesMentioned() : null;
+		TypeBinding[] mentionedTypeVariables = newType != null ? newType.syntheticTypeVariablesMentioned() : null;
 		if (mentionedTypeVariables != null && mentionedTypeVariables.length > 0) {
 			newType = newType.upwardsProjection(this.binding.declaringScope, mentionedTypeVariables);
 		}
 		this.type.resolvedType = newType;
 		if (this.binding != null) {
 			this.binding.type = newType;
-			this.binding.markInitialized();
 		}
 		return this.type.resolvedType;
 	}
 
-	private static Expression findPolyExpression(Expression e) {
-		// This is simpler than using an ASTVisitor, since we only care about a very few select cases.
-		if (e instanceof FunctionalExpression) {
-			return e;
-		}
-		if (e instanceof ConditionalExpression) {
-			ConditionalExpression ce = (ConditionalExpression)e;
-			Expression candidate = findPolyExpression(ce.valueIfTrue);
-			if (candidate == null) {
-				candidate = findPolyExpression(ce.valueIfFalse);
-			}
-			if (candidate != null) return candidate;
-		}
-		if (e instanceof SwitchExpression se) {
-			for (Expression re : se.resultExpressions()) {
-				Expression candidate = findPolyExpression(re);
-				if (candidate != null) return candidate;
-			}
-		}
-		return null;
-	}
-
 	@Override
 	public void resolve(BlockScope scope) {
-		resolve(scope, false);
-	}
-	public void resolve(BlockScope scope, boolean isPatternVariable) {		// prescan NNBD
-		handleNonNullByDefault(scope, this.annotations, this);
 
-		if (!isPatternVariable && (this.bits & ASTNode.IsForeachElementVariable) == 0 && this.initialization == null && this.isUnnamed(scope)) {
-			scope.problemReporter().unnamedVariableMustHaveInitializer(this);
-		}
+		handleNonNullByDefault(scope, this.annotations, this); // prescan NNBD
+
+		final boolean isPatternVariable = (this.bits & ASTNode.IsPatternVariable) != 0;
+		final boolean isForeachElementVariable = (this.bits & ASTNode.IsForeachElementVariable) != 0;
+		final boolean varTypedLocal = isVarTyped(scope);
+		final boolean unnamedLocal = isUnnamed(scope);
 
 		TypeBinding variableType = null;
-		boolean variableTypeInferenceError = false;
-		boolean isTypeNameVar = isTypeNameVar(scope);
-		if (isTypeNameVar && !isPatternVariable) {
-			if (this.type.isParameterizedTypeReference()) {
-				scope.problemReporter().varCannotBeUsedWithTypeArguments(this.type);
-			}
-			if ((this.bits & ASTNode.IsForeachElementVariable) == 0) {
-				// infer a type from the initializer
-				if (this.initialization != null) {
-					variableType = checkInferredLocalVariableInitializer(scope);
-					variableTypeInferenceError = variableType != null;
-				} else {
-					// That's always an error
-					scope.problemReporter().varLocalWithoutInitizalier(this);
-					variableType = scope.getJavaLangObject();
-					variableTypeInferenceError = true;
-				}
-			}
+
+		if (varTypedLocal) {
+			if ((this.bits & ASTNode.IsAdditionalDeclarator) != 0)
+				scope.problemReporter().varLocalMultipleDeclarators(this);
+			if (isPatternVariable)
+				variableType = this.type.resolvedType; // set already if this is a component pattern or is problem binding otherwise as it should be.
 		} else {
 			variableType = this.type == null ? null : this.type.resolveType(scope, true /* check bounds*/);
 		}
@@ -297,14 +266,14 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				}
 			}
 
-		Binding existingVariable = scope.getBinding(this.name, Binding.VARIABLE, this, false /*do not resolve hidden field*/);
-			if (existingVariable != null && existingVariable.isValidBinding() && !this.isUnnamed(scope)) {
+			Binding existingVariable = scope.getBinding(this.name, Binding.VARIABLE, this, false /*do not resolve hidden field*/);
+			if (existingVariable != null && existingVariable.isValidBinding() && !unnamedLocal) {
 				boolean localExists = existingVariable instanceof LocalVariableBinding;
-			if (localExists && (this.bits & ASTNode.ShadowsOuterLocal) != 0 && scope.isLambdaSubscope() && this.hiddenVariableDepth == 0) {
+				if (localExists && (this.bits & ASTNode.ShadowsOuterLocal) != 0 && scope.isLambdaSubscope() && this.hiddenVariableDepth == 0) {
 					scope.problemReporter().lambdaRedeclaresLocal(this);
 				} else if (localExists && this.hiddenVariableDepth == 0) {
 					if (existingVariable.isPatternVariable()) {
-					scope.problemReporter().illegalRedeclarationOfPatternVar((LocalVariableBinding) existingVariable, this);
+						scope.problemReporter().illegalRedeclarationOfPatternVar((LocalVariableBinding) existingVariable, this);
 					} else {
 						scope.problemReporter().redefineLocal(this);
 					}
@@ -313,66 +282,22 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				}
 			}
 		}
-		if ((this.modifiers & ClassFileConstants.AccFinal)!= 0 && this.initialization == null) {
+		if ((this.modifiers & ClassFileConstants.AccFinal) != 0 && this.initialization == null) {
 			this.modifiers |= ExtraCompilerModifiers.AccBlankFinal;
 		}
-		if (isTypeNameVar) {
-			// Create binding for the initializer's type
-			// In order to resolve self-referential initializers, we must declare the variable with a placeholder type (j.l.Object), and then patch it later
-			this.binding = new LocalVariableBinding(this, variableType != null ? variableType : scope.getJavaLangObject(), this.modifiers, false) {
-				private boolean isInitialized = false;
-
-				@Override
-				public void markReferenced() {
-					if (! this.isInitialized) {
-						scope.problemReporter().varLocalReferencesItself(LocalDeclaration.this);
-						this.type = null;
-						this.isInitialized = true; // Quell additional type errors
-					}
-				}
-				@Override
-				public void markInitialized() {
-					this.isInitialized = true;
-				}
-			};
-		} else {
-			// create a binding from the specified type
-			this.binding = new LocalVariableBinding(this, variableType, this.modifiers, false /*isArgument*/);
-		}
+		// Create a binding from the specified type; In order to diagnose self-referential initializers,
+		// we must create the binding with jlO as a placeholder type and patch it later
+		this.binding = new LocalVariableBinding(this, varTypedLocal && variableType == null ? scope.getJavaLangObject() : variableType, this.modifiers, false /*isArgument*/);
 		if (isPatternVariable)
 			this.binding.tagBits |= TagBits.IsPatternBinding;
 		scope.addLocalVariable(this.binding);
 		this.binding.setConstant(Constant.NotAConstant);
-		// allow to recursivelly target the binding....
+		// allow to recursively target the binding....
 		// the correct constant is harmed if correctly computed at the end of this method
 
-		if (variableType == null) {
-			if (this.initialization != null) {
-				if (this.initialization instanceof CastExpression) {
-					((CastExpression)this.initialization).setVarTypeDeclaration(true);
-				}
-				this.initialization.resolveType(scope); // want to report all possible errors
-				if (isTypeNameVar && this.initialization.resolvedType != null) {
-					if (TypeBinding.equalsEquals(TypeBinding.NULL, this.initialization.resolvedType)) {
-						scope.problemReporter().varLocalInitializedToNull(this);
-						variableTypeInferenceError = true;
-					} else if (TypeBinding.equalsEquals(TypeBinding.VOID, this.initialization.resolvedType)) {
-						scope.problemReporter().varLocalInitializedToVoid(this);
-						variableTypeInferenceError = true;
-					}
-					variableType = patchType(this.initialization.resolvedType);
-				} else {
-					variableTypeInferenceError = true;
-				}
-			}
-		}
-		this.binding.markInitialized();
-		if (variableTypeInferenceError) {
-			return;
-		}
 		boolean resolveAnnotationsEarly = false;
 		if (scope.environment().usesNullTypeAnnotations()
-				&& !isTypeNameVar // 'var' does not provide a target type
+				&& !varTypedLocal // 'var' does not provide a target type
 				&& variableType != null && variableType.isValidBinding()) {
 			resolveAnnotationsEarly = this.initialization instanceof Invocation
 					|| this.initialization instanceof ConditionalExpression
@@ -387,16 +312,35 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		}
 		if (this.initialization != null) {
 			if (this.initialization instanceof ArrayInitializer) {
+				if (varTypedLocal) {
+					scope.problemReporter().varLocalCannotBeArrayInitalizers(this);
+					variableType = scope.createArrayType(scope.getJavaLangObject(), 1); // Treat as array of anything
+				}
 				TypeBinding initializationType = this.initialization.resolveTypeExpecting(scope, variableType);
 				if (initializationType != null) {
 					((ArrayInitializer) this.initialization).binding = (ArrayBinding) initializationType;
 					this.initialization.computeConversion(scope, variableType, initializationType);
 				}
 			} else {
-				this.initialization.setExpressionContext(isTypeNameVar ? VANILLA_CONTEXT : ASSIGNMENT_CONTEXT);
+				if (varTypedLocal) {
+					this.binding.useFlag = LocalVariableBinding.ILLEGAL_SELF_REFERENCE_IF_USED; // hijack analysis phase flag
+					if (this.initialization instanceof CastExpression castExpression)
+						castExpression.setVarTypeDeclaration(true);
+				}
+				this.initialization.setExpressionContext(varTypedLocal ? VANILLA_CONTEXT : ASSIGNMENT_CONTEXT);
 				this.initialization.setExpectedType(variableType);
-				TypeBinding initializationType = this.initialization.resolvedType != null ? this.initialization.resolvedType : this.initialization.resolveType(scope);
+				TypeBinding initializationType = this.initialization.resolveType(scope);
+				if (varTypedLocal)
+					this.binding.useFlag = LocalVariableBinding.UNUSED; // hand-over hijacked flag; let flow analysis do what it does with it.
+
+				if ((variableType == null && !varTypedLocal) || // having waited until any additional errors in initializer are surfaced, bail out
+						(initializationType == null && varTypedLocal)) // fubar, bail out.
+					return;
+
 				if (initializationType != null) {
+					if (varTypedLocal) {
+						variableType = patchType(scope, this.initialization.resolvedType);
+					}
 					if (TypeBinding.notEquals(variableType, initializationType)) // must call before computeConversion() and typeMismatchError()
 						scope.compilationUnitScope().recordTypeConversion(variableType, initializationType);
 					if (this.initialization.isConstantValueOfTypeAssignableToType(initializationType, variableType)
@@ -434,6 +378,11 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				this.binding.isFinal()
 					? this.initialization.constant.castTo((variableType.id << 4) + this.initialization.constant.typeID())
 					: Constant.NotAConstant);
+		} else if (!isPatternVariable && !isForeachElementVariable) {
+			if (varTypedLocal)
+				scope.problemReporter().varLocalWithoutInitizalier(this);
+			if (unnamedLocal)
+				scope.problemReporter().unnamedVariableMustHaveInitializer(this);
 		}
 		// if init could be a constant only resolve annotation at the end, for constant to be positioned before (96991)
 		if (!resolveAnnotationsEarly)
@@ -445,37 +394,6 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	void validateNullAnnotations(BlockScope scope) {
 		if (!scope.validateNullAnnotation(this.binding.tagBits, this.type, this.annotations))
 			this.binding.tagBits &= ~TagBits.AnnotationNullMASK;
-	}
-
-	/*
-	 * Checks the initializer for simple errors, and reports an error as needed. If error is found,
-	 * returns a reasonable match for further type checking.
-	 */
-	private TypeBinding checkInferredLocalVariableInitializer(BlockScope scope) {
-		TypeBinding errorType = null;
-		if (this.initialization instanceof ArrayInitializer) {
-			scope.problemReporter().varLocalCannotBeArrayInitalizers(this);
-			errorType = scope.createArrayType(scope.getJavaLangObject(), 1); // Treat as array of anything
-		} else {
-			// Catch-22: isPolyExpression() is not reliable BEFORE resolveType, so we need to peek to suppress the errors
-			Expression polyExpression = findPolyExpression(this.initialization);
-			if (polyExpression instanceof ReferenceExpression) {
-				scope.problemReporter().varLocalCannotBeMethodReference(this);
-				errorType = TypeBinding.NULL;
-			} else if (polyExpression != null) { // Should be instanceof LambdaExpression, but this is safer
-				scope.problemReporter().varLocalCannotBeLambda(this);
-				errorType = TypeBinding.NULL;
-			}
-		}
-		if (this.type.dimensions() > 0 || this.type.extraDimensions() > 0) {
-			scope.problemReporter().varLocalCannotBeArray(this);
-			errorType = scope.createArrayType(scope.getJavaLangObject(), 1); // This is just to quell some warnings
-		}
-		if ((this.bits & ASTNode.IsAdditionalDeclarator) != 0) {
-			scope.problemReporter().varLocalMultipleDeclarators(this);
-			errorType = this.initialization.resolveType(scope);
-		}
-		return errorType;
 	}
 
 	@Override

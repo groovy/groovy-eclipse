@@ -1425,14 +1425,13 @@ public boolean isRecord() {
 }
 
 private static SourceTypeBinding getSourceTypeBinding(ReferenceBinding ref) {
-	if (ref instanceof SourceTypeBinding)
-		return (SourceTypeBinding) ref;
-	if (ref instanceof ParameterizedTypeBinding) {
-		ParameterizedTypeBinding ptb = (ParameterizedTypeBinding) ref;
-		return ptb.type instanceof SourceTypeBinding ? (SourceTypeBinding) ptb.type : null;
-	}
+	if (ref instanceof SourceTypeBinding stb)
+		return stb;
+	if (ref instanceof ParameterizedTypeBinding ptb)
+		return ptb.type instanceof SourceTypeBinding stb ? stb : null;
 	return null;
 }
+
 public  boolean isNestmateOf(ReferenceBinding other) {
 	SourceTypeBinding s1 = getSourceTypeBinding(this);
 	SourceTypeBinding s2 = getSourceTypeBinding(other);
@@ -1685,6 +1684,22 @@ public boolean isInterface() {
 	return (this.modifiers & ClassFileConstants.AccInterface) != 0;
 }
 
+private boolean isPatentlyDysfunctional(Scope scope) {
+	if (!isInterface() || isSealed() || isAnnotationType())
+		return true;
+	MethodBinding samCandidate = null;
+	for (MethodBinding method : methods()) {
+		if (method.isAbstract() && !method.redeclaresPublicObjectMethod(scope)) {
+			if (samCandidate == null) {
+				samCandidate = method;
+			} else if (!CharOperation.equals(samCandidate.selector, method.selector) ||
+						samCandidate.parameters.length != method.parameters.length) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
 @Override
 public boolean isFunctionalInterface(Scope scope) {
 	MethodBinding method;
@@ -2109,30 +2124,6 @@ public char[] sourceName() {
 	return this.sourceName;
 }
 
-/**
- * Perform an upwards type projection as per JLS 4.10.5
- * @param scope Relevant scope for evaluating type projection
- * @param mentionedTypeVariables Filter for mentioned type variabled
- * @return Upwards type projection of 'this', or null if downwards projection is undefined
-*/
-@Override
-public TypeBinding upwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
-	// Note: return type remains as TypeBinding, because subclass CaptureBinding may return an ArrayBinding :(
-	return this;
-}
-
-/**
- * Perform a downwards type projection as per JLS 4.10.5
- * @param scope Relevant scope for evaluating type projection
- * @param mentionedTypeVariables Filter for mentioned type variabled
- * @return Downwards type projection of 'this', or null if downwards projection is undefined
-*/
-@Override
-public TypeBinding downwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
-	// Note: return type remains as TypeBinding, because subclass CaptureBinding may return an ArrayBinding :(
-	return this;
-}
-
 void storeAnnotationHolder(Binding binding, AnnotationHolder holder) {
 	if (holder == null) {
 		Map<Binding, AnnotationHolder> store = storedAnnotations(false, false);
@@ -2428,11 +2419,11 @@ public MethodBinding getSingleAbstractMethod(Scope scope, boolean replaceWildcar
 	int index = replaceWildcards ? 0 : 1;
 	if (this.singleAbstractMethod != null) {
 		if (this.singleAbstractMethod[index] != null)
-		return this.singleAbstractMethod[index];
+			return this.singleAbstractMethod[index];
 	} else {
 		this.singleAbstractMethod = new MethodBinding[2];
-		if (this.isSealed())
-			return this.singleAbstractMethod[index] = samProblemBinding; // JLS 9.8
+		if (isPatentlyDysfunctional(scope))
+			return this.singleAbstractMethod[0] = this.singleAbstractMethod[1] = samProblemBinding;
 	}
 
 	if (this.compoundName != null)

@@ -1701,10 +1701,6 @@ public final class AST {
 		if (elementType == null) {
 			throw new IllegalArgumentException();
 		}
-		if (dimensions < 0 || dimensions > 255) {
-			// max as per Java VM spec
-			throw new IllegalArgumentException();
-		}
 		ArrayType result;
 		if (this.apiLevel < JLS8_INTERNAL) {
 			if (dimensions < 1) {

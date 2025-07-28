@@ -41,7 +41,7 @@ class DOMToIndexVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(PackageDeclaration packageDeclaration) {
-		this.packageName = packageDeclaration.getName().toString().toCharArray();
+		this.packageName = packageDeclaration.getName().getFullyQualifiedName().toCharArray();
 		return false;
 	}
 
@@ -162,7 +162,7 @@ class DOMToIndexVisitor extends ASTVisitor {
 					0 /* TODO ExtraFlags.IsLocalType ? */);
 			}
 		} else {
-			this.sourceIndexer.addConstructorDeclaration(method.getName().toString().toCharArray(),
+			this.sourceIndexer.addConstructorDeclaration(method.getName().getFullyQualifiedName().toCharArray(),
 					method.parameters().size(),
 					null, parameterTypes, parameterNames, method.getModifiers(), this.packageName, currentType().getModifiers(), exceptionTypes, 0);
 		}
@@ -174,7 +174,7 @@ class DOMToIndexVisitor extends ASTVisitor {
 		if (node.isStatic() && !node.isOnDemand()) {
 			this.sourceIndexer.addMethodReference(simpleName(node.getName()), 0);
 		} else if (!node.isOnDemand()) {
-			this.sourceIndexer.addTypeReference(node.getName().toString().toCharArray());
+			this.sourceIndexer.addTypeReference(node.getName().getFullyQualifiedName().toCharArray());
 		}
 		return true;
 	}
@@ -335,11 +335,9 @@ class DOMToIndexVisitor extends ASTVisitor {
 		return true;
 	}
 	// TODO (cf SourceIndexer and SourceIndexerRequestor)
-	// * Module: addModuleDeclaration/addModuleReference/addModuleExportedPackages
 	// * Lambda: addIndexEntry/addClassDeclaration
 	// * FieldReference
 	// * Deprecated
-	// * Javadoc
 
 	@Override
 	public boolean visit(MethodRef methodRef) {
@@ -381,4 +379,46 @@ class DOMToIndexVisitor extends ASTVisitor {
 		}
 		return null;
 	}
+
+	@Override
+	public boolean visit(ModuleDeclaration node) {
+		this.sourceIndexer.addModuleDeclaration(node.getName().getFullyQualifiedName().toCharArray());
+		return true;
+	}
+
+	@Override
+	public boolean visit(RequiresDirective node) {
+		this.sourceIndexer.addModuleReference(node.getName().getFullyQualifiedName().toCharArray());
+		return true;
+	}
+	@Override
+	public boolean visit(ExportsDirective node) {
+		this.sourceIndexer.addModuleExportedPackages(node.getName().getFullyQualifiedName().toCharArray());
+		for (Name moduleName : (List<Name>)node.modules()) {
+			this.sourceIndexer.addModuleReference(moduleName.getFullyQualifiedName().toCharArray());
+		}
+		return true;
+	}
+	@Override
+	public boolean visit(ProvidesDirective node) {
+		this.sourceIndexer.addTypeReference(node.getName().getFullyQualifiedName().toCharArray());
+		for (var n : (List<Name>)node.implementations()) {
+			this.sourceIndexer.addTypeReference(n.getFullyQualifiedName().toCharArray());
+		}
+		return true;
+	}
+	@Override
+	public boolean visit(UsesDirective node) {
+		this.sourceIndexer.addTypeReference(node.getName().toString().toCharArray());
+		return true;
+	}
+	@Override
+	public boolean visit(OpensDirective node) {
+		this.sourceIndexer.addModuleExportedPackages(node.getName().getFullyQualifiedName().toCharArray());
+		for (Name moduleName : (List<Name>)node.modules()) {
+			this.sourceIndexer.addModuleReference(moduleName.getFullyQualifiedName().toCharArray());
+		}
+		return true;
+	}
+
 }

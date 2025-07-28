@@ -104,7 +104,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 	// that collection contains all the remaining bytes of the .class file
 	public int headerOffset;
 	public Map<TypeBinding, Boolean> innerClassesBindings;
-	public Set<SourceTypeBinding> nestMembers;
 	public List<Object> bootstrapMethods = null;
 	public int methodCount;
 	public int methodCountOffset;
@@ -124,7 +123,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 	public static final int INITIAL_CONTENTS_SIZE = 400;
 	public static final int INITIAL_HEADER_SIZE = 1500;
 	public static final int INNER_CLASSES_SIZE = 5;
-	public static final int NESTED_MEMBER_SIZE = 5;
 
 	// TODO: Move these to an enum?
 	public static final String ALTMETAFACTORY_STRING = new String(ConstantPool.ALTMETAFACTORY);
@@ -402,8 +400,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		attributesNumber += generateTypeAnnotationAttributeForTypeDeclaration();
 
 		if (this.targetJDK >= ClassFileConstants.JDK11) {
-			// add nestMember and nestHost attributes
-			attributesNumber += generateNestAttributes();
+			attributesNumber += generateNestAttributes(); // add nestMember and nestHost attributes
 		}
 		if (this.targetJDK >= ClassFileConstants.JDK16) {
 			attributesNumber += generateRecordAttribute();
@@ -2683,8 +2680,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 		if (nestHost == null)
 			return 0;
 		int localContentsOffset = this.contentsOffset;
-		if (localContentsOffset + 10 >= this.contents.length) {
-			resizeContents(10);
+		if (localContentsOffset + 8 >= this.contents.length) {
+			resizeContents(8);
 		}
 		int nestHostAttributeNameIndex =
 			this.constantPool.literalIndex(AttributeNamesConstants.NestHost);
@@ -2705,12 +2702,19 @@ public class ClassFile implements TypeConstants, TypeIds {
 	}
 	private int generateNestMembersAttribute() {
 
-		int localContentsOffset = this.contentsOffset;
-		List<String> nestedMembers = getNestMembers();
+		Set<SourceTypeBinding> nestMembers = this.referenceBinding.getNestMembers();
+		if (nestMembers == null )
+			return 0;
+		List<String> nestedMembers = nestMembers
+										.stream()
+										.map(s -> new String(s.constantPoolName()))
+										.sorted()
+										.collect(Collectors.toList());
 		int numberOfNestedMembers = nestedMembers != null ? nestedMembers.size() : 0;
-		if (numberOfNestedMembers == 0) // JVMS 11 4.7.29 says "at most one" NestMembers attribute - return if none.
+		if (numberOfNestedMembers == 0)
 			return 0;
 
+		int localContentsOffset = this.contentsOffset;
 		int exSize = 8 + 2 * numberOfNestedMembers;
 		if (exSize + localContentsOffset >= this.contents.length) {
 			resizeContents(exSize);
@@ -2737,7 +2741,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		return 1;
 	}
 	private int generateNestAttributes() {
-		int nAttrs = generateNestMembersAttribute(); //either member or host will exist 4.7.29
+		int nAttrs = generateNestMembersAttribute(); // either member or host will exist 4.7.29
 		nAttrs += generateNestHostAttribute();
 		return nAttrs;
 	}
@@ -5950,25 +5954,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 			enclosingType = enclosingType.enclosingType();
 		}
 	}
-	public void recordNestMember(SourceTypeBinding binding) {
-		SourceTypeBinding nestHost = binding != null ? binding.getNestHost() : null;
-		if (nestHost != null && !binding.equals(nestHost)) {// member
-			if (this.nestMembers == null) {
-				this.nestMembers = new HashSet<>(NESTED_MEMBER_SIZE);
-			}
-			this.nestMembers.add(binding);
-		}
-	}
-	public List<String> getNestMembers() {
-		if (this.nestMembers == null)
-			return null;
-		List<String> list = this.nestMembers
-								.stream()
-								.map(s -> new String(s.constantPoolName()))
-								.sorted()
-								.collect(Collectors.toList());
-		return list;
-	}
 
 	public int recordBootstrapMethod(FunctionalExpression expression) {
 		if (this.bootstrapMethods == null) {
@@ -6070,9 +6055,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.methodCountOffset = 0;
 		if (this.innerClassesBindings != null) {
 			this.innerClassesBindings.clear();
-		}
-		if (this.nestMembers != null) {
-			this.nestMembers.clear();
 		}
 		if (this.bootstrapMethods != null) {
 			this.bootstrapMethods.clear();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,8 @@ final class HighlightingExtenderTests extends GroovyEclipseTestSuite {
     @Before
     void setUp() {
         registry.initialize()
-        addNature(Extender1.NATURE1, Extender2.NATURE2)
+        removeNature(Extender1.NATURE1, Extender2.NATURE2)
+        addNature   (Extender1.NATURE1, Extender2.NATURE2)
     }
 
     @Test

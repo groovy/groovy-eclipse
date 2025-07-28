@@ -849,7 +849,7 @@ private char[] getTypeName(int index) {
  * @param scope Relevant scope, for error reporting
  * @return true, if source level is Java 10 or above and the type name is just 'var', false otherwise
  */
-public boolean isTypeNameVar(Scope scope) {
+public final boolean isTypeNameVar(Scope scope) {
 	CompilerOptions compilerOptions = scope != null ? scope.compilerOptions() : null;
 	if (compilerOptions != null && compilerOptions.sourceLevel < ClassFileConstants.JDK10) {
 		return false;

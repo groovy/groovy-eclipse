@@ -1418,17 +1418,14 @@ private boolean hasNonNullDefaultForType(TypeBinding type, int location, Abstrac
 }
 
 public boolean redeclaresPublicObjectMethod(Scope scope) {
-	ReferenceBinding javaLangObject = scope.getJavaLangObject();
-	MethodBinding [] methods = javaLangObject.getMethods(this.selector);
-	for (int i = 0, length = methods == null ? 0 : methods.length; i < length; i++) {
-		final MethodBinding method = methods[i];
-		if (!method.isPublic() || method.isStatic() || method.parameters.length != this.parameters.length)
-			continue;
-		if (MethodVerifier.doesMethodOverride(this, method, scope.environment()))
-			return true;
-	}
-	return false;
+	 if (this.selector[0] == 'h')
+		 return this.parameters.length == 0 && this.selector.length == 8 && CharOperation.equals(this.selector, TypeConstants.HASHCODE);
+	 if (this.selector[0] == 't')
+		 return this.parameters.length == 0 && this.selector.length == 8 && CharOperation.equals(this.selector, TypeConstants.TOSTRING);
+	 return this.selector[0] == 'e' && this.parameters.length == 1 && this.selector.length == 6
+						&& CharOperation.equals(this.selector, TypeConstants.EQUALS) && TypeBinding.equalsEquals(this.parameters[0], scope.getJavaLangObject());
 }
+
 public boolean isVoidMethod() {
 	return this.returnType == TypeBinding.VOID;
 }

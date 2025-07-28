@@ -19,6 +19,7 @@ import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.Javadoc;
 import org.eclipse.jdt.internal.compiler.ast.JavadocSingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.JavadocSingleTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
@@ -29,6 +30,7 @@ import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
+import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
 
 /**
  * Node representing a Javadoc comment including code selection.
@@ -66,7 +68,12 @@ public class CompletionJavadoc extends Javadoc {
 				if (resolve) {
 					switch (scope.kind) {
 						case Scope.CLASS_SCOPE:
-							this.completionNode.resolveType((ClassScope)scope);
+							if (scope.referenceContext() instanceof TypeDeclaration type && type.isRecord()) {
+								this.completionNode.resolveType(type.initializerScope);
+							}
+							else {
+								this.completionNode.resolveType((ClassScope)scope);
+							}
 							break;
 						case Scope.METHOD_SCOPE:
 							this.completionNode.resolveType((MethodScope) scope);
@@ -77,6 +84,8 @@ public class CompletionJavadoc extends Javadoc {
 					CompletionOnJavadocParamNameReference paramNameReference = (CompletionOnJavadocParamNameReference) this.completionNode;
 					if (scope.kind == Scope.METHOD_SCOPE) {
 						paramNameReference.missingParams = missingParamTags(paramNameReference.binding, (MethodScope)scope);
+					} else if (scope.kind == Scope.CLASS_SCOPE) {
+						paramNameReference.missingParams = missingRecordComponentNames(paramNameReference.binding, (ClassScope)scope);
 					}
 					if (paramNameReference.token == null || paramNameReference.token.length == 0) {
 						paramNameReference.missingTypeParams = missingTypeParameterTags(paramNameReference.binding, scope);
@@ -196,6 +205,58 @@ public class CompletionJavadoc extends Javadoc {
 		internalResolve(scope);
 	}
 
+	/*
+	 * Look for missing record component @param tags
+	 */
+	private char[][] missingRecordComponentNames(Binding paramNameRefBinding, ClassScope scope) {
+		TypeDeclaration type = scope.referenceContext;
+		if (type == null || !type.isRecord()) {
+			return null;
+		}
+		// Verify if there's some possible param tag
+		RecordComponent[] components = type.recordComponents;
+		int componentSize = components == null ? 0 : components.length;
+		if (componentSize == 0) return null;
+		int paramTagsSize = this.paramReferences == null ? 0 : this.paramReferences.length;
+
+		char[][] missingComponents = new char[componentSize][];
+		if (paramTagsSize == 0) {
+			for (int i = 0; i < componentSize; i++) {
+				missingComponents[i] = components[i].name;
+			}
+			return missingComponents;
+		}
+
+		missingComponents = new char[componentSize][];
+		int size = 0;
+		for (int i = 0; i < componentSize; i++) {
+			RecordComponent arg = components[i];
+			boolean found = false;
+			int paramNameRefCount = 0;
+			for (int j = 0; j < paramTagsSize && !found; j++) {
+				JavadocSingleNameReference param = this.paramReferences[j];
+				VariableBinding field = type.binding.getField(arg.name, false);
+				if (field == param.binding) {
+					if (param.binding == paramNameRefBinding) { // do not count first occurrence of component name reference
+						paramNameRefCount++;
+						found = paramNameRefCount > 1;
+					} else {
+						found = true;
+					}
+				}
+			}
+			if (!found) {
+				missingComponents[size++] = arg.name;
+			}
+		}
+		if (size > 0) {
+			if (size != componentSize) {
+				System.arraycopy(missingComponents, 0, missingComponents = new char[size][], 0, size);
+			}
+			return missingComponents;
+		}
+		return null;
+	}
 	/*
 	 * Look for missing method @param tags
 	 */

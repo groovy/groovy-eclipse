@@ -29,7 +29,7 @@ public class SingleTypeReference extends TypeReference {
 		this.token = source;
 		this.sourceStart = start;
 		this.sourceEnd = end;
-}
+	}
 	public SingleTypeReference(char[] source, long pos) {
 			this.token = source;
 			this.sourceStart = (int) (pos>>>32);

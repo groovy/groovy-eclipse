@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2023 Mateusz Matela and others.
+ * Copyright (c) 2014, 2025 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -17,11 +17,11 @@ import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameCO
 import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameCOMMENT_JAVADOC;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameCOMMENT_LINE;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameCOMMENT_MARKDOWN;
-import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameInvalid;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameNotAToken;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameStringLiteral;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameTextBlock;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameWHITESPACE;
+import static org.eclipse.jdt.internal.formatter.TokenManager.ANY;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,7 +89,7 @@ public class TextEditsBuilder extends TokenTraverser {
 			int sourceStart = this.tm.get(0).originalStart;
 
 			if (start > sourceStart) {
-				Token token = this.tm.get(this.tm.findIndex(start, TokenNameInvalid, false));
+				Token token = this.tm.get(this.tm.findIndex(start, ANY, false));
 				if ((token.tokenType == TokenNameCOMMENT_BLOCK || token.tokenType == TokenNameCOMMENT_JAVADOC)
 						&& start <= token.originalEnd) {
 					start = token.originalStart;
@@ -97,7 +97,7 @@ public class TextEditsBuilder extends TokenTraverser {
 			}
 
 			if (end > start && end > sourceStart) {
-				Token token = this.tm.get(this.tm.findIndex(end, TokenNameInvalid, false));
+				Token token = this.tm.get(this.tm.findIndex(end, ANY, false));
 				if ((token.tokenType == TokenNameCOMMENT_BLOCK || token.tokenType == TokenNameCOMMENT_JAVADOC)
 						&& end < token.originalEnd) {
 					end = token.originalEnd;

@@ -37,7 +37,9 @@ public class LocalVariableBinding extends VariableBinding {
 	public static final int UNUSED = 0;
 	public static final int USED = 1;
 	public static final int FAKE_USED = 2;
+	public static final int ILLEGAL_SELF_REFERENCE_IF_USED = 3;
 	public int useFlag; // for flow analysis (default is UNUSED), values < 0 indicate the number of compound uses (postIncrement or compoundAssignment)
+	                    // also used to detect self reference in initializers in LVTI.
 
 	public BlockScope declaringScope; // back-pointer to its declaring scope
 	public AbstractVariableDeclaration declaration; // for source-positions
@@ -50,7 +52,7 @@ public class LocalVariableBinding extends VariableBinding {
 	public Set<MethodScope> uninitializedInMethod;
 
 	// for synthetic local variables
-	// if declaration slot is not positionned, the variable will not be listed in attribute
+	// if declaration slot is not positioned, the variable will not be listed in attribute
 	// note that the name of a variable should be chosen so as not to conflict with user ones (usually starting with a space char is all needed)
 	public LocalVariableBinding(char[] name, TypeBinding type, int modifiers, boolean isArgument) {
 		super(name, type, modifiers, isArgument ? Constant.NotAConstant : null);
@@ -122,7 +124,7 @@ public class LocalVariableBinding extends VariableBinding {
 			// scope index
 			getScopeKey(scope, buffer);
 
-			// find number of occurences of a variable with the same name in the scope
+			// find number of occurrences of a variable with the same name in the scope
 			LocalVariableBinding[] locals = scope.locals;
 			for (int i = 0; i < scope.localIndex; i++) { // use linear search assuming the number of locals per scope is low
 				LocalVariableBinding local = locals[i];
@@ -138,7 +140,7 @@ public class LocalVariableBinding extends VariableBinding {
 		buffer.append(this.name);
 
 		boolean addParameterRank = this.isParameter() && this.declaringScope != null;
-		// add occurence count to avoid same key for duplicate variables
+		// add occurrence count to avoid same key for duplicate variables
 		// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=149590)
 		if (occurenceCount > 0 || addParameterRank) {
 			buffer.append('#');
@@ -325,13 +327,6 @@ public class LocalVariableBinding extends VariableBinding {
 			}
 		}
 		return null;
-	}
-
-	public void markInitialized() {
-		// Signals that the type is correctly set now - This is for extension in subclasses
-	}
-	public void markReferenced() {
-		// Signal that the name is used - This is for extension in subclasses
 	}
 
 	public void checkEffectiveFinality(Scope scope, Expression node) {

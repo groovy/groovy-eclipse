@@ -22,16 +22,16 @@ import org.eclipse.jdt.internal.compiler.util.CharDeduplication;
  */
 
 public class InnerClassInfo extends ClassFileStruct implements IBinaryNestedType {
-	int innerClassNameIndex = -1;
-	int outerClassNameIndex = -1;
-	int innerNameIndex = -1;
-	private char[] innerClassName;
-	private char[] outerClassName;
-	private char[] innerName;
-	private int accessFlags = -1;
-	private boolean readInnerClassName;
-	private boolean readOuterClassName;
-	private boolean readInnerName;
+	final int innerClassNameIndex;
+	final int outerClassNameIndex;
+	final int innerNameIndex;
+	private volatile char[] innerClassName;
+	private volatile char[] outerClassName;
+	private volatile char[] innerName;
+	private volatile int accessFlags = -1;
+	private volatile boolean readInnerClassName;
+	private volatile boolean readOuterClassName;
+	private volatile boolean readInnerName;
 
 public InnerClassInfo(byte classFileBytes[], int offsets[], int offset) {
 	super(classFileBytes, offsets, offset);

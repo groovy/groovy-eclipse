@@ -208,7 +208,7 @@ public void testBug534787_negative_004() throws IOException {
 			"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
 			"	I lam = (var  x, var y, var...s) -> {System.out.println(\"SUCCESS \" + x);};\n" +
-			"	                              ^\n" +
+			"	                        ^^^\n" +
 			"'var' is not allowed as an element type of an array\n" +
 			"----------\n");
 }
@@ -234,7 +234,7 @@ public void testBug534787_negative_005() throws IOException {
 			"----------\n" +
 			"2. ERROR in X.java (at line 3)\n" +
 			"	I lam = (var  x, Integer y, var...s) -> {System.out.println(\"SUCCESS \" + x);};\n" +
-			"	                                  ^\n" +
+			"	                            ^^^\n" +
 			"'var' is not allowed as an element type of an array\n" +
 			"----------\n");
 }
@@ -313,8 +313,8 @@ public void testBug536159_04() throws IOException {
 			"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
 			"	FI x = (var i []) -> 5;\n" +
-			"	            ^\n" +
-			"\'var\' is not allowed as an element type of an array\n" +
+			"	        ^^^\n" +
+			"'var' is not allowed as an element type of an array\n" +
 			"----------\n");
 }
 public void testBug541532_01() throws IOException {
@@ -341,5 +341,29 @@ public void testBug541532_01() throws IOException {
 			"}\n"
 		},
 		"hello\nworld");
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4159
+// [LVTI/var] ECJ allows type arguments to be specified with the reserved type name var
+public void testIssue4159() throws IOException {
+	runNegativeTest(new String[] {
+			"X.java",
+			"""
+			interface I {
+				void doit(int x);
+			}
+
+			public class X  {
+				public static void main(String[] args) {
+					I i = (var<String> x ) -> {};
+				}
+			}
+			"""
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 7)\n" +
+			"	I i = (var<String> x ) -> {};\n" +
+			"	       ^^^\n" +
+			"'var' cannot be used with type arguments\n" +
+			"----------\n");
 }
 }

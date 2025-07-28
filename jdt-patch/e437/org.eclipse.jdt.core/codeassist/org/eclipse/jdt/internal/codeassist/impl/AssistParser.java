@@ -1484,13 +1484,13 @@ protected void flushElementStack() {
  * Build specific type reference nodes in case the cursor is located inside the type reference
  */
 @Override
-protected TypeReference getTypeReference(int dim) {
+protected TypeReference constructTypeReference(int dim) {
 
 	int index;
 
 	/* no need to take action if not inside completed identifiers */
 	if ((index = indexOfAssistIdentifier(true)) < 0) {
-		return super.getTypeReference(dim);
+		return super.constructTypeReference(dim);
 	}
 	int length = this.identifierLengthStack[this.identifierLengthPtr];
 	TypeReference reference;

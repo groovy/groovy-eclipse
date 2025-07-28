@@ -754,7 +754,7 @@ protected CompilationUnitDeclaration endParse(int act) {
 	}
 }
 @Override
-public TypeReference getTypeReference(int dim) {
+public TypeReference constructTypeReference(int dim) {
 	/* build a Reference on a variable that may be qualified or not
 	 * This variable is a type reference and dim will be its dimensions
 	 */

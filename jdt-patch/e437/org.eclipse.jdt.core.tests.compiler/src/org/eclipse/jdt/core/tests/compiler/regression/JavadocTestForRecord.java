@@ -14,7 +14,6 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
 import junit.framework.Test;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class JavadocTestForRecord extends JavadocTest {
@@ -39,8 +38,7 @@ public class JavadocTestForRecord extends JavadocTest {
 	String reportMissingJavadocComments = CompilerOptions.ERROR;
 	String reportMissingJavadocCommentsVisibility = CompilerOptions.PROTECTED;
 
-	@SuppressWarnings("rawtypes")
-	public static Class testClass() {
+	public static Class<JavadocTestForRecord> testClass() {
 		return JavadocTestForRecord.class;
 	}
 
@@ -57,9 +55,8 @@ public class JavadocTestForRecord extends JavadocTest {
 		return buildMinimalComplianceTestSuite(testClass(), F_16);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	protected Map getCompilerOptions() {
-		Map options = super.getCompilerOptions();
+	protected Map<String, String> getCompilerOptions() {
+		Map<String, String> options = super.getCompilerOptions();
 		options.put(CompilerOptions.OPTION_DocCommentSupport, this.docCommentSupport);
 		options.put(CompilerOptions.OPTION_ReportInvalidJavadoc, this.reportInvalidJavadoc);
 		if (!CompilerOptions.IGNORE.equals(this.reportInvalidJavadoc)) {
@@ -115,13 +112,11 @@ public class JavadocTestForRecord extends JavadocTest {
 		runConformTest(testFiles, expectedOutput, getCompilerOptions());
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	protected void runConformTest(String[] testFiles, String expectedOutput, Map customOptions) {
+	protected void runConformTest(String[] testFiles, String expectedOutput, Map<String, String> customOptions) {
 		Runner runner = new Runner();
 		runner.testFiles = testFiles;
 		runner.expectedOutputString = expectedOutput;
-		runner.vmArguments = new String[] { "--enable-preview" };
 		runner.customOptions = customOptions;
 		runner.javacTestOptions = JavacTestOptions.forReleaseWithPreview("16");
 		runner.runConformTest();
@@ -141,9 +136,6 @@ public class JavadocTestForRecord extends JavadocTest {
 	}
 
 	public void test001() {
-		if(this.complianceLevel < ClassFileConstants.JDK14) {
-			return;
-		}
 		this.runNegativeTest(new String[] { "X.java", "public record X() {\n" + "}\n" },
 				"----------\n" + "1. ERROR in X.java (at line 1)\n" + "	public record X() {\n" + "	              ^\n"
 						+ "Javadoc: Missing comment for public declaration\n" + "----------\n",
@@ -151,9 +143,6 @@ public class JavadocTestForRecord extends JavadocTest {
 	}
 
 	public void test002() {
-		if(this.complianceLevel < ClassFileConstants.JDK14) {
-			return;
-		}
 		this.runNegativeTest(
 				new String[] { "X.java",
 						"	/**\n" + "	 * @param radius radius of X\n" + "	 */\n" + "public record X(int radius) {\n"
@@ -164,9 +153,6 @@ public class JavadocTestForRecord extends JavadocTest {
 	}
 
 	public void test003() {
-		if(this.complianceLevel < ClassFileConstants.JDK14) {
-			return;
-		}
 		runConformTest(new String[] { "X.java",
 				"		/**  \n" + "		 *   \n" + "		 */  \n" + "public record X() {\n" + "		/**  \n"
 						+ "		 *   @param args \n" + "		 */  \n" + "  public static void main(String[] args){\n"
@@ -175,9 +161,6 @@ public class JavadocTestForRecord extends JavadocTest {
 	}
 
 	public void test004() {
-		if(this.complianceLevel < ClassFileConstants.JDK14) {
-			return;
-		}
 		runConformTest(new String[] { "X.java",
 				"		/**  \n" +
 				"		 * @param a\n" +
@@ -193,9 +176,6 @@ public class JavadocTestForRecord extends JavadocTest {
 	}
 
 	public void test005() {
-		if(this.complianceLevel < ClassFileConstants.JDK14) {
-			return;
-		}
 		runNegativeTest(new String[] { "X.java",
 				"		/**  \n" +
 				"		 */  \n" +
@@ -217,9 +197,6 @@ public class JavadocTestForRecord extends JavadocTest {
 	}
 
 	public void test006() {
-		if(this.complianceLevel < ClassFileConstants.JDK14) {
-			return;
-		}
 		runNegativeTest(new String[] { "X.java",
 				"		/**  \n" +
 				"		 * @param a\n" +
@@ -243,9 +220,6 @@ public class JavadocTestForRecord extends JavadocTest {
 	}
 
 	public void test007() {
-		if(this.complianceLevel < ClassFileConstants.JDK14) {
-			return;
-		}
 		runNegativeTest(new String[] { "X.java",
 				"		/**  \n" +
 				"		 * @param a\n" +
@@ -263,15 +237,11 @@ public class JavadocTestForRecord extends JavadocTest {
 				"1. ERROR in X.java (at line 3)\n" +
 				"	* @param b\n" +
 				"	         ^\n" +
-				"Javadoc: Invalid param tag name\n" +
+				"Javadoc: Parameter b is not declared\n" +
 				"----------\n",
 				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 	}
 	public void test_bug572367() {
-		if(this.complianceLevel < ClassFileConstants.JDK14) {
-			return;
-		}
-
 		this.reportMissingJavadocCommentsVisibility = CompilerOptions.PRIVATE;
 		runConformTest(new String[] { "X.java",
 				"		/**  \n" +
@@ -286,5 +256,78 @@ public class JavadocTestForRecord extends JavadocTest {
 				"		}" },
 				"0");
 	}
-
+	public void testGHIssue4158_1() {
+		runNegativeTest(new String[] { "X.java",
+				"""
+					/**
+					 * @param abc
+					 * @param abc
+					 * @param def
+					 * @param xyz
+					 * @return no return
+					 */
+					public record X(int abc, int def) {}
+					""" },
+				"----------\n" +
+				"1. ERROR in X.java (at line 3)\n" +
+				"	* @param abc\n" +
+				"	         ^^^\n" +
+				"Javadoc: Duplicate tag for parameter\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 3)\n" +
+				"	* @param abc\n" +
+				"	         ^^^\n" +
+				"Javadoc: Duplicate tag for parameter\n" +
+				"----------\n" +
+				"3. ERROR in X.java (at line 5)\n" +
+				"	* @param xyz\n" +
+				"	         ^^^\n" +
+				"Javadoc: Parameter xyz is not declared\n" +
+				"----------\n" +
+				"4. ERROR in X.java (at line 6)\n" +
+				"	* @return no return\n" +
+				"	   ^^^^^^\n" +
+				"Javadoc: Unexpected tag\n" +
+				"----------\n",
+				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+	}
+	public void testGHIssue4158_2() {
+		runNegativeTest(new String[] { "X.java",
+					"""
+					/**
+					 * @param <T> a type param
+					 * @param <S> a type param
+					 * @param abc first
+					 * Javadoc with missing param tags
+					 */
+					public record X<U, V>(int abc, int def) {}
+					""" },
+				"----------\n" +
+				"1. ERROR in X.java (at line 2)\n" +
+				"	* @param <T> a type param\n" +
+				"	          ^\n" +
+				"Javadoc: T cannot be resolved to a type\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 3)\n" +
+				"	* @param <S> a type param\n" +
+				"	          ^\n" +
+				"Javadoc: S cannot be resolved to a type\n" +
+				"----------\n" +
+				"3. ERROR in X.java (at line 7)\n" +
+				"	public record X<U, V>(int abc, int def) {}\n" +
+				"	                ^\n" +
+				"Javadoc: Missing tag for parameter U\n" +
+				"----------\n" +
+				"4. ERROR in X.java (at line 7)\n" +
+				"	public record X<U, V>(int abc, int def) {}\n" +
+				"	                   ^\n" +
+				"Javadoc: Missing tag for parameter V\n" +
+				"----------\n" +
+				"5. ERROR in X.java (at line 7)\n" +
+				"	public record X<U, V>(int abc, int def) {}\n" +
+				"	                                   ^^^\n" +
+				"Javadoc: Missing tag for parameter def\n" +
+				"----------\n",
+				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+	}
 }

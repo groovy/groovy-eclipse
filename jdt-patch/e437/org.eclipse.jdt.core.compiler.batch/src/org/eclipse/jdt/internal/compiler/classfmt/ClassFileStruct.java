@@ -16,7 +16,7 @@ package org.eclipse.jdt.internal.compiler.classfmt;
 abstract public class ClassFileStruct {
 	byte[] reference;
 	int[] constantPoolOffsets;
-	int structOffset;
+	final int structOffset;
 public ClassFileStruct(byte[] classFileBytes, int[] offsets, int offset) {
 	this.reference = classFileBytes;
 	this.constantPoolOffsets = offsets;

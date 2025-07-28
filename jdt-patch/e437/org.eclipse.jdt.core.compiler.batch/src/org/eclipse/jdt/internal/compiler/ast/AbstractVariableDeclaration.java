@@ -167,7 +167,7 @@ public abstract class AbstractVariableDeclaration extends Statement implements I
 		return this.name.length == 1 && this.name[0] == '_' && JavaFeature.UNNAMMED_PATTERNS_AND_VARS.isSupported(scope.compilerOptions().sourceLevel, scope.compilerOptions().enablePreviewFeatures);
 	}
 
-	public boolean isTypeNameVar(Scope scope) {
+	public boolean isVarTyped(Scope scope) {
 		return this.type != null && this.type.isTypeNameVar(scope);
 	}
 

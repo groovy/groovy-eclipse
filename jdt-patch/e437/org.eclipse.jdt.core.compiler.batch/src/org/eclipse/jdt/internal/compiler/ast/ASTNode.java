@@ -159,6 +159,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	public static final int IsForeachElementVariable = Bit5;
 	public static final int ShadowsOuterLocal = Bit22;
 	public static final int IsAdditionalDeclarator = Bit23;
+	public static final int IsPatternVariable = Bit24;
 
 	// for name refs or local decls
 	public static final int FirstAssignmentToLocal = Bit4;
@@ -199,6 +200,9 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	// for type, method and field declarations
 	public static final int HasLocalType = Bit2; // cannot conflict with AddAssertionMASK
 	public static final int HasBeenResolved = Bit5; // field decl only (to handle forward references)
+
+	// for lambda expressions
+	public static final int ArgumentsTypeElided = Bit2; // A lambda with var typed arguments is considered to be type elided, but the Arguments themselves are considered var typed.
 
 	// for expression
 	public static final int ParenthesizedSHIFT = 21; // Bit22 -> Bit29

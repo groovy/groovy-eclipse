@@ -218,6 +218,8 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 	public boolean isSubtypeOf(TypeBinding right, boolean simulatingBugJDK8026527) {
     	if (simulatingBugJDK8026527) {
     		right = this.environment.convertToRawType(right.erasure(), false);
+    	} else if (!right.isRawType() && TypeBinding.equalsEquals(this.type, right.erasure())) {
+			return false; // outside the scope of JDK-8026527 T#RAW should not be seen as subtype of T<X> nor T<?>
     	}
     	return super.isSubtypeOf(right, simulatingBugJDK8026527);
     }

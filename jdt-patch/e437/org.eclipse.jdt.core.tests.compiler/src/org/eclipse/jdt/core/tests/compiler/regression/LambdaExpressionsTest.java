@@ -26,6 +26,7 @@ import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.Jav
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.EclipseJustification;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.JavacHasABug;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.core.util.IAttributeNamesConstants;
 import org.eclipse.jdt.core.util.IClassFileAttribute;
 import org.eclipse.jdt.core.util.IClassFileReader;
@@ -8902,6 +8903,54 @@ public void testIssue3869_6() {
 		    """
 	  },
 	  "Callable");
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4204
+// negative testing that the synthetic method - access - not present in the class declaring the private method accessed by a nestmate
+public void testIssue4204() throws Exception {
+
+	this.runConformTest(
+			new String[] {
+					"X.java",
+					"""
+					interface Base {
+						Base get(int x);
+					}
+					public class X {
+						private void privateMethod(int p) {
+							System.out.println("Private method called with " + p);
+						}
+					    <T> Base foo(Base b) {
+					        return b;
+					     }
+					    void bar(Base b) {
+					    	b.get(42);
+					    }
+					    void testCase() {
+					        bar(foo((int p)-> {
+					        	new Object() {
+					        		void foo() {
+					        			privateMethod(p);
+					        		}
+					        	}.foo();
+					        	return null;}
+					        ));
+					     }
+
+					    public static void main(String[] args) {
+							new X().testCase();
+						}
+					}
+					""",
+			},
+			"Private method called with 42");
+
+	if (this.complianceLevel >= ClassFileConstants.JDK11) {
+		String unExpectedPartialOutput = "access$";
+		verifyNegativeClassFile(unExpectedPartialOutput, "X.class", ClassFileBytesDisassembler.SYSTEM);
+	} else {
+		String expectedPartialOutput = "static synthetic void access$0(X arg0, int arg1);";
+		verifyClassFile(expectedPartialOutput, "X.class", ClassFileBytesDisassembler.SYSTEM);
+	}
 }
 public static Class testClass() {
 	return LambdaExpressionsTest.class;

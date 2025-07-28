@@ -4969,7 +4969,34 @@ public class RecordPatternTest extends AbstractRegressionTest9 {
 			},
 			"java.lang.IllegalArgumentException: myRecord contained null value\n" +
 			"java.lang.IllegalArgumentException: myRecord contained blank value '  '\n" +
-			"java.lang.IllegalArgumentException: myRecord was null"
-);
+			"java.lang.IllegalArgumentException: myRecord was null");
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4163
+	// [LVTI/var] ECJ accepts illegal array dimensions on type pattern declarations with var type
+	public void testIssue4163() {
+		runNegativeTest(new String[] {
+				"X.java",
+				"""
+				record R (String s) {
+
+				}
+
+				public class X  {
+					public static void main(String[] args) {
+						Object o = new R("Hello");
+						if (o instanceof R(var [][][] s)) {  // you can use any number of [] pairs actually!
+							System.out.println("R");
+						}
+					}
+				}
+				"""
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 8)\n" +
+			"	if (o instanceof R(var [][][] s)) {  // you can use any number of [] pairs actually!\n" +
+			"	                   ^^^^^^^^^^\n" +
+			"'var' is not allowed as an element type of an array\n" +
+			"----------\n");
 	}
 }

@@ -141,7 +141,7 @@ public void resolve(BlockScope scope) {
 
 	if (this.switchExpression == null) {
 		this.switchExpression = enclosingSwitchExpression(scope);
-		if (this.switchExpression != null && this.switchExpression.isPolyExpression()) {
+		if (this.switchExpression != null) {
 			this.expression.setExpressionContext(this.switchExpression.expressionContext); // result expressions feature in same context ...
 			this.expression.setExpectedType(this.switchExpression.expectedType);           // ... with the same target type
 		}

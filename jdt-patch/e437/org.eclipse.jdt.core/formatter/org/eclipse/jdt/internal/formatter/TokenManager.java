@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2023 Mateusz Matela and others.
+ * Copyright (c) 2014, 2025 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -41,6 +41,11 @@ import org.eclipse.jdt.internal.formatter.linewrap.CommentWrapExecutor;
  * It also has some other methods that are useful on multiple stages of formatting.
  */
 public class TokenManager implements Iterable<Token> {
+
+	/**
+	 * This constant can be passed to all the token-finding methods when looking for a token of unspecified (any) type.
+	 */
+	public static final TerminalToken ANY = TerminalToken.TokenNameInvalid;
 
 	private static final Pattern COMMENT_LINE_ANNOTATION_PATTERN = Pattern.compile("^(\\s*\\*?\\s*)(@)"); //$NON-NLS-1$
 
@@ -132,7 +137,7 @@ public class TokenManager implements Iterable<Token> {
 	}
 
 	public int indexOf(Token token) {
-		int index = findIndex(token.originalStart, TerminalToken.TokenNameInvalid, false);
+		int index = findIndex(token.originalStart, ANY, false);
 		if (get(index) != token)
 			return -1;
 		return index;
@@ -169,7 +174,7 @@ public class TokenManager implements Iterable<Token> {
 		if (forward && get(index).originalEnd < positionInSource)
 			index++;
 		Token t;
-		while (tokenType != TerminalToken.TokenNameInvalid && (t = get(index)).tokenType != tokenType) {
+		while (tokenType != ANY && (t = get(index)).tokenType != tokenType) {
 			if (TerminalToken.isRestrictedKeyword(tokenType) && t.tokenType == TerminalToken.TokenNameIdentifier) {
 				if (tokenType == TerminalToken.getRestrictedKeyword(toString(t)))
 					break;

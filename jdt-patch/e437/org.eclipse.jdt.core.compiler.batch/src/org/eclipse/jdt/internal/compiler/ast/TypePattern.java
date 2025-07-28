@@ -206,7 +206,8 @@ public class TypePattern extends Pattern implements IGenerateTypeCheck {
 			return this.resolvedType;
 
 		Pattern enclosingPattern = this.getEnclosingPattern();
-		if (this.local.type == null || this.local.type.isTypeNameVar(scope)) {
+		boolean varTypedLocal = false;
+		if (this.local.type == null || (varTypedLocal = this.local.type.isTypeNameVar(scope))) {
 			if (enclosingPattern instanceof RecordPattern) {
 				// 14.30.1: The type of a pattern variable declared in a nested type pattern is determined as follows ...
 				ReferenceBinding recType = (ReferenceBinding) enclosingPattern.resolvedType;
@@ -223,9 +224,11 @@ public class TypePattern extends Pattern implements IGenerateTypeCheck {
 							this.local.type.resolvedType = this.resolvedType;
 					}
 				}
+			} else if (varTypedLocal) {
+				this.local.type.resolveType(scope, true); // trigger complaint
 			}
 		}
-		this.local.resolve(scope, true);
+		this.local.resolve(scope);
 		if (this.local.binding != null) {
 			this.local.binding.modifiers |= ExtraCompilerModifiers.AccOutOfFlowScope; // start out this way, will be BlockScope.include'd when definitely assigned
 			CompilerOptions compilerOptions = scope.compilerOptions();

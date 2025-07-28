@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2024 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -24,8 +24,8 @@ import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameCO
 import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameCOMMENT_JAVADOC;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameCOMMENT_LINE;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameEOF;
-import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameInvalid;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameNotAToken;
+import static org.eclipse.jdt.internal.formatter.TokenManager.ANY;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -240,7 +240,7 @@ public class DefaultCodeFormatter extends CodeFormatter {
 					: unit.getModule() != null ? unit.getModule()
 					: unit.getPackage();
 			if (firstElement != null) {
-				int headerEndIndex = this.tokenManager.firstIndexIn(firstElement, TokenNameInvalid);
+				int headerEndIndex = this.tokenManager.firstIndexIn(firstElement, ANY);
 				this.tokenManager.setHeaderEndIndex(headerEndIndex);
 			}
 		}

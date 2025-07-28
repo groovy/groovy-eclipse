@@ -164,6 +164,7 @@ public class InferenceContext18 {
 	TypeBinding missingType;
 
 	private static ThreadLocal<InferenceContext18> instance = new ThreadLocal<>();
+	private boolean isCaptureInProcess = false;
 
 	public static boolean isSameSite(InvocationSite site1, InvocationSite site2) {
 		if (site1 == site2)
@@ -2213,9 +2214,14 @@ public class InferenceContext18 {
 	}
 	public static TypeBinding maybeCapture(TypeBinding type) {
 		InferenceContext18 inst = instance.get();
-		if (inst != null) {
-			InvocationSite inv = inst.currentInvocation;
-			return type.capture(inst.scope, inv.sourceStart(), inv.sourceEnd());
+		if (inst != null && !inst.isCaptureInProcess) {
+			try {
+				InvocationSite inv = inst.currentInvocation;
+				inst.isCaptureInProcess = true;
+				return type.capture(inst.scope, inv.sourceStart(), inv.sourceEnd());
+			} finally {
+				inst.isCaptureInProcess = false;
+			}
 		}
 		return type;
 	}

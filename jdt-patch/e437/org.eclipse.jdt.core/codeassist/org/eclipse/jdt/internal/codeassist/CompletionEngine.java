@@ -6351,6 +6351,16 @@ public final class CompletionEngine
 		}
 	}
 
+	private boolean argumentMismatch(AbstractVariableDeclaration[] arguments, char[][] parameterTypes) {
+		int argumentsLength = arguments == null ? 0 : arguments.length;
+		if (parameterTypes.length != argumentsLength)
+			return true;
+		for (int j = 0; j < argumentsLength; j++)
+			if (!CharOperation.equals(getTypeName(arguments[j].type), parameterTypes[j]))
+				return true;
+		return false;
+	}
+
 	private char[] getResolvedSignature(char[][] parameterTypes, char[] fullyQualifiedTypeName, int parameterCount, Scope scope) {
 		char[][] cn = CharOperation.splitOn('.', fullyQualifiedTypeName);
 
@@ -6388,25 +6398,23 @@ public final class CompletionEngine
 					TypeDeclaration typeDeclaration = refBinding.scope.referenceContext;
 					AbstractMethodDeclaration[] methods = typeDeclaration.methods;
 
+					if (methods == null)
+						return null;
+
 					next : for (AbstractMethodDeclaration method : methods) {
-						if (!method.isConstructor()) continue next;
-
-						AbstractVariableDeclaration[] arguments = method.arguments(true);
-						int argumentsLength = arguments == null ? 0 : arguments.length;
-
-						if (parameterCount != argumentsLength) continue next;
-
-						for (int j = 0; j < argumentsLength; j++) {
-							char[] argumentTypeName = getTypeName(arguments[j].type);
-
-							if (!CharOperation.equals(argumentTypeName, parameterTypes[j])) {
-								continue next;
-							}
-						}
-
+						if (!method.isConstructor() || argumentMismatch(method.arguments(true), parameterTypes))
+							continue next;
 						refBinding.resolveTypesFor(method.binding); // force resolution
 						if (method.binding == null) continue next;
 						return getSignature(method.binding);
+					}
+					if (typeDeclaration.isRecord() && !argumentMismatch(typeDeclaration.recordComponents, parameterTypes)) {
+						MethodBinding [] constructors = refBinding.getMethods(TypeConstants.INIT, parameterTypes.length);
+						if (constructors != null) {
+							for (MethodBinding constructor : constructors)
+								if (constructor instanceof SyntheticMethodBinding)
+									return getSignature(constructor);
+						}
 					}
 				}
 			}

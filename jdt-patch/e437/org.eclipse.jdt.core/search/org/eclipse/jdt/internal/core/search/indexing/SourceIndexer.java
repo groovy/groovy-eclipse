@@ -203,6 +203,7 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 		try {
 			ASTParser astParser = ASTParser.newParser(AST.getJLSLatest()); // we don't seek exact compilation the more tolerant the better here
 			astParser.setSource(unit); // configure projects and so on
+			astParser.setUnitName(unit.getElementName());
 			astParser.setSource(reducedDOM.toCharArray()); // trimmed contents
 			astParser.setStatementsRecovery(true);
 			astParser.setResolveBindings(true);

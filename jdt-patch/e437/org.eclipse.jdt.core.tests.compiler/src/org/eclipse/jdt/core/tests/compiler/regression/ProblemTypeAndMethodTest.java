@@ -7827,20 +7827,10 @@ public void test376550_11() {
 				"}"
 		};
 	runner.expectedCompilerLog = isMinimumCompliant(ClassFileConstants.JDK11) ?
-		"----------\n" +
-		"1. WARNING in X.java (at line 6)\n" +
-		"	return new ArrayList<Object>() {\n" +
-		"	           ^^^^^^^^^^^^^^^^^^^\n" +
-		"The serializable class  does not declare a static final serialVersionUID field of type long\n" +
-		"----------\n"
+		""
 		:
 		"----------\n" +
-		"1. WARNING in X.java (at line 6)\n" +
-		"	return new ArrayList<Object>() {\n" +
-		"	           ^^^^^^^^^^^^^^^^^^^\n" +
-		"The serializable class  does not declare a static final serialVersionUID field of type long\n" +
-		"----------\n" +
-		"2. WARNING in X.java (at line 7)\n" +
+		"1. WARNING in X.java (at line 7)\n" +
 		"	{ add(o);}\n" +
 		"	      ^\n" +
 		"Read access to enclosing field X.o is emulated by a synthetic accessor method\n" +
@@ -7877,11 +7867,6 @@ public void test376550_11a() {
 		"	public final Collection<Object> go() {\n" +
 		"	                                ^^^^\n" +
 		"The method go() from the type X can be declared as static\n" +
-		"----------\n" +
-		"2. WARNING in X.java (at line 6)\n" +
-		"	return new ArrayList<Object>() {\n" +
-		"	           ^^^^^^^^^^^^^^^^^^^\n" +
-		"The serializable class  does not declare a static final serialVersionUID field of type long\n" +
 		"----------\n";
 	runner.javacTestOptions =
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
@@ -7915,11 +7900,6 @@ public void test376550_12() {
 		"	public final <E1> Collection<E1> go() {\n" +
 		"	                                 ^^^^\n" +
 		"The method go() from the type X<E> can be declared as static\n" +
-		"----------\n" +
-		"2. WARNING in X.java (at line 6)\n" +
-		"	return new ArrayList<E1>() {\n" +
-		"	           ^^^^^^^^^^^^^^^\n" +
-		"The serializable class  does not declare a static final serialVersionUID field of type long\n" +
 		"----------\n";
 	runner.javacTestOptions =
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
@@ -10134,5 +10114,32 @@ public void testGH3451() {
 			----------
 			""";
 	runner.runNegativeTest();
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4209
+// ECJ should not warn about missing serialVersionUID for anonymous inner classes
+public void testIssue4209() throws Exception {
+	this.runNegativeTest(
+			new String[] {
+					"X.java",
+					"""
+					public class X {
+					  void test() {
+					    new Number() {
+					      public double doubleValue() {return 0.0;}
+					      public float floatValue() {return 0.0f;}
+					      public int intValue() {return 0;}
+					      public long longValue() {return 0L;}
+					    };
+					    return 42;
+					  }
+					}
+					""",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 9)\n" +
+			"	return 42;\n" +
+			"	^^^^^^^^^^\n" +
+			"Void methods cannot return a value\n" +
+			"----------\n");
 }
 }

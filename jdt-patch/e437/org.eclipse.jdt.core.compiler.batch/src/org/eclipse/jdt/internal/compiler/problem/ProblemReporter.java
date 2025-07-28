@@ -9922,7 +9922,7 @@ public void varLocalMultipleDeclarators(AbstractVariableDeclaration varDecl) {
 		varDecl.sourceStart,
 		varDecl.sourceEnd);
 }
-public void varLocalCannotBeArray(AbstractVariableDeclaration varDecl) {
+public void varLocalCannotBeArray(ASTNode varDecl) {
 	this.handle(
 		IProblem.VarLocalCannotBeArray,
 		NoArgument,
@@ -9930,13 +9930,13 @@ public void varLocalCannotBeArray(AbstractVariableDeclaration varDecl) {
 		varDecl.sourceStart,
 		varDecl.sourceEnd);
 }
-public void varLocalReferencesItself(AbstractVariableDeclaration varDecl) {
+public void varLocalReferencesItself(SingleNameReference reference) {
 	this.handle(
 		IProblem.VarLocalReferencesItself,
 		NoArgument,
 		NoArgument,
-		varDecl.sourceStart,
-		varDecl.sourceEnd);
+		reference.sourceStart,
+		reference.sourceEnd);
 }
 public void varLocalWithoutInitizalier(AbstractVariableDeclaration varDecl) {
 	this.handle(
@@ -9965,22 +9965,6 @@ public void varLocalInitializedToVoid(AbstractVariableDeclaration varDecl) {
 public void varLocalCannotBeArrayInitalizers(AbstractVariableDeclaration varDecl) {
 	this.handle(
 		IProblem.VarLocalCannotBeArrayInitalizers,
-		NoArgument,
-		NoArgument,
-		varDecl.sourceStart,
-		varDecl.sourceEnd);
-}
-public void varLocalCannotBeLambda(AbstractVariableDeclaration varDecl) {
-	this.handle(
-		IProblem.VarLocalCannotBeLambda,
-		NoArgument,
-		NoArgument,
-		varDecl.sourceStart,
-		varDecl.sourceEnd);
-}
-public void varLocalCannotBeMethodReference(AbstractVariableDeclaration varDecl) {
-	this.handle(
-		IProblem.VarLocalCannotBeMethodReference,
 		NoArgument,
 		NoArgument,
 		varDecl.sourceStart,

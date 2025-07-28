@@ -843,22 +843,20 @@ public void generateOptimizedStringConcatenationCreation(BlockScope blockScope, 
 	codeStream.invokeStringConcatenationStringConstructor();
 }
 private void addArgumentToRecipe(BlockScope blockScope, CodeStream codeStream, StringBuilder recipe, TypeBinding argType, List<TypeBinding> args) {
-	recipe.append(STRING_CONCAT_MARKER_1);
+	recipe.append(STRING_CONCAT_FACTORY_TAG_ARG);
 	args.add(argType);
 	if (args.size() > 190) {
-		// StringConcatFactory#makeConcatWithConstants() can take only 200 arguments
-		// Commit whatever we have accumulated so far
-		// Get the result pushed to the stack and to be used as an operand
-		// for the subsequent concat operation
+		// StringConcatFactory#makeConcatWithConstants() can take only 200 arguments. Commit whatever we have accumulated so far
+		// Get the intermediate result pushed to the stack and to be used as an operand for the subsequent concat operation
 		codeStream.invokeDynamicForStringConcat(recipe, args);
 		// Clear the arguments for the next batch
 		args.clear();
 		recipe.delete(0, recipe.length());
-		recipe.append(TypeConstants.STRING_CONCAT_MARKER_1);
+		recipe.append(TypeConstants.STRING_CONCAT_FACTORY_TAG_ARG);
 		args.add(blockScope.getJavaLangString());
 	}
 }
-public void buildStringForConcatation(BlockScope blockScope, CodeStream codeStream, int typeID, StringBuilder recipe, List<TypeBinding> argTypes) {
+public void buildStringForConcatenation(BlockScope blockScope, CodeStream codeStream, int typeID, StringBuilder recipe, List<TypeBinding> argTypes) {
 	if (this.constant == Constant.NotAConstant) {
 		switch (typeID) {
 			case T_JavaLangString :
@@ -885,11 +883,12 @@ public void buildStringForConcatation(BlockScope blockScope, CodeStream codeStre
 		}
 	} else {
 		// StringLiteral and CharLiteral may contain special characters
-		if (this.constant.stringValue().indexOf('\u0001') != -1 || this.constant.stringValue().indexOf('\u0002') != -1) {
-			codeStream.ldc(this.constant.stringValue());
+		final String stringValue = this.constant.stringValue();
+		if (stringValue.indexOf(TypeConstants.STRING_CONCAT_FACTORY_TAG_ARG) != -1 || stringValue.indexOf(TypeConstants.STRING_CONCAT_FACTORY_TAG_CONST) != -1) {
+			codeStream.ldc(stringValue);
 			addArgumentToRecipe(blockScope, codeStream, recipe, blockScope.getJavaLangString(), argTypes);
 		} else {
-			recipe.append(this.constant.stringValue());
+			recipe.append(stringValue);
 		}
 	}
 }
