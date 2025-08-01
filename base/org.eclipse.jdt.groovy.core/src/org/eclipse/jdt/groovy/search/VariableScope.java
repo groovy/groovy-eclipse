@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -191,8 +191,8 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         this.scopeNode = enclosingNode;
         this.shared = (parent != null ? parent.shared : new SharedState());
         this.enclosingCallStackDepth = this.shared.enclosingCallStack.size();
-        this.isStaticScope = (isStatic || (parent != null && parent.isStaticScope && !(enclosingNode instanceof ClassNode)))
-                        && (getEnclosingClosureScope() == null); // if in a closure, items may be found on delegate or owner
+        this.isStaticScope = (isStatic || (parent != null && parent.isStaticScope && !(enclosingNode instanceof ClassNode))) &&
+                              (getEnclosingClosureScope() == null); // if in a closure, items may be found on delegate or owner
 
         // determine if scope belongs to script body
         if (enclosingNode instanceof ClassNode || enclosingNode instanceof FieldNode) {
@@ -641,7 +641,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                     type = type.getComponentType();
                     dims += 1;
                 }
-                type = mapper.findParameter(type.getUnresolvedName(), type.redirect());
+                type = mapper.findParameter(type.getUnresolvedName(), type);
                 while (dims > 0) {
                     type = type.makeArray();
                     dims -= 1;
@@ -653,34 +653,39 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     public static ClassNode resolveTypeParameterization(GenericsMapper mapper, GenericsType generic, ClassNode unresolved) {
         if (!generic.isWildcard()) {
-            resolveTypeParameterization(mapper, generic.getType()); // TODO: capture return value?
+            int dims = 0;
+            ClassNode type = generic.getType();
+            while (type.isArray()) {
+                dims += 1;
+                type = type.getComponentType();
+            }
+            if (!type.isGenericsPlaceHolder()) {
+                if (GenericsUtils.hasUnresolvedGenerics(type))
+                    resolveTypeParameterization(mapper, type); // drill down
+                return unresolved;
+            }
+            String typeParameterName = type.getUnresolvedName();
+            type = mapper.findParameter(typeParameterName, type);
+            while (dims > 0) {
+                dims -= 1;
+                type = type.makeArray();
+            }
 
-            String toParameterizeName = generic.getName();
-            ClassNode resolved = mapper.findParameter(toParameterizeName, generic.getType());
-
-            // there are three known possibilities for resolved:
-            // 1. it is the resolution of a type parameter itself (e.g. E --> String)
-            // 2. it is the resolved type parameter of a generic type (e.g. Iterator<E> --> Iterator<String>)
-            // 3. it is a substitution of one type parameter for another (e.g. List<T> --> List<E>, where T comes from the declaring type)
-
-            if (!unresolved.toString(false).equals(toParameterizeName) && typeParameterExistsInRedirected(unresolved, toParameterizeName)) {
-                Assert.isLegal(unresolved.redirect() != unresolved, "Error: trying to resolve type parameters of a type declaration: " + unresolved);
-                // Iterator<E> --> Iterator<String>
-                generic.setType(resolved);
+            if (unresolved.toString(false).equals(typeParameterName)) {
+                // E --> String
+                return type;
+            } else {
+                Assert.isLegal(unresolved.redirect() != unresolved, "Error: trying to mutate type parameters of a type declaration: " + unresolved);
+                Assert.isLegal(unresolved.redirect().getGenericsTypes() != null, "Error: trying to add type arguments to non-generic type: " + unresolved);
+                // List<E> --> List<String>
+                // List<E[]> --> List<String[]>
+                generic.setType(type);
                 generic.setResolved(true);
                 generic.setWildcard(false);
                 generic.setLowerBound(null);
                 generic.setUpperBounds(null);
-                generic.setPlaceHolder(resolved.isGenericsPlaceHolder());
-                generic.setName(generic.isPlaceholder() ? resolved.getUnresolvedName() : resolved.getName());
-            } else {
-                // E --> String
-                // E[] --> String[]
-                while (unresolved.isArray()) {
-                    unresolved = unresolved.getComponentType();
-                    resolved = resolved.makeArray();
-                }
-                return resolved;
+                generic.setPlaceHolder(type.isGenericsPlaceHolder());
+                generic.setName(generic.isPlaceholder() ? typeParameterName : type.getName());
             }
         } else if (generic.getLowerBound() != null) {
             // List<? super E> --> List<? super String>
@@ -706,7 +711,8 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public static MethodNode resolveTypeParameterization(GenericsMapper mapper, MethodNode method) {
-        if (mapper.hasGenerics() && GroovyUtils.isUsingGenerics(method)) {
+        if (mapper.hasGenerics() && (GenericsUtils.hasUnresolvedGenerics(method.getReturnType()) ||
+                GroovyUtils.getParameterTypes(method.getParameters()).stream().anyMatch(GenericsUtils::hasUnresolvedGenerics))) {
 
             ClassNode returnType = resolveTypeParameterization(mapper, clone(method.getReturnType()));
 
@@ -755,16 +761,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             method = resolved;
         }
         return method;
-    }
-
-    private static boolean typeParameterExistsInRedirected(ClassNode type, String toParameterizeName) {
-        ClassNode redirect = type.redirect();
-        GenericsType[] genericsTypes = redirect.getGenericsTypes();
-        if (genericsTypes != null) {
-            // I don't *think* we need to check here. if any type parameter exists in the redirect, then we are parameterizing
-            return true;
-        }
-        return false;
     }
 
     /**

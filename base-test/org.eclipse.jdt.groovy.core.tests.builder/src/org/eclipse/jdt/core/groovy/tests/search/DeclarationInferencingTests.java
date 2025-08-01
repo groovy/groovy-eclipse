@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1674,14 +1674,15 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         //@formatter:on
 
         int offset = contents.indexOf("toArray");
-        try { // Java 11 adds default method toArray(IntFunction) to the Collection interface
+        try { // Java 11 adds default method toArray(IntFunction) to Collection interface
             java.util.Collection.class.getDeclaredMethod("toArray", java.util.function.IntFunction.class);
-            MethodNode method = assertDeclaration(contents, offset, offset + 7, "java.util.Collection", "toArray", DeclarationKind.METHOD);
-            assertEquals("java.util.function.IntFunction<T[]>", printTypeName(method.getParameters()[0].getType()));
+            MethodNode m = assertDeclaration(contents, offset, offset + 7, "java.util.Collection", "toArray", DeclarationKind.METHOD);
+            assertEquals("java.util.function.IntFunction<java.lang.Object[]>", printTypeName(m.getParameters()[0].getType()));
+            assertEquals("java.lang.Object[]", printTypeName(m.getReturnType()));
             assertType(contents, "n", "java.lang.Integer");
         } catch (Exception e) {
-            MethodNode method = assertDeclaration(contents, offset, offset + 7, "java.util.List", "toArray", DeclarationKind.METHOD);
-            assertEquals("T[]", printTypeName(method.getParameters()[0].getType()));
+            MethodNode m = assertDeclaration(contents, offset, offset + 7, "java.util.List", "toArray", DeclarationKind.METHOD);
+            assertEquals("java.lang.Object[]", printTypeName(m.getParameters()[0].getType()));
         }
     }
 

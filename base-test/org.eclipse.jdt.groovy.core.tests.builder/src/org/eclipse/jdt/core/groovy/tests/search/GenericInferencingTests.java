@@ -1512,8 +1512,32 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "n", "java.lang.Byte");
     }
 
-    @Test // GROOVY-10544
+    @Test
     public void testMethod7() {
+        String contents =
+            "class C<T> {\n" +
+            "  T[] m() {\n" +
+            "  }\n" +
+            "}\n" +
+            "new C<String>().m()\n";
+        assertType(contents, "m", "java.lang.String[]");
+    }
+
+    @Test
+    public void testMethod8() {
+        String contents =
+            "class C<T> {\n" +
+            "  class D {\n" +
+            "    T[] m() {\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new C.D(new C<String>()).m()\n";
+        assertType(contents, "m", "java.lang.String[]");
+    }
+
+    @Test // GROOVY-10544
+    public void testMethod9() {
         String contents =
             "import java.util.function.Function\n" +
             "interface I<T> {\n" +

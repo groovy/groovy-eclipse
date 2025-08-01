@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -208,10 +208,10 @@ public class GroovyUtils {
         return nodes != null ? Collections.unmodifiableSet(nodes) : Collections.EMPTY_SET;
     }
 
-    public static ClassNode[] getTypeParameterBounds(ClassNode typeParam) {
-        if (typeParam.isGenericsPlaceHolder()) {
-            GenericsType[] generics = typeParam.getGenericsTypes();
-            if (generics != null && generics.length > 0) {
+    public static ClassNode[] getTypeParameterBounds(ClassNode classNode) {
+        if (classNode.isGenericsPlaceHolder()) {
+            GenericsType[] generics = classNode.getGenericsTypes();
+            if (asBoolean(generics)) {
                 ClassNode[] bounds = generics[0].getUpperBounds();
                 if (bounds != null) {
                     return bounds;
@@ -568,13 +568,16 @@ public class GroovyUtils {
     }
 
     public static boolean isUsingGenerics(MethodNode node) {
-        if (getGenericsTypes(node).length > 0) {
+        if (asBoolean(node.getGenericsTypes())) {
             return true;
         }
-        if (!node.isStatic() && node.getDeclaringClass().isUsingGenerics()) {
-            Stream<ClassNode> types = Stream.concat(Stream.of(node.getReturnType()),
-                                        getParameterTypes(node.getParameters()).stream());
-            return types.anyMatch(type -> type.isUsingGenerics() || type.isGenericsPlaceHolder());
+        if (getBaseType(node.getReturnType()).isUsingGenerics()) {
+            return true;
+        }
+        for (ClassNode type : getParameterTypes(node.getParameters())) {
+            if (getBaseType(type).isUsingGenerics()) {
+                return true;
+            }
         }
         return false;
     }

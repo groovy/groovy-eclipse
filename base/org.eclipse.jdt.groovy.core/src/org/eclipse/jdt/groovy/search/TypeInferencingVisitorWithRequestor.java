@@ -127,6 +127,7 @@ import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
@@ -1127,6 +1128,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
               super.visitConstructorCallExpression(node);
             scopes.getLast().forgetEnclosingMethodCall();
 
+            if (!node.isSpecialCall() && type.getNodeMetaData("outer.class") == null &&
+                    type.getOuterClass() != null && !Flags.isStatic(type.getModifiers())) {
+                List<ClassNode> argumentTypes = node.getArguments().getNodeMetaData("tuple.types");
+                if (isNotEmpty(argumentTypes) && argumentTypes.get(0).isDerivedFrom(type.getOuterClass())) {
+                    type.putNodeMetaData("outer.class", argumentTypes.get(0)); // save outer class type args
+                }
+            }
+
             // visit anonymous inner class body
             if (node.isUsingAnonymousInnerClass()) {
                 scopes.add(new VariableScope(scopes.getLast(), type, false));
@@ -1624,12 +1633,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         node.getArguments().visit(this);
         scope.forgetEnclosingMethodCall();
 
-        ClassNode type = node.getType().redirect();
-        if (isEnumInit(node) && GroovyUtils.isAnonymous(type)) {
-            visitEnumConstBody(type);
+        if (isEnumInit(node)) {
+            ClassNode type = node.getType().redirect();
+            if (GroovyUtils.isAnonymous(type)) {
+                visitEnumConstBody(type);
+            }
         }
 
-        if (inferred.declaration instanceof MethodNode) {
+        if (inferred.declaration instanceof MethodNode &&
+                node.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE) == null) {
             MethodNode meth = (MethodNode) inferred.declaration;
             // if return type depends on any Closure argument return types, deal with that
             if (GroovyUtils.isUsingGenerics(meth) && GroovyUtils.getParameterTypes(meth.getParameters()).stream()
@@ -2621,6 +2633,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                                 GenericsType[]  typeArgs = getMethodCallGenericsTypes((Expression) cat.call);
                                 List<ClassNode> pTypes = GroovyUtils.getParameterTypes(methodNode.getParameters());
                                 GenericsMapper  mapper = GenericsMapper.gatherGenerics(pTypes, cat.declaringType, methodNode.getOriginal(), typeArgs);
+
+                                for (GenericsType tp : GroovyUtils.getGenericsTypes(methodNode)) {
+                                    if (mapper.findParameter(tp.getName(), null) == null) {
+                                        ClassNode cn = tp.getType().redirect().getPlainNodeReference(); // erasure
+                                        mapper.allGenerics.getLast().put(tp.getName(), cn);
+                                    }
+                                }
 
                                 for (ClassNode[] sig : sigs) {
                                     if (sig != null && sig.length == inferredTypes.length) {
