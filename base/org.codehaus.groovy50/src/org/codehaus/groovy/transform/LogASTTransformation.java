@@ -44,7 +44,6 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.syntax.Token;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 
 import static org.apache.groovy.ast.tools.VisibilityUtils.getVisibility;
 import static groovyjarjarasm.asm.Opcodes.ACC_FINAL;
@@ -123,7 +122,7 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
                 FieldNode logField = node.getField(logFieldName);
                 if (logField != null && logField.getOwner().equals(node)) {
                     addError("Class annotated with Log annotation cannot have log field declared", logField);
-                } else if (logField != null && !Modifier.isPrivate(logField.getModifiers())) {
+                } else if (logField != null && !logField.isPrivate()) {
                     addError("Class annotated with Log annotation cannot have log field declared because the field exists in the parent class: " + logField.getOwner().getName(), logField);
                 } else {
                     if (loggingStrategy instanceof LoggingStrategyV2) {
