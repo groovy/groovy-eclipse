@@ -1189,7 +1189,7 @@ public long getAnnotationTagBits() {
 	if (!isPrototype())
 		return this.prototype.getAnnotationTagBits();
 
-	if ((this.extendedTagBits & ExtendedTagBits.AnnotationResolved) == 0 && this.scope != null) {
+	if (!ExtendedTagBits.areAllAnnotationsResolved(this.extendedTagBits) && this.scope != null) {
 		TypeDeclaration typeDecl = this.scope.referenceContext;
 		boolean old = typeDecl.staticInitializerScope.insideTypeAnnotation;
 		try {
@@ -2457,13 +2457,25 @@ protected boolean hasMethodWithNumArgs(char[] selector, int numArgs) {
 	}
 	return false;
 }
+@Override
+public AnnotationBinding[] getAnnotations(long requestedInitialization) {
+	AnnotationHolder holder = retrieveAnnotationHolder(prototype(), requestedInitialization);
+	return holder == null ? Binding.NO_ANNOTATIONS : holder.getAnnotations();
+}
 
 @Override
 public AnnotationHolder retrieveAnnotationHolder(Binding binding, boolean forceInitialization) {
+	return retrieveAnnotationHolder(binding, ExtendedTagBits.AllAnnotationsResolved);
+}
+private AnnotationHolder retrieveAnnotationHolder(Binding binding, long requestedInitialization) {
 	if (!isPrototype())
-		return this.prototype.retrieveAnnotationHolder(binding, forceInitialization);
-	if (forceInitialization)
-		binding.getAnnotationTagBits(); // ensure annotations are up to date
+		return this.prototype.retrieveAnnotationHolder(binding, requestedInitialization);
+	if (requestedInitialization == ExtendedTagBits.AllAnnotationsResolved) {
+		binding.getAnnotationTagBits(); // ensure all annotations are up to date
+	} else {
+		if ((requestedInitialization & ExtendedTagBits.DeprecatedAnnotationResolved) != 0)
+			binding.initializeDeprecatedAnnotationTagBits(); // selective initialization
+	}
 	return super.retrieveAnnotationHolder(binding, false);
 }
 

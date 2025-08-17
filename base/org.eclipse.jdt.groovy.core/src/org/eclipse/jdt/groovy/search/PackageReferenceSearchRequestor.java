@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,11 +61,12 @@ public class PackageReferenceSearchRequestor implements ITypeRequestor {
                 if (name.startsWith(packageName)) {
                     notifyRequestor(enclosingElement, i.getNameStart());
                 }
-            } else if (node instanceof ClassNode && enclosingElement.getElementType() != IJavaElement.IMPORT_DECLARATION) {
+            } else if (node instanceof ClassNode && ((ClassNode) node).isRedirectNode() &&
+                    enclosingElement.getElementType() != IJavaElement.IMPORT_DECLARATION) {
                 String name = ((ClassNode) node).getName(); // "java.util.Map$Entry"
 
                 if (name.startsWith(packageName) && name.length() <= node.getLength()) {
-                    // beware of class declarations and inlined constant references
+                    // beware of inlined constant references
                     if (enclosingElement instanceof ISourceReference) {
                         ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
                         if (node.getStart() >= range.getOffset() && node.getLength() < range.getLength()) {

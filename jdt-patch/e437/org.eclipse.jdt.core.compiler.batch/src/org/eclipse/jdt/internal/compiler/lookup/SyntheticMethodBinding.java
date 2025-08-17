@@ -718,6 +718,14 @@ public class SyntheticMethodBinding extends MethodBinding {
 		}
 	}
 
+	//pre: null annotation analysis is enabled
+	@Override
+	public boolean hasNonNullDefaultForReturnType(AbstractMethodDeclaration srcMethod) {
+		if (this.purpose == RecordComponentReadAccess)
+			return hasNonNullDefaultForType(this.returnType, Binding.DefaultLocationRecordComponent, srcMethod, srcMethod == null ? -1 : srcMethod.declarationSourceStart);
+		return super.hasNonNullDefaultForReturnType(srcMethod);
+	}
+
 	public void markNonNull(LookupEnvironment environment) {
 		markNonNull(this, this.purpose, environment);
 	}

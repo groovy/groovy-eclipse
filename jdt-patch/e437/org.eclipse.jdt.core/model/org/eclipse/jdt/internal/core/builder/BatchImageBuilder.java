@@ -160,32 +160,35 @@ protected void cleanOutputFolders(boolean copyBack) throws CoreException {
 			this.notifier.subTask(Messages.bind(Messages.build_cleaningOutput, this.javaBuilder.currentProject.getName()));
 			if (sourceLocation.hasIndependentOutputFolder) {
 				IContainer outputFolder = sourceLocation.binaryFolder;
-				if (!visited.contains(outputFolder)) {
-					visited.add(outputFolder);
-					IResource[] members = outputFolder.members();
-					for (IResource member : members) {
-						if (!member.isDerived()) {
-							member.accept(
-								new IResourceVisitor() {
-									@Override
-									public boolean visit(IResource resource) throws CoreException {
-										resource.setDerived(true, null);
-										return resource.getType() != IResource.FILE;
+				if (visited.add(outputFolder)) {
+					if (outputFolder.exists()) { // if folder does not exists we can't delete it
+							// (reasons include: deleted already by an overlapping output folder, or another process deleted it)
+							// without this check the Eclipse resource API would bail out...
+						IResource[] members = outputFolder.members();
+						for (IResource member : members) {
+							if (!member.isDerived()) {
+								member.accept(
+									new IResourceVisitor() {
+										@Override
+										public boolean visit(IResource resource) throws CoreException {
+											resource.setDerived(true, null);
+											return resource.getType() != IResource.FILE;
+										}
 									}
-								}
-							);
-						}
-						try {
-							member.delete(IResource.FORCE, null);
-						} catch(CoreException e) {
-							Util.log(e, "Error occurred while deleting: " + member.getFullPath()); //$NON-NLS-1$
+								);
+							}
+							try {
+								member.delete(IResource.FORCE, null);
+							} catch(CoreException e) {
+								Util.log(e, "Error occurred while deleting: " + member.getFullPath()); //$NON-NLS-1$
+							}
 						}
 					}
 				}
 				this.notifier.checkCancel();
 				if (copyBack)
 					copyExtraResourcesBack(sourceLocation, true);
-			} else {
+			} else if (sourceLocation.binaryFolder.exists()) { // if folder does not exists we can't delete it and we can't visit children
 				boolean isOutputFolder = sourceLocation.sourceFolder.equals(sourceLocation.binaryFolder);
 				final char[][] exclusionPatterns =
 					isOutputFolder

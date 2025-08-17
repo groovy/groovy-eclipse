@@ -110,7 +110,6 @@ public class TypePattern extends Pattern implements IGenerateTypeCheck {
 		this.isTotalTypeNode = true;
 	}
 
-	@Override
 	public void generateTestingConversion(BlockScope scope, CodeStream codeStream) {
 		TypeBinding provided = this.outerExpressionType;
 		TypeBinding expected = this.resolvedType;

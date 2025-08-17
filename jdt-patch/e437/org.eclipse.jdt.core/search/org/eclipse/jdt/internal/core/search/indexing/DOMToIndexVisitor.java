@@ -56,13 +56,13 @@ class DOMToIndexVisitor extends ASTVisitor {
 				.map(String::toCharArray)
 				.toArray(char[][]::new);
 		if (type.isInterface()) {
-			this.sourceIndexer.addInterfaceDeclaration(type.getModifiers(), this.packageName, simpleName(type.getName()), enclosing, ((List<Type>)type.superInterfaceTypes()).stream().map(this::name).toArray(char[][]::new), parameterTypeSignatures, isSecondary(type));
+			this.sourceIndexer.addInterfaceDeclaration(type.getModifiers() | maybeDeprecated(type), this.packageName, simpleName(type.getName()), enclosing, ((List<Type>)type.superInterfaceTypes()).stream().map(this::name).toArray(char[][]::new), parameterTypeSignatures, isSecondary(type));
 		} else {
-			this.sourceIndexer.addClassDeclaration(type.getModifiers(), this.packageName, simpleName(type.getName()), enclosing, type.getSuperclassType() == null ? null : name(type.getSuperclassType()),
+			this.sourceIndexer.addClassDeclaration(type.getModifiers() | maybeDeprecated(type), this.packageName, simpleName(type.getName()), enclosing, type.getSuperclassType() == null ? null : name(type.getSuperclassType()),
 				((List<Type>)type.superInterfaceTypes()).stream().map(this::name).toArray(char[][]::new), parameterTypeSignatures, isSecondary(type));
 			if (type.bodyDeclarations().stream().noneMatch(member -> member instanceof MethodDeclaration method && method.isConstructor())) {
 				this.sourceIndexer.addDefaultConstructorDeclaration(type.getName().getIdentifier().toCharArray(),
-						this.packageName, type.getModifiers(), 0);
+						this.packageName, type.getModifiers() | maybeDeprecated(type), 0);
 			}
 			if (type.getSuperclassType() != null) {
 				this.sourceIndexer.addConstructorReference(name(type.getSuperclassType()), 0);
@@ -80,7 +80,7 @@ class DOMToIndexVisitor extends ASTVisitor {
 	@Override
 	public boolean visit(EnumDeclaration type) {
 		char[][] enclosing = this.enclosingTypes.stream().map(AbstractTypeDeclaration::getName).map(SimpleName::getIdentifier).map(String::toCharArray).toArray(char[][]::new);
-		this.sourceIndexer.addEnumDeclaration(type.getModifiers(), this.packageName, type.getName().getIdentifier().toCharArray(), enclosing, Enum.class.getName().toCharArray(), ((List<Type>)type.superInterfaceTypes()).stream().map(this::name).toArray(char[][]::new), isSecondary(type));
+		this.sourceIndexer.addEnumDeclaration(type.getModifiers() | maybeDeprecated(type), this.packageName, type.getName().getIdentifier().toCharArray(), enclosing, Enum.class.getName().toCharArray(), ((List<Type>)type.superInterfaceTypes()).stream().map(this::name).toArray(char[][]::new), isSecondary(type));
 		this.enclosingTypes.add(type);
 		return true;
 	}
@@ -98,7 +98,7 @@ class DOMToIndexVisitor extends ASTVisitor {
 	@Override
 	public boolean visit(AnnotationTypeDeclaration type) {
 		char[][] enclosing = this.enclosingTypes.stream().map(AbstractTypeDeclaration::getName).map(SimpleName::getIdentifier).map(String::toCharArray).toArray(char[][]::new);
-		this.sourceIndexer.addAnnotationTypeDeclaration(type.getModifiers(), this.packageName, type.getName().getIdentifier().toCharArray(), enclosing, isSecondary(type));
+		this.sourceIndexer.addAnnotationTypeDeclaration(type.getModifiers() | maybeDeprecated(type), this.packageName, type.getName().getIdentifier().toCharArray(), enclosing, isSecondary(type));
 		this.enclosingTypes.add(type);
 		return true;
 	}
@@ -116,7 +116,7 @@ class DOMToIndexVisitor extends ASTVisitor {
 	public boolean visit(RecordDeclaration recordDecl) {
 		this.enclosingTypes.add(recordDecl);
 		// copied processing of TypeDeclaration
-		this.sourceIndexer.addClassDeclaration(recordDecl.getModifiers(), this.packageName, recordDecl.getName().getIdentifier().toCharArray(), null, null,
+		this.sourceIndexer.addClassDeclaration(recordDecl.getModifiers() | maybeDeprecated(recordDecl), this.packageName, recordDecl.getName().getIdentifier().toCharArray(), null, null,
 				((List<Type>)recordDecl.superInterfaceTypes()).stream().map(this::name).toArray(char[][]::new), null, false);
 		return true;
 	}
@@ -155,7 +155,7 @@ class DOMToIndexVisitor extends ASTVisitor {
 					parameterTypes,
 					parameterNames,
 					returnType,
-					method.getModifiers(),
+					method.getModifiers() | maybeDeprecated(method),
 					this.packageName,
 					0 /* TODO What to put here? */,
 					exceptionTypes,
@@ -164,7 +164,7 @@ class DOMToIndexVisitor extends ASTVisitor {
 		} else {
 			this.sourceIndexer.addConstructorDeclaration(method.getName().getFullyQualifiedName().toCharArray(),
 					method.parameters().size(),
-					null, parameterTypes, parameterNames, method.getModifiers(), this.packageName, currentType().getModifiers(), exceptionTypes, 0);
+					null, parameterTypes, parameterNames, method.getModifiers() | maybeDeprecated(method), this.packageName, currentType().getModifiers(), exceptionTypes, 0);
 		}
 		return true;
 	}
@@ -173,7 +173,9 @@ class DOMToIndexVisitor extends ASTVisitor {
 	public boolean visit(ImportDeclaration node) {
 		if (node.isStatic() && !node.isOnDemand()) {
 			this.sourceIndexer.addMethodReference(simpleName(node.getName()), 0);
-		} else if (!node.isOnDemand()) {
+		} else if (Modifier.isModule(node.getModifiers())) {
+			this.sourceIndexer.addModuleReference(node.getName().getFullyQualifiedName().toCharArray());
+		} if (!node.isOnDemand()) {
 			this.sourceIndexer.addTypeReference(node.getName().getFullyQualifiedName().toCharArray());
 		}
 		return true;
@@ -337,7 +339,6 @@ class DOMToIndexVisitor extends ASTVisitor {
 	// TODO (cf SourceIndexer and SourceIndexerRequestor)
 	// * Lambda: addIndexEntry/addClassDeclaration
 	// * FieldReference
-	// * Deprecated
 
 	@Override
 	public boolean visit(MethodRef methodRef) {
@@ -421,4 +422,28 @@ class DOMToIndexVisitor extends ASTVisitor {
 		return true;
 	}
 
+	private int maybeDeprecated(BodyDeclaration declaration) {
+		return hasDeprecated(declaration.modifiers()) || hasDeprecated(declaration.getJavadoc()) ? org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants.AccDeprecated : 0;
+	}
+	private boolean hasDeprecated(List<?> modifiers) {
+		if (modifiers == null) {
+			return false;
+		}
+		return modifiers.stream()
+				.filter(Annotation.class::isInstance)
+				.map(Annotation.class::cast)
+				.map(Annotation::getTypeName)
+				.map(Name::getFullyQualifiedName)
+				.anyMatch(Deprecated.class.getSimpleName()::equals);
+	}
+	private boolean hasDeprecated(Javadoc javadoc) {
+		if (javadoc == null) {
+			return false;
+		}
+		return ((List<?>)javadoc.tags()).stream()
+				.filter(TagElement.class::isInstance)
+				.map(TagElement.class::cast)
+				.map(TagElement::getTagName)
+				.anyMatch(TagElement.TAG_DEPRECATED::equals);
+	}
 }

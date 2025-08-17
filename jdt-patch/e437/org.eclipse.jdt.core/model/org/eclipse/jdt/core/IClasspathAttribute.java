@@ -278,6 +278,20 @@ public interface IClasspathAttribute {
 	String WITHOUT_TEST_CODE = "without_test_code"; //$NON-NLS-1$
 
 	/**
+	 * Constant for the name of the release attribute.
+	 *
+	 * <p>
+	 * The possible values for this attribute are numbers > 8.
+	 * If the value of this attribute is provided, and the classpath entry
+	 * is a source folder, this will enable <a href="https://openjdk.org/jeps/238">Multi-Release</a>
+	 * compilation for this source folder for the given java release.
+	 * </p>
+	 *
+	 * @since 3.43
+	 */
+	String RELEASE = "release"; //$NON-NLS-1$
+
+	/**
 	 * Returns the name of this classpath attribute.
 	 *
 	 * @return the name of this classpath attribute.

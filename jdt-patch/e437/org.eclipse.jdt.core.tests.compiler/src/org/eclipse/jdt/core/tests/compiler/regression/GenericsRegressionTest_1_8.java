@@ -6986,7 +6986,7 @@ public void testBug472851() {
 		"1. ERROR in Test.java (at line 10)\n" +
 		"	test(type);\n" +
 		"	^^^^\n" +
-		"The method test(List<L>) in the type Test is not applicable for the arguments (List<capture#2-of ? extends List<?>>)\n" +
+		"The method test(List<L>) in the type Test is not applicable for the arguments (List<capture#1-of ? extends List<?>>)\n" +
 		"----------\n");
 }
 public void testBug502350() {

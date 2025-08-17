@@ -187,7 +187,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 			this.scope.checkUnusedParameters(this.binding);
 			// check if the method could have been static
 			if (!this.binding.isStatic() && (this.bits & ASTNode.CanBeStatic) != 0 && !this.isDefaultMethod()) {
-				if(!this.binding.isOverriding() && !this.binding.isImplementing()) {
+				if(!this.binding.isOverriding() && !this.binding.isImplementing() && !this.binding.isSynchronized()) {
 					if (this.binding.isPrivate() || this.binding.isFinal() || this.binding.declaringClass.isFinal()) {
 						this.scope.problemReporter().methodCanBeDeclaredStatic(this);
 					} else {

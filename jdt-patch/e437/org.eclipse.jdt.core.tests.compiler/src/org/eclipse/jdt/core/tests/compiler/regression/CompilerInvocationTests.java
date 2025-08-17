@@ -995,6 +995,7 @@ public void test011_problem_categories() {
 		expectedProblemAttributes.put("PatternSwitchCaseDefaultOnlyAsSecond", new ProblemAttributes(CategorizedProblem.CAT_PREVIEW_RELATED));
 		expectedProblemAttributes.put("RawMemberTypeCannotBeParameterized", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
 		expectedProblemAttributes.put("RawTypeReference", new ProblemAttributes(CategorizedProblem.CAT_UNCHECKED_RAW));
+		expectedProblemAttributes.put("RecordComponentIncompatibleNullnessVsInheritedAccessor", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
 		expectedProblemAttributes.put("RecursiveConstructorInvocation", new ProblemAttributes(CategorizedProblem.CAT_MEMBER));
 		expectedProblemAttributes.put("RedefinedArgument", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
 		expectedProblemAttributes.put("RedefinedLocal", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
@@ -2145,6 +2146,7 @@ public void test012_compiler_problems_tuning() {
 		expectedProblemAttributes.put("PatternSwitchCaseDefaultOnlyAsSecond", SKIP);
 		expectedProblemAttributes.put("RawMemberTypeCannotBeParameterized", SKIP);
 		expectedProblemAttributes.put("RawTypeReference", new ProblemAttributes(JavaCore.COMPILER_PB_RAW_TYPE_REFERENCE));
+		expectedProblemAttributes.put("RecordComponentIncompatibleNullnessVsInheritedAccessor", SKIP);
 		expectedProblemAttributes.put("RecursiveConstructorInvocation", SKIP);
 		expectedProblemAttributes.put("RedefinedArgument", SKIP);
 		expectedProblemAttributes.put("RedefinedLocal", SKIP);

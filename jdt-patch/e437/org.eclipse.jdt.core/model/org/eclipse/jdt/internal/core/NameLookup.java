@@ -19,6 +19,7 @@ import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -730,7 +731,7 @@ public class NameLookup implements SuffixConstants {
 	 * It means that secondary types may be not found under certain circumstances...
 	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=118789"
 	 */
-	public Answer findType(String typeName, String packageName, boolean partialMatch, int acceptFlags, boolean checkRestrictions, IPackageFragmentRoot[] moduleContext) {
+	public Answer findType(String typeName, String packageName, boolean partialMatch, int acceptFlags, boolean checkRestrictions, IPackageFragmentRoot[] moduleContext, int release) {
 		return findType(typeName,
 			packageName,
 			partialMatch,
@@ -739,7 +740,8 @@ public class NameLookup implements SuffixConstants {
 			false/* do NOT wait for indexes */,
 			checkRestrictions,
 			null,
-			moduleContext);
+			moduleContext,
+			release);
 	}
 
 	/**
@@ -778,7 +780,8 @@ public class NameLookup implements SuffixConstants {
 				waitForIndexes,
 				checkRestrictions,
 				monitor,
-				null); // no module
+				null,// no module
+				JavaProject.NO_RELEASE);
 	}
 	/**
 	 * Find type. Considering secondary types and waiting for indexes depends on given corresponding parameters.
@@ -792,7 +795,8 @@ public class NameLookup implements SuffixConstants {
 			boolean waitForIndexes,
 			boolean checkRestrictions,
 			IProgressMonitor monitor,
-			IPackageFragmentRoot[] moduleContext) {
+			IPackageFragmentRoot[] moduleContext,
+			int release) {
 		if (packageName == null || packageName.length() == 0) {
 			packageName= IPackageFragment.DEFAULT_PACKAGE_NAME;
 		} else if (typeName.length() > 0 && ScannerHelper.isLowerCase(typeName.charAt(0))) {
@@ -804,6 +808,24 @@ public class NameLookup implements SuffixConstants {
 		JavaElementRequestor elementRequestor = new JavaElementRequestor();
 		seekPackageFragments(packageName, false, elementRequestor, moduleContext);
 		IPackageFragment[] packages= elementRequestor.getPackageFragments();
+		if (release > JavaProject.NO_RELEASE) {
+			// if a release is given, then type lookup must work like it does at runtime, that is:
+			// 1) ignore any types from a release-specific folder that is higher than the current release
+			// 2) look for a type in descending order by the versioned folders, so types in a folder with
+			//    higher release are preferred over types from a lower release
+			// 3) if the type is not found in any such versioned folder, look at the default project types
+			packages = Arrays.stream(packages).map(f -> {
+				IJavaElement parent = f.getParent();
+				int packageFragmentRelease = getRelease((IPackageFragmentRoot) parent);
+				if (packageFragmentRelease > release) {
+					return null;
+				}
+				return new PackageFragmentWithRelease(f, packageFragmentRelease);
+			}).filter(Objects::nonNull)
+					.sorted(Comparator.comparingInt(PackageFragmentWithRelease::release).reversed())
+					.map(PackageFragmentWithRelease::fragment)
+					.toArray(IPackageFragment[]::new);
+		}
 
 		// Try to find type in package fragments list
 		IType type = null;
@@ -880,6 +902,22 @@ public class NameLookup implements SuffixConstants {
 			}
 		}
 		return type == null ? null : new Answer(type, null, null);
+	}
+
+	private int getRelease(IPackageFragmentRoot root) {
+		IClasspathEntry entry = this.rootToResolvedEntries.get(root);
+		if (entry != null) {
+			String extraAttributes = ClasspathEntry.getExtraAttribute(entry, IClasspathAttribute.RELEASE);
+			if (extraAttributes != null) {
+				try {
+					return Integer.parseInt(extraAttributes);
+				} catch (NumberFormatException e) {
+					// we can't determine the release from the classpath so assume default release,
+					// this would already be reported at other places.
+				}
+			}
+		}
+		return JavaProject.NO_RELEASE;
 	}
 
 	public static IModule getModuleDescriptionInfo(IModuleDescription moduleDesc) {
@@ -1777,5 +1815,9 @@ public class NameLookup implements SuffixConstants {
 		trace(" -> seekPackageFragments......................." + this.timeSpentInSeekPackageFragments + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
 		trace(" -> seekPackageFragmentsWithModuleContext......" + this.timeSpentInSeekPackageFragmentsWithModuleContext + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
 		trace(" -> isPackage(pkg,moduleCtx)..................." + this.timeSpentInIsPackageWithModuleContext + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	private static final record PackageFragmentWithRelease(IPackageFragment fragment, int release) {
+
 	}
 }

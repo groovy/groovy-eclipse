@@ -535,7 +535,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         assertUnit(unit, source);
 
         IType script = unit.getTypes()[0];
-        assertRange(script, source.indexOf("\n"), source.indexOf("\n"));
+        assertRange(script, source.indexOf("\n"), source.indexOf("\n") + 1); // odd but required for new folding
 
         IMethod method = script.getMethod("run", new String[0]);
         assertRange(method, source.indexOf("\n"), source.indexOf("\n"));

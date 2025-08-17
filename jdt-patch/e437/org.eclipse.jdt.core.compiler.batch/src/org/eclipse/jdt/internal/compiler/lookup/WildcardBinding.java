@@ -1000,6 +1000,25 @@ public class WildcardBinding extends ReferenceBinding implements HotSwappable{
 			    return new String(CharOperation.concat(TypeConstants.WILDCARD_NAME, TypeConstants.WILDCARD_SUPER, this.bound.debugName().toCharArray()));
         }
 	}
+
+	@Override
+	public int typeArgumentDepth() {
+		int max = 0;
+		if (enterRecursiveFunction()) {
+			try {
+				if (this.bound != null)
+					max = this.bound.typeArgumentDepth();
+				if (this.otherBounds != null) {
+					for (TypeBinding otherBound : this.otherBounds)
+						max = Math.max(max, otherBound.typeArgumentDepth());
+				}
+			} finally {
+				exitRecursiveFunction();
+			}
+		}
+		return max;
+	}
+
 	/**
 	 * Returns associated type variable, or null in case of inconsistency
 	 */

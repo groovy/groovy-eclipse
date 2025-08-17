@@ -27,6 +27,10 @@ public class Problem implements Comparable {
 	private int severity = IMarker.SEVERITY_ERROR;
 
 	public Problem(String location, String message, IPath resourcePath, int start, int end, int categoryId, int severity) {
+		this(location, message, resourcePath, start, end, categoryId, severity, null);
+	}
+
+	public Problem(String location, String message, IPath resourcePath, int start, int end, int categoryId, int severity, String sourceId) {
 		this.location = location;
 		this.message = message;
 		this.resourcePath = resourcePath;
@@ -34,6 +38,7 @@ public class Problem implements Comparable {
 		this.end = end;
 		this.categoryId = categoryId;
 		this.severity = severity;
+		this.sourceId = sourceId;
 //		if ((start > 0 || end > 0) && categoryId <= 0) {
 //			System.out.print("is categoryId properly set ? new Problem(\"" + location + "\", \"" + message + "\", \"" + resourcePath + "\"");
 //			System.out.print(", " + start + ", " + end +  ", " + categoryId);

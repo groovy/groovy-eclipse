@@ -18,7 +18,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class ManifestAnalyzer {
 	private static final int
 		START = 0,
@@ -31,7 +30,7 @@ public class ManifestAnalyzer {
 	private static final char[] CLASSPATH_HEADER_TOKEN =
 		"Class-Path:".toCharArray(); //$NON-NLS-1$
 	private int classpathSectionsCount;
-	private ArrayList calledFilesNames;
+	private ArrayList<String> calledFilesNames;
 
 	/**
 	 * Analyzes the manifest contents. The given input stream is read using a UTF-8 encoded reader.
@@ -180,7 +179,7 @@ public class ManifestAnalyzer {
 	private boolean addCurrentTokenJarWhenNecessary(StringBuilder currentJarToken) {
 		if (currentJarToken != null && currentJarToken.length() > 0) {
 			if (this.calledFilesNames == null) {
-				this.calledFilesNames = new ArrayList();
+				this.calledFilesNames = new ArrayList<>();
 			}
 			this.calledFilesNames.add(currentJarToken.toString());
 			currentJarToken.setLength(0);
@@ -194,7 +193,7 @@ public class ManifestAnalyzer {
 	public int getClasspathSectionsCount() {
 		return this.classpathSectionsCount;
 	}
-	public List getCalledFileNames() {
+	public List<String> getCalledFileNames() {
 		return this.calledFilesNames;
 	}
 }

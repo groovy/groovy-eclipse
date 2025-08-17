@@ -292,6 +292,10 @@ public class DOMCodeSelector {
 					if (parent != null && bindingNode instanceof SingleVariableDeclaration variableDecl) {
 						return new IJavaElement[] { DOMToModelPopulator.toLocalVariable(variableDecl, (JavaElement)parent) };
 					}
+					if( parent != null && bindingNode instanceof VariableDeclarationFragment vdf) {
+						// Parent might be statement or expression
+						return new IJavaElement[] { DOMToModelPopulator.toLocalVariable(vdf, (JavaElement)parent) };
+					}
 				}
 			}
 		}

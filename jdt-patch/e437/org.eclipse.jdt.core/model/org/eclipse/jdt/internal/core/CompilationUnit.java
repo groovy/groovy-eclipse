@@ -75,7 +75,7 @@ public class CompilationUnit extends Openable implements ICompilationUnit, org.e
 	private static final IImportDeclaration[] NO_IMPORTS = new IImportDeclaration[0];
 
 	protected final String name;
-	public WorkingCopyOwner owner; // GROOVY edit
+	public/*final*/WorkingCopyOwner owner; // GROOVY edit
 	private org.eclipse.jdt.core.dom.CompilationUnit ast;
 
 /**

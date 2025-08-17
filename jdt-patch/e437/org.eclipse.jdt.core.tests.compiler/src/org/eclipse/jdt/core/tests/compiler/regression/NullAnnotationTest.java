@@ -11570,6 +11570,7 @@ public void testIssue3971_1b() {
 			getCompilerOptions(),
 			"");
 }
+
 // https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3971
 // [Records][Null analysis] Verify null analysis plays well with the recent design and implementation changes for Records 2.0
 public void testIssue3971_2() {

@@ -1,5 +1,6 @@
+// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -92,16 +93,19 @@ public class SearchableEnvironment
 
 	private List<IPackageFragmentRoot> unnamedModulePackageFragmentRoots;
 
+	private int release;
+
 	@Deprecated
 	public SearchableEnvironment(JavaProject project, org.eclipse.jdt.core.ICompilationUnit[] workingCopies) throws JavaModelException {
-		this(project, workingCopies, false);
+		this(project, workingCopies, false, JavaProject.NO_RELEASE);
 	}
 	/**
 	 * Creates a SearchableEnvironment on the given project
 	 */
-	public SearchableEnvironment(JavaProject project, org.eclipse.jdt.core.ICompilationUnit[] workingCopies, boolean excludeTestCode) throws JavaModelException {
+	public SearchableEnvironment(JavaProject project, org.eclipse.jdt.core.ICompilationUnit[] workingCopies, boolean excludeTestCode, int release) throws JavaModelException {
 		this.project = project;
 		this.excludeTestCode = excludeTestCode;
+		this.release = release;
 		this.checkAccessRestrictions =
 			!JavaCore.IGNORE.equals(project.getOption(JavaCore.COMPILER_PB_FORBIDDEN_REFERENCE, true))
 			|| !JavaCore.IGNORE.equals(project.getOption(JavaCore.COMPILER_PB_DISCOURAGED_REFERENCE, true));
@@ -134,20 +138,20 @@ public class SearchableEnvironment
 			}
 		}
 	}
-
-	/**
-	 * Note: this is required for (abandoned) Scala-IDE
-	 */
 	@Deprecated
 	public SearchableEnvironment(JavaProject project, WorkingCopyOwner owner) throws JavaModelException {
-		this(project, owner, false);
+		this(project, owner, false, JavaProject.NO_RELEASE);
 	}
-
+	// GROOVY add
+	public SearchableEnvironment(JavaProject project, WorkingCopyOwner owner, boolean excludeTestCode) throws JavaModelException {
+		this(project, owner, excludeTestCode, JavaProject.NO_RELEASE);
+	}
+	// GROOVY end
 	/**
 	 * Creates a SearchableEnvironment on the given project
 	 */
-	public SearchableEnvironment(JavaProject project, WorkingCopyOwner owner, boolean excludeTestCode) throws JavaModelException {
-		this(project, owner == null ? null : JavaModelManager.getJavaModelManager().getWorkingCopies(owner, true/*add primary WCs*/), excludeTestCode);
+	public SearchableEnvironment(JavaProject project, WorkingCopyOwner owner, boolean excludeTestCode, int release) throws JavaModelException {
+		this(project, owner == null ? null : JavaModelManager.getJavaModelManager().getWorkingCopies(owner, true/*add primary WCs*/), excludeTestCode, release);
 		this.owner = owner;
 	}
 
@@ -195,7 +199,8 @@ public class SearchableEnvironment
 				false/*exact match*/,
 				NameLookup.ACCEPT_ALL,
 				this.checkAccessRestrictions,
-				moduleContext);
+				moduleContext,
+				this.release);
 		if (answer != null) {
 			// construct name env answer
 			if (answer.type instanceof BinaryType) { // BinaryType

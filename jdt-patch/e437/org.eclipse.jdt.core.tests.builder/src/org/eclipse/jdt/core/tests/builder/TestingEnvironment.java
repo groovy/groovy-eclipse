@@ -127,6 +127,18 @@ public class TestingEnvironment {
 		return addClass(packageFragmentRootPath, className, contents);
 	}
 
+	/**
+	 * replace the given class with new content
+	 */
+	public void editClass(IPath path, String contents) {
+		try {
+			IFile file = this.workspace.getRoot().getFile(path);
+			file.setContents(contents.getBytes(StandardCharsets.UTF_8), true, false, null);
+		} catch (CoreException e) {
+			handle(e);
+		}
+	}
+
 /**
  * Add a class folder to the classpath of a project.
  */
@@ -174,6 +186,19 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 	 * Returns the path of the added package fragment root.
 	 */
 	public IPath addPackageFragmentRoot(IPath projectPath, String sourceFolderName, IPath[] inclusionPatterns, IPath[] exclusionPatterns, String specificOutputLocation, boolean isTest) throws JavaModelException {
+		IClasspathAttribute[] extraAttributes = isTest ? new IClasspathAttribute[] {JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, "true")} : ClasspathEntry.NO_EXTRA_ATTRIBUTES;
+		return addPackageFragmentRoot(projectPath, sourceFolderName, inclusionPatterns, exclusionPatterns,
+				specificOutputLocation, extraAttributes);
+	}
+
+	public IPath addPackageFragmentRoot(IPath projectPath, String sourceFolderName, IClasspathAttribute[] extraAttributes)
+			throws JavaModelException {
+		return addPackageFragmentRoot(projectPath, sourceFolderName, null, null, null, extraAttributes);
+	}
+
+	public IPath addPackageFragmentRoot(IPath projectPath, String sourceFolderName, IPath[] inclusionPatterns,
+			IPath[] exclusionPatterns, String specificOutputLocation, IClasspathAttribute[] extraAttributes)
+			throws JavaModelException {
 		checkAssertion("a workspace must be open", this.isOpen); //$NON-NLS-1$
 		IPath path = getPackageFragmentRootPath(projectPath, sourceFolderName);
 		createFolder(path);
@@ -187,7 +212,7 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 			inclusionPatterns == null ? new Path[0] : inclusionPatterns,
 			exclusionPatterns == null ? new Path[0] : exclusionPatterns,
 			outputPath,
-			isTest ? new IClasspathAttribute[] {JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, "true")} : ClasspathEntry.NO_EXTRA_ATTRIBUTES);
+			extraAttributes);
 		addEntry(projectPath, entry);
 		return path;
 	}
@@ -896,7 +921,9 @@ public void cleanBuild(String projectName) {
 	public void incrementalBuild(IPath projectPath) {
 		checkAssertion("a workspace must be open", this.isOpen); //$NON-NLS-1$
 		try {
-			getProject(projectPath).build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null);
+			IProject project = getProject(projectPath);
+			checkAssertion("project for path "+projectPath+" not found", project !=null);
+			project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null);
 		} catch (Throwable e) {
 			handle(e);
 		}
@@ -1209,6 +1236,12 @@ public void cleanBuild(String projectName) {
 			checkAssertion("JavaModelException", false); //$NON-NLS-1$
 		}
 		return outputPath;
+	}
+
+	public void setProjectOption(IPath projectPath, String key, String value) {
+		checkAssertion("a workspace must be open", this.isOpen); //$NON-NLS-1$
+		IJavaProject javaProject = JavaCore.create(getProject(projectPath));
+		javaProject.setOption(key, value);
 	}
 
 	private void setup() {

@@ -598,6 +598,13 @@ public class CaptureBinding extends TypeVariableBinding {
 	}
 
 	@Override
+	public int typeArgumentDepth() {
+		if (this.wildcard != null)
+			return this.wildcard.typeArgumentDepth();
+		return 1;
+	}
+
+	@Override
 	public String toString() {
 		if (this.wildcard != null) {
 			StringBuilder buffer = new StringBuilder(10);

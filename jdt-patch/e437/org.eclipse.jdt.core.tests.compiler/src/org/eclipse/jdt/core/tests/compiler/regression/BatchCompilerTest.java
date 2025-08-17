@@ -50,6 +50,7 @@ import java.util.List;
 import junit.framework.Test;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.batch.ClasspathDirectory;
@@ -63,7 +64,6 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.util.ManifestAnalyzer;
 
-@SuppressWarnings({ "unchecked", "rawtypes" })
 public class BatchCompilerTest extends AbstractBatchCompilerTest {
 
 	static {
@@ -83,7 +83,7 @@ public class BatchCompilerTest extends AbstractBatchCompilerTest {
 	public static Test suite() {
 		return buildMinimalComplianceTestSuite(testClass(), FIRST_SUPPORTED_JAVA_VERSION);
 	}
-	public static Class testClass() {
+	public static Class<? extends TestCase> testClass() {
 		return BatchCompilerTest.class;
 	}
 	static class StringMatcher extends Matcher {
@@ -8187,12 +8187,12 @@ public void test230_sourcepath_vs_classpath() throws IOException, InterruptedExc
 		assertTrue(this.verifier.getExecutionOutput().startsWith("2")); // skip trailing newline
 		// 2 means we selected src2
 		// recompile and run result using various levels of javac
-		Iterator javacCompilersIterator = javacCompilers.iterator();
+		Iterator<JavacCompiler> javacCompilersIterator = javacCompilers.iterator();
 		String specialOptions = commonOptions + " -Xprefer:source ";
 		String sourceFileNames[] = new String[] {sourceFilePath};
 		File outputDir = new File(OUTPUT_DIR);
 		while (javacCompilersIterator.hasNext()) {
-			JavacCompiler javacCompiler = (JavacCompiler) javacCompilersIterator.next();
+			JavacCompiler javacCompiler = javacCompilersIterator.next();
 			assertTrue(javacCompiler.compile(
 					outputDir, /* directory */
 					commonOptions /* options */,
@@ -8270,11 +8270,11 @@ public void test231_sourcepath_vs_classpath() throws IOException, InterruptedExc
 		false /* shouldFlushOutputDirectory */,
 		null /* progress */);
 	if (RUN_JAVAC) {
-		Iterator javacCompilersIterator = javacCompilers.iterator();
+		Iterator<JavacCompiler> javacCompilersIterator = javacCompilers.iterator();
 		String sourceFileNames[] = new String[] {sourceFilePath};
 		File outputDir = new File(OUTPUT_DIR);
 		while (javacCompilersIterator.hasNext()) {
-			JavacCompiler javacCompiler = (JavacCompiler) javacCompilersIterator.next();
+			JavacCompiler javacCompiler = javacCompilersIterator.next();
 			assertFalse(javacCompiler.compile(
 					outputDir /* directory */,
 					commonOptions /* options */,
@@ -8329,11 +8329,11 @@ public void test232_repeated_classpath() throws IOException, InterruptedExceptio
 	if (RUN_JAVAC) {
 		// javac skips all but the last classpath entry (which results into an
 		// error in the split case here)
-		Iterator javacCompilersIterator = javacCompilers.iterator();
+		Iterator<JavacCompiler> javacCompilersIterator = javacCompilers.iterator();
 		String sourceFileNames[] = new String[] {sourceFilePath};
 		File outputDir = new File(OUTPUT_DIR);
 		while (javacCompilersIterator.hasNext()) {
-			JavacCompiler javacCompiler = (JavacCompiler) javacCompilersIterator.next();
+			JavacCompiler javacCompiler = javacCompilersIterator.next();
 			assertTrue(javacCompiler.compile(
 					outputDir /* directory */,
 					combinedClasspathOptions /* options */,
@@ -8381,12 +8381,12 @@ public void test233_repeated_sourcepath() throws IOException, InterruptedExcepti
 		true /* shouldFlushOutputDirectory */,
 		null /* progress */);
 	if (RUN_JAVAC) {
-		Iterator javacCompilersIterator = javacCompilers.iterator();
+		Iterator<JavacCompiler> javacCompilersIterator = javacCompilers.iterator();
 		String sourceFileNamesZ[] = new String[] {sourceFilePathZ};
 		String sourceFileNamesW[] = new String[] {sourceFilePathW};
 		File outputDir = new File(OUTPUT_DIR);
 		while (javacCompilersIterator.hasNext()) {
-			JavacCompiler javacCompiler = (JavacCompiler) javacCompilersIterator.next();
+			JavacCompiler javacCompiler = javacCompilersIterator.next();
 			// succeeds because it picks src2 up
 			assertTrue(javacCompiler.compile(
 					outputDir /* directory */,
@@ -8436,11 +8436,11 @@ public void test234_sourcepath_vs_classpath() throws IOException, InterruptedExc
 		// in contrast with test#232 when src1 is on the classpath, javac fails
 		// to find src1/X.java; this is because -sourcepath inhibits source files
 		// search in classpath directories
-		Iterator javacCompilersIterator = javacCompilers.iterator();
+		Iterator<JavacCompiler> javacCompilersIterator = javacCompilers.iterator();
 		String sourceFileNames[] = new String[] {sourceFilePath};
 		File outputDir = new File(OUTPUT_DIR);
 		while (javacCompilersIterator.hasNext()) {
-			JavacCompiler javacCompiler = (JavacCompiler) javacCompilersIterator.next();
+			JavacCompiler javacCompiler = javacCompilersIterator.next();
 			assertFalse(javacCompiler.compile(
 					outputDir, /* directory */
 					commonOptions /* options */,
@@ -8518,11 +8518,11 @@ public void test235_classpath() throws IOException, InterruptedException {
 	// javac passes, using the most recent file amongst source and class files
 	// present on the classpath
 	if (RUN_JAVAC) {
-		Iterator javacCompilersIterator = javacCompilers.iterator();
+		Iterator<JavacCompiler> javacCompilersIterator = javacCompilers.iterator();
 		String sourceFileNames[] = new String[] {sourceFilePath};
 		File outputDir = new File(OUTPUT_DIR);
 		while (javacCompilersIterator.hasNext()) {
-			JavacCompiler javacCompiler = (JavacCompiler) javacCompilersIterator.next();
+			JavacCompiler javacCompiler = javacCompilersIterator.next();
 			assertTrue(javacCompiler.compile(
 					outputDir /* directory */,
 					commonOptions /* options */,
@@ -8590,11 +8590,11 @@ public void test236_classpath() throws IOException, InterruptedException {
 	this.verifier.execute("Y", new String[] {OUTPUT_DIR + File.separator + "bin"});
 	assertTrue(this.verifier.getExecutionOutput().startsWith("1")); // skip trailing newline
 	if (RUN_JAVAC) {
-		Iterator javacCompilersIterator = javacCompilers.iterator();
+		Iterator<JavacCompiler> javacCompilersIterator = javacCompilers.iterator();
 		String sourceFileNames[] = new String[] {sourceFilePath};
 		File outputDir = new File(OUTPUT_DIR);
 		while (javacCompilersIterator.hasNext()) {
-			JavacCompiler javacCompiler = (JavacCompiler) javacCompilersIterator.next();
+			JavacCompiler javacCompiler = javacCompilersIterator.next();
 			assertTrue(javacCompiler.compile(
 					outputDir /* directory */,
 					commonOptions /* options */,
@@ -8657,11 +8657,11 @@ public void test237_classpath() throws IOException, InterruptedException {
 	this.verifier.execute("Y", new String[] {OUTPUT_DIR + File.separator + "bin"});
 	assertTrue(this.verifier.getExecutionOutput().startsWith("1")); // skip trailing newline
 	if (RUN_JAVAC) {
-		Iterator javacCompilersIterator = javacCompilers.iterator();
+		Iterator<JavacCompiler> javacCompilersIterator = javacCompilers.iterator();
 		String sourceFileNames[] = new String[] {sourceFilePath};
 		File outputDir = new File(OUTPUT_DIR);
 		while (javacCompilersIterator.hasNext()) {
-			JavacCompiler javacCompiler = (JavacCompiler) javacCompilersIterator.next();
+			JavacCompiler javacCompiler = javacCompilersIterator.next();
 			assertTrue(javacCompiler.compile(
 					outputDir /* directory */,
 					commonOptions /* options */,
@@ -8717,11 +8717,11 @@ public void test238_classpath() throws IOException, InterruptedException {
 	this.verifier.execute("Y", new String[] {OUTPUT_DIR + File.separator + "bin"});
 	assertTrue(this.verifier.getExecutionOutput().startsWith("1")); // skip trailing newline
 	if (RUN_JAVAC) {
-		Iterator javacCompilersIterator = javacCompilers.iterator();
+		Iterator<JavacCompiler> javacCompilersIterator = javacCompilers.iterator();
 		String sourceFileNames[] = new String[] {sourceFilePath};
 		File outputDir = new File(OUTPUT_DIR);
 		while (javacCompilersIterator.hasNext()) {
-			JavacCompiler javacCompiler = (JavacCompiler) javacCompilersIterator.next();
+			JavacCompiler javacCompiler = javacCompilersIterator.next();
 			assertTrue(javacCompiler.compile(
 					outputDir /* directory */,
 					commonOptions /* options */,
@@ -10103,8 +10103,8 @@ public void test291_jar_ref_in_jar() throws Exception {
 		"Class-Path: \r\n" +
 		"\r\n"
 		));
-	List calledFileNames = analyzer.getCalledFileNames();
-	String actual = calledFileNames == null ? "<null>" : Util.toString((String[]) calledFileNames.toArray(new String[calledFileNames.size()]), false/*don't add extra new lines*/);
+	List<String> calledFileNames = analyzer.getCalledFileNames();
+	String actual = calledFileNames == null ? "<null>" : Util.toString(calledFileNames.toArray(new String[calledFileNames.size()]), false/*don't add extra new lines*/);
 	assertStringEquals(
 		"<null>",
 		actual,
@@ -13325,5 +13325,36 @@ public void testIssue3827_3() {
 				"",
 				"",
 				true);
+}
+public void testBug550255() {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+			"	public static int field1;\n" +
+			"	public static int field2;\n" +
+			"	private synchronized String foo() {\n" +
+			"		return null;\n" +
+			"	}\n" +
+			"	public synchronized void foo1() {\n" +
+			"		System.out.println(1);\n" +
+			"	}\n" +
+			"	public final void foo2() {\n" +
+			"		System.out.println(2);\n" +
+			"	}\n" +
+			"}\n",
+		},
+		"\"" + OUTPUT_DIR +  File.separator + "X.java\""
+		+ " -sourcepath \"" + OUTPUT_DIR + "\""
+		+ " -warn:all-static-method -proc:none -d \"" + OUTPUT_DIR + "\"",
+		"",
+		"----------\n" +
+		"1. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/X.java (at line 10)\n"
+		+ "	public final void foo2() {\n"
+		+ "	                  ^^^^^^\n"
+		+ "The method foo2() from the type X can be declared as static\n"
+		+ "----------\n"
+		+ "1 problem (1 warning)\n",
+		true);
 }
 }

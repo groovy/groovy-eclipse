@@ -78,10 +78,6 @@ public MethodBinding shallowOriginal() {
 	return this.closestMatch == null ? this : this.closestMatch.shallowOriginal();
 }
 @Override
-public MethodBinding tiebreakMethod() {
-	return this.closestMatch == null ? this : this.closestMatch.tiebreakMethod();
-}
-@Override
 public boolean hasSubstitutedParameters() {
 	if (this.closestMatch != null)
 		return this.closestMatch.hasSubstitutedParameters();

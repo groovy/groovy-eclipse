@@ -3898,7 +3898,7 @@ public final class CompletionEngine
 			checkCancel();
 
 			// see if we can find argument type at position in case if we are at a vararg.
-			checkForVarargExpectedTypes(astNodeParent, scope);
+			checkForVarargExpectedTypes(astNodeParent, astNode, scope);
 			findVariablesAndMethods(this.completionToken, scope, singleNameReference, scope, insideTypeAnnotation,
 					singleNameReference.isInsideAnnotationAttribute, true, new ObjectVector());
 
@@ -3934,8 +3934,11 @@ public final class CompletionEngine
 		}
 	}
 
-	private void checkForVarargExpectedTypes(ASTNode astNodeParent, Scope scope) {
-		if (astNodeParent instanceof MessageSend m && this.expectedTypesPtr == -1) {
+	private void checkForVarargExpectedTypes(ASTNode astNodeParent, ASTNode astNode, Scope scope) {
+		if (astNodeParent instanceof MessageSend m
+				&& m.arguments() != null
+				&& Stream.of(m.arguments()).anyMatch(astNode::equals)
+				&& this.expectedTypesPtr == -1) {
 			final ObjectVector methodsToSearchOn = new ObjectVector();
 			final CompletionRequestor actual = this.requestor;
 			this.requestor = new CompletionRequestor(true) {

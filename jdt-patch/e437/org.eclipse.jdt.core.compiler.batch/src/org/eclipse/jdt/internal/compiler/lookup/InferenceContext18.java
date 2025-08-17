@@ -163,9 +163,6 @@ public class InferenceContext18 {
 	// during reduction we ignore missing types but record that fact here:
 	TypeBinding missingType;
 
-	private static ThreadLocal<InferenceContext18> instance = new ThreadLocal<>();
-	private boolean isCaptureInProcess = false;
-
 	public static boolean isSameSite(InvocationSite site1, InvocationSite site2) {
 		if (site1 == site2)
 			return true;
@@ -737,7 +734,7 @@ public class InferenceContext18 {
 
 
 	protected int getInferenceKind(MethodBinding nonGenericMethod, TypeBinding[] argumentTypes) {
-		switch (this.scope.parameterCompatibilityLevel(nonGenericMethod, argumentTypes)) {
+		switch (this.scope.parameterCompatibilityLevel(nonGenericMethod, argumentTypes, this.currentInvocation)) {
 			case Scope.AUTOBOX_COMPATIBLE:
 			case Scope.COMPATIBLE_IGNORING_MISSING_TYPE: // if in doubt the method with missing types should be accepted to signal its relevance for resolution
 				return CHECK_LOOSE;
@@ -1017,16 +1014,20 @@ public class InferenceContext18 {
 	 * @throws InferenceFailureException a compile error has been detected during inference
 	 */
 	public /*@Nullable*/ BoundSet solve(boolean inferringApplicability) throws InferenceFailureException {
-		return solve(inferringApplicability, false);
+		return solve(inferringApplicability, (ASTNode) this.currentInvocation);
 	}
 	/**
 	 * Try to solve the inference problem defined by constraints and bounds previously registered.
-	 * @param isRecordPatternTypeInference see 18_5_5_item_5 for Record Type Inference
+	 * @param inferringApplicability toggles between 18.5.1 and 18.5.2
+	 * @param location the current invocation (18.5.1 - 18.5.5) or record pattern (18.5.5, see item 5)
 	 * @return a bound set representing the solution, or null if inference failed
 	 * @throws InferenceFailureException a compile error has been detected during inference
 	 */
-	private /*@Nullable*/ BoundSet solve(boolean inferringApplicability, boolean isRecordPatternTypeInference) throws InferenceFailureException {
-		instance.set(this);
+	private /*@Nullable*/ BoundSet solve(boolean inferringApplicability, ASTNode location)
+			throws InferenceFailureException
+	{
+		CapturingContext.enter(location.sourceStart(), location.sourceEnd(), this.scope);
+		boolean isRecordPatternTypeInference = location instanceof RecordPattern;
 
 		try {
 			if (!reduce())
@@ -1053,7 +1054,7 @@ public class InferenceContext18 {
 			}
 			return solution;
 		} finally {
-			instance.remove();
+			CapturingContext.leave();
 		}
 	}
 
@@ -1994,7 +1995,7 @@ public class InferenceContext18 {
 		 */
 		BoundSet solution = null;
 		try {
-			solution = solve(false, true /* isRecordPatternTypeInference */);
+			solution = solve(false, recordPattern);
 		} catch (InferenceFailureException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2211,18 +2212,5 @@ public class InferenceContext18 {
 			}
 		}
 		return false;
-	}
-	public static TypeBinding maybeCapture(TypeBinding type) {
-		InferenceContext18 inst = instance.get();
-		if (inst != null && !inst.isCaptureInProcess) {
-			try {
-				InvocationSite inv = inst.currentInvocation;
-				inst.isCaptureInProcess = true;
-				return type.capture(inst.scope, inv.sourceStart(), inv.sourceEnd());
-			} finally {
-				inst.isCaptureInProcess = false;
-			}
-		}
-		return type;
 	}
 }

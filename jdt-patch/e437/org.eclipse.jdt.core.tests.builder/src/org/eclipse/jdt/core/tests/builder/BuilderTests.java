@@ -552,7 +552,8 @@ public class BuilderTests extends TestCase {
 			PackageInfoTest.class,
 			ParticipantBuildTests.class,
 			AnnotationDependencyTests.class,
-			Bug544921Test.class
+			Bug544921Test.class,
+			MultiReleaseTests.class
 		};
 		List<Class<?>> list = new ArrayList<>(Arrays.asList(classes));
 		if (matchesCompliance(F_9)) {

@@ -413,7 +413,7 @@ protected void deleteGeneratedFiles(IFile[] deletedGeneratedFiles) {
 						removeClassFile(packagePath.append(new String(definedTypeName)), sourceFile.sourceLocation.binaryFolder);
 				}
 			}
-			this.newState.removeLocator(typeLocator);
+			this.newState.removeLocator(typeLocator, sourceFile.sourceLocation.release);
 		}
 	} catch (CoreException e) {
 		// must continue with compile loop so just log the CoreException
@@ -641,7 +641,9 @@ protected boolean findSourceFiles(IResourceDelta sourceDelta, ClasspathMultiDire
 					if (JavaBuilder.DEBUG)
 						System.out.println("Found removed package " + removedPackagePath); //$NON-NLS-1$
 					addDependentsOf(removedPackagePath, true);
-					this.newState.removePackage(sourceDelta);
+					for (ClasspathMultiDirectory sourceLocation : this.sourceLocations) {
+						this.newState.removePackage(sourceDelta, sourceLocation.release);
+					}
 			}
 			return true;
 		case IResource.FILE :
@@ -665,7 +667,7 @@ protected boolean findSourceFiles(IResourceDelta sourceDelta, ClasspathMultiDire
 							System.out.println("Compile this added source file " + typeLocator); //$NON-NLS-1$
 						this.sourceFiles.add(new SourceFile((IFile) resource, md, true));
 						String typeName = typePath.toString();
-						if (!this.newState.isDuplicateLocator(typeName, typeLocator)) { // adding dependents results in 2 duplicate errors
+						if (!this.newState.isDuplicateLocator(typeName, typeLocator, md.release)) { // adding dependents results in 2 duplicate errors
 							if (JavaBuilder.DEBUG)
 								System.out.println("Found added source file " + typeName); //$NON-NLS-1$
 							addDependentsOf(typePath, true);
@@ -693,7 +695,7 @@ protected boolean findSourceFiles(IResourceDelta sourceDelta, ClasspathMultiDire
 									removeClassFile(packagePath.append(new String(definedTypeName)), md.binaryFolder);
 							}
 						}
-						this.newState.removeLocator(typeLocator);
+						this.newState.removeLocator(typeLocator, md.release);
 						return true;
 					case IResourceDelta.CHANGED :
 						if ((sourceDelta.getFlags() & IResourceDelta.CONTENT) == 0

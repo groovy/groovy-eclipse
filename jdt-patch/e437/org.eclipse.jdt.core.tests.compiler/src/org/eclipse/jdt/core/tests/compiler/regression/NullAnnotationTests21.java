@@ -50,7 +50,7 @@ public class NullAnnotationTests21 extends AbstractNullAnnotationTest {
 			int len = defaultLibs.length;
 			this.LIBS = new String[len+1];
 			System.arraycopy(defaultLibs, 0, this.LIBS, 0, len);
-			this.LIBS[len] = NullAnnotationTests9.createAnnotation_2_2_jar(Util.getOutputDirectory() + File.separator, null);
+			this.LIBS[len] = NullAnnotationTests9.createAnnotation_2_4_jar(Util.getOutputDirectory() + File.separator, null);
 		}
 	}
 
@@ -1089,6 +1089,105 @@ public class NullAnnotationTests21 extends AbstractNullAnnotationTest {
 		runner.classLibraries = this.LIBS;
 		runner.runConformTest();
 	}
+	public void testGH1771_otherConflict1() {
+		Runner runner = new Runner();
+		runner.customOptions = getCompilerOptions();
+		runner.customOptions.put(CompilerOptions.OPTION_ReportNullSpecViolation, CompilerOptions.ERROR);
+		runner.customOptions.put(CompilerOptions.OPTION_InheritNullAnnotations, CompilerOptions.ENABLED);
+		runner.testFiles = new String[] {
+			"p/Foo.java",
+			"""
+			package p;
+			import org.eclipse.jdt.annotation.*;
+			public interface Foo {
+
+				@NonNull Object foo();
+
+				record BarNOK(
+						Object foo // conflicts with inherited @NonNull Object foo()
+					) implements Foo { }
+
+				record BarNOK2(
+						@Nullable Object foo // conflicts with inherited @NonNull Object foo()
+					) implements Foo { }
+
+				record BarNOK3(Object foo) {
+					@Override
+					public @NonNull Object foo() { // try to outsmart analysis by improved explicit accessor
+						return foo; // simple contract violation
+					}
+				}
+
+				@NonNullByDefault
+				record BarOK(Object foo) implements Foo { }
+			}
+			"""
+		};
+		runner.classLibraries = this.LIBS;
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in p\\Foo.java (at line 8)
+					Object foo // conflicts with inherited @NonNull Object foo()
+					^^^^^^
+				Implicit accessor method for 'Object foo' cannot override inherited method '@NonNull Object foo()' from Foo.BarNOK due to incompatible nullness constraints
+				----------
+				2. ERROR in p\\Foo.java (at line 12)
+					@Nullable Object foo // conflicts with inherited @NonNull Object foo()
+					          ^^^^^^
+				Implicit accessor method for '@Nullable Object foo' cannot override inherited method '@NonNull Object foo()' from Foo.BarNOK2 due to incompatible nullness constraints
+				----------
+				3. WARNING in p\\Foo.java (at line 18)
+					return foo; // simple contract violation
+					       ^^^
+				Null type safety (type annotations): The expression of type 'Object' needs unchecked conversion to conform to '@NonNull Object'
+				----------
+				""";
+		runner.runNegativeTest();
+	}
+	public void testGH1771_otherConflict2() {
+		Runner runner = new Runner();
+		runner.customOptions = getCompilerOptions();
+		runner.customOptions.put(CompilerOptions.OPTION_ReportNullSpecViolation, CompilerOptions.ERROR);
+		runner.customOptions.put(CompilerOptions.OPTION_InheritNullAnnotations, CompilerOptions.ENABLED);
+		runner.testFiles = new String[] {
+			"p/Foo.java",
+			"""
+			package p;
+			import org.eclipse.jdt.annotation.*;
+			public interface Foo {
+
+				@Nullable Object foo();
+
+				record BarNOK(
+						Object foo // legally covariant override @Nullable Object -> Object
+					) implements Foo { }
+
+				record BarOK1(
+						@NonNull Object foo // legally covariant override @Nullable Object -> @NonNull Object
+					) implements Foo { }
+
+				@NonNullByDefault
+				record BarNOK3(
+						Object foo // conflict between implicits: default & inherited
+					) implements Foo { }
+
+				record BarOK(@Nullable Object foo) implements Foo { }
+			}
+			"""
+		};
+		runner.classLibraries = this.LIBS;
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in p\\Foo.java (at line 17)
+					Object foo // conflict between implicits: default & inherited
+					^^^^^^
+				The default '@NonNull' conflicts with the inherited '@Nullable' annotation in the overridden method from Foo
+				----------
+				""";
+		runner.runNegativeTest();
+	}
 
 	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2521
 	// NPE on exhaustive pattern matching switch expressions with sealed interface
@@ -1357,5 +1456,34 @@ public class NullAnnotationTests21 extends AbstractNullAnnotationTest {
 				"Dead code\n" +
 				"----------\n";
 		runner.runNegativeTest();
+	}
+
+	public void testGH701() {
+		Runner runner = getDefaultRunner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				import static org.eclipse.jdt.annotation.DefaultLocation.*;
+
+
+				@org.eclipse.jdt.annotation.NonNullByDefault({FIELD, PARAMETER, RETURN_TYPE}) // not RECORD_COMPONENT!
+				public class X {
+					record R(X x) {}
+					X test(R r) {
+						return r.x();
+					}
+				}
+				"""
+		};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. WARNING in X.java (at line 8)
+					return r.x();
+					       ^^^^^
+				Null type safety (type annotations): The expression of type 'X' needs unchecked conversion to conform to '@NonNull X'
+				----------
+				""";
+		runner.runWarningTest();
 	}
 }

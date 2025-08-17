@@ -137,8 +137,8 @@ public abstract class ClasspathLocation {
 		return true;
 	}
 	static ClasspathLocation forSourceFolder(IContainer sourceFolder, IContainer outputFolder,
-			char[][] inclusionPatterns, char[][] exclusionPatterns, boolean ignoreOptionalProblems, IPath externalAnnotationPath) {
-		return new ClasspathMultiDirectory(sourceFolder, outputFolder, inclusionPatterns, exclusionPatterns, ignoreOptionalProblems, externalAnnotationPath);
+			char[][] inclusionPatterns, char[][] exclusionPatterns, boolean ignoreOptionalProblems, IPath externalAnnotationPath, int release) {
+		return new ClasspathMultiDirectory(sourceFolder, outputFolder, inclusionPatterns, exclusionPatterns, ignoreOptionalProblems, externalAnnotationPath, release);
 	}
 public static ClasspathLocation forBinaryFolder(IContainer binaryFolder, boolean isOutputFolder, AccessRuleSet accessRuleSet, IPath externalAnnotationPath, boolean autoModule) {
 	return new ClasspathDirectory(binaryFolder, isOutputFolder, accessRuleSet, externalAnnotationPath, autoModule);

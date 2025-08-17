@@ -116,11 +116,6 @@ public abstract class Pattern extends Expression {
 
 	public abstract void generateCode(BlockScope currentScope, CodeStream codeStream, BranchLabel patternMatchLabel, BranchLabel matchFailLabel);
 
-	public void generateTestingConversion(BlockScope scope, CodeStream codeStream) {
-		// TODO: MAKE THIS abstract
-	}
-
-
 	@Override
 	public boolean checkUnsafeCast(Scope scope, TypeBinding castType, TypeBinding expressionType, TypeBinding match, boolean isNarrowing) {
 		if (!castType.isReifiable())

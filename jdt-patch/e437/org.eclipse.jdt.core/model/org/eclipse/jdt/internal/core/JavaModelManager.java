@@ -28,6 +28,7 @@ package org.eclipse.jdt.internal.core;
 
 import java.io.*;
 import java.net.URI;
+import java.nio.file.NoSuchFileException;
 import java.text.MessageFormat;
 import java.time.Instant;
 import java.util.*;
@@ -2984,7 +2985,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			// file may exist but for some reason is inaccessible
 			ArchiveValidity reason=ArchiveValidity.INVALID;
 			addInvalidArchive(path, reason);
-			throw new CoreException(new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, -1, Messages.status_IOException, e));
+			int code = -1;
+			if(e instanceof FileNotFoundException || e instanceof NoSuchFileException) {
+				code = IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST;
+			}
+			throw new JavaModelException(new JavaModelStatus(code, e));
 		}
 	}
 

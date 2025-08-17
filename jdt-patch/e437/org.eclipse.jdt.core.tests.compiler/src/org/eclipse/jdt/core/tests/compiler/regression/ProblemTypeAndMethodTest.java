@@ -10142,4 +10142,50 @@ public void testIssue4209() throws Exception {
 			"Void methods cannot return a value\n" +
 			"----------\n");
 }
+
+public void testMissingClass_return() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+			"p1/I.java",
+			"""
+			package p1;
+			public class I {}
+			""",
+			"p2/P.java",
+			"""
+			package p2;
+			import p1.I;
+			public class P extends I {
+				public P(Number n) {}
+			}
+			"""
+		};
+	runner.runConformTest();
+
+	// delete binary file I (i.e. simulate removing it from classpath for subsequent compile)
+	Util.delete(new File(OUTPUT_DIR, "p1" + File.separator + "I.class"));
+
+	runner.shouldFlushOutputDirectory = false;
+	runner.testFiles = new String[] {
+			"p3/C.java",
+			"""
+			package p3;
+			import p2.P;
+			class C {
+				public Object test() {
+					return new P(1);
+				}
+
+				public Object test2() {
+					Object o = new P(1);
+					return o;
+				}
+
+			}
+			"""
+		};
+	runner.expectedCompilerLog = "";
+	runner.runConformTest();
+}
+
 }

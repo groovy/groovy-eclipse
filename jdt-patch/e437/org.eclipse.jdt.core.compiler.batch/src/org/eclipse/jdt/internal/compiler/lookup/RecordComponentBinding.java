@@ -15,12 +15,16 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 
 public class RecordComponentBinding extends VariableBinding {
 
 	public ReferenceBinding declaringRecord;
+
+	// When applying @NNBD to this component, let's remember the explicit type before applying the default.
+	TypeBinding explicitType;
 
 	public RecordComponentBinding(ReferenceBinding declaringRecord, RecordComponent declaration, TypeBinding type, int modifiers) {
 		super(declaration.name, type, modifiers,  null);
@@ -94,6 +98,12 @@ public class RecordComponentBinding extends VariableBinding {
 			}
 		}
 		return originalRecordComponentBinding.tagBits;
+	}
+
+	@Override
+	public void fillInDefaultNonNullness(AbstractVariableDeclaration sourceField, Scope scope) {
+		this.explicitType = this.type;
+		super.fillInDefaultNonNullness(sourceField, scope);
 	}
 
 	@Override

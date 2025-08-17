@@ -262,10 +262,14 @@ public class ImplicitNullAnnotationVerifier {
 			this.buddyImplicitNullAnnotationsVerifier.checkImplicitNullAnnotations(inheritedMethod, null, false, scope);
 		}
 		boolean useTypeAnnotations = this.environment.usesNullTypeAnnotations();
-		long inheritedNullnessBits = getReturnTypeNullnessTagBits(inheritedMethod, useTypeAnnotations);
-		long currentNullnessBits = getReturnTypeNullnessTagBits(currentMethod, useTypeAnnotations);
+		long inheritedNullnessBits = getExplicitReturnTypeNullnessTagBits(inheritedMethod, useTypeAnnotations);
+		long currentNullnessBits = getExplicitReturnTypeNullnessTagBits(currentMethod, useTypeAnnotations);
 
 		boolean shouldInherit = this.inheritNullAnnotations;
+
+		SyntheticMethodBinding currentRecordAccessor = null;
+		if (currentMethod instanceof SyntheticMethodBinding synth && synth.purpose == SyntheticMethodBinding.RecordComponentReadAccess)
+			currentRecordAccessor = synth;
 
 		// return type:
 		returnType: {
@@ -281,15 +285,11 @@ public class ImplicitNullAnnotationVerifier {
 								ASTNode location = null;
 								if (srcMethod instanceof MethodDeclaration) {
 									location = ((MethodDeclaration) srcMethod).returnType;
-								} else if (currentMethod instanceof SyntheticMethodBinding) {
-									SyntheticMethodBinding synth = (SyntheticMethodBinding) currentMethod;
-									switch (synth.purpose) {
-										case SyntheticMethodBinding.RecordComponentReadAccess:
-											if (synth.recordComponentBinding != null) {
-												RecordComponent sourceRecordComponent = synth.sourceRecordComponent();
-												if (sourceRecordComponent != null)
-													location = sourceRecordComponent.type;
-											}
+								} else if (currentRecordAccessor != null) {
+									if (currentRecordAccessor.recordComponentBinding != null) {
+										RecordComponent sourceRecordComponent = currentRecordAccessor.sourceRecordComponent();
+										if (sourceRecordComponent != null)
+											location = sourceRecordComponent.type;
 									}
 								}
 								if (location == null)
@@ -298,14 +298,16 @@ public class ImplicitNullAnnotationVerifier {
 								// 	still use the inherited bits to avoid incompatibility
 							}
 						}
-						if (inheritedNonNullnessInfos != null && srcMethod != null) {
-							recordDeferredInheritedNullness(scope, ((MethodDeclaration) srcMethod).returnType,
-									inheritedMethod, Boolean.valueOf(inheritedNullnessBits == TagBits.AnnotationNonNull), inheritedNonNullnessInfos[0]);
-						} else {
-							// no need to defer, record this info now:
-							applyReturnNullBits(currentMethod, inheritedNullnessBits);
+						if (currentRecordAccessor == null) { // never transfer nullness from inherited method to record component
+							if (inheritedNonNullnessInfos != null && srcMethod != null) {
+								recordDeferredInheritedNullness(scope, ((MethodDeclaration) srcMethod).returnType,
+										inheritedMethod, Boolean.valueOf(inheritedNullnessBits == TagBits.AnnotationNonNull), inheritedNonNullnessInfos[0]);
+							} else {
+								// no need to defer, record this info now:
+								applyReturnNullBits(currentMethod, inheritedNullnessBits);
+							}
+							break returnType; // compatible by construction, skip complain phase below
 						}
-						break returnType; // compatible by construction, skip complain phase below
 					}
 				}
 				if (hasReturnNonNullDefault && (!useTypeAnnotations || currentMethod.returnType.acceptsNonNullDefault())) { // conflict with inheritance already checked
@@ -514,10 +516,21 @@ public class ImplicitNullAnnotationVerifier {
 						? null : method.getParameterNullness(i);
 	}
 
-	private long getReturnTypeNullnessTagBits(MethodBinding method, boolean useTypeAnnotations) {
+	/**
+	 * Retrieve nullness of the method's return type, but make sure we don't get nullness from {@code @NNBD}
+	 * (which can happen for record components).
+	 */
+	private long getExplicitReturnTypeNullnessTagBits(MethodBinding method, boolean useTypeAnnotations) {
 		if (useTypeAnnotations) {
 			if (method.returnType == null)
 				return 0L;
+			if (method instanceof SyntheticMethodBinding synth && synth.purpose == SyntheticMethodBinding.RecordComponentReadAccess) {
+				// record components apply @NNBD already during SBT.resolveTypeFor(FieldBinding)
+				// so we need to dig deeper to find the explicit type before application of a default:
+				Binding explicitType = synth.recordComponentBinding.explicitType;
+				if (explicitType != null)
+					return NullAnnotationMatching.validNullTagBits(explicitType.tagBits);
+			}
 			return NullAnnotationMatching.validNullTagBits(method.returnType.tagBits);
 		}
 		return method.tagBits & TagBits.AnnotationNullMASK;

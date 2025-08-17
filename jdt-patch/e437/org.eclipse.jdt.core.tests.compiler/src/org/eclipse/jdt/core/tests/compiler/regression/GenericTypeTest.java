@@ -28971,7 +28971,7 @@ public void test0909() {
 
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=127583
 public void test0910() {
-	int[] capIds = new int[]{ 1, 2, 3, 4, 8};
+	int[] capIds = new int[]{ 1, 3, 4, 6, 13};
 	this.runNegativeTest(
 		new String[] {
 			"X.java",

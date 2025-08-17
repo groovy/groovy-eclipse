@@ -2945,10 +2945,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
 
                 typeDeclaration.declarationSourceStart = (doc != null ? doc.sourceStart : classNode.getStart());
-                // without the -1 we can hit AIOOBE in org.eclipse.jdt.internal.core.Member.getJavadocRange where it
-                // calls getText() because the source range length causes us to ask for more data than is in the buffer
-                // What does this mean? For hovers, the AIOOBE is swallowed and you just see no hover box.
-                typeDeclaration.declarationSourceEnd = classNode.getEnd() - 1;
+                typeDeclaration.declarationSourceEnd   = Math.max(classNode.getEnd() - 1, classNode.getStart());
 
                 // TODO: start past the opening brace and end before the closing brace
                 //       except that scripts do not have a name, use the start instead

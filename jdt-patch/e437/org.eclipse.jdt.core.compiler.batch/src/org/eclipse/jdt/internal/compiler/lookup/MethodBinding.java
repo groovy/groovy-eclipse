@@ -1284,13 +1284,6 @@ public final int sourceStart() {
 	return method.sourceStart;
 }
 
-/**
- * Returns the method to use during tiebreak (usually the method itself).
- * For generic method invocations, tiebreak needs to use generic method with erasure substitutes.
- */
-public MethodBinding tiebreakMethod() {
-	return this;
-}
 @Override
 public String toString() {
 	StringBuilder output = new StringBuilder(10);
@@ -1407,7 +1400,7 @@ public ParameterNonNullDefaultProvider hasNonNullDefaultForParameter(AbstractMet
 		return trueFound ? ParameterNonNullDefaultProvider.TRUE_PROVIDER : ParameterNonNullDefaultProvider.FALSE_PROVIDER;
 	}
 //pre: null annotation analysis is enabled
-private boolean hasNonNullDefaultForType(TypeBinding type, int location, AbstractMethodDeclaration srcMethod, int start) {
+protected boolean hasNonNullDefaultForType(TypeBinding type, int location, AbstractMethodDeclaration srcMethod, int start) {
 	if (type != null && !type.acceptsNonNullDefault() && srcMethod != null && srcMethod.scope.environment().usesNullTypeAnnotations())
 		return false;
 	if ((this.modifiers & ExtraCompilerModifiers.AccIsDefaultConstructor) != 0)

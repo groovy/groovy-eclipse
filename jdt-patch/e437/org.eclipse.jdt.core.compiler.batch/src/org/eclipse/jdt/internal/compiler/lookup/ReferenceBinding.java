@@ -61,6 +61,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
@@ -96,6 +98,8 @@ abstract public class ReferenceBinding extends TypeBinding {
 
 	int typeBits; // additional bits characterizing this type
 	protected MethodBinding [] singleAbstractMethod;
+
+	protected static final DysfunctionalInterfaceException DYSFUNCTIONAL_INTERFACE_EXCEPTION = new DysfunctionalInterfaceException("Not a functional interface"); //$NON-NLS-1$
 
 	public static final ReferenceBinding LUB_GENERIC = new ReferenceBinding() { /* used for lub computation */
 		{ this.id = TypeIds.T_undefined; }
@@ -1083,7 +1087,15 @@ public final int getAccessFlags() {
 public AnnotationBinding[] getAnnotations() {
 	return retrieveAnnotations(prototype());
 }
-
+/**
+ * Get annotations, but request initialization only for specific ones
+ * @param requestedInitialization uses the bits from {@link ExtendedTagBits#DeprecatedAnnotationResolved}
+ *  or {@link ExtendedTagBits#AllAnnotationsResolved} to request initialization of specific annotations
+ *  (with option to select others in the future).
+ */
+public AnnotationBinding[] getAnnotations(long requestedInitialization) {
+	return getAnnotations();
+}
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.Binding#getAnnotationTagBits()
  */
@@ -1762,7 +1774,7 @@ public final boolean isStrictfp() {
  */
 public boolean isSuperclassOf(ReferenceBinding otherType) {
 	while ((otherType = otherType.superclass()) != null) {
-		otherType = (ReferenceBinding) InferenceContext18.maybeCapture(otherType);
+		otherType = CapturingContext.maybeCapture(otherType);
 		if (otherType.isEquivalentTo(this)) return true;
 	}
 	return false;
@@ -2326,93 +2338,58 @@ public void detectWrapperResource() {
 	}
 }
 
-protected MethodBinding [] getInterfaceAbstractContracts(Scope scope, boolean replaceWildcards, boolean filterDefaultMethods) throws InvalidBindingException {
-
-	if (!isInterface() || !isValidBinding()) {
-		throw new InvalidBindingException("Not a functional interface"); //$NON-NLS-1$
-	}
-
-	MethodBinding [] methods = methods();
-	MethodBinding [] contracts = new MethodBinding[0];
-	int contractsCount = 0;
-	int contractsLength = 0;
-
-	ReferenceBinding [] superInterfaces = superInterfaces();
-	for (ReferenceBinding superInterface : superInterfaces) {
-		// filterDefaultMethods=false => keep default methods needed to filter out any abstract methods they may override:
-		MethodBinding [] superInterfaceContracts = superInterface.getInterfaceAbstractContracts(scope, replaceWildcards, false);
-		final int superInterfaceContractsLength = superInterfaceContracts == null  ? 0 : superInterfaceContracts.length;
-		if (superInterfaceContractsLength == 0) continue;
-		if (contractsLength < contractsCount + superInterfaceContractsLength) {
-			System.arraycopy(contracts, 0, contracts = new MethodBinding[contractsLength = contractsCount + superInterfaceContractsLength], 0, contractsCount);
-		}
-		System.arraycopy(superInterfaceContracts, 0, contracts, contractsCount,	superInterfaceContractsLength);
-		contractsCount += superInterfaceContractsLength;
-	}
+private MethodBinding[] getFunctionalInterfaceAbstractContracts(Scope scope, boolean replaceWildcards) throws DysfunctionalInterfaceException {
 
 	LookupEnvironment environment = scope.environment();
-	for (int i = 0, length = methods == null ? 0 : methods.length; i < length; i++) {
-		final MethodBinding method = methods[i];
-		if (method == null || method.isStatic() || method.redeclaresPublicObjectMethod(scope) || method.isPrivate())
-			continue;
-		if (!method.isValidBinding())
-			throw new InvalidBindingException("Not a functional interface"); //$NON-NLS-1$
-		for (int j = 0; j < contractsCount;) {
-			if ( contracts[j] != null && MethodVerifier.doesMethodOverride(method, contracts[j], environment)) {
-				contractsCount--;
-				// abstract method from super type overridden by present interface ==> contracts[j] = null;
-				if (j < contractsCount) {
-					System.arraycopy(contracts, j+1, contracts, j, contractsCount - j);
-					continue;
-				}
-			}
-			j++;
-		}
-		if (filterDefaultMethods && method.isDefaultMethod())
-			continue; // skip default method itself
-		if (contractsCount == contractsLength) {
-			System.arraycopy(contracts, 0, contracts = new MethodBinding[contractsLength += 16], 0, contractsCount);
-		}
-		if(environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
-			ImplicitNullAnnotationVerifier.ensureNullnessIsKnown(method, scope);
-		}
-		contracts[contractsCount++] = method;
-	}
-	// check mutual overriding of inherited methods (i.e., not from current type):
-	for (int i = 0; i < contractsCount; i++) {
-		MethodBinding contractI = contracts[i];
-		if (TypeBinding.equalsEquals(contractI.declaringClass, this))
-			continue;
-		for (int j = 0; j < contractsCount; j++) {
-			MethodBinding contractJ = contracts[j];
-			if (i == j || TypeBinding.equalsEquals(contractJ.declaringClass, this))
-				continue;
-			if (contractI == contractJ || MethodVerifier.doesMethodOverride(contractI, contractJ, environment)) {
-				contractsCount--;
-				// abstract method from one super type overridden by other super interface ==> contracts[j] = null;
-				if (j < contractsCount) {
-					System.arraycopy(contracts, j+1, contracts, j, contractsCount - j);
-				}
-				j--;
-				if (j < i)
-					i--;
-				continue;
+	boolean isAnnotationBasedNullAnalysisEnabled = environment.globalOptions.isAnnotationBasedNullAnalysisEnabled;
+	MethodBinding samCandidate = null;
+
+	MethodBinding[] methods = collateFunctionalInterfaceContracts(scope, replaceWildcards, new HashSet<>())
+		.sorted((m1, m2) -> CharOperation.compareTo(m1.selector, m2.selector))
+		.toArray(MethodBinding []::new);
+
+	for (int i = 0, length = methods.length; i < length; i++) {
+		MethodBinding method = methods[i];
+		for (int j = i + 1; j < length; j++) {
+			MethodBinding otherMethod = methods[j];
+			if (method.selector.length != otherMethod.selector.length || !CharOperation.equals(method.selector, otherMethod.selector))
+				break; // Skip comparing apple to oranges (input sorted by selector, so no viable overrides past this point)
+			if (MethodVerifier.doesMethodOverride(otherMethod, method, environment)) {
+				methods[i] = method = null;
+				break; // Skip comparing rotten apple with remaining lot: is overridden already, no use checking if is overridden also by another
 			}
 		}
-		if (filterDefaultMethods && contractI.isDefaultMethod()) {
-			contractsCount--;
-			// remove default method after it has eliminated any matching abstract methods from contracts
-			if (i < contractsCount) {
-				System.arraycopy(contracts, i+1, contracts, i, contractsCount - i);
-			}
-			i--;
+		if (method != null && method.isAbstract()) {
+			if (samCandidate == null)
+				samCandidate = method;
+			else if (!CharOperation.equals(samCandidate.selector, method.selector) || samCandidate.parameters.length != method.parameters.length)
+				throw DYSFUNCTIONAL_INTERFACE_EXCEPTION;
+			if (isAnnotationBasedNullAnalysisEnabled)
+				ImplicitNullAnnotationVerifier.ensureNullnessIsKnown(method, scope);
 		}
 	}
-	if (contractsCount < contractsLength) {
-		System.arraycopy(contracts, 0, contracts = new MethodBinding[contractsCount], 0, contractsCount);
-	}
-	return contracts;
+	return Arrays.stream(methods).filter(m -> m != null && m.isAbstract()).toArray(MethodBinding []::new);
 }
+
+protected Stream<MethodBinding> collateFunctionalInterfaceContracts(Scope scope, boolean replaceWildcards, Set<ReferenceBinding> visitedInterfaces) throws DysfunctionalInterfaceException {
+
+	if (!isInterface() || !isValidBinding())
+		throw DYSFUNCTIONAL_INTERFACE_EXCEPTION;
+
+	Predicate<MethodBinding> isContractual = m -> { // select valid public abstract || default methods
+		if (m == null || m.isStatic() || m.redeclaresPublicObjectMethod(scope) || m.isPrivate())
+			return false;
+		if (!m.isValidBinding())
+			throw DYSFUNCTIONAL_INTERFACE_EXCEPTION;
+		return true;
+	};
+
+	return Stream.concat( //
+			Arrays.stream(superInterfaces()).filter(iface->visitedInterfaces.add(iface)).flatMap(superInterface -> superInterface.collateFunctionalInterfaceContracts(scope, replaceWildcards, visitedInterfaces)), //
+			Arrays.stream(methods()).filter(isContractual)
+	);
+}
+
 @Override
 public MethodBinding getSingleAbstractMethod(Scope scope, boolean replaceWildcards) {
 
@@ -2430,7 +2407,7 @@ public MethodBinding getSingleAbstractMethod(Scope scope, boolean replaceWildcar
 		scope.compilationUnitScope().recordQualifiedReference(this.compoundName);
 	MethodBinding[] methods = null;
 	try {
-		methods = getInterfaceAbstractContracts(scope, replaceWildcards, true);
+		methods = getFunctionalInterfaceAbstractContracts(scope, replaceWildcards);
 		if (methods == null || methods.length == 0)
 			return this.singleAbstractMethod[index] = samProblemBinding;
 		int contractParameterLength = 0;
@@ -2446,7 +2423,7 @@ public MethodBinding getSingleAbstractMethod(Scope scope, boolean replaceWildcar
 					return this.singleAbstractMethod[index] = samProblemBinding;
 			}
 		}
-	} catch (InvalidBindingException e) {
+	} catch (DysfunctionalInterfaceException e) {
 		return this.singleAbstractMethod[index] = samProblemBinding;
 	}
 	if (methods.length == 1)
@@ -2681,10 +2658,9 @@ public boolean isDisjointFrom(ReferenceBinding that) {
 		}
 	}
 }
-static class InvalidBindingException extends Exception {
+static class DysfunctionalInterfaceException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
-
-	InvalidBindingException(String message) {
+	DysfunctionalInterfaceException(String message) {
 		super(message);
 	}
 }

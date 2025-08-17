@@ -15,14 +15,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
 import org.eclipse.core.runtime.ILog;
-import org.eclipse.jdt.core.Flags;
-import org.eclipse.jdt.core.IAnnotation;
-import org.eclipse.jdt.core.IImportDeclaration;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.ILocalVariable;
-import org.eclipse.jdt.core.IMemberValuePair;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.core.dom.*;
@@ -894,6 +887,33 @@ public class DOMToModelPopulator extends ASTVisitor {
 		return toLocalVariable(parameter, parent, parameter.getParent() instanceof MethodDeclaration);
 	}
 
+	public static LocalVariable toLocalVariable(VariableDeclarationFragment fragment, JavaElement parent) {
+		if (fragment.getParent() instanceof VariableDeclarationStatement variableDeclaration) {
+			return new LocalVariable(parent,
+				fragment.getName().getIdentifier(),
+				variableDeclaration.getStartPosition(),
+				variableDeclaration.getStartPosition() + variableDeclaration.getLength() - 1,
+				fragment.getName().getStartPosition(),
+				fragment.getName().getStartPosition() + fragment.getName().getLength() - 1,
+				Util.getSignature(variableDeclaration.getType()),
+				null, // I don't think we need this, also it's the ECJ's annotation node
+				toModelFlags(variableDeclaration.getModifiers(), false),
+				false);
+		} else if (fragment.getParent() instanceof VariableDeclarationExpression variableDeclaration) {
+			return new LocalVariable(parent,
+					fragment.getName().getIdentifier(),
+					variableDeclaration.getStartPosition(),
+					variableDeclaration.getStartPosition() + variableDeclaration.getLength() - 1,
+					fragment.getName().getStartPosition(),
+					fragment.getName().getStartPosition() + fragment.getName().getLength() - 1,
+					Util.getSignature(variableDeclaration.getType()),
+					null, // I don't think we need this, also it's the ECJ's annotation node
+					toModelFlags(variableDeclaration.getModifiers(), false),
+					false);
+		}
+		return null;
+	}
+
 	private static LocalVariable toLocalVariable(SingleVariableDeclaration parameter, JavaElement parent, boolean isParameter) {
 		return new LocalVariable(parent,
 				parameter.getName().getIdentifier(),
@@ -1039,7 +1059,11 @@ public class DOMToModelPopulator extends ASTVisitor {
 
 		this.unitInfo.setModule(newElement);
 		try {
-			this.root.getJavaProject().setModuleDescription(newElement);
+			if (this.root.getPackageFragmentRoot().getResolvedClasspathEntry().getEntryKind() == IClasspathEntry.CPE_SOURCE
+				&& this.root.getParent() instanceof IPackageFragment packageFragment
+				&& packageFragment.getElementName().isEmpty()) {
+				this.root.getJavaProject().setModuleDescription(newElement);
+			}
 		} catch (JavaModelException e) {
 			ILog.get().error(e.getMessage(), e);
 		}

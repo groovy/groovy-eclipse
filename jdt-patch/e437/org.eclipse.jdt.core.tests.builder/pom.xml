@@ -18,6 +18,6 @@
     <relativePath>../tests-pom/</relativePath>
   </parent>
   <artifactId>org.eclipse.jdt.core.tests.builder</artifactId>
-  <version>3.12.800-SNAPSHOT</version>
+  <version>3.12.900-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
 </project>

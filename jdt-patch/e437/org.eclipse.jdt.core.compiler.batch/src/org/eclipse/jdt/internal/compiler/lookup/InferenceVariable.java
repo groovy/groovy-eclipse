@@ -162,6 +162,11 @@ public class InferenceVariable extends TypeVariableBinding {
 	}
 
 	@Override
+	public boolean isSubtypeOf(TypeBinding other, boolean simulatingBugJDK8026527) {
+		return this.typeParameter.isSubtypeOf(other, simulatingBugJDK8026527);
+	}
+
+	@Override
 	TypeBinding substituteInferenceVariable(InferenceVariable var, TypeBinding substituteType) {
 		if (TypeBinding.equalsEquals(this, var))
 			return substituteType;

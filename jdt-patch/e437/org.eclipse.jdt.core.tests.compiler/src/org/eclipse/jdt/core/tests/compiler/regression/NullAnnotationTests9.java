@@ -66,13 +66,13 @@ public class NullAnnotationTests9 extends AbstractNullAnnotationTest {
 			int len = defaultLibs.length;
 			this.LIBS = new String[len+1];
 			System.arraycopy(defaultLibs, 0, this.LIBS, 0, len);
-			this.LIBS[len] = createAnnotation_2_2_jar(Util.getOutputDirectory() + File.separator, null);
+			this.LIBS[len] = createAnnotation_2_4_jar(Util.getOutputDirectory() + File.separator, null);
 		}
 	}
 
-	public static String createAnnotation_2_2_jar(String dirName, String jcl9Path) throws IOException {
-		// role our own annotation library as long as o.e.j.annotation is still at BREE 1.8:
-		String jarFileName = dirName + "org.eclipse.jdt.annotation_2.2.0.jar";
+	public static String createAnnotation_2_4_jar(String dirName, String jcl9Path) throws IOException {
+		// role our own annotation library supporting location MODULE whereas o.e.j.annotation is still at BREE 1.8:
+		String jarFileName = dirName + "org.eclipse.jdt.annotation_2.4.0.jar";
 		createJar(new String[] {
 				"module-info.java",
 				"module org.eclipse.jdt.annotation {\n" +
@@ -84,7 +84,7 @@ public class NullAnnotationTests9 extends AbstractNullAnnotationTest {
 				"\n" +
 				"public enum DefaultLocation {\n" +
 				"	\n" +
-				"	PARAMETER, RETURN_TYPE, FIELD, TYPE_PARAMETER, TYPE_BOUND, TYPE_ARGUMENT, ARRAY_CONTENTS\n" +
+				"	PARAMETER, RETURN_TYPE, FIELD, TYPE_PARAMETER, TYPE_BOUND, TYPE_ARGUMENT, ARRAY_CONTENTS, RECORD_COMPONENT\n" +
 				"}\n",
 
 				"org/eclipse/jdt/annotation/NonNullByDefault.java",
@@ -99,7 +99,7 @@ public class NullAnnotationTests9 extends AbstractNullAnnotationTest {
 				"@Retention(RetentionPolicy.CLASS)\n" +
 				"@Target({ ElementType.MODULE, ElementType.PACKAGE, ElementType.TYPE, ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.FIELD, ElementType.LOCAL_VARIABLE })\n" +
 				"public @interface NonNullByDefault {\n" +
-				"	DefaultLocation[] value() default { PARAMETER, RETURN_TYPE, FIELD, TYPE_BOUND, TYPE_ARGUMENT };\n" +
+				"	DefaultLocation[] value() default { PARAMETER, RETURN_TYPE, FIELD, TYPE_BOUND, TYPE_ARGUMENT, RECORD_COMPONENT };\n" +
 				"}",
 
 				"org/eclipse/jdt/annotation/NonNull.java",

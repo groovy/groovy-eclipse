@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.debug;
 import static org.codehaus.jdt.groovy.integration.internal.GroovyLanguageSupport.newGroovyClassLoader;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import groovy.lang.Script;
@@ -245,6 +246,10 @@ public class EvaluationEngine implements IAstEvaluationEngine {
 
             @Override
             public String[] getErrorMessages() {
+                return null;
+            }
+
+            public List<Integer> getProblemIDs() {
                 return null;
             }
         };

@@ -1335,6 +1335,91 @@ public void testGH4098() {
 	});
 }
 
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3907
+// Compilation error on full build but not on incremental build due to @deprecated
+public void testIssue3907() {
+	runConformTest(new String[] {
+		"LoadExtension.java",
+		"""
+		public class LoadExtension extends AbstractLoad<Integer> {
+		}
+		""",
+		"TestIntegrationExtension.java",
+		"""
+		public final class TestIntegrationExtension implements Extension {
+
+		}
+
+		@ExtendWith(TestIntegrationExtension.class)
+		@interface TestIntegration {
+		}
+
+		@interface ExtendWith {
+			Class<? extends Extension>[] value();
+		}
+
+		interface Extension {
+		}
+
+
+		/**
+		 * @deprecated
+		 */
+		@TestIntegration()
+		@Deprecated
+		abstract class AbstractLoad<T extends Number> {
+
+		}
+		"""
+	});
+}
+public void testIssue3907_since() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+		"LoadExtension.java",
+		"""
+		public class LoadExtension extends AbstractLoad<Integer> {
+		}
+		""",
+		"TestIntegrationExtension.java",
+		"""
+		public final class TestIntegrationExtension implements Extension {
+
+		}
+
+		@ExtendWith(TestIntegrationExtension.class)
+		@interface TestIntegration {
+		}
+
+		@interface ExtendWith {
+			Class<? extends Extension>[] value();
+		}
+
+		interface Extension {
+		}
+
+
+		/**
+		 * @deprecated
+		 */
+		@TestIntegration()
+		@Deprecated(since="13")
+		abstract class AbstractLoad<T extends Number> {
+
+		}
+		"""
+	};
+	runner.expectedCompilerLog =
+			"""
+			----------
+			1. WARNING in LoadExtension.java (at line 1)
+				public class LoadExtension extends AbstractLoad<Integer> {
+				                                   ^^^^^^^^^^^^
+			The type AbstractLoad<Integer> is deprecated since version 13
+			----------
+			""";
+	runner.runWarningTest();
+}
 public static Class<GenericsRegressionTest_9> testClass() {
 	return GenericsRegressionTest_9.class;
 }

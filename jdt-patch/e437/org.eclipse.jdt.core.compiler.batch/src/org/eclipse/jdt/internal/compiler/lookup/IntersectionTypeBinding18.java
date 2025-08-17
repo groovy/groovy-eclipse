@@ -23,7 +23,9 @@
 
 package org.eclipse.jdt.internal.compiler.lookup;
 
+import java.util.Arrays;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
@@ -67,22 +69,10 @@ public class IntersectionTypeBinding18 extends ReferenceBinding {
 	}
 
 	@Override
-	protected MethodBinding[] getInterfaceAbstractContracts(Scope scope, boolean replaceWildcards, boolean filterDefaultMethods) throws InvalidBindingException {
-		int typesLength = this.intersectingTypes.length;
-		MethodBinding[][] methods = new MethodBinding[typesLength][];
-		int contractsLength = 0;
-		for (int i = 0; i < typesLength; i++) {
-			methods[i] = this.intersectingTypes[i].getInterfaceAbstractContracts(scope, replaceWildcards, true);
-			contractsLength += methods[i].length;
-		}
-		MethodBinding[] contracts = new MethodBinding[contractsLength];
-		int idx = 0;
-		for (int i = 0; i < typesLength; i++) {
-			int len = methods[i].length;
-			System.arraycopy(methods[i], 0, contracts, idx, len);
-			idx += len;
-		}
-		return contracts;
+	protected Stream<MethodBinding> collateFunctionalInterfaceContracts(Scope scope, boolean replaceWildcards, Set<ReferenceBinding> visitedInterfaces) throws DysfunctionalInterfaceException {
+		return Arrays.stream(this.intersectingTypes).flatMap( //
+						intersectingType -> intersectingType.collateFunctionalInterfaceContracts(scope, replaceWildcards, visitedInterfaces) //
+		);
 	}
 
 	@Override
@@ -235,6 +225,20 @@ public class IntersectionTypeBinding18 extends ReferenceBinding {
 				return true;
 		}
 		return false;
+	}
+
+	@Override
+	public boolean isProperType(boolean admitCapture18) {
+		enterRecursiveFunction();
+		try {
+			for (ReferenceBinding binding : this.intersectingTypes) {
+				if (!binding.isProperType(admitCapture18))
+					return false;
+			}
+		} finally {
+			exitRecursiveFunction();
+		}
+		return true;
 	}
 
 	@Override

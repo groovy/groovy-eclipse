@@ -2954,7 +2954,11 @@ public class ASTMatcher {
 			return false;
 		}
 		TypePattern o = (TypePattern) other;
-		return safeSubtreeMatch(node.getPatternVariable(), o.getPatternVariable());
+		int level = node.getAST().apiLevel;
+		if (level < AST.JLS22_INTERNAL) {
+			return safeSubtreeMatch(node.getPatternVariable(), o.getPatternVariable());
+		}
+		return safeSubtreeMatch(node.getPatternVariable2(), o.getPatternVariable2());
 	}
 
 	/**

@@ -2000,6 +2000,8 @@ void setSourceStart(int sourceStart);
 	int ConstNonNullFieldComparisonYieldsFalse = Internal + 945;
 	/** @since 3.21 */
 	int InheritedParameterLackingNonNullAnnotation = MethodRelated + 946;
+	/** @since 3.43 */
+	int RecordComponentIncompatibleNullnessVsInheritedAccessor = MethodRelated + 947;
 
 	/** @since 3.10 */
 	int ArrayReferencePotentialNullReference = Internal + 951;

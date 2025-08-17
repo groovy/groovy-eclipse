@@ -74,7 +74,7 @@ public List<Classpath> fetchLinkedJars(FileSystem.ClasspathSectionProblemReporte
 			try (InputStream inputStream = this.zipFile.getInputStream(manifest)) {
 				success = analyzer.analyzeManifestContents(inputStream);
 			}
-			List calledFileNames = analyzer.getCalledFileNames();
+			List<String> calledFileNames = analyzer.getCalledFileNames();
 			if (problemReporter != null) {
 				if (!success || analyzer.getClasspathSectionsCount() == 1 &&  calledFileNames == null) {
 					problemReporter.invalidClasspathSection(getPath());

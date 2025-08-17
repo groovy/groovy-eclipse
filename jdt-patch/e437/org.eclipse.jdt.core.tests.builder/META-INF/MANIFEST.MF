@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %pluginName
 Bundle-SymbolicName: org.eclipse.jdt.core.tests.builder; singleton:=true
-Bundle-Version: 3.12.800.qualifier
+Bundle-Version: 3.12.900.qualifier
 Bundle-Vendor: %providerName
 Bundle-Localization: plugin
 Export-Package: org.eclipse.jdt.core.tests.builder

@@ -9838,4 +9838,36 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 		String unexpectedOutput = "checkcast";
 		verifyClassFile(expectedOutput, unexpectedOutput, "X.class", ClassFileBytesDisassembler.SYSTEM);
 	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4256
+	// [Enhanced switch] ECJ allows case null to be followed by a constant where only default is legal
+	public void testIssue4256() throws Exception {
+		runNegativeTest(
+			new String[] {
+				"X.java",
+				"""
+				public class X {
+
+				  public static enum Any {
+				    One, Two, Three;
+				  }
+
+				  public static void main(final String[] args) {
+				    final Any any = Any.Three;
+				    switch (any) {
+				      case One -> System.out.println("ONE");
+				      case Two -> System.out.println("TWO");
+				      case null, Three -> System.out.println("THREE");
+				    }
+				  }
+				}
+				"""
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 12)\n" +
+			"	case null, Three -> System.out.println(\"THREE\");\n" +
+			"	           ^^^^^\n" +
+			"A null case label has to be either the only expression in a case label or the first expression followed only by a default\n" +
+			"----------\n");
+	}
 }

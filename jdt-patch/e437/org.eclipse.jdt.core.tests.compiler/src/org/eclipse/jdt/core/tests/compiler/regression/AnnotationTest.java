@@ -12057,4 +12057,62 @@ public void testIssue4107() {
 			null,
 			true);
 }
+public void testGH4243() throws Exception {
+	if (this.complianceLevel < ClassFileConstants.JDK16) return; // uses records
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(JavaCore.COMPILER_ANNOTATION_NULL_ANALYSIS, JavaCore.ENABLED);
+	runner.customOptions.put(JavaCore.COMPILER_NONNULL_BY_DEFAULT_ANNOTATION_NAME, "p.nonnullbydefault");
+	runner.testFiles = new String[] {
+			"p/Main.java",
+			"""
+			package p;
+			import java.lang.annotation.*;
+
+			@nonnullbydefault
+			@Main.NeededAnnotation
+			public final class Main {
+
+			   public static void main(String[] args) {
+			      for (Annotation anno : Main.class.getAnnotations()) {
+			         System.out.println(anno);
+			      }
+			   }
+
+			   public record Foo(String needed) {}
+
+			   @Retention(RetentionPolicy.RUNTIME)
+			   @interface NeededAnnotation {}
+			}
+			""",
+			"p/nonnullbydefault.java",
+			"""
+			package p;
+			public @interface nonnullbydefault {}
+			""",
+		};
+	runner.expectedOutputString = "@p.Main.NeededAnnotation()"; // the other annotation is not runtime visible
+	runner.runConformTest();
+
+	ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
+	byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(
+			new File(OUTPUT_DIR + File.separator  + "p"+ File.separator + "Main.class"));
+	String actualOutput =
+		disassembler.disassemble(
+			classFileBytes,
+			"\n",
+			ClassFileBytesDisassembler.DETAILED);
+
+	String expectedOutput =
+		"""
+		@p.nonnullbydefault
+		@p.Main.NeededAnnotation
+		public final class p.Main {
+		""";
+
+	if (actualOutput.indexOf(expectedOutput) == -1) {
+		System.out.println(org.eclipse.jdt.core.tests.util.Util.displayString(actualOutput, 2));
+	}
+	assertTrue("unexpected bytecode sequence", actualOutput.indexOf(expectedOutput) != -1);
+}
 }

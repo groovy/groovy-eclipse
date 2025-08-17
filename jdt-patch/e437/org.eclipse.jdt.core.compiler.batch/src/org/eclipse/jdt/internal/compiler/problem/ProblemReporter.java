@@ -397,6 +397,7 @@ public static int getIrritant(int problemID) {
 		case IProblem.ContradictoryNullAnnotationsInferred:
 		case IProblem.ContradictoryNullAnnotationsInferredFunctionType:
 		case IProblem.IllegalParameterNullityRedefinition:
+		case IProblem.RecordComponentIncompatibleNullnessVsInheritedAccessor:
 			return CompilerOptions.NullSpecViolation;
 
 		case IProblem.NullNotCompatibleToFreeTypeVariable:
@@ -1928,7 +1929,7 @@ public void deprecatedType(TypeBinding type, ASTNode location) {
 // a deprecated type in a qualified reference (see bug 292510)
 public void deprecatedType(TypeBinding type, ASTNode location, int index) {
 	if (location == null) return; // 1G828DN - no type ref for synthetic arguments
-	final TypeBinding leafType = type.leafComponentType();
+	final ReferenceBinding leafType = (ReferenceBinding) type.leafComponentType();
 	if (!leafType.isReadyForAnnotations() && scheduleProblemForContext(() -> deprecatedType(type, location, index)))
 		return;
 	int sourceStart = -1;
@@ -1938,7 +1939,7 @@ public void deprecatedType(TypeBinding type, ASTNode location, int index) {
 			sourceStart = (int) (ref.sourcePositions[index] >> 32);
 		}
 	}
-	String sinceValue = deprecatedSinceValue(() -> leafType.getAnnotations());
+	String sinceValue = deprecatedSinceValue(() -> leafType.getAnnotations(ExtendedTagBits.DeprecatedAnnotationResolved));
 	if (sinceValue != null) {
 		this.handle(
 			((leafType.tagBits & TagBits.AnnotationTerminallyDeprecated) == 0) ? IProblem.UsingDeprecatedSinceVersionType : IProblem.UsingTerminallyDeprecatedSinceVersionType,
@@ -10644,6 +10645,10 @@ public void expressionPotentialNullReference(ASTNode location) {
 }
 
 public void cannotImplementIncompatibleNullness(ReferenceContext context, MethodBinding currentMethod, MethodBinding inheritedMethod, boolean showReturn) {
+	if (currentMethod instanceof SyntheticMethodBinding synth && synth.purpose == SyntheticMethodBinding.RecordComponentReadAccess) {
+		recordComponentOverrideIncompatibleNullness(synth.sourceRecordComponent(), inheritedMethod, currentMethod.declaringClass);
+		return;
+	}
 	int sourceStart = 0, sourceEnd = 0;
 	if (context instanceof TypeDeclaration) {
 		TypeDeclaration type = (TypeDeclaration) context;
@@ -10679,6 +10684,27 @@ public void cannotImplementIncompatibleNullness(ReferenceContext context, Method
 			messageArguments,
 			sourceStart,
 			sourceEnd);
+}
+public void recordComponentOverrideIncompatibleNullness(AbstractVariableDeclaration component, MethodBinding inheritedMethod, ReferenceBinding declaringClass) {
+	Expression type = component.type;
+	if (type.resolvedType == null || inheritedMethod.returnType == null)
+		return;
+	this.handle(
+		IProblem.RecordComponentIncompatibleNullnessVsInheritedAccessor,
+		new String[] {
+				String.valueOf(type.resolvedType.nullAnnotatedReadableName(this.options, false)),
+				String.valueOf(component.name),
+				String.valueOf(inheritedMethod.returnType.nullAnnotatedReadableName(this.options, false)),
+				String.valueOf(inheritedMethod.readableName()),
+				String.valueOf(declaringClass.readableName()) },
+		new String[] {
+				String.valueOf(type.resolvedType.nullAnnotatedReadableName(this.options, true)),
+				String.valueOf(component.name),
+				String.valueOf(inheritedMethod.returnType.nullAnnotatedReadableName(this.options, true)),
+				String.valueOf(inheritedMethod.shortReadableName()),
+				String.valueOf(declaringClass.shortReadableName()) },
+		type.sourceStart,
+		type.sourceEnd);
 }
 
 public void nullAnnotationIsRedundant(AbstractMethodDeclaration sourceMethod, int i) {

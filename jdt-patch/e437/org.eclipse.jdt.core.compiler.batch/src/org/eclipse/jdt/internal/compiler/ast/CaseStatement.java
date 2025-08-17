@@ -245,8 +245,6 @@ public void resolve(BlockScope scope) {
 			if (this.swich.nullCase == null)
 				this.swich.nullCase = this;
 			nullCaseCount++;
-			if (count > 1 && nullCaseCount < 2)
-				scope.problemReporter().patternSwitchNullOnlyOrFirstWithDefault(e);
 		}
 
 		// tag constant name with enum type for privileged access to its members
@@ -257,6 +255,10 @@ public void resolve(BlockScope scope) {
 		if (e instanceof Pattern p) {
 			this.swich.containsPatterns = this.swich.isNonTraditional =  true;
 			p.setOuterExpressionType(selectorType);
+		} else if (count > 1 && nullCaseCount == 1) {
+			// Under if (!pattern) because we anyway issue ConstantWithPatternIncompatible for mixing patterns & null
+			// Also multiple nulls get reported as duplicates and we don't want to complain again.
+			scope.problemReporter().patternSwitchNullOnlyOrFirstWithDefault(e);
 		}
 
 		TypeBinding	caseType = e.resolveType(scope);
