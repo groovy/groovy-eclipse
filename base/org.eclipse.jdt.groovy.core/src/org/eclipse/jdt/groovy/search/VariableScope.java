@@ -679,13 +679,18 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                 Assert.isLegal(unresolved.redirect().getGenericsTypes() != null, "Error: trying to add type arguments to non-generic type: " + unresolved);
                 // List<E> --> List<String>
                 // List<E[]> --> List<String[]>
+                if (Boolean.TRUE.equals(type.getNodeMetaData("?"))) {
+                    type = ClassHelper.makeWithoutCaching("?");
+                    generic.setWildcard(true);
+                } else {
+                    generic.setWildcard(false);
+                    generic.setPlaceHolder(type.isGenericsPlaceHolder());
+                    generic.setName(type.isGenericsPlaceHolder() ? type.getUnresolvedName() : type.getName());
+                }
                 generic.setType(type);
                 generic.setResolved(true);
-                generic.setWildcard(false);
                 generic.setLowerBound(null);
                 generic.setUpperBounds(null);
-                generic.setPlaceHolder(type.isGenericsPlaceHolder());
-                generic.setName(generic.isPlaceholder() ? typeParameterName : type.getName());
             }
         } else if (generic.getLowerBound() != null) {
             // List<? super E> --> List<? super String>

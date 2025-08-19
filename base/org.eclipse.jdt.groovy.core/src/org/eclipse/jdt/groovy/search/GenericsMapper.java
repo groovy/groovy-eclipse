@@ -188,7 +188,9 @@ public class GenericsMapper {
             if (!topGT.getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
                 return topGT.getType(); // GROOVY-10671: non-Object erasure
             }
-            return VariableScope.OBJECT_CLASS_NODE;
+            ClassNode t = VariableScope.OBJECT_CLASS_NODE.getPlainNodeReference();
+            t.putNodeMetaData("?", Boolean.TRUE);
+            return t;
         }
 
         if (depth > 10) {

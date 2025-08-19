@@ -75,6 +75,14 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "def xxx = Collections.emptyList()\n";
 
         assertType(contents, "xxx", "java.util.List<java.lang.Object>");
+        assertType(contents, "emptyList", "java.util.List<java.lang.Object>");
+
+        contents = "@groovy.transform.TypeChecked test() {\n" +
+            "  " + contents +
+            "}\n";
+
+        assertType(contents, "xxx", "java.util.List<java.lang.Object>");
+        assertType(contents, "emptyList", "java.util.List<#T>"); // TODO
     }
 
     @Test // GRECLIPSE-1040
@@ -182,6 +190,21 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "def xxx = [x + 8 * 7, (Serializable)6]\n";
 
         assertType(contents, "xxx", "java.util.List<java.io.Serializable>");
+    }
+
+    @Test // GROOVY-11615
+    public void testList14() {
+        String contents =
+            "import java.util.stream.Collectors\n" +
+            "List<String> list = ['foo','bar','baz']\n" +
+            "def copy = list.stream().collect(Collectors.toList())\n";
+
+        assertType(contents, "copy", "java.util.List<java.lang.Object>");
+        assertType(contents, "toList", "java.util.stream.Collector<java.lang.Object,?,java.util.List<java.lang.Object>>");
+
+        int offset = contents.indexOf("collect"); // String is known input type and accumulation type should not be reduced to Object
+        MethodNode m = assertDeclaration(contents, offset, offset + 7, "java.util.stream.Stream", "collect", DeclarationKind.METHOD);
+        assertEquals("java.util.stream.Collector<? super java.lang.String,?,java.util.List<java.lang.Object>>", printTypeName(m.getParameters()[0].getType()));
     }
 
     @Test
@@ -1153,6 +1176,25 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
         contents = contents.replace("(String.&trim)", "{String s -> s.trim()}");
         assertType(contents, "groupingBy", "java.util.stream.Collector<java.lang.String,?,java.util.Map<java.lang.String,java.util.List<java.lang.String>>>");
+    }
+
+    @Test
+    public void testClosure28() {
+        String contents =
+            "@groovy.transform.TypeChecked\n" +
+            "void test(java.util.stream.Stream<String> stream) {\n" +
+            "  stream.collect(java.util.stream.Collectors.groupingBy(String.&trim))\n" +
+            "}\n";
+        int offset = contents.indexOf("collect");
+        MethodNode m = assertDeclaration(contents, offset, offset + 7, "java.util.stream.Stream", "collect", DeclarationKind.METHOD);
+        String resultType = "java.util.Map<java.lang.String,java.util.List<java.lang.String>>"; // maps from String to String, not Object
+        assertEquals("java.util.stream.Collector<? super java.lang.String,?," + resultType + ">", printTypeName(m.getParameters()[0].getType()));
+        assertEquals(resultType, printTypeName(m.getReturnType()));
+
+        contents = contents.replace("(String.&trim)", "{String s -> s.trim()}");
+        m = assertDeclaration(contents, offset, offset + 7, "java.util.stream.Stream", "collect", DeclarationKind.METHOD);
+        assertEquals("java.util.stream.Collector<? super java.lang.String,?," + resultType + ">", printTypeName(m.getParameters()[0].getType()));
+        assertEquals(resultType, printTypeName(m.getReturnType()));
     }
 
     @Test

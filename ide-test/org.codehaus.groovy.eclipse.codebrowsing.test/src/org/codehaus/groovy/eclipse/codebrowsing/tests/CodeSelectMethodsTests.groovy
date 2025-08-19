@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -532,8 +532,8 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |  def list = Collections.emptyList()
             |}'''.stripMargin()
         IJavaElement element = assertCodeSelect([contents], 'emptyList')
-        assert element.inferredElement.returnType.toString(false) == 'java.util.List<java.lang.Object>'
-        assert element.key == 'Ljava/util/Collections;.emptyList()Ljava/util/List<Ljava/lang/Object;>;'
+        assert element.inferredElement.returnType.toString(false) == 'java.util.List<#T>'
+        assert element.key == 'Ljava/util/Collections;.emptyList()Ljava/util/List<T!T;>;'
     }
 
     @Test

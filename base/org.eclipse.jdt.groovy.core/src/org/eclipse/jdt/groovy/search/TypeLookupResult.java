@@ -245,7 +245,7 @@ public class TypeLookupResult {
                     if (unresolved.test(tp)) {
                         GenericsMapper gm = GenericsMapper.gatherGenerics(singletonList(type), selfType, returnTypeStub(method));
                         ClassNode cn = gm.findParameter(tp.getName(), null);
-                        if (cn == null || cn.isGenericsPlaceHolder()) {
+                        if (cn == null || (cn.isGenericsPlaceHolder() && cn.getUnresolvedName().equals(tp.getName()))) {
                             cn = erasure(tp);
                         }
                         mapper.allGenerics.getLast().put(tp.getName(), cn);
