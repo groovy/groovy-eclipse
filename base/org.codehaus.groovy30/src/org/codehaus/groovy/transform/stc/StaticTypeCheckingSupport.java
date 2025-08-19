@@ -1049,6 +1049,12 @@ public abstract class StaticTypeCheckingSupport {
         boolean noCulling = methods.size() <= 1 || "<init>".equals(methods.iterator().next().getName());
         Iterable<MethodNode> candidates = noCulling ? methods : removeCovariantsAndInterfaceEquivalents(methods);
 
+        // GRECLIPSE add -- GROOVY-11683
+        if (argumentTypes == null) {
+            return org.codehaus.groovy.runtime.DefaultGroovyMethods.asList(candidates);
+        }
+        // GRECLIPSE end
+
         for (MethodNode candidate : candidates) {
             MethodNode  safeNode = candidate;
             ClassNode[] safeArgs = argumentTypes;

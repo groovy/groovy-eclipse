@@ -2708,7 +2708,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 ClassNode commonReturnType = null;
                 for (MethodNode candidate : candidates) {
                     ClassNode returnType = candidate.getReturnType();
+                    /* GRECLIPSE edit -- GROOVY-11683
                     if (!candidate.isStatic() && GenericsUtils.hasUnresolvedGenerics(returnType)) {
+                    */
+                    if (!isStaticInContext(candidate) && GenericsUtils.hasUnresolvedGenerics(returnType)) {
+                    // GRECLIPSE end
                         Map<GenericsTypeName, GenericsType> spec = new HashMap<>(); // GROOVY-11364
                         extractGenericsConnections(spec, receiverType, candidate.getDeclaringClass());
                         returnType = applyGenericsContext(spec, returnType);
@@ -2758,7 +2762,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     private List<MethodNode> filterMethodCandidates(final List<MethodNode> candidates, final Expression objectOrType, /*@Nullable*/ ClassNode[] signature) {
         List<MethodNode> result = filterMethodsByVisibility(candidates, typeCheckingContext.getEnclosingClassNode());
         // assignment or parameter target type may help reduce the list
+        /* GRECLIPSE edit -- GROOVY-11683
         if (result.size() > 1 && signature != null) {
+        */
+        if (result.size() > 1) {
+        // GRECLIPSE end
             ClassNode type = getType(objectOrType);
             if (!isClassClassNodeWrappingConcreteType(type)) {
                 result = chooseBestMethod(type, result, signature);
@@ -2769,7 +2777,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 result = new ArrayList<>(result.size());
                 result.addAll(chooseBestMethod(type, staticAndNonStatic.get(Boolean.TRUE), signature));
                 if (result.isEmpty() && !staticAndNonStatic.get(Boolean.FALSE).isEmpty()) { // GROOVY-11009
-                    if (signature.length > 0) signature= Arrays.copyOfRange(signature, 1, signature.length);
+                    if (asBoolean(signature)) signature= Arrays.copyOfRange(signature, 1, signature.length);
                     result.addAll(chooseBestMethod(type, staticAndNonStatic.get(Boolean.FALSE), signature));
                 }
             }
