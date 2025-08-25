@@ -1420,6 +1420,63 @@ public void testIssue3907_since() {
 			""";
 	runner.runWarningTest();
 }
+public void testGH4308() {
+	runConformTest(new String[] {
+			"ClassA.java",
+			"""
+			import java.lang.reflect.InvocationTargetException;
+			import java.util.HashSet;
+			import java.util.Map;
+			import java.util.Set;
+			import java.util.function.Consumer;
+			import java.util.stream.Collectors;
+
+			public class ClassA {
+
+				private static final Map<ClassB, Consumer<ClassC>> S;
+
+				static {
+					S = load(ClassB.class).stream().collect(Collectors.toMap(s -> s, // Compilation error
+							s -> s.ping() ? s::sync : ClassD.getInstance()::replay));
+				}
+
+				private static <T> Set<T> load(Class<T> clazz) {
+					Set<T> set = new HashSet<>();
+					try {
+						set.add(clazz.getConstructor().newInstance());
+					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+						e.printStackTrace();
+					}
+					return set;
+				}
+
+				private static class ClassB {
+					public ClassB() {}
+					boolean ping() {
+						return false;
+					}
+					void sync(ClassC classC) { }
+				}
+
+				private static class ClassD {
+					private static ClassD getInstance() {
+						return new ClassD();
+					}
+					void replay(ClassC classC) {
+						System.out.println("replay");
+					}
+				}
+
+				private static class ClassC { }
+
+				public static void main(String[] args) {
+					S.values().forEach(consumer -> consumer.accept(new ClassC()));
+				}
+			}
+			"""
+		},
+		"replay");
+}
 public static Class<GenericsRegressionTest_9> testClass() {
 	return GenericsRegressionTest_9.class;
 }

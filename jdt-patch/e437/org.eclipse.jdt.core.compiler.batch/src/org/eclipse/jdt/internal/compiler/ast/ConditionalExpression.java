@@ -789,11 +789,11 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		if (this.expressionContext != ASSIGNMENT_CONTEXT && this.expressionContext != INVOCATION_CONTEXT)
 			return false;
 
-		if (this.originalValueIfTrueType == null || this.originalValueIfFalseType == null) // resolution error.
-			return false;
-
 		if (this.valueIfTrue.isPolyExpression() || this.valueIfFalse.isPolyExpression())
 			return true;
+
+		if (this.originalValueIfTrueType == null || this.originalValueIfFalseType == null) // resolution error.
+			return false;
 
 		// "... unless both operands produce primitives (or boxed primitives)":
 		if (this.originalValueIfTrueType.isBaseType() || (this.originalValueIfTrueType.id >= TypeIds.T_JavaLangByte && this.originalValueIfTrueType.id <= TypeIds.T_JavaLangBoolean)) {

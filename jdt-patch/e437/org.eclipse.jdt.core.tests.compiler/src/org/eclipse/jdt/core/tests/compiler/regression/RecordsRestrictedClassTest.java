@@ -10915,4 +10915,24 @@ public void testIssue4146_3() throws Exception {
 	verifyClassFile(expectedOutput, "Segment.class", ClassFileBytesDisassembler.SYSTEM);
 
 }
+public void testIssue4290() throws Exception {
+	this.runConformTest(
+		new String[] {
+					"X.java",
+					"""
+					public class X {
+					    public Object a() {
+					        return new Object() {
+					            static record A(Object  a, Object b) {}
+					        };
+					    }
+					    public static void main(String[] args) {
+							System.out.println("OK");
+						}
+					}
+					""",
+	            },
+				"OK");
+
+}
 }

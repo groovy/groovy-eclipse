@@ -140,6 +140,7 @@ public class ClassScope extends Scope {
 		}
 		anonymousType.tagBits |= TagBits.EndHierarchyCheck;
 		connectMemberTypes();
+		collateRecordComponents();
 		buildFieldsAndMethods();
 		anonymousType.faultInTypesForFieldsAndMethods();
 		anonymousType.verifyMethods(environment().methodVerifier());

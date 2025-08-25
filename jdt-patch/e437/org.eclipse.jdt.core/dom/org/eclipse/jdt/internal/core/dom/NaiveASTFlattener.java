@@ -243,19 +243,6 @@ public class NaiveASTFlattener extends ASTVisitor {
 		}
 	}
 
-	private void printTypes(List<Type> types, String prefix) {
-		if (types.size() > 0) {
-			this.buffer.append(" " + prefix + " ");//$NON-NLS-1$ //$NON-NLS-2$
-			Type type = types.get(0);
-			type.accept(this);
-			for (int i = 1, l = types.size(); i < l; ++i) {
-				this.buffer.append(","); //$NON-NLS-1$
-				type = types.get(0);
-				type.accept(this);
-			}
-		}
-	}
-
 	/**
 	 * reference node helper function that is common to all
 	 * the difference reference nodes.
@@ -1231,12 +1218,23 @@ public class NaiveASTFlattener extends ASTVisitor {
 	}
 
 	private boolean visit(ModulePackageAccess node, String keyword) {
-		printIndent();
 		this.buffer.append(keyword);
-		this.buffer.append(" ");//$NON-NLS-1$
-		node.getName().accept(this);
-		printTypes(node.modules(), "to"); //$NON-NLS-1$
-		this.buffer.append(";\n");//$NON-NLS-1$
+		if (node.getName() != null) {
+	        this.buffer.append(' ');
+	        node.getName().accept(this);
+	    }
+		// Handle target modules as Names instead of Types
+		if (!node.modules().isEmpty()) {
+	        this.buffer.append(" to "); //$NON-NLS-1$
+	        for (Iterator it = node.modules().iterator(); it.hasNext(); ) {
+	            Name moduleName = (Name) it.next();
+	            moduleName.accept(this);
+	            if (it.hasNext()) {
+	                this.buffer.append(","); //$NON-NLS-1$
+	            }
+	        }
+	        this.buffer.append(";\n"); //$NON-NLS-1$
+		}
 		return false;
 	}
 
@@ -1359,7 +1357,20 @@ public class NaiveASTFlattener extends ASTVisitor {
 		this.buffer.append("provides");//$NON-NLS-1$
 		this.buffer.append(" ");//$NON-NLS-1$
 		node.getName().accept(this);
-		printTypes(node.implementations(), "with"); //$NON-NLS-1$
+
+		// Replace printTypes() with proper Name handling
+	    List implementations = node.implementations();
+	    if (!implementations.isEmpty()) {
+	        this.buffer.append(" with ");//$NON-NLS-1$
+	        for (Iterator it = implementations.iterator(); it.hasNext(); ) {
+	            Name implName = (Name) it.next();
+	            implName.accept(this);
+	            if (it.hasNext()) {
+	                this.buffer.append(", ");//$NON-NLS-1$
+	            }
+	        }
+	    }
+
 		this.buffer.append(";\n");//$NON-NLS-1$
 		return false;
 	}

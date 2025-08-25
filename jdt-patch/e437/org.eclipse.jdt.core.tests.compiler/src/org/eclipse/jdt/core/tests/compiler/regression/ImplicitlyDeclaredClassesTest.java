@@ -48,7 +48,8 @@ public class ImplicitlyDeclaredClassesTest extends AbstractRegressionTest9 {
 	protected void setUp() throws Exception {
 		this.runJavacOptIn = true;
 		super.setUp();
-	}
+		this.isJRE25Plus = isRunningIn25Jre();
+ 	}
 	@Override
 	protected void tearDown() throws Exception {
 		super.tearDown();
@@ -67,6 +68,15 @@ public class ImplicitlyDeclaredClassesTest extends AbstractRegressionTest9 {
 	protected Map<String, String> getCompilerOptions() {
 		return getCompilerOptions(true);
 	}
+	private boolean isJRE25Plus = false;
+	public boolean isRunningIn25Jre() {
+		try {
+			javax.lang.model.SourceVersion.valueOf("RELEASE_25");
+		} catch(IllegalArgumentException iae) {
+			return false;
+		}
+		return true;
+	}
 	// Enables the tests to run individually
 	protected Map<String, String> getCompilerOptions(boolean previewFlag) {
 		Map<String, String> defaultOptions = super.getCompilerOptions();
@@ -79,13 +89,13 @@ public class ImplicitlyDeclaredClassesTest extends AbstractRegressionTest9 {
 	}
 	@Override
 	protected void runConformTest(String[] testFiles, String expectedOutput) {
-		if(!isJRE23Plus)
+		if(this.isJRE25Plus)
 			return;
 		runConformTest(testFiles, expectedOutput, null, VMARGS, new JavacTestOptions("-source 24 --enable-preview"));
 	}
 	@Override
 	protected void runConformTest(String[] testFiles, String expectedOutput, Map<String, String> customOptions) {
-		if(!isJRE23Plus)
+		if(this.isJRE25Plus)
 			return;
 		runConformTest(testFiles, expectedOutput, customOptions, VMARGS, JAVAC_OPTIONS);
 	}
@@ -263,6 +273,8 @@ public class ImplicitlyDeclaredClassesTest extends AbstractRegressionTest9 {
 	// Test implicit type with a valid candidate main method (public but no static, and String[] argument)
 	@Test
 	public void testImplicitType006() throws IOException, ClassFormatException {
+		if (this.isJRE25Plus)
+			return;
 		try {
 			runConformTest(
 					new String[] {"X.java",
@@ -370,6 +382,8 @@ public class ImplicitlyDeclaredClassesTest extends AbstractRegressionTest9 {
 		"Hello2");
 	}
 	public void testGH3137b() {
+		if (this.isJRE25Plus)
+			return;
 		runConformTest(new String[] {
 				"X.java",
 				"""
@@ -385,6 +399,8 @@ public class ImplicitlyDeclaredClassesTest extends AbstractRegressionTest9 {
 		JavacTestOptions.SKIP);
 	}
 	public void testGH3714() {
+		if (this.isJRE25Plus)
+			return;
 		runConformTest(new String[] {
 				"Main.java",
 				"""
