@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
     public IJavaElement[] select(final GroovyCompilationUnit unit, int start, int length) {
         char[] contents = unit.getContents();
         // expand zero-length selection to include adjacent identifier characters
-        if (length == 0) {
+        if (start >= 0 && length == 0) {
             // TODO: Use the ExpressionFinder or TokenStream to do this?
             while (start > 0 && Character.isJavaIdentifierPart(contents[start - 1])) {
                 start -= 1;
