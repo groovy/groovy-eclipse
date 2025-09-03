@@ -22,7 +22,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class PatternMatching16Test extends AbstractRegressionTest {
 
-	private static final JavacTestOptions JAVAC_OPTIONS = new JavacTestOptions("-source 16 --enable-preview -Xlint:-preview");
+	private static final JavacTestOptions JAVAC_OPTIONS = new JavacTestOptions("-source 16");
 	static {
 //		TESTS_NUMBERS = new int [] { 40 };
 //		TESTS_RANGE = new int[] { 1, -1 };
@@ -195,7 +195,7 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 				options);
 	}
 	public void test003a() {
-		Map<String, String> options = getCompilerOptions(true);
+		Map<String, String> options = getCompilerOptions(false);
 		String[] testFiles =
 				new String[] {
 						"X3.java",
@@ -211,22 +211,18 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 						"	}\n" +
 						"}\n",
 				};
-		if (this.complianceLevel < ClassFileConstants.JDK24) {
-			runNegativeTest(
+		runNegativeTest(
 				testFiles,
 				"----------\n" +
-				"1. ERROR in X3.java (at line 4)\n" +
-				"	if (num instanceof int) {\n" +
-				"	    ^^^^^^^^^^^^^^^^^^\n" +
-				"Incompatible conditional operand types Number and int\n" +
-				"----------\n",
-				"",
-				null,
-				true,
-				options);
-		} else {
-			runConformTest(testFiles, "int", options, new String[] {"--enable-preview"}, JavacTestOptions.DEFAULT);
-		}
+						"1. ERROR in X3.java (at line 4)\n" +
+						"	if (num instanceof int) {\n" +
+						"	    ^^^^^^^^^^^^^^^^^^\n" +
+						"Incompatible conditional operand types Number and int\n" +
+						"----------\n",
+						"",
+						null,
+						true,
+						options);
 	}
 	public void test004() {
 		Map<String, String> options = getCompilerOptions(true);
@@ -1775,7 +1771,7 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 						"}\n",
 				},
 				"null",
-				getCompilerOptions(true));
+				getCompilerOptions(false));
 	}
 	public void test032a() {
 		runConformTest(
@@ -1800,7 +1796,7 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 						"}\n",
 				},
 				"one",
-				getCompilerOptions(true));
+				getCompilerOptions(false));
 	}
 	public void test033() {
 		runNegativeTest(
@@ -1909,7 +1905,7 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 				"",
 				null,
 				true,
-				getCompilerOptions(true));
+				getCompilerOptions(false));
 	}
 	public void test036() {
 		runConformTest(
@@ -1933,7 +1929,7 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 						"}\n",
 				},
 				"one",
-				getCompilerOptions(true));
+				getCompilerOptions(false));
 	}
 	public void test037() {
 		runNegativeTest(
@@ -2304,7 +2300,7 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, old);
 	}
 	public void test052() {
-		Map<String, String> compilerOptions = getCompilerOptions(true);
+		Map<String, String> compilerOptions = getCompilerOptions(false);
 		String old = compilerOptions.get(CompilerOptions.OPTION_PreserveUnusedLocal);
 		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
 		runConformTest(

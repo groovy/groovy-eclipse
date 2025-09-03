@@ -14,6 +14,7 @@
 package org.eclipse.jdt.core.tests.util;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -194,10 +195,18 @@ public class AbstractCompilerTest extends TestCase {
 		}
 		if (complianceSuite == null)
 			return null;
-
+		String specVersion = System.getProperty("java.specification.version");
+		int spec = Integer.parseInt(specVersion);
+		boolean futureJREUsed = spec > Integer.parseInt(CompilerOptions.getLatestVersion());
 		// add tests
 		for (int i=0, m=testClasses.size(); i<m ; i++) {
 			Class testClass = (Class)testClasses.get(i);
+			if (futureJREUsed) {
+				Annotation annotation = testClass.getAnnotation(PreviewTest.class);
+				if (annotation != null) {
+					continue;
+				}
+			}
 			TestSuite suite = new TestSuite(testClass.getName());
 			int inheritedDepth = 0;
 			try {

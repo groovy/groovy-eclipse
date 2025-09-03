@@ -9675,8 +9675,6 @@ public void previewAPIUsed(Scope scope, int sourceStart, int sourceEnd, IBinaryA
 
 	int problemId = -1, severity = -1;
 	if (!this.options.enablePreviewFeatures) {
-//		problemId = IProblem.PreviewAPIDisabled;
-//		severity = isReflective ? ProblemSeverities.Warning : ProblemSeverities.Error;
 		if (this.options.complianceLevel < ClassFileConstants.getLatestJDKLevel()) {
 			problemId = IProblem.PreviewAPIUsed;
 			severity = ProblemSeverities.Warning;
