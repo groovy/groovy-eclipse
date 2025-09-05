@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,11 +39,13 @@ import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.asm.MopWriter;
+import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.stc.ExtensionMethodNode;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeLookup;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
@@ -79,10 +81,10 @@ public class STCTypeLookup implements ITypeLookup {
                     if (vexp.isThisExpression() || vexp.isSuperExpression()) {
                         declaration = (ClassNode) inferredType;
                     } else {
-                        Object methodTarget = vexp.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
-                        if (methodTarget instanceof MethodNode) {
-                            declaration = (MethodNode) methodTarget;
-                            declaringType = ((MethodNode) methodTarget).getDeclaringClass();
+                        var methodTarget = getAstMethodTarget(vexp);
+                        if (methodTarget != null) {
+                            declaration   = methodTarget;
+                            declaringType = methodTarget.getDeclaringClass();
                         } else {
                             Variable accessedVariable = vexp.getAccessedVariable();
                             if (accessedVariable instanceof AnnotatedNode && !(vexp.getEnd() > 0 && // explicit reference to
@@ -112,17 +114,17 @@ public class STCTypeLookup implements ITypeLookup {
                         }
                     }
                 } else if (expr instanceof MethodCall) {
-                    var methodTarget = declaration.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
-                    if (methodTarget instanceof MethodNode) {
-                        declaration = (MethodNode) methodTarget;
-                        declaringType = ((MethodNode) methodTarget).getDeclaringClass();
+                    var methodTarget = getAstMethodTarget(expr);
+                    if (methodTarget != null) {
+                        declaration   = methodTarget;
+                        declaringType = methodTarget.getDeclaringClass();
                     }
                 }
             } else if (expr instanceof ConstantExpression) {
                 ASTNode enclosingNode = scope.getEnclosingNode(), methodTarget = null;
                 if (enclosingNode instanceof PropertyExpression && ((PropertyExpression) enclosingNode).getProperty() == expr) {
                     isSpread = ((PropertyExpression) enclosingNode).isSpreadSafe();
-                    methodTarget = enclosingNode.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                    methodTarget = getAstMethodTarget((PropertyExpression) enclosingNode);
                     if (methodTarget instanceof MethodNode && ((MethodNode) methodTarget).isSynthetic()) {
                         declaringType = ((MethodNode) methodTarget).getOriginal().getDeclaringClass();
                         inferredType = enclosingNode.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
@@ -134,7 +136,7 @@ public class STCTypeLookup implements ITypeLookup {
                     }
                 } else if (enclosingNode instanceof MethodCallExpression && ((MethodCallExpression) enclosingNode).getMethod() == expr) {
                     isSpread = ((MethodCallExpression) enclosingNode).isSpreadSafe();
-                    methodTarget = enclosingNode.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                    methodTarget = getAstMethodTarget((MethodCallExpression) enclosingNode);
                     if (methodTarget == null) methodTarget = getMopMethodTarget((MethodCallExpression) enclosingNode);
                     if (methodTarget == null) methodTarget = ((MethodCallExpression) enclosingNode).getMethodTarget();
                     //
@@ -211,6 +213,18 @@ public class STCTypeLookup implements ITypeLookup {
     }
 
     //--------------------------------------------------------------------------
+
+    private static MethodNode getAstMethodTarget(final Expression expr) {
+        MethodNode node = null;
+        StatementMeta meta = expr.getNodeMetaData(StatementMeta.class);
+        if (meta != null) {
+            node = ReflectionUtils.getPrivateField(StatementMeta.class, "target", meta);
+        }
+        if (node == null) {
+            node = expr.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+        }
+        return node;
+    }
 
     /**
      * Resolves {@code this.super$2$method()} to {@code super.method()}

@@ -8298,6 +8298,51 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic10897() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "new E().p()\n",
+
+            "A.java",
+            "interface A {\n" +
+            "  void p();\n" +
+            "}\n",
+
+            "B.java",
+            "interface B extends A {\n" +
+            "  @Override\n" +
+            "  void p();\n" +
+            "}\n",
+
+            "C.java",
+            "class C implements A {\n" +
+            "  @Override\n" +
+            "  public void p() {\n" +
+            "    System.out.print(\"C\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "D.java",
+            "class D extends C implements B {\n" +
+            "}\n",
+
+            "E.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class E extends D {\n" +
+            "  @Override\n" +
+            "  void p() {\n" +
+            "    print('E then ')\n" +
+            "    super.p()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "E then C");
+    }
+
+    @Test
     public void testCompileStatic10904() {
         assumeTrue(isParrotParser());
 
@@ -8478,16 +8523,57 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic11341() {
+        assumeTrue(isAtLeastGroovy(50));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  Long value = new p.C().getValue()\n" +
+            "  print(value)\n" +
+            "}\n" +
+            "test()\n",
+
+            "p/A.java",
+            "package p;\n" +
+            "public interface A {\n" +
+            "  Object getValue();\n" +
+            "}\n",
+
+            "p/B.java",
+            "package p;\n" +
+            "public class B {\n" +
+            "  public Long getValue() {\n" +
+            "    return 42L;\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/C.java",
+            "package p;\n" +
+            "public class C extends B implements A {\n" +
+            "//public synthetic Object getValue() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
     public void testCompileStatic11694() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
             "print(new q.C().m())\n",
+
             "p/A.groovy",
             "package p\n" +
             "abstract class A {\n" +
             "  protected static pm() { 'xx' }\n" +
             "}\n",
+
             "q/C.groovy",
             "package q\n" +
             "class C extends p.A {\n" +
