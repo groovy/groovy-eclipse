@@ -4340,7 +4340,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\tclass X implements I<String>, J<Number> {\n" +
             "\t^\n" +
             "Groovy:The interface I " + (isAtLeastGroovy(40) ? "cannot be" : "is") +
-            " implemented more than once with different arguments: I<java.lang.String> and I<java.lang.Number>\n" +
+            " implemented more than once with different arguments: I<java.lang.String>" + (isAtLeastGroovy(50) ? " (via X)" : "") +
+            " and I<java.lang.Number>" + (isAtLeastGroovy(50) ? " (via J)" : "") + "\n" +
             "----------\n");
     }
 
@@ -4368,7 +4369,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\tclass Y extends X implements I<Number> {\n" +
             "\t^\n" +
             "Groovy:The interface I " + (isAtLeastGroovy(40) ? "cannot be" : "is") +
-            " implemented more than once with different arguments: I<java.lang.Number> and I<java.lang.String>\n" +
+            " implemented more than once with different arguments: I<java.lang.Number>" + (isAtLeastGroovy(50) ? " (via Y)" : "") +
+            " and I<java.lang.String>" + (isAtLeastGroovy(50) ? " (via X)" : "") + "\n" +
             "----------\n");
     }
 

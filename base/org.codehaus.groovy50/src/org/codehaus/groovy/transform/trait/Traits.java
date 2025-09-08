@@ -143,7 +143,7 @@ public abstract class Traits {
                     staticFieldHelperClassNode = icn;
                 }
             } while (innerClasses.hasNext());
-        } else {
+        } else if (!trait.isPrimaryClassNode()) { // GROOVY-11743
             // precompiled trait
             try {
                 String helperClassName = Traits.helperClassName(trait);
