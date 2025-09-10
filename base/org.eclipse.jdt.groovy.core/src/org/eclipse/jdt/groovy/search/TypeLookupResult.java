@@ -223,13 +223,25 @@ public class TypeLookupResult {
 
             if (scope.getMethodCallGenericsTypes() == null &&
                     Arrays.stream(GroovyUtils.getGenericsTypes(method)).anyMatch(unresolved)) {
-                if (testEnclosingAssignment(scope, rhs ->
-                    (rhs instanceof StaticMethodCallExpression && rhs == scope.getCurrentNode()) ||
-                    (rhs instanceof MethodCallExpression && ((MethodCallExpression) rhs).getMethod() == scope.getCurrentNode())
-                )) {
+                Predicate<Expression> test = (exp) -> // finds call expression for current node
+                    (exp instanceof StaticMethodCallExpression && exp == scope.getCurrentNode()) ||
+                    (exp instanceof MethodCallExpression && ((MethodCallExpression) exp).getMethod() == scope.getCurrentNode());
+
+                if (testEnclosingAssignment(scope, test)) {
                     // maybe the assign target type can help resolve type parameters of method
                     targetType = scope.getEnclosingAssignment().getLeftExpression().getType();
-
+                } else {
+                    // maybe outer call target type can help resolve type parameters of method
+                    VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
+                    if (cat != null) { Parameter[] params;
+                        int index = indexOf(asList(cat.call.getArguments()), test);
+                        if (index != -1 && (params = parameters(cat)).length > 0) {
+                            targetType = params[Math.min(index, params.length - 1)].getType();
+                            if (targetType.isArray() && index > params.length - 1) targetType = targetType.getComponentType();
+                        }
+                    }
+                }
+                if (targetType != null) {
                     GenericsMapper gm = GenericsMapper.gatherGenerics(singletonList(targetType), selfType, returnTypeStub(method));
                     if (gm.hasGenerics()) {
                         for (GenericsType tp : method.getGenericsTypes()) {
@@ -266,13 +278,12 @@ public class TypeLookupResult {
 
         // check for Closure or SAM-type coercion of the method pointer/reference
         VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
-        if (cat != null && cat.declaration instanceof MethodNode && cat.call.getArguments() instanceof TupleExpression) {
-            int index = ((TupleExpression) cat.call.getArguments()).getExpressions().indexOf(scope.getEnclosingNode());
-            Parameter[] params = ((MethodNode) cat.declaration).getParameters();
-            if (index != -1 && params.length > 0) {
+        if (cat != null) { Parameter[] params;
+            int index = asList(cat.call.getArguments()).indexOf(scope.getEnclosingNode());
+            if (index != -1 && (params = parameters(cat)).length > 0) {
                 targetType = params[Math.min(index, params.length - 1)].getType();
-                if (targetType.isArray() && index >= params.length - 1) {
-                    targetType = selfType.getComponentType();
+                if (targetType.isArray() && index >= params.length - 1) { // vargs
+                    targetType = targetType.getComponentType();
                 }
 
                 if (targetType.equals(VariableScope.CLOSURE_CLASS_NODE)) {
@@ -342,11 +353,38 @@ public class TypeLookupResult {
         return cn;
     }
 
+    private static List<Expression> asList(final Expression args) {
+        if (args instanceof TupleExpression) {
+            return ((TupleExpression) args).getExpressions();
+        }
+        return singletonList(args);
+    }
+
+    private static Parameter[] parameters(final VariableScope.CallAndType cat) {
+        if (cat.declaration instanceof MethodNode) {
+            MethodNode declaration = (MethodNode)cat.declaration;
+            Parameter[] parameters = declaration.getParameters();
+            // check for groovy method; compare real declaring class to the self-type class
+            if (!declaration.getDeclaringClass().equals(cat.getPerceivedDeclaringType())) {
+                parameters = Arrays.copyOfRange(parameters, 1, parameters.length);
+            }
+            return parameters;
+        }
+        return Parameter.EMPTY_ARRAY;
+    }
+
     private static MethodNode returnTypeStub(final MethodNode node) {
         MethodNode stub = new MethodNode("", 0, VariableScope.VOID_CLASS_NODE, new Parameter[] {new Parameter(node.getReturnType(), "")}, null, null);
         stub.setDeclaringClass(node.getDeclaringClass());
         stub.setGenericsTypes(node.getGenericsTypes());
         return stub;
+    }
+
+    private static <T> int indexOf(final List<T> list, final Predicate<? super T> test) {
+        for (java.util.ListIterator<T> iter = list.listIterator(); iter.hasNext(); ) {
+            if (test.test(iter.next())) return iter.previousIndex();
+        }
+        return -1;
     }
 
     private static boolean testEnclosingAssignment(final VariableScope scope, final Predicate<Expression> rhsTest) {

@@ -200,7 +200,9 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "def copy = list.stream().collect(Collectors.toList())\n";
 
         assertType(contents, "copy", "java.util.List<java.lang.Object>");
-        assertType(contents, "toList", "java.util.stream.Collector<java.lang.Object,?,java.util.List<java.lang.Object>>");
+        assertType(contents, "list", "java.util.List<java.lang.String>");
+        assertType(contents, "stream", "java.util.stream.Stream<java.lang.String>");
+        assertType(contents, "toList", "java.util.stream.Collector<java.lang.String,?,java.util.List<java.lang.String>>");
 
         int offset = contents.indexOf("collect"); // String is known input type and accumulation type should not be reduced to Object
         MethodNode m = assertDeclaration(contents, offset, offset + 7, "java.util.stream.Stream", "collect", DeclarationKind.METHOD);
