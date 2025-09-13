@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -274,7 +274,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
 
         String release = config.getReleaseVersion();
-        if (isNotBlank(release)) {
+        if (isNotBlank(release) && Float.parseFloat(getJavaVersion(config)) >= 9f) {
             args.put("--release", release.trim());
             if (!config.isFork()) { // check tycho useJDK
                 String javaHome = config.getCustomCompilerArgumentsAsMap().get("use.java.home");
@@ -591,6 +591,30 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         } else {
             throw new CompilerException("Cannot find the location of the requested className <" + className + "> in classpath");
         }
+    }
+
+    private String getJavaVersion(final CompilerConfiguration config) throws CompilerException {
+        if (config.isFork()) {
+            org.codehaus.plexus.util.cli.Commandline cli = new org.codehaus.plexus.util.cli.Commandline();
+            cli.setExecutable(getJavaExecutable(config));
+            cli.addArguments(new String[] {"-version"});
+            try {
+                CommandLineUtils.StringStreamConsumer out = new CommandLineUtils.StringStreamConsumer();
+                int exitCode = CommandLineUtils.executeCommandLine(cli, out, out);
+                if (exitCode == 0) { getLogger().debug(out.getOutput());
+                    Pattern p = Pattern.compile("\\d+(\\.\\d+)?");
+                    Matcher m = p.matcher(out.getOutput());
+                    if (m.find()) {
+                        return m.group();
+                    }
+                }
+                getLogger().warn("Failed to auto-detect version of 'java' executable");
+            } catch (Exception e) {
+                getLogger().warn("Failed to auto-detect version of 'java' executable", e);
+            }
+        }
+
+        return System.getProperty("java.specification.version");
     }
 
     private String getJavaExecutable(final CompilerConfiguration config) {

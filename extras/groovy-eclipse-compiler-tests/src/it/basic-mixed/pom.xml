@@ -11,6 +11,7 @@
 
   <properties>
     <maven.compiler.fork>true</maven.compiler.fork>
+    <maven.compiler.release>8</maven.compiler.release>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <project.build.sourceEncoding>US-ASCII</project.build.sourceEncoding>

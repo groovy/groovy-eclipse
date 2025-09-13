@@ -6,8 +6,8 @@
 	<packaging>pom</packaging>
 
 	<!-- To run this build, use the following commands (depending on what you are trying to do):
-		mvn clean verify -Pe4.19
-		mvn clean deploy -Pe4.19 -Prelease
+		mvn clean verify -Pe4.28
+		mvn clean deploy -Pe4.28 -Prelease
 	-->
 
 	<properties>
@@ -21,7 +21,7 @@
 			tycho ecj compiler. These two properties define what compiler will be used
 			for those bundles.
 		-->
-		<groovy-eclipse-compiler-version>3.9.0</groovy-eclipse-compiler-version>
+		<groovy-eclipse-compiler-version>3.9.1</groovy-eclipse-compiler-version>
 
 		<!-- This should align with the oldest supported Groovy version. -->
 		<groovy-eclipse-batch-version>3.0.25-02</groovy-eclipse-batch-version>
