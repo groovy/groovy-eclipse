@@ -109,6 +109,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 import static java.lang.reflect.Modifier.isFinal;
@@ -136,6 +137,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.declS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.fieldX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getInterfacesAndSuperInterfaces;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.inSamePackage;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.localVarX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.params;
@@ -1060,16 +1062,6 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     public void visitField(final FieldNode node) {
     }
 
-    private boolean methodNeedsReplacement(final MethodNode m) {
-        // no method found, we need to replace
-        if (m == null) return true;
-        // method is in current class, nothing to be done
-        if (m.getDeclaringClass() == getClassNode()) return false;
-        // do not overwrite final
-        if (isFinal(m.getModifiers())) return false;
-        return true;
-    }
-
     @Override
     public void visitProperty(final PropertyNode node) {
         String name = node.getName();
@@ -1087,14 +1079,16 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             if (getter == null && isPrimitiveBoolean(node.getType())) {
                 getter = classNode.getGetterMethod("is" + capitalize(name), !node.isStatic());
             }
-            if (methodNeedsReplacement(getter)) {
+            if (methodNeedsReplacement(getter,
+                    (mn) -> cannotReplaceMethod(node, mn))) {
                 getterBlock = createGetterBlock(node, field);
             }
         }
         Statement setterBlock = node.getSetterBlock();
         if (setterBlock == null && !node.isPrivate() && !node.isFinal()) {
             MethodNode setter = classNode.getSetterMethod(setterName, false); // atypical: allow setter with non-void return type
-            if (methodNeedsReplacement(setter)) {
+            if (methodNeedsReplacement(setter,
+                    (mn) -> cannotReplaceMethod(node, mn))) {
                 setterBlock = createSetterBlock(node, field);
             }
         }
@@ -1120,6 +1114,28 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             }
             visitMethod(setter);
         }
+    }
+
+    private void cannotReplaceMethod(final PropertyNode pn, final MethodNode mn) {
+        String message = MethodNodeUtils.methodDescriptor(mn, true);
+        message = message.substring(message.indexOf(' ') + 1); // strip return type
+        message = String.format("Property %s cannot override final method %s of class %s", pn.getName(), message, mn.getDeclaringClass().getName());
+
+        classNode.getModule().getContext().addWarning(message, pn);
+    }
+
+    private boolean methodNeedsReplacement(final MethodNode mn, final Consumer<MethodNode> cannotReplace) {
+        if (mn != null) {
+            ClassNode declaringClass = mn.getDeclaringClass();
+            // nothing to be done for method of current class
+            if (declaringClass == classNode) return false;
+            // cannot overwrite a non-private final method
+            if (mn.isFinal() && !mn.isPrivate() && (!mn.isPackageScope() || inSamePackage(declaringClass, classNode))) {
+                cannotReplace.accept(mn); // GROOVY-8659
+                return false;
+            }
+        }
+        return true;
     }
 
     private void visitGetter(final PropertyNode node, final FieldNode field, final Statement getterBlock, final int getterModifiers, final String getterName) {

@@ -2228,12 +2228,12 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Bar.groovy",
             "class Bar {\n" +
-            "  final def getFinalProperty() {}\n" +
+            "  final getSomething() {}\n" +
             "}\n",
 
             "Foo.groovy",
             "class Foo extends Bar {\n" +
-            "  def getFinalProperty() {}\n" +
+            "  def getSomething() {}\n" +
             "}\n",
         };
         //@formatter:on
@@ -2241,29 +2241,67 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Foo.groovy (at line 2)\n" +
-            "\tdef getFinalProperty() {}\n" +
-            "\t    ^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:You are not allowed to override the final method getFinalProperty() from class 'Bar'.\n" +
+            "\tdef getSomething() {}\n" +
+            "\t    ^^^^^^^^^^^^^^\n" +
+            "Groovy:You are not allowed to override the final method getSomething() from class 'Bar'.\n" +
             "----------\n");
     }
 
-    @Test // TODO: https://issues.apache.org/jira/browse/GROOVY-8659
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8659
     public void testOverriding_FinalMethod2() {
         //@formatter:off
         String[] sources = {
             "Bar.groovy",
             "class Bar {\n" +
-            "  final def getFinalProperty() {}\n" +
+            "  final getSomething() {}\n" +
             "}\n",
 
             "Foo.groovy",
             "class Foo extends Bar {\n" +
-            "  def finalProperty = 32\n" +
+            "  def something = 32\n" +
             "}\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources, "");
+        runNegativeTest(sources, isAtLeastGroovy(50) ?
+            "----------\n" +
+            "1. WARNING in Foo.groovy (at line 2)\n" +
+            "\tdef something = 32\n" +
+            "\t^\n" +
+            "Groovy:Property something cannot override final method getSomething() of class Bar\n" +
+            "----------\n" : "");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11548 and GROOVY-11758
+    public void testOverriding_FinalMethod3() {
+        //@formatter:off
+        String[] sources = {
+            "Bar.groovy",
+            "class Bar {\n" +
+            "  protected final getSomething() {}\n" +
+            "}\n",
+
+            "Baz.groovy",
+            "trait Baz {\n" +
+            "  def something = null\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "class Foo extends Bar implements Baz {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass Foo extends Bar implements Baz {\n" +
+            "\t      ^^^\n" +
+            (isAtLeastGroovy(40)
+            ? "Groovy:inherited final method getSomething() from Bar cannot shadow the public method in Baz\n"
+            : "Groovy:You are not allowed to override the final method getSomething() from class 'Bar'.\n"
+            ) +
+            "----------\n");
     }
 
     @Test
