@@ -1573,6 +1573,82 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, "CONST", "java.lang.Integer");
     }
 
+    @Test // GROOVY-8283
+    public void testSuperFieldReference20() {
+        for (String mods : List.of("public", "protected", "@groovy.transform.PackageScope")) {
+            for (String qual : List.of("", "this.", "super.")) {
+                String contents =
+                    "class A {\n" +
+                    "  String getValue() {\n" +
+                    "  }\n" +
+                    "}\n" +
+                    "class B extends A {\n" +
+                    "  " + mods + " Number value\n" +
+                    "}\n" +
+                    "class C extends B {\n" +
+                    "  def method() {\n" +
+                    "    " + qual + "value\n" +
+                    "  }\n" +
+                    "}\n";
+                assertType(contents, "value", isAtLeastGroovy(50) || qual.startsWith("s") ? "java.lang.Number" : "java.lang.String");
+            }
+        }
+    }
+
+    @Test // GROOVY-8283
+    public void testSuperFieldReference21() {
+        for (String mods : List.of("public", "protected")) {
+            createJavaUnit("p", "A",
+                "package p;\n" +
+                "public class A extends groovy.lang.GroovyObjectSupport {\n" + // TODO
+                "  public String getValue() {\n" +
+                "    return \"\";\n" +
+                "  }\n" +
+                "}\n");
+            createJavaUnit("p", "B",
+                "package p;\n" +
+                "public class B extends A {\n" +
+                "  " + mods + " Number value;\n" +
+                "}\n");
+
+            for (String qual : List.of("", "this.", "super.")) {
+                String contents =
+                    "class C extends p.B {\n" +
+                    "  def method() {\n" +
+                    "    " + qual + "value\n" +
+                    "  }\n" +
+                    "}\n";
+                assertType(contents, "value", isAtLeastGroovy(50) || qual.startsWith("s") ? "java.lang.Number" : "java.lang.String");
+            }
+        }
+    }
+
+    @Test // GROOVY-11764
+    public void testSuperFieldReference22() {
+        for (String mods : List.of("public", "protected")) {
+            createJavaUnit("p", "A",
+                "package p;\n" +
+                "public class A extends groovy.lang.GroovyObjectSupport {\n" + // TODO
+                "  " + mods + " String getValue() {\n" +
+                "    return \"\";\n" +
+                "  }\n" +
+                "}\n");
+            createJavaUnit("p", "B",
+                "package p;\n" +
+                "public class B extends A {\n" +
+                "  /*package-private*/ Number value;\n" +
+                "}\n");
+
+            String contents =
+                "class C extends p.B {\n" +
+                "  def method() {\n" +
+                "    super.value\n" + // IllegalAccessError
+                "  }\n" +
+                "}\n";
+            assertType(contents, "value", "java.lang.Number");
+        }
+    }
+
     @Test
     public void testSuperPropertyReference1() {
         String contents =
@@ -1839,6 +1915,60 @@ public final class InferencingTests extends InferencingTestSuite {
                 assertDeclaration(contents, offset, offset + 5, "p.A", "getValue", DeclarationKind.METHOD);
                 /**/offset = contents.lastIndexOf("getValue");
                 assertDeclaration(contents, offset, offset + 8, "p.A", "getValue", DeclarationKind.METHOD);
+            }
+        }
+    }
+
+    @Test // GROOVY-8283
+    public void testSuperPropertyReference15() {
+        for (String mods : List.of("final", "public", "protected", "@groovy.transform.PackageScope")) {
+            for (String qual : List.of("", "this.", "super.")) {
+                String contents =
+                    "class A {\n" +
+                    "  " + mods + " String getValue() {\n" +
+                    "  }\n" +
+                    "}\n" +
+                    "class B extends A {\n" +
+                    "  private Number value\n" +
+                    "}\n" +
+                    "class C extends B {\n" +
+                    "  def method() {\n" +
+                    "    " + qual + "value\n" +
+                    "    " + qual + "getValue()\n" +
+                    "  }\n" +
+                    "}\n";
+                assertType(contents, "value", "java.lang.String");
+                assertType(contents, "getValue", "java.lang.String");
+            }
+        }
+    }
+
+    @Test // GROOVY-8283
+    public void testSuperPropertyReference16() {
+        for (String mods : List.of("public", "protected")) {
+            createJavaUnit("p", "A",
+                "package p;\n" +
+                "public class A {\n" +
+                "  " + mods + " String getValue() {\n" +
+                "    return \"\";\n" +
+                "  }\n" +
+                "}\n");
+            createJavaUnit("p", "B",
+                "package p;\n" +
+                "public class B extends A {\n" +
+                "  /*package-private*/ Number value;\n" +
+                "}\n");
+
+            for (String qual : List.of("", "this.")) {
+                String contents =
+                    "class C extends p.B {\n" +
+                    "  def method() {\n" +
+                    "    " + qual + "value\n" +
+                    "    " + qual + "getValue()\n" +
+                    "  }\n" +
+                    "}\n";
+                assertType(contents, "value", "java.lang.String");
+                assertType(contents, "getValue", "java.lang.String");
             }
         }
     }

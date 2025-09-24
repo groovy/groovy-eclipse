@@ -18,6 +18,7 @@ package org.eclipse.jdt.groovy.search;
 import static org.apache.groovy.util.BeanUtils.capitalize;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.unique;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.inSamePackage;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 import static org.eclipse.jdt.groovy.core.util.GroovyUtils.implementsTrait;
 
@@ -358,9 +359,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         // GRECLIPSE-1544: "Type.staticMethod()" or "def type = Type.class; type.staticMethod()" or ".&" variations; StatementAndExpressionCompletionProcessor circa line 275 has similar check for proposals
         ClassNode declaring = isStaticObjectExpression && (!Traits.isTrait(getBaseDeclaringType(declaringType)) || getObjectExpression(scope) instanceof Variable) ? getBaseDeclaringType(declaringType) : declaringType;
         ASTNode declaration = findDeclaration(name, declaring, isLhsExpression, isStaticObjectExpression, fieldAccessPolicy, scope.getEnclosingNode() instanceof MethodPointerExpression ? UNKNOWN_TYPES : scope.getMethodCallArgumentTypes());
-        if (declaration instanceof MethodNode && scope.getEnclosingNode() instanceof PropertyExpression && !scope.isMethodCall() &&
-                (!AccessorSupport.isGetter((MethodNode) declaration) || name.equals(((MethodNode) declaration).getName()))) {
-            declaration = null; // property expression "foo.bar" does not resolve to "bar(...)" or "setBar(x)" w/o call args
+
+        if (declaration instanceof MethodNode && scope.getEnclosingNode() instanceof PropertyExpression) { MethodNode accessMethod = (MethodNode) declaration;
+            if ((name.equals(accessMethod.getName()) || !AccessorSupport.isGetter(accessMethod)) && !scope.isMethodCall()) {
+                declaration = null; // property expression "foo.bar" does not resolve to "bar(...)" or "setBar(x)" w/o call args
+            } else if (!name.equals(accessMethod.getName()) && (AccessorSupport.isGetter(accessMethod) || AccessorSupport.isSetter(accessMethod))) {
+                declaration = resolvePropertyShadowing(accessMethod, declaring, name, scope.getEnclosingTypeDeclaration(), isStaticObjectExpression);
+            }
         }
 
         if (declaration == null && declaring != declaringType && (
@@ -443,8 +448,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         } else if (isNotThisOrOuterClass(declaring, resolvedDeclaringType) || (resolvedDeclaringType.isAbstract() && isNotThisOrOuterClass(scope.getEnclosingTypeDeclaration(), resolvedDeclaringType))) {
                             confidence = TypeConfidence.UNKNOWN;
                         }
-                    } else if (Flags.isPackageDefault(method.getModifiers()) && !declaring.equals(resolvedDeclaringType) &&
-                            !Objects.equals(declaringType.getPackageName(), resolvedDeclaringType.getPackageName()) && GroovyUtils.getGroovyVersion().getMajor() > 4) {
+                    } else if (method.isPackageScope() && !inSamePackage(declaringType, resolvedDeclaringType) &&
+                            !declaring.equals(resolvedDeclaringType) && GroovyUtils.getGroovyVersion().getMajor() > 4) {
                         // GROOVY-11357: indirect reference to package-private method yields MissingMethodException
                         confidence = TypeConfidence.UNKNOWN;
                     } else if (method.getName().startsWith("is") && !name.startsWith("is") && !scope.isMethodCall() && isSuperObjectExpression(scope) && GroovyUtils.getGroovyVersion().getMajor() < 4) {
@@ -543,6 +548,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             if (candidate != null && (!(candidate instanceof MethodNode) || scope.isMethodCall() ||
                     ((AccessorSupport.isGetter((MethodNode) candidate) || AccessorSupport.isSetter((MethodNode) candidate)) && !var.getName().equals(((MethodNode) candidate).getName())))) {
                 ClassNode implicitThisType = Optional.ofNullable((ClassNode) var.putNodeMetaData("_from_type_", null)).orElse(declaringType);
+                if (candidate instanceof MethodNode && !scope.isMethodCall()) {
+                    candidate = resolvePropertyShadowing((MethodNode) candidate, implicitThisType, var.getName(), scope.getEnclosingTypeDeclaration(), scope.isStatic());
+                }
                 if (candidate instanceof FieldNode) {
                     FieldNode field = (FieldNode) candidate;
                     ClassNode owner = field.getDeclaringClass();
@@ -557,17 +565,15 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     }
                 } else if (candidate instanceof MethodNode) {
                     MethodNode method = (MethodNode) candidate;
-                    // check for call "method(1,2,3)" matched to decl "method(int)"
-                    List<ClassNode> argumentTypes = scope.getMethodCallArgumentTypes();
-                    if (argumentTypes != null && isLooseMatch(argumentTypes, method.getParameters())) {
+                    // check for call like "method(1,2,3)" matched to declaration "method(int)"
+                    if (scope.isMethodCall() && isLooseMatch(scope.getMethodCallArgumentTypes(), method.getParameters())) {
                         confidence = TypeConfidence.LOOSELY_INFERRED;
                     }
                     ClassNode owner = method.getOriginal().getDeclaringClass();
                     if (method.isPrivate() && (isNotThisOrOuterClass(implicitThisType, owner) ||
                             (owner.isAbstract() && isNotThisOrOuterClass(scope.getEnclosingTypeDeclaration(), owner)))) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private method of other class yields MissingMethodException
-                    } else if (Flags.isPackageDefault(method.getModifiers()) && !implicitThisType.equals(owner) &&
-                            !Objects.equals(implicitThisType.getPackageName(), owner.getPackageName()) &&
+                    } else if (method.isPackageScope() && !inSamePackage(implicitThisType, owner) &&
                             GroovyUtils.getGroovyVersion().getMajor() > 4) { // GROOVY-11357: package-private was indexed for local subs
                         confidence = TypeConfidence.UNKNOWN; // extern reference to package-private method yields MissingMethodException
                     }
@@ -730,7 +736,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         // look for canonical accessor method
         Optional<MethodNode> accessor = findPropertyAccessorMethod(name, declaringType, isLhsExpression, isStaticExpression, methodCallArgumentTypes).filter(it -> !isSynthetic(it));
-        boolean nonPrivateAccessor = accessor.filter(it -> (!it.isPrivate() && (!it.isPackageScope() || Objects.equals(declaringType.getPackageName(), it.getDeclaringClass().getPackageName()) || GroovyUtils.getGroovyVersion().getMajor() < 5)) || // GROOVY-11357
+        boolean nonPrivateAccessor = accessor.filter(it -> (!it.isPrivate() && (!it.isPackageScope() || inSamePackage(declaringType, it.getDeclaringClass()) || GroovyUtils.getGroovyVersion().getMajor() < 5)) || // GROOVY-11357
                                                             declaringType.equals(it.getDeclaringClass()) // direct access
                                                     ).isPresent();
         if (nonPrivateAccessor && directFieldAccess == 0 &&
@@ -1001,6 +1007,30 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             });
         }
         return accessors.findFirst();
+    }
+
+    /**
+     * Determines if a field is shadowing the method for property access within
+     * the enclosing (aka sender) class.
+     *
+     * @see https://issues.apache.org/jira/browse/GROOVY-8283
+     */
+    private static ASTNode resolvePropertyShadowing(final MethodNode method, final ClassNode receiver, final String name, final ClassNode sender, final boolean staticExpression) {
+        ClassNode owner = method.getOriginal().getDeclaringClass();
+        if (!owner.isInterface() && !Traits.isTrait(owner) && GroovyUtils.getGroovyVersion().getMajor() >= 5) {
+            java.util.function.Predicate<FieldNode> isAccessible = (field) ->
+                !field.isPrivate() && (
+                    field.isPublic() ||
+                    inSamePackage(sender, field.getDeclaringClass()) ||
+                    (field.isProtected() && sender.isDerivedFrom(field.getDeclaringClass())));
+
+            FieldNode field = receiver.getField(name);
+            if (isCompatible(field, staticExpression) && isAccessible.test(field) &&
+                  !field.getDeclaringClass().equals(owner) && field.getDeclaringClass().isDerivedFrom(owner)) {
+                return field;
+            }
+        }
+        return method;
     }
 
     //--------------------------------------------------------------------------
