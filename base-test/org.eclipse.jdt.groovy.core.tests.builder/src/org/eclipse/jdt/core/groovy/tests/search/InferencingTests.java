@@ -1600,7 +1600,7 @@ public final class InferencingTests extends InferencingTestSuite {
         for (String mods : List.of("public", "protected")) {
             createJavaUnit("p", "A",
                 "package p;\n" +
-                "public class A extends groovy.lang.GroovyObjectSupport {\n" + // TODO
+                "public class A {\n" +
                 "  public String getValue() {\n" +
                 "    return \"\";\n" +
                 "  }\n" +
@@ -1628,7 +1628,7 @@ public final class InferencingTests extends InferencingTestSuite {
         for (String mods : List.of("public", "protected")) {
             createJavaUnit("p", "A",
                 "package p;\n" +
-                "public class A extends groovy.lang.GroovyObjectSupport {\n" + // TODO
+                "public class A {\n" +
                 "  " + mods + " String getValue() {\n" +
                 "    return \"\";\n" +
                 "  }\n" +

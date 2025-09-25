@@ -335,7 +335,12 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                         if (superInterfaces.length > 0 && GroovyUtils.getGroovyVersion().getMajor() > 3) {
                             String union = Stream.concat(Stream.of(superType), Stream.of(superInterfaces))
                                 .map(t -> t.toString(false)).collect(Collectors.joining(" | ", "(", ")"));
-                            superType = new ClassNode(union, 0, superType, superInterfaces.clone(), null);
+                            superType = new ClassNode(union, 0, superType, superInterfaces.clone(), null){
+                                @Override
+                                public boolean equals(Object that) {
+                                    return that == this || that.equals(getSuperClass()) || Stream.of(getInterfaces()).anyMatch(that::equals);
+                                }
+                            };
                         }
                     } else { // type is Class<T>, so produce Class<"super of T">
                         assert (type.equals(CLASS_CLASS_NODE) && type.getGenericsTypes() != null);
@@ -1078,7 +1083,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                     createTypeHierarchy(sc, accumulator, useResolved);
                 }
             }
-            if (!type.equals(OBJECT_CLASS_NODE)) {
+            if (!OBJECT_CLASS_NODE.equals(type)) {
                 findAllInterfaces(type, accumulator, useResolved);
             }
             if (bounds != null && bounds.length > 1) {
