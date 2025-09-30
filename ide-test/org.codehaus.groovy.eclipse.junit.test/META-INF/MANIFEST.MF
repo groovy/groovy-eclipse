@@ -4,7 +4,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.junit.test;singleton:=true
 Bundle-Name: Groovy JUnit Tests
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 5.9.0.qualifier
+Bundle-Version: 6.0.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.junit.test
-Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="5.9.0",
+Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="6.0.0",
  org.eclipse.jdt.junit
