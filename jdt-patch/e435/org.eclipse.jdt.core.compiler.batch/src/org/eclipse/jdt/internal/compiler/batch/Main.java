@@ -1443,9 +1443,6 @@ public static File[][] getLibrariesFiles(File[] files) {
 }
 
 public static void main(String[] argv) {
-	// GROOVY add
-	if (System.getProperty("groovy.antlr4") == null) System.setProperty("groovy.antlr4", "true"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	// GROOVY end
 	new Main(new PrintWriter(System.out), new PrintWriter(System.err), true/*systemExit*/, null/*options*/, null/*progress*/).compile(argv);
 }
 

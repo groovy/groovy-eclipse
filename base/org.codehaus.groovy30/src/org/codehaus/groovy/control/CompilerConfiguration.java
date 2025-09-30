@@ -862,19 +862,8 @@ public class CompilerConfiguration {
 
     public ParserPluginFactory getPluginFactory() {
         if (pluginFactory == null) {
-            /* GRECLIPSE edit
             pluginFactory = !Boolean.parseBoolean(getSystemPropertySafe("groovy.antlr4", "true"))
                                 ? ParserPluginFactory.antlr2() : ParserPluginFactory.antlr4();
-            */
-            pluginFactory = new ParserPluginFactory() {
-                @Override
-                public ParserPlugin createParserPlugin() {
-                    return !getBooleanSafe("groovy.antlr4")
-                        ? ParserPluginFactory.antlr2().createParserPlugin()
-                        : ParserPluginFactory.antlr4().createParserPlugin();
-                }
-            };
-            // GRECLIPSE end
         }
         return pluginFactory;
     }

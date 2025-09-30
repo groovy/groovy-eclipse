@@ -843,7 +843,8 @@ public class CompilerConfiguration {
             pluginFactory = new ParserPluginFactory() {
                 @Override
                 public ParserPlugin createParserPlugin() {
-                    return Boolean.getBoolean("groovy.antlr4")
+                    String antlr4 = System.getProperty("groovy.antlr4", "true");
+                    return Boolean.parseBoolean(antlr4)
                         ? ParserPluginFactory.antlr4().createParserPlugin()
                         : new org.codehaus.groovy.antlr.AntlrParserPlugin();
                 }
