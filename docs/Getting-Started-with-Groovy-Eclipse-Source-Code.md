@@ -162,9 +162,9 @@ This minimal project set should be open in your workspace:
 * org.codehaus.groovy.eclipse.ui
 * org.codehaus.groovyXX (where XX is the Groovy version you are working with; you should only have one of these open in your workspace at a time)
 * org.eclipse.jdt.core
-* org.eclipse.jdt.core.compiler.batch (4.27+)
+* org.eclipse.jdt.core.compiler.batch
 * org.eclipse.jdt.core.tests.builder
-* org.eclipse.jdt.core.tests.builder.mockcompiler (4.33+)
+* org.eclipse.jdt.core.tests.builder.mockcompiler
 * org.eclipse.jdt.core.tests.compiler
 * org.eclipse.jdt.groovy.core
 * org.eclipse.jdt.groovy.core.tests.builder
@@ -198,13 +198,6 @@ Replace e4.37 with a different option to build it for another Eclipse version:
 
 * e4.36
 * e4.35
-* e4.34
-* e4.33
-* e4.32
-* e4.31
-* e4.30
-* e4.29
-* e4.28
 
 Tests will be executed as part of the build.  To skip them, append this option to the command: `-Dmaven.test.skip=true`.
 

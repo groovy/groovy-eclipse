@@ -1,7 +1,0 @@
-Comparator errors in I20230607-0720
-Comparator errors in I20230906-0400
-https://github.com/eclipse-platform/eclipse.platform.releng.aggregator/issues/1388
-https://github.com/eclipse-platform/eclipse.platform.releng.aggregator/issues/1759
-https://github.com/eclipse-platform/eclipse.platform.releng.aggregator/issues/2044
-https://github.com/eclipse-platform/eclipse.platform.releng.aggregator/issues/2358
-Update force qualifier
