@@ -25,5 +25,5 @@ Require-Bundle: org.codehaus.groovy;bundle-version="[3.0.25,6)";visibility:=reex
  org.eclipse.text
 Bundle-ActivationPolicy: lazy;exclude:="org.eclipse.jdt.groovy.core.util"
 Bundle-Activator: org.eclipse.jdt.groovy.core.Activator
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Eclipse-RegisterBuddy: org.eclipse.jdt.core

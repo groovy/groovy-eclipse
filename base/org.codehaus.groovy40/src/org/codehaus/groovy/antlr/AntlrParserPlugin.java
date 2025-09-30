@@ -126,8 +126,6 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.lang.annotation.Annotation;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -320,10 +318,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     public Reduction outputAST(final SourceUnit sourceUnit, final SourceBuffer sourceBuffer) {
+        /* GRECLIPSE edit
         return AccessController.doPrivileged((PrivilegedAction<Reduction>) () -> {
+        */
             outputASTInVariousFormsIfNeeded(sourceUnit, sourceBuffer);
             return null;
+        /* GRECLIPSE edit
         });
+        */
     }
 
     private void outputASTInVariousFormsIfNeeded(SourceUnit sourceUnit, SourceBuffer sourceBuffer) {

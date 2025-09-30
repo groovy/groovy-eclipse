@@ -12,4 +12,4 @@ Export-Package: org.codehaus.groovy.eclipse.codebrowsing,
 Require-Bundle: org.codehaus.groovy.eclipse.core;bundle-version="6.0.0"
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.codebrowsing.GroovyBrowsingPlugin
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17

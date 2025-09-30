@@ -99,6 +99,6 @@ Export-Package: groovy.beans;version="5.0.1",
  org.codehaus.groovy.vmplugin.v16;version="5.0.1"
 Require-Bundle: org.eclipse.core.runtime,
  org.junit;resolution:=optional
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy
 Eclipse-BundleShape: dir

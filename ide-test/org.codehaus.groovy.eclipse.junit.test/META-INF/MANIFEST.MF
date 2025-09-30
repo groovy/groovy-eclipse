@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.junit.test;singleton:=true
 Bundle-Name: Groovy JUnit Tests
 Bundle-Vendor: Pivotal Software, Inc.

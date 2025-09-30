@@ -7,4 +7,4 @@ Bundle-Version: 6.0.0.qualifier
 Bundle-ActivationPolicy: lazy
 ExtensionBundle-Activator: org.codehaus.groovy.frameworkadapter.Activator
 Fragment-Host: system.bundle;extension:=framework
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17

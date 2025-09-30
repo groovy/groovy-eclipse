@@ -23,4 +23,4 @@ Require-Bundle: org.codehaus.groovy.eclipse.codeassist;bundle-version="6.0.0",
  org.eclipse.ui.ide
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17

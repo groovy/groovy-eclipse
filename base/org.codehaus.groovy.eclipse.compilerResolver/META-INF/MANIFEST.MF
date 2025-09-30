@@ -9,4 +9,4 @@ Export-Package: org.codehaus.groovy.eclipse.chooser,
 Require-Bundle: org.eclipse.core.runtime
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.chooser.CompilerChooser
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17

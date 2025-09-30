@@ -46,4 +46,4 @@ Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="6.0.0",
  org.eclipse.ui.workbench.texteditor;visibility:=reexport
 Bundle-ActivationPolicy: lazy;exclude:="org.codehaus.groovy.eclipse.ui,org.codehaus.groovy.eclipse.ui.decorators"
 Bundle-Activator: org.codehaus.groovy.eclipse.GroovyPlugin
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17

@@ -6,4 +6,4 @@ Bundle-Vendor: Pivotal Software, Inc.
 Bundle-Version: 6.0.0.qualifier
 Require-Bundle: org.eclipse.ant.core
 Import-Package: org.eclipse.jdt.core
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-17

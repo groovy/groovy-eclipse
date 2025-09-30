@@ -17,4 +17,4 @@ Require-Bundle: org.codehaus.groovy.eclipse.codeassist;bundle-version="6.0.0",
  org.eclipse.ui.editors
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
