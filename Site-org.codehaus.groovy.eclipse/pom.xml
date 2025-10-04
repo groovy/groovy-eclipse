@@ -66,6 +66,7 @@
 				<version>${tycho-version}</version>
 				<configuration>
 					<filterProvided>true</filterProvided>
+					<finalName>${project.name}_${deploy.version}.${buildQualifier}</finalName>
 				</configuration>
 			</plugin>
 		</plugins>

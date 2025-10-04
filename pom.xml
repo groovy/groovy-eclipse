@@ -12,9 +12,9 @@
 
 	<properties>
 		<!-- See https://www.eclipse.org/tycho/sitedocs/index.html -->
-		<tycho-version>4.0.13</tycho-version>
+		<tycho-version>5.0.0</tycho-version>
 		<!-- See https://www.eclipse.org/tycho/sitedocs/tycho-extras/index.html -->
-		<tycho-extras-version>4.0.13</tycho-extras-version>
+		<tycho-extras-version>5.0.0</tycho-extras-version>
 
 		<!-- Versions of groovy compiler components to use for building. Some bundles,
 			mostly test related, have Groovy code that can't be compiled with standard
@@ -189,7 +189,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-deploy-plugin</artifactId>
-				<version>3.1.3</version>
+				<version>3.1.4</version>
 				<!-- disable default behavior; see Site project -->
 				<configuration>
 					<skip>true</skip>
@@ -199,7 +199,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.1.2</version>
+				<version>3.5.4</version>
 				<!-- disable default behavior; tycho-surefire-plugin tests units -->
 				<configuration>
 					<skip>true</skip>
@@ -266,10 +266,10 @@
 				<version>${tycho-version}</version>
 				<configuration>
 					<archive>
+						<addMavenDescriptor>false</addMavenDescriptor>
 						<manifest>
 							<addDefaultEntries>false</addDefaultEntries>
 						</manifest>
-						<addMavenDescriptor>false</addMavenDescriptor>
 					</archive>
 					<format>${greclipse.build.qualifier}</format>
 					<sourceReferences>
