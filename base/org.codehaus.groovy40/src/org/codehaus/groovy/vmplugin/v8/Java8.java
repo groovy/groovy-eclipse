@@ -603,6 +603,7 @@ public class Java8 implements VMPlugin {
      * @return the check result
      */
     @Override
+    @SuppressWarnings("removal") // TODO a future Groovy version should skip the permission check
     public boolean checkCanSetAccessible(final AccessibleObject accessibleObject, final Class<?> callerClass) {
         SecurityManager sm = System.getSecurityManager();
         try {
@@ -741,6 +742,7 @@ public class Java8 implements VMPlugin {
         throw new UnsupportedOperationException("doPrivileged is no longer supported");
     }
 
+    @SuppressWarnings("removal") // TODO a future Groovy version should perform the operation not as a privileged action
     private static <T> T doPrivilegedInternal(final java.security.PrivilegedAction<T> action) {
         return java.security.AccessController.doPrivileged(action);
     }
