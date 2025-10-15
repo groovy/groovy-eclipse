@@ -106,6 +106,8 @@ public class CompilerConfiguration {
     public static final String JDK24 = "24";
     /** This (<code>"25"</code>) is the value for targetBytecode to compile for a JDK 25. */
     public static final String JDK25 = "25";
+    /** This (<code>"26"</code>) is the value for targetBytecode to compile for a JDK 26. */
+    public static final String JDK26 = "26";
 
     /**
      * JDK version to bytecode version mapping.
@@ -125,7 +127,8 @@ public class CompilerConfiguration {
             JDK22, Opcodes.V22,
             JDK23, Opcodes.V23,
             JDK24, Opcodes.V24,
-            JDK25, Opcodes.V25
+            JDK25, Opcodes.V25,
+            JDK26, Opcodes.V26
     );
 
     /**
@@ -603,19 +606,19 @@ public class CompilerConfiguration {
         if (text != null) setTargetBytecode(text);
 
         text = configuration.getProperty("groovy.parameters");
-        if (text != null) setParameters(text.equalsIgnoreCase("true"));
+        if (text != null) setParameters(Boolean.parseBoolean(text));
 
         text = configuration.getProperty("groovy.preview.features");
-        if (text != null) setPreviewFeatures(text.equalsIgnoreCase("true"));
+        if (text != null) setPreviewFeatures(Boolean.parseBoolean(text));
 
         text = configuration.getProperty("groovy.classpath");
         if (text != null) setClasspath(text);
 
         text = configuration.getProperty("groovy.output.verbose");
-        if (text != null) setVerbose(text.equalsIgnoreCase("true"));
+        if (text != null) setVerbose(Boolean.parseBoolean(text));
 
         text = configuration.getProperty("groovy.output.debug");
-        if (text != null) setDebug(text.equalsIgnoreCase("true"));
+        if (text != null) setDebug(Boolean.parseBoolean(text));
 
         numeric = 10;
         text = configuration.getProperty("groovy.errors.tolerance", "10");
@@ -633,7 +636,7 @@ public class CompilerConfiguration {
         if (text != null) setScriptBaseClass(text);
 
         text = configuration.getProperty("groovy.recompile");
-        if (text != null) setRecompileGroovySource(text.equalsIgnoreCase("true"));
+        if (text != null) setRecompileGroovySource(Boolean.parseBoolean(text));
 
         numeric = 100;
         text = configuration.getProperty("groovy.recompile.minimumIntervall"); // legacy misspelling

@@ -1294,7 +1294,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "a");
     }
 
-    @Test // protected method of superclass and traits method overriding by class
+    @Test // protected method of superclass and trait method overriding by class
     public void testTraits50() {
         //@formatter:off
         String[] sources = {
@@ -1316,7 +1316,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "c");
     }
 
-    @Test // Test protected method of superclass and traits method overriding by class - negative test
+    @Test // Test protected method of superclass and trait method overriding by class - negative test
     public void testTraits51() {
         //@formatter:off
         String[] sources = {
@@ -3448,5 +3448,70 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
                 "No signature of method: static T.three() is applicable for argument types: (String) values: [ugly]");
         }
+    }
+
+    @Test
+    public void testTraits11758() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait A {\n" +
+            "  final long id = 1L\n" +
+            "}\n" +
+            "class B {\n" +
+            "  protected final long getId() { 2L }\n" +
+            "}\n" +
+            "class C extends B implements A {\n" +
+            "}\n" +
+            "def c = new C()\n" +
+            "assert c.id == 2L\n" +
+            "assert c.getId() == 2L\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 7)\n" +
+            "\tclass C extends B implements A {\n" +
+            "\t      ^\n" +
+            "Groovy:inherited final method getId() from B cannot shadow the public method in A\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTraits11776() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait A {\n" +
+            "  def foo(Map<String, Object> m) {\n" +
+            "    print('foo(m)')\n" +
+            "  }\n" +
+            "  def foo(Object o) {\n" +
+            "    print('foo(o)')\n" +
+            "  }\n" +
+            "}\n" +
+            "class B implements A {\n" +
+            "  def bar(Map<String, Object> m) {\n" +
+            "    print('bar(m)')\n" +
+            "  }\n" +
+            "  def bar(Object o) {\n" +
+            "    print('bar(o)')\n" +
+            "  }\n" +
+            "}\n" +
+            "new B().with {\n" +
+            "  foo( (Object) null)\n" +
+            "  foo(null as Object)\n" +
+            "  bar( (Object) null)\n" +
+            "  bar(null as Object)\n" +
+            "}\n" +
+            "(new Object() as A).with {\n" +
+            "  foo( (Object) null)\n" +
+            "  foo(null as Object)\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foo(o)foo(o)bar(o)bar(o)foo(o)foo(o)");
     }
 }

@@ -99,6 +99,7 @@ public abstract class ProcessingUnit {
         this.classLoader = loader != null ? loader : createClassLoader();
     }
 
+    @SuppressWarnings("removal") // TODO a future Groovy version should create the loader not as a privileged action
     private GroovyClassLoader createClassLoader() {
         return java.security.AccessController.doPrivileged((java.security.PrivilegedAction<GroovyClassLoader>) () -> {
             ClassLoader parent = Thread.currentThread().getContextClassLoader();
