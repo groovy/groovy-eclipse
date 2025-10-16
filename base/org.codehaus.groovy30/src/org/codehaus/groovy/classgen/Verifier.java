@@ -965,23 +965,22 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         String name = node.getName();
         FieldNode field = node.getField();
 
+        String  isserName =  "is" + capitalize(name);
         String getterName = "get" + capitalize(name);
         String setterName = "set" + capitalize(name);
-
-        int accessorModifiers = adjustPropertyModifiersForMethod(node);
 
         Statement getterBlock = node.getGetterBlock();
         if (getterBlock == null && !node.isPrivate()) {
             MethodNode getter = classNode.getGetterMethod(getterName, !node.isStatic());
             if (getter == null && node.getType().equals(ClassHelper.boolean_TYPE)) {
-                getter = classNode.getGetterMethod("is" + capitalize(name));
+                getter = classNode.getGetterMethod(isserName, !node.isStatic());
             }
             if (methodNeedsReplacement(getter)) {
                 getterBlock = createGetterBlock(node, field);
             }
         }
         Statement setterBlock = node.getSetterBlock();
-        if (setterBlock == null && !node.isPrivate() && !isFinal(accessorModifiers)) {
+        if (setterBlock == null && !node.isPrivate() && !isFinal(node.getModifiers())) {
             boolean voidOnly = false; // accept setter with non-void return type
             MethodNode setter = classNode.getSetterMethod(setterName, voidOnly);
             if (methodNeedsReplacement(setter)) {
@@ -989,42 +988,37 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             }
         }
 
-        int getterModifiers = accessorModifiers;
-        // don't make static accessors final
-        if (node.isStatic()) {
-            getterModifiers &= ~ACC_FINAL;
-        }
+        int accessorModifiers = adjustPropertyModifiersForMethod(node);
+        // GRECLIPSE add
+        if (node.isStatic()) accessorModifiers &= ~ACC_FINAL;
+        List<AnnotationNode> annotationsToCopy = field.getAnnotations().stream()
+            .filter(a -> a.getClassNode().getName().equals("java.lang.Deprecated")).toList();
+        // GRECLIPSE end
+
         if (getterBlock != null) {
-            visitGetter(node, getterBlock, getterModifiers, getterName);
+            addAccessMethod(getterName, accessorModifiers, node.getType(), Parameter.EMPTY_ARRAY, getterBlock, annotationsToCopy);
 
             if (node.getType().equals(ClassHelper.boolean_TYPE) || node.getType().equals(ClassHelper.Boolean_TYPE)) {
-                String isserName = "is" + capitalize(name);
                 MethodNode isser = classNode.getGetterMethod(isserName, !node.isStatic());
                 if (methodNeedsReplacement(isser)) {
-                    visitGetter(node, getterBlock, getterModifiers, isserName);
+                    addAccessMethod(isserName, accessorModifiers, node.getType(), Parameter.EMPTY_ARRAY, getterBlock, annotationsToCopy);
                 }
             }
         }
         if (setterBlock != null) {
-            Parameter[] setterParameterTypes = {new Parameter(node.getType(), "value")};
-            MethodNode setter = new MethodNode(setterName, accessorModifiers, ClassHelper.VOID_TYPE, setterParameterTypes, ClassNode.EMPTY_ARRAY, setterBlock);
-            // GRECLIPSE add
-            node.getField().getAnnotations().stream().filter(a -> a.getClassNode().getName().equals("java.lang.Deprecated")).forEach(setter::addAnnotation);
-            // GRECLIPSE end
-            setter.setSynthetic(true);
-            addPropertyMethod(setter);
-            visitMethod(setter);
+            Parameter[] setterParameters = {new Parameter(node.getType(), "value")};
+            addAccessMethod(setterName, accessorModifiers, ClassHelper.VOID_TYPE, setterParameters, setterBlock, annotationsToCopy);
         }
     }
 
-    private void visitGetter(final PropertyNode node, final Statement getterBlock, final int getterModifiers, final String getterName) {
-        MethodNode getter = new MethodNode(getterName, getterModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
+    private void addAccessMethod(final String name, final int mods, final ClassNode returnType, final Parameter[] parameters, final Statement accessBlock, final List<AnnotationNode> annotations) {
+        MethodNode accessor = new MethodNode(name, mods, returnType, parameters, ClassNode.EMPTY_ARRAY, accessBlock);
         // GRECLIPSE add
-        node.getField().getAnnotations().stream().filter(a -> a.getClassNode().getName().equals("java.lang.Deprecated")).forEach(getter::addAnnotation);
+        annotations.forEach(accessor::addAnnotation);
         // GRECLIPSE end
-        getter.setSynthetic(true);
-        addPropertyMethod(getter);
-        visitMethod(getter);
+        accessor.setSynthetic(true);
+        addPropertyMethod(accessor);
+        visitMethod(accessor);
     }
 
     protected void addPropertyMethod(final MethodNode method) {

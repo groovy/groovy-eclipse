@@ -315,7 +315,7 @@ public class AnnotationCollectorTransform {
         } catch (GroovyBugError | MissingClassException | NullPointerException ignore) {
         }
         // GRECLIPSE end
-        List<AnnotationNode> collectors = alias.getAnnotations(ClassHelper.make(AnnotationCollector.class));
+        List<AnnotationNode> collectors = alias.getAnnotations(new ClassNode(AnnotationCollector.class));
         if (!collectors.isEmpty()) {
             assert collectors.size() == 1;
             AnnotationNode collectorNode = collectors.get(0);

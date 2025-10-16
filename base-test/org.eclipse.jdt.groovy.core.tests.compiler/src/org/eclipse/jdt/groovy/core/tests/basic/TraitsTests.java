@@ -69,12 +69,16 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "public class C implements T {\n" +
             "  public @groovy.transform.Generated C() {\n" +
             "  }\n" +
-          //"  public @groovy.transform.Generated @org.codehaus.groovy.transform.trait.Traits.TraitBridge String getFoo() {\n" +
-          //"  }\n" +
+            /* TODO
+            "  public @groovy.transform.Generated @org.codehaus.groovy.transform.trait.Traits.TraitBridge String getFoo() {\n" +
+            "  }\n" +
+            */
             "}");
         checkGCUDeclaration("T.groovy",
             "public @groovy.transform.Trait interface T {\n" +
-          //"  public @groovy.transform.Generated @org.codehaus.groovy.transform.trait.Traits.Implemented String getFoo();\n" +
+            /* TODO
+            "  public @groovy.transform.Generated @org.codehaus.groovy.transform.trait.Traits.Implemented String getFoo();\n" +
+            */
             "}");
     }
 
@@ -600,8 +604,8 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
-            "No signature of method: " + (isAtLeastGroovy(50) ? "methodFromA for class: C" : "C.methodFromA()") + " is applicable for argument types: () values: []");
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: " +
+            (isAtLeastGroovy(50) ? "methodFromA for class: C" : "C.methodFromA()") + " is applicable for argument types: () values: []");
     }
 
     @Test // Implementing multiple traits at once - positive
@@ -1431,7 +1435,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Script.groovy (at line 7)\n" +
-            "\tdef m() { 'D' }\n" +
+            "\tdef m() { 'D' " + "}\n" +
             "\t    ^^^\n" +
             "Groovy:You are not allowed to override the final method m() from class 'C'.\n" +
             "----------\n");
@@ -1695,8 +1699,8 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
-            "No signature of " + (isAtLeastGroovy(50) ? "static method: m for class: T" : "method: static T.m()") + " is applicable for argument types: () values: []");
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of " +
+            (isAtLeastGroovy(50) ? "static method: m for class: T" : "method: static T.m()") + " is applicable for argument types: () values: []");
     }
 
     @Test
@@ -1800,8 +1804,8 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
-            "No signature of method: " + (isAtLeastGroovy(50) ? "Ttrait$super$bar for class: C" : "C.Ttrait$super$bar()") + " is applicable for argument types: () values: []");
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: " +
+            (isAtLeastGroovy(50) ? "Ttrait$super$bar for class: C" : "C.Ttrait$super$bar()") + " is applicable for argument types: () values: []");
     }
 
     @Test
@@ -2244,8 +2248,8 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
-            "No signature of method: " + (isAtLeastGroovy(50) ? "m for class: java.lang.Object" : "java.lang.Object.m()") + " is applicable for argument types: () values: []");
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: " +
+            (isAtLeastGroovy(50) ? "m for class: java.lang.Object" : "java.lang.Object.m()") + " is applicable for argument types: () values: []");
     }
 
     @Test
@@ -3474,7 +3478,10 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Script.groovy (at line 7)\n" +
             "\tclass C extends B implements A {\n" +
             "\t      ^\n" +
-            "Groovy:inherited final method getId() from B cannot shadow the public method in A\n" +
+            (isAtLeastGroovy(40)
+            ? "Groovy:inherited final method getId() from B cannot shadow the public method in A\n"
+            : "Groovy:You are not allowed to override the final method getId() from class 'B'.\n"
+            ) +
             "----------\n");
     }
 
@@ -3512,6 +3519,6 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "foo(o)foo(o)bar(o)bar(o)foo(o)foo(o)");
+        runConformTest(sources, isAtLeastGroovy(40) ? "foo(o)foo(o)bar(o)bar(o)foo(o)foo(o)" : "foo(m)foo(m)bar(o)bar(o)foo(m)foo(m)");
     }
 }

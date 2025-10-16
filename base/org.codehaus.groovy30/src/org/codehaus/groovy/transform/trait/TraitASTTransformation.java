@@ -61,6 +61,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import static java.lang.reflect.Modifier.isFinal;
 import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.markAsGenerated;
 import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getCodeAsBlock;
@@ -77,6 +78,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.params;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
+import static org.codehaus.groovy.ast.tools.PropertyNodeUtils.adjustPropertyModifiersForMethod;
 import static org.codehaus.groovy.transform.trait.SuperCallTraitTransformer.UNRESOLVED_HELPER_CLASS;
 
 /**
@@ -406,33 +408,36 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
     private static void processProperty(final ClassNode cNode, final PropertyNode node) {
         String name = node.getName();
         FieldNode field = node.getField();
-        int propNodeModifiers = node.getModifiers() & 0x1F; // GROOVY-3726
 
-        String getterName = GeneralUtils.getGetterName(node);
-        String setterName = GeneralUtils.getSetterName(name);
+        String  isserName =  "is" + capitalize(name);
+        String getterName = "get" + capitalize(name);
+        String setterName = "set" + capitalize(name);
 
         Statement getterBlock = node.getGetterBlock();
-        if (getterBlock == null) {
+        if (getterBlock == null && !node.isPrivate()) {
             MethodNode getter = cNode.getGetterMethod(getterName);
             if (getter == null && node.getType().equals(ClassHelper.boolean_TYPE)) {
-                getter = cNode.getGetterMethod("is" + capitalize(name));
+                getter = cNode.getGetterMethod(isserName);
             }
-            if (!node.isPrivate() && methodNeedsReplacement(cNode, getter)) {
+            if (methodNeedsReplacement(cNode, getter)) {
                 getterBlock = stmt(fieldX(field));
             }
         }
         Statement setterBlock = node.getSetterBlock();
-        if (setterBlock == null) {
-            // 2nd arg false below: though not usual, allow setter with non-void return type
-            MethodNode setter = cNode.getSetterMethod(setterName, false);
-            if (!node.isPrivate() && (propNodeModifiers & ACC_FINAL) == 0
-                    && methodNeedsReplacement(cNode, setter)) {
+        if (setterBlock == null && !node.isPrivate() && !isFinal(node.getModifiers())) {
+            MethodNode setter = cNode.getSetterMethod(setterName, /*void-only:*/false);
+            if (methodNeedsReplacement(cNode, setter)) {
                 setterBlock = assignS(fieldX(field), varX(name));
             }
         }
 
+        int methodModifiers = adjustPropertyModifiersForMethod(node); // GROOVY-3726
+        // GRECLIPSE add
+        if (node.isStatic()) methodModifiers &= ~ACC_FINAL;
+        // GRECLIPSE end
+
         if (getterBlock != null) {
-            MethodNode getter = new MethodNode(getterName, propNodeModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
+            MethodNode getter = new MethodNode(getterName, methodModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
             // GRECLIPSE add
             getter.setNameStart(field.getNameStart());
             getter.setNameEnd(field.getNameEnd());
@@ -441,13 +446,13 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
             addGeneratedMethod(cNode, getter);
 
             if (node.getType().equals(ClassHelper.boolean_TYPE) || node.getType().equals(ClassHelper.Boolean_TYPE)) {
-                MethodNode secondGetter = new MethodNode("is" + capitalize(name), propNodeModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
+                getter = new MethodNode(isserName, methodModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
                 // GRECLIPSE add
-                secondGetter.setNameStart(field.getNameStart());
-                secondGetter.setNameEnd(field.getNameEnd());
+                getter.setNameStart(field.getNameStart());
+                getter.setNameEnd(field.getNameEnd());
                 // GRECLIPSE end
-                secondGetter.setSynthetic(true);
-                addGeneratedMethod(cNode, secondGetter);
+                getter.setSynthetic(true);
+                addGeneratedMethod(cNode, getter);
             }
         }
         if (setterBlock != null) {
@@ -455,7 +460,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
             Parameter setterParameter = new Parameter(node.getType(), name);
             var.setAccessedVariable(setterParameter);
 
-            MethodNode setter = new MethodNode(setterName, propNodeModifiers, ClassHelper.VOID_TYPE, params(setterParameter), ClassNode.EMPTY_ARRAY, setterBlock);
+            MethodNode setter = new MethodNode(setterName, methodModifiers, ClassHelper.VOID_TYPE, params(setterParameter), ClassNode.EMPTY_ARRAY, setterBlock);
             // GRECLIPSE add
             setter.setNameStart(field.getNameStart());
             setter.setNameEnd(field.getNameEnd());
@@ -586,45 +591,56 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
     }
 
     private MethodNode processMethod(final ClassNode traitClass, final ClassNode traitHelperClass, final MethodNode methodNode, final ClassNode fieldHelper, final Collection<String> knownFields) {
-        Parameter[] initialParams = methodNode.getParameters();
-        Parameter[] newParams = new Parameter[initialParams.length + 1];
-        newParams[0] = createSelfParameter(traitClass, methodNode.isStatic());
-        System.arraycopy(initialParams, 0, newParams, 1, initialParams.length);
-        final int mod = methodNode.isPrivate() ? ACC_PRIVATE : ACC_PUBLIC | (methodNode.isFinal() ? ACC_FINAL : 0);
+        boolean isAbstractMethod = methodNode.isAbstract();
+        boolean isPrivateMethod = methodNode.isPrivate();
+        boolean isStaticMethod = methodNode.isStatic();
+
+        int modifiers = ACC_PUBLIC;
+        if (isAbstractMethod) {
+            modifiers |= ACC_ABSTRACT;
+        } else {
+            // public or private
+            if (isPrivateMethod) {
+                modifiers ^= ACC_PUBLIC | ACC_PRIVATE;
+            }
+            // static or final (maybe)
+            if (!isStaticMethod && methodNode.isFinal()) {
+                modifiers |= ACC_FINAL;
+            }
+            modifiers |= ACC_STATIC;
+        }
+
+        Parameter[] methodParams = methodNode.getParameters();
+        Parameter[] helperParams = new Parameter[methodParams.length + 1];
+        helperParams[0] = createSelfParameter(traitClass, isStaticMethod);
+        System.arraycopy(methodParams, 0, helperParams, 1, methodParams.length);
+
         MethodNode mNode = new MethodNode(
                 methodNode.getName(),
-                mod | ACC_STATIC,
+                modifiers,
                 methodNode.getReturnType(),
-                newParams,
+                helperParams,
                 methodNode.getExceptions(),
-                processBody(varX(newParams[0]), methodNode.getCode(), traitClass, traitHelperClass, fieldHelper, knownFields)
+                processBody(varX(helperParams[0]), methodNode.getCode(), traitClass, traitHelperClass, fieldHelper, knownFields)
         );
-        mNode.setSourcePosition(methodNode);
-        mNode.addAnnotations(filterAnnotations(methodNode.getAnnotations()));
+        for (AnnotationNode annotation : methodNode.getAnnotations()) {
+            if (!annotation.getClassNode().equals(OVERRIDE_CLASSNODE)) {
+                mNode.addAnnotation(annotation);
+            }
+        }
         mNode.setGenericsTypes(methodNode.getGenericsTypes());
-        if (methodNode.isAbstract()) {
-            mNode.setModifiers(ACC_PUBLIC | ACC_ABSTRACT);
-        } else {
+        mNode.setSourcePosition(methodNode);
+
+        if (!isAbstractMethod) {
             methodNode.addAnnotation(new AnnotationNode(Traits.IMPLEMENTED_CLASSNODE));
+        }
+        if (!isPrivateMethod && !isStaticMethod) {
+            methodNode.setModifiers(ACC_PUBLIC | ACC_ABSTRACT);
         }
         /* GRECLIPSE edit
         methodNode.setCode(null);
         */
-        if (!methodNode.isPrivate() && !methodNode.isStatic()) {
-            methodNode.setModifiers(ACC_PUBLIC | ACC_ABSTRACT);
-        }
         return mNode;
-    }
-
-    private static List<AnnotationNode> filterAnnotations(final List<AnnotationNode> annotations) {
-        List<AnnotationNode> result = new ArrayList<>(annotations.size());
-        for (AnnotationNode annotation : annotations) {
-            if (!OVERRIDE_CLASSNODE.equals(annotation.getClassNode())) {
-                result.add(annotation);
-            }
-        }
-
-        return result;
     }
 
     private static Parameter createSelfParameter(final ClassNode traitClass, boolean isStatic) {

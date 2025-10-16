@@ -94,10 +94,8 @@ import static org.codehaus.groovy.ast.tools.ClosureUtils.getParametersSafe;
 public class ResolveVisitor extends ClassCodeExpressionTransformer {
     // note: BigInteger and BigDecimal are also imported by default
     public static final String[] DEFAULT_IMPORTS = {"java.lang.", "java.util.", "java.io.", "java.net.", "groovy.lang.", "groovy.util."};
-    private static final String BIGINTEGER_STR = "BigInteger";
-    private static final String BIGDECIMAL_STR = "BigDecimal";
-    public static final String QUESTION_MARK = "?";
-    public static final String[] EMPTY_STRING_ARRAY = new String[0];
+    public static final String[] EMPTY_STRING_ARRAY = {};
+    public static final String   QUESTION_MARK = "?";
 
     // GRECLIPSE private->protected
     protected ClassNode currentClass;
@@ -292,20 +290,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (!canSeeTypeVars(node.getModifiers(), node.getDeclaringClass())) {
             genericParameterNames = Collections.emptyMap();
         }
-        // GRECLIPSE add
         try {
-        // GRECLIPSE end
-        if (!fieldTypesChecked.contains(node)) {
-            resolveOrFail(node.getType(), node);
-        }
-        super.visitField(node);
-        // GRECLIPSE add
+            if (!fieldTypesChecked.contains(node)) {
+                resolveOrFail(node.getType(), node);
+            }
+            super.visitField(node);
         } finally {
-        // GRECLIPSE end
-        genericParameterNames = oldNames;
-        // GRECLIPSE add
+            genericParameterNames = oldNames;
         }
-        // GRECLIPSE end
     }
 
     @Override
@@ -314,20 +306,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (!canSeeTypeVars(node.getModifiers(), node.getDeclaringClass())) {
             genericParameterNames = Collections.emptyMap();
         }
-        // GRECLIPSE add
         try {
-        // GRECLIPSE end
-        resolveOrFail(node.getType(), node);
-        fieldTypesChecked.add(node.getField());
+            resolveOrFail(node.getType(), node);
+            fieldTypesChecked.add(node.getField());
 
-        super.visitProperty(node);
-        // GRECLIPSE add
+            super.visitProperty(node);
         } finally {
-        // GRECLIPSE end
-        genericParameterNames = oldNames;
-        // GRECLIPSE add
+            genericParameterNames = oldNames;
         }
-        // GRECLIPSE end
     }
 
     private static boolean canSeeTypeVars(final int mods, final ClassNode node) {
@@ -336,45 +322,36 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     @Override
     protected void visitConstructorOrMethod(final MethodNode node, final boolean isConstructor) {
+        MethodNode oldMethod = currentMethod;
         VariableScope oldScope = currentScope;
         currentScope = node.getVariableScope();
         Map<GenericsTypeName, GenericsType> oldNames = genericParameterNames;
         genericParameterNames =
                 canSeeTypeVars(node.getModifiers(), node.getDeclaringClass())
                     ? new HashMap<>(genericParameterNames) : new HashMap<>();
-        // GRECLIPSE add
-        MethodNode oldCurrentMethod = currentMethod;
         try {
-        // GRECLIPSE end
-        resolveGenericsHeader(node.getGenericsTypes());
+            resolveGenericsHeader(node.getGenericsTypes());
 
-        resolveOrFail(node.getReturnType(), node);
-        for (Parameter p : node.getParameters()) {
-            p.setInitialExpression(transform(p.getInitialExpression()));
-            ClassNode t = p.getType();
-            resolveOrFail(t, t);
-            visitAnnotations(p);
-        }
-        if (node.getExceptions() != null) {
-            for (ClassNode t : node.getExceptions()) {
+            resolveOrFail(node.getReturnType(), node);
+            for (Parameter p : node.getParameters()) {
+                p.setInitialExpression(transform(p.getInitialExpression()));
+                ClassNode t = p.getType();
                 resolveOrFail(t, t);
+                visitAnnotations(p);
             }
-        }
-        /* GRECLIPSE edit
-        MethodNode oldCurrentMethod = currentMethod;
-        */
-        currentMethod = node;
+            if (node.getExceptions() != null) {
+                for (ClassNode t : node.getExceptions()) {
+                    resolveOrFail(t, t);
+                }
+            }
 
-        super.visitConstructorOrMethod(node, isConstructor);
-        // GRECLIPSE add
+            currentMethod = node;
+            super.visitConstructorOrMethod(node, isConstructor);
         } finally {
-        // GRECLIPSE end
-        currentMethod = oldCurrentMethod;
-        genericParameterNames = oldNames;
-        currentScope = oldScope;
-        // GRECLIPSE add
+            genericParameterNames = oldNames;
+            currentMethod = oldMethod;
+            currentScope = oldScope;
         }
-        // GRECLIPSE end
     }
 
     private void resolveOrFail(final ClassNode type, final ASTNode node) {
@@ -750,11 +727,11 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             if (resolveFromDefaultImports(type, DEFAULT_IMPORTS)) {
                 return true;
             }
-            if (BIGINTEGER_STR.equals(typeName)) {
+            if ("BigInteger".equals(typeName)) {
                 type.setRedirect(ClassHelper.BigInteger_TYPE);
                 return true;
             }
-            if (BIGDECIMAL_STR.equals(typeName)) {
+            if ("BigDecimal".equals(typeName)) {
                 type.setRedirect(ClassHelper.BigDecimal_TYPE);
                 return true;
             }
@@ -1311,7 +1288,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     private static boolean testVanillaNameForClass(final String name) {
-        if (name == null || name.length() == 0) return false;
+        if (name == null || name.isEmpty()) return false;
         return !Character.isLowerCase(name.charAt(0));
     }
 
@@ -1586,135 +1563,138 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         ClassNode oldNode = currentClass; currentClass = node;
         Map<GenericsTypeName, GenericsType> outerNames = null;
         // GRECLIPSE add
-        if (phase == 2 || commencingResolution()) try {
+        if (phase == 2 || commencingResolution())
         // GRECLIPSE end
-        if (node instanceof InnerClassNode) {
-            outerNames = genericParameterNames;
-            genericParameterNames = new HashMap<>();
-            if (!Modifier.isStatic(node.getModifiers())) {
-                genericParameterNames.putAll(outerNames); // outer names visible
-            }
-            /* GRECLIPSE edit -- GROOVY-4386, et al.
-            InnerClassNode innerClass = (InnerClassNode) node;
-            if (innerClass.isAnonymous()) {
-                MethodNode enclosingMethod = innerClass.getEnclosingMethod();
-                if (enclosingMethod != null) {
-                    resolveGenericsHeader(enclosingMethod.getGenericsTypes());
+        try {
+            if (node instanceof InnerClassNode) {
+                outerNames = genericParameterNames;
+                genericParameterNames = new HashMap<>();
+                if (!Modifier.isStatic(node.getModifiers())) {
+                    genericParameterNames.putAll(outerNames); // outer names visible
                 }
-            }
-            */
-        } else {
-            genericParameterNames.clear(); // outer class: new generic namespace
-        }
-
-        resolveGenericsHeader(node.getGenericsTypes());
-
-        ModuleNode module = node.getModule();
-        if (!module.hasImportsResolved()) {
-            for (ImportNode importNode : module.getImports()) {
-                currImportNode = importNode;
-                ClassNode type = importNode.getType();
-                if (resolve(type, false, false, true)) {
-                    currImportNode = null;
-                    continue;
+                /* GRECLIPSE edit -- GROOVY-4386, et al.
+                InnerClassNode innerClass = (InnerClassNode) node;
+                if (innerClass.isAnonymous()) {
+                    MethodNode enclosingMethod = innerClass.getEnclosingMethod();
+                    if (enclosingMethod != null) {
+                        resolveGenericsHeader(enclosingMethod.getGenericsTypes());
+                    }
                 }
-                currImportNode = null;
-                addError("unable to resolve class " + type.getName(), type);
+                */
+            } else {
+                genericParameterNames.clear(); // outer class: new generic namespace
             }
-            for (ImportNode importNode : module.getStarImports()) {
-                if (importNode.getLineNumber() > 0) {
+
+            resolveGenericsHeader(node.getGenericsTypes());
+
+            ModuleNode module = node.getModule();
+            if (!module.hasImportsResolved()) {
+                for (ImportNode importNode : module.getImports()) {
                     currImportNode = importNode;
-                    String importName = importNode.getPackageName();
-                    importName = importName.substring(0, importName.length()-1);
-                    ClassNode type = ClassHelper.makeWithoutCaching(importName);
-                    if (resolve(type, false, false, true)) {
-                        importNode.setType(type);
-                        // GRECLIPSE add
-                        type.setStart(importNode.getStart() + 7);
-                        type.setEnd(type.getStart() + importName.length());
-                        // GRECLIPSE end
-                    }
-                    currImportNode = null;
-                }
-            }
-            for (ImportNode importNode : module.getStaticImports().values()) {
-                ClassNode type = importNode.getType();
-                if (!resolve(type, false, false, true))
-                    addError("unable to resolve class " + type.getName(), type);
-                // GRECLIPSE add
-                else {
-                    type = ClassHelper.makeWithoutCaching(
-                        type.getName() + "$" + importNode.getFieldName());
-                    if (resolve(type, false, false, true)) {
-                        Expression nameExpr = importNode.getFieldNameExpr();
-                        importNode.setFieldNameExpr(new ClassExpression(type));
-                        importNode.getFieldNameExpr().setSourcePosition(nameExpr);
+                    try {
+                        ClassNode type = importNode.getType();
+                        if (!resolve(type, false, false, true)) {
+                            addError("unable to resolve class " + type.getName(), type);
+                        }
+                    } finally {
+                        currImportNode = null;
                     }
                 }
-                // GRECLIPSE end
+                for (ImportNode importNode : module.getStarImports()) {
+                    if (importNode.getLineNumber() > 0) {
+                        currImportNode = importNode;
+                        try {
+                            String importName = importNode.getPackageName();
+                            importName = importName.substring(0, importName.length()-1);
+                            ClassNode type = ClassHelper.makeWithoutCaching(importName);
+                            if (resolve(type, false, false, true)) {
+                                importNode.setType(type);
+                                // GRECLIPSE add
+                                type.setStart(importNode.getStart() + 7);
+                                type.setEnd(type.getStart() + importName.length());
+                                // GRECLIPSE end
+                            }
+                        } finally {
+                            currImportNode = null;
+                        }
+                    }
+                }
+                for (ImportNode importNode : module.getStaticImports().values()) {
+                    ClassNode type = importNode.getType();
+                    if (!resolve(type, false, false, true))
+                        addError("unable to resolve class " + type.getName(), type);
+                    // GRECLIPSE add
+                    else {
+                        type = ClassHelper.makeWithoutCaching(
+                            type.getName() + "$" + importNode.getFieldName());
+                        if (resolve(type, false, false, true)) {
+                            Expression nameExpr = importNode.getFieldNameExpr();
+                            importNode.setFieldNameExpr(new ClassExpression(type));
+                            importNode.getFieldNameExpr().setSourcePosition(nameExpr);
+                        }
+                    }
+                    // GRECLIPSE end
+                }
+                for (ImportNode importNode : module.getStaticStarImports().values()) {
+                    ClassNode type = importNode.getType();
+                    if (!resolve(type, false, false, true))
+                        addError("unable to resolve class " + type.getName(), type);
+                }
+                module.setImportsResolved(true);
             }
-            for (ImportNode importNode : module.getStaticStarImports().values()) {
-                ClassNode type = importNode.getType();
-                if (!resolve(type, false, false, true))
-                    addError("unable to resolve class " + type.getName(), type);
-            }
-            module.setImportsResolved(true);
-        }
+// GRECLIPSE add
 switch (phase) { case 0: case 1: // GROOVY-9866, GROOVY-10466
-        ClassNode sn = node.getUnresolvedSuperClass();
-        if (sn != null) {
-            resolveOrFail(sn, "", node, true);
-        }
-        for (ClassNode in : node.getInterfaces()) {
-            resolveOrFail(in, "", node, true);
-        }
+// GRECLIPSE end
+            ClassNode sn = node.getUnresolvedSuperClass();
+            if (sn != null) {
+                resolveOrFail(sn, "", node, true);
+            }
+            for (ClassNode in : node.getInterfaces()) {
+                resolveOrFail(in, "", node, true);
+            }
 
-        if (sn != null) checkCyclicInheritance(node, sn);
-        for (ClassNode in : node.getInterfaces()) {
-            checkCyclicInheritance(node, in);
-        }
-        if (node.getGenericsTypes() != null) {
-            for (GenericsType gt : node.getGenericsTypes()) {
-                if (gt != null && gt.getUpperBounds() != null) {
-                    for (ClassNode variant : gt.getUpperBounds()) {
-                        if (variant.isGenericsPlaceHolder()) checkCyclicInheritance(variant, gt.getType());
+            if (sn != null) checkCyclicInheritance(node, sn);
+            for (ClassNode in : node.getInterfaces()) {
+                checkCyclicInheritance(node, in);
+            }
+            if (node.getGenericsTypes() != null) {
+                for (GenericsType gt : node.getGenericsTypes()) {
+                    if (gt != null && gt.getUpperBounds() != null) {
+                        for (ClassNode variant : gt.getUpperBounds()) {
+                            if (variant.isGenericsPlaceHolder()) checkCyclicInheritance(variant, gt.getType());
+                        }
                     }
                 }
             }
-        }
-        // GRECLIPSE add
+// GRECLIPSE add
 case 2:
-        // VariableScopeVisitor visits anon. inner class body inline, so resolve now
-        for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext(); ) {
-            InnerClassNode cn = it.next();
-            if (cn.isAnonymous()) {
-                MethodNode enclosingMethod = cn.getEnclosingMethod();
-                if (enclosingMethod != null) {
-                    resolveGenericsHeader(enclosingMethod.getGenericsTypes()); // GROOVY-6977
+            // VariableScopeVisitor visits anon. inner class body inline, so resolve now
+            for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext(); ) {
+                InnerClassNode cn = it.next();
+                if (cn.isAnonymous()) {
+                    MethodNode enclosingMethod = cn.getEnclosingMethod();
+                    if (enclosingMethod != null) {
+                        resolveGenericsHeader(enclosingMethod.getGenericsTypes()); // GROOVY-6977
+                    }
+                    resolveOrFail(cn.getUnresolvedSuperClass(false), cn); // GROOVY-9642
                 }
-                resolveOrFail(cn.getUnresolvedSuperClass(false), cn); // GROOVY-9642
             }
-        }
 if (phase == 1) break; // resolve other class headers before members, et al.
-        // initialize scopes/variables now that imports and super types are resolved
-        new VariableScopeVisitor(source).visitClass(node);
-        // GRECLIPSE end
-        super.visitClass(node);
-        // GRECLIPSE add
-        finishedResolution();
-} // phase switch
+            // initialize scopes/variables now that imports and super types are resolved
+            new VariableScopeVisitor(source).visitClass(node);
+// GRECLIPSE end
+            super.visitClass(node);
+            /* GRECLIPSE edit
+            resolveOuterNestedClassFurther(node);
+            */
+            finishedResolution();
+} // GRECLIPSE end - phase switch
         } finally {
-        // GRECLIPSE end
-        /* GRECLIPSE edit
-        resolveOuterNestedClassFurther(node);
-        */
-        if (outerNames != null) // GROOVY-11711
-            genericParameterNames = outerNames;
+            if (outerNames != null) // GROOVY-11711
+                genericParameterNames = outerNames;
 
-        currentClass = oldNode;
-        // GRECLIPSE add
+            currentClass = oldNode;
         }
-        // GRECLIPSE end
     }
 
     // GRECLIPSE add
@@ -1814,17 +1794,11 @@ if (phase == 1) break; // resolve other class headers before members, et al.
     public void visitBlockStatement(final BlockStatement block) {
         VariableScope oldScope = currentScope;
         currentScope = block.getVariableScope();
-        // GRECLIPSE add
         try {
-        // GRECLIPSE end
-        super.visitBlockStatement(block);
-        // GRECLIPSE add
+            super.visitBlockStatement(block);
         } finally {
-        // GRECLIPSE end
-        currentScope = oldScope;
-        // GRECLIPSE add
+            currentScope = oldScope;
         }
-        // GRECLIPSE end
     }
 
     private boolean resolveGenericsTypes(final GenericsType[] types) {
