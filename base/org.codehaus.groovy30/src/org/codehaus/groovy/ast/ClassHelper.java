@@ -60,7 +60,6 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.invoke.SerializedLambda;
 import java.lang.ref.SoftReference;
-import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collections;
@@ -79,7 +78,7 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implem
  */
 public class ClassHelper {
 
-    @SuppressWarnings("unused")
+    /* GRECLIPSE edit
     private static final Class[] classes = new Class[]{
             Object.class, Boolean.TYPE, Character.TYPE, Byte.TYPE, Short.TYPE,
             Integer.TYPE, Long.TYPE, Double.TYPE, Float.TYPE, Void.TYPE,
@@ -90,6 +89,7 @@ public class ClassHelper {
             Number.class, Void.class, Reference.class, Class.class, MetaClass.class,
             Iterator.class, GeneratedClosure.class, GeneratedLambda.class, GroovyObjectSupport.class
     };
+    */
 
     public static final Class[] TUPLE_CLASSES = new Class[]{
             Tuple0.class, Tuple1.class, Tuple2.class, Tuple3.class, Tuple4.class, Tuple5.class, Tuple6.class,
@@ -97,17 +97,18 @@ public class ClassHelper {
             Tuple14.class, Tuple15.class, Tuple16.class
     };
 
-    @SuppressWarnings("unused")
+    /* GRECLIPSE edit
     private static final String[] primitiveClassNames = new String[]{
             "", "boolean", "char", "byte", "short", "int", "long", "double", "float", "void"
     };
+    */
 
     public static final ClassNode
             DYNAMIC_TYPE = makeCached(Object.class),
             OBJECT_TYPE = DYNAMIC_TYPE,
-            CLOSURE_TYPE = makeCached(Closure.class),
+            CLOSURE_TYPE = makeWithoutCaching(Closure.class),
             GSTRING_TYPE = makeCached(GString.class),
-            RANGE_TYPE = makeCached(Range.class),
+            RANGE_TYPE = makeWithoutCaching(Range.class),
             PATTERN_TYPE = makeCached(Pattern.class),
             STRING_TYPE = makeCached(String.class),
             SCRIPT_TYPE = makeCached(Script.class),
@@ -130,14 +131,14 @@ public class ClassHelper {
             Float_TYPE = makeCached(Float.class),
             Double_TYPE = makeCached(Double.class),
             Boolean_TYPE = makeCached(Boolean.class),
-            BigInteger_TYPE = makeCached(java.math.BigInteger.class),
-            BigDecimal_TYPE = makeCached(java.math.BigDecimal.class),
+            BigInteger_TYPE = makeCached(BigInteger.class),
+            BigDecimal_TYPE = makeCached(BigDecimal.class),
             Number_TYPE = makeCached(Number.class),
 
             VOID_TYPE = makeCached(Void.TYPE),
             void_WRAPPER_TYPE = makeCached(Void.class),
             METACLASS_TYPE = makeCached(MetaClass.class),
-            Iterator_TYPE = makeCached(Iterator.class),
+            Iterator_TYPE = makeWithoutCaching(Iterator.class),
             Annotation_TYPE = makeCached(Annotation.class),
             ELEMENT_TYPE_TYPE = makeCached(ElementType.class),
             AUTOCLOSEABLE_TYPE = makeCached(AutoCloseable.class),
@@ -158,6 +159,7 @@ public class ClassHelper {
             GROOVY_INTERCEPTABLE_TYPE = makeWithoutCaching(GroovyInterceptable.class),
             GROOVY_OBJECT_SUPPORT_TYPE = makeWithoutCaching(GroovyObjectSupport.class);
 
+    /* GRECLIPSE edit
     private static final ClassNode[] types = new ClassNode[]{
             OBJECT_TYPE,
             boolean_TYPE, char_TYPE, byte_TYPE, short_TYPE,
@@ -172,22 +174,58 @@ public class ClassHelper {
             Iterator_TYPE, GENERATED_CLOSURE_Type, GENERATED_LAMBDA_TYPE, GROOVY_OBJECT_SUPPORT_TYPE,
             GROOVY_OBJECT_TYPE, GROOVY_INTERCEPTABLE_TYPE, Enum_Type, Annotation_TYPE
     };
-
-    // GRECLIPSE add
+    */
     private static final Map<String, ClassNode> namesToTypes;
     static {
-        Map<String, ClassNode> map = new HashMap<String, ClassNode>();
-        for (ClassNode type : types) {
+        Map<String, ClassNode> map = new HashMap<>();
+        for (ClassNode type : new ClassNode[]{
+            boolean_TYPE,
+            byte_TYPE,
+            char_TYPE,
+            double_TYPE,
+            float_TYPE,
+            int_TYPE,
+            long_TYPE,
+            short_TYPE,
+            VOID_TYPE,
+
+            Boolean_TYPE,
+            Byte_TYPE,
+            Character_TYPE,
+            Double_TYPE,
+            Float_TYPE,
+            Integer_TYPE,
+            Long_TYPE,
+            Short_TYPE,
+            void_WRAPPER_TYPE,
+
+            AUTOCLOSEABLE_TYPE,
+            Annotation_TYPE,
+            BINDING_TYPE,
+            BigDecimal_TYPE,
+            BigInteger_TYPE,
+            ELEMENT_TYPE_TYPE,
+            GSTRING_TYPE,
+            METACLASS_TYPE,
+            Number_TYPE,
+            OBJECT_TYPE,
+            PATTERN_TYPE,
+            SCRIPT_TYPE,
+            SERIALIZABLE_TYPE,
+            SERIALIZEDLAMBDA_TYPE,
+            STRING_TYPE,
+            THROWABLE_TYPE
+        }) {
             map.put(type.getName(), type);
         }
         namesToTypes = Collections.unmodifiableMap(map);
     }
     // GRECLIPSE end
-
+    /* GRECLIPSE edit
     private static final int ABSTRACT_STATIC_PRIVATE = Opcodes.ACC_ABSTRACT | Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE;
     private static final int VISIBILITY = 5; // public|protected
-
-    protected static final ClassNode[] EMPTY_TYPE_ARRAY = {};
+    */
+    protected static final ClassNode[] EMPTY_TYPE_ARRAY = ClassNode.EMPTY_ARRAY;
 
     public static final String OBJECT = "java.lang.Object";
 
@@ -306,8 +344,7 @@ public class ClassHelper {
      * @param name of the class the ClassNode is representing
      */
     public static ClassNode make(String name) {
-        if (name == null || name.length() == 0) return DYNAMIC_TYPE;
-
+        if (name == null || name.isEmpty()) return DYNAMIC_TYPE;
         /* GRECLIPSE edit
         for (int i = 0; i < primitiveClassNames.length; i++) {
             if (primitiveClassNames[i].equals(name)) return types[i];
@@ -353,7 +390,8 @@ public class ClassHelper {
      * @see #make(Class)
      * @see #make(String)
      */
-    public static ClassNode getWrapper(ClassNode cn) {
+    public static ClassNode getWrapper(final ClassNode cn) {
+        /* GRECLIPSE edit
         cn = cn.redirect();
         if (!isPrimitiveType(cn)) return cn;
 
@@ -364,11 +402,15 @@ public class ClassHelper {
         }
 
         return cn;
+        */
+        return PRIMITIVE_TYPE_TO_WRAPPER_TYPE_MAP.getOrDefault(cn, cn.redirect());
+        // GRECLIPSE end
     }
 
     private static final Map<ClassNode, ClassNode> WRAPPER_TYPE_TO_PRIMITIVE_TYPE_MAP = Maps.inverse(PRIMITIVE_TYPE_TO_WRAPPER_TYPE_MAP);
 
-    public static ClassNode getUnwrapper(ClassNode cn) {
+    public static ClassNode getUnwrapper(final ClassNode cn) {
+        /* GRECLIPSE edit
         cn = cn.redirect();
         if (isPrimitiveType(cn)) return cn;
 
@@ -379,6 +421,9 @@ public class ClassHelper {
         }
 
         return cn;
+        */
+        return WRAPPER_TYPE_TO_PRIMITIVE_TYPE_MAP.getOrDefault(cn, cn.redirect());
+        // GRECLIPSE end
     }
 
     /**
@@ -454,10 +499,14 @@ public class ClassHelper {
     }
 
     public static boolean isCachedType(ClassNode type) {
+        /* GRECLIPSE edit
         for (ClassNode cachedType : types) {
             if (cachedType == type) return true;
         }
         return false;
+        */
+        return type != null && !type.isGenericsPlaceHolder() && namesToTypes.containsKey(type.getName());
+        // GRECLIPSE end
     }
 
     // GRECLIPSE add
@@ -471,7 +520,7 @@ public class ClassHelper {
     // GRECLIPSE end
 
     static class ClassHelperCache {
-        static ManagedConcurrentMap<Class, SoftReference<ClassNode>> classCache = new ManagedConcurrentMap<Class, SoftReference<ClassNode>>(ReferenceBundle.getWeakBundle());
+        static ManagedConcurrentMap<Class, SoftReference<ClassNode>> classCache = new ManagedConcurrentMap<>(ReferenceBundle.getWeakBundle());
     }
 
     public static boolean isSAMType(final ClassNode type) {
@@ -513,7 +562,7 @@ public class ClassHelper {
             MethodNode found = null;
             for (MethodNode mi : methods) {
                 // ignore methods, that are not abstract and from Object
-                if (!Modifier.isAbstract(mi.getModifiers())) continue;
+                if (!mi.isAbstract()) continue;
                 // ignore trait methods which have a default implementation
                 if (Traits.hasDefaultImplementation(mi)) continue;
                 if (mi.getDeclaringClass().equals(OBJECT_TYPE)) continue;
@@ -538,12 +587,24 @@ public class ClassHelper {
     }
 
     private static boolean hasUsableImplementation(ClassNode c, MethodNode m) {
+        /* GRECLIPSE edit
         if (c == m.getDeclaringClass()) return false;
+        */
+        var declaringClass = m.getDeclaringClass();
+        if (c.equals(declaringClass)) return false;
+        // GROOVY-10540: GroovyObject declared and Verifier not run yet
+        if (GROOVY_OBJECT_TYPE.equals(declaringClass) && c.getCompileUnit() != null) return true;
+        // GRECLIPSE end
         MethodNode found = c.getDeclaredMethod(m.getName(), m.getParameters());
         if (found == null) return false;
+        /* GRECLIPSE edit
         int asp = found.getModifiers() & ABSTRACT_STATIC_PRIVATE;
         int visible = found.getModifiers() & VISIBILITY;
         if (visible != 0 && asp == 0) return true;
+        */
+        int modifiers = found.getModifiers() & 0x40F;//ABSTRACT|STATIC|PROTECTED|PRIVATE|PUBLIC
+        if (modifiers == Opcodes.ACC_PUBLIC || modifiers == Opcodes.ACC_PROTECTED) return true;
+        // GRECLIPSE end
         if (c.equals(OBJECT_TYPE)) return false;
         return hasUsableImplementation(c.getSuperClass(), m);
     }

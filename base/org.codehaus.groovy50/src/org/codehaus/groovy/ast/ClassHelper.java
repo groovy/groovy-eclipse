@@ -81,7 +81,7 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implem
  */
 public class ClassHelper {
 
-    @SuppressWarnings("unused")
+    /* GRECLIPSE edit
     private static final Class[] classes = new Class[]{
             Object.class, Boolean.TYPE, Character.TYPE, Byte.TYPE, Short.TYPE,
             Integer.TYPE, Long.TYPE, Double.TYPE, Float.TYPE, Void.TYPE,
@@ -92,6 +92,7 @@ public class ClassHelper {
             Number.class, Void.class, Reference.class, Class.class, MetaClass.class,
             Iterator.class, GeneratedClosure.class, GeneratedLambda.class, GroovyObjectSupport.class
     };
+    */
 
     public static final Class[] TUPLE_CLASSES = new Class[]{
             Tuple0.class, Tuple1.class, Tuple2.class, Tuple3.class, Tuple4.class, Tuple5.class, Tuple6.class,
@@ -99,16 +100,17 @@ public class ClassHelper {
             Tuple14.class, Tuple15.class, Tuple16.class
     };
 
-    @SuppressWarnings("unused")
+    /* GRECLIPSE edit
     private static final String[] primitiveClassNames = new String[]{
             "", "boolean", "char", "byte", "short", "int", "long", "double", "float", "void"
     };
+    */
 
     public static final ClassNode
             OBJECT_TYPE = makeCached(Object.class),
-            CLOSURE_TYPE = makeCached(Closure.class),
+            CLOSURE_TYPE = makeWithoutCaching(Closure.class),
             GSTRING_TYPE = makeCached(GString.class),
-            RANGE_TYPE = makeCached(Range.class),
+            RANGE_TYPE = makeWithoutCaching(Range.class),
             PATTERN_TYPE = makeCached(Pattern.class),
             STRING_TYPE = makeCached(String.class),
             SCRIPT_TYPE = makeCached(Script.class),
@@ -131,14 +133,14 @@ public class ClassHelper {
             Float_TYPE = makeCached(Float.class),
             Double_TYPE = makeCached(Double.class),
             Boolean_TYPE = makeCached(Boolean.class),
-            BigInteger_TYPE = makeCached(java.math.BigInteger.class),
-            BigDecimal_TYPE = makeCached(java.math.BigDecimal.class),
+            BigInteger_TYPE = makeCached(BigInteger.class),
+            BigDecimal_TYPE = makeCached(BigDecimal.class),
             Number_TYPE = makeCached(Number.class),
 
             VOID_TYPE = makeCached(Void.TYPE),
             void_WRAPPER_TYPE = makeCached(Void.class),
             METACLASS_TYPE = makeCached(MetaClass.class),
-            Iterator_TYPE = makeCached(Iterator.class),
+            Iterator_TYPE = makeWithoutCaching(Iterator.class),
             Annotation_TYPE = makeCached(Annotation.class),
             ELEMENT_TYPE_TYPE = makeCached(ElementType.class),
             AUTOCLOSEABLE_TYPE = makeCached(AutoCloseable.class),
@@ -170,6 +172,7 @@ public class ClassHelper {
     @Deprecated
     public static final ClassNode DYNAMIC_TYPE = OBJECT_TYPE;
 
+    /* GRECLIPSE edit
     private static final ClassNode[] types = new ClassNode[]{
             OBJECT_TYPE,
             boolean_TYPE, char_TYPE, byte_TYPE, short_TYPE,
@@ -184,12 +187,52 @@ public class ClassHelper {
             Iterator_TYPE, GENERATED_CLOSURE_Type, GENERATED_LAMBDA_TYPE, GROOVY_OBJECT_SUPPORT_TYPE,
             GROOVY_OBJECT_TYPE, GROOVY_INTERCEPTABLE_TYPE, Enum_Type, Annotation_TYPE
     };
-
-    // GRECLIPSE add
+    */
     private static final Map<String, ClassNode> namesToTypes;
     static {
-        Map<String, ClassNode> map = new HashMap<String, ClassNode>();
-        for (ClassNode type : types) {
+        Map<String, ClassNode> map = new HashMap<>();
+        for (ClassNode type : new ClassNode[]{
+            boolean_TYPE,
+            byte_TYPE,
+            char_TYPE,
+            double_TYPE,
+            float_TYPE,
+            int_TYPE,
+            long_TYPE,
+            short_TYPE,
+            VOID_TYPE,
+
+            Boolean_TYPE,
+            Byte_TYPE,
+            Character_TYPE,
+            Double_TYPE,
+            Float_TYPE,
+            Integer_TYPE,
+            Long_TYPE,
+            Short_TYPE,
+            void_WRAPPER_TYPE,
+
+            AUTOCLOSEABLE_TYPE,
+            Annotation_TYPE,
+            BINDING_TYPE,
+            BigDecimal_TYPE,
+            BigInteger_TYPE,
+            CLONEABLE_TYPE,
+            DEPRECATED_TYPE,
+            ELEMENT_TYPE_TYPE,
+            GSTRING_TYPE,
+            METACLASS_TYPE,
+            Number_TYPE,
+            OBJECT_TYPE,
+            OVERRIDE_TYPE,
+            PATTERN_TYPE,
+            SCRIPT_TYPE,
+            SEALED_TYPE,
+            SERIALIZABLE_TYPE,
+            SERIALIZEDLAMBDA_TYPE,
+            STRING_TYPE,
+            THROWABLE_TYPE
+        }) {
             map.put(type.getName(), type);
         }
         namesToTypes = Collections.unmodifiableMap(map);
@@ -322,7 +365,6 @@ public class ClassHelper {
      */
     public static ClassNode make(String name) {
         if (name == null || name.isEmpty()) return dynamicType();
-
         /* GRECLIPSE edit
         for (int i = 0; i < primitiveClassNames.length; i++) {
             if (primitiveClassNames[i].equals(name)) return types[i];
@@ -368,26 +410,30 @@ public class ClassHelper {
      * @see #make(Class)
      * @see #make(String)
      */
-    public static ClassNode getWrapper(ClassNode cn) {
+    public static ClassNode getWrapper(final ClassNode cn) {
+        /* GRECLIPSE edit
         cn = cn.redirect();
         if (!isPrimitiveType(cn)) return cn;
 
         ClassNode result = PRIMITIVE_TYPE_TO_WRAPPER_TYPE_MAP.get(cn);
-        /* GRECLIPSE edit
         if (result == null) {
             result = PRIMITIVE_TYPE_TO_WRAPPER_TYPE_MAP.get(cn.redirect());
         }
-        */
+
         if (null != result) {
             return result;
         }
 
         return cn;
+        */
+        return PRIMITIVE_TYPE_TO_WRAPPER_TYPE_MAP.getOrDefault(cn, cn.redirect());
+        // GRECLIPSE end
     }
 
     private static final Map<ClassNode, ClassNode> WRAPPER_TYPE_TO_PRIMITIVE_TYPE_MAP = Maps.inverse(PRIMITIVE_TYPE_TO_WRAPPER_TYPE_MAP);
 
-    public static ClassNode getUnwrapper(ClassNode cn) {
+    public static ClassNode getUnwrapper(final ClassNode cn) {
+        /* GRECLIPSE edit
         cn = cn.redirect();
         if (isPrimitiveType(cn)) return cn;
 
@@ -398,6 +444,9 @@ public class ClassHelper {
         }
 
         return cn;
+        */
+        return WRAPPER_TYPE_TO_PRIMITIVE_TYPE_MAP.getOrDefault(cn, cn.redirect());
+        // GRECLIPSE end
     }
 
     /**
@@ -471,10 +520,14 @@ public class ClassHelper {
     }
 
     public static boolean isCachedType(ClassNode type) {
+        /* GRECLIPSE edit
         for (ClassNode cachedType : types) {
             if (cachedType == type) return true;
         }
         return false;
+        */
+        return type != null && !type.isGenericsPlaceHolder() && namesToTypes.containsKey(type.getName());
+        // GRECLIPSE end
     }
 
     public static boolean isDynamicTyped(ClassNode type) {
@@ -582,7 +635,7 @@ public class ClassHelper {
     }
 
     static class ClassHelperCache {
-        static ManagedIdentityConcurrentMap<Class, SoftReference<ClassNode>> classCache = new ManagedIdentityConcurrentMap<>(128);
+        static Map<Class, SoftReference<ClassNode>> classCache = new ManagedIdentityConcurrentMap<>(128);
     }
 
     public static boolean isSAMType(final ClassNode type) {
@@ -617,8 +670,15 @@ public class ClassHelper {
             for (MethodNode mn : type.getAbstractMethods()) {
                 // ignore methods that will have an implementation
                 if (Traits.hasDefaultImplementation(mn)) continue;
+                /* GRECLIPSE edit
+                final String name = mn.getName();
+                if (OBJECT_METHOD_NAME_SET.contains(name)) {
+                    // Avoid unnecessary checking for `Object` methods as possible as we could
+                    if (OBJECT_TYPE.getDeclaredMethod(name, mn.getParameters()) != null) continue;
+                }
+                */
                 if (OBJECT_TYPE.getDeclaredMethod(mn.getName(), mn.getParameters()) != null) continue;
-
+                // GRECLIPSE end
                 // we have two methods, so no SAM
                 if (sam != null) return null;
                 sam = mn;

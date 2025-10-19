@@ -66,9 +66,7 @@ import java.lang.reflect.ReflectPermission;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
-import java.security.AccessController;
 import java.security.Permission;
-import java.security.PrivilegedAction;
 import java.util.List;
 
 import static org.codehaus.groovy.runtime.MetaClassHelper.EMPTY_CLASS_ARRAY;
@@ -608,6 +606,7 @@ public class Java8 implements VMPlugin {
      * @return the check result
      */
     @Override
+    @SuppressWarnings("removal")
     public boolean checkCanSetAccessible(final AccessibleObject accessibleObject, final Class<?> callerClass) {
         SecurityManager sm = System.getSecurityManager();
         try {
@@ -674,12 +673,16 @@ public class Java8 implements VMPlugin {
         if (getLookupConstructor() == null) {
             throw new GroovyBugError("getInvokeSpecialHandle requires at least JDK 7 for private access to Lookup");
         }
+        /* GRECLIPSE edit
         if (!method.isAccessible()) {
             AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
                 ReflectionUtils.trySetAccessible(method);
                 return null;
             });
         }
+        */
+        ReflectionUtils.makeAccessibleInPrivilegedAction(method);
+        // GRECLIPSE end
         Class<?> declaringClass = method.getDeclaringClass();
         try {
             final int TRUSTED = -1;
@@ -722,6 +725,7 @@ public class Java8 implements VMPlugin {
                 throw new IllegalStateException("Incompatible JVM", e);
             }
             try {
+                /* GRECLIPSE edit
                 if (!lookup.isAccessible()) {
                     final Constructor<MethodHandles.Lookup> finalReference = lookup;
                     AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
@@ -729,6 +733,9 @@ public class Java8 implements VMPlugin {
                         return null;
                     });
                 }
+                */
+                ReflectionUtils.makeAccessibleInPrivilegedAction(lookup);
+                // GRECLIPSE end
             } catch (SecurityException ignore) {
                 lookup = null;
             } catch (RuntimeException e) {

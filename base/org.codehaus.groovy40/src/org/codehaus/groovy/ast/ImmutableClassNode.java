@@ -131,9 +131,6 @@ public class ImmutableClassNode extends ClassNode {
     public void setAnnotated(boolean b) {}
 
     @Override
-    protected void setCompileUnit(CompileUnit cu) {}
-
-    @Override
     public void setEnclosingMethod(MethodNode mn) {}
 
     @Override

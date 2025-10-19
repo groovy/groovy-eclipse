@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import java.util.StringJoiner;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.CompileUnit;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
@@ -182,11 +181,6 @@ class IntersectionType extends ClassNode {
 
     @Override
     public void setAnnotated(boolean b) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected void setCompileUnit(CompileUnit cu) {
         throw new UnsupportedOperationException();
     }
 

@@ -2245,7 +2245,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
         private TypeReference createTypeReferenceForArrayName(char[] typeName, ClassNode typeNode, int dim, int sourceStart, int sourceEnd) {
             int nameEnd = (sourceEnd < 0 ? -1 : typeNode.getEnd());
-            if (!typeNode.isUsingGenerics()) {
+            GenericsType[] generics = typeNode.getGenericsTypes();
+            if (generics == null) {
                 if (CharOperation.indexOf('.', typeName) < 0) {
                     // For a single array reference, for example 'String[]' start will be 'S' and end will be the char after ']'. When the
                     // ArrayTypeReference is built we need these positions for the result: sourceStart - the 'S'; sourceEnd - the last ']';
@@ -2263,7 +2264,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     return tr;
                 }
             } else {
-                GenericsType[] generics = typeNode.getGenericsTypes();
                 TypeReference[] typeArgs = new TypeReference[generics.length];
                 for (int i = 0; i < generics.length; i += 1) {
                     typeArgs[i] = createTypeReferenceForGenerics(generics[i]);

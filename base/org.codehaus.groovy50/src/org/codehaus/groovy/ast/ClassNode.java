@@ -480,10 +480,11 @@ public class ClassNode extends AnnotatedNode {
             redirect.setSuperClass(superClass);
         } else {
             this.superClass = superClass;
-            // GROOVY-10763: update generics indicator
+            /* GRECLIPSE edit
             if (superClass != null && !usesGenerics && isPrimaryNode) {
                 usesGenerics = superClass.isUsingGenerics();
             }
+            */
         }
     }
 
@@ -520,12 +521,13 @@ public class ClassNode extends AnnotatedNode {
             redirect.setInterfaces(interfaces);
         } else {
             this.interfaces = interfaces;
-            // GROOVY-10763: update generics indicator
+            /* GRECLIPSE edit
             if (interfaces != null && !usesGenerics && isPrimaryNode) {
                 for (int i = 0, n = interfaces.length; i < n; i += 1) {
                     usesGenerics |= interfaces[i].isUsingGenerics();
                 }
             }
+            */
         }
     }
 
@@ -1556,17 +1558,27 @@ faces:  if (method == null && ArrayGroovyMethods.asBoolean(getInterfaces())) { /
 
     //
 
+    /* GRECLIPSE edit
     private MethodNode enclosingMethod;
+    */
 
     /**
      * The enclosing method of local inner class.
      */
     public MethodNode getEnclosingMethod() {
+        /* GRECLIPSE edit
         return redirect().enclosingMethod;
+        */
+        return redirect().getNodeMetaData(MethodNode.class);
+        // GRECLIPSE end
     }
 
     public void setEnclosingMethod(MethodNode enclosingMethod) {
+        /* GRECLIPSE edit
         this.enclosingMethod = enclosingMethod;
+        */
+        redirect().putNodeMetaData(MethodNode.class, enclosingMethod);
+        // GRECLIPSE end
     }
 
     //
@@ -1590,80 +1602,146 @@ faces:  if (method == null && ArrayGroovyMethods.asBoolean(getInterfaces())) { /
     }
 
     public void setGenericsTypes(GenericsType[] genericsTypes) {
+        /* GRECLIPSE edit
         usesGenerics = usesGenerics || genericsTypes != null;
+        */
         this.genericsTypes = genericsTypes;
     }
 
     //
 
+    /* GRECLIPSE edit
     private boolean placeholder;
+    */
 
     public boolean isGenericsPlaceHolder() {
+        /* GRECLIPSE edit
         return placeholder;
+        */
+        return bit(0x1);
+        // GRECLIPSE end
     }
 
     public void setGenericsPlaceHolder(boolean placeholder) {
+        /* GRECLIPSE edit
         usesGenerics = usesGenerics || placeholder;
         this.placeholder = placeholder;
+        */
+        bit(0x1, placeholder);
+        // GRECLIPSE end
     }
 
     //
 
+    /* GRECLIPSE edit
     private boolean usesGenerics;
+    */
 
     public boolean isUsingGenerics() {
+        /* GRECLIPSE edit -- GROOVY-10763
         return usesGenerics;
+        */
+        if (genericsTypes != null) {
+            return true;
+        } else if (redirect != null) {
+            return isGenericsPlaceHolder();
+        } else if (isPrimaryNode) { // compile target
+            ClassNode sc = getUnresolvedSuperClass();
+            if (sc != null && sc.isUsingGenerics()) {
+                return true;
+            }
+            ClassNode[] interfaces = getInterfaces();
+            for (int i = 0; i < interfaces.length; ++i) {
+                if (interfaces[i].isUsingGenerics()) return true;
+            }
+        }
+        return false;
+        // GRECLIPSE end
     }
 
     public void setUsingGenerics(boolean usesGenerics) {
+        /* GRECLIPSE edit
         this.usesGenerics = usesGenerics;
+        */
     }
 
     //
 
+    /* GRECLIPSE edit
     private boolean script;
+    */
 
     public boolean isScript() {
+        /* GRECLIPSE edit
         return redirect().script || isDerivedFrom(ClassHelper.SCRIPT_TYPE);
+        */
+        return bit(0x2) || isDerivedFrom(ClassHelper.SCRIPT_TYPE);
+        // GRECLIPSE end
     }
 
     public void setScript(boolean script) {
+        /* GRECLIPSE edit
         this.script = script;
+        */
+        redirect().bit(0x2, script);
+        // GRECLIPSE end
     }
 
     //
 
+    /* GRECLIPSE edit
     private boolean scriptBody;
+    */
 
     /**
      * @return {@code true} if this inner class or closure was declared inside a script body
      */
     public boolean isScriptBody() {
+        /* GRECLIPSE edit
         return redirect().scriptBody;
+        */
+        return bit(0x4);
+        // GRECLIPSE end
     }
 
     public void setScriptBody(boolean scriptBody) {
+        /* GRECLIPSE edit
         this.scriptBody = scriptBody;
+        */
+        redirect().bit(0x4, scriptBody);
+        // GRECLIPSE end
     }
 
     //
 
+    /* GRECLIPSE edit
     private boolean staticClass;
+    */
 
     /**
      * Is this class declared in a static method (such as a closure / inner class declared in a static method)
      */
     public boolean isStaticClass() {
+        /* GRECLIPSE edit
         return redirect().staticClass;
+        */
+        return bit(0x8);
+        // GRECLIPSE end
     }
 
     public void setStaticClass(boolean staticClass) {
+        /* GRECLIPSE edit
         this.staticClass = staticClass;
+        */
+        redirect().bit(0x8, staticClass);
+        // GRECLIPSE end
     }
 
     //
 
+    /* GRECLIPSE edit
     private boolean syntheticPublic;
+    */
 
     /**
      * Indicates that this class has been "promoted" to public by Groovy when in
@@ -1674,23 +1752,41 @@ faces:  if (method == null && ArrayGroovyMethods.asBoolean(getInterfaces())) { /
      * @return {@code true} if node is public but had no explicit public modifier
      */
     public boolean isSyntheticPublic() {
+        /* GRECLIPSE edit
         return syntheticPublic;
+        */
+        return bit(0x10);
+        // GRECLIPSE end
     }
 
     public void setSyntheticPublic(boolean syntheticPublic) {
+        /* GRECLIPSE edit
         this.syntheticPublic = syntheticPublic;
+        */
+        redirect().bit(0x10, syntheticPublic);
+        // GRECLIPSE end
     }
 
     //
 
+    /* GRECLIPSE edit
     private boolean annotated;
+    */
 
     public boolean isAnnotated() {
+        /* GRECLIPSE edit
         return this.annotated;
+        */
+        return bit(0x20);
+        // GRECLIPSE end
     }
 
     public void setAnnotated(boolean annotated) {
+        /* GRECLIPSE edit
         this.annotated = annotated;
+        */
+        redirect().bit(0x20, annotated);
+        // GRECLIPSE end
     }
 
     //
@@ -1782,20 +1878,30 @@ faces:  if (method == null && ArrayGroovyMethods.asBoolean(getInterfaces())) { /
     }
 
     public boolean hasInconsistentHierarchy() {
-        return redirect().cycle;
+        return redirect().bit(0x100);
     }
 
     public void setHasInconsistentHierarchy(final boolean cycle) {
-        redirect().cycle = cycle;
+        redirect().bit(0x100, cycle);
     }
 
-    private boolean cycle;
+    private int bits;
+
+    private boolean bit(int mask) {
+        return (bits & mask) != 0;
+    }
+
+    private void    bit(int mask, boolean b) {
+        if (b) bits |=  mask;
+        else   bits &= ~mask;
+    }
+
     private int nameStart;
 
     /**
      * Returns the offset of 'M' in "java.util.Map" or 'E' in "java.util.Map.Entry".
      */
-    public int getNameStart2() {
+    public int  getNameStart2() {
         return nameStart > 0 ? nameStart : getStart();
     }
 
@@ -1806,8 +1912,8 @@ faces:  if (method == null && ArrayGroovyMethods.asBoolean(getInterfaces())) { /
     @Override
     public void setSourcePosition(final ASTNode node) {
         super.setSourcePosition(node);
-        if (node instanceof ClassNode) {
-            setNameStart2(((ClassNode) node).getNameStart2());
+        if (node instanceof ClassNode that) {
+            this.setNameStart2(that.getNameStart2());
         }
     }
     // GRECLIPSE end

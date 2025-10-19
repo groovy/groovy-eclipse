@@ -150,7 +150,18 @@ public class ClassNode extends AnnotatedNode {
 
     private String name;
     private int modifiers;
+    /* GRECLIPSE edit
     private boolean syntheticPublic;
+    */
+    private int bits;
+    private boolean bit(int mask) {
+        return (bits & mask) != 0;
+    }
+    private void    bit(int mask, boolean b) {
+        if (b) bits |=  mask;
+        else   bits &= ~mask;
+    }
+    // GRECLIPSE end
     private ClassNode[] interfaces;
     private MixinNode[] mixins;
     private List<Statement> objectInitializers;
@@ -162,11 +173,13 @@ public class ClassNode extends AnnotatedNode {
     private List<FieldNode> fields;
     private List<PropertyNode> properties;
     private Map<String, FieldNode> fieldIndex;
+    /* GRECLIPSE edit
     private ModuleNode module;
     private CompileUnit compileUnit;
     private boolean staticClass;
     private boolean scriptBody;
     private boolean script;
+    */
     private ClassNode superClass;
     protected boolean isPrimaryNode;
     protected List<InnerClassNode> innerClasses;
@@ -191,16 +204,15 @@ public class ClassNode extends AnnotatedNode {
     // if not null this instance is handled as proxy
     // for the redirect
     private ClassNode redirect;
-    // flag if the classes or its members are annotated
+    /* GRECLIPSE edit
     private boolean annotated;
-
+    */
     // type spec for generics
     private GenericsType[] genericsTypes;
+    /* GRECLIPSE edit
     private boolean usesGenerics;
-
-    // if set to true the name getGenericsTypes consists
-    // of 1 element describing the name of the placeholder
     private boolean placeholder;
+    */
 
     /**
      * Returns the {@code ClassNode} this node is a proxy for or the node itself.
@@ -330,22 +342,29 @@ public class ClassNode extends AnnotatedNode {
                                          "A redirect() call is missing somewhere!");
             }
             if (lazyInitDone) return;
-            VMPluginFactory.getPlugin().configureClassNode(compileUnit, this);
+            VMPluginFactory.getPlugin().configureClassNode(getCompileUnit(), this);
             lazyInitDone = true;
         }
     }
 
-    /**
-     * Tracks the enclosing method for local inner classes.
-     */
+    /* GRECLIPSE edit
     private MethodNode enclosingMethod;
+    */
 
     public MethodNode getEnclosingMethod() {
+        /* GRECLIPSE edit
         return redirect().enclosingMethod;
+        */
+        return redirect().getNodeMetaData(MethodNode.class);
+        // GRECLIPSE end
     }
 
     public void setEnclosingMethod(MethodNode enclosingMethod) {
+        /* GRECLIPSE edit
         redirect().enclosingMethod = enclosingMethod;
+        */
+        redirect().putNodeMetaData(MethodNode.class, enclosingMethod);
+        // GRECLIPSE end
     }
 
     /**
@@ -357,11 +376,19 @@ public class ClassNode extends AnnotatedNode {
      * @return {@code true} if node is public but had no explicit public modifier
      */
     public boolean isSyntheticPublic() {
+        /* GRECLIPSE edit
         return syntheticPublic;
+        */
+        return bit(0x1);
+        // GRECLIPSE end
     }
 
     public void setSyntheticPublic(boolean syntheticPublic) {
+        /* GRECLIPSE edit
         this.syntheticPublic = syntheticPublic;
+        */
+        bit(0x1, syntheticPublic);
+        // GRECLIPSE end
     }
 
     /**
@@ -388,6 +415,7 @@ public class ClassNode extends AnnotatedNode {
         this.mixins = mixins;
 
         isPrimaryNode = true;
+        /* GRECLIPSE edit
         if (superClass != null) {
             usesGenerics = superClass.isUsingGenerics();
         }
@@ -396,6 +424,7 @@ public class ClassNode extends AnnotatedNode {
                  usesGenerics = interfaces[i++].isUsingGenerics();
             }
         }
+        */
         methods = new MapOfLists();
         methodsList = Collections.EMPTY_LIST;
     }
@@ -404,7 +433,15 @@ public class ClassNode extends AnnotatedNode {
      * Sets the superclass of this {@code ClassNode}.
      */
     public void setSuperClass(ClassNode superClass) {
+        /* GRECLIPSE edit
         redirect().superClass = superClass;
+        */
+        if (redirect != null) {
+            redirect.setSuperClass(superClass);
+        } else {
+            setUnresolvedSuperClass(superClass);
+        }
+        // GRECLIPSE end
     }
 
     /**
@@ -572,7 +609,11 @@ public class ClassNode extends AnnotatedNode {
     }
 
     public ModuleNode getModule() {
+        /* GRECLIPSE edit
         return redirect().module;
+        */
+        return redirect().getNodeMetaData(ModuleNode.class);
+        // GRECLIPSE end
     }
 
     public PackageNode getPackage() {
@@ -580,10 +621,14 @@ public class ClassNode extends AnnotatedNode {
     }
 
     public void setModule(ModuleNode module) {
+        /* GRECLIPSE edit
         redirect().module = module;
         if (module != null) {
             redirect().compileUnit = module.getUnit();
         }
+        */
+        redirect().putNodeMetaData(ModuleNode.class, module);
+        // GRECLIPSE end
     }
 
     public void addField(FieldNode node) {
@@ -785,7 +830,7 @@ public class ClassNode extends AnnotatedNode {
             MixinNode[] newMixins = new MixinNode[mixins.length + 1];
             System.arraycopy(mixins, 0, newMixins, 0, mixins.length);
             newMixins[mixins.length] = mixin;
-            redirect().mixins = newMixins;
+            setMixins(newMixins);
         }
     }
 
@@ -840,7 +885,7 @@ public class ClassNode extends AnnotatedNode {
         if (outer == null) {
             return Collections.emptyList();
         }
-        List<ClassNode> result = new LinkedList<>();
+        List<ClassNode> result = new ArrayList<>(4);
         do {
             result.add(outer);
         } while ((outer = outer.getOuterClass()) != null);
@@ -1140,16 +1185,23 @@ public class ClassNode extends AnnotatedNode {
     public CompileUnit getCompileUnit() {
         if (redirect != null)
             return redirect.getCompileUnit();
+        /* GRECLIPSE edit
         if (compileUnit == null && module != null) {
             compileUnit = module.getUnit();
         }
         return compileUnit;
+        */
+        return Optional.ofNullable(getModule()).map(ModuleNode::getUnit).orElse(null);
+        // GRECLIPSE end
     }
 
+    @Deprecated
     protected void setCompileUnit(CompileUnit cu) {
+        /* GRECLIPSE edit
         if (redirect != null)
             redirect.setCompileUnit(cu);
         if (compileUnit != null) compileUnit = cu;
+        */
     }
 
     public String getPackageName() {
@@ -1260,30 +1312,54 @@ public class ClassNode extends AnnotatedNode {
      * Is this class declared in a static method (such as a closure / inner class declared in a static method)
      */
     public boolean isStaticClass() {
+        /* GRECLIPSE edit
         return redirect().staticClass;
+        */
+        return redirect().bit(0x2);
+        // GRECLIPSE end
     }
 
     public void setStaticClass(boolean staticClass) {
+        /* GRECLIPSE edit
         redirect().staticClass = staticClass;
+        */
+        redirect().bit(0x2, staticClass);
+        // GRECLIPSE end
     }
 
     /**
      * @return {@code true} if this inner class or closure was declared inside a script body
      */
     public boolean isScriptBody() {
+        /* GRECLIPSE edit
         return redirect().scriptBody;
+        */
+        return redirect().bit(0x4);
+        // GRECLIPSE end
     }
 
     public void setScriptBody(boolean scriptBody) {
+        /* GRECLIPSE edit
         redirect().scriptBody = scriptBody;
+        */
+        redirect().bit(0x4, scriptBody);
+        // GRECLIPSE end
     }
 
     public boolean isScript() {
+        /* GRECLIPSE edit
         return redirect().script || isDerivedFrom(ClassHelper.SCRIPT_TYPE);
+        */
+        return redirect().bit(0x8) || isDerivedFrom(ClassHelper.SCRIPT_TYPE);
+        // GRECLIPSE end
     }
 
     public void setScript(boolean script) {
+        /* GRECLIPSE edit
         redirect().script = script;
+        */
+        redirect().bit(0x8, script);
+        // GRECLIPSE end
     }
 
     @Override
@@ -1531,11 +1607,19 @@ faces:  if (method == null && DefaultGroovyMethods.asBoolean(getInterfaces())) {
      * Marks if the current class uses annotations or not.
      */
     public void setAnnotated(boolean annotated) {
+        /* GRECLIPSE edit
         this.annotated = annotated;
+        */
+        bit(0x10, annotated);
+        // GRECLIPSE end
     }
 
     public boolean isAnnotated() {
+        /* GRECLIPSE edit
         return this.annotated;
+        */
+        return bit(0x10);
+        // GRECLIPSE end
     }
 
     public GenericsType asGenericsType() {
@@ -1555,25 +1639,55 @@ faces:  if (method == null && DefaultGroovyMethods.asBoolean(getInterfaces())) {
     }
 
     public void setGenericsTypes(GenericsType[] genericsTypes) {
+        /* GRECLIPSE edit
         usesGenerics = usesGenerics || genericsTypes != null;
+        */
         this.genericsTypes = genericsTypes;
     }
 
     public void setGenericsPlaceHolder(boolean placeholder) {
+        /* GRECLIPSE edit
         usesGenerics = usesGenerics || placeholder;
         this.placeholder = placeholder;
+        */
+        bit(0x20, placeholder);
+        // GRECLIPSE end
     }
 
     public boolean isGenericsPlaceHolder() {
+        /* GRECLIPSE edit
         return placeholder;
+        */
+        return bit(0x20);
+        // GRECLIPSE end
     }
 
     public boolean isUsingGenerics() {
+        /* GRECLIPSE edit -- GROOVY-10763
         return usesGenerics;
+        */
+        if (genericsTypes != null) {
+            return true;
+        } else if (redirect != null) {
+            return isGenericsPlaceHolder();
+        } else if (isPrimaryNode) { // compile target
+            ClassNode sc = getUnresolvedSuperClass();
+            if (sc != null && sc.isUsingGenerics()) {
+                return true;
+            }
+            ClassNode[] interfaces = getInterfaces();
+            for (int i = 0; i < interfaces.length; ++i) {
+                if (interfaces[i].isUsingGenerics()) return true;
+            }
+        }
+        return false;
+        // GRECLIPSE end
     }
 
     public void setUsingGenerics(boolean usesGenerics) {
+        /* GRECLIPSE edit
         this.usesGenerics = usesGenerics;
+        */
     }
 
     public ClassNode getPlainNodeReference(boolean skipPrimitives) {
@@ -1707,14 +1821,13 @@ faces:  if (method == null && DefaultGroovyMethods.asBoolean(getInterfaces())) {
     }
 
     public boolean hasInconsistentHierarchy() {
-        return redirect().cycle;
+        return redirect().bit(0x100);
     }
 
     public void setHasInconsistentHierarchy(final boolean cycle) {
-        redirect().cycle = cycle;
+        redirect().bit(0x100, cycle);
     }
 
-    private boolean cycle;
     private int nameStart;
 
     /**
