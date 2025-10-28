@@ -30,6 +30,7 @@ import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.util.Util;
@@ -263,4 +264,37 @@ class PackageBinding implements IPackageBinding {
 	public String toString() {
 		return this.binding.toString();
 	}
+
+	@Override
+	public ITypeBinding findTypeBinding(String nameString) {
+		if (nameString == null || nameString.isEmpty()) {
+			return null;
+		}
+		String[] segments = nameString.split("[.]"); //$NON-NLS-1$
+		int i = 0;
+		org.eclipse.jdt.internal.compiler.lookup.PackageBinding pkgBinding = this.binding;
+		Binding foundBinding = null;
+		char[] segName= segments[i++].toCharArray();
+		foundBinding = pkgBinding.getTypeOrPackage(segName, this.binding.enclosingModule, false);
+		if (foundBinding != null && foundBinding.isValidBinding()
+				&& (foundBinding instanceof org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding refBinding)) {
+			org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding referenceBinding = refBinding;
+			while (i < segments.length) {
+				segName = segments[i++].toCharArray();
+				foundBinding = referenceBinding.getMemberType(segName);
+				if (foundBinding == null || !foundBinding.isValidBinding()
+						|| !(foundBinding instanceof org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding foundRefBinding)) {
+					break;
+				} else {
+					referenceBinding = foundRefBinding;
+				}
+			}
+		}
+		if (foundBinding != null && foundBinding.isValidBinding()
+				&& foundBinding instanceof org.eclipse.jdt.internal.compiler.lookup.TypeBinding typeBinding) {
+			return this.resolver.getTypeBinding(typeBinding);
+		}
+		return null;
+	}
+
 }

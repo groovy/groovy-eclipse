@@ -39,4 +39,6 @@ public interface ExtendedTagBits {
 	static boolean areAllAnnotationsResolved(long extendedTagBits) {
 		return (extendedTagBits & AllAnnotationsResolved) == AllAnnotationsResolved;
 	}
+
+	int IsNullAnnotationPackage = ASTNode.Bit1; // package
 }

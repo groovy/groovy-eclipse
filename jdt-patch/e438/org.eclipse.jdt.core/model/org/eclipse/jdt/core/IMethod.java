@@ -272,8 +272,8 @@ boolean isMainMethod() throws JavaModelException;
  * <li>it is <code>static</code> and <code>public</code></li>
  * <li>it defines one parameter whose type's simple name is <code>String[]</code></li>
  * </ul>
- * Starting with Java 21 there is "preview feature" that allows <a href="https://openjdk.org/jeps/445">instance main methods</a>.
- * It is a main method according to this JEP if:
+ * Starting with Java 24, Java allows <a href="https://openjdk.org/jeps/445">instance main methods</a>.
+ * It is an instance main method if:
  * <ul>
  * <li>its name is equal to <code>"main"</code></li>
  * <li>its return type is <code>void</code></li>

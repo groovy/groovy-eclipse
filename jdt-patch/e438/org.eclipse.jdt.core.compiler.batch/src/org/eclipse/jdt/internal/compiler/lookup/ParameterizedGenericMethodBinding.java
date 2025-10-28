@@ -47,7 +47,6 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 
     public TypeBinding[] typeArguments;
     protected LookupEnvironment environment;
-    public boolean inferredReturnType;
     public boolean wasInferred; // only set to true for instances resulting from method invocation inferrence
     public boolean isRaw; // set to true for method behaving as raw for substitution purpose
 	public boolean inferredWithUncheckedConversion;
@@ -483,7 +482,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 	 */
 	@Override
 	public boolean hasSubstitutedReturnType() {
-		if (this.inferredReturnType)
+		if (this.wasInferred)
 			return this.originalMethod.hasSubstitutedReturnType();
 		return super.hasSubstitutedReturnType();
 	}

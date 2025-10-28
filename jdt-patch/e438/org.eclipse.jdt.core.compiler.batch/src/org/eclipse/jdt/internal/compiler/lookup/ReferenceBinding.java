@@ -2231,14 +2231,16 @@ protected int applyCloseableClassWhitelists(CompilerOptions options) {
 					}
 				}
 			}
-			for (int i=0; i<3; i++) {
-				if (!CharOperation.equals(this.compoundName[i], TypeConstants.ONE_UTIL_STREAMEX[i])) {
-					return 0;
+			streamex: {
+				for (int i=0; i<3; i++) {
+					if (!CharOperation.equals(this.compoundName[i], TypeConstants.ONE_UTIL_STREAMEX[i])) {
+						break streamex;
+					}
 				}
-			}
-			for (char[] streamName : TypeConstants.RESOURCE_FREE_CLOSEABLE_STREAMEX) {
-				if (CharOperation.equals(this.compoundName[3], streamName)) {
-					return TypeIds.BitResourceFreeCloseable;
+				for (char[] streamName : TypeConstants.RESOURCE_FREE_CLOSEABLE_STREAMEX) {
+					if (CharOperation.equals(this.compoundName[3], streamName)) {
+						return TypeIds.BitResourceFreeCloseable;
+					}
 				}
 			}
 			break;
@@ -2533,7 +2535,7 @@ public MethodBinding getSingleAbstractMethod(Scope scope, boolean replaceWildcar
 }
 
 // See JLS 4.9 bullet 1
-public static boolean isConsistentIntersection(TypeBinding[] intersectingTypes) {
+public static boolean isConsistentIntersection(TypeBinding[] intersectingTypes, boolean simulatingBugJDK8026527) {
 	TypeBinding[] ci = new TypeBinding[intersectingTypes.length];
 	for (int i = 0; i < ci.length; i++) {
 		TypeBinding current = intersectingTypes[i];
@@ -2546,9 +2548,9 @@ public static boolean isConsistentIntersection(TypeBinding[] intersectingTypes) 
 		// when invoked during type inference we only want to check inconsistency among real types:
 		if (current.isTypeVariable() || current.isWildcard() || !current.isProperType(true))
 			continue;
-		if (mostSpecific.isSubtypeOf(current, false))
+		if (mostSpecific.isSubtypeOf(current, simulatingBugJDK8026527))
 			continue;
-		else if (current.isSubtypeOf(mostSpecific, false))
+		else if (current.isSubtypeOf(mostSpecific, simulatingBugJDK8026527))
 			mostSpecific = current;
 		else
 			return false;
@@ -2562,7 +2564,7 @@ public ModuleBinding module() {
 }
 
 public boolean hasEnclosingInstanceContext() {
-	// This method intentionally disregards early construction contexts (JEP 482).
+	// This method intentionally disregards early construction contexts (JEP 513).
 	// Details of how each outer level is handled are coordinated in
 	// TypeDeclaration.manageEnclosingInstanceAccessIfNecessary().
 	if (isStatic())

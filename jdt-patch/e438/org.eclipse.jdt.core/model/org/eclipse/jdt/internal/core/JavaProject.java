@@ -3475,7 +3475,10 @@ public class JavaProject
 				// reset to default all options not in new map
 				// @see https://bugs.eclipse.org/bugs/show_bug.cgi?id=26255
 				// @see https://bugs.eclipse.org/bugs/show_bug.cgi?id=49691
-				for (String key : projectPreferences.keys()) {
+				String[] pNames = projectPreferences.keys();
+				int ln = pNames.length;
+				for (int i=0; i<ln; i++) {
+					String key = pNames[i];
 					if (!newOptions.containsKey(key)) {
 						projectPreferences.remove(key); // old preferences => remove from preferences table
 					}

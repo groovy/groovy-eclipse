@@ -83,7 +83,7 @@ public class AllocationExpression extends Expression implements IPolyExpression,
 	public TypeBinding[] genericTypeArguments;
 	public FieldDeclaration enumConstant; // for enum constant initializations
 	protected TypeBinding typeExpected;	  // for <> inference
-	public boolean inferredReturnType;
+	public boolean wasInferred;
 
 	public FakedTrackingVariable closeTracker;	// when allocation a Closeable store a pre-liminary tracking variable here
 	public ExpressionContext expressionContext = VANILLA_CONTEXT;
@@ -559,7 +559,7 @@ protected void checkEarlyConstructionContext(BlockScope scope) {
 		if (uninitialized != null)
 			scope.problemReporter().allocationInEarlyConstructionContext(this, this.resolvedType, uninitialized);
 	}
-	// if JEP 482 is not enabled, problems will be detected when looking for enclosing instance(s)
+	// if JEP 513 is not enabled, problems will be detected when looking for enclosing instance(s)
 }
 protected boolean isMissingTypeRelevant() {
 	if (this.binding != null && this.binding.isVarargs()) {
@@ -631,10 +631,8 @@ public MethodBinding inferConstructorOfElidedParameterizedType(final Scope scope
 		if (cached != null)
 			return cached;
 	}
-	boolean[] inferredReturnTypeOut = new boolean[1];
-	MethodBinding constructor = inferDiamondConstructor(scope, this, this.type.resolvedType, this.argumentTypes, inferredReturnTypeOut);
+	MethodBinding constructor = inferDiamondConstructor(scope, this, this.type.resolvedType, this.argumentTypes);
 	if (constructor != null) {
-		this.inferredReturnType = inferredReturnTypeOut[0];
 		if (this.expressionContext == INVOCATION_CONTEXT && this.typeExpected == null) { // not ready for invocation type inference
 			if (constructor instanceof PolyParameterizedGenericMethodBinding) {
 				return constructor; // keep this placeholder binding, which also serves as a key into #inferenceContexts
@@ -649,7 +647,7 @@ public MethodBinding inferConstructorOfElidedParameterizedType(final Scope scope
 	return constructor;
 }
 
-public static MethodBinding inferDiamondConstructor(Scope scope, InvocationSite site, TypeBinding type, TypeBinding[] argumentTypes, boolean[] inferredReturnTypeOut) {
+public static MethodBinding inferDiamondConstructor(Scope scope, InvocationSite site, TypeBinding type, TypeBinding[] argumentTypes) {
 	ReferenceBinding genericType = ((ParameterizedTypeBinding) type).genericType();
 	ReferenceBinding enclosingType = type.enclosingType();
 	ParameterizedTypeBinding allocationType = scope.environment().createParameterizedType(genericType, genericType.typeVariables(), enclosingType);
@@ -660,7 +658,8 @@ public static MethodBinding inferDiamondConstructor(Scope scope, InvocationSite 
 		if (site.invocationTargetType() == null && site.getExpressionContext().definesTargetType() && factory instanceof PolyParameterizedGenericMethodBinding)
 			return factory; // during applicability inference keep the PolyParameterizedGenericMethodBinding
 		ParameterizedGenericMethodBinding genericFactory = (ParameterizedGenericMethodBinding) factory;
-		inferredReturnTypeOut[0] = genericFactory.inferredReturnType;
+		if (site instanceof AllocationExpression allocation)
+			allocation.wasInferred = genericFactory.wasInferred;
 		SyntheticFactoryMethodBinding sfmb = (SyntheticFactoryMethodBinding) factory.original();
 		TypeVariableBinding[] constructorTypeVariables = sfmb.getConstructor().typeVariables();
 		TypeBinding [] constructorTypeArguments = constructorTypeVariables != null ? new TypeBinding[constructorTypeVariables.length] : Binding.NO_TYPES;
@@ -692,7 +691,7 @@ public TypeBinding[] inferElidedTypes(ParameterizedTypeBinding parameterizedType
 	MethodBinding factory = scope.getStaticFactory(allocationType, enclosingType, this.argumentTypes, this);
 	if (factory instanceof ParameterizedGenericMethodBinding && factory.isValidBinding()) {
 		ParameterizedGenericMethodBinding genericFactory = (ParameterizedGenericMethodBinding) factory;
-		this.inferredReturnType = genericFactory.inferredReturnType;
+		this.wasInferred = genericFactory.wasInferred;
 		return ((ParameterizedTypeBinding)factory.returnType).arguments;
 	}
 	return null;

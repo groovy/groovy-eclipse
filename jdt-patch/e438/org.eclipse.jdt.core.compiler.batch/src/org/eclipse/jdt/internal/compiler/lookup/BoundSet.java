@@ -452,6 +452,8 @@ class BoundSet {
 		if (that == null || environment == null)
 			return;
 		addBounds(that.flatten(), environment);
+		this.inThrows.addAll(that.inThrows);
+		this.captures.putAll(that.captures);
 	}
 
 	public boolean isInstantiated(InferenceVariable inferenceVariable) {

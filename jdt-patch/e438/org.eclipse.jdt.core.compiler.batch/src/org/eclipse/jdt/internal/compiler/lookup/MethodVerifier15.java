@@ -795,12 +795,7 @@ void checkTypeVariableMethods(TypeParameter typeParameter) {
 boolean detectInheritedNameClash(MethodBinding inherited, MethodBinding otherInherited) {
 	if (!inherited.areParameterErasuresEqual(otherInherited))
 		return false;
-	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=322001
-	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=323693
-	// When reporting a name clash between two inherited methods, we should not look for a
-	// signature clash, but instead should be looking for method descriptor clash.
-	if (TypeBinding.notEquals(inherited.returnType.erasure(), otherInherited.returnType.erasure()))
-		return false;
+
 	// skip it if otherInherited is defined by a subtype of inherited's declaringClass or vice versa.
 	// avoid being order sensitive and check with the roles reversed also.
 	if (TypeBinding.notEquals(inherited.declaringClass.erasure(), otherInherited.declaringClass.erasure())) {

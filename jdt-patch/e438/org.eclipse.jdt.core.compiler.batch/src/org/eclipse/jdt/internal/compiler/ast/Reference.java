@@ -189,7 +189,7 @@ void reportOnlyUselesslyReadPrivateField(BlockScope currentScope, FieldBinding f
 protected void checkFieldAccessInEarlyConstructionContext(BlockScope scope, char[] token, FieldBinding fieldBinding, TypeBinding actualReceiverType) {
 	if (actualReceiverType != null) {
 		if (scope.isInsideEarlyConstructionContext(actualReceiverType, false)) {
-			// §6.5.6.1 (JEP 482):
+			// §6.5.6.1 (JEP 513):
 			// If the declaration denotes an instance variable of a class C ... then .. or a compile time occurs:
 			// - [...]
 			// - If the expression name appears in an early construction context of C (8.8.7.1),
@@ -218,7 +218,7 @@ protected void checkFieldAccessInEarlyConstructionContext(BlockScope scope, char
 					return;
 				}
 			}
-			// otherwise legal if JEP 482 is enabled
+			// otherwise legal if JEP 513 is enabled
 			scope.problemReporter().validateJavaFeatureSupport(JavaFeature.FLEXIBLE_CONSTRUCTOR_BODIES, this.sourceStart, this.sourceEnd);
 		}
 	}

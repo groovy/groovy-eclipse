@@ -1235,12 +1235,11 @@ public boolean isPolyExpression(MethodBinding resolutionCandidate) {
 		throw new UnsupportedOperationException("Unresolved MessageSend can't be queried if it is a polyexpression"); //$NON-NLS-1$
 
 	if (resolutionCandidate != null) {
-		if (resolutionCandidate instanceof ParameterizedGenericMethodBinding) {
-			ParameterizedGenericMethodBinding pgmb = (ParameterizedGenericMethodBinding) resolutionCandidate;
-			if (pgmb.inferredReturnType)
-				return true; // if already determined
-		}
-		if (resolutionCandidate.returnType != null) {
+		if (resolutionCandidate.returnType != null && resolutionCandidate.returnType.id != TypeIds.T_void) {
+			if (resolutionCandidate instanceof ParameterizedGenericMethodBinding pgmb) {
+				if (pgmb.wasInferred)
+					return true; // if already determined
+			}
 			// resolution may have prematurely instantiated the generic method, we need the original, though:
 			MethodBinding candidateOriginal = resolutionCandidate.original();
 			return candidateOriginal.returnType.mentionsAny(candidateOriginal.typeVariables(), -1);

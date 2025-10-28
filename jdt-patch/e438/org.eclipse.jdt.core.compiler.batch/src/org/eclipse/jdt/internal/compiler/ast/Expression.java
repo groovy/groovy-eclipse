@@ -1234,6 +1234,17 @@ public boolean isPolyExpression(MethodBinding method) {
 	return false;
 }
 
+// Answer if the receiver is a poly-expression in the given context.
+public final boolean isPolyExpression(ExpressionContext context) {
+	ExpressionContext prevailing = getExpressionContext();
+	try {
+		setExpressionContext(context);
+		return isPolyExpression();
+	} finally {
+		setExpressionContext(prevailing);
+	}
+}
+
 
 public void tagAsNeedCheckCast() {
     // do nothing by default

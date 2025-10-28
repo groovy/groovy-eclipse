@@ -515,7 +515,7 @@ public FieldBinding findField(TypeBinding receiverType, char[] fieldName, Invoca
 		return field; // static fields are always accessible
 
 	if (this.isConstructorCall) {
-		// JEP 482 exception to old rules.
+		// JEP 513 exception to old rules.
 		// 'this.field' is already detected when FieldReference triggers ThisReference.resolveType() -> checkAccess()
 		// hence here we only handle single name references:
 		if (invocationSite instanceof SingleNameReference nameRef

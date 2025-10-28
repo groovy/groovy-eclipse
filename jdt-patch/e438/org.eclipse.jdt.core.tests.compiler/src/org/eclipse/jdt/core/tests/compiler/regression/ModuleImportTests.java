@@ -25,7 +25,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 public class ModuleImportTests extends AbstractModuleCompilationTest {
 
 	static {
-//		 TESTS_NAMES = new String[] { "test001" };
+//		 TESTS_NAMES = new String[] { "test000_previewDisabled" };
 		// TESTS_NUMBERS = new int[] { 1 };
 		// TESTS_RANGE = new int[] { 298, -1 };
 	}

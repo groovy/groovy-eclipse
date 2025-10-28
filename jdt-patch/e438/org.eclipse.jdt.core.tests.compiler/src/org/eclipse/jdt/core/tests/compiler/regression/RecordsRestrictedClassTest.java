@@ -10941,4 +10941,43 @@ public void testIssue4290() throws Exception {
 				"OK");
 
 }
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4412
+// Internal Compile error problem since 2025-09 
+public void testIssue4412() throws Exception {
+	this.runConformTest(
+		new String[] {
+					"R.java",
+					"""
+					import java.util.Collection;
+					import java.util.stream.Collectors;
+
+					@interface A {
+
+					    Id use();
+
+					    public enum Id {
+					        CLASS;
+					    }
+					}
+
+					public record R<V>(String name, @A(use = A.Id.CLASS) V value) {
+
+					    @Override
+					    public String toString() {
+					        return String.format("[%s] %s",
+					                             name,
+					                             (value instanceof Collection<?> coll
+					                                     ? coll.stream().map(Object::toString).collect(Collectors.joining(", ", "[ ", " ]"))
+					                                     : value.toString()));
+					    }
+
+					    public static void main(String [] args) {
+					    	System.out.println("OK!");
+					    }
+					}
+					""",
+	            },
+				"OK!");
+
+}
 }

@@ -219,6 +219,29 @@ public CategorizedProblem[] getErrors() {
 }
 
 /**
+ * Answer the syntax errors encountered during compilation.
+ */
+public CategorizedProblem[] getSyntaxErrors() {
+	CategorizedProblem[] reportedProblems = getProblems();
+	if (this.problemCount == 0)
+		return reportedProblems;
+	int syntaxErrorCount = 0;
+	for (CategorizedProblem reportedProblem : reportedProblems) {
+		if (reportedProblem.isError() && (reportedProblem.getID() & IProblem.Syntax) != 0)
+			syntaxErrorCount++;
+	}
+	if (syntaxErrorCount == this.problemCount)
+		return reportedProblems;
+	CategorizedProblem[] syntaxErrors = new CategorizedProblem[syntaxErrorCount];
+	int index = 0;
+	for (CategorizedProblem reportedProblem : reportedProblems) {
+		if (reportedProblem.isError() && (reportedProblem.getID() & IProblem.Syntax) != 0)
+			syntaxErrors[index++] = reportedProblem;
+	}
+	return syntaxErrors;
+}
+
+/**
  * Answer the initial file name
  */
 public char[] getFileName(){

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -346,7 +346,7 @@ protected void attachOrphanCompletionNode(){
 			RecoveredMethod recoveredMethod = (RecoveredMethod)this.currentElement;
 			/* only consider if inside method header */
 			if (!recoveredMethod.foundOpeningBrace) {
-				//if (rParenPos < lParenPos){ // inside arguments
+				//if (rParenPos < lParenPos){ // inside argument
 				if (orphan instanceof TypeReference){
 					this.currentElement = this.currentElement.parent.add(
 						new CompletionOnFieldType((TypeReference)orphan, true), 0);

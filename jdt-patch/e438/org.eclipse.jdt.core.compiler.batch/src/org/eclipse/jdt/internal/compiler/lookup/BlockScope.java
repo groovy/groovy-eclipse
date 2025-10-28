@@ -899,7 +899,7 @@ public Object[] getEmulationPath(ReferenceBinding targetEnclosingType, boolean o
 	Object[] path = new Object[2]; // probably at least 2 of them
 	ReferenceBinding currentType = sourceType.enclosingType();
 	if ((methodScope().referenceContext instanceof ConstructorDeclaration) && JavaFeature.FLEXIBLE_CONSTRUCTOR_BODIES.matchesCompliance(compilerOptions())) {
-		// JEP 482: find the outermost arg up-to the target depth, available as a synthetic argument
+		// JEP 513: find the outermost arg up-to the target depth, available as a synthetic argument
 		// this allows us to "skip over" any intermediate early construction context not having an enclosing instance
 		ReferenceBinding outer = currentType;
 		while (outer != null && outer.depth() >= targetEnclosingType.depth()) {
@@ -952,7 +952,7 @@ public Object[] getEmulationPath(ReferenceBinding targetEnclosingType, boolean o
 				}
 			}
 
-			// TODO JEP 482: do we need a search for far outer starting at currentType, like in the above JEP 482 section?
+			// TODO JEP 513: do we need a search for far outer starting at currentType, like in the above JEP 513 section?
 			syntheticField = ((NestedTypeBinding) currentType).getSyntheticField(currentEnclosingType, onlyExactMatch);
 			if (syntheticField == null) break;
 

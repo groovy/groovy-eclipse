@@ -1,5 +1,6 @@
+// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2021, 2024 IBM Corporation and others.
+ * Copyright (c) 2021, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,22 +24,19 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.JavaFeature;
 
 public class PreviewFeatureTest extends AbstractRegressionTest9 {
-
 	public static Class<?> testClass() {
 		return PreviewFeatureTest.class;
 	}
 	public static Test suite() {
 		return buildMinimalComplianceTestSuite(testClass(), F_16);
 	}
-	public PreviewFeatureTest(String testName){
+	public PreviewFeatureTest(String testName) {
 		super(testName);
 	}
 	@Override
 	protected Map<String, String> getCompilerOptions() {
 		Map<String, String> options = super.getCompilerOptions();
-//		if (isJRE17Plus) {
-			options.put(CompilerOptions.OPTION_Release, CompilerOptions.ENABLED);
-//		}
+		options.put(CompilerOptions.OPTION_Release, CompilerOptions.ENABLED);
 		return options;
 	}
 	private String[] getClasspathWithPreviewAPI() {
@@ -80,7 +78,7 @@ public class PreviewFeatureTest extends AbstractRegressionTest9 {
 				jarPath,
 				JavaCore.VERSION_9);
 		} catch (IOException e) {
-			// ignore
+			throw new RuntimeException(e);
 		}
 		String [] javaClassLibs = Util.getJavaClassLibs();
 		int javaClassLibsLength;
@@ -93,10 +91,6 @@ public class PreviewFeatureTest extends AbstractRegressionTest9 {
 	 * Preview API, --enable-preview=false, SuppressWarning=No
 	 */
 	public void test001() {
-		if (this.complianceLevel >= ClassFileConstants.JDK17) {
-			return;
-		}
-		String[] classLibs = getClasspathWithPreviewAPI();
 		Map<String, String> options = getCompilerOptions();
 		String old = options.get(CompilerOptions.OPTION_EnablePreviews);
 		options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.DISABLED);
@@ -119,22 +113,22 @@ public class PreviewFeatureTest extends AbstractRegressionTest9 {
 					"	^^^^\n" +
 					"Zork cannot be resolved to a type\n" +
 					"----------\n" +
-					"2. WARNING in X.java (at line 4)\n" +
+					"2. ERROR in X.java (at line 4)\n" +
 					"	ABC abc = null;\n" +
 					"	^^^\n" +
-					"You are using an API that is part of the preview feature 'Test Feature' and may be removed in future\n" +
+					"This API is part of the preview feature \'Test Feature\' which is disabled by default. Use --enable-preview to enable\n" +
 					"----------\n" +
-					"3. WARNING in X.java (at line 6)\n" +
+					"3. ERROR in X.java (at line 6)\n" +
 					"	(new ABC()).doSomething();\n" +
 					"	^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-					"You are using an API that is part of the preview feature 'Test Feature' and may be removed in future\n" +
+					"This API is part of the preview feature \'Test Feature\' which is disabled by default. Use --enable-preview to enable\n" +
 					"----------\n" +
-					"4. WARNING in X.java (at line 6)\n" +
+					"4. ERROR in X.java (at line 6)\n" +
 					"	(new ABC()).doSomething();\n" +
 					"	     ^^^\n" +
-					"You are using an API that is part of the preview feature 'Test Feature' and may be removed in future\n" +
+					"This API is part of the preview feature \'Test Feature\' which is disabled by default. Use --enable-preview to enable\n" +
 					"----------\n",
-					classLibs,
+					getClasspathWithPreviewAPI(),
 					true,
 					options);
 		} finally {
@@ -142,16 +136,12 @@ public class PreviewFeatureTest extends AbstractRegressionTest9 {
 		}
 	}
 	/*
-	 * Preview API, --enable-preview=false, SuppressWarning=yes
+	 * Preview API, --enable-preview=false, SuppressWarning=Yes
 	 */
 	public void test002() {
-		if (this.complianceLevel >= ClassFileConstants.JDK17) {
-			return;
-		}
 		Map<String, String> options = getCompilerOptions();
 		String old = options.get(CompilerOptions.OPTION_EnablePreviews);
 		options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.DISABLED);
-		String[] classLibs = getClasspathWithPreviewAPI();
 		try {
 			runNegativeTest(
 					new String[] {
@@ -159,35 +149,35 @@ public class PreviewFeatureTest extends AbstractRegressionTest9 {
 							"import p.*;\n"+
 							"@SuppressWarnings(\"preview\")\n"+
 							"public class X {\n"+
-									"    Zork z = null;\n" +
-									"    ABC abc = null;\n" +
-									"   public void foo () {\n"+
-									"      (new ABC()).doSomething();\n"+
-									"   }\n"+
-									"}\n",
+							"    Zork z = null;\n" +
+							"    ABC abc = null;\n" +
+							"   public void foo () {\n"+
+							"      (new ABC()).doSomething();\n"+
+							"   }\n"+
+							"}\n",
 					},
 					"----------\n" +
 					"1. ERROR in X.java (at line 4)\n" +
 					"	Zork z = null;\n" +
 					"	^^^^\n" +
 					"Zork cannot be resolved to a type\n" +
-//					"----------\n" +
-//					"2. WARNING in X.java (at line 5)\n" +
-//					"	ABC abc = null;\n" +
-//					"	^^^\n" +
-//					"You are using an API that is part of the preview feature 'Test Feature' and may be removed in future\n" +
-//					"----------\n" +
-//					"3. WARNING in X.java (at line 7)\n" +
-//					"	(new ABC()).doSomething();\n" +
-//					"	^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-//					"You are using an API that is part of the preview feature 'Test Feature' and may be removed in future\n" +
-//					"----------\n" +
-//					"4. WARNING in X.java (at line 7)\n" +
-//					"	(new ABC()).doSomething();\n" +
-//					"	     ^^^\n" +
-//					"You are using an API that is part of the preview feature 'Test Feature' and may be removed in future\n" +
+					"----------\n" +
+					"2. ERROR in X.java (at line 5)\n" +
+					"	ABC abc = null;\n" +
+					"	^^^\n" +
+					"This API is part of the preview feature \'Test Feature\' which is disabled by default. Use --enable-preview to enable\n" +
+					"----------\n" +
+					"3. ERROR in X.java (at line 7)\n" +
+					"	(new ABC()).doSomething();\n" +
+					"	^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+					"This API is part of the preview feature \'Test Feature\' which is disabled by default. Use --enable-preview to enable\n" +
+					"----------\n" +
+					"4. ERROR in X.java (at line 7)\n" +
+					"	(new ABC()).doSomething();\n" +
+					"	     ^^^\n" +
+					"This API is part of the preview feature \'Test Feature\' which is disabled by default. Use --enable-preview to enable\n" +
 					"----------\n",
-					classLibs,
+					getClasspathWithPreviewAPI(),
 					true,
 					options);
 		} finally {
@@ -198,25 +188,31 @@ public class PreviewFeatureTest extends AbstractRegressionTest9 {
 	 * Preview API, --enable-preview=true, SuppressWarning=No
 	 */
 	public void test003() {
-		if (this.complianceLevel < ClassFileConstants.getLatestJDKLevel())
-			return;
 		Map<String, String> options = getCompilerOptions();
 		String old = options.get(CompilerOptions.OPTION_EnablePreviews);
 		options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.ENABLED);
-		String[] classLibs = getClasspathWithPreviewAPI();
 		try {
 			runNegativeTest(
 					new String[] {
 							"X.java",
 							"import p.*;\n"+
 							"public class X {\n"+
-									"    Zork z = null;\n" +
-									"    ABC abc = null;\n" +
-									"   public void foo () {\n"+
-									"      (new ABC()).doSomething();\n"+
-									"   }\n"+
-									"}\n",
+							"    Zork z = null;\n" +
+							"    ABC abc = null;\n" +
+							"   public void foo () {\n"+
+							"      (new ABC()).doSomething();\n"+
+							"   }\n"+
+							"}\n",
 					},
+					this.complianceLevel < ClassFileConstants.getLatestJDKLevel()
+					?
+					"----------\n" +
+					"1. ERROR in X.java (at line 0)\n" +
+					"	import p.*;\n" +
+					"	^\n" +
+					"Preview features enabled at an invalid source release level " + CompilerOptions.versionFromJdkLevel(this.complianceLevel) + ", preview can be enabled only at source level " + CompilerOptions.versionFromJdkLevel(ClassFileConstants.getLatestJDKLevel()) + "\n" +
+					"----------\n"
+					:
 					"----------\n" +
 					"1. ERROR in X.java (at line 3)\n" +
 					"	Zork z = null;\n" +
@@ -238,7 +234,7 @@ public class PreviewFeatureTest extends AbstractRegressionTest9 {
 					"	     ^^^\n" +
 					"You are using an API that is part of the preview feature 'Test Feature' and may be removed in future\n" +
 					"----------\n",
-					classLibs,
+					getClasspathWithPreviewAPI(),
 					true,
 					options);
 		} finally {
@@ -249,12 +245,9 @@ public class PreviewFeatureTest extends AbstractRegressionTest9 {
 	 * Preview API, --enable-preview=true, SuppressWarning=Yes
 	 */
 	public void test004() {
-		if (this.complianceLevel < ClassFileConstants.getLatestJDKLevel())
-			return;
 		Map<String, String> options = getCompilerOptions();
 		String old = options.get(CompilerOptions.OPTION_EnablePreviews);
 		options.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.ENABLED);
-		String[] classLibs = getClasspathWithPreviewAPI();
 		try {
 			runNegativeTest(
 					new String[] {
@@ -262,29 +255,39 @@ public class PreviewFeatureTest extends AbstractRegressionTest9 {
 							"import p.*;\n"+
 							"@SuppressWarnings(\"preview\")\n"+
 							"public class X {\n"+
-									"    Zork z = null;\n" +
-									"    ABC abc = null;\n" +
-									"   public void foo () {\n"+
-									"      (new ABC()).doSomething();\n"+
-									"   }\n"+
-									"}\n",
+							"    Zork z = null;\n" +
+							"    ABC abc = null;\n" +
+							"   public void foo () {\n"+
+							"      (new ABC()).doSomething();\n"+
+							"   }\n"+
+							"}\n",
 					},
+					this.complianceLevel < ClassFileConstants.getLatestJDKLevel()
+					?
+					"----------\n" +
+					"1. ERROR in X.java (at line 0)\n" +
+					"	import p.*;\n" +
+					"	^\n" +
+					"Preview features enabled at an invalid source release level " + CompilerOptions.versionFromJdkLevel(this.complianceLevel) + ", preview can be enabled only at source level " + CompilerOptions.versionFromJdkLevel(ClassFileConstants.getLatestJDKLevel()) + "\n" +
+					"----------\n"
+					:
 					"----------\n" +
 					"1. ERROR in X.java (at line 4)\n" +
 					"	Zork z = null;\n" +
 					"	^^^^\n" +
 					"Zork cannot be resolved to a type\n" +
 					"----------\n",
-					classLibs,
+					getClasspathWithPreviewAPI(),
 					true,
 					options);
 		} finally {
 			options.put(CompilerOptions.OPTION_EnablePreviews, old);
 		}
 	}
+	/*
+	 * Primitive in Pattern
+	 */
 	public void test005() {
-		if (this.complianceLevel < ClassFileConstants.JDK16)
-			return;
 		Map<String, String> options = getCompilerOptions();
 		String old = options.get(CompilerOptions.OPTION_EnablePreviews);
 		if (this.complianceLevel == ClassFileConstants.getLatestJDKLevel())
@@ -293,7 +296,7 @@ public class PreviewFeatureTest extends AbstractRegressionTest9 {
 			if (this.complianceLevel < ClassFileConstants.getLatestJDKLevel())
 				assertFalse(JavaFeature.PRIMITIVES_IN_PATTERNS.isSupported(new CompilerOptions(options)));
 			else
-				assertTrue(JavaFeature.PRIMITIVES_IN_PATTERNS.isSupported(new CompilerOptions(options)));
+				assertTrue (JavaFeature.PRIMITIVES_IN_PATTERNS.isSupported(new CompilerOptions(options)));
 		} finally {
 			options.put(CompilerOptions.OPTION_EnablePreviews, old);
 		}

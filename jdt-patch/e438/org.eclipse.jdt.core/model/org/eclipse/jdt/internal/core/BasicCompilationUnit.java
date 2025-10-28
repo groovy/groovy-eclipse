@@ -134,7 +134,7 @@ private void initAttributes(IJavaElement javaElement) {
 		} catch (CoreException e) {
 			this.encoding = null;
 		}
-	} else  {
+	} else {
 		this.encoding = null;
 	}
 }

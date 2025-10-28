@@ -44,7 +44,7 @@ public class CaptureBinding18 extends CaptureBinding {
 		if (upperBounds.length > 0)
 			this.firstBound = upperBounds[0];
 		int numReferenceInterfaces = 0;
-		if (!isConsistentIntersection(upperBounds))
+		if (!isConsistentIntersection(upperBounds, InferenceContext18.SIMULATE_BUG_JDK_8026527))
 			return false;
 		for (TypeBinding aBound : upperBounds) {
 			if (aBound instanceof ReferenceBinding) {

@@ -76,7 +76,7 @@ private static final String STREAMEX_CONTENT =
 	""";
 
 static {
-//	TESTS_NAMES = new String[] { "testBug463320" };
+//	TESTS_NAMES = new String[] { "testBug368709b" };
 //	TESTS_NUMBERS = new int[] { 50 };
 //	TESTS_RANGE = new int[] { 11, -1 };
 }
@@ -7391,5 +7391,71 @@ public void testGH3328_2() {
 			}
 			"""
 		});
+}
+public void testGH4486() {
+	Map<String, String> compilerOptions = getCompilerOptions();
+	compilerOptions.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	runLeakTest(new String[] {
+			"p1/p2/p3/TryWithResources.java",
+			"""
+			package p1.p2.p3;
+
+			import java.io.ByteArrayOutputStream;
+			import java.io.IOException;
+			import java.util.Properties;
+
+			public class TryWithResources {
+			  private static final class BOS
+			    extends ByteArrayOutputStream {
+			    BOS(final int size) {
+			      super(size);
+			    }
+			  }
+
+			  public void exectute() throws IOException {
+			    final Properties p = new Properties();
+			    final BOS bos = new BOS(8192);
+			    p.store(bos, null);
+			    bos.writeTo(System.out);
+			  }
+			}
+			"""
+	},
+	"",
+	compilerOptions);
+}
+public void testGH4511() {
+	Map<String, String> compilerOptions = getCompilerOptions();
+	compilerOptions.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	runLeakTest(new String[] {
+			"Main.java",
+			"""
+			import java.io.BufferedReader;
+			import java.io.BufferedWriter;
+			import java.io.FileReader;
+			import java.io.FileWriter;
+			import java.io.IOException;
+			import java.io.PrintWriter;
+
+			public class Main {
+
+				void foo() throws IOException{
+					BufferedReader in = new BufferedReader(new FileReader("garbage.in"));
+					PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("garbage.out")));
+					int N = Integer.parseInt(in.readLine());
+					System.out.println("N = "+N);
+					int i = 0;
+					for (i = 0; i < N; i++) {
+						System.out.println(i);
+					}
+					System.out.println("i = "+i);
+					in.close();
+					out.close();
+				}
+			}
+			"""
+	},
+	"",
+	compilerOptions);
 }
 }

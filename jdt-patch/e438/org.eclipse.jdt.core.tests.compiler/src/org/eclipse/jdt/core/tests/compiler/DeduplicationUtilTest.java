@@ -179,7 +179,6 @@ public class DeduplicationUtilTest extends TestCase {
 		}
 	}
 
-	@SuppressWarnings("removal")
 	private void forceGc() {
 		System.gc();
 		System.runFinalization();

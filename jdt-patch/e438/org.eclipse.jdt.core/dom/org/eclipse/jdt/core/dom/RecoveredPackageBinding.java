@@ -131,4 +131,9 @@ class RecoveredPackageBinding implements IPackageBinding {
 		}
 	}
 
+	@Override
+	public ITypeBinding findTypeBinding(String nameString) {
+		return null;
+	}
+
 }

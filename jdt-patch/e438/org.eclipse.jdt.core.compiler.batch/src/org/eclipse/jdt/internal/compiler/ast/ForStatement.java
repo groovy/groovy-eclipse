@@ -242,7 +242,8 @@ public class ForStatement extends Statement {
 			}
 		}
 		this.mergedInitStateIndex = currentScope.methodScope().recordInitializationStates(mergedInfo);
-		this.scope.checkUnclosedCloseables(mergedInfo, loopingContext, null, null);
+		if ((this.bits & ASTNode.NeededScope) != 0)
+			this.scope.checkUnclosedCloseables(mergedInfo, loopingContext, null, null);
 		if (this.condition != null)
 			this.condition.updateFlowOnBooleanResult(mergedInfo, false);
 		return mergedInfo;

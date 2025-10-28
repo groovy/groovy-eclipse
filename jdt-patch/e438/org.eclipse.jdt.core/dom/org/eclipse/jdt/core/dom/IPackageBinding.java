@@ -63,21 +63,30 @@ public interface IPackageBinding extends IBinding {
 	public default IModuleBinding getModule() {
 		return null;
 	}
-//	/**
-//	 * Finds and returns the binding for the class or interface with the given
-//	 * name declared in this package.
-//	 * <p>
-//	 * For top-level classes and interfaces, the name here is just the simple
-//	 * name of the class or interface. For nested classes and interfaces, the
-//	 * name is the VM class name (in other words, a name like
-//	 * <code>"Outer$Inner"</code> as used to name the class file; see
-//	 * <code>ITypeBinding.getName</code>).
-//	 * </p>
-//	 *
-//	 * @param name the name of a class or interface
-//	 * @return the type binding for the class or interface with the
-//	 *   given name declared in this package, or <code>null</code>
-//	 *   if there is no such type
-//	 */
-//	public ITypeBinding findTypeBinding(String name);
+	/**
+	 * Finds and returns the binding for the class or interface with the given
+	 * name declared in this package.
+	 * <p>
+	 * For top-level classes and interfaces, the name is just the simple
+	 * name of the class or interface. For member classes and interfaces, the
+	 * name is prefixed by its outer class(es) with a dot separator.
+	 * For example, for the following class:
+	 *</p>
+	 * <pre><code>
+	 *    public class Outer {
+	 *        public static class Inner {
+	 *             public static class Inner2 {}
+	 *        }
+	 *    }
+	 * </code></pre> the first inner class is referenced via:
+	 * <code>"Outer.Inner"</code> and it's inner class can be accessed via
+	 * <code>"Outer.Inner.Inner2"</code>.
+	 *
+	 * @param name the name of a class or interface
+	 * @return the type binding for the class or interface with the
+	 *   given name declared in this package, or <code>null</code>
+	 *   if no such valid type can be found
+	 * @since 3.44
+	 */
+	public ITypeBinding findTypeBinding(String name);
 }

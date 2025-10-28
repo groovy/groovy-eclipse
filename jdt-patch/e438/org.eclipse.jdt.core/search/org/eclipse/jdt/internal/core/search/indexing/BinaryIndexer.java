@@ -966,8 +966,8 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			return descriptor;
 		}
 	}
-	/*
-	 * Modify the array by replacing all occurences of toBeReplaced with newChar
+	/**
+	 * @return a copy of the array, replacing all occurences of toBeReplaced with newChar
 	 */
 	private char[][] replace(char toBeReplaced, char newChar, char[][] array) {
 		if (array == null) return null;
@@ -977,8 +977,8 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 		}
 		return array;
 	}
-	/*
-	 * Modify the array by replacing all occurences of toBeReplaced with newChar
+	/**
+	 * @return a copy of the array, replacing all occurences of toBeReplaced with newChar
 	 */
 	private char[] replace(char toBeReplaced, char newChar, char[] array) {
 		if (array == null) return null;

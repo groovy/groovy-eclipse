@@ -326,7 +326,7 @@ public class ExplicitConstructorCall extends Statement implements Invocation {
 				ConstructorDeclaration constructorDeclaration = (ConstructorDeclaration) methodDeclaration;
 				ExplicitConstructorCall constructorCall = constructorDeclaration.constructorCall;
 				if (constructorCall == null) {
-					constructorCall = constructorDeclaration.getLateConstructorCall(); // JEP 482
+					constructorCall = constructorDeclaration.getLateConstructorCall(); // JEP 513
 				}
 				if (constructorCall != null && constructorCall != this) {
 					hasError = true;

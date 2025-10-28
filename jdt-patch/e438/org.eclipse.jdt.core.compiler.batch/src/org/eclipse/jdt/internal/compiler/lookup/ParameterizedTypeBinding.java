@@ -201,14 +201,17 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 			CompilationUnitScope compilationUnitScope = scope.compilationUnitScope();
 			ASTNode cud = compilationUnitScope.referenceContext;
 
-			for (int i = 0; i < length; i++) {
+			boolean[] freshCaptures = new boolean[length];
+ 			for (int i = 0; i < length; i++) {
 				TypeBinding argument = originalArguments[i];
 				if (argument.kind() == Binding.WILDCARD_TYPE) { // no capture for intersection types
 					final WildcardBinding wildcard = (WildcardBinding) argument;
-					if (wildcard.boundKind == Wildcard.SUPER && wildcard.bound.id == TypeIds.T_JavaLangObject)
+					if (wildcard.boundKind == Wildcard.SUPER && wildcard.bound.id == TypeIds.T_JavaLangObject) {
 						capturedArguments[i] = wildcard.bound;
-					else
+					} else {
 						capturedArguments[i] = this.environment.createCapturedWildcard(wildcard, contextType, start, end, cud, compilationUnitScope::nextCaptureID);
+						freshCaptures[i] = true;
+					}
 				} else {
 					capturedArguments[i] = argument;
 				}
@@ -216,7 +219,7 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 			ParameterizedTypeBinding capturedParameterizedType = this.environment.createParameterizedType(this.type, capturedArguments, enclosingType(), this.typeAnnotations);
 			for (int i = 0; i < length; i++) {
 				TypeBinding argument = capturedArguments[i];
-				if (argument.isCapture()) {
+				if (freshCaptures[i] && argument.isCapture()) {
 					try {
 						CapturingContext.enter(start, end, scope);
 						((CaptureBinding)argument).initializeBounds(scope, capturedParameterizedType);

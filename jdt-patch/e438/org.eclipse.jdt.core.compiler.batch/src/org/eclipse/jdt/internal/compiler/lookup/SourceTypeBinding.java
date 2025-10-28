@@ -441,7 +441,7 @@ public SyntheticFieldBinding addSyntheticFieldForSwitchEnum(char[] fieldName, St
 	if (synthField == null) {
 		synthField = new SyntheticFieldBinding(
 			fieldName,
-			this.scope.createArrayType(TypeBinding.INT, 1),
+			this.scope.createArrayType(TypeBinding.INT,1),
 			(isInterface() ? (ClassFileConstants.AccPublic | ClassFileConstants.AccFinal) : ClassFileConstants.AccPrivate | ClassFileConstants.AccVolatile) | ClassFileConstants.AccStatic | ClassFileConstants.AccSynthetic,
 			this,
 			Constant.NotAConstant);
@@ -581,7 +581,7 @@ private void addDeserializeLambdaMethod() {
 	SyntheticMethodBinding[] deserializeLambdaMethods = (SyntheticMethodBinding[]) this.synthetics[SourceTypeBinding.METHOD_EMUL].get(TypeConstants.DESERIALIZE_LAMBDA);
 	if (deserializeLambdaMethods == null) {
 		SyntheticMethodBinding deserializeLambdaMethod = new SyntheticMethodBinding(this);
-		this.synthetics[SourceTypeBinding.METHOD_EMUL].put(TypeConstants.DESERIALIZE_LAMBDA, deserializeLambdaMethods = new SyntheticMethodBinding[1]);
+		this.synthetics[SourceTypeBinding.METHOD_EMUL].put(TypeConstants.DESERIALIZE_LAMBDA,deserializeLambdaMethods = new SyntheticMethodBinding[1]);
 		deserializeLambdaMethods[0] = deserializeLambdaMethod;
 	}
 }
@@ -980,15 +980,6 @@ private VariableBinding resolveTypeFor(VariableBinding variable) {
 	if ((variable.modifiers & ExtraCompilerModifiers.AccUnresolved) == 0)
 		return variable;
 
-	if ((variable.getAnnotationTagBits() & TagBits.AnnotationDeprecated) != 0)
-		variable.modifiers |= ClassFileConstants.AccDeprecated;
-	if (isViewedAsDeprecated() && !variable.isDeprecated()) {
-		variable.modifiers |= ExtraCompilerModifiers.AccDeprecatedImplicitly;
-		variable.tagBits |= this.tagBits & TagBits.AnnotationTerminallyDeprecated;
-	}
-	if (hasRestrictedAccess())
-		variable.modifiers |= ExtraCompilerModifiers.AccRestrictedAccess;
-
 	MethodScope initializationScope = variable.isStatic()
 		? this.scope.referenceContext.staticInitializerScope
 		: this.scope.referenceContext.initializerScope;
@@ -997,6 +988,7 @@ private VariableBinding resolveTypeFor(VariableBinding variable) {
 		if (variable instanceof FieldBinding field)
 			initializationScope.initializedField = field;
 		AbstractVariableDeclaration variableDeclaration = variable instanceof FieldBinding field ? field.sourceField() : ((RecordComponentBinding) variable).sourceRecordComponent();
+		ASTNode.resolveNullDefaultAnnotations(initializationScope, variableDeclaration.annotations, variable);
 		TypeBinding variableType =
 			variableDeclaration.getKind() == AbstractVariableDeclaration.ENUM_CONSTANT
 				? initializationScope.environment().convertToRawType(this, false /*do not force conversion of enclosing types*/) // enum constant is implicitly of declaring enum type
@@ -1024,6 +1016,15 @@ private VariableBinding resolveTypeFor(VariableBinding variable) {
 		if (leafType instanceof ReferenceBinding && (((ReferenceBinding)leafType).modifiers & ExtraCompilerModifiers.AccGenericSignature) != 0) {
 			variable.modifiers |= ExtraCompilerModifiers.AccGenericSignature;
 		}
+
+		if ((variable.getAnnotationTagBits() & TagBits.AnnotationDeprecated) != 0)
+			variable.modifiers |= ClassFileConstants.AccDeprecated;
+		if (isViewedAsDeprecated() && !variable.isDeprecated()) {
+			variable.modifiers |= ExtraCompilerModifiers.AccDeprecatedImplicitly;
+			variable.tagBits |= this.tagBits & TagBits.AnnotationTerminallyDeprecated;
+		}
+		if (hasRestrictedAccess())
+			variable.modifiers |= ExtraCompilerModifiers.AccRestrictedAccess;
 
 		Annotation [] annotations = variableDeclaration.annotations;
 
@@ -1263,8 +1264,18 @@ public MethodBinding[] getDefaultAbstractMethods() {
 	if (!isPrototype())
 		return this.prototype.getDefaultAbstractMethods();
 
-	return Arrays.stream(this.methods).filter(MethodBinding::isDefaultAbstract)
-				 .toArray(n -> n > 0 ? new MethodBinding[n] : Binding.NO_METHODS);
+	int count = 0;
+	for (int i = this.methods.length; --i >= 0;)
+		if (this.methods[i].isDefaultAbstract())
+			count++;
+	if (count == 0) return Binding.NO_METHODS;
+
+	MethodBinding[] result = new MethodBinding[count];
+	count = 0;
+	for (int i = this.methods.length; --i >= 0;)
+		if (this.methods[i].isDefaultAbstract())
+			result[count++] = this.methods[i];
+	return result;
 }
 
 // NOTE: the return type, arg & exception types of each method of a source type are resolved when needed
@@ -2015,7 +2026,7 @@ public TypeBinding prototype() {
 }
 
 public boolean isPrototype() {
-	return this == this.prototype; //$IDENTITY-COMPARISON$
+	return this == this.prototype;  //$IDENTITY-COMPARISON$
 }
 
 @Override
@@ -2097,7 +2108,7 @@ private MethodBinding resolveTypesWithSuspendedTempErrorHandlingPolicy(MethodBin
 	TypeParameter[] typeParameters = methodDecl.typeParameters();
 	if (typeParameters != null) {
 		methodDecl.scope.connectTypeVariables(typeParameters, true);
-		// perform deferred bound checks for type variables (only done after type variable hierarchy is connected)
+		// Perform deferred bound checks for type variables (only done after type variable hierarchy is connected)
 		for (TypeParameter typeParameter : typeParameters) {
 			typeParameter.checkBounds(methodDecl.scope);
 		}
@@ -2395,7 +2406,7 @@ public void evaluateNullAnnotations() {
 	PackageBinding pkg = getPackage();
 	boolean isInDefaultPkg = (pkg.compoundName == CharOperation.NO_CHAR_CHAR);
 	if (!isPackageInfo) {
-		boolean isInNullnessAnnotationPackage = this.scope.environment().isNullnessAnnotationPackage(pkg);
+		boolean isInNullnessAnnotationPackage = (pkg.extendedTagBits & ExtendedTagBits.IsNullAnnotationPackage) != 0;
 		if (pkg.getDefaultNullness() == NO_NULL_DEFAULT && !isInDefaultPkg && !isInNullnessAnnotationPackage && !(this instanceof NestedTypeBinding)) {
 			ReferenceBinding packageInfo = pkg.getType(TypeConstants.PACKAGE_INFO_NAME, this.module);
 			if (packageInfo == null) {
@@ -2918,7 +2929,7 @@ void verifyMethods(MethodVerifier verifier) {
 	verifier.verify(this);
 
 	for (int i = this.memberTypes.length; --i >= 0;)
-		((SourceTypeBinding) this.memberTypes[i]).verifyMethods(verifier);
+		 ((SourceTypeBinding) this.memberTypes[i]).verifyMethods(verifier);
 }
 
 @Override
@@ -2995,11 +3006,14 @@ public void setNestHost(SourceTypeBinding nestHost) {
 
 public boolean isNestmateOf(SourceTypeBinding other) {
 	CompilerOptions options = this.scope.compilerOptions();
-	if (options.targetJDK < ClassFileConstants.JDK11 || options.complianceLevel < ClassFileConstants.JDK11)
+	if (options.targetJDK < ClassFileConstants.JDK11 ||
+		options.complianceLevel < ClassFileConstants.JDK11)
 		return false; // default false if level less than 11
 
 	SourceTypeBinding otherHost = other.getNestHost();
-	return TypeBinding.equalsEquals(this, other) || TypeBinding.equalsEquals(this.nestHost == null ? this : this.nestHost, otherHost == null ? other : otherHost);
+	return TypeBinding.equalsEquals(this, other) ||
+			TypeBinding.equalsEquals(this.nestHost == null ? this : this.nestHost,
+					otherHost == null ? other : otherHost);
 }
 
 @Override

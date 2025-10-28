@@ -117,7 +117,7 @@ public class InferenceContext18 {
 	/** the invocation being inferred (for 18.5.1 and 18.5.2) */
 	InvocationSite currentInvocation;
 	/** arguments of #currentInvocation, if any */
-	Expression[] invocationArguments;
+	public Expression[] invocationArguments;
 
 	/** The inference variables for which as solution is sought. */
 	InferenceVariable[] inferenceVariables;
@@ -1307,7 +1307,7 @@ public class InferenceContext18 {
 			}
 		}
 		IntersectionTypeBinding18 intersection = (IntersectionTypeBinding18) this.environment.createIntersectionType18(refGlbs);
-		if (ReferenceBinding.isConsistentIntersection(intersection.intersectingTypes))
+		if (ReferenceBinding.isConsistentIntersection(intersection.intersectingTypes, InferenceContext18.SIMULATE_BUG_JDK_8026527))
 			return intersection;
 		return null;
 	}
@@ -1444,10 +1444,10 @@ public class InferenceContext18 {
 		outside.removeAll(cycles);
 
 		Set<ConstraintFormula> candidatesII = new LinkedHashSet<>();
-		// (i): participates in a cycle:
+		// participates in a cycle:
 		candidates: for (ConstraintFormula candidate : cycles) {
 			Collection<InferenceVariable> infVars = candidate.inputVariables(this);
-			// (ii) does not depend on any constraints outside the cycle
+			// does not depend on any constraints outside the cycle
 			for (ConstraintFormula out : outside) {
 				if (dependsOn(infVars, out.outputVariables(this)))
 					continue candidates;

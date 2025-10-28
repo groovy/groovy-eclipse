@@ -1583,6 +1583,204 @@ public void testGH4346() {
 			"""
 	});
 }
+public void testGH4498() {
+	runConformTest(new String[] {
+			"AFactory.java",
+			"""
+			public abstract class AFactory<T> {
+
+			  public <U extends AFactory> U getProcess(Object object) {
+			    return getProcess(object.getClass()); // Type mismatch: cannot convert from AFactory<capture#2-of ?> to U
+			  }
+
+			  public abstract <U extends AFactory<?>> U getProcess(Class<?> classeObject);
+
+			}
+			"""});
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4503
+// [Mockito] Compilation error "Unhandled exception type Throwable"
+public void testIssue4503_differs_from_javac() {
+	runConformTest(new String[] {
+			"X.java",
+			"""
+			public class X {
+
+				interface RetryCallback<T, E extends Throwable> {}
+
+				interface OngoingStubbing<T> {}
+
+			    public void test() {
+			        when(execute(any()));   // <------ Unhandled exception type Throwable
+			    }
+
+			    public static <T> T any() {
+			        return null;
+			    }
+
+			    public static final <T, E extends Throwable> T execute(RetryCallback<T, E> retryCallback) throws E {
+					return null;
+				}
+
+			    public static <T> OngoingStubbing<T> when(T methodCall) {
+			        return null;
+			    }
+			}
+			"""});
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4503
+// [Mockito] Compilation error "Unhandled exception type Throwable"
+public void testIssue4503_matches_with_javac() {
+	runNegativeTest(new String[] {
+			"X.java",
+			"""
+			public class X {
+
+				interface RetryCallback<T, E extends Throwable> {}
+
+				interface OngoingStubbing<T> {}
+
+			    public void test() {
+			        when(execute((RetryCallback<java.lang.Object,java.lang.Throwable>) null));   // <------ Unhandled exception type Throwable
+			    }
+
+			    public static <T> T any() {
+			        return null;
+			    }
+
+			    public static final <T, E extends Throwable> T execute(RetryCallback<T, E> retryCallback) throws E {
+					return null;
+				}
+
+			    public static <T> OngoingStubbing<T> when(T methodCall) {
+			        return null;
+			    }
+			}
+			"""},
+			"----------\n" +
+			"1. ERROR in X.java (at line 8)\r\n" +
+			"	when(execute((RetryCallback<java.lang.Object,java.lang.Throwable>) null));   // <------ Unhandled exception type Throwable\r\n" +
+			"	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Unhandled exception type Throwable\n" +
+			"----------\n");
+}
+public void testGH4533() {
+	runConformTest(new String[] {
+		"X.java",
+		"""
+		import java.util.function.Supplier;
+
+		public class X implements Foo {
+
+			private final Foo delegate;
+			private final Helper helper;
+
+			public X(Helper helper, Foo delegate) {
+				this.helper = helper;
+				this.delegate = delegate;
+			}
+
+			@Override
+			public <T> void setProperty(T value) {
+				helper.run(() -> delegate.setProperty(value));  // Problem detected during type inference: expression has no value
+			}
+		}
+
+		interface Foo {
+			public <T> void setProperty(T value);
+		}
+
+		interface Helper {
+			public void run(Runnable runnable); // comment out this to see a different error
+			public <R> R run(Supplier<R> supplier);
+		}
+		"""
+	});
+}
+public void testGH4281() {
+	runConformTest(new String[] {
+		"InferenceTest.java",
+		"""
+		public class InferenceTest {
+
+			public static class A<I extends C<I, ?>> {}
+
+			public static class B<I extends C<I, ?>, J> {
+				public B(A<I> a) {}
+			}
+
+			public static class C<I extends C<I, J>, J> {}
+
+			public static void test(A<?> a) {
+				new B<>(a);
+			}
+		}
+		"""
+	});
+}
+public void testGH1501() {
+	runNegativeTest(new String[] {
+			"Test.java",
+			"""
+			import java.util.Map;
+			import java.util.function.Function;
+
+			public class Test {
+			  public Outer<Data> errorInLambda() {
+			    Outer<Data> x = new Outer<>(new InnerImpl<>(Map.of()));
+			    // the above one works but on mouse over InnerImpl produces:
+			    // InnerImpl.InnerImpl<Object>(Map<String, Function<Object, Object>> map)
+			    // should be:
+			    // InnerImpl.InnerImpl<Data>(Map<String, Function<Data, Object>> map)
+
+			    Outer<Data> y = new Outer<>(new InnerImpl<Object>(Map.of()));
+			    // but this one correctly errors with:
+			    // Cannot infer type arguments for Outer<>
+
+			    return new Outer<>(new InnerImpl<>(Map.of("x",
+			        data -> data.getValue() // Eclipse error:
+			        // This lambda expression must return a result of type Object
+			        // javac correctly infers Data to both diamonds here and no errors produced
+			        )));
+			  }
+			}
+
+			class Outer<T> {
+			  final Inner<T> inner;
+
+			  Outer(Inner<T> inner) {
+			      this.inner = inner;
+			  }
+			}
+
+			interface Inner<T> {}
+
+			class InnerImpl<T> implements Inner<T> {
+			  InnerImpl(Map<String, Function<T, Object>> map) {}
+			}
+
+			class Data {
+			  String value;
+
+			  Data(String value) {
+			      this.value = value;
+			  }
+
+			  String getValue() {
+			      return value;
+			  }
+			}
+			"""
+		},
+		"""
+		----------
+		1. ERROR in Test.java (at line 12)
+			Outer<Data> y = new Outer<>(new InnerImpl<Object>(Map.of()));
+			                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+		Cannot infer type arguments for Outer<>
+		----------
+		""");
+}
 public static Class<GenericsRegressionTest_9> testClass() {
 	return GenericsRegressionTest_9.class;
 }

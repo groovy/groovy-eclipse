@@ -67,7 +67,7 @@ import org.eclipse.jdt.internal.compiler.util.ManifestAnalyzer;
 public class BatchCompilerTest extends AbstractBatchCompilerTest {
 
 	static {
-//		TESTS_NAMES = new String[] { "test3445" };
+//		TESTS_NAMES = new String[] { "testBug550255" };
 //		TESTS_NUMBERS = new int[] { 306 };
 //		TESTS_RANGE = new int[] { 298, -1 };
 	}

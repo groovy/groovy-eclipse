@@ -101,6 +101,11 @@ public class SearchableEnvironment
 	}
 	/**
 	 * Creates a SearchableEnvironment on the given project
+	 * <p>
+	 * When {@code release} is not {@link JavaProject#NO_RELEASE} then this SearchableEnvironment
+	 * will define a view that prefers to search in locations that best match the given release.
+	 * See {@link NameLookup#findType(String, String, boolean, int, boolean, boolean, boolean, IProgressMonitor, IPackageFragmentRoot[], int)}.
+	 * </p>
 	 */
 	public SearchableEnvironment(JavaProject project, org.eclipse.jdt.core.ICompilationUnit[] workingCopies, boolean excludeTestCode, int release) throws JavaModelException {
 		this.project = project;
@@ -138,6 +143,10 @@ public class SearchableEnvironment
 			}
 		}
 	}
+
+	/**
+	 * Note: this is required for (abandoned) Scala-IDE
+	 */
 	@Deprecated
 	public SearchableEnvironment(JavaProject project, WorkingCopyOwner owner) throws JavaModelException {
 		this(project, owner, false, JavaProject.NO_RELEASE);

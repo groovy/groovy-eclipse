@@ -394,8 +394,31 @@ public final class ImportRewrite {
 	 * @since 3.44
 	 */
 	public static List<String> getPackageNamesForModule(IModuleBinding binding, IJavaProject project) {
-		Set<IModuleBinding> modules= new HashSet<>();
-		String currentModuleName= null;
+		List<IPackageBinding> packageBindings= getPackageBindingsForModule(binding, project);
+		List<String> packageNames= new ArrayList<>();
+		for (IPackageBinding packageBinding : packageBindings) {
+			packageNames.add(packageBinding.getName());
+		}
+		return packageNames;
+	}
+
+	/**
+	 * Calculate the list of package names that are exported, explicitly or implicitly, by a module.
+	 * A package is implicitly exported if it is exported by a module that is reachable from
+	 * the current module via "requires transitive".
+	 *
+	 * @param binding module binding whose exports as queried.
+	 * @param project Java project that defines the module where packages are being imported.
+	 * 	This is needed to respect qualified exports ("exports p to m").
+	 *  If the java project does not declare a module, then importing happens in the unnamed module
+	 *  which cannot leverage any qualified exports.
+	 * @return a list of package names that are exported by the given binding
+	 *
+	 * @since 3.44
+	 */
+	public static List<IPackageBinding> getPackageBindingsForModule(IModuleBinding binding, IJavaProject project) {
+ 		Set<IModuleBinding> modules= new HashSet<>();
+ 		String currentModuleName= null;
 		try {
 			IModuleDescription modDesc= project.getModuleDescription();
 			if (modDesc != null) {
@@ -404,13 +427,13 @@ public final class ImportRewrite {
 		} catch (JavaModelException e) {
 			// if we cannot retrieve a module description then we'll treat it as unnamed module
 		}
-		populateTransitiveModules(binding, modules);
-		Set<String> packageList= new HashSet<>();
-		for (IModuleBinding moduleBinding : modules) {
-			packageList.addAll(getPackageNames(moduleBinding, currentModuleName));
-		}
-		return new ArrayList<>(packageList);
-	}
+ 		populateTransitiveModules(binding, modules);
+		Set<IPackageBinding> packageList= new HashSet<>();
+ 		for (IModuleBinding moduleBinding : modules) {
+			packageList.addAll(getPackages(moduleBinding, currentModuleName));
+ 		}
+ 		return new ArrayList<>(packageList);
+ 	}
 
 	private static void populateTransitiveModules(IModuleBinding binding, Set<IModuleBinding> transitiveModules) {
 		if (transitiveModules.add(binding)) {
@@ -421,20 +444,20 @@ public final class ImportRewrite {
 		}
 	}
 
-	private static Set<String> getPackageNames(IModuleBinding binding, String currentModuleName) {
-		Set<String> result= new HashSet<>();
+	private static Set<IPackageBinding> getPackages(IModuleBinding binding, String currentModuleName) {
+		Set<IPackageBinding> result= new HashSet<>();
 		IPackageBinding[] packageBindings= binding.getExportedPackages();
 		for (IPackageBinding packageBinding : packageBindings) {
 			String[] exportedToList= binding.getExportedTo(packageBinding);
 			if (exportedToList.length > 0) {
 				for (String moduleName : exportedToList) {
 					if (currentModuleName != null && currentModuleName.equals(moduleName)) {
-						result.add(packageBinding.getName());
+						result.add(packageBinding);
 						break;
 					}
 				}
 			} else {
-				result.add(packageBinding.getName());
+				result.add(packageBinding);
 			}
 		}
 		return result;
@@ -481,7 +504,7 @@ public final class ImportRewrite {
 				ImportDeclaration curr= (ImportDeclaration) imports.get(i);
 				StringBuilder buf= new StringBuilder();
 				buf.append(curr.isStatic() ? STATIC_PREFIX : Modifier.isModule(curr.getModifiers()) ? MODULE_PREFIX : NORMAL_PREFIX).append(curr.getName().getFullyQualifiedName());
-				if (curr.isOnDemand()) {
+				if (curr.isOnDemand() && !Modifier.isModule(curr.getModifiers())) {
 					if (buf.length() > 1)
 						buf.append('.');
 					buf.append('*');
@@ -516,8 +539,6 @@ public final class ImportRewrite {
 			this.restoreExistingImports= false;
 		}
 		this.filterImplicitImports= true;
-		// consider that no contexts are used
-		this.useContextToFilterImplicitImports= false;
 
 		this.defaultContext= new ImportRewriteContext() {
 			@Override
@@ -1389,6 +1410,21 @@ public final class ImportRewrite {
 	 */
 	public boolean removeImport(String qualifiedName) {
 		return removeEntry(NORMAL_PREFIX + qualifiedName);
+	}
+
+	/**
+	 * Records to remove a import. No remove is recorded if no such import exists or if such an import is recorded
+	 * to be added. In that case the record of the addition is discarded.
+	 * <p>
+	 * The content of the compilation unit itself is actually not modified
+	 * in any way by this method; rather, the rewriter just records that an import has been removed.
+	 * </p>
+	 * @param qualifiedName The import name to remove.
+	 * @return <code>true</code> is returned of an import of the given name could be found.
+	 * @since 3.44
+	 */
+	public boolean removeModuleImport(String qualifiedName) {
+		return removeEntry(MODULE_PREFIX + qualifiedName);
 	}
 
 	/**

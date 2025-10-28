@@ -9785,40 +9785,39 @@ public void test176() {
 	options);
 }
 
-//https://bugs.eclipse.org/bugs/show_bug.cgi?id=251091
-// Srikanth, Aug 10th 2010. This test does not elicit any name clash error from javac 5 or javac6
-// javac7 reports "X.java:7: name clash: foo(Collection<?>) in X and foo(Collection) in A have the
-// same erasure, yet neither overrides the other"
-// After the fix for https://bugs.eclipse.org/bugs/show_bug.cgi?id=322001, we match
-// JDK7 (7b100) behavior. (earlier we would issue an extra name clash)
 public void test177() {
 	String expectedCompilerLog =
-				"----------\n" +
-				"1. WARNING in X.java (at line 3)\n" +
-				"	class A extends LinkedHashMap {\n" +
-				"	      ^\n" +
-				"The serializable class A does not declare a static final serialVersionUID field of type long\n" +
-				"----------\n" +
-				"2. WARNING in X.java (at line 3)\n" +
-				"	class A extends LinkedHashMap {\n" +
-				"	                ^^^^^^^^^^^^^\n" +
-				"LinkedHashMap is a raw type. References to generic type LinkedHashMap<K,V> should be parameterized\n" +
-				"----------\n" +
-				"3. WARNING in X.java (at line 4)\n" +
-				"	public A foo(Collection c) { return this; }\n" +
-				"	             ^^^^^^^^^^\n" +
-				"Collection is a raw type. References to generic type Collection<E> should be parameterized\n" +
-				"----------\n" +
-				"4. WARNING in X.java (at line 6)\n" +
-				"	class X extends A implements I {\n" +
-				"	      ^\n" +
-				"The serializable class X does not declare a static final serialVersionUID field of type long\n" +
-				"----------\n" +
-				"5. ERROR in X.java (at line 7)\n" +
-				"	@Override public X foo(Collection<?> c) { return this; }\n" +
-				"	                   ^^^^^^^^^^^^^^^^^^^^\n" +
-				"Name clash: The method foo(Collection<?>) of type X has the same erasure as foo(Collection) of type A but does not override it\n" +
-				"----------\n";
+			"----------\n" +
+			"1. WARNING in X.java (at line 3)\n" +
+			"	class A extends LinkedHashMap {\n" +
+			"	      ^\n" +
+			"The serializable class A does not declare a static final serialVersionUID field of type long\n" +
+			"----------\n" +
+			"2. WARNING in X.java (at line 3)\n" +
+			"	class A extends LinkedHashMap {\n" +
+			"	                ^^^^^^^^^^^^^\n" +
+			"LinkedHashMap is a raw type. References to generic type LinkedHashMap<K,V> should be parameterized\n" +
+			"----------\n" +
+			"3. WARNING in X.java (at line 4)\n" +
+			"	public A foo(Collection c) { return this; }\n" +
+			"	             ^^^^^^^^^^\n" +
+			"Collection is a raw type. References to generic type Collection<E> should be parameterized\n" +
+			"----------\n" +
+			"4. ERROR in X.java (at line 6)\n" +
+			"	class X extends A implements I {\n" +
+			"	      ^\n" +
+			"Name clash: The method foo(Collection<?>) of type I has the same erasure as foo(Collection) of type A but does not override it\n" +
+			"----------\n" +
+			"5. WARNING in X.java (at line 6)\n" +
+			"	class X extends A implements I {\n" +
+			"	      ^\n" +
+			"The serializable class X does not declare a static final serialVersionUID field of type long\n" +
+			"----------\n" +
+			"6. ERROR in X.java (at line 7)\n" +
+			"	@Override public X foo(Collection<?> c) { return this; }\n" +
+			"	                   ^^^^^^^^^^^^^^^^^^^^\n" +
+			"Name clash: The method foo(Collection<?>) of type X has the same erasure as foo(Collection) of type A but does not override it\n" +
+			"----------\n";
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -10299,22 +10298,27 @@ public void test186() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=?
 public void test187() {
 	String expectedCompilerLog =
-				"----------\n" +
-				"1. ERROR in X.java (at line 6)\n" +
-				"	double f(List<Integer> l) {return 0;}\n" +
-				"	       ^^^^^^^^^^^^^^^^^^\n" +
-				"Name clash: The method f(List<Integer>) of type Y has the same erasure as f(List<String>) of type X but does not override it\n" +
-				"----------\n" +
-				"2. ERROR in X.java (at line 13)\n" +
-				"	int f(List<String> l) {return 0;}\n" +
-				"	    ^^^^^^^^^^^^^^^^^\n" +
-				"Erasure of method f(List<String>) is the same as another method in type XX\n" +
-				"----------\n" +
-				"3. ERROR in X.java (at line 14)\n" +
-				"	double f(List<Integer> l) {return 0;}\n" +
-				"	       ^^^^^^^^^^^^^^^^^^\n" +
-				"Erasure of method f(List<Integer>) is the same as another method in type XX\n" +
-				"----------\n";
+			"----------\n" +
+			"1. ERROR in X.java (at line 6)\n" +
+			"	double f(List<Integer> l) {return 0;}\n" +
+			"	       ^^^^^^^^^^^^^^^^^^\n" +
+			"Name clash: The method f(List<Integer>) of type Y has the same erasure as f(List<String>) of type X but does not override it\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 11)\n" +
+			"	abstract class Z extends X implements I {}\n" +
+			"	               ^\n" +
+			"Name clash: The method f(List<String>) of type X has the same erasure as f(List<Integer>) of type I but does not override it\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 13)\n" +
+			"	int f(List<String> l) {return 0;}\n" +
+			"	    ^^^^^^^^^^^^^^^^^\n" +
+			"Erasure of method f(List<String>) is the same as another method in type XX\n" +
+			"----------\n" +
+			"4. ERROR in X.java (at line 14)\n" +
+			"	double f(List<Integer> l) {return 0;}\n" +
+			"	       ^^^^^^^^^^^^^^^^^^\n" +
+			"Erasure of method f(List<Integer>) is the same as another method in type XX\n" +
+			"----------\n";
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -11095,6 +11099,16 @@ public void test209() {
 		"	class Bar extends Zork {}\n" +
 		"	                  ^^^^\n" +
 		"Zork cannot be resolved to a type\n" +
+		"----------\n" +
+		"2. ERROR in Concrete.java (at line 11)\n" +
+		"	public class Concrete implements Predicate<Foo>, Function<Bar, Boolean> {\n" +
+		"	             ^^^^^^^^\n" +
+		"Name clash: The method apply(T) of type Predicate<T> has the same erasure as apply(F) of type Function<F,T> but does not override it\n" +
+		"----------\n" +
+		"3. ERROR in Concrete.java (at line 11)\n" +
+		"	public class Concrete implements Predicate<Foo>, Function<Bar, Boolean> {\n" +
+		"	             ^^^^^^^^\n" +
+		"Name clash: The method apply(F) of type Function<F,T> has the same erasure as apply(T) of type Predicate<T> but does not override it\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=321548
@@ -11117,6 +11131,16 @@ public void test210() {
 		},
 		"----------\n" +
 		"1. ERROR in ErasureTest.java (at line 7)\n" +
+		"	public class ErasureTest extends Zork implements Interface1<String>, Interface2<Double> {\n" +
+		"	             ^^^^^^^^^^^\n" +
+		"Name clash: The method hello(T) of type Interface2<T> has the same erasure as hello(T) of type Interface1<T> but does not override it\n" +
+		"----------\n" +
+		"2. ERROR in ErasureTest.java (at line 7)\n" +
+		"	public class ErasureTest extends Zork implements Interface1<String>, Interface2<Double> {\n" +
+		"	             ^^^^^^^^^^^\n" +
+		"Name clash: The method hello(T) of type Interface1<T> has the same erasure as hello(T) of type Interface2<T> but does not override it\n" +
+		"----------\n" +
+		"3. ERROR in ErasureTest.java (at line 7)\n" +
 		"	public class ErasureTest extends Zork implements Interface1<String>, Interface2<Double> {\n" +
 		"	                                 ^^^^\n" +
 		"Zork cannot be resolved to a type\n" +
@@ -13587,5 +13611,50 @@ public void testBug536978_comment5() {
 			"}\n"
 		},
 		errMsg);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4354
+// ECJ fails to detect name clash between Function.andThen and BiFunction.andThen methods with same erasure
+public void testIssue4354() {
+	this.runNegativeTest(
+		new String[] {
+			"Test.java",
+			"""
+			public class Test {
+			    public static void main(String[] strArr) {
+			    }
+			}
+
+			class MyLambda implements java.util.function.Function<Integer, String>,
+			        java.util.function.BiFunction<Integer, Integer, Integer>, java.util.function.Supplier<String>,
+			        java.util.function.Consumer<Integer> {
+
+			    @Override
+			    public String apply(Integer t) {
+			        return "";
+			    }
+
+			    @Override
+			    public Integer apply(Integer t, Integer u) {
+			        return 1;
+			    }
+
+			    @Override
+			    public String get() {
+			        return "";
+			    }
+
+			    @Override
+			    public void accept(Integer t) {
+			    }
+			}
+			"""
+		},
+		"----------\n" +
+		"1. ERROR in Test.java (at line 6)\n" +
+		"	class MyLambda implements java.util.function.Function<Integer, String>,\n" +
+		"	      ^^^^^^^^\n" +
+		"Name clash: The method andThen(Function<? super R,? extends V>) of type BiFunction<T,U,R> has the same erasure as andThen(Function<? super R,? extends V>) of type Function<T,R> but does not override it\n" +
+		"----------\n"
+	);
 }
 }

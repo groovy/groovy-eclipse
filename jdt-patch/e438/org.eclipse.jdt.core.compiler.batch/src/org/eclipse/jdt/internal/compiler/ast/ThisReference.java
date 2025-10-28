@@ -60,7 +60,7 @@ public class ThisReference extends Reference {
 			if (JavaFeature.FLEXIBLE_CONSTRUCTOR_BODIES.isSupported(scope.compilerOptions())) {
 				if (!this.inFieldReference  // this.f is also covered in Reference.checkFieldAccessInEarlyConstructionContext()
 						&& scope.isInsideEarlyConstructionContext(this.resolvedType, false)) {
-					// JEP 482 message
+					// JEP 513 message
 					scope.problemReporter().errorExpressionInEarlyConstructionContext(this);
 					return false;
 				}

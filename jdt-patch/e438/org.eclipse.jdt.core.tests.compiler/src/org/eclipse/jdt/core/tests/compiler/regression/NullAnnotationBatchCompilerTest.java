@@ -188,7 +188,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 
 	// -warn option - regression tests to check option nullAnnot and missingNullDefault
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=372012
-	public void _2551_test315_warn_options() {
+	public void test315_warn_options() {
 		this.runConformTest(
 			new String[] {
 					"p/package-info.java",

@@ -126,7 +126,7 @@ public class QualifiedThisReference extends ThisReference {
 		// Ensure one cannot write code like: B() { super(B.this); }
 		if (depth == 0 || JavaFeature.FLEXIBLE_CONSTRUCTOR_BODIES.isSupported(scope.compilerOptions())) {
 			checkAccess(scope, null);
-		} // if depth>0, prior to JEP 482: path emulation will diagnose bad scenarii
+		} // if depth>0, prior to JEP 513: path emulation will diagnose bad scenarii
 		else if (scope.compilerOptions().complianceLevel >= ClassFileConstants.JDK16) {
 			MethodScope ms = scope.methodScope();
 			if (ms.isStatic)

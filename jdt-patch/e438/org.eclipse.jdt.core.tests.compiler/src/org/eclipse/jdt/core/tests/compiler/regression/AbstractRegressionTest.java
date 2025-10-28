@@ -1762,12 +1762,12 @@ protected static class JavacTestOptions {
 	protected INameEnvironment[] getClassLibs(boolean useDefaultClasspaths, Map<String, String> options) {
 		if (options == null)
 			options = getCompilerOptions();
-		String encoding = getCompilerOptions().get(CompilerOptions.OPTION_Encoding);
+		String encoding = options.get(CompilerOptions.OPTION_Encoding);
 		if ("".equals(encoding))
 			encoding = null;
 		String release = null;
 		if (CompilerOptions.ENABLED.equals(options.get(CompilerOptions.OPTION_Release))) {
-			release = getCompilerOptions().get(CompilerOptions.OPTION_Compliance);
+			release = options.get(CompilerOptions.OPTION_Compliance);
 		}
 		if (useDefaultClasspaths && encoding == null)
 			return DefaultJavaRuntimeEnvironment.create(this.classpaths, release);

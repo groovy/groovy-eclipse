@@ -1211,7 +1211,7 @@ public class DefaultCodeFormatterConstants {
 	/**
 	 * <pre>
 	 * FORMATTER / Option to position parentheses in method declarations
-	 *     - option id:         "org.eclipse.jdt.core.formatter.parentheses_positions_in_method_declaration"
+	 *     - option id:         "org.eclipse.jdt.core.formatter.parentheses_positions_in_method_delcaration"
 	 *     - possible values:   { COMMON_LINES, SEPARATE_LINES_IF_NOT_EMPTY, SEPARATE_LINES_IF_WRAPPED, SEPARATE_LINES, PRESERVE_POSITIONS }
 	 *     - default:           COMMON_LINES
 	 * </pre>
@@ -1294,10 +1294,14 @@ public class DefaultCodeFormatterConstants {
 	/**
 	 * <pre>
 	 * FORMATTER / Option to position parentheses in 'for' statements
-	 *     - option id:         "org.eclipse.jdt.core.formatter.parentheses_positions_in_for_statement"
+	 *     - option id:         "org.eclipse.jdt.core.formatter.parentheses_positions_in_for_statment"
 	 *     - possible values:   { COMMON_LINES,  SEPARATE_LINES_IF_WRAPPED, SEPARATE_LINES, PRESERVE_POSITIONS }
 	 *     - default:           COMMON_LINES
 	 * </pre>
+	 *
+	 * Note that there is a typo ({@code statment} vs. {@code statement})
+	 * in the option name. It has to remain, as fixing it would be a breaking
+	 * change.
 	 * @see #COMMON_LINES
 	 * @see #SEPARATE_LINES_IF_WRAPPED
 	 * @see #SEPARATE_LINES

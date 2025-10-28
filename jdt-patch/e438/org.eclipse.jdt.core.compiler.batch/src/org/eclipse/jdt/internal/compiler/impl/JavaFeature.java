@@ -75,13 +75,14 @@ public enum JavaFeature {
 			new char[][] {},
 			false),
 	/**
-	 * JEP 482. Some locations only check if compliance is sufficient to use this feature,
-	 * to leave checking for actual enablement for later. This is done so we can report
-	 * that a preview feature could potentially kick in even when it is disabled.
+	 * JEP 513.
+	 * As this feature graduated to a standard feature, we optimistically perform analysis using the
+	 * rules of this JEP even below 25. This is done so we can report when certain code will become
+	 * legal when adopting version 25.
 	 * <dl>
 	 * <dt>Initial check in ConstructorDeclaration.resolveStatements();
-	 * <dd>At 23 we always call enterEarlyConstructionContext() to enable many downstream analyses.<br>
-	 * Check actual support only when a "late constructor" has been found.<br>
+	 * <dd>we always call enterEarlyConstructionContext() to enable many downstream analyses.<br>
+	 * Check actual support only when the feature is actually used.<br>
 	 * Similar for analyseCode() and generateCode().
 	 * <dt>Differentiate error messages based on enablement:
 	 * <dd><ul>
@@ -93,7 +94,7 @@ public enum JavaFeature {
 	 * <dd>applies all strategy variants from above
 	 * <dt>Individual exceptions from old rules
 	 * <dd><ul><li>MethodScope.findField()<li>Scope.getBinding(char[], int, InvocationSite, boolean)</ul>
-	 * <dt>Main code gen change in TypeDeclaration.manageEnclosingInstanceAccessIfNecessary()
+	 * <dt>Main code gen addition in TypeDeclaration.addSyntheticArgumentsBeyondEarlyConstructionContext()
 	 * <dd>Only if feature is actually supported, we will generate special synthetic args and fields<br>
 	 * Uses some feature-specific help from BlockScope.getEmulationPath()
 	 * </dl>

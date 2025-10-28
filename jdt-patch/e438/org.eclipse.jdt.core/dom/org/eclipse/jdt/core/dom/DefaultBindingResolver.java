@@ -519,16 +519,8 @@ class DefaultBindingResolver extends BindingResolver {
 	@Override
 	boolean isResolvedTypeInferredFromExpectedType(MethodInvocation methodInvocation) {
 		Object oldNode = this.newAstToOldAst.get(methodInvocation);
-		if (oldNode instanceof MessageSend) {
-			MessageSend messageSend = (MessageSend) oldNode;
-			org.eclipse.jdt.internal.compiler.lookup.MethodBinding methodBinding = messageSend.binding;
-			if (methodBinding instanceof ParameterizedGenericMethodBinding) {
-				ParameterizedGenericMethodBinding genericMethodBinding = (ParameterizedGenericMethodBinding) methodBinding;
-				if (genericMethodBinding.wasInferred && messageSend.typeArguments == null) {
-					return org.eclipse.jdt.internal.compiler.lookup.TypeBinding.notEquals(
-							genericMethodBinding.original().returnType, genericMethodBinding.returnType);
-				}
-			}
+		if (oldNode instanceof MessageSend messageSend && messageSend.typeArguments == null) {
+			return internalIsResolvedTypeInferred(messageSend.binding);
 		}
 		return false;
 	}
@@ -536,12 +528,18 @@ class DefaultBindingResolver extends BindingResolver {
 	@Override
 	boolean isResolvedTypeInferredFromExpectedType(SuperMethodInvocation superMethodInvocation) {
 		Object oldNode = this.newAstToOldAst.get(superMethodInvocation);
-		if (oldNode instanceof MessageSend) {
-			MessageSend messageSend = (MessageSend) oldNode;
-			org.eclipse.jdt.internal.compiler.lookup.MethodBinding methodBinding = messageSend.binding;
-			if (methodBinding instanceof ParameterizedGenericMethodBinding) {
-				ParameterizedGenericMethodBinding genericMethodBinding = (ParameterizedGenericMethodBinding) methodBinding;
-				return genericMethodBinding.inferredReturnType;
+		if (oldNode instanceof MessageSend messageSend && messageSend.typeArguments == null) {
+			return internalIsResolvedTypeInferred(messageSend.binding);
+		}
+		return false;
+	}
+
+	private boolean internalIsResolvedTypeInferred(org.eclipse.jdt.internal.compiler.lookup.MethodBinding methodBinding) {
+		if (methodBinding instanceof ParameterizedGenericMethodBinding) {
+			ParameterizedGenericMethodBinding genericMethodBinding = (ParameterizedGenericMethodBinding) methodBinding;
+			if (genericMethodBinding.wasInferred) {
+				return org.eclipse.jdt.internal.compiler.lookup.TypeBinding.notEquals(
+						genericMethodBinding.original().returnType, genericMethodBinding.returnType);
 			}
 		}
 		return false;
@@ -552,7 +550,12 @@ class DefaultBindingResolver extends BindingResolver {
 		Object oldNode = this.newAstToOldAst.get(classInstanceCreation);
 		if (oldNode instanceof AllocationExpression) {
 			AllocationExpression allocationExpression = (AllocationExpression) oldNode;
-			return allocationExpression.inferredReturnType;
+			if (allocationExpression.wasInferred) {
+				if (allocationExpression.binding instanceof ParameterizedMethodBinding methodBinding) {
+					return org.eclipse.jdt.internal.compiler.lookup.TypeBinding.notEquals(
+								methodBinding.original().declaringClass, methodBinding.declaringClass);
+				}
+			}
 		}
 		return false;
 	}

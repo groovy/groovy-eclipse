@@ -3484,7 +3484,8 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 			return doVisitUnchangedChildren(node);
 		}
 		int startPos= node.getStartPosition() + 3;
-		String separator= getLineDelimiter() + getIndentAtOffset(node.getStartPosition())  + " * "; //$NON-NLS-1$
+		String separator= getLineDelimiter() + getIndentAtOffset(node.getStartPosition())  +
+				((node.getAST().apiLevel() >= AST.JLS23 && node.isMarkdown()) ? "/// " : " * "); //$NON-NLS-1$ //$NON-NLS-2$
 
 		rewriteNodeList(node, Javadoc.TAGS_PROPERTY, startPos, separator, separator);
 		return false;

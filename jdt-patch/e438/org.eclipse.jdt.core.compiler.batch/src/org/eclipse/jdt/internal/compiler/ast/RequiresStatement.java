@@ -62,7 +62,7 @@ public class RequiresStatement extends ModuleStatement {
 				if (CharOperation.equals(TypeConstants.JAVA_DOT_BASE, this.module.moduleName)) {
 					if (this.isStatic()) {
 						scope.problemReporter().modifierRequiresJavaBase(this, null);
-					} else if (this.isTransitive()) { // conditionally legal (requires preview)
+					} else if (this.isTransitive()) { // legal since 25
 						scope.problemReporter().modifierRequiresJavaBase(this, JavaFeature.MODULE_IMPORTS);
 					}
 				}

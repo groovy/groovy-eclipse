@@ -1601,57 +1601,62 @@ public void test043() {
 			"}\n"
 			},
 			"----------\n" +
-			"1. ERROR in X.java (at line 17)\n" +
+			"1. ERROR in X.java (at line 14)\n" +
+			"	interface M extends I, L {}\n" +
+			"	          ^\n" +
+			"Name clash: The method foo(List<Integer>) of type L has the same erasure as foo(List<String>) of type I but does not override it\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 17)\n" +
 			"	interface P extends N, O {}\n" +
 			"	          ^\n" +
 			"Name clash: The method foo(List, Class<?>) of type O has the same erasure as foo(List<String>, Class) of type N but does not override it\n" +
 			"----------\n" +
-			"2. ERROR in X.java (at line 20)\n" +
+			"3. ERROR in X.java (at line 20)\n" +
 			"	interface S extends Q, R {}\n" +
 			"	          ^\n" +
 			"The return types are incompatible for the inherited methods Q.foo(), R.foo()\n" +
 			"----------\n" +
-			"3. ERROR in X.java (at line 23)\n" +
+			"4. ERROR in X.java (at line 23)\n" +
 			"	interface V<P, Q> extends T<P>, U<Q> {}\n" +
 			"	          ^\n" +
 			"Name clash: The method foo(P) of type U<P> has the same erasure as foo(P) of type T<P> but does not override it\n" +
 			"----------\n" +
-			"4. ERROR in X.java (at line 29)\n" +
+			"5. ERROR in X.java (at line 29)\n" +
 			"	B b              =    () -> {};\n" +
 			"	                      ^^^^^\n" +
 			"The target type of this expression must be a functional interface\n" +
 			"----------\n" +
-			"5. ERROR in X.java (at line 32)\n" +
+			"6. ERROR in X.java (at line 32)\n" +
 			"	E e              =    () -> {};\n" +
 			"	                      ^^^^^\n" +
 			"The target type of this expression must be a functional interface\n" +
 			"----------\n" +
-			"6. ERROR in X.java (at line 40)\n" +
+			"7. ERROR in X.java (at line 40)\n" +
 			"	M m              =    (p0) -> {};\n" +
 			"	                      ^^^^^^^\n" +
 			"The target type of this expression must be a functional interface\n" +
 			"----------\n" +
-			"7. ERROR in X.java (at line 43)\n" +
+			"8. ERROR in X.java (at line 43)\n" +
 			"	P p              =    (p0, q0) -> {};\n" +
 			"	                      ^^^^^^^^^^^\n" +
 			"The target type of this expression must be a functional interface\n" +
 			"----------\n" +
-			"8. ERROR in X.java (at line 46)\n" +
+			"9. ERROR in X.java (at line 46)\n" +
 			"	S s              =    () -> {};\n" +
 			"	                      ^^^^^\n" +
 			"The target type of this expression must be a functional interface\n" +
 			"----------\n" +
-			"9. ERROR in X.java (at line 49)\n" +
+			"10. ERROR in X.java (at line 49)\n" +
 			"	V<?,?> v         =    (p0) -> {};\n" +
 			"	                      ^^^^^^^\n" +
 			"The target type of this expression must be a functional interface\n" +
 			"----------\n" +
-			"10. ERROR in X.java (at line 50)\n" +
+			"11. ERROR in X.java (at line 50)\n" +
 			"	W<?,?> w         =    (p0) -> {};\n" +
 			"	                      ^^^^^^^\n" +
 			"The target type of this expression must be a functional interface\n" +
 			"----------\n" +
-			"11. ERROR in X.java (at line 51)\n" +
+			"12. ERROR in X.java (at line 51)\n" +
 			"	X x              =    (p0) -> {};\n" +
 			"	                      ^^^^^^^\n" +
 			"The target type of this expression must be a functional interface\n" +

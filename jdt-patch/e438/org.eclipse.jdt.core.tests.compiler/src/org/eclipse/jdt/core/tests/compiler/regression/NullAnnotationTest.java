@@ -11956,8 +11956,8 @@ public void testIssue3971_8() {
 			this.LIBS,
 			false/*shouldFlush*/);
 }
-// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3971
-// [Records][Null analysis] Verify null analysis plays well with the recent design and implementation changes for Records 2.0
+//https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3971
+//[Records][Null analysis] Verify null analysis plays well with the recent design and implementation changes for Records 2.0
 public void testIssue3971_9a() {
 	if (this.complianceLevel < ClassFileConstants.JDK16)
 		return;
@@ -11985,8 +11985,8 @@ public void testIssue3971_9a() {
 			this.LIBS,
 			false/*shouldFlush*/);
 }
-// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3971
-// [Records][Null analysis] Verify null analysis plays well with the recent design and implementation changes for Records 2.0
+//https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3971
+//[Records][Null analysis] Verify null analysis plays well with the recent design and implementation changes for Records 2.0
 public void testIssue3971_9b() {
 	if (this.complianceLevel < ClassFileConstants.JDK16)
 		return;

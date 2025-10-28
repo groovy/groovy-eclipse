@@ -49,6 +49,7 @@ package org.eclipse.jdt.internal.compiler.ast;
 import static org.eclipse.jdt.internal.compiler.ast.ExpressionContext.INVOCATION_CONTEXT;
 
 import java.util.HashMap;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -169,7 +170,7 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 
 		int argc = this.descriptor.parameters.length;
 
-		LambdaExpression implicitLambda = new LambdaExpression(this.compilationResult, false, (this.binding.modifiers & ExtraCompilerModifiers.AccGenericSignature) != 0);
+		LambdaExpression implicitLambda = new LambdaExpression(this.compilationResult, false);
 		Argument [] arguments = new Argument[argc];
 		for (int i = 0; i < argc; i++)
 			arguments[i] = new Argument(CharOperation.append(ImplicitArgName, Integer.toString(i).toCharArray()), 0, null, 0, true);
@@ -744,8 +745,7 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
         		}
         	}
         	if (argumentsTypeElided() && this.receiverType.isRawType()) {
-        		boolean[] inferredReturnType = new boolean[1];
-	        	someMethod = AllocationExpression.inferDiamondConstructor(scope, this, this.receiverType, this.descriptor.parameters, inferredReturnType);
+	        	someMethod = AllocationExpression.inferDiamondConstructor(scope, this, this.receiverType, this.descriptor.parameters);
         	}
         	if (someMethod == null)
         		someMethod = scope.getConstructor((ReferenceBinding) this.receiverType, descriptorParameters, this);
@@ -974,8 +974,13 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 	private boolean contextHasSyntaxError() {
 		ReferenceContext referenceContext = this.enclosingScope.referenceContext();
 		if (referenceContext instanceof AbstractMethodDeclaration) {
-			if ((((AbstractMethodDeclaration) referenceContext).bits & ASTNode.HasSyntaxErrors) != 0)
-				return true;
+			if ((((AbstractMethodDeclaration) referenceContext).bits & ASTNode.HasSyntaxErrors) != 0) {
+				CategorizedProblem[] syntaxErrors = this.enclosingScope.referenceCompilationUnit().compilationResult.getSyntaxErrors();
+				for (CategorizedProblem syntaxError : syntaxErrors) {
+					if (syntaxError.getSourceStart() >= this.sourceStart && syntaxError.getSourceEnd() <= this.sourceEnd)
+						return true;
+				}
+			}
 		}
 		return false;
 	}

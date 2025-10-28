@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2019 IBM Corporation and others.
+ * Copyright (c) 2005, 2025 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -242,6 +242,13 @@ public class BindingKeyResolver extends BindingKeyParser {
 			public boolean visit(MessageSend messageSend, BlockScope blockScope) {
 				if (checkType(messageSend.resolvedType))
 					return false;
+				MethodBinding mBinding = messageSend.binding;
+				if (mBinding.isValidBinding()) {
+					for (TypeBinding parameter : mBinding.parameters) {
+						if (checkType(parameter))
+							return false;
+					}
+				}
 				return super.visit(messageSend, blockScope);
 			}
 			@Override

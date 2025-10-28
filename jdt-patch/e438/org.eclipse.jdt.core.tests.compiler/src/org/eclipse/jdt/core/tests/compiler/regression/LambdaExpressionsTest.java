@@ -8952,6 +8952,48 @@ public void testIssue4204() throws Exception {
 		verifyClassFile(expectedPartialOutput, "X.class", ClassFileBytesDisassembler.SYSTEM);
 	}
 }
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4433
+// Java 25: java.lang.TypeNotPresentException: Type I not present
+public void testIssue4433() throws Exception {
+
+	this.runConformTest(
+			new String[] {
+					"X.java",
+					"""
+					import java.lang.reflect.Method;
+					import java.util.function.BinaryOperator;
+
+					public class X {
+
+					    public static class A<I> {}
+
+					    public static <I> A<I> a(A<I>... a) {
+					        return null;
+					    }
+
+					    public static <J> J b(BinaryOperator<J> bo) {
+					        return null;
+					    }
+
+					    public <I> void c() {
+					        A<I> d = b(X::a);
+					        System.out.println(d);
+					    }
+
+					    public static void main(String[] args) {
+
+					        Method[] methods = X.class.getDeclaredMethods();
+
+					        for (Method method : methods) {
+					        	if (method.getName().contains("lambda"))
+					        		System.out.println(method.getGenericReturnType());
+					        }
+					    }
+					}
+					""",
+			},
+			"class X$A");
+}
 public static Class testClass() {
 	return LambdaExpressionsTest.class;
 }

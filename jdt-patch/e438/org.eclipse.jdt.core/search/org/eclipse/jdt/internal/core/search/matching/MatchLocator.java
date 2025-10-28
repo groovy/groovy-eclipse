@@ -3196,11 +3196,13 @@ protected void reportMatching(TypeDeclaration type, IJavaElement parent, int acc
 	if (enclosingElement == null) return;
 	boolean enclosesElement = encloses(enclosingElement);
 
+	boolean typeReported = false;
 	// report the type declaration
 	if (accuracy > -1 && enclosesElement) {
 		int offset = type.sourceStart;
 		SearchMatch match = this.patternLocator.newDeclarationMatch(type, enclosingElement, type.binding, accuracy, type.sourceEnd-offset+1, this);
 		report(match);
+		typeReported = true;
 	}
 
 	boolean matchedClassContainer = (this.matchContainer & PatternLocator.CLASS_CONTAINER) != 0;
@@ -3325,7 +3327,9 @@ protected void reportMatching(TypeDeclaration type, IJavaElement parent, int acc
 		for (AbstractMethodDeclaration method : methods) {
 			Integer level = nodeSet.matchingNodes.remove(method);
 			int value = (level != null && matchedClassContainer) ? level.intValue() : -1;
-			reportMatching(method, type, enclosingElement, value, typeInHierarchy, nodeSet);
+			if (!method.isDefaultConstructor() || !typeReported) {
+				reportMatching(method, type, enclosingElement, value, typeInHierarchy, nodeSet);
+			}
 		}
 	}
 
