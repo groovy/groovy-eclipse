@@ -72,6 +72,7 @@ public abstract class Binding {
 	public static final RecordComponentBinding[] NO_COMPONENTS = new RecordComponentBinding[0];
 	public static final FieldBinding[] UNINITIALIZED_FIELDS = new FieldBinding[0];
 	public static final MethodBinding[] UNINITIALIZED_METHODS = new MethodBinding[0];
+	public static final RecordComponentBinding[] UNINITIALIZED_COMPONENTS = new RecordComponentBinding[0];
 	public static final ReferenceBinding[] UNINITIALIZED_REFERENCE_TYPES = new ReferenceBinding[0];
 
 	static final InferenceVariable[] NO_INFERENCE_VARIABLES = new InferenceVariable[0];

@@ -3488,4 +3488,29 @@ public class SuperAfterStatementsTest extends AbstractRegressionTest9 {
 		----------
 		""");
 	}
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4585
+	// [25] ECJ reports a bogus "The final field t may already have been assigned" error
+	public void testIssue4585() {
+		runConformTest(new String[] {
+			"X.java",
+			"""
+			public class X {
+				class TestClass<T extends Object> {
+					T t;
+					TestClass() {}
+
+					TestClass(T v) {
+						switch (0) {
+							case 2:
+								t = v;
+								break;
+						}
+						this(); // Error here
+					}
+				}
+			}
+			"""
+		});
+	}
 }
+

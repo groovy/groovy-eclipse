@@ -55,6 +55,7 @@ import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.ClassFilePool;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.Location;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
@@ -118,7 +119,7 @@ public class LookupEnvironment implements ProblemReasons, TypeConstants {
 	public HashtableOfModule knownModules;		// SHARED
 
 	public CompilationUnitDeclaration unitBeingCompleted = null; // only set while completing units -- ROOT_ONLY
-	public Object missingClassFileLocation = null; // only set when resolving certain references, to help locating problems
+	public Location missingClassFileLocation = null; // only set when resolving certain references, to help locating problems
 	private CompilationUnitDeclaration[] units = new CompilationUnitDeclaration[4]; // ROOT_ONLY
 	private MethodVerifier verifier;
 
@@ -206,7 +207,7 @@ public class LookupEnvironment implements ProblemReasons, TypeConstants {
 				case CHECK_AND_SET_IMPORTS -> scope.checkAndSetImports();
 				case CONNECT_TYPE_HIERARCHY -> scope.connectTypeHierarchy();
 				case SEAL_TYPE_HIERARCHY -> scope.sealTypeHierarchy();
-				case COLLATE_RECORD_COMPONENTS -> scope.collateRecordComponents();
+				case COLLATE_RECORD_COMPONENTS -> scope.buildComponents();
 				case BUILD_FIELDS_AND_METHODS -> scope.buildFieldsAndMethods();
 				case INTEGRATE_ANNOTATIONS_IN_HIERARCHY -> scope.integrateAnnotationsInHierarchy();
 				case CHECK_PARAMETERIZED_TYPES -> scope.checkParameterizedTypes();

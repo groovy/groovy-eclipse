@@ -87,7 +87,9 @@ public class IrritantSet {
 		.set(
 			CompilerOptions.UnlikelyEqualsArgumentType
 			| CompilerOptions.SuppressWarningsNotAnalysed
-			| CompilerOptions.AnnotatedTypeArgumentToUnannotated);
+			| CompilerOptions.AnnotatedTypeArgumentToUnannotated)
+		// group-3 infos enabled by default
+		.set(CompilerOptions.MemberOfDeprecatedType);
 
 		COMPILER_DEFAULT_WARNINGS
 			// group-0 warnings enabled by default

@@ -16,7 +16,6 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
-import org.eclipse.jdt.internal.compiler.lookup.InferenceContext18;
 import org.eclipse.jdt.internal.compiler.lookup.InvocationSite;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.PolyTypeBinding;
@@ -64,6 +63,6 @@ public interface IPolyExpression {
 	*/
 	public TypeBinding resolveType(BlockScope blockScope);
 	// Resolve expression tentatively - should have no lingering side-effects that may impact final resolution !
-	public Expression resolveExpressionExpecting(TypeBinding targetType, Scope scope, InferenceContext18 inferenceContext);
+	public Expression resolveExpressionExpecting(TypeBinding targetType, Scope scope);
 
 }

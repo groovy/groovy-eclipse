@@ -72,21 +72,6 @@ public void initializeDeprecatedAnnotationTagBits() {
 	}
 	if ((this.extendedTagBits & ExtendedTagBits.DeprecatedAnnotationResolved) == 0) {
 		super.initializeDeprecatedAnnotationTagBits();
-		if ((this.tagBits & TagBits.AnnotationDeprecated) == 0) {
-			// check enclosing type
-			updateDeprecationFromEnclosing();
-		}
-	}
-}
-
-public void updateDeprecationFromEnclosing() {
-	ReferenceBinding enclosing = enclosingType();
-	if ((enclosing.extendedTagBits & ExtendedTagBits.DeprecatedAnnotationResolved) == 0) {
-		enclosing.initializeDeprecatedAnnotationTagBits();
-	}
-	if (enclosing.isViewedAsDeprecated()) {
-		this.modifiers |= ExtraCompilerModifiers.AccDeprecatedImplicitly;
-		this.tagBits |= (enclosing.tagBits & TagBits.AnnotationTerminallyDeprecated);
 	}
 }
 

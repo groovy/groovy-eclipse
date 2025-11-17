@@ -335,7 +335,9 @@ class DOMToIndexVisitor extends ASTVisitor {
 	}
 	@Override
 	public boolean visit(SimpleName name) {
-		this.sourceIndexer.addNameReference(name.getIdentifier().toCharArray());
+		char[] id = name.getIdentifier().toCharArray();
+		this.sourceIndexer.addNameReference(id);
+		this.sourceIndexer.addIndexMetaQualification(id, false);
 		return true;
 	}
 	// TODO (cf SourceIndexer and SourceIndexerRequestor)

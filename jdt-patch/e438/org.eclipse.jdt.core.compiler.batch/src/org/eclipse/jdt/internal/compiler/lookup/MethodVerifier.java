@@ -194,8 +194,8 @@ void checkAgainstInheritedMethods(MethodBinding currentMethod, MethodBinding[] m
 			if(inheritedMethod.isSynchronized() && !currentMethod.isSynchronized()) {
 				problemReporter(currentMethod).missingSynchronizedOnInheritedMethod(currentMethod, inheritedMethod);
 			}
-			if (options.reportDeprecationWhenOverridingDeprecatedMethod && inheritedMethod.isViewedAsDeprecated()) {
-				if (!currentMethod.isViewedAsDeprecated() || options.reportDeprecationInsideDeprecatedCode) {
+			if (options.reportDeprecationWhenOverridingDeprecatedMethod && inheritedMethod.isDeprecated()) {
+				if (!currentMethod.isDeprecated() || options.reportDeprecationInsideDeprecatedCode) {
 					// check against the other inherited methods to see if they hide this inheritedMethod
 					ReferenceBinding declaringClass = inheritedMethod.declaringClass;
 					if (declaringClass.isInterface())

@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
@@ -357,7 +358,11 @@ public final boolean isTransient() {
 }
 /* Answer true if the receiver's declaring type is deprecated (or any of its enclosing types)
 */
-
+// GROOVY add
+public final boolean isViewedAsDeprecated() {
+	return isDeprecated();
+}
+// GROOVY end
 public final boolean isUsed() {
 	return (this.modifiers & ExtraCompilerModifiers.AccLocallyUsed) != 0 || this.compoundUseFlag > 0;
 }
@@ -366,12 +371,6 @@ public final boolean isUsed() {
 
 public final boolean isUsedOnlyInCompound() {
 	return (this.modifiers & ExtraCompilerModifiers.AccLocallyUsed) == 0 && this.compoundUseFlag > 0;
-}
-/* Answer true if the receiver has protected visibility
-*/
-
-public final boolean isViewedAsDeprecated() {
-	return (this.modifiers & (ClassFileConstants.AccDeprecated | ExtraCompilerModifiers.AccDeprecatedImplicitly)) != 0;
 }
 /* Answer true if the receiver is a volatile field
 */

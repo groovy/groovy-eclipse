@@ -669,8 +669,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 		FieldBinding[] syntheticFields = currentBinding.syntheticFields();
 		if (syntheticFields != null) {
 			for (FieldBinding syntheticField : syntheticFields) {
-				addFieldInfo(syntheticField);
-				fieldCount++;
+				if (syntheticField.type != null) { // complained already if null, skip field in problem type
+					addFieldInfo(syntheticField);
+					fieldCount++;
+				}
 			}
 		}
 		// write the number of fields

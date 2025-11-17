@@ -13657,4 +13657,58 @@ public void testIssue4354() {
 		"----------\n"
 	);
 }
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4601
+// New Compile Errors in Xtext Dev Workspace with newer jdt versions
+public void testIssue4601() {
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			abstract class TraceForStorageProvider extends AbstractTraceForURIProvider<IFile, StorageAwareTrace> implements ITraceForStorageProvider {
+
+			}
+
+
+			abstract class AbstractTraceForURIProvider<SomeFile, Trace extends AbstractTrace> implements ITraceForURIProvider {
+
+				public Trace getTraceToSource(final SomeFile generatedFile) {
+					return null;
+				}
+			}
+
+			interface ITraceForStorageProvider extends IPlatformSpecificTraceProvider<IStorage, IEclipseTrace> {}
+
+			interface IPlatformSpecificTraceProvider<PlatformResource, Trace extends IPlatformSpecificTrace<PlatformResource, ?>> {
+				Trace getTraceToSource(PlatformResource derivedResource);
+			}
+
+			interface ITraceForURIProvider {}
+
+			interface IFile {}
+
+			interface IStorage {}
+
+			class StorageAwareTrace extends AbstractEclipseTrace {}
+
+			abstract class AbstractEclipseTrace extends AbstractTrace implements IEclipseTrace {}
+			abstract class AbstractTrace implements ITrace {}
+
+			interface ITrace {}
+
+			interface IEclipseTrace extends IPlatformSpecificTrace<IStorage, ILocationInEclipseResource> {}
+
+			interface ILocationInEclipseResource extends IPlatformSpecificLocation<IStorage> {}
+
+			interface IPlatformSpecificTrace<PlatformResource, Location extends IPlatformSpecificLocation<? extends PlatformResource>> extends ITrace {}
+
+			interface IPlatformSpecificLocation<PlatformResource> {}
+			"""
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 1)\n" +
+		"	abstract class TraceForStorageProvider extends AbstractTraceForURIProvider<IFile, StorageAwareTrace> implements ITraceForStorageProvider {\n" +
+		"	               ^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Name clash: The method getTraceToSource(SomeFile) of type AbstractTraceForURIProvider<SomeFile,Trace> has the same erasure as getTraceToSource(PlatformResource) of type IPlatformSpecificTraceProvider<PlatformResource,Trace> but does not override it\n" +
+		"----------\n");
+}
 }

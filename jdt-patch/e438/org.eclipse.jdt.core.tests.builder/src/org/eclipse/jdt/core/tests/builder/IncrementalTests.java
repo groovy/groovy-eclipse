@@ -1781,4 +1781,58 @@ public class IncrementalTests extends BuilderTests {
 		env.removeProject(projectPath);
 	}
 
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4622
+	// Inconsistent classfile encountered on annotated generic types
+	public void testIssue4622() throws JavaModelException {
+		IPath projectPath = env.addProject("Project", "19");
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, "");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		env.addClass(root, "", "Record",
+					"""
+					import java.lang.annotation.Target;
+
+					public record Record(
+					        Patch<@ValidUrlTemplate(value = UrlValidationType.AA, message = "{}") String> labelUrl) {
+					}
+
+					class Patch<T> {
+					    public T field;
+					}
+
+					enum UrlValidationType {
+					    AA, BB
+					}
+
+					@Target(java.lang.annotation.ElementType.TYPE_USE)
+					@interface ValidUrlTemplate {
+					    UrlValidationType value();
+					    String message();
+					}
+					""");
+		fullBuild(projectPath);
+		expectingNoProblems();
+
+		env.addClass(root, "", "Driver",
+				"""
+				public class Driver {
+				    public Record r;
+
+				    public static void main(String [] args) {
+				    	System.out.println("OK!");
+					}
+				}
+				""");
+
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+
+		env.removeProject(projectPath);
+	}
+
 }

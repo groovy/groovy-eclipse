@@ -6008,7 +6008,7 @@ public final class CompletionEngine
 					if (constructor.isSynthetic()) continue next;
 
 					if (this.options.checkDeprecation &&
-							constructor.isViewedAsDeprecated() &&
+							constructor.isDeprecated() &&
 							!scope.isDefinedInSameUnit(constructor.declaringClass))
 						continue next;
 
@@ -6744,7 +6744,7 @@ public final class CompletionEngine
 			return;
 
 		if (this.options.checkDeprecation &&
-				exceptionType.isViewedAsDeprecated() &&
+				exceptionType.isDeprecated() &&
 				!scope.isDefinedInSameUnit(exceptionType))
 			return;
 
@@ -6934,7 +6934,7 @@ public final class CompletionEngine
 					if (constructor.isSynthetic()) continue next;
 
 					if (this.options.checkDeprecation &&
-							constructor.isViewedAsDeprecated() &&
+							constructor.isDeprecated() &&
 							!scope.isDefinedInSameUnit(constructor.declaringClass))
 						continue next;
 
@@ -7085,7 +7085,7 @@ public final class CompletionEngine
 			if (isFailedMatch(fieldName, field.name))	continue next;
 
 			if (this.options.checkDeprecation &&
-					field.isViewedAsDeprecated() &&
+					field.isDeprecated() &&
 					!scope.isDefinedInSameUnit(field.declaringClass))
 				continue next;
 
@@ -8363,7 +8363,7 @@ public final class CompletionEngine
 			if (isFailedMatch(fieldName, field.name))	continue next;
 
 			if (this.options.checkDeprecation &&
-					field.isViewedAsDeprecated() &&
+					field.isDeprecated() &&
 					!scope.isDefinedInSameUnit(field.declaringClass))
 				continue next;
 
@@ -8607,7 +8607,7 @@ public final class CompletionEngine
 			if (isFailedMatch(typeName, memberType.sourceName))
 				continue next;
 
-			if (this.options.checkDeprecation && memberType.isViewedAsDeprecated()) continue next;
+			if (this.options.checkDeprecation && memberType.isDeprecated()) continue next;
 
 			if (this.options.checkVisibility
 				&& !memberType.canBeSeenBy(this.unitScope.fPackage))
@@ -8663,7 +8663,7 @@ public final class CompletionEngine
 			if (isFailedMatch(fieldName, field.name))
 				continue next;
 
-			if (this.options.checkDeprecation && field.isViewedAsDeprecated()) continue next;
+			if (this.options.checkDeprecation && field.isDeprecated()) continue next;
 
 			if (this.options.checkVisibility
 				&& !field.canBeSeenBy(this.unitScope.fPackage))
@@ -8716,7 +8716,7 @@ public final class CompletionEngine
 
 			if (!method.isStatic()) continue next;
 
-			if (this.options.checkDeprecation && method.isViewedAsDeprecated()) continue next;
+			if (this.options.checkDeprecation && method.isDeprecated()) continue next;
 
 			if (this.options.checkVisibility
 				&& !method.canBeSeenBy(this.unitScope.fPackage)) continue next;
@@ -9236,7 +9236,7 @@ public final class CompletionEngine
             }
 
 			if (this.options.checkDeprecation &&
-					method.isViewedAsDeprecated() &&
+					method.isDeprecated() &&
 					!scope.isDefinedInSameUnit(method.declaringClass))
 				continue next;
 
@@ -9396,7 +9396,7 @@ public final class CompletionEngine
 			if (method.isConstructor()) continue next;
 
 			if (this.options.checkDeprecation &&
-					method.isViewedAsDeprecated() &&
+					method.isDeprecated() &&
 					!scope.isDefinedInSameUnit(method.declaringClass))
 				continue next;
 
@@ -9856,7 +9856,7 @@ public final class CompletionEngine
 				if (method.isConstructor()) continue next;
 
 				if (this.options.checkDeprecation &&
-						method.isViewedAsDeprecated() &&
+						method.isDeprecated() &&
 						!scope.isDefinedInSameUnit(method.declaringClass))
 					continue next;
 
@@ -10147,7 +10147,7 @@ public final class CompletionEngine
 			if (!method.isStatic()) continue next;
 
 			if (this.options.checkDeprecation &&
-					method.isViewedAsDeprecated() &&
+					method.isDeprecated() &&
 					!scope.isDefinedInSameUnit(method.declaringClass))
 				continue next;
 
@@ -10653,7 +10653,7 @@ public final class CompletionEngine
 				continue next;
 
 			if (this.options.checkDeprecation &&
-					memberType.isViewedAsDeprecated() &&
+					memberType.isDeprecated() &&
 					!scope.isDefinedInSameUnit(memberType))
 				continue next;
 
@@ -11428,7 +11428,7 @@ public final class CompletionEngine
 		ReferenceBinding refBinding = (ReferenceBinding) ref.resolvedType;
 		if(refBinding != null) {
 			if (this.options.checkDeprecation &&
-					refBinding.isViewedAsDeprecated() &&
+					refBinding.isDeprecated() &&
 					!scope.isDefinedInSameUnit(refBinding))
 				return;
 
@@ -12083,7 +12083,7 @@ public final class CompletionEngine
 						&& !(this.options.camelCaseMatch && CharOperation.camelCaseMatch(token, sourceType.sourceName)))	continue;
 
 				if (this.options.checkDeprecation &&
-						sourceType.isViewedAsDeprecated() &&
+						sourceType.isDeprecated() &&
 						!scope.isDefinedInSameUnit(sourceType))
 					continue;
 
@@ -12241,7 +12241,7 @@ public final class CompletionEngine
 						continue next;
 					}
 					if (this.options.checkDeprecation &&
-							refBinding.isViewedAsDeprecated() &&
+							refBinding.isDeprecated() &&
 							!scope.isDefinedInSameUnit(refBinding))
 						continue next;
 

@@ -1705,4 +1705,30 @@ public class LocalStaticsTest extends AbstractRegressionTest {
 			"Hi from MyTest\n" +
 			"Hi from EnumTester");
 	}
+	// ECJ reports about non-existing modifiers on a local class in a switch expression
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4584
+	public void testIssue4584() throws Exception {
+		runConformTest(
+			new String[] {
+					"X.java",
+					"""
+					public interface X {
+					    int i = switch (0) {
+					        case 2 -> {
+					            class ParentLocal { // This is rejected
+					            }
+					            yield 1;
+					        }
+					        default -> {
+					            yield 0;
+					        }
+					    };
+					    public static void main(String [] args) {
+					        System.out.println("OK!");
+					    }
+					}
+					"""
+				},
+			"OK!");
+	}
 }

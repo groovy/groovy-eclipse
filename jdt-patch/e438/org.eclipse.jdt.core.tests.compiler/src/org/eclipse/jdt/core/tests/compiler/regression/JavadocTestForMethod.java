@@ -136,11 +136,6 @@ public class JavadocTestForMethod extends JavadocTest {
 		"	* @see Y#y\n" +
 		"	       ^\n" +
 		"Javadoc: The type Y is deprecated\n" +
-		"----------\n" +
-		"4. ERROR in Z.java (at line 6)\n" +
-		"	* @see Y#y\n" +
-		"	         ^\n" +
-		"Javadoc: The field Y.y is deprecated\n" +
 		"----------\n",
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
 			);

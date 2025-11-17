@@ -91,7 +91,6 @@ public class AllocationExpression extends Expression implements IPolyExpression,
 	 // hold on to this context from invocation applicability inference until invocation type inference (per method candidate):
 	private Map<ParameterizedGenericMethodBinding, InferenceContext18> inferenceContexts;
 	public HashMap<TypeBinding, MethodBinding> solutionsPerTargetType;
-	private InferenceContext18 outerInferenceContext; // resolving within the context of an outer (lambda) inference?
 	public boolean argsContainCast;
 	public TypeBinding[] argumentTypes = Binding.NO_PARAMETERS;
 	public boolean argumentsHaveErrors = false;
@@ -855,7 +854,6 @@ public void cleanUpInferenceContexts() {
 		value.cleanUp();
 	}
 	this.inferenceContexts = null;
-	this.outerInferenceContext = null;
 	this.solutionsPerTargetType = null;
 }
 
@@ -866,7 +864,7 @@ public ExpressionContext getExpressionContext() {
 }
 @Override
 public InferenceContext18 freshInferenceContext(Scope scope) {
-	return new InferenceContext18(scope, this.arguments, this, this.outerInferenceContext);
+	return new InferenceContext18(scope, this.arguments, this);
 }
 @Override
 public int nameSourceStart() {

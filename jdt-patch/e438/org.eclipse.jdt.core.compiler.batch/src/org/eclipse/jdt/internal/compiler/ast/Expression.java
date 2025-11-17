@@ -1115,7 +1115,7 @@ public TypeBinding resolveTypeExpecting(BlockScope scope, TypeBinding expectedTy
 	return expressionType;
 }
 
-public Expression resolveExpressionExpecting(TypeBinding targetType, Scope scope, InferenceContext18 context) {
+public Expression resolveExpressionExpecting(TypeBinding targetType, Scope scope) {
 	return this; // subclasses should implement for a better resolved expression if required.
 }
 

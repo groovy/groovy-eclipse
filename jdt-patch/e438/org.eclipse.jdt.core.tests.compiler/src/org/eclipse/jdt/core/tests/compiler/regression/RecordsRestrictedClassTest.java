@@ -10942,7 +10942,7 @@ public void testIssue4290() throws Exception {
 
 }
 // https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4412
-// Internal Compile error problem since 2025-09 
+// Internal Compile error problem since 2025-09
 public void testIssue4412() throws Exception {
 	this.runConformTest(
 		new String[] {
@@ -10979,5 +10979,713 @@ public void testIssue4412() throws Exception {
 	            },
 				"OK!");
 
+}
+public void testDeprecation_type() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+		"X.java",
+		"""
+		@Deprecated record R(int i, boolean f) {}
+		public class X {
+			R test() {
+				return new R(1,false);
+			}
+		}
+		"""
+		};
+	runner.expectedCompilerLog =
+		"""
+		----------
+		1. WARNING in X.java (at line 3)
+			R test() {
+			^
+		The type R is deprecated
+		----------
+		2. WARNING in X.java (at line 4)
+			return new R(1,false);
+			           ^
+		The type R is deprecated
+		----------
+		""";
+	runner.runWarningTest();
+}
+public void testDeprecation_altCtor() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+		"X.java",
+		"""
+		record R(int i, boolean f) {
+			@Deprecated R(int i) {
+				this(i, i>0);
+			}
+			R {
+				i = Math.abs(i);
+			}
+		}
+		public class X {
+			R test(int in) {
+				return switch(in) {
+					case 0 -> new R(0);
+					case 1 -> new R(1, false);
+					default -> null;
+				};
+			}
+		}
+		"""
+		};
+	runner.expectedCompilerLog =
+		"""
+		----------
+		1. WARNING in X.java (at line 12)
+			case 0 -> new R(0);
+			              ^
+		The constructor R(int) is deprecated
+		----------
+		""";
+	runner.runWarningTest();
+}
+public void testDeprecation_compactCtor() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+		"X.java",
+		"""
+		record R(int i, boolean f) {
+			R(int i) {
+				this(i, i>0);
+			}
+			@Deprecated R {
+				i = Math.abs(i);
+			}
+		}
+		public class X {
+			R test(int in) {
+				return switch(in) {
+					case 0 -> new R(0);
+					case 1 -> new R(1, false);
+					default -> null;
+				};
+			}
+		}
+		"""
+		};
+	runner.expectedCompilerLog =
+		"""
+		----------
+		1. WARNING in X.java (at line 13)
+			case 1 -> new R(1, false);
+			              ^
+		The constructor R(int, boolean) is deprecated
+		----------
+		""";
+	runner.runWarningTest();
+}
+public void testDeprecation_accessor() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+		"X.java",
+		"""
+		record R(int i, boolean f) {
+			@Deprecated public int i() {
+				return this.i;
+			}
+		}
+		public class X {
+			int test1() {
+				return new R(1,false).i();
+			}
+			boolean test2() {
+				return new R(1,false).f();
+			}
+		}
+		"""
+		};
+	runner.expectedCompilerLog =
+		"""
+		----------
+		1. WARNING in X.java (at line 8)
+			return new R(1,false).i();
+			                      ^
+		The method i() from the type R is deprecated
+		----------
+		""";
+	runner.runWarningTest();
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4551
+// ECJ fails on Record used within Enum in Annotation
+public void testIssue4551() throws Exception {
+	this.runNegativeTest(
+		new String[] {
+					"X.java",
+					"""
+					public record X(
+					  @ExampleAnnotation(value = { ExampleEnum.VALUE })
+					  String string) {
+
+					  @Target(ElementType.FIELD)
+					  public @interface ExampleAnnotation {
+					  	ExampleEnum[] value();
+					  }
+					}
+
+					enum ExampleEnum {
+					  VALUE(new SecondExampleRecord());
+
+					  private ExampleEnum(SecondExampleRecord exampleRecord) { }
+					}
+
+					record SecondExampleRecord() {
+					}
+					""",
+	            },
+				"----------\n" +
+				"1. ERROR in X.java (at line 5)\r\n" +
+				"	@Target(ElementType.FIELD)\r\n" +
+				"	 ^^^^^^\n" +
+				"Target cannot be resolved to a type\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 5)\r\n" +
+				"	@Target(ElementType.FIELD)\r\n" +
+				"	        ^^^^^^^^^^^\n" +
+				"ElementType cannot be resolved to a variable\n" +
+				"----------\n");
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4551
+// ECJ fails on Record used within Enum in Annotation
+public void testIssue4551_2() throws Exception {
+	this.runConformTest(
+		new String[] {
+					"mypackage/Test.java",
+					"""
+					package mypackage;
+
+
+					import java.lang.annotation.Target;
+					import java.lang.reflect.Method;
+					import java.lang.reflect.Modifier;
+
+					import static java.lang.annotation.ElementType.*;
+					import java.lang.annotation.Retention;
+					import java.lang.annotation.RetentionPolicy;
+					import java.math.BigDecimal;
+
+					import static mypackage.Test.TOPIC;
+
+
+					public record Test(
+					        @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+					        @JsonProperty("test") BigDecimal test
+
+					) {
+					        public static final String TOPIC = "test";
+
+					        public static void main(String[] args) {
+					        	Method[] methods = Test.class.getDeclaredMethods();
+
+					            for (Method method : methods) {
+					                // Get modifiers, return type, and name
+					                String modifiers = Modifier.toString(method.getModifiers());
+					                String returnType = method.getReturnType().getSimpleName();
+					                String name = method.getName();
+
+					                // Get parameter types
+					                Class<?>[] params = method.getParameterTypes();
+					                StringBuilder paramList = new StringBuilder();
+					                for (int i = 0; i < params.length; i++) {
+					                    if (i > 0) paramList.append(", ");
+					                    paramList.append(params[i].getSimpleName());
+					                }
+
+					                // Print it out
+					                System.out.printf("%s %s %s(%s)%n", modifiers, returnType, name, paramList);
+					            }
+							}
+					}
+
+
+					@Target({FIELD, METHOD, PARAMETER, TYPE, ANNOTATION_TYPE})
+					@Retention(RetentionPolicy.RUNTIME)
+					@interface Schema {
+						enum RequiredMode {
+						    AUTO,
+						    REQUIRED,
+						    NOT_REQUIRED;
+						}
+						static enum AccessMode {
+					        AUTO,
+					        READ_ONLY,
+					        WRITE_ONLY,
+					        READ_WRITE;
+					    }
+					    String name() default "";
+					    String title() default "";
+					    String description() default "";
+					    Class<?> implementation() default Void.class;
+					    AccessMode accessMode() default AccessMode.AUTO;
+					    RequiredMode requiredMode() default RequiredMode.AUTO;
+					    boolean hidden() default false;
+					    // … many more elements …
+					}
+
+					@Target({ANNOTATION_TYPE, FIELD, METHOD, PARAMETER})
+					@Retention(RetentionPolicy.RUNTIME)
+					@interface JsonProperty {
+					    String value() default "";
+					    boolean required() default false;
+					    int index() default -1;
+					    String defaultValue() default "";
+					   // Access access() default Access.AUTO;
+					    String namespace() default "";
+					    // …
+					}
+					""",
+	            },
+				"public static void main(String[])\n" +
+				"public final boolean equals(Object)\n" +
+				"public final String toString()\n" +
+				"public final int hashCode()\n" +
+				"public BigDecimal test()");
+
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4616
+// NPE because annotation.resolvedType is null
+public void testIssue4616() throws Exception {
+	this.runConformTest(
+		new String[] {
+					"test/Broken.java",
+					"""
+					package test;
+
+					import test.Schema.RequiredMode;
+
+					public record Broken(@Schema(description = "str", requiredMode = RequiredMode.REQUIRED) @JsonProperty("str")  Broken.UpsertEnvironmentDto environment) {
+						public record UpsertEnvironmentDto() {}
+						public static void main(String [] args) {
+						    System.out.println("OK!");
+						}
+					}
+
+					@interface JsonProperty {
+						String value();
+					}
+
+					@interface Schema {
+
+					    RequiredMode requiredMode();
+
+					    String description();
+
+					    enum RequiredMode {
+					        REQUIRED,
+					    }
+					}
+					""",
+	            },
+				"OK!");
+
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4616
+// NPE because annotation.resolvedType is null
+public void testIssue4616_fuller() throws Exception {
+	this.runConformTest(
+		new String[] {
+					"test/Broken.java",
+					"""
+					package test;
+
+					import test.Schema.RequiredMode;
+
+					import java.util.Map;
+
+					public record Broken(
+
+					        @Schema(description = "str", requiredMode = RequiredMode.NOT_REQUIRED) @JsonProperty("str")  String externalAccountId,
+
+					        @Schema(description = "str", requiredMode = RequiredMode.REQUIRED) @JsonProperty("str") String productId,
+
+					        @Schema(description = "str", requiredMode = RequiredMode.REQUIRED) @JsonProperty("str") Broken.UpsertEnvironmentDto environment,
+
+					        @Schema(description = \"\"\"
+					            str\"\"\", requiredMode = RequiredMode.NOT_REQUIRED) @JsonProperty("str") Map<String, String> metadata) {
+					    public record UpsertEnvironmentDto(
+
+					            @Schema(description = "str", requiredMode = RequiredMode.REQUIRED) @JsonProperty("str") String id,
+
+					            @Schema(description = "str", requiredMode = RequiredMode.REQUIRED) @JsonProperty("str") String url) {
+
+					    }
+					    public static void main(String [] args) {
+						    System.out.println("OK!");
+						}
+					}
+
+
+					@interface JsonProperty {
+						String value();
+					}
+
+					@interface Schema {
+
+					    RequiredMode requiredMode();
+
+					    String description();
+
+					    enum RequiredMode {
+					        REQUIRED,
+					        NOT_REQUIRED,
+					    }
+					}
+					""",
+	            },
+				"OK!");
+	String expectedOutput =
+					"  // Field descriptor #6 Ljava/lang/String;\n" +
+					"  private final java.lang.String externalAccountId;\n" +
+					"    RuntimeInvisibleAnnotations: \n" +
+					"      #8 @test.Schema(\n" +
+					"        #9 description=\"str\" (constant type)\n" +
+					"        #11 requiredMode=test.Schema.RequiredMode.NOT_REQUIRED(enum type #12.#13)\n" +
+					"      )\n" +
+					"      #14 @test.JsonProperty(\n" +
+					"        #15 value=\"str\" (constant type)\n" +
+					"      )\n" +
+					"  \n" +
+					"  // Field descriptor #6 Ljava/lang/String;\n" +
+					"  private final java.lang.String productId;\n" +
+					"    RuntimeInvisibleAnnotations: \n" +
+					"      #8 @test.Schema(\n" +
+					"        #9 description=\"str\" (constant type)\n" +
+					"        #11 requiredMode=test.Schema.RequiredMode.REQUIRED(enum type #12.#17)\n" +
+					"      )\n" +
+					"      #14 @test.JsonProperty(\n" +
+					"        #15 value=\"str\" (constant type)\n" +
+					"      )\n" +
+					"  \n" +
+					"  // Field descriptor #19 Ltest/Broken$UpsertEnvironmentDto;\n" +
+					"  private final test.Broken$UpsertEnvironmentDto environment;\n" +
+					"    RuntimeInvisibleAnnotations: \n" +
+					"      #8 @test.Schema(\n" +
+					"        #9 description=\"str\" (constant type)\n" +
+					"        #11 requiredMode=test.Schema.RequiredMode.REQUIRED(enum type #12.#17)\n" +
+					"      )\n" +
+					"      #14 @test.JsonProperty(\n" +
+					"        #15 value=\"str\" (constant type)\n" +
+					"      )\n" +
+					"  \n" +
+					"  // Field descriptor #21 Ljava/util/Map;\n" +
+					"  // Signature: Ljava/util/Map<Ljava/lang/String;Ljava/lang/String;>;\n" +
+					"  private final java.util.Map metadata;\n" +
+					"    RuntimeInvisibleAnnotations: \n" +
+					"      #8 @test.Schema(\n" +
+					"        #9 description=\"str\" (constant type)\n" +
+					"        #11 requiredMode=test.Schema.RequiredMode.NOT_REQUIRED(enum type #12.#13)\n" +
+					"      )\n" +
+					"      #14 @test.JsonProperty(\n" +
+					"        #15 value=\"str\" (constant type)\n" +
+					"      )\n" +
+					"  \n" +
+					"  // Method descriptor #25 ([Ljava/lang/String;)V\n" +
+					"  // Stack: 2, Locals: 1\n" +
+					"  public static void main(java.lang.String[] args);\n" +
+					"    0  getstatic java.lang.System.out : java.io.PrintStream [27]\n" +
+					"    3  ldc <String \"OK!\"> [33]\n" +
+					"    5  invokevirtual java.io.PrintStream.println(java.lang.String) : void [35]\n" +
+					"    8  return\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 25]\n" +
+					"        [pc: 8, line: 26]\n" +
+					"      Local variable table:\n" +
+					"        [pc: 0, pc: 9] local: args index: 0 type: java.lang.String[]\n" +
+					"  \n" +
+					"  // Method descriptor #45 ()Ljava/lang/String;\n" +
+					"  // Stack: 1, Locals: 1\n" +
+					"  public java.lang.String externalAccountId();\n" +
+					"    0  aload_0 [this]\n" +
+					"    1  getfield test.Broken.externalAccountId : java.lang.String [46]\n" +
+					"    4  areturn\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 9]\n" +
+					"    RuntimeInvisibleAnnotations: \n" +
+					"      #8 @test.Schema(\n" +
+					"        #9 description=\"str\" (constant type)\n" +
+					"        #11 requiredMode=test.Schema.RequiredMode.NOT_REQUIRED(enum type #12.#13)\n" +
+					"      )\n" +
+					"      #14 @test.JsonProperty(\n" +
+					"        #15 value=\"str\" (constant type)\n" +
+					"      )\n" +
+					"  \n" +
+					"  // Method descriptor #45 ()Ljava/lang/String;\n" +
+					"  // Stack: 1, Locals: 1\n" +
+					"  public java.lang.String productId();\n" +
+					"    0  aload_0 [this]\n" +
+					"    1  getfield test.Broken.productId : java.lang.String [48]\n" +
+					"    4  areturn\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 11]\n" +
+					"    RuntimeInvisibleAnnotations: \n" +
+					"      #8 @test.Schema(\n" +
+					"        #9 description=\"str\" (constant type)\n" +
+					"        #11 requiredMode=test.Schema.RequiredMode.REQUIRED(enum type #12.#17)\n" +
+					"      )\n" +
+					"      #14 @test.JsonProperty(\n" +
+					"        #15 value=\"str\" (constant type)\n" +
+					"      )\n" +
+					"  \n" +
+					"  // Method descriptor #50 ()Ltest/Broken$UpsertEnvironmentDto;\n" +
+					"  // Stack: 1, Locals: 1\n" +
+					"  public test.Broken.UpsertEnvironmentDto environment();\n" +
+					"    0  aload_0 [this]\n" +
+					"    1  getfield test.Broken.environment : test.Broken.UpsertEnvironmentDto [51]\n" +
+					"    4  areturn\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 13]\n" +
+					"    RuntimeInvisibleAnnotations: \n" +
+					"      #8 @test.Schema(\n" +
+					"        #9 description=\"str\" (constant type)\n" +
+					"        #11 requiredMode=test.Schema.RequiredMode.REQUIRED(enum type #12.#17)\n" +
+					"      )\n" +
+					"      #14 @test.JsonProperty(\n" +
+					"        #15 value=\"str\" (constant type)\n" +
+					"      )\n" +
+					"  \n" +
+					"  // Method descriptor #53 ()Ljava/util/Map;\n" +
+					"  // Signature: ()Ljava/util/Map<Ljava/lang/String;Ljava/lang/String;>;\n" +
+					"  // Stack: 1, Locals: 1\n" +
+					"  public java.util.Map metadata();\n" +
+					"    0  aload_0 [this]\n" +
+					"    1  getfield test.Broken.metadata : java.util.Map [55]\n" +
+					"    4  areturn\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 16]\n" +
+					"    RuntimeInvisibleAnnotations: \n" +
+					"      #8 @test.Schema(\n" +
+					"        #9 description=\"str\" (constant type)\n" +
+					"        #11 requiredMode=test.Schema.RequiredMode.NOT_REQUIRED(enum type #12.#13)\n" +
+					"      )\n" +
+					"      #14 @test.JsonProperty(\n" +
+					"        #15 value=\"str\" (constant type)\n" +
+					"      )\n" +
+					"  \n" +
+					"  // Method descriptor #45 ()Ljava/lang/String;\n" +
+					"  // Stack: 2, Locals: 1\n" +
+					"  public final java.lang.String toString();\n" +
+					"    0  aload_0 [this]\n" +
+					"    1  invokedynamic 0 toString(test.Broken) : java.lang.String [58]\n" +
+					"    6  areturn\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 1]\n" +
+					"  \n" +
+					"  // Method descriptor #62 ()I\n" +
+					"  // Stack: 2, Locals: 1\n" +
+					"  public final int hashCode();\n" +
+					"    0  aload_0 [this]\n" +
+					"    1  invokedynamic 0 hashCode(test.Broken) : int [63]\n" +
+					"    6  ireturn\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 1]\n" +
+					"  \n" +
+					"  // Method descriptor #67 (Ljava/lang/Object;)Z\n" +
+					"  // Stack: 2, Locals: 2\n" +
+					"  public final boolean equals(java.lang.Object arg0);\n" +
+					"    0  aload_0 [this]\n" +
+					"    1  aload_1 [arg0]\n" +
+					"    2  invokedynamic 0 equals(test.Broken, java.lang.Object) : boolean [68]\n" +
+					"    7  ireturn\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 1]\n" +
+					"  \n" +
+					"  // Method descriptor #72 (Ljava/lang/String;Ljava/lang/String;Ltest/Broken$UpsertEnvironmentDto;Ljava/util/Map;)V\n" +
+					"  // Signature: (Ljava/lang/String;Ljava/lang/String;Ltest/Broken$UpsertEnvironmentDto;Ljava/util/Map<Ljava/lang/String;Ljava/lang/String;>;)V\n" +
+					"  // Stack: 2, Locals: 5\n" +
+					"  public Broken(java.lang.String externalAccountId, java.lang.String productId, test.Broken.UpsertEnvironmentDto environment, java.util.Map metadata);\n" +
+					"     0  aload_0 [this]\n" +
+					"     1  invokespecial java.lang.Record() [75]\n" +
+					"     4  aload_0 [this]\n" +
+					"     5  aload_1 [externalAccountId]\n" +
+					"     6  putfield test.Broken.externalAccountId : java.lang.String [46]\n" +
+					"     9  aload_0 [this]\n" +
+					"    10  aload_2 [productId]\n" +
+					"    11  putfield test.Broken.productId : java.lang.String [48]\n" +
+					"    14  aload_0 [this]\n" +
+					"    15  aload_3 [environment]\n" +
+					"    16  putfield test.Broken.environment : test.Broken.UpsertEnvironmentDto [51]\n" +
+					"    19  aload_0 [this]\n" +
+					"    20  aload 4 [metadata]\n" +
+					"    22  putfield test.Broken.metadata : java.util.Map [55]\n" +
+					"    25  return\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 1]\n" +
+					"      Method Parameters:\n" +
+					"        externalAccountId\n" +
+					"        productId\n" +
+					"        environment\n" +
+					"        metadata\n" +
+					"    RuntimeInvisibleParameterAnnotations: \n" +
+					"      Number of annotations for parameter 0: 2\n" +
+					"        #8 @test.Schema(\n" +
+					"          #9 description=\"str\" (constant type)\n" +
+					"          #11 requiredMode=test.Schema.RequiredMode.NOT_REQUIRED(enum type #12.#13)\n" +
+					"        )\n" +
+					"        #14 @test.JsonProperty(\n" +
+					"          #15 value=\"str\" (constant type)\n" +
+					"        )\n" +
+					"      Number of annotations for parameter 1: 2\n" +
+					"        #8 @test.Schema(\n" +
+					"          #9 description=\"str\" (constant type)\n" +
+					"          #11 requiredMode=test.Schema.RequiredMode.REQUIRED(enum type #12.#17)\n" +
+					"        )\n" +
+					"        #14 @test.JsonProperty(\n" +
+					"          #15 value=\"str\" (constant type)\n" +
+					"        )\n" +
+					"      Number of annotations for parameter 2: 2\n" +
+					"        #8 @test.Schema(\n" +
+					"          #9 description=\"str\" (constant type)\n" +
+					"          #11 requiredMode=test.Schema.RequiredMode.REQUIRED(enum type #12.#17)\n" +
+					"        )\n" +
+					"        #14 @test.JsonProperty(\n" +
+					"          #15 value=\"str\" (constant type)\n" +
+					"        )\n" +
+					"      Number of annotations for parameter 3: 2\n" +
+					"        #8 @test.Schema(\n" +
+					"          #9 description=\"str\" (constant type)\n" +
+					"          #11 requiredMode=test.Schema.RequiredMode.NOT_REQUIRED(enum type #12.#13)\n" +
+					"        )\n" +
+					"        #14 @test.JsonProperty(\n" +
+					"          #15 value=\"str\" (constant type)\n" +
+					"        )\n" +
+					"\n" +
+					"  Inner classes:\n" +
+					"    [inner class info: #96 java/lang/invoke/MethodHandles$Lookup, outer class info: #98 java/lang/invoke/MethodHandles\n" +
+					"     inner name: #100 Lookup, accessflags: 25 public static final],\n" +
+					"    [inner class info: #101 test/Broken$UpsertEnvironmentDto, outer class info: #1 test/Broken\n" +
+					"     inner name: #103 UpsertEnvironmentDto, accessflags: 25 public static final],\n" +
+					"    [inner class info: #104 test/Schema$RequiredMode, outer class info: #106 test/Schema\n" +
+					"     inner name: #108 RequiredMode, accessflags: 16409 public static final]\n" +
+					"\n" +
+					"Nest Members:\n" +
+					"   #101 test/Broken$UpsertEnvironmentDto\n" +
+					"\n" +
+					"Record: #Record\n" +
+					"Components:\n" +
+					"  \n" +
+					"// Component descriptor #6 Ljava/lang/String;\n" +
+					"java.lang.String externalAccountId;\n" +
+					"  RuntimeInvisibleAnnotations: \n" +
+					"    #8 @test.Schema(\n" +
+					"      #9 description=\"str\" (constant type)\n" +
+					"      #11 requiredMode=test.Schema.RequiredMode.NOT_REQUIRED(enum type #12.#13)\n" +
+					"    )\n" +
+					"    #14 @test.JsonProperty(\n" +
+					"      #15 value=\"str\" (constant type)\n" +
+					"    )\n" +
+					"// Component descriptor #6 Ljava/lang/String;\n" +
+					"java.lang.String productId;\n" +
+					"  RuntimeInvisibleAnnotations: \n" +
+					"    #8 @test.Schema(\n" +
+					"      #9 description=\"str\" (constant type)\n" +
+					"      #11 requiredMode=test.Schema.RequiredMode.REQUIRED(enum type #12.#17)\n" +
+					"    )\n" +
+					"    #14 @test.JsonProperty(\n" +
+					"      #15 value=\"str\" (constant type)\n" +
+					"    )\n" +
+					"// Component descriptor #19 Ltest/Broken$UpsertEnvironmentDto;\n" +
+					"test.Broken$UpsertEnvironmentDto environment;\n" +
+					"  RuntimeInvisibleAnnotations: \n" +
+					"    #8 @test.Schema(\n" +
+					"      #9 description=\"str\" (constant type)\n" +
+					"      #11 requiredMode=test.Schema.RequiredMode.REQUIRED(enum type #12.#17)\n" +
+					"    )\n" +
+					"    #14 @test.JsonProperty(\n" +
+					"      #15 value=\"str\" (constant type)\n" +
+					"    )\n" +
+					"// Component descriptor #21 Ljava/util/Map;\n" +
+					"// Signature: Ljava/util/Map<Ljava/lang/String;Ljava/lang/String;>;\n" +
+					"java.util.Map metadata;\n" +
+					"  RuntimeInvisibleAnnotations: \n" +
+					"    #8 @test.Schema(\n" +
+					"      #9 description=\"str\" (constant type)\n" +
+					"      #11 requiredMode=test.Schema.RequiredMode.NOT_REQUIRED(enum type #12.#13)\n" +
+					"    )\n" +
+					"    #14 @test.JsonProperty(\n" +
+					"      #15 value=\"str\" (constant type)\n" +
+					"    )\n";
+	verifyClassFile(expectedOutput, "test/Broken.class", ClassFileBytesDisassembler.SYSTEM);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4622
+// Inconsistent classfile encountered on annotated generic types
+public void testIssue4622() throws Exception {
+	this.runConformTest(
+		new String[] {
+					"test/Record.java",
+					"""
+					package test;
+
+					import java.lang.annotation.Target;
+
+					public record Record(
+					        Patch<@ValidUrlTemplate(value = UrlValidationType.AA, message = "{}") String> labelUrl) {
+
+					        public static void main(String [] args) {
+						    	System.out.println("OK!");
+						}
+					}
+
+					class Patch<T> {
+					    public T field;
+					}
+
+					enum UrlValidationType {
+					    AA, BB
+					}
+
+					@Target(java.lang.annotation.ElementType.TYPE_USE)
+					@interface ValidUrlTemplate {
+					    UrlValidationType value();
+					    String message();
+					}
+					""",
+	            },
+				"OK!");
+	String expectedOutput =
+					"  // Field descriptor #6 Ltest/Patch;\n" +
+					"  // Signature: Ltest/Patch<Ljava/lang/String;>;\n" +
+					"  private final test.Patch labelUrl;\n" +
+					"    RuntimeInvisibleTypeAnnotations: \n" +
+					"      #10 @test.ValidUrlTemplate(\n" +
+					"        #11 value=test.UrlValidationType.AA(enum type #12.#13)\n" +
+					"        #14 message=\"{}\" (constant type)\n" +
+					"        target type = 0x13 FIELD\n" +
+					"        location = [TYPE_ARGUMENT(0)]\n" +
+					"      )\n" +
+					"  \n" +
+					"  // Method descriptor #17 ([Ljava/lang/String;)V\n" +
+					"  // Stack: 2, Locals: 1\n" +
+					"  public static void main(java.lang.String[] args);\n" +
+					"    0  getstatic java.lang.System.out : java.io.PrintStream [19]\n" +
+					"    3  ldc <String \"OK!\"> [25]\n" +
+					"    5  invokevirtual java.io.PrintStream.println(java.lang.String) : void [27]\n" +
+					"    8  return\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 9]\n" +
+					"        [pc: 8, line: 10]\n" +
+					"      Local variable table:\n" +
+					"        [pc: 0, pc: 9] local: args index: 0 type: java.lang.String[]\n" +
+					"  \n" +
+					"  // Method descriptor #37 ()Ltest/Patch;\n" +
+					"  // Signature: ()Ltest/Patch<Ljava/lang/String;>;\n" +
+					"  // Stack: 1, Locals: 1\n" +
+					"  public test.Patch labelUrl();\n" +
+					"    0  aload_0 [this]\n" +
+					"    1  getfield test.Record.labelUrl : test.Patch [39]\n" +
+					"    4  areturn\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 6]\n" +
+					"    RuntimeInvisibleTypeAnnotations: \n" +
+					"      #10 @test.ValidUrlTemplate(\n" +
+					"        #11 value=test.UrlValidationType.AA(enum type #12.#13)\n" +
+					"        #14 message=\"{}\" (constant type)\n" +
+					"        target type = 0x14 METHOD_RETURN\n" +
+					"        location = [TYPE_ARGUMENT(0)]\n" +
+					"      )";
+	verifyClassFile(expectedOutput, "test/Record.class", ClassFileBytesDisassembler.SYSTEM);
 }
 }

@@ -4999,4 +4999,51 @@ public class RecordPatternTest extends AbstractRegressionTest9 {
 			"'var' is not allowed as an element type of an array\n" +
 			"----------\n");
 	}
+
+	public void testGH4002() {
+		runConformTest(new String[] {
+				"Example.java",
+				"""
+				import java.util.List;
+
+				public class Example {
+
+				    private static boolean matches(ComponentType<?> type, ComponentType.RegularComponentType<?> eventType) {
+				        return switch (type) {
+				            case ComponentType.RegularComponentType<?> regular -> switch (regular) {
+				                case ComponentType.ClassType(var clazz) -> switch (eventType) {
+				                    case ComponentType.ClassType(var eventClazz) -> clazz == eventClazz;
+				                };
+				            };
+				            /* Workaround:
+				            case ComponentType.Wildcard<?> wildcard -> switch (eventType) {
+				                case ComponentType.ClassType(var eventClazz) -> wildcard.bound().isAssignableFrom(eventClazz);
+				            };
+				            /**/
+				            case ComponentType.Wildcard(var bound) -> switch (eventType) {
+				                case ComponentType.ClassType(var eventClazz) -> bound.isAssignableFrom(eventClazz);
+				            };
+				            /**/
+				            default -> false;
+				        };
+				    }
+
+				    sealed interface ComponentType<T> {
+
+				        sealed interface RegularComponentType<T> extends ComponentType<T> {
+				        }
+
+				        record ClassType<T>(Class<T> clazz) implements RegularComponentType<T> {
+				        }
+
+				        // "implements ComponentType<T>" works, javac (JDK 21 & JDK 24) accepts both
+				        record Wildcard<T>(Class<T> bound) implements ComponentType<List<? extends T>> {
+				        }
+
+				    }
+
+				}
+				"""
+		});
+	}
 }

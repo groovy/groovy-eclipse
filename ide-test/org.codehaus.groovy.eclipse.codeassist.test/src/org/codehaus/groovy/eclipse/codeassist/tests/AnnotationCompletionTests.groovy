@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,11 @@ package org.codehaus.groovy.eclipse.codeassist.tests
 
 import static org.eclipse.jdt.ui.PreferenceConstants.CODEASSIST_ADDIMPORT
 import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED
+import static org.osgi.framework.Version.parseVersion
 
 import groovy.test.NotYetImplemented
 
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -890,8 +892,11 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
         def proposals = getProposals(contents, '(')
-
-        assertThat(proposals).excludes('E', 'ABC', 'DEF').includes('value')
+        if (JavaCore.plugin.bundle.version < parseVersion('3.44')) {
+            assertThat(proposals).excludes('E', 'ABC', 'DEF').includes('value')
+        } else {
+            assertThat(proposals).excludes('E').includes('ABC', 'DEF', 'value')
+        }
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/671

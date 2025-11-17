@@ -1264,7 +1264,9 @@ public abstract class Annotation extends Expression {
 					if ((metaTagBits & TagBits.AnnotationForParameter) != 0) {
 						return AnnotationTargetAllowed.YES;
 					} else if ((metaTagBits & TagBits.AnnotationForTypeUse) != 0) {
-						if (isTypeUseCompatible(localVariableBinding.declaration.type, scope)) {
+						if (localVariableBinding.declaration.isVarTyped(scope)) {
+							return AnnotationTargetAllowed.NO;
+						} else if (isTypeUseCompatible(localVariableBinding.declaration.type, scope)) {
 							return AnnotationTargetAllowed.YES;
 						} else {
 							return AnnotationTargetAllowed.TYPE_ANNOTATION_ON_QUALIFIED_NAME;

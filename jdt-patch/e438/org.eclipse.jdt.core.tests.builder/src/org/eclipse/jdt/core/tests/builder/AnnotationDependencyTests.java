@@ -19,14 +19,12 @@ package org.eclipse.jdt.core.tests.builder;
 
 import java.io.IOException;
 import junit.framework.Test;
-import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractNullAnnotationTest;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -339,6 +337,7 @@ public class AnnotationDependencyTests extends BuilderTests {
 	}
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=214948
+	// Edit https://github.com/eclipse-jdt/eclipse.jdt.core/pull/4564: package deprecation has no effect
 	public void testPackageInfoDependency() throws Exception {
 		String notypes = "@question.SimpleAnnotation(\"foo\") package notypes;";
 		String question = "package question;";
@@ -346,7 +345,7 @@ public class AnnotationDependencyTests extends BuilderTests {
 		String SimpleAnnotation = "package question; " + "\n"
 			+ "public @interface SimpleAnnotation { String value(); }";
 
-		IPath notypesPath = env.addClass( this.srcRoot, "notypes", "package-info", notypes );
+		env.addClass( this.srcRoot, "notypes", "package-info", notypes );
 		env.addClass( this.srcRoot, "question", "package-info", question );
 		env.addClass( this.srcRoot, "question", "SimpleAnnotation", SimpleAnnotation );
 
@@ -355,7 +354,7 @@ public class AnnotationDependencyTests extends BuilderTests {
 
 		env.addClass( this.srcRoot, "question", "package-info", deprecatedQuestion );
 		incrementalBuild( this.projectPath );
-		expectingOnlySpecificProblemFor(notypesPath, new Problem("", "The type SimpleAnnotation is deprecated", notypesPath, 10, 26, CategorizedProblem.CAT_DEPRECATION, IMarker.SEVERITY_WARNING)); //$NON-NLS-1$
+		expectingNoProblems();
 
 		env.addClass( this.srcRoot, "question", "package-info", question );
 		incrementalBuild( this.projectPath );

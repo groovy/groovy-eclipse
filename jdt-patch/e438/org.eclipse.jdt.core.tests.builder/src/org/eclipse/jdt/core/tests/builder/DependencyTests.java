@@ -1203,6 +1203,7 @@ public class DependencyTests extends BuilderTests {
 // warnings, which is unexpected. Guard test for DeprecatedTest#test015 (the
 // builder is not the cause of the bug, but we want to ensure that the end to
 // end behavior is OK).
+// Edit https://github.com/eclipse-jdt/eclipse.jdt.core/pull/4564: package deprecation has no effect
 public void test0100() throws JavaModelException {
 	IPath projectPath = env.addProject("P");
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -1241,19 +1242,13 @@ public void test0100() throws JavaModelException {
 	fullBuild(projectPath);
 	expectingOnlyProblemsFor(new IPath[] {M1Path});
 	expectingSpecificProblemFor(M1Path,
-		new Problem("", "The type N1.N2.N3 is deprecated",
-			M1Path, 198, 200, CategorizedProblem.CAT_DEPRECATION, IMarker.SEVERITY_WARNING));
-	expectingSpecificProblemFor(M1Path,
-		new Problem("",	"The method foo() from the type N1.N2.N3 is deprecated",
-			M1Path, 217, 220, CategorizedProblem.CAT_DEPRECATION, IMarker.SEVERITY_WARNING));
+		new Problem("", "The type N1.N2 is deprecated",
+			M1Path, 195, 197, CategorizedProblem.CAT_DEPRECATION, IMarker.SEVERITY_WARNING));
 	M1Path = env.addClass(rootPath, "p", "M1", M1Contents);
 	incrementalBuild(projectPath);
 	expectingOnlyProblemsFor(new IPath[] {M1Path});
 	expectingSpecificProblemFor(M1Path,
-		new Problem("", "The type N1.N2.N3 is deprecated",
-			M1Path, 198, 200, CategorizedProblem.CAT_DEPRECATION, IMarker.SEVERITY_WARNING));
-	expectingSpecificProblemFor(M1Path,
-		new Problem("",	"The method foo() from the type N1.N2.N3 is deprecated",
-			M1Path, 217, 220, CategorizedProblem.CAT_DEPRECATION, IMarker.SEVERITY_WARNING));
+		new Problem("", "The type N1.N2 is deprecated",
+			M1Path, 195, 197, CategorizedProblem.CAT_DEPRECATION, IMarker.SEVERITY_WARNING));
 }
 }

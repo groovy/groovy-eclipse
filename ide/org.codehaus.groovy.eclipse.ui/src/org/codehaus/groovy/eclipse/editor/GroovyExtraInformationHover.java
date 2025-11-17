@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -45,7 +44,6 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.debug.ui.JavaDebugHover;
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocBrowserInformationControlInput;
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover;
-import org.eclipse.jdt.internal.ui.text.javadoc.JavadocContentAccess2;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.ui.IEditorPart;
@@ -118,7 +116,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
      */
     private boolean shouldComputeHover(final IJavaElement[] elements) {
         return (elements != null && elements.length == 1 && (alwaysReturnInformation ||
-            (elements[0] instanceof IGroovyResolvedElement && isNotBlank(((IGroovyResolvedElement) elements[0]).getExtraDoc()))));
+            (elements[0] instanceof IGroovyResolvedElement element && isNotBlank(element.getExtraDoc()))));
     }
 
     private static boolean isNotBlank(final String string) {
@@ -133,10 +131,9 @@ public class GroovyExtraInformationHover extends JavadocHover {
         Object[] values = {elements, getEditorInputJavaElement(), hoverRegion, null};
 
         JavadocBrowserInformationControlInput hover = ReflectionUtils.executePrivateMethod(JavadocHover.class, "getHoverInfo", types, null, values);
-        if (hover != null && elements[0] instanceof IGroovyResolvedElement) {
+        if (hover != null && elements[0] instanceof IGroovyResolvedElement element) {
             hover = new JavadocBrowserInformationControlInput(
-                (JavadocBrowserInformationControlInput) hover.getPrevious(), hover.getElement(),
-                wrapHTML(hover, (IGroovyResolvedElement) elements[0]), hover.getLeadingImageWidth());
+                (JavadocBrowserInformationControlInput) hover.getPrevious(), hover.getElement(), wrapHTML(hover, element), hover.getLeadingImageWidth());
         }
         return hover;
     }
@@ -162,37 +159,31 @@ public class GroovyExtraInformationHover extends JavadocHover {
             extraDoc = "/**" + extraDoc;
         }
         if (!extraDoc.endsWith("*/")) {
-            extraDoc = extraDoc + "*/";
+            extraDoc += "*/";
         }
 
-        String html;
-        try {
-            html = ReflectionUtils.throwableExecutePrivateMethod(JavadocContentAccess2.class, "javadoc2HTML",
-                new Class[] {IMember.class, IJavaElement.class, String.class}, null, new Object[] {elem, elem, extraDoc});
-        } catch (NoSuchMethodException e) {
-            html = ReflectionUtils.executePrivateMethod(JavadocContentAccess2.class, "javadoc2HTML",
-                new Class[] {IMember.class, String.class}, null, new Object[] {elem, extraDoc});
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e.getCause());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        var javadocAccess = new org.eclipse.jdt.core.manipulation.internal.javadoc.CoreJavadocAccess() {
+            @Override
+            protected String javadoc2HTML(IMember member, IJavaElement element, String rawJavadoc) {
+                return super.javadoc2HTML(member, element, rawJavadoc);
+            }
+        };
+        String html = javadocAccess.javadoc2HTML((IMember) elem, elem, extraDoc);
         return html;
     }
 
-    private String createLabel(ASTNode inferredElement) {
-        if (inferredElement instanceof PropertyNode) {
-            inferredElement = ((PropertyNode) inferredElement).getField();
-        }
+    private String createLabel(final ASTNode astNode) {
         String label;
-        if (inferredElement instanceof ClassNode) {
-            label = createTypeLabel((ClassNode) inferredElement);
-        } else if (inferredElement instanceof MethodNode) {
-            label = createMethodLabel((MethodNode) inferredElement);
-        } else if (inferredElement instanceof FieldNode) {
-            label = createFieldLabel((FieldNode) inferredElement);
+        /*  */ if (astNode instanceof ClassNode classNode) {
+            label = createTypeLabel(classNode);
+        } else if (astNode instanceof FieldNode fieldNode) {
+            label = createFieldLabel(fieldNode);
+        } else if (astNode instanceof MethodNode methodNode) {
+            label = createMethodLabel(methodNode);
+        } else if (astNode instanceof PropertyNode propertyNode) {
+            label = createFieldLabel(propertyNode.getField());
         } else {
-            label = inferredElement.getText();
+            label = astNode.getText();
         }
         return "<b>" + label + "</b><br>\n";
     }
@@ -258,9 +249,9 @@ public class GroovyExtraInformationHover extends JavadocHover {
     }
 
     private String createValueLabel(final Expression value) {
-        if (value instanceof ListExpression) {
-            StringJoiner sj = new StringJoiner(", ", "[", "]");
-            for (Expression e : ((ListExpression) value).getExpressions()) {
+        if (value instanceof ListExpression le) {
+            var sj = new StringJoiner(", ", "[", "]");
+            for (Expression e : le.getExpressions()) {
                 sj.add(createValueLabel(e));
             }
             return sj.toString();

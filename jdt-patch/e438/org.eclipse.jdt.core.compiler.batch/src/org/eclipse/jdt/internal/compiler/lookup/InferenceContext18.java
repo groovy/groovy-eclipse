@@ -194,13 +194,12 @@ public class InferenceContext18 {
 	}
 
 	/** Construct an inference context for an invocation (method/constructor). */
-	public InferenceContext18(Scope scope, Expression[] arguments, InvocationSite site, InferenceContext18 outerContext) {
+	public InferenceContext18(Scope scope, Expression[] arguments, InvocationSite site) {
 		this.scope = scope;
 		this.environment = scope.environment();
 		this.object = scope.getJavaLangObject();
 		this.invocationArguments = arguments;
 		this.currentInvocation = site;
-		this.outerContext = outerContext;
 		if (site instanceof Invocation)
 			scope.compilationUnitScope().registerInferredInvocation((Invocation) site);
 	}
@@ -671,7 +670,7 @@ public class InferenceContext18 {
 						t = ConstraintExpressionFormula.findGroundTargetType(this, skope, lambda, withWildCards);
 					}
 					MethodBinding functionType;
-					if (t != null && (functionType = t.getSingleAbstractMethod(skope, true)) != null && (lambda = lambda.resolveExpressionExpecting(t, this.scope, this)) != null) {
+					if (t != null && (functionType = t.getSingleAbstractMethod(skope, true)) != null && (lambda = lambda.resolveExpressionExpecting(t, this.scope)) != null) {
 						TypeBinding r = functionType.returnType;
 						Expression[] resultExpressions = lambda.resultExpressions();
 						for (int i = 0, length = resultExpressions == null ? 0 : resultExpressions.length; i < length; i++) {
@@ -1014,7 +1013,7 @@ public class InferenceContext18 {
 	 * @throws InferenceFailureException a compile error has been detected during inference
 	 */
 	public /*@Nullable*/ BoundSet solve(boolean inferringApplicability) throws InferenceFailureException {
-		return solve(inferringApplicability, (ASTNode) this.currentInvocation);
+		return solve(inferringApplicability, this.currentInvocation);
 	}
 	/**
 	 * Try to solve the inference problem defined by constraints and bounds previously registered.
@@ -1023,8 +1022,7 @@ public class InferenceContext18 {
 	 * @return a bound set representing the solution, or null if inference failed
 	 * @throws InferenceFailureException a compile error has been detected during inference
 	 */
-	private /*@Nullable*/ BoundSet solve(boolean inferringApplicability, ASTNode location)
-			throws InferenceFailureException
+	private /*@Nullable*/ BoundSet solve(boolean inferringApplicability, Location location) throws InferenceFailureException
 	{
 		CapturingContext.enter(location.sourceStart(), location.sourceEnd(), this.scope);
 		boolean isRecordPatternTypeInference = location instanceof RecordPattern;
@@ -1074,7 +1072,7 @@ public class InferenceContext18 {
 	/**
 	 * JLS 18.2. reduce all initial constraints
 	 */
-	private boolean reduce() throws InferenceFailureException {
+	public boolean reduce() throws InferenceFailureException {
 		// Caution: This can be reentered recursively even as an earlier call is munching through the constraints !
 		for (int i = 0; this.initialConstraints != null && i < this.initialConstraints.length; i++) {
 			final ConstraintFormula currentConstraint = this.initialConstraints[i];
@@ -1112,17 +1110,10 @@ public class InferenceContext18 {
 	public TypeBinding /*@Nullable*/[] getSolutions(TypeVariableBinding[] typeParameters, InvocationSite site, BoundSet boundSet) {
 		int len = typeParameters.length;
 		TypeBinding[] substitutions = new TypeBinding[len];
-		InferenceVariable[] outerVariables = null;
-		if (this.outerContext != null && this.outerContext.stepCompleted < TYPE_INFERRED)
-			outerVariables = this.outerContext.inferenceVariables;
 		for (int i = 0; i < typeParameters.length; i++) {
 			for (InferenceVariable variable : this.inferenceVariables) {
 				if (isSameSite(variable.site, site) && TypeBinding.equalsEquals(variable.typeParameter, typeParameters[i])) {
-					TypeBinding outerVar = null;
-					if (outerVariables != null && (outerVar = boundSet.getEquivalentOuterVariable(variable, outerVariables)) != null)
-						substitutions[i] = outerVar;
-					else
-						substitutions[i] = boundSet.getInstantiation(variable, this.environment);
+					substitutions[i] = boundSet.getInstantiation(variable, this.environment);
 					break;
 				}
 			}
@@ -2015,13 +2006,9 @@ public class InferenceContext18 {
 		return true;
 	}
 	private TypeBinding deriveTPrime(RecordPattern recordPattern, TypeBinding candidateT, InferenceVariable[] alphas, TypeBinding typeBinding) {
-		ParameterizedTypeBinding parameterizedType = null;
-		TypeBinding tPrime = null;
-		if (candidateT.isParameterizedType()) {
-			parameterizedType = InferenceContext18.parameterizedWithWildcard(candidateT);
-		}
-		if (parameterizedType != null && parameterizedType.arguments != null) {
-			TypeBinding[] arguments = parameterizedType.capture(this.scope, recordPattern.sourceStart, recordPattern.sourceEnd).arguments;
+		TypeBinding tPrime = candidateT.capture(this.scope, recordPattern.sourceStart, recordPattern.sourceEnd);
+		if (tPrime instanceof ParameterizedTypeBinding parameterizedType && parameterizedType.arguments != null) {
+			TypeBinding[] arguments = parameterizedType.arguments;
 			/* addTypeVariableSubstitutions() gives a beta for every argument which is
 			 * a super set of betas required by 18_5_5_item_3_bullet_1 betas.
 			 * this happens since we are just reusing 18.5.2.1 utility
@@ -2029,13 +2016,13 @@ public class InferenceContext18 {
 			 * TODO: a Just18_5_5_item_3_bullet_1Betas utility?
 			 */
 			InferenceVariable[] notJust18_5_5_item_3_bullet_1Betas = addTypeVariableSubstitutions(arguments, true);
-			TypeVariableBinding[] typeVariables = getTPrimeArgumentsAndCreateBounds(parameterizedType,
+			TypeBinding[] typeArguments = getTPrimeArgumentsAndCreateBounds(parameterizedType,
 					notJust18_5_5_item_3_bullet_1Betas);
 			tPrime = this.environment.createParameterizedType(
-					parameterizedType.genericType(), typeVariables,
+					parameterizedType.genericType(), typeArguments,
 					parameterizedType.enclosingType(), parameterizedType.getTypeAnnotations());
-			createAdditionalBoundswithU((ParameterizedTypeBinding) tPrime, notJust18_5_5_item_3_bullet_1Betas, typeVariables);
-		} else if (candidateT.isTypeVariable() || candidateT.isIntersectionType18()) {
+			createAdditionalBoundswithU((ParameterizedTypeBinding) tPrime, notJust18_5_5_item_3_bullet_1Betas, typeArguments);
+		} else if (tPrime.isTypeVariable() || tPrime.isIntersectionType18()) {
 			// 18.5.5_item_3_bullet_3
 			/* If T is a type variable or an intersection type, then for each upper bound of the type
 			 * variable or element of the intersection type, this step and step 4 are repeated
@@ -2052,7 +2039,7 @@ public class InferenceContext18 {
 						return null;
 				}
 			}
-			return tPrime = candidateT; //18.5.5_item_3_bullet_2
+			return tPrime = candidateT; //18.5.5_item_3_bullet_4
 		} else if (candidateT.isClass() || candidateT.isInterface()) {
 			tPrime = candidateT; //18.5.5_item_3_bullet_2
 		}
@@ -2060,12 +2047,12 @@ public class InferenceContext18 {
 	}
 
 	private void createAdditionalBoundswithU(ParameterizedTypeBinding tPrime, InferenceVariable[] notJust18_5_5_item_3_bullet_1Betas,
-			TypeVariableBinding[] typeVariables) {
+			TypeBinding[] typeArguments) {
 		TypeVariableBinding[] typeParams = tPrime.original().typeVariables();
 		TypeBinding[] aArr = tPrime.typeArguments();
 		for (int i = 0, l = notJust18_5_5_item_3_bullet_1Betas.length; i < l; ++i) {
 			InferenceVariable beta = notJust18_5_5_item_3_bullet_1Betas[i];
-			if (beta == null || !beta.equals(typeVariables[i])) continue; //not an expected inference variable.
+			if (beta == null || !beta.equals(typeArguments[i])) continue; //not an expected inference variable.
 
 			TypeBinding[] uArr = typeParams[i]!= null ? typeParams[i].allUpperBounds() : null;
 			if (uArr == null || uArr.length == 0) {
@@ -2096,17 +2083,17 @@ public class InferenceContext18 {
 		}
 	}
 
-	private TypeVariableBinding[] getTPrimeArgumentsAndCreateBounds(
+	private TypeBinding[] getTPrimeArgumentsAndCreateBounds(
 			ParameterizedTypeBinding parameterizedType,
 			InferenceVariable[] beta) {
 		TypeBinding[] arguments = parameterizedType.typeArguments();
-		TypeVariableBinding[] typeVariables = new TypeVariableBinding[arguments.length];
+		TypeBinding[] typearguments = Arrays.copyOf(arguments, arguments.length);
 		InferenceSubstitution theta = new InferenceSubstitution(this.environment, beta, this.currentInvocation);
 		TypeBound bound;
 		for (int i = 0, l = arguments.length; i < l; ++i) {
 			bound = null;
-			if (arguments[i].kind() == Binding.WILDCARD_TYPE && beta[i] != null) {
-				WildcardBinding wildcard = (WildcardBinding) arguments[i];
+			if (arguments[i].getClass() == CaptureBinding.class && beta[i] != null) { // exclude subclass CaptureBinding18
+				WildcardBinding wildcard = ((CaptureBinding) arguments[i]).wildcard;
 				switch(wildcard.boundKind) {
 					case Wildcard.EXTENDS :
 						TypeBinding uTheta = Scope.substitute(theta, wildcard.allBounds());
@@ -2122,20 +2109,14 @@ public class InferenceContext18 {
 					default:
 						continue;
 				}
-			} else {
-				/* As per 18_5_5_item_3_bullet_1 should not have a beta here
-				 * instead the same typevariable  */
-				typeVariables[i] = parameterizedType.type.typeVariables()[i];
 			}
 			if (bound != null) {
 				this.currentBounds.addBound(bound, this.environment);
-				typeVariables[i] = beta[i];
-			} else {
-				typeVariables[i] = parameterizedType.type.typeVariables()[i];
+				typearguments[i] = beta[i];
 
 			}
 		}
-		return typeVariables;
+		return typearguments;
 	}
 
 	public boolean isInexactVarargsInference() {

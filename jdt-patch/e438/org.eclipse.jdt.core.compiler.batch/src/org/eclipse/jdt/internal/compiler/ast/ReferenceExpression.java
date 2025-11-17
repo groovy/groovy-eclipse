@@ -1028,7 +1028,7 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 	}
 
 	@Override
-	public ReferenceExpression resolveExpressionExpecting(TypeBinding targetType, Scope scope, InferenceContext18 inferenceContext) {
+	public ReferenceExpression resolveExpressionExpecting(TypeBinding targetType, Scope scope) {
 		if (this.exactMethodBinding != null) { // We may see inference variables in target type.
 			MethodBinding functionType = targetType.getSingleAbstractMethod(scope, true);
 			if (functionType == null || functionType.problemId() == ProblemReasons.NoSuchSingleAbstractMethod)
@@ -1080,7 +1080,7 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 	public InferenceContext18 freshInferenceContext(Scope scope) {
 		if (this.expressionContext != ExpressionContext.VANILLA_CONTEXT) {
 			Expression[] arguments = createPseudoExpressions(this.freeParameters);
-			return new InferenceContext18(scope, arguments, this, null);
+			return new InferenceContext18(scope, arguments, this);
 		}
 		return null; // shouldn't happen, actually
 	}

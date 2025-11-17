@@ -8597,11 +8597,6 @@ public void testGHIssue2096() {
     		"	^^^^^^^^^^^^^^^^\n" +
     		"The type AccessController has been deprecated since version 17 and marked for removal\n" +
     		"----------\n" +
-    		"2. WARNING in X.java (at line 7)\n" +
-    		"	AccessController.doPrivileged((PrivilegedExceptionAction<Boolean>)() ->\n" +
-    		"	                 ^^^^^^^^^^^^\n" +
-    		"The method doPrivileged(PrivilegedExceptionAction<Boolean>) from the type AccessController has been deprecated and marked for removal\n" +
-    		"----------\n" +
     		"3. ERROR in X.java (at line 7)\n" +
     		"	AccessController.doPrivileged((PrivilegedExceptionAction<Boolean>)() ->\n" +
     		"	                                                                  ^^^^^\n" +

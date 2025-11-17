@@ -18,8 +18,9 @@ package org.eclipse.jdt.internal.compiler.lookup;
 
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.ExpressionContext;
+import org.eclipse.jdt.internal.compiler.ast.Location;
 
-public interface InvocationSite {
+public interface InvocationSite extends Location {
 
 	TypeBinding[] genericTypeArguments();
 	boolean isSuperAccess();
@@ -32,8 +33,6 @@ public interface InvocationSite {
 	void setActualReceiverType(ReferenceBinding receiverType);
 	void setDepth(int depth);
 	void setFieldIndex(int depth);
-	int sourceEnd();
-	int sourceStart();
 	default int nameSourceStart() { return sourceStart(); }
 	default int nameSourceEnd() { return sourceEnd(); }
 	TypeBinding invocationTargetType();

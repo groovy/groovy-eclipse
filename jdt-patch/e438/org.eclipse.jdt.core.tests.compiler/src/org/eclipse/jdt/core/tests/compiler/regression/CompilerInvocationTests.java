@@ -813,6 +813,7 @@ public void test011_problem_categories() {
 		expectedProblemAttributes.put("MaskedCatch", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
 		expectedProblemAttributes.put("MandatoryCloseNotShown", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
 		expectedProblemAttributes.put("MandatoryCloseNotShownAtExit", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
+		expectedProblemAttributes.put("MemberOfDeprecatedTypeNotDeprecated", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
 		expectedProblemAttributes.put("MessageSendWithUnresolvedOwningAnnotation", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
 		expectedProblemAttributes.put("MethodButWithConstructorName", new ProblemAttributes(CategorizedProblem.CAT_CODE_STYLE));
 		expectedProblemAttributes.put("MethodCanBePotentiallyStatic", new ProblemAttributes(CategorizedProblem.CAT_CODE_STYLE));
@@ -1964,6 +1965,7 @@ public void test012_compiler_problems_tuning() {
 		expectedProblemAttributes.put("MaskedCatch", new ProblemAttributes(JavaCore.COMPILER_PB_HIDDEN_CATCH_BLOCK));
 		expectedProblemAttributes.put("MandatoryCloseNotShown", new ProblemAttributes(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE));
 		expectedProblemAttributes.put("MandatoryCloseNotShownAtExit", new ProblemAttributes(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE));
+		expectedProblemAttributes.put("MemberOfDeprecatedTypeNotDeprecated", new ProblemAttributes(JavaCore.COMPILER_PB_MEMBER_OF_DEPRECATED_TYPE));
 		expectedProblemAttributes.put("MessageSendWithUnresolvedOwningAnnotation", SKIP);
 		expectedProblemAttributes.put("MethodButWithConstructorName", new ProblemAttributes(JavaCore.COMPILER_PB_METHOD_WITH_CONSTRUCTOR_NAME));
 		expectedProblemAttributes.put("MethodCanBePotentiallyStatic", new ProblemAttributes(JavaCore.COMPILER_PB_POTENTIALLY_MISSING_STATIC_ON_METHOD));

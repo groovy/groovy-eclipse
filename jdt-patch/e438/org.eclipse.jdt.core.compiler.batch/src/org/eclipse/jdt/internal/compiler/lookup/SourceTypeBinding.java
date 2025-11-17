@@ -76,7 +76,7 @@ public class SourceTypeBinding extends ReferenceBinding {
 	public ReferenceBinding superclass;                    // MUST NOT be modified directly, use setter !
 	public ReferenceBinding[] superInterfaces;             // MUST NOT be modified directly, use setter !
 	private FieldBinding[] fields;                         // MUST NOT be modified directly, use setter !
-	private RecordComponentBinding[] components;           // MUST NOT be modified directly, use setter !
+	/*package*/ RecordComponentBinding[] components;       // MUST NOT be modified directly, use setter !
 	private MethodBinding[] methods;                       // MUST NOT be modified directly, use setter !
 	public ReferenceBinding[] memberTypes;                 // MUST NOT be modified directly, use setter !
 	public TypeVariableBinding[] typeVariables;            // MUST NOT be modified directly, use setter !
@@ -122,6 +122,7 @@ public SourceTypeBinding(char[][] compoundName, PackageBinding fPackage, ClassSc
 	// expect the fields & methods to be initialized correctly later
 	this.fields = Binding.UNINITIALIZED_FIELDS;
 	this.methods = Binding.UNINITIALIZED_METHODS;
+	this.components = this.isRecord() ? Binding.UNINITIALIZED_COMPONENTS : NO_COMPONENTS;
 	this.prototype = this;
 	this.isImplicit = scope.referenceContext.isImplicitType();
 	computeId();
@@ -140,6 +141,7 @@ public SourceTypeBinding(SourceTypeBinding prototype) {
 	this.permittedTypes = prototype.permittedTypes;
 	this.fields = prototype.fields;
 	this.methods = prototype.methods;
+	this.components = prototype.components;
 	this.memberTypes = prototype.memberTypes;
 	this.typeVariables = prototype.typeVariables;
 	this.environment = prototype.environment;
@@ -806,6 +808,12 @@ public SyntheticMethodBinding addSyntheticRecordOverrideMethod(char[] selector) 
 	}
 	return accessMethod;
 }
+boolean areComponentsInitialized() {
+	if (!isPrototype())
+		return this.prototype.areComponentsInitialized();
+	return this.components != Binding.UNINITIALIZED_COMPONENTS;
+}
+
 boolean areFieldsInitialized() {
 	if (!isPrototype())
 		return this.prototype.areFieldsInitialized();
@@ -878,12 +886,6 @@ public char[] computeUniqueKey(boolean isLeaf) {
 private void checkAnnotationsInType() {
 	// check @Deprecated annotation
 	getAnnotationTagBits(); // marks as deprecated by side effect
-	ReferenceBinding enclosingType = enclosingType();
-	if (enclosingType != null && enclosingType.isViewedAsDeprecated() && !isDeprecated()) {
-		this.modifiers |= ExtraCompilerModifiers.AccDeprecatedImplicitly;
-		this.tagBits |= (enclosingType.tagBits & TagBits.AnnotationTerminallyDeprecated);
-	}
-
 	for (ReferenceBinding memberType : this.memberTypes)
 		((SourceTypeBinding) memberType).checkAnnotationsInType();
 }
@@ -969,7 +971,21 @@ public RecordComponentBinding[] components() {
 	if (!isPrototype()) {
 		return this.components = this.prototype.components();
 	}
-	return this.components;
+	if ((this.tagBits & TagBits.HasUnresolvedComponents) == 0)
+		return this.components;
+
+	int length = this.components.length;
+	int count = 0;
+	RecordComponentBinding[] rcbs = length == 0 ? Binding.NO_COMPONENTS : new RecordComponentBinding[length];
+	for (int i = 0; i < length; i++) {
+		if (resolveTypeFor(this.components[i]) != null) {
+			rcbs[count++] = this.components[i];
+		}
+	}
+	if (count != rcbs.length) // remove duplicate or broken components
+		System.arraycopy(rcbs, 0, rcbs = count == 0 ? Binding.NO_COMPONENTS : new RecordComponentBinding[count], 0, count);
+	this.tagBits &= ~TagBits.HasUnresolvedComponents;
+	return setComponents(rcbs);
 }
 
 private VariableBinding resolveTypeFor(VariableBinding variable) {
@@ -1019,10 +1035,6 @@ private VariableBinding resolveTypeFor(VariableBinding variable) {
 
 		if ((variable.getAnnotationTagBits() & TagBits.AnnotationDeprecated) != 0)
 			variable.modifiers |= ClassFileConstants.AccDeprecated;
-		if (isViewedAsDeprecated() && !variable.isDeprecated()) {
-			variable.modifiers |= ExtraCompilerModifiers.AccDeprecatedImplicitly;
-			variable.tagBits |= this.tagBits & TagBits.AnnotationTerminallyDeprecated;
-		}
 		if (hasRestrictedAccess())
 			variable.modifiers |= ExtraCompilerModifiers.AccRestrictedAccess;
 
@@ -1107,6 +1119,9 @@ public FieldBinding[] fields() {
 
 	if ((this.tagBits & TagBits.AreFieldsComplete) != 0)
 		return this.fields;
+
+	if ((this.tagBits & TagBits.HasUnresolvedComponents) != 0)
+		components();
 
 	int failed = 0;
 	FieldBinding[] theFields = unResolvedFields();
@@ -1432,6 +1447,9 @@ public FieldBinding getField(char[] fieldName, boolean needResolve) {
 	if ((this.tagBits & TagBits.AreFieldsComplete) != 0)
 		return ReferenceBinding.binarySearch(fieldName, this.fields);
 
+	if ((this.tagBits & TagBits.HasUnresolvedComponents) != 0)
+		components();
+
 	FieldBinding[] theFields = unResolvedFields();
 
 	// lazily sort fields
@@ -1639,7 +1657,7 @@ void initializeForStaticImports() {
 
 	if (this.superInterfaces == null)
 		this.scope.connectTypeHierarchy();
-	this.scope.collateRecordComponents();
+	this.scope.buildComponents();
 	this.scope.buildFields();
 	this.scope.buildMethods();
 }
@@ -1799,6 +1817,9 @@ public MethodBinding[] methods() {
 	if (!areMethodsInitialized()) { // https://bugs.eclipse.org/384663
 		this.scope.buildMethods();
 	}
+
+	if ((this.tagBits & TagBits.HasUnresolvedComponents) != 0)
+		components();
 
 	// lazily sort methods
 	if ((this.tagBits & TagBits.AreMethodsSorted) == 0) {
@@ -2076,10 +2097,6 @@ private MethodBinding resolveTypesWithSuspendedTempErrorHandlingPolicy(MethodBin
 
 	if ((method.getAnnotationTagBits() & TagBits.AnnotationDeprecated) != 0)
 		method.modifiers |= ClassFileConstants.AccDeprecated;
-	if (isViewedAsDeprecated() && !method.isDeprecated()) {
-		method.modifiers |= ExtraCompilerModifiers.AccDeprecatedImplicitly;
-		method.tagBits |= this.tagBits & TagBits.AnnotationTerminallyDeprecated;
-	}
 	if (hasRestrictedAccess())
 		method.modifiers |= ExtraCompilerModifiers.AccRestrictedAccess;
 
@@ -2550,7 +2567,7 @@ public RecordComponentBinding[] setComponents(RecordComponentBinding[] component
 
 	for (RecordComponentBinding component : components) {
 		for (FieldBinding field : this.fields) {
-			if (CharOperation.equals(field.name, component.name) && field.type == null) { // field got built before record component resolution
+			if (CharOperation.equals(field.name, component.name)) { // field got built before record component resolution
 				field.type = component.type;
 				field.modifiers |= component.modifiers & ExtraCompilerModifiers.AccGenericSignature;
 				field.tagBits |= component.tagBits & (TagBits.AnnotationNullMASK | TagBits.AnnotationOwningMASK);

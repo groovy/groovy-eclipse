@@ -101,6 +101,9 @@ public class MemberValuePair extends ASTNode {
 			return;
 		}
 
+		if (this.binding != null && isMethodUseDeprecated(this.binding, scope, false, null))
+			scope.problemReporter().deprecatedMethod(this.binding, this);
+
 		if (this.value == null) {
 			this.compilerElementPair = new ElementValuePair(this.name, this.value, this.binding);
 			return;

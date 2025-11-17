@@ -1080,6 +1080,7 @@ public void test012b(){
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.invalidJavadocTagsNotVisibleRef\" value=\"disabled\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.invalidJavadocTagsVisibility\" value=\"public\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.localVariableHiding\" value=\"ignore\"/>\n" +
+			"		<option key=\"org.eclipse.jdt.core.compiler.problem.memberOfDeprecatedTypeNotDeprecated\" value=\"info\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.methodWithConstructorName\" value=\"warning\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.missingDefaultCase\" value=\"ignore\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.missingDeprecatedAnnotation\" value=\"ignore\"/>\n" +

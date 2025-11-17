@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Jesper S Moller and others.
+ * Copyright (c) 2013, 2025 Jesper S Moller and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -41,8 +41,21 @@ public class ContainerAnnotation extends SingleMemberAnnotation {
 		this.resolvedType = containerAnnotationType;
 		this.recipient = repeatingAnnotation.recipient;
 		this.containees = new Annotation[0];
-		this.memberValue = this.memberValues = new ArrayInitializer();
+		this.memberValue = this.memberValues = createInitializer(repeatingAnnotation);
 		addContainee(repeatingAnnotation);
+	}
+
+	private ArrayInitializer createInitializer(Annotation repeatingAnnotation) {
+		ArrayInitializer arrayInitializer = new ArrayInitializer();
+		// initialize positions suitable for problem reporting (e.g., deprecation)
+		MemberValuePair[] pairs = repeatingAnnotation.memberValuePairs();
+		arrayInitializer.sourceStart = this.sourceStart;
+		if (pairs != null && pairs.length > 0) {
+			arrayInitializer.sourceEnd = pairs[pairs.length-1].sourceEnd;
+		} else {
+			arrayInitializer.sourceEnd = repeatingAnnotation.declarationSourceEnd;
+		}
+		return arrayInitializer;
 	}
 
 	public void addContainee(Annotation repeatingAnnotation) {
@@ -50,6 +63,7 @@ public class ContainerAnnotation extends SingleMemberAnnotation {
 		System.arraycopy(this.containees, 0, this.containees = new Annotation[length + 1], 0, length);
 		this.containees[length] = repeatingAnnotation;
 		this.memberValues.expressions = this.containees;
+		this.memberValues.sourceEnd = repeatingAnnotation.declarationSourceEnd;
 		repeatingAnnotation.setPersistibleAnnotation(length == 0 ? this : null);
 	}
 

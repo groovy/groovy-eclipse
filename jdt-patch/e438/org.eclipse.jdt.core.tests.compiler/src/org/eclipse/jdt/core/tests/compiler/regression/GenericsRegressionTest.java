@@ -42,6 +42,7 @@ import java.io.File;
 import java.util.Map;
 import junit.framework.Test;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.JavacHasABug;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
@@ -6973,6 +6974,89 @@ public void testGH4254() {
 			"""
 		}
 	);
+}
+
+public void testGH4314() {
+    runConformTest(new String[] {
+            "Test.java",
+            """
+            import java.util.function.Function;
+
+            public class Test {
+
+                public static void main(String[] args) {
+                    m(
+                            i -> new A<>(i),
+                            b -> b.intValue());
+                }
+
+                private static <T, R> void m(Function<Integer, A<T>> f1, Function<T, R> f2) {}
+                private static class A<T> {
+                    public A(T t) {}
+                }
+            }
+            """
+    });
+}
+public void testGH4314b() {
+	if (this.complianceLevel < ClassFileConstants.JDK22)
+		return; // uses unnamed lambda param
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+			"Test.java",
+			"""
+			import java.util.function.Function;
+			public class Test {
+				public static void main(String[] args) {
+					C<B<?>> c = null;
+					m(
+							_ -> new A<>(c),
+							b -> b.intValue());
+				}
+				static <T, R> void m(Function<B<Number>, A<T>> f1, Function<T, R> f2) {}
+				static class A<U> {
+					public A(C<? extends C<U>> t) {}
+				}
+				record B<V extends Number>(V t) implements C<V> {
+
+				}
+				interface C<W> {
+					W t();
+				}
+			}
+			"""
+		};
+	runner.javacTestOptions = JavacHasABug.JavacBug8016196;
+	runner.runConformTest();
+}
+public void testGH4314c() {
+	if (this.complianceLevel < ClassFileConstants.JDK22)
+		return; // uses unnamed lambda param
+	runConformTest(new String[] {
+			"Test.java",
+			"""
+			import java.util.function.Function;
+			public class Test {
+				public static void main(String[] args) {
+					C<B<?>> c = null;
+					m(
+							_ -> new A<>(c),
+							b -> b.intValue());
+				}
+				static <T, R> void m(Function<B<Number>, A<T>> f1, Function<T, R> f2) {}
+				static class A<U> {
+					public A(C<? extends C<? extends U>> t) {}
+				}
+				record B<V extends Number>(V t) implements C<V> {
+
+				}
+				interface C<W> {
+					W t();
+				}
+			}
+			"""
+		},
+		"");
 }
 }
 

@@ -38,7 +38,7 @@ public interface ExtraCompilerModifiers { // modifier constant
 	final int AccFromClassFile = ASTNode.Bit20;
 	final int AccDefaultAbstract = ASTNode.Bit20;
 	// bit21 - use by ClassFileConstants.AccDeprecated
-	final int AccDeprecatedImplicitly = ASTNode.Bit22; // record whether deprecated itself or contained by a deprecated type
+	// bit22 was used for AccDeprecatedImplicitly
 	final int AccAlternateModifierProblem = ASTNode.Bit23;
 	// GROOVY add
 	final int AccModifierProblem = ASTNode.Bit24;

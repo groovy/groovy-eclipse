@@ -3798,20 +3798,10 @@ public void testBug77260nested() {
 			"	         ^\n" +
 			"Javadoc: The type X is deprecated\n" +
 			"----------\n" +
-			"3. ERROR in Y.java (at line 6)\n" +
-			"	/** @see X#x */\n" +
-			"	           ^\n" +
-			"Javadoc: The field X.x is deprecated\n" +
-			"----------\n" +
 			"4. ERROR in Y.java (at line 8)\n" +
 			"	/** @see X#foo() */\n" +
 			"	         ^\n" +
 			"Javadoc: The type X is deprecated\n" +
-			"----------\n" +
-			"5. ERROR in Y.java (at line 8)\n" +
-			"	/** @see X#foo() */\n" +
-			"	           ^^^^^\n" +
-			"Javadoc: The method foo() from the type X is deprecated\n" +
 			"----------\n" +
 			"----------\n" +
 			"1. ERROR in Z.java (at line 3)\n" +
@@ -3819,20 +3809,10 @@ public void testBug77260nested() {
 			"	       ^\n" +
 			"Javadoc: The type X is deprecated\n" +
 			"----------\n" +
-			"2. ERROR in Z.java (at line 3)\n" +
-			"	* @see X#x\n" +
-			"	         ^\n" +
-			"Javadoc: The field X.x is deprecated\n" +
-			"----------\n" +
 			"3. ERROR in Z.java (at line 8)\n" +
 			"	* @see X#foo()\n" +
 			"	       ^\n" +
 			"Javadoc: The type X is deprecated\n" +
-			"----------\n" +
-			"4. ERROR in Z.java (at line 8)\n" +
-			"	* @see X#foo()\n" +
-			"	         ^^^^^\n" +
-			"Javadoc: The method foo() from the type X is deprecated\n" +
 			"----------\n",
 			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
 	);
@@ -8407,18 +8387,8 @@ public void testBug292510() {
 		"	* @see X.XX.XXX\n" +
 		"	       ^\n" +
 		"Javadoc: The type X is deprecated\n" +
-		"----------\n" +
-		"2. ERROR in Y.java (at line 2)\n" +
-		"	* @see X.XX.XXX\n" +
-		"	       ^^^^\n" +
-		"Javadoc: The type X.XX is deprecated\n" +
-		"----------\n" +
-		"3. ERROR in Y.java (at line 2)\n" +
-		"	* @see X.XX.XXX\n" +
-		"	       ^^^^^^^^\n" +
-		"Javadoc: The type X.XX.XXX is deprecated\n" +
 		"----------\n",
-			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
 	);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=316782

@@ -3377,7 +3377,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('Bar'),   3, DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('Bar.'),  3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('CONST'), 5, DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('CONST'), 5, isDeprecatedTransitive() ? DEPRECATED : STATIC_VALUE))
     }
 
     @Test
@@ -3393,7 +3393,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('Bar'),   3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('CONST'), 5, DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('CONST'), 5, isDeprecatedTransitive() ? DEPRECATED : STATIC_VALUE))
     }
 
     @Test
@@ -3433,9 +3433,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('Bar;'),   3, DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('Bar.*'),  3, DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('Bar.F'),  3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('FIELD'),  5, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('FIELD'),  5, isDeprecatedTransitive() ? DEPRECATED : STATIC_FIELD),
             new HighlightedTypedPosition(contents.indexOf('Bar.m'),  3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('method'), 6, DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, isDeprecatedTransitive() ? DEPRECATED : STATIC_CALL))
     }
 
     @Test
@@ -3479,9 +3479,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('Bar.Baz;'),  3, DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('Bar.Baz.*'), 3, DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('Bar.Baz.F'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('FIELD'),     5, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('FIELD'),     5, isDeprecatedTransitive() ? DEPRECATED : STATIC_FIELD),
             new HighlightedTypedPosition(contents.indexOf('Bar.Baz.m'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('method'),    6, DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('method'),    6, isDeprecatedTransitive() ? DEPRECATED : STATIC_CALL))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/907
@@ -5800,5 +5800,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         }.join('\n')
 
         assertEquals(expect, actual)
+    }
+
+    private boolean isDeprecatedTransitive() {
+        org.eclipse.jdt.core.JavaCore.plugin.bundle.version < org.osgi.framework.Version.parseVersion('3.44')
     }
 }

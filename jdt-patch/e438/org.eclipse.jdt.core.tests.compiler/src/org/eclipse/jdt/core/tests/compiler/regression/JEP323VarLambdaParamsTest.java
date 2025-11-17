@@ -366,4 +366,42 @@ public void testIssue4159() throws IOException {
 			"'var' cannot be used with type arguments\n" +
 			"----------\n");
 }
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4593
+// Type-use annotations on var lambda parameter should be rejected
+public void testIssue4593() throws IOException {
+	runNegativeTest(new String[] {
+			"X.java",
+			"""
+			import java.lang.annotation.Retention;
+			import java.lang.annotation.Target;
+			import java.util.function.Function;
+
+			import static java.lang.annotation.ElementType.TYPE_USE;
+			import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+			@Retention(value=RUNTIME)
+			@Target(value={TYPE_USE})
+			@interface Anno {
+			}
+			public class X {
+			    public static void main(String[] args) {
+			    @Anno var bkah = "hello";
+			        Function<Integer, String> f = (@Anno var val) -> Integer.toHexString(val);
+			        System.out.println(f.apply(10));
+			    }
+			}
+			"""
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 14)\n" +
+			"	@Anno var bkah = \"hello\";\n" +
+			"	^^^^^\n" +
+			"The annotation @Anno is disallowed for this location\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 15)\n" +
+			"	Function<Integer, String> f = (@Anno var val) -> Integer.toHexString(val);\n" +
+			"	                               ^^^^^\n" +
+			"The annotation @Anno is disallowed for this location\n" +
+			"----------\n");
+}
 }

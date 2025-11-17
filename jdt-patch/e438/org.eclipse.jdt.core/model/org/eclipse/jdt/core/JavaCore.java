@@ -425,6 +425,24 @@ public final class JavaCore extends Plugin {
 	 */
 	public static final String COMPILER_PB_DEPRECATION_WHEN_OVERRIDING_DEPRECATED_METHOD = "org.eclipse.jdt.core.compiler.problem.deprecationWhenOverridingDeprecatedMethod"; //$NON-NLS-1$
 	/**
+	 * Compiler option ID: Reporting members in a deprecated type that are not deprecated.
+	 * <p>When enabled, the compiler will issue a configurable warning against every member of
+	 * 	a deprecated type that is not deprecated itself.</p>
+	 * <p>This information is relevant in particular in light that previous versions of JDT have treated such
+	 * 	members as <em>implicitly deprecated</em>, which, however, is incorrect with respect to JLS.
+	 * 	Users are advised to consider explicitly marking all affected members as deprecated, to raise visibility
+	 * 	of any usage of members from deprecated types.</p>
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.memberOfDeprecatedTypeNotDeprecated"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "error", "warning", "info", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"info"</code></dd>
+	 * </dl>
+	 * @since 3.44
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_MEMBER_OF_DEPRECATED_TYPE = "org.eclipse.jdt.core.compiler.problem.memberOfDeprecatedTypeNotDeprecated"; //$NON-NLS-1$
+
+	/**
 	 * Compiler option ID: Reporting Hidden Catch Block.
 	 * <p>Locally to a try statement, some catch blocks may hide others. For example,</p>
 	 *    <pre>

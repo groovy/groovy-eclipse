@@ -316,7 +316,7 @@ private void complainAboutInitializedFinalFields(FlowInfo flowInfo, ExplicitCons
 		// if calling 'this(...)', complain about final fields that are already assigned
 		FieldBinding[] fields = this.binding.declaringClass.fields();
 		for (FieldBinding field : fields) {
-			if (!field.isStatic()) {
+			if (field.isBlankFinal() && !field.isStatic()) {
 				if (flowInfo.isPotentiallyAssigned(field))
 					this.scope.problemReporter().duplicateInitializationOfBlankFinalField(field, call);
 			}

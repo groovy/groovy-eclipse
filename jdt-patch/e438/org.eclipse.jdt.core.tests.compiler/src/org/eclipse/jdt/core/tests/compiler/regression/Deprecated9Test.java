@@ -32,8 +32,20 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 	}
 
 	static {
-//		TESTS_NAMES = new String[] { "test007" };
+//		TESTS_NAMES = new String[] { "testGH4579" };
 	}
+	// ========= OPT-IN to run.javac mode: ===========
+	@Override
+	protected void setUp() throws Exception {
+		this.runJavacOptIn = true;
+		super.setUp();
+	}
+	@Override
+	protected void tearDown() throws Exception {
+		super.tearDown();
+		this.runJavacOptIn = false; // do it last, so super can still clean up
+	}
+	// =================================================
 
 	@Override
 	protected INameEnvironment[] getClassLibs(boolean useDefaultClasspaths) {
@@ -87,15 +99,16 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			"	     ^^\n" +
 			"The type N1.N2 has been deprecated since version 1.2 and marked for removal\n" +
 			"----------\n" +
-			"2. ERROR in p\\M1.java (at line 4)\n" +
-			"	a.N1.N2.N3 m = null;\n" +
-			"	        ^^\n" +
-			"The type N1.N2.N3 has been deprecated and marked for removal\n" +
 			"----------\n" +
-			"3. ERROR in p\\M1.java (at line 5)\n" +
-			"	m.foo();\n" +
-			"	  ^^^\n" +
-			"The method foo() from the type N1.N2.N3 has been deprecated and marked for removal\n" +
+			"1. INFO in a\\N1.java (at line 4)\n" +
+			"	public class N2 {    public void foo() {}    public class N3 {      public void foo() {}    }  }}\n" +
+			"	                                 ^^^^^\n" +
+			"The enclosing type N1.N2 is deprecated, perhaps this member should be marked as deprecated, too?\n" +
+			"----------\n" +
+			"2. INFO in a\\N1.java (at line 4)\n" +
+			"	public class N2 {    public void foo() {}    public class N3 {      public void foo() {}    }  }}\n" +
+			"	                                                          ^^\n" +
+			"The enclosing type N1.N2 is deprecated, perhaps this member should be marked as deprecated, too?\n" +
 			"----------\n",
 			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 	}
@@ -139,16 +152,6 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			"	a.N1.N2.N3 m = null;\n" +
 			"	     ^^\n" +
 			"The type N1.N2 has been deprecated since version 1.2 and marked for removal\n" +
-			"----------\n" +
-			"2. ERROR in p\\M1.java (at line 4)\n" +
-			"	a.N1.N2.N3 m = null;\n" +
-			"	        ^^\n" +
-			"The type N1.N2.N3 has been deprecated and marked for removal\n" +
-			"----------\n" +
-			"3. ERROR in p\\M1.java (at line 5)\n" +
-			"	m.foo();\n" +
-			"	  ^^^\n" +
-			"The method foo() from the type N1.N2.N3 has been deprecated and marked for removal\n" +
 			"----------\n";
 		runner.javacTestOptions =
 			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
@@ -193,11 +196,11 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 	}
 	// Bug 354536 - compiling package-info.java still depends on the order of compilation units
 	public void test005a() {
-		Map<String, String> customOptions = new HashMap<>();
-		customOptions.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.WARNING);
-		customOptions.put(CompilerOptions.OPTION_ReportTerminalDeprecation, CompilerOptions.ERROR);
-		this.runNegativeTest(
-			true,
+		Runner runner = new Runner();
+		runner.customOptions = new HashMap<>();
+		runner.customOptions.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.WARNING);
+		runner.customOptions.put(CompilerOptions.OPTION_ReportTerminalDeprecation, CompilerOptions.ERROR);
+		runner.testFiles =
 			new String[] {
 				"p1/X.java",
 				"package p1;\n" +
@@ -215,26 +218,9 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"    void bar(p1.X.Inner a) {\n" +
 				"        a.foo();\n" +
 				"    }\n" +
-				"}\n",
-			},
-			null, customOptions,
-			"----------\n" +
-			"1. ERROR in p2\\C.java (at line 3)\n" +
-			"	void bar(p1.X.Inner a) {\n" +
-			"	            ^\n" +
-			"The type X has been deprecated and marked for removal\n" +
-			"----------\n" +
-			"2. ERROR in p2\\C.java (at line 3)\n" +
-			"	void bar(p1.X.Inner a) {\n" +
-			"	              ^^^^^\n" +
-			"The type X.Inner has been deprecated and marked for removal\n" +
-			"----------\n" +
-			"3. ERROR in p2\\C.java (at line 4)\n" +
-			"	a.foo();\n" +
-			"	  ^^^\n" +
-			"The method foo() from the type X.Inner has been deprecated and marked for removal\n" +
-			"----------\n",
-			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+				"}\n"
+			};
+		runner.runConformTest();
 	}
 	public void test005b() {
 		Map<String, String> customOptions = new HashMap<>();
@@ -291,7 +277,12 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			};
 		runner.expectedCompilerLog =
 			"----------\n" +
-			"1. WARNING in p2\\C.java (at line 5)\n" +
+			"1. WARNING in p2\\C.java (at line 3)\n" +
+			"	@SuppressWarnings(\"deprecation\")\n" +
+			"	                  ^^^^^^^^^^^^^\n" +
+			"Unnecessary @SuppressWarnings(\"deprecation\")\n" +
+			"----------\n" +
+			"2. WARNING in p2\\C.java (at line 5)\n" +
 			"	a.foo();\n" +
 			"	  ^^^\n" +
 			"The method foo() from the type X.Inner has been deprecated and marked for removal\n" +
@@ -400,11 +391,6 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			};
 		runner.expectedCompilerLog =
 			"----------\n" +
-			"1. WARNING in test1\\E02.java (at line 4)\n" +
-			"	System.out.println(new E01.Old());\n" +
-			"	                       ^^^^^^^\n" +
-			"The constructor E01.Old() is deprecated since version 1.0\n" +
-			"----------\n" +
 			"2. WARNING in test1\\E02.java (at line 4)\n" +
 			"	System.out.println(new E01.Old());\n" +
 			"	                           ^^^\n" +
@@ -481,11 +467,6 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			};
 		runner.expectedCompilerLog =
 			"----------\n" +
-			"1. WARNING in test1\\E02.java (at line 4)\n" +
-			"	System.out.println(new E01.Old());\n" +
-			"	                       ^^^^^^^\n" +
-			"The constructor E01.Old() is deprecated since version 1.0\n" +
-			"----------\n" +
 			"2. WARNING in test1\\E02.java (at line 4)\n" +
 			"	System.out.println(new E01.Old());\n" +
 			"	                           ^^^\n" +
@@ -555,11 +536,6 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"}"
 			};
 		runner.expectedCompilerLog =
-			"----------\n" +
-			"1. ERROR in test1\\E02.java (at line 4)\n" +
-			"	System.out.println(new E01.Old());\n" +
-			"	                       ^^^^^^^\n" +
-			"The constructor E01.Old() has been deprecated since version 1.0 and marked for removal\n" +
 			"----------\n" +
 			"2. ERROR in test1\\E02.java (at line 4)\n" +
 			"	System.out.println(new E01.Old());\n" +
@@ -781,6 +757,18 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			"	provides p1.IServiceTermDepSince with p1impl.ServiceTermDepSince;\n" +
 			"	                                             ^^^^^^^^^^^^^^^^^^^\n" +
 			"The type ServiceTermDepSince has been deprecated since version 3 and marked for removal\n" +
+			"----------\n" +
+			"----------\n" +
+			"1. WARNING in p1impl\\ServiceTermDep.java (at line 3)\n" +
+			"	public class ServiceTermDep implements p1.IServiceTermDep {}\n" +
+			"	                                          ^^^^^^^^^^^^^^^\n" +
+			"The type IServiceTermDep has been deprecated and marked for removal\n" +
+			"----------\n" +
+			"----------\n" +
+			"1. WARNING in p1impl\\ServiceTermDepSince.java (at line 3)\n" +
+			"	public class ServiceTermDepSince implements p1.IServiceTermDepSince {}\n" +
+			"	                                               ^^^^^^^^^^^^^^^^^^^^\n" +
+			"The type IServiceTermDepSince has been deprecated since version 3 and marked for removal\n" +
 			"----------\n";
 		runner.runWarningTest();
 	}
@@ -1122,6 +1110,241 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				The method nothing() from the type C1 is deprecated
 				----------
 				""";
+		runner.runWarningTest();
+	}
+	public void testGH4580() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"p/Dep.java",
+				"""
+				package p;
+				@Deprecated(forRemoval=true)
+				public class Dep {
+					@Deprecated public static final String S= "";
+				}
+				"""
+			};
+		runner.runConformTest();
+		runner.shouldFlushOutputDirectory = false;
+		runner.customOptions = getCompilerOptions();
+		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION, JavaCore.ERROR);
+		runner.customOptions.put(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION, JavaCore.ERROR);
+		runner.customOptions.put(JavaCore.COMPILER_PB_UNUSED_WARNING_TOKEN, JavaCore.ERROR);
+		runner.customOptions.put(JavaCore.COMPILER_PB_SUPPRESS_OPTIONAL_ERRORS, JavaCore.ENABLED);
+		runner.testFiles = new String[] {
+				"p/DepSub.java",
+				"""
+				package p;
+
+				@SuppressWarnings({"removal", "deprecation"})
+				public class DepSub extends Dep {
+					@SuppressWarnings("hiding")
+					public static final String S = Dep.S;
+				}
+				"""
+			};
+		runner.runConformTest();
+	}
+	public void testGH4579_fromNonDeprecated() {
+		Runner runner = new Runner();
+		runner.customOptions = getCompilerOptions();
+		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION, JavaCore.WARNING);
+		runner.customOptions.put(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION, JavaCore.WARNING);
+		runner.testFiles = new String[] {
+				"p/WarningTable.java",
+				"""
+				package p;
+
+				class Dep {
+					@Deprecated(forRemoval=false)
+					public void mOrdinary() {}
+					@Deprecated(forRemoval=true)
+					public void mTerminal() {}
+
+					@Deprecated(since="now")
+					public final String fOrdinary = "O";
+					@Deprecated(forRemoval=true)
+					public final String fTerminal = "T";
+
+					@Deprecated
+					public class cOrdinary {}
+					@Deprecated(forRemoval=true)
+					public class cTerminal{}
+				}
+				class WarningTable {
+					public void notDeprecated(Dep d) {
+						d.mOrdinary();
+						d.mTerminal();
+
+						String s1 = d.fOrdinary;
+						String s2 = d.fTerminal;
+
+						d.new cOrdinary();
+						d.new cTerminal();
+					}
+				}
+				"""
+			};
+		runner.expectedCompilerLog =
+			"""
+			----------
+			1. WARNING in p\\WarningTable.java (at line 21)
+				d.mOrdinary();
+				  ^^^^^^^^^
+			The method mOrdinary() from the type Dep is deprecated
+			----------
+			2. WARNING in p\\WarningTable.java (at line 22)
+				d.mTerminal();
+				  ^^^^^^^^^
+			The method mTerminal() from the type Dep has been deprecated and marked for removal
+			----------
+			3. WARNING in p\\WarningTable.java (at line 24)
+				String s1 = d.fOrdinary;
+				              ^^^^^^^^^
+			The field Dep.fOrdinary is deprecated since version now
+			----------
+			4. WARNING in p\\WarningTable.java (at line 25)
+				String s2 = d.fTerminal;
+				              ^^^^^^^^^
+			The field Dep.fTerminal has been deprecated and marked for removal
+			----------
+			5. WARNING in p\\WarningTable.java (at line 27)
+				d.new cOrdinary();
+				      ^^^^^^^^^
+			The type Dep.cOrdinary is deprecated
+			----------
+			6. WARNING in p\\WarningTable.java (at line 28)
+				d.new cTerminal();
+				      ^^^^^^^^^
+			The type Dep.cTerminal has been deprecated and marked for removal
+			----------
+			""";
+		runner.runWarningTest();
+	}
+	public void testGH4579_fromOrdinarilyDeprecated() {
+		Runner runner = new Runner();
+		runner.customOptions = getCompilerOptions();
+		runner.customOptions.put(JavaCore.COMPILER_PB_UNUSED_LOCAL, JavaCore.IGNORE);
+		runner.customOptions.put(JavaCore.COMPILER_PB_UNUSED_OBJECT_ALLOCATION, JavaCore.IGNORE);
+		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION, JavaCore.WARNING);
+		runner.customOptions.put(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION, JavaCore.WARNING);
+		runner.testFiles = new String[] {
+				"p/WarningTable.java",
+				"""
+				package p;
+
+				class Dep {
+					@Deprecated(forRemoval=false)
+					public void mOrdinary() {}
+					@Deprecated(forRemoval=true)
+					public void mTerminal() {}
+
+					@Deprecated(since="now")
+					public final String fOrdinary = "O";
+					@Deprecated(forRemoval=true)
+					public final String fTerminal = "T";
+
+					@Deprecated
+					public class cOrdinary {}
+					@Deprecated(forRemoval=true)
+					public class cTerminal {}
+				}
+				class WarningTable {
+					@Deprecated(forRemoval=false)
+					public void oridinary(Dep d) {
+						d.mOrdinary();
+						d.mTerminal();
+
+						String s1 = d.fOrdinary;
+						String s2 = d.fTerminal;
+
+						d.new cOrdinary();
+						d.new cTerminal();
+					}
+				}
+				"""
+			};
+		runner.expectedCompilerLog =
+			"""
+			----------
+			1. WARNING in p\\WarningTable.java (at line 23)
+				d.mTerminal();
+				  ^^^^^^^^^
+			The method mTerminal() from the type Dep has been deprecated and marked for removal
+			----------
+			2. WARNING in p\\WarningTable.java (at line 26)
+				String s2 = d.fTerminal;
+				              ^^^^^^^^^
+			The field Dep.fTerminal has been deprecated and marked for removal
+			----------
+			3. WARNING in p\\WarningTable.java (at line 29)
+				d.new cTerminal();
+				      ^^^^^^^^^
+			The type Dep.cTerminal has been deprecated and marked for removal
+			----------
+			""";
+		runner.runWarningTest();
+	}
+	public void testGH4579_fromTerminallyDeprecated() {
+		Runner runner = new Runner();
+		runner.customOptions = getCompilerOptions();
+		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION, JavaCore.WARNING);
+		runner.customOptions.put(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION, JavaCore.WARNING);
+		runner.testFiles = new String[] {
+				"p/WarningTable.java",
+				"""
+				package p;
+
+				class Dep {
+					@Deprecated(forRemoval=false)
+					public void mOrdinary() {}
+					@Deprecated(forRemoval=true)
+					public void mTerminal() {}
+
+					@Deprecated(since="now")
+					public final String fOrdinary = "O";
+					@Deprecated(forRemoval=true)
+					public final String fTerminal = "T";
+
+					@Deprecated
+					public class cOrdinary {}
+					@Deprecated(forRemoval=true)
+					public class cTerminal{}
+				}
+				class WarningTable {
+					@Deprecated(forRemoval=true)
+					public void terminal(Dep d) {
+						d.mOrdinary();
+						d.mTerminal();
+
+						String s1 = d.fOrdinary;
+						String s2 = d.fTerminal;
+
+						d.new cOrdinary();
+						d.new cTerminal();
+					}
+				}
+				"""
+			};
+		runner.expectedCompilerLog =
+			"""
+			----------
+			1. WARNING in p\\WarningTable.java (at line 23)
+				d.mTerminal();
+				  ^^^^^^^^^
+			The method mTerminal() from the type Dep has been deprecated and marked for removal
+			----------
+			2. WARNING in p\\WarningTable.java (at line 26)
+				String s2 = d.fTerminal;
+				              ^^^^^^^^^
+			The field Dep.fTerminal has been deprecated and marked for removal
+			----------
+			3. WARNING in p\\WarningTable.java (at line 29)
+				d.new cTerminal();
+				      ^^^^^^^^^
+			The type Dep.cTerminal has been deprecated and marked for removal
+			----------
+			""";
 		runner.runWarningTest();
 	}
 	public static Class<?> testClass() {

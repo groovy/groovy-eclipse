@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2025 IBM Corporation and others.
  *
@@ -852,7 +853,11 @@ public boolean isDefaultMethod() {
 public final boolean isDeprecated() {
 	return (this.modifiers & ClassFileConstants.AccDeprecated) != 0;
 }
-
+// GROOVY add
+public final boolean isViewedAsDeprecated() {
+	return isDeprecated();
+}
+// GROOVY end
 /* Answer true if the receiver is final and cannot be overridden
 */
 public final boolean isFinal() {
@@ -981,12 +986,6 @@ public boolean isParameterizedGeneric() {
 public boolean isPolymorphic() {
 	return false;
 }
-/* Answer true if the receiver's declaring type is deprecated (or any of its enclosing types)
-*/
-public final boolean isViewedAsDeprecated() {
-	return (this.modifiers & (ClassFileConstants.AccDeprecated | ExtraCompilerModifiers.AccDeprecatedImplicitly)) != 0;
-}
-
 @Override
 public final int kind() {
 	return Binding.METHOD;

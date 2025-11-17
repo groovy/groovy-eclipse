@@ -3751,13 +3751,48 @@ public abstract class Scope {
 				Object value = invocations.get(mec);
 				if (value instanceof TypeBinding[]) {
 					TypeBinding[] invalidInvocations = (TypeBinding[]) value;
-					problemReporter().superinterfacesCollide(invalidInvocations[0].erasure(), typeRef, invalidInvocations[0], invalidInvocations[1]);
-					type.tagBits |= TagBits.HierarchyHasProblems;
-					return true;
+					if (areSignificantlyDifferent(invalidInvocations[0], invalidInvocations[1])) {
+						problemReporter().superinterfacesCollide(invalidInvocations[0].erasure(), typeRef, invalidInvocations[0], invalidInvocations[1]);
+						type.tagBits |= TagBits.HierarchyHasProblems;
+						return true;
+					}
 				}
 			}
 		}
 		return false;
+	}
+
+	private boolean areSignificantlyDifferent(TypeBinding one, TypeBinding two) {
+		if (!one.enterRecursiveFunction())
+			return true;
+		try {
+			if (one instanceof ParameterizedTypeBinding ptb1 && two instanceof ParameterizedTypeBinding ptb2) {
+				if (TypeBinding.notEquals(ptb1.erasure(), ptb2.erasure()))
+					return true;
+				return areSignificantlyDifferent(ptb1.arguments, ptb2.arguments);
+			} else if (one instanceof WildcardBinding wb1 && two instanceof WildcardBinding wb2) {
+				if (wb1.boundKind() != wb2.boundKind())
+					return true;
+				if (TypeBinding.notEquals(wb1.bound, wb2.bound))
+					return true;
+				return areSignificantlyDifferent(wb1.otherBounds, wb2.otherBounds);
+			}
+			return TypeBinding.notEquals(one, two);
+		} finally {
+			one.exitRecursiveFunction();
+		}
+	}
+
+	private boolean areSignificantlyDifferent(TypeBinding[] ones, TypeBinding[] twos) {
+		if (ones == null || twos == null)
+			return ones != twos;
+		if (ones.length != twos.length)
+			return true;
+		for (int i = 0; i < ones.length; i++) {
+			if (areSignificantlyDifferent(ones[i], twos[i]))
+				return true;
+		}
+		return false; // no significant difference found
 	}
 
 	/**
@@ -3832,6 +3867,15 @@ public abstract class Scope {
 		return false;
 	}
 
+	/* Answer true if this scope and the given type share a outermost enclosing type
+	 */
+	public final boolean isDefinedInSameEnclosingType(ReferenceBinding type) {
+		ClassScope outerMostClassScope = outerMostClassScope();
+		if (outerMostClassScope != null && outerMostClassScope.referenceContext != null)
+			return TypeBinding.equalsEquals(outerMostClassScope.referenceContext.binding, type.outermostEnclosingType());
+		return false;
+	}
+
 	/* Answer true if the scope is nested inside a given type declaration
 	*/
 	public final boolean isDefinedInType(ReferenceBinding type) {
@@ -3873,24 +3917,20 @@ public abstract class Scope {
 					ReferenceContext referenceContext = methodScope.referenceContext();
 					if (referenceContext instanceof AbstractMethodDeclaration) {
 						MethodBinding context = ((AbstractMethodDeclaration) referenceContext).binding;
-						if (context != null && context.isViewedAsDeprecated())
-							return true;
-					} else if (referenceContext instanceof LambdaExpression) {
-						MethodBinding context = ((LambdaExpression) referenceContext).binding;
-						if (context != null && context.isViewedAsDeprecated())
+						if (context != null && context.isDeprecated())
 							return true;
 					} else if (referenceContext instanceof ModuleDeclaration) {
 						ModuleBinding context = ((ModuleDeclaration) referenceContext).binding;
 						return context != null && context.isDeprecated();
 					}
-				} else if (methodScope.initializedField != null && methodScope.initializedField.isViewedAsDeprecated()) {
+				} else if (methodScope.initializedField != null && methodScope.initializedField.isDeprecated()) {
 					// inside field declaration ? check field modifier to see if deprecated
 					return true;
 				}
 				SourceTypeBinding declaringType = ((BlockScope)this).referenceType().binding;
 				if (declaringType != null) {
 					declaringType.initializeDeprecatedAnnotationTagBits(); // may not have been resolved until then
-					if (declaringType.isViewedAsDeprecated())
+					if (declaringType.isDeprecated())
 						return true;
 				}
 				break;
@@ -3898,7 +3938,7 @@ public abstract class Scope {
 				ReferenceBinding context = ((ClassScope)this).referenceType().binding;
 				if (context != null) {
 					context.initializeDeprecatedAnnotationTagBits(); // may not have been resolved until then
-					if (context.isViewedAsDeprecated())
+					if (context.isDeprecated())
 						return true;
 				}
 				break;
@@ -3909,11 +3949,13 @@ public abstract class Scope {
 					SourceTypeBinding type = unit.types[0].binding;
 					if (type != null) {
 						type.initializeDeprecatedAnnotationTagBits(); // may not have been resolved until then
-						if (type.isViewedAsDeprecated())
+						if (type.isDeprecated())
 							return true;
 					}
 				}
 		}
+		if (this.parent != null && !(this.parent instanceof CompilationUnitScope))
+			return this.parent.isInsideDeprecatedCode();
 		return false;
 	}
 
@@ -4598,7 +4640,7 @@ public abstract class Scope {
 					} else {
 						expressions = ((ReferenceExpression)invocationSite).createPseudoExpressions(argumentTypes);
 					}
-					InferenceContext18 ic18 = new InferenceContext18(this, expressions, invocationSite, null);
+					InferenceContext18 ic18 = new InferenceContext18(this, expressions, invocationSite);
 					if (!ic18.isMoreSpecificThan(mbj, mbk, levelj == VARARGS_COMPATIBLE, levelk == VARARGS_COMPATIBLE)) {
 						continue nextJ;
 					}

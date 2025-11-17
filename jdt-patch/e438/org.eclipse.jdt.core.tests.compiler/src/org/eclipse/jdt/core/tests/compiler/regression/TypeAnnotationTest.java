@@ -6375,7 +6375,12 @@ public class TypeAnnotationTest extends AbstractRegressionTest {
 				"    Class<? extends Annotation> value();\n" +
 				"}\n",
 			},
-			"");
+			"----------\n" +
+			"1. WARNING in T.java (at line 5)\n" +
+			"	@R(TC.class)\n" +
+			"	   ^^\n" +
+			"The type TC is deprecated\n" +
+			"----------\n");
 	}
 	public void testHybridTargets() throws Exception {
 		this.runConformTest(

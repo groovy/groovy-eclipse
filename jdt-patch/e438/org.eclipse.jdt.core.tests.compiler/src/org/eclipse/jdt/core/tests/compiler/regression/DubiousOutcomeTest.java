@@ -292,4 +292,27 @@ public class DubiousOutcomeTest extends AbstractRegressionTest {
 		runner.javacTestOptions = DubiousOutcome.JDK8364144;
 		runner.runConformTest();
 	}
+	public void testGH4263() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				class AClass<T> {
+					AClass(T t) {}
+				}
+				interface I<T> {}
+				class Concrete<T> implements I<T> {}
+				public class X {
+					public static void main(String args[]) {
+						foo(new AClass<I<? super Integer>>(new Concrete<java.io.Serializable>()));
+					}
+					static <T extends I<? super String>> String foo(AClass<? super T> ac) {
+						return "foo";
+					}
+				}
+				"""
+			};
+		runner.javacTestOptions = DubiousOutcome.JavacErrorsEclipseNone;
+		runner.runConformTest();
+	}
 }
