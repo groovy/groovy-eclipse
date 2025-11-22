@@ -52,6 +52,7 @@ package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -97,6 +98,7 @@ public class BinaryTypeBinding extends ReferenceBinding {
 	protected FieldBinding[] fields;
 	protected RecordComponentBinding[] components;
 	protected MethodBinding[] methods;
+	protected MethodBinding[] methodsInOriginalOrder;
 	// GROOVY add
 	private boolean infraMethodsComplete;
 	protected MethodBinding[] infraMethods = Binding.NO_METHODS;
@@ -1784,6 +1786,20 @@ private ReferenceBinding[] maybeSortedMemberTypes() {
 	return this.memberTypes;
 }
 
+/**
+ * Returns the methods in the order they appear in the class file if available. In some case,
+ * for e.g., when annotation processing is enabled, the original order is preserved and available
+ * for clients. If the original order is not available, the regular sorted array is returned.
+ *
+ * @return the methods in the original order
+ */
+public MethodBinding[] methodsInOriginalOrder() {
+	if (this.methodsInOriginalOrder != null) {
+		return this.methodsInOriginalOrder;
+	}
+	return this.methods;
+}
+
 // GROOVY add
 public MethodBinding[] infraMethods() {
 	if (!this.infraMethodsComplete) {
@@ -1810,8 +1826,12 @@ public MethodBinding[] methods() {
 	// lazily sort methods
 	if ((this.tagBits & TagBits.AreMethodsSorted) == 0) {
 		int length = this.methods.length;
-		if (length > 1)
+		if (length > 1) {
+			if (this.environment.globalOptions.processAnnotations) {
+				this.methodsInOriginalOrder = Arrays.copyOf(this.methods, this.methods.length);
+			}
 			ReferenceBinding.sortMethods(this.methods, 0, length);
+		}
 		this.tagBits |= TagBits.AreMethodsSorted;
 	}
 	for (int i = this.methods.length; --i >= 0;)

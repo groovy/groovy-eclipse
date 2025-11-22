@@ -129,8 +129,9 @@ public class TypeElementImpl extends ElementImpl implements TypeElement {
 	@Override
 	public List<? extends Element> getEnclosedElements() {
 		ReferenceBinding binding = (ReferenceBinding)this._binding;
-		List<Element> enclosed = new ArrayList<>(binding.fieldCount() + binding.methods().length + binding.memberTypes().length);
-		for (MethodBinding method : binding.methods()) {
+		MethodBinding[] methods = (binding instanceof BinaryTypeBinding btb) ? btb.methodsInOriginalOrder() : binding.methods();
+		List<Element> enclosed = new ArrayList<>(binding.fieldCount() + methods.length + binding.memberTypes().length);
+		for (MethodBinding method : methods) {
 			ExecutableElement executable = new ExecutableElementImpl(this._env, method);
 			enclosed.add(executable);
 		}
@@ -152,7 +153,9 @@ public class TypeElementImpl extends ElementImpl implements TypeElement {
 			TypeElement type = new TypeElementImpl(this._env, memberType, null);
 			enclosed.add(type);
 		}
-		Collections.sort(enclosed, new SourceLocationComparator());
+		// SourceLocationComparator is of no use for binaries; so skip it.
+		if (!binding.isBinaryBinding())
+			Collections.sort(enclosed, new SourceLocationComparator());
 		return Collections.unmodifiableList(enclosed);
 	}
 

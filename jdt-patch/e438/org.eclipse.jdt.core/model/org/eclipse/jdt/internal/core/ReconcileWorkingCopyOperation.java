@@ -202,8 +202,9 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 				if (CompilationUnit.DOM_BASED_OPERATIONS) {
 					try {
 						ASTParser parser = ASTParser.newParser(this.astLevel > 0 ? this.astLevel : AST.getJLSLatest());
-						parser.setResolveBindings(this.resolveBindings || (this.reconcileFlags & ICompilationUnit.FORCE_PROBLEM_DETECTION) != 0);
+						parser.setResolveBindings(this.resolveBindings);
 						parser.setCompilerOptions(options);
+						parser.setForceProblemDetection((this.reconcileFlags & ICompilationUnit.FORCE_PROBLEM_DETECTION) != 0);
 						parser.setSource(source);
 						org.eclipse.jdt.core.dom.CompilationUnit newAST = (org.eclipse.jdt.core.dom.CompilationUnit) parser.createAST(this.progressMonitor);
 						if ((this.reconcileFlags & ICompilationUnit.FORCE_PROBLEM_DETECTION) != 0 && newAST != null) {

@@ -487,6 +487,21 @@ public class ASTParser {
 	}
 
 	/**
+	 * Requests for the compiler to force problem detection (such as extra analysis
+	 * or linting configured in project).
+	 * @param enabled <code>true</code> if problems are wanted, and <code>false</code>
+	 *                if problems are not of interest.
+	 * @since 3.44
+	 */
+	public void setForceProblemDetection(boolean enabled) {
+		if (enabled) {
+			this.bits |= CompilationUnitResolver.FORCE_PROBLEM_DETECTION;
+		} else {
+			this.bits &= ~CompilationUnitResolver.FORCE_PROBLEM_DETECTION;
+		}
+	}
+
+	/**
 	 * Requests an abridged abstract syntax tree.
 	 * By default, complete ASTs are returned.
 	 * <p>
