@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,13 +102,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     private void addJUnitAndSpock(final IPath projectPath) throws Exception {
         String spockCorePath;
-        if (isAtLeastGroovy(40)) {
+        if (!isAtLeastGroovy(40)) {
+            spockCorePath = "lib/spock-core-2.3-groovy-3.0.jar";
+        } else if (!isAtLeastGroovy(50)) {
             spockCorePath = "lib/spock-core-2.3-groovy-4.0.jar";
         } else {
-            spockCorePath = "lib/spock-core-2.3-groovy-3.0.jar";
+            spockCorePath = "lib/spock-core-2.4-M7-groovy-5.0.jar";
         }
         env.addJar(projectPath, spockCorePath);
-        if (isAtLeastGroovy(50)) System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
+        if (isAtLeastGroovy(60)) System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
         env.addEntry(projectPath, JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/5")));
     }
 

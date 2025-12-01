@@ -44,8 +44,11 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.syntax.Token;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 import static org.apache.groovy.ast.tools.VisibilityUtils.getVisibility;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.callThisX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
 import static groovyjarjarasm.asm.Opcodes.ACC_FINAL;
 import static groovyjarjarasm.asm.Opcodes.ACC_PRIVATE;
 import static groovyjarjarasm.asm.Opcodes.ACC_STATIC;
@@ -97,7 +100,8 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
 
         final ClassNode classNode = (ClassNode) targetClass;
 
-        ClassCodeExpressionTransformer transformer = new ClassCodeExpressionTransformer() {
+        var transformer = new ClassCodeExpressionTransformer() {
+            private boolean inClosure;
             private FieldNode logNode;
 
             @Override
@@ -107,12 +111,23 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
 
             @Override
             public Expression transform(final Expression exp) {
-                if (exp == null) return null;
                 if (exp instanceof MethodCallExpression) {
-                    return transformMethodCallExpression(exp);
-                }
-                if (exp instanceof ClosureExpression) {
-                    return transformClosureExpression((ClosureExpression) exp);
+                    var call = (MethodCallExpression) exp;
+                    var modifiedCall = addGuard(call);
+                    if (modifiedCall != null) {
+                        return modifiedCall;
+                    }
+                } else if (exp instanceof ClosureExpression) {
+                    var code = ((ClosureExpression) exp).getCode();
+                    if (code instanceof BlockStatement) {
+                        boolean previousValue = inClosure; inClosure = true;
+                        try {
+                            super.visitBlockStatement((BlockStatement) code);
+                        } finally {
+                            inClosure = previousValue;
+                        }
+                    }
+                    return exp;
                 }
                 return super.transform(exp);
             }
@@ -122,7 +137,7 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
                 FieldNode logField = node.getField(logFieldName);
                 if (logField != null && logField.getOwner().equals(node)) {
                     addError("Class annotated with Log annotation cannot have log field declared", logField);
-                } else if (logField != null && !logField.isPrivate()) {
+                } else if (logField != null && !Modifier.isPrivate(logField.getModifiers())) {
                     addError("Class annotated with Log annotation cannot have log field declared because the field exists in the parent class: " + logField.getOwner().getName(), logField);
                 } else {
                     if (loggingStrategy instanceof LoggingStrategyV2) {
@@ -143,46 +158,41 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
                 super.visitClass(node);
             }
 
-            private Expression transformClosureExpression(final ClosureExpression exp) {
-                if (exp.getCode() instanceof BlockStatement) {
-                    BlockStatement code = (BlockStatement) exp.getCode();
-                    super.visitBlockStatement(code);
-                }
-                return exp;
-            }
-
-            private Expression transformMethodCallExpression(final Expression exp) {
-                Expression modifiedCall = addGuard((MethodCallExpression) exp);
-                return modifiedCall == null ? super.transform(exp) : modifiedCall;
-            }
-
             private Expression addGuard(final MethodCallExpression mce) {
-                // only add guard to methods of the form: logVar.logMethod(params)
+                // only add guard to methods of the form: logVar.logMethod(arguments)
                 if (!(mce.getObjectExpression() instanceof VariableExpression)) {
                     return null;
                 }
-                VariableExpression variableExpression = (VariableExpression) mce.getObjectExpression();
+                var variableExpression = (VariableExpression) mce.getObjectExpression();
                 if (!variableExpression.getName().equals(logFieldName)
                         || !(variableExpression.getAccessedVariable() instanceof DynamicVariable)) {
                     return null;
                 }
-
                 String methodName = mce.getMethodAsString();
-                if (methodName == null) return null;
-                if (!loggingStrategy.isLoggingMethod(methodName)) return null;
-                // also don't bother with guard if we have "simple" method args
-                // since there is no saving
+                if (methodName == null || !loggingStrategy.isLoggingMethod(methodName)) return null;
+
+                Expression receiver;
+                if (inClosure) {
+                    var pe = propX(callThisX("getThisObject"), logFieldName); // GROOVY-11800
+                    pe.getProperty().setSourcePosition(variableExpression);
+                    pe.setType(logNode.getType());
+                    mce.setObjectExpression(pe);
+                    receiver = pe;
+                } else {
+                    receiver = variableExpression;
+                    variableExpression.setAccessedVariable(logNode);
+                }
+
+                // do not bother with guard if we have "simple" args since there are no savings
                 if (usesSimpleMethodArgumentsOnly(mce)) return null;
 
-                variableExpression.setAccessedVariable(logNode);
-                return loggingStrategy.wrapLoggingMethodCall(variableExpression, methodName, mce);
+                return loggingStrategy.wrapLoggingMethodCall(receiver, methodName, mce);
             }
 
             private boolean usesSimpleMethodArgumentsOnly(final MethodCallExpression mce) {
                 Expression arguments = mce.getArguments();
                 if (arguments instanceof TupleExpression) {
-                    TupleExpression tuple = (TupleExpression) arguments;
-                    for (Expression exp : tuple.getExpressions()) {
+                    for (Expression exp : (TupleExpression) arguments) {
                         if (!isSimpleExpression(exp)) return false;
                     }
                     return true;

@@ -295,7 +295,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         if (PredictionMode.SLL.equals(predictionMode)) {
             this.removeErrorListeners();
         } else {
-            parser.getInputStream().seek(0);
         */
             this.addErrorListeners();
         /*}*/
