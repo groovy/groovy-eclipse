@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -44,165 +43,70 @@ import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.internal.browser.WebBrowserPreference;
 import org.eclipse.ui.internal.browser.WorkbenchBrowserSupport;
-import org.osgi.framework.Version;
 
 /**
  * Shared functionality to provide a UI for compiler switching.
  */
 public class CompilerSwitchUIHelper {
-    static final String PROP_VM = "eclipse.vm"; //$NON-NLS-1$
-
-    static final String PROP_VMARGS = "eclipse.vmargs"; //$NON-NLS-1$
-
-    static final String PROP_REFRESH_BUNDLES = "-Declipse.refreshBundles=true";
-
-    static final String PROP_CLEAN = "-Dosgi.clean=true"; //$NON-NLS-1$
-
-    static final String PROP_COMMANDS = "eclipse.commands"; //$NON-NLS-1$
-
-    private static final String PROP_EXIT_CODE = "eclipse.exitcode"; //$NON-NLS-1$
-
-    private static final String PROP_EXIT_DATA = "eclipse.exitdata"; //$NON-NLS-1$
-
-    static final String CMD_VMARGS = "-vmargs"; //$NON-NLS-1$
-
-    static final String NEW_LINE = "\n"; //$NON-NLS-1$
 
     /**
-     * Main entry point to generate UI for compiler switching
-     * @param compilerPage
+     * Main entry point to generate UI for compiler switching.
      */
-    public static Composite createCompilerSwitchBlock(Composite parent) {
-        Composite compilerPage = new Composite(parent, SWT.NONE);
+    public static Composite createCompilerSwitchBlock(final Composite parent) {
+        Composite compilerPanel = new Composite(parent, SWT.NONE);
 
         GridLayout layout = new GridLayout();
-        layout.numColumns = 1;
-        layout.marginHeight = 3;
-        layout.marginWidth = 3;
-        compilerPage.setLayout(layout);
+        layout.marginBottom = 3;
+        layout.marginHeight = 0;
+        layout.marginWidth  = 0;
+        layout.numColumns   = 1;
+        compilerPanel.setLayout(layout);
+        compilerPanel.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 
-        SpecifiedVersion activeGroovyVersion = CompilerUtils.getActiveGroovyVersion();
-        Label compilerVersion = new Label(compilerPage, SWT.LEFT | SWT.WRAP);
-        compilerVersion.setText("You are currently using Groovy Compiler version " + CompilerUtils.getGroovyVersion() + ".");
+        Label compilerVersion = new Label(compilerPanel, SWT.LEFT);
+        compilerVersion.setText("You are currently using Groovy Compiler version " + CompilerUtils.getGroovyVersion());
 
+        /**/ SpecifiedVersion activeGroovyVersion = CompilerUtils.getActiveGroovyVersion();
         for (SpecifiedVersion version : SpecifiedVersion.values()) {
             if (activeGroovyVersion != version) {
-                switchVersion(version, compilerPage);
-            }
-        }
-
-        Link moreInfoLink = new Link(compilerPage, 0);
-        moreInfoLink.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-        moreInfoLink.setText("<a href=\"https://github.com/groovy/groovy-eclipse/wiki\">See here</a> for more information (opens a browser window).");
-        moreInfoLink.addListener(SWT.Selection, event -> openUrl(event.text));
-
-        return compilerPage;
-    }
-
-    /**
-     * Provides UI for switching compiler between versions
-     * @param toVersion
-     */
-    private static void switchVersion(final SpecifiedVersion toSpecifiedVersion, final Composite compilerPage) {
-        final Version toVersion = CompilerUtils.getBundleVersion(toSpecifiedVersion);
-        if (toVersion == null) {
-            // this version is not installed
-            return;
-        }
-
-        Button switchTo = new Button(compilerPage, SWT.PUSH);
-        switchTo.setText("Switch to " + toVersion);
-        switchTo.addSelectionListener(new SelectionListener() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                Shell shell = compilerPage.getShell();
-                boolean result = MessageDialog.openQuestion(shell, "Change compiler and restart?",
-                        "Do you want to change the compiler?\n\nIf you select \"Yes\"," +
-                                " the compiler will be changed and Eclipse will be restarted.\n\n" +
-                        "Make sure all your work is saved before clicking \"Yes\".");
-
-                if (result) {
-                    // change compiler
-                    SpecifiedVersion activeGroovyVersion = CompilerUtils.getActiveGroovyVersion();
-                    IStatus status = CompilerUtils.switchVersions(activeGroovyVersion, toSpecifiedVersion);
-                    if (status == Status.OK_STATUS) {
-                        restart(shell);
-                    } else {
-                        ErrorDialog error = new ErrorDialog(shell,
-                                "Error occurred", "Error occurred when trying to enable Groovy " +
-                                        toVersion,
-                                        status, IStatus.ERROR);
-                        error.open();
-                    }
+                var bundleVersion = CompilerUtils.getBundleVersion(version);
+                if (bundleVersion != null) {
+                    Button switchTo = new Button(compilerPanel, SWT.PUSH);
+                    switchTo.addSelectionListener(switchTo(version));
+                    switchTo.setText("Switch to " + bundleVersion);
                 }
             }
+        }
 
-            @Override
-            public void widgetDefaultSelected(SelectionEvent e) {
+        Link moreInfoLink = new Link(compilerPanel, 0);
+        moreInfoLink.addSelectionListener(SelectionListener.widgetSelectedAdapter((event) -> openUrl(event.text)));
+        moreInfoLink.setText("<a href=\"https://github.com/groovy/groovy-eclipse/wiki\">See here</a> for more information (opens a browser window).");
+
+        return compilerPanel;
+    }
+
+    private static SelectionListener switchTo(final SpecifiedVersion version) {
+        return SelectionListener.widgetSelectedAdapter((event) -> {
+            Shell shell = ((Button) event.getSource()).getShell();
+            boolean result = MessageDialog.openQuestion(shell,
+                "Change compiler and restart?",
+                "Do you want to change the compiler?\n\n" +
+                "If you select \"Yes\", the compiler will be changed and Eclipse will be restarted.\n\n" +
+                "Make sure all your work is saved before clicking \"Yes\".");
+            if (result) {
+                IStatus status = CompilerUtils.switchVersions(CompilerUtils.getActiveGroovyVersion(), version);
+                if (status == Status.OK_STATUS) {
+                    restart(shell);
+                } else {
+                    String errorString = "Error occurred when trying to enable Groovy " + version.toReadableVersionString();
+                    ErrorDialog dialog = new ErrorDialog(shell, "Error occurred", errorString, status, IStatus.ERROR);
+                    dialog.open();
+                }
             }
         });
     }
 
-    /**
-     * borrowed from {@link OpenWorkspaceAction}
-     */
-    protected static void restart(Shell shell) {
-        String commandLine = buildCommandLine(shell);
-        if (commandLine == null) {
-            return;
-        }
-
-        System.out.println("Restart command line begin:\n " + commandLine);
-        System.out.println("Restart command line end");
-        System.setProperty(PROP_EXIT_DATA, commandLine);
-        System.setProperty(PROP_EXIT_CODE, Integer.toString(24));
-        Workbench.getInstance().restart();
-    }
-
-    /**
-     * Create and return a string with command line options for eclipse.exe that
-     * will launch a new workbench that is the same as the currently running
-     * one, but using the argument directory as its workspace.
-     *
-     * @param workspace
-     *            the directory to use as the new workspace
-     * @return a string of command line options or null on error
-     */
-    private static String buildCommandLine(Shell shell) {
-        String property = System.getProperty(PROP_VM);
-        if (property == null) {
-            MessageDialog.openError(shell, "Missing System Property",
-                NLS.bind("Unable to relaunch the platform because the {0} property has not been set.", PROP_VM));
-            return null;
-        }
-
-        StringBuffer result = new StringBuffer(512);
-        result.append(property);
-        result.append(NEW_LINE);
-
-        // append the vmargs and commands. Assume that these already end in \n
-        String vmargs = System.getProperty(PROP_VMARGS, "");
-        vmargs = vmargs + NEW_LINE + PROP_REFRESH_BUNDLES + NEW_LINE + PROP_CLEAN + NEW_LINE;
-        result.append(vmargs);
-
-        // append the rest of the args, replacing or adding -data as required
-        property = System.getProperty(PROP_COMMANDS);
-        if (property != null) {
-            result.append(property);
-        }
-
-        // put the vmargs back at the very end (the eclipse.commands property
-        // already contains the -vm arg)
-        if (vmargs != null) {
-            result.append(CMD_VMARGS);
-            result.append(NEW_LINE);
-            result.append(vmargs);
-        }
-
-        return result.toString();
-    }
-
-    public static void openUrl(String location) {
+    private static void openUrl(final String location) {
         try {
             URL url = null;
 
@@ -234,5 +138,84 @@ public class CompilerSwitchUIHelper {
         } catch (MalformedURLException e) {
             MessageDialog.openInformation(Display.getDefault().getActiveShell(), "Malformed URL", location);
         }
+    }
+
+    //--------------------------------------------------------------------------
+
+    private static final String PROP_VM = "eclipse.vm"; //$NON-NLS-1$
+
+    private static final String PROP_VMARGS = "eclipse.vmargs"; //$NON-NLS-1$
+
+    private static final String PROP_REFRESH_BUNDLES = "-Declipse.refreshBundles=true";
+
+    private static final String PROP_CLEAN = "-Dosgi.clean=true"; //$NON-NLS-1$
+
+    private static final String PROP_COMMANDS = "eclipse.commands"; //$NON-NLS-1$
+
+    private static final String PROP_EXIT_CODE = "eclipse.exitcode"; //$NON-NLS-1$
+
+    private static final String PROP_EXIT_DATA = "eclipse.exitdata"; //$NON-NLS-1$
+
+    private static final String CMD_VMARGS = "-vmargs"; //$NON-NLS-1$
+
+    private static final String NEW_LINE = "\n"; //$NON-NLS-1$
+
+    /**
+     * Borrowed from {@link OpenWorkspaceAction}.
+     */
+    private static void restart(final Shell shell) {
+        String commandLine = buildCommandLine(shell);
+        if (commandLine == null) {
+            return;
+        }
+
+        System.out.println("Restart command line begin:\n " + commandLine);
+        System.out.println("Restart command line end");
+        System.setProperty(PROP_EXIT_DATA, commandLine);
+        System.setProperty(PROP_EXIT_CODE, Integer.toString(24));
+        Workbench.getInstance().restart();
+    }
+
+    /**
+     * Creates and return a string with command line options for eclipse.exe that
+     * will launch a new workbench that is the same as the currently running
+     * one, but using the argument directory as its workspace.
+     *
+     * @param workspace
+     *            the directory to use as the new workspace
+     * @return a string of command line options or null on error
+     */
+    private static String buildCommandLine(final Shell shell) {
+        String property = System.getProperty(PROP_VM);
+        if (property == null) {
+            MessageDialog.openError(shell, "Missing System Property",
+                NLS.bind("Unable to relaunch the platform because the {0} property has not been set.", PROP_VM));
+            return null;
+        }
+
+        StringBuffer result = new StringBuffer(512);
+        result.append(property);
+        result.append(NEW_LINE);
+
+        // append the vmargs and commands. Assume that these already end in \n
+        String vmargs = System.getProperty(PROP_VMARGS, "");
+        vmargs = vmargs + NEW_LINE + PROP_REFRESH_BUNDLES + NEW_LINE + PROP_CLEAN + NEW_LINE;
+        result.append(vmargs);
+
+        // append the rest of the args, replacing or adding -data as required
+        property = System.getProperty(PROP_COMMANDS);
+        if (property != null) {
+            result.append(property);
+        }
+
+        // put the vmargs back at the very end (the eclipse.commands property
+        // already contains the -vm arg)
+        if (vmargs != null) {
+            result.append(CMD_VMARGS);
+            result.append(NEW_LINE);
+            result.append(vmargs);
+        }
+
+        return result.toString();
     }
 }
