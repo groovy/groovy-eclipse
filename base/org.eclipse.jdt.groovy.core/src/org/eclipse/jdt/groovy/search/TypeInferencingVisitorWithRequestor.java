@@ -3310,7 +3310,7 @@ out:    if (inferredTypes[0] == null) {
                 }
             } else if (!GeneralUtils.isOrImplements(type1, type2)) {
                 if (type1 instanceof WideningCategories.LowestUpperBoundClassNode) {
-                    superclass = type1.getSuperClass();
+                    superclass = type1.getUnresolvedSuperClass();
                     interfaces = (ClassNode[]) ArrayUtils.add(type1.getInterfaces(), type2);
                 } else if (type1.isInterface()) {
                     superclass = VariableScope.OBJECT_CLASS_NODE;
