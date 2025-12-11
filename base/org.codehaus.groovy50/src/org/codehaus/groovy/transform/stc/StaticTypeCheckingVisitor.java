@@ -827,10 +827,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         typeCheckingContext.pushEnclosingBinaryExpression(expression);
         try {
             int op = expression.getOperation().getType();
-            // GRECLIPSE add -- GROOVY-7971, GROOVY-8965
-            if (op == LOGICAL_OR)
-                typeCheckingContext.pushTemporaryTypeInfo();
-            // GRECLIPSE end
             Expression leftExpression = expression.getLeftExpression();
             Expression rightExpression = expression.getRightExpression();
 
@@ -854,15 +850,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 return;
             }
 
+            // GRECLIPSE add -- GROOVY-7971, GROOVY-8965, GROOVY-10702, et al.
+            if (op == LOGICAL_OR) typeCheckingContext.pushTemporaryTypeInfo();
+            // GRECLIPSE end
             leftExpression.visit(this);
             ClassNode lType = getType(leftExpression);
             var setterInfo  = removeSetterInfo(leftExpression);
-            if (setterInfo != null) {
+            if (setterInfo != null) { assert op != LOGICAL_OR ;
                 if (ensureValidSetter(expression, leftExpression, rightExpression, setterInfo)) {
-                    // GRECLIPSE add -- GROOVY-7971, GROOVY-8965
-                    if (op == LOGICAL_OR)
-                        typeCheckingContext.popTemporaryTypeInfo();
-                    // GRECLIPSE end
                     return;
                 }
             } else {
@@ -870,6 +865,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     lType = getOriginalDeclarationType(leftExpression);
                     applyTargetType(lType, rightExpression);
                 }
+                // GRECLIPSE add
+                if (op == LOGICAL_OR) {
+                    typeCheckingContext. popTemporaryTypeInfo();
+                    typeCheckingContext.pushTemporaryTypeInfo();
+                    /**/rightExpression.visit(this);
+                    typeCheckingContext. popTemporaryTypeInfo();
+                } else
+                // GRECLIPSE end
                 rightExpression.visit(this);
             }
 
@@ -886,10 +889,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 storeTargetMethod(expression, reverseExpression.getNodeMetaData(DIRECT_METHOD_CALL_TARGET));
             } else {
                 resultType = getResultType(lType, op, rType, expression);
-                // GRECLIPSE add -- GROOVY-7971, GROOVY-8965
-                if (op == LOGICAL_OR)
-                    typeCheckingContext.popTemporaryTypeInfo();
-                // GRECLIPSE end
             }
             if (resultType == null) {
                 resultType = lType;

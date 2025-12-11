@@ -784,21 +784,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         typeCheckingContext.pushEnclosingBinaryExpression(expression);
         try {
             int op = expression.getOperation().getType();
-            // GRECLIPSE add -- GROOVY-7971, GROOVY-8965
-            if (op == LOGICAL_OR)
-                typeCheckingContext.pushTemporaryTypeInfo();
-            // GRECLIPSE end
             Expression leftExpression = expression.getLeftExpression();
             Expression rightExpression = expression.getRightExpression();
 
+            // GRECLIPSE add -- GROOVY-7971, GROOVY-8965, GROOVY-10702, et al.
+            if (op == LOGICAL_OR) typeCheckingContext.pushTemporaryTypeInfo();
+            // GRECLIPSE end
             leftExpression.visit(this);
             SetterInfo setterInfo = removeSetterInfo(leftExpression);
             ClassNode lType = null;
             if (setterInfo != null) {
                 if (ensureValidSetter(expression, leftExpression, rightExpression, setterInfo)) {
-                    // GRECLIPSE add
-                    if (op == LOGICAL_OR) typeCheckingContext.popTemporaryTypeInfo();
-                    // GRECLIPSE end
                     return;
                 }
                 lType = getType(leftExpression);
@@ -810,6 +806,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
                     applyTargetType(lType, rightExpression);
                 }
+                // GRECLIPSE add
+                if (op == LOGICAL_OR) {
+                    typeCheckingContext. popTemporaryTypeInfo();
+                    typeCheckingContext.pushTemporaryTypeInfo();
+                    /**/rightExpression.visit(this);
+                    typeCheckingContext. popTemporaryTypeInfo();
+                } else
+                // GRECLIPSE end
                 rightExpression.visit(this);
             }
 
@@ -837,10 +841,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         && leftExpression.getNodeMetaData(INFERRED_TYPE) == null) {
                     storeType(leftExpression, lType);
                 }
-                // GRECLIPSE add
-                else if (op == LOGICAL_OR)
-                    typeCheckingContext.popTemporaryTypeInfo();
-                // GRECLIPSE end
             }
             if (resultType == null) {
                 resultType = lType;
