@@ -12,9 +12,9 @@
 
 	<properties>
 		<!-- See https://www.eclipse.org/tycho/sitedocs/index.html -->
-		<tycho-version>5.0.0</tycho-version>
+		<tycho-version>5.0.1</tycho-version>
 		<!-- See https://www.eclipse.org/tycho/sitedocs/tycho-extras/index.html -->
-		<tycho-extras-version>5.0.0</tycho-extras-version>
+		<tycho-extras-version>5.0.1</tycho-extras-version>
 
 		<!-- Versions of groovy compiler components to use for building. Some bundles,
 			mostly test related, have Groovy code that can't be compiled with standard
@@ -24,7 +24,7 @@
 		<groovy-eclipse-compiler-version>3.9.1</groovy-eclipse-compiler-version>
 
 		<!-- This should align with the oldest supported Groovy version. -->
-		<groovy-eclipse-batch-version>3.0.25-03</groovy-eclipse-batch-version>
+		<groovy-eclipse-batch-version>3.0.25-04</groovy-eclipse-batch-version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -104,11 +104,6 @@
 					<id>eclipse</id>
 					<layout>p2</layout>
 					<url>https://download.eclipse.org/eclipse/updates/4.38</url>
-				</repository>
-				<repository>
-					<id>milestone</id>
-					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.38-I-builds/I20251201-0920</url>
 				</repository>
 			</repositories>
 			<modules>

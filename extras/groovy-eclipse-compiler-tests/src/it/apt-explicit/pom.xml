@@ -10,6 +10,8 @@
   <version>1.0-SNAPSHOT</version>
 
   <properties>
+    <immutables.version>2.12.0</immutables.version>
+
     <maven.compiler.fork>true</maven.compiler.fork>
     <maven.compiler.release>8</maven.compiler.release>
     <maven.compiler.source>1.8</maven.compiler.source>
@@ -24,20 +26,9 @@
       <version>@groovy.rt.version@</version>
     </dependency>
     <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>30.1.1-jre</version>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>org.immutables</groupId>
-      <artifactId>value</artifactId>
-      <version>2.8.8</version>
+      <artifactId>value-annotations</artifactId>
+      <version>${immutables.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -55,9 +46,13 @@
         <version>@maven-compiler-plugin.version@</version>
         <configuration>
           <compilerId>groovy-eclipse-compiler</compilerId>
-          <annotationProcessors>
-            <annotationProcessor>org.immutables.processor.ProxyProcessor</annotationProcessor>
-          </annotationProcessors>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.immutables</groupId>
+              <artifactId>value</artifactId>
+              <version>${immutables.version}</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
         <dependencies>
           <dependency>

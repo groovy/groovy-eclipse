@@ -60,7 +60,6 @@
                 <exclude name="META-INF/maven/**"/>
                 <exclude name="META-INF/native-image/**"/>
                 <exclude name="META-INF/services/org.osgi.*"/>
-                <exclude name="META-INF/*.properties"/>
                 <exclude name="META-INF/*.RSA"/>
                 <exclude name="META-INF/*.SF"/>
                 <exclude name="OSGI-INF/**"/>
