@@ -229,9 +229,7 @@ public class GroovyUtils {
      */
     public static String getTypeSignature(ClassNode node, boolean qualified, boolean resolved) {
         ClassNode baseType = getBaseType(node);
-        if (baseType.getName().startsWith("<UnionType:") ||
-                (baseType instanceof LowestUpperBoundClassNode &&
-                !baseType.getUnresolvedName().startsWith("CommonAssignOf$"))) {
+        if (baseType instanceof LowestUpperBoundClassNode) {
             return getUnionTypeSignature(node, type -> getTypeSignature(type, qualified, resolved));
         }
         if (baseType instanceof IntersectionType) {
@@ -267,9 +265,7 @@ public class GroovyUtils {
 
     public static String getTypeSignatureWithoutGenerics(ClassNode node, boolean qualified, boolean resolved) {
         ClassNode baseType = getBaseType(node);
-        if (baseType.getName().startsWith("<UnionType:") ||
-                (baseType instanceof LowestUpperBoundClassNode &&
-                !baseType.getUnresolvedName().startsWith("CommonAssignOf$"))) {
+        if (baseType instanceof LowestUpperBoundClassNode) {
             return getUnionTypeSignature(node, type -> getTypeSignatureWithoutGenerics(type, qualified, resolved));
         }
         if (baseType instanceof IntersectionType) {
@@ -320,9 +316,7 @@ public class GroovyUtils {
             node = node.getComponentType();
         }
 
-        ClassNode[] types = node instanceof LowestUpperBoundClassNode
-                            ? node.asGenericsType().getUpperBounds() // non-Object super and interface(s)
-                            : ReflectionUtils.executePrivateMethod(node.getClass(), "getDelegates", node);
+        ClassNode[] types = node.asGenericsType().getUpperBounds(); // non-Object super and interface(s)
         String signature = Signature.createUnionTypeSignature(Stream.of(types).map(signer).toArray(String[]::new));
 
         return builder.append(signature).toString();

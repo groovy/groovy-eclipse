@@ -17,10 +17,8 @@ package org.eclipse.jdt.groovy.search;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -907,9 +905,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 String associatedMethod = findBinaryOperatorName(node.getOperation().getText());
                 if (associatedMethod != null) {
                     if (!"getAt".equals(associatedMethod) || node.getNodeMetaData("rhsType") == null) {
-                        scopes.getLast().setMethodCallArgumentTypes(Collections.singletonList(dependentExprType));
+                        scopes.getLast().setMethodCallArgumentTypes(List.of(dependentExprType));
                     } else { associatedMethod = "putAt";
-                        scopes.getLast().setMethodCallArgumentTypes(Arrays.asList(dependentExprType, node.getNodeMetaData("rhsType")));
+                        scopes.getLast().setMethodCallArgumentTypes(List.of(dependentExprType, node.getNodeMetaData("rhsType")));
                     }
                     // there is an overloadable method associated with this operation; convert to a constant expression and look it up
                     TypeLookupResult result = lookupExpressionType(GeneralUtils.constX(associatedMethod), primaryExprType, false, scopes.getLast());
@@ -2013,7 +2011,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             // infer the type of the (possibly overloaded) operator
             String associatedMethod = findUnaryOperatorName(operation);
             if (associatedMethod != null && !ClassHelper.getWrapper(operandType).isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
-                scope.setMethodCallArgumentTypes(Collections.emptyList());
+                scope.setMethodCallArgumentTypes(List.of());
                 TypeLookupResult result = lookupExpressionType(GeneralUtils.constX(associatedMethod), operandType, false, scope);
 
                 exprType = result.confidence.isAtLeast(TypeConfidence.LOOSELY_INFERRED) ? result.type : operandType;
@@ -2432,7 +2430,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             if (arguments.getNodeMetaData("tuple.types") != null) {
                 return arguments.getNodeMetaData("tuple.types");
             }
-            List<Expression> expressions = arguments instanceof TupleExpression ? ((TupleExpression) arguments).getExpressions() : Collections.singletonList(arguments);
+            List<Expression> expressions = arguments instanceof TupleExpression ? ((TupleExpression) arguments).getExpressions() : List.of(arguments);
             if (isNotEmpty(expressions)) {
                 List<ClassNode> types = new ArrayList<>(expressions.size());
                 for (Expression expression : expressions) {
@@ -2495,14 +2493,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
                         TypeLookupResult tlr;
                         scope.setCurrentNode(expression);
-                        if (expression instanceof PropertyExpression) {
-                            PropertyExpression path = (PropertyExpression) expression;
+                        if (expression instanceof PropertyExpression path) {
                             ClassNode type = recursively.apply(path.getObjectExpression());
                             scope.setCurrentNode(path.getProperty());
                             tlr = lookupExpressionType(path.getProperty(), type, path.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(type), scope);
                             scope.forgetCurrentNode();
-                        } else if (expression instanceof MethodCallExpression) {
-                            MethodCallExpression call = (MethodCallExpression) expression;
+                        } else if (expression instanceof MethodCallExpression call) {
                             ClassNode type = recursively.apply(call.getObjectExpression());
                             scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(call));
                             scope.setCurrentNode(call.getMethod());
@@ -2512,8 +2508,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(expression));
                             tlr = lookupExpressionType(expression, null, true, scope);
 /*
-                        } else if (expression instanceof MethodPointerExpression) {
-                            MethodPointerExpression ref = (MethodPointerExpression) expression;
+                        } else if (expression instanceof MethodPointerExpression ref) {
                             ClassNode type = recursively.apply(ref.getExpression());
                             scope.setCurrentNode(ref.getMethodName());
                             tlr = lookupExpressionType(ref.getMethodName(), type, ref.getExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(type), scope);
@@ -2524,10 +2519,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             scope.forgetCurrentNode();
                             continue;
 */
-                        } else if (expression instanceof BinaryExpression && ((BinaryExpression) expression).getOperation().isA(Types.LEFT_SQUARE_BRACKET)) {
-                            ClassNode type = recursively.apply(((BinaryExpression) expression).getLeftExpression());
-                            scope.setMethodCallArgumentTypes(Collections.singletonList(recursively.apply(((BinaryExpression) expression).getRightExpression())));
-
+                        } else if (expression instanceof BinaryExpression be && be.getOperation().isA(Types.LEFT_SQUARE_BRACKET)) {
+                            ClassNode type = recursively.apply(be.getLeftExpression());
+                            scope.setMethodCallArgumentTypes(List.of(recursively.apply(be.getRightExpression())));
                             if (type.isArray() && ClassHelper.isNumberType(scope.getMethodCallArgumentTypes().get(0))) {
                                 tlr = new TypeLookupResult(type.getComponentType(), null, null, null, scope);
                             } else {
@@ -2542,13 +2536,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 }
                 return types;
             }
-            return Collections.emptyList();
+            return List.of();
         }
 
         // "bar = 123" may refer to "setBar(x)"
         if (node instanceof VariableExpression && node == scopes.getLast().getWormhole().get("lhs")) {
             VariableScope.VariableInfo info = scopes.getLast().lookupName(node.getText());
-            return (info == null || info.type == null ? null : Collections.singletonList(info.type));
+            return (info == null || info.type == null ? null : List.of(info.type));
         }
 
         // "foo.bar = 123" may refer to "setBar(x)"
@@ -2557,7 +2551,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
         if (node == scopes.getLast().getWormhole().get("lhs")) {
             ClassNode rhsType = node.getNodeMetaData("rhsType");
-            if (rhsType != null) return Collections.singletonList(rhsType);
+            if (rhsType != null)
+                return List.of(rhsType);
         }
 
         return null;
@@ -2964,8 +2959,8 @@ out:    if (inferredTypes[0] == null) {
             p1 = Arrays.copyOfRange(p1, 1, p1.length);
         }
 
-        if (p0.length == p1.length && Arrays.equals(Arrays.stream(p0).map(Parameter::getType).toArray(),
-                                                    Arrays.stream(p1).map(Parameter::getType).toArray())) {
+        if (p0.length == p1.length && Arrays.equals(Stream.of(p0).map(Parameter::getType).toArray(),
+                                                    Stream.of(p1).map(Parameter::getType).toArray())) {
             if (p0.length == 0 &&
                     next.scope.isMethodCall() &&
                     m0.getName().startsWith("get") &&
@@ -3294,7 +3289,7 @@ out:    if (inferredTypes[0] == null) {
             return (vi != null && (vi.type == null || (!vi.type.equals(type) && StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(type, vi.type))));
         };
 
-        java.util.function.BinaryOperator<ClassNode> unionOfTypes = (type1, type2) -> {
+        java.util.function.BinaryOperator<ClassNode> intersection = (type1, type2) -> {
             // TODO: sealed interface and trait with self type(s)
             ClassNode   superclass = null;
             ClassNode[] interfaces = null;
@@ -3307,6 +3302,8 @@ out:    if (inferredTypes[0] == null) {
                 } else if (type1.isInterface()) {
                     superclass = type2;
                     interfaces = !type2.implementsInterface(type1) ? new ClassNode[] {type1} : ClassNode.EMPTY_ARRAY;
+                } else if (!type1.isDerivedFrom(type2) && !type2.isDerivedFrom(type1)) {
+                    return VariableScope.VOID_CLASS_NODE;
                 }
             } else if (!GeneralUtils.isOrImplements(type1, type2)) {
                 if (type1 instanceof WideningCategories.LowestUpperBoundClassNode) {
@@ -3322,12 +3319,11 @@ out:    if (inferredTypes[0] == null) {
             }
             if (interfaces == null) return type1;
             if (interfaces.length == 0) return type2;
-            return new WideningCategories.LowestUpperBoundClassNode("<UnionType:", superclass, interfaces);
+            return new WideningCategories.LowestUpperBoundClassNode("TODO:name", superclass, interfaces);
         };
 
         // check for "if (x instanceof T) { ... }" or "if (x.getClass() == T) { ... }" flow typing
-        if (expression instanceof BinaryExpression) {
-            BinaryExpression be = (BinaryExpression) expression;
+        if (expression instanceof BinaryExpression be) {
             // check for "if (x == null || x instanceof T) { ... }" or
             //  "if (x != null && x instanceof T) { ... }" flow typing
             BinaryExpression nsbe = nullSafeBinaryExpression(be);
@@ -3343,18 +3339,18 @@ out:    if (inferredTypes[0] == null) {
                 if (types.isEmpty()) {
                     types = other;
                 } else if (!other.isEmpty()) {
-                    types = new HashMap<>(types); // make map mutable
                     for (Map.Entry<String, ClassNode[]> entry : other.entrySet()) {
                         types.merge(entry.getKey(), entry.getValue(), (t1, t2) -> {
+                            // TODO: Can "x !instanceof T && ..." be merged?
+                            if (t1[1] != null || t2[1] != null) return null;
+
                             ClassNode[] merged = new ClassNode[2];
-                            for (int i = 0; i < merged.length; i += 1) {
-                                if (t1[i] == null || t2[i] == null) {
-                                    merged[i] = t1[i] != null ? t1[i] : t2[i];
-                                } else if (!(t2[i] instanceof WideningCategories.LowestUpperBoundClassNode)) {
-                                    merged[i] = unionOfTypes.apply(t1[i], t2[i]);
-                                } else {
-                                    merged[i] = Stream.of(t2[i].asGenericsType().getUpperBounds()).reduce(t1[i], unionOfTypes);
-                                }
+                            if (t1[0] == null || t2[0] == null) {
+                                merged[0] = t1[0] != null ? t1[0] : t2[0];
+                            } else if (!(t2[0] instanceof WideningCategories.LowestUpperBoundClassNode)) {
+                                merged[0] = intersection.apply(t1[0], t2[0]);
+                            } else {
+                                merged[0] = Stream.of(t2[0].asGenericsType().getUpperBounds()).reduce(t1[0], intersection);
                             }
                             return merged;
                         });
@@ -3377,7 +3373,7 @@ out:    if (inferredTypes[0] == null) {
 
                     VariableScope.VariableInfo vi = scope.lookupName(name);
                     if (vi != null) {
-                        type = unionOfTypes.apply(vi.type, type);
+                        type = intersection.apply(vi.type, type);
                         if (vi.type != type)
                             return instanceOfBinding(name, type, be.getOperation());
                     }
@@ -3396,15 +3392,13 @@ out:    if (inferredTypes[0] == null) {
                     expr = be.getRightExpression();
                     type = be.getLeftExpression().getType();
                 }
-                if (expr instanceof PropertyExpression) {
-                    PropertyExpression pe = (PropertyExpression) expr;
+                if (expr instanceof PropertyExpression pe) {
                     if (pe.getObjectExpression() instanceof VariableExpression && pe.getPropertyAsString().equals("class")) {
                         String name = pe.getObjectExpression().getText();
                         if (isSubType.test(name, type))
                             return instanceOfBinding(name, type, be.getOperation());
                     }
-                } else if (expr instanceof MethodCallExpression) {
-                    MethodCallExpression mce = (MethodCallExpression) expr;
+                } else if (expr instanceof MethodCallExpression mce) {
                     if (mce.getObjectExpression() instanceof VariableExpression && mce.getMethodAsString().equals("getClass")) {
                         String name = mce.getObjectExpression().getText();
                         if (isSubType.test(name, type))
@@ -3413,23 +3407,36 @@ out:    if (inferredTypes[0] == null) {
                 }
                 break;
             }
-        } else if (expression instanceof BooleanExpression) {
-            Map<String, ClassNode[]> types = inferInstanceOfType(((BooleanExpression) expression).getExpression(), scope);
+        } else if (expression instanceof BooleanExpression be) {
+            Map<String, ClassNode[]> types = inferInstanceOfType(be.getExpression(), scope);
             if (!types.isEmpty()) {
-                // check for "if (!(x instanceof T)) { ... } else { ... }" flow typing
+                // check for "!(x instanceof T) ? ... : ..." flow typing
                 if (expression instanceof NotExpression) {
-                    for (ClassNode[] value : types.values()) {
-                        DefaultGroovyMethods.swap(value, 0, 1);
+                    for (var it = types.entrySet().iterator(); it.hasNext(); ) {
+                        Map.Entry<String, ClassNode[]> entry = it.next();
+                        ClassNode[] value = entry.getValue();
+                        DefaultGroovyMethods.swap(value,0,1);
+
+                        if (value[1] instanceof WideningCategories.LowestUpperBoundClassNode) {
+                            var list = new ArrayList<>(List.of(value[1].asGenericsType().getUpperBounds()));
+                            list.remove(scope.lookupName(entry.getKey()).type);
+                            if (list.size() > 1) {
+                                it.remove();
+                            }
+                        }
                     }
                 }
                 return types;
             }
         }
-        return Collections.emptyMap();
+        return Map.of();
     }
 
     private static Map<String, ClassNode[]> instanceOfBinding(final String name, final ClassNode type, final Token operator) {
-        return Collections.singletonMap(name, operator.getText().startsWith("!") ? new ClassNode[] {null, type} : new ClassNode[] {type, null});
+        var value = !operator.getText().startsWith("!") ? new ClassNode[] {type, null} : new ClassNode[] {null, type};
+        var types = new java.util.HashMap<String, ClassNode[]>(4);
+        types.put(name, value);
+        return types;
     }
 
     private static boolean isEnumInit(final MethodCallExpression node) {

@@ -671,7 +671,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "    @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
             "      def type = node.rightExpression.objectExpression.getNodeMetaData(\n" +
             "        org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE)\n" +
-            "      assert type.toString(false) == '<UnionType:A+B>'\n" +
+            "      assert type.toString(false) == '(A & B)'\n" +
             "    })\n" +
             "    def x = a.x\n" +
             "    def y = a.y\n" +
@@ -2469,29 +2469,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked8965() {
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.TypeChecked\n" +
-            "def test(o) {\n" +
-            "  if (o instanceof Integer || o instanceof Double)\n" +
-            "    o.floatValue()\n" + // CCE: Double cannot be cast to Integer
-            "}\n" +
-            "print test(1.2d)\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 4)\n" +
-            "\to.floatValue()\n" +
-            "\t^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#floatValue()\n" +
-            "----------\n");
-    }
-
-    @Test
     public void testTypeChecked8974() {
         //@formatter:off
         String[] sources = {
@@ -3213,7 +3190,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  if (a instanceof B) {\n" +
             "    @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
             "      def type = node.getNodeMetaData(org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE)\n" +
-            "      assert type.toString(false) == 'B'\n" + // not <UnionType:A+B> nor <UnionType:B+B>
+            "      assert type.name == 'B'\n" + // not (A & B) nor (B & B)
             "    })\n" +
             "    def x = a\n" +
             "    def y = x.m()\n" +
@@ -7170,6 +7147,28 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeChecked10702() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(o) {\n" +
+            "  o instanceof Map || o instanceof List ? o.entrySet() : null\n" +
+            "}\n" +
+            "test([])\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\to instanceof Map || o instanceof List ? o.entrySet() : null\n" +
+            "\t                                        ^^^^^^^^^^^^" + (isParrotParser() ? "" : "^") + "\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#entrySet()\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTypeChecked10720() {
         //@formatter:off
         String[] sources = {
@@ -7344,7 +7343,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "@groovy.transform.SelfType(C)\n" +
             "trait B implements A {\n" +
             "  void methodB() {\n" +
-            "    methodA()\n" + // Cannot find matching method <UnionType:C+B>#methodA()
+            "    methodA()\n" + // Cannot find matching method (B & C)#methodA()
             "  }\n" +
             "}\n" +
             "class C {\n" +

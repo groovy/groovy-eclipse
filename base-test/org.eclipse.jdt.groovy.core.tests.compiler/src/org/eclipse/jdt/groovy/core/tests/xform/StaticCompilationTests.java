@@ -2332,6 +2332,37 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, ":A:B:C");
     }
 
+    @Test // https://github.com/apache/groovy/pull/1269#issuecomment-639957966
+    public void testCompileStatic7971() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" + // add extensions=... for makeDynamic
+            "void test() {\n" +
+            "  def x = false ? new ArrayDeque() : new Stack()\n" +
+            "  x.clear()\n" + // 'clear' in LUB (AbstractCollection or Serializable or ...)
+            "  if (x instanceof Deque) {\n" +
+            "    x.addFirst(1)\n" + // 'addFirst' only in Deque
+            "  } else if (x instanceof Stack) {\n" +
+            "    x.addElement(2)\n" + // 'addElement' only in Stack
+            "  }\n" +
+            "  if (x instanceof Queue || x instanceof Stack) {\n" +
+            "    assert x.peek() in 1..2\n" + // 'peek' in Queue and Stack but not LUB
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 11)\n" +
+            "\tassert x.peek() in 1..2\n" +
+            "\t       ^^^^^^^^" + (isParrotParser() ? "" : "^") + "\n" +
+            "Groovy:[Static type checking] - Cannot find matching method (java.util.AbstractCollection & java.io.Serializable & java.lang.Cloneable & java.util.SequencedCollection)#peek()\n" +
+            "----------\n");
+    }
+
     @Test
     public void testCompileStatic7985() {
         //@formatter:off
@@ -3550,6 +3581,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testCompileStatic8965() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test(o) {\n" +
+            "  if (o instanceof Integer || o instanceof Double)\n" +
+            "    o.floatValue()\n" + // CCE: Double cannot be cast to Integer
+            "}\n" +
+            "print test(1.2d)\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\to.floatValue()\n" +
+            "\t^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#floatValue()\n" +
+            "----------\n");
     }
 
     @Test

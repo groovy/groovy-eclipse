@@ -1183,8 +1183,8 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                 }
                 addStaticTypeError(message, leftExpression);
             } else {
-                ClassNode[] tergetTypes = visibleSetters.stream().map(setterType).toArray(ClassNode[]::new);
-                addAssignmentError(tergetTypes.length == 1 ? tergetTypes[0] : new UnionTypeClassNode(tergetTypes), getType(valueExpression), expression);
+                ClassNode[] targetTypes = visibleSetters.stream().map(setterType).toArray(ClassNode[]::new);
+                addAssignmentError(targetTypes.length == 1 ? targetTypes[0] : new UnionTypeClassNode(targetTypes), getType(valueExpression), expression);
             }
             return true;
         }
@@ -1505,7 +1505,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                     ClassNode valueType = getType(valueExpression);
                     BinaryExpression kv = typeCheckingContext.popEnclosingBinaryExpression();
                     if (propertyTypes.stream().noneMatch(targetType -> checkCompatibleAssignmentTypes(targetType, getResultType(targetType, ASSIGN, valueType, kv), valueExpression))) {
-                        ClassNode targetType = propertyTypes.size() == 1 ? propertyTypes.iterator().next() : new UnionTypeClassNode(propertyTypes.toArray(ClassNode.EMPTY_ARRAY));
+                        ClassNode targetType = propertyTypes.size() == 1 ? propertyTypes.iterator().next() : new UnionTypeClassNode(propertyTypes.toArray(ClassNode[]::new));
                         if (!extension.handleIncompatibleAssignment(targetType, valueType, entryExpression)) {
                             addAssignmentError(targetType, valueType, entryExpression);
                         }
@@ -4034,10 +4034,17 @@ out:                if (mn.size() != 1) {
             addReceivers(owners, thisType, typeCheckingContext.delegationMetadata.getParent(), "owner.");
         } else {
             List<ClassNode> temporaryTypes = getTemporaryTypesForExpression(objectExpression);
+            /* GRECLIPSE edit -- GROOVY-7971, GROOVY-11137
             int temporaryTypesCount = (temporaryTypes != null ? temporaryTypes.size() : 0);
             if (temporaryTypesCount > 0) { // GROOVY-8965, GROOVY-10180, GROOVY-10668
                 owners.add(Receiver.make(lowestUpperBound(temporaryTypes)));
             }
+            */
+            temporaryTypes.removeIf(t -> receiver.isDerivedFrom(t) || receiver.implementsInterface(t));
+            if (!temporaryTypes.isEmpty()) {
+                owners.add(Receiver.make(newIntersectionTypeClassNode(temporaryTypes)));
+            }
+            // GRECLIPSE end
             if (isClassClassNodeWrappingConcreteType(receiver)) {
                 ClassNode staticType = receiver.getGenericsTypes()[0].getType();
                 owners.add(new Receiver<>(staticType, false, null)); // Type from Class<Type>
@@ -4053,9 +4060,11 @@ out:                if (mn.size() != 1) {
                     }
                 }
             }
+            /* GRECLIPSE edit
             if (temporaryTypesCount > 1 && !(objectExpression instanceof VariableExpression)) {
                 owners.add(Receiver.make(new UnionTypeClassNode(temporaryTypes.toArray(ClassNode.EMPTY_ARRAY))));
             }
+            */
         }
         return owners;
     }
@@ -4268,9 +4277,10 @@ trying: for (ClassNode[] signature : signatures) {
 
     @Override
     protected void afterSwitchCaseStatementsVisited(final SwitchStatement statement) {
-        // GROOVY-8411: if any "case Type:" then "default:" contributes condition type
+        /* GRECLIPSE edit -- GROOVY-7971, GROOVY-11137
         if (!statement.getDefaultStatement().isEmpty() && !typeCheckingContext.temporaryIfBranchTypeInformation.peek().isEmpty())
             pushInstanceOfTypeInfo(statement.getExpression(), new ClassExpression(statement.getExpression().getNodeMetaData(TYPE)));
+        */
     }
 
     @Override
@@ -4297,6 +4307,9 @@ trying: for (ClassNode[] signature : signatures) {
                 .peek().remove(extractTemporaryTypeInfoKey(selectable));
             restoreTypeBeforeConditional(); // isolate assignment branch
         }
+        // GRECLIPSE add -- GROOVY-7971, GROOVY-11137
+        else typeCheckingContext.temporaryIfBranchTypeInformation.peek().remove(extractTemporaryTypeInfoKey(selectable));
+        // GRECLIPSE end
     }
 
     private static boolean maybeFallsThrough(Statement statement) {
@@ -6192,12 +6205,22 @@ out:    for (ClassNode type : todo) {
      */
     protected void pushInstanceOfTypeInfo(final Expression objectOfInstanceOf, final Expression typeExpression) {
         Object ttiKey = extractTemporaryTypeInfoKey(objectOfInstanceOf); ClassNode type = typeExpression.getType();
+        /* GRECLIPSE edit -- GROOVY-7971, GROOVY-11137
         typeCheckingContext.temporaryIfBranchTypeInformation.peek().computeIfAbsent(ttiKey, x -> new LinkedList<>()).add(type);
+        */
+        var tti = typeCheckingContext.temporaryIfBranchTypeInformation.peek().computeIfAbsent(ttiKey, x -> new LinkedList<>());
+        tti.removeIf(type::isDerivedFrom); // x instanceof Number && x instanceof Integer; Number is redundant
+        tti.add(type);
+        // GRECLIPSE end
     }
 
     private void putNotInstanceOfTypeInfo(final Object key, final Collection<ClassNode> types) {
         Object notKey = key instanceof Object[] ? ((Object[]) key)[1] : new Object[]{"!instanceof", key}; // stash negative type(s)
         typeCheckingContext.temporaryIfBranchTypeInformation.peek().computeIfAbsent(notKey, x -> new LinkedList<>()).addAll(types);
+        // GRECLIPSE add -- GROOVY-7971, GROOVY-11137
+        var map = typeCheckingContext.temporaryIfBranchTypeInformation.peek();
+        if (map.get(notKey).size() > 1) map.remove(notKey);
+        // GRECLIPSE end
     }
 
     /**
@@ -6279,11 +6302,30 @@ out:    for (ClassNode type : todo) {
                 if (typesCount == 1) {
                     return types.get(0);
                 } else if (typesCount > 1) {
+                    /* GRECLIPSE edit -- GROOVY-7971, GROOVY-11137
                     return new UnionTypeClassNode(types.toArray(ClassNode.EMPTY_ARRAY));
+                    */
+                    return newIntersectionTypeClassNode(types);
+                    // GRECLIPSE end
                 }
             }
         }
         return expressionType;
+    }
+
+    private static ClassNode newIntersectionTypeClassNode(final Collection<ClassNode> types) {
+        Map<Boolean, List<ClassNode>> spec = types.stream().collect(Collectors.partitioningBy(ClassNode::isInterface));
+        ClassNode[] interfaces = spec.get(Boolean.TRUE ).toArray(ClassNode[]::new);
+        List<ClassNode> supers = spec.get(Boolean.FALSE);
+        if (supers.size() > 1) {
+            for (ClassNode sc : supers) {
+                if (supers.stream().anyMatch(t -> t != sc && !t.isDerivedFrom(sc) && !sc.isDerivedFrom(t)))
+                    return VOID_TYPE;
+            }
+        }
+        if (interfaces.length == 0) return supers.get(0);
+        supers.add(OBJECT_TYPE); // ensure get(0) nothrow
+        return new WideningCategories.LowestUpperBoundClassNode("IntersectionTypeClassNode", supers.get(0), interfaces);
     }
 
     //--------------------------------------------------------------------------
