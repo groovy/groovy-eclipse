@@ -2888,7 +2888,7 @@ public final class InferencingTests extends InferencingTestSuite {
         String contents = "try {\n} catch (Exception | Error e) {\n}\n";
 
         int offset = contents.lastIndexOf("e");
-        assertType(contents, offset, offset + 1, "java.lang.Exception or java.lang.Error");
+        assertType(contents, offset, offset + 1, "java.lang.Exception | java.lang.Error");
     }
 
     private static final String CONTENTS_GETAT1 =
@@ -4196,7 +4196,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
         start = contents.indexOf("val", end + 1);
         end = start + "val".length();
-        assertType(contents, start, end, "java.lang.Object");
+        assertType(contents, start, end, "java.lang.Number | java.lang.CharSequence");
 
         start = contents.indexOf("val", end + 1);
         end = start + "val".length();
@@ -4531,7 +4531,7 @@ public final class InferencingTests extends InferencingTestSuite {
                 "  }\n" +
                 "}\n";
 
-            assertType(contents, "value", "java.lang.Object");
+            assertType(contents, "value", "java.lang.Integer | java.lang.Short | java.lang.Long");
         }
     }
 
@@ -4547,7 +4547,7 @@ public final class InferencingTests extends InferencingTestSuite {
                 "  }\n" +
                 "}\n";
 
-            assertType(contents, "value", "java.lang.Object");
+            assertType(contents, "value", "java.lang.Object | java.util.Map");
         }
     }
 
@@ -4758,6 +4758,52 @@ public final class InferencingTests extends InferencingTestSuite {
             offset = contents.lastIndexOf("number\n");
             assertType(contents, offset, offset + 6, "java.lang.Number");
             assertType(contents.replace("&&", "||"), offset, offset + 6, "java.lang.Number");
+        }
+    }
+
+    @Test
+    public void testInstanceOf31() {
+        assumeTrue(isParrotParser());
+
+        for (String mode : List.of("CompileDynamic", "CompileStatic")) {
+            String contents =
+                "@groovy.transform." + mode + "\n" +
+                "void test(Number number) {\n" +
+                "  if (number !instanceof Cloneable && number !instanceof Closeable) {\n" +
+                "    number\n" +
+                "  } else {\n" +
+                "    number\n" +
+                "  }\n" +
+                "}\n";
+
+            int offset = contents.indexOf("number\n");
+            assertType(contents, offset, offset + 6, "java.lang.Number");
+            assertType(contents.replace("&&", "||"), offset, offset + 6, "java.lang.Number");
+
+            offset = contents.lastIndexOf("number\n");
+            assertType(contents, offset, offset + 6, "java.lang.Number");
+            assertType(contents.replace("&&", "||"), offset, offset + 6, "java.lang.Number");
+        }
+    }
+
+    @Test
+    public void testInstanceOf32() {
+        for (String mode : List.of("CompileDynamic", "CompileStatic")) {
+            String contents =
+                "@groovy.transform." + mode + "\n" +
+                "void test(Number number) {\n" +
+                "  if (!(number instanceof Cloneable || number instanceof Closeable)) {\n" +
+                "    number\n" +
+                "  } else {\n" +
+                "    number\n" +
+                "  }\n" +
+                "}\n";
+
+            int offset = contents.indexOf("number\n");
+            assertType(contents, offset, offset + 6, "java.lang.Number");
+
+            offset = contents.lastIndexOf("number\n");
+            assertType(contents, offset, offset + 6, "java.lang.Number");
         }
     }
 
@@ -5049,7 +5095,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 3, "java.lang.Number");
 
         offset = contents.indexOf("obj", offset + 1);
-        assertType(contents, offset, offset + 3, "java.io.Serializable");
+        assertType(contents, offset, offset + 3, "java.lang.Number | java.lang.String");
 
         offset = contents.indexOf("obj", offset + 1);
         assertType(contents, offset, offset + 3, "java.lang.Object");
@@ -5075,7 +5121,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 3, "java.lang.Number");
 
         offset = contents.indexOf("obj", offset + 1);
-        assertType(contents, offset, offset + 3, "java.lang.Object");
+        assertType(contents, offset, offset + 3, "java.lang.Number | java.lang.Object");
 
         offset = contents.indexOf("obj", offset + 1);
         assertType(contents, offset, offset + 3, "java.lang.Object");
@@ -5101,7 +5147,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 3, "java.lang.Object");
 
         offset = contents.indexOf("obj", offset + 1);
-        assertType(contents, offset, offset + 3, "java.lang.String");
+        assertType(contents, offset, offset + 3, "java.lang.Object | java.lang.String");
 
         offset = contents.indexOf("obj", offset + 1);
         assertType(contents, offset, offset + 3, "java.lang.Object");
@@ -5129,10 +5175,10 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 3, "java.lang.Number");
 
         offset = contents.indexOf("obj", offset + 1);
-        assertType(contents, offset, offset + 3, "java.lang.Object");
+        assertType(contents, offset, offset + 3, "java.lang.Number | java.lang.Object");
 
         offset = contents.indexOf("obj", offset + 1);
-        assertType(contents, offset, offset + 3, "java.io.Serializable");
+        assertType(contents, offset, offset + 3, "java.lang.Number | java.lang.Object | java.lang.String");
 
         offset = contents.indexOf("obj", offset + 1);
         assertType(contents, offset, offset + 3, "java.lang.Object");
@@ -5167,14 +5213,80 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 3, "java.lang.Number");
 
         offset = contents.indexOf("obj", offset + 1);
-        assertType(contents, offset, offset + 3, "java.io.Serializable");
+        assertType(contents, offset, offset + 3, "java.lang.Number | java.lang.String");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+    }
+
+    @Test
+    public void testSwitchClassCase10() {
+        String contents =
+            "void test(obj) {\n" +
+            "  switch (obj) {\n" +
+            "   case String:\n" +
+            "    obj\n" +
+            "   case Number:\n" +
+            "    if (obj instanceof Cloneable) {\n" +
+            "      obj\n" +
+            "    }\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  obj\n" +
+            "}\n";
+
+        int offset = contents.indexOf("switch (obj") + 8;
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.String");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.String | java.lang.Number");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.io.Serializable & java.lang.Cloneable");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.String | java.lang.Number");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+    }
+
+    @Test
+    public void testSwitchClassCase11() {
+        String contents =
+            "void test(obj) {\n" +
+            "  switch (obj) {\n" +
+            "   case Cloneable:\n" +
+            "   case Comparable:\n" +
+            "    if (obj instanceof Number) {\n" +
+            "      obj\n" +
+            "    }\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  obj\n" +
+            "}\n";
+
+        int offset = contents.indexOf("switch (obj") + 8;
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Cloneable | java.lang.Comparable");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Number");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Cloneable | java.lang.Comparable");
 
         offset = contents.indexOf("obj", offset + 1);
         assertType(contents, offset, offset + 3, "java.lang.Object");
     }
 
     @Test // GROOVY-9272
-    public void testSwitchClassCase10() {
+    public void testSwitchClassCase12() {
         assumeTrue(isParrotParser() && isAtLeastGroovy(40));
 
         String contents =

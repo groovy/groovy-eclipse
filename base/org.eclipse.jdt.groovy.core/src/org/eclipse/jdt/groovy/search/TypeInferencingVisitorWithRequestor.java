@@ -19,14 +19,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -1851,32 +1855,34 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 .map(statement -> new VariableScope(scopes.getLast(), statement, false)).toArray(VariableScope[]::new);
             VariableScope defaultScope = new VariableScope(scopes.getLast(), switchStatement.getDefaultStatement(), false);
 
-            // when the case tests for a type, apply instanceof-like flow-typing
-            if (switchStatement.getExpression() instanceof VariableExpression) {
+            // when any case tests for a type, apply instanceof-like flow typing
+            if (switchStatement.getExpression() instanceof VariableExpression &&
+                    switchStatement.getCaseStatements().stream().anyMatch(cs -> cs.getExpression() instanceof ClassExpression)) {
                 String name = switchStatement.getExpression().getText();
-                ClassNode type = null;
+                Set<ClassNode> types = new java.util.LinkedHashSet< >();
+                Supplier<ClassNode> union = () -> GroovyUtils.intersect(new ArrayList<>(types)); // eclipse "intersect" is any-of
 
                 for (int i = 0, n = caseScopes.length; i < n; i += 1) {
                     CaseStatement caseStatement = switchStatement.getCaseStatements().get(i);
 
                     if (caseStatement.getExpression() instanceof ClassExpression) {
-                        if (type != null) {
-                            type = WideningCategories.lowestUpperBound(type, caseStatement.getExpression().getType());
-                        } else {
-                            type = caseStatement.getExpression().getType();
-                        }
-                        caseScopes[i].updateVariableSoft(name, type);
+                        types.add(caseStatement.getExpression().getType());
+                        caseScopes[i].updateVariableSoft(name, union.get());
+                    } else {
+                        types.add(scopes.getLast().lookupName(name).type); // default type
+                        if (types.size() > 1) caseScopes[i].updateVariableSoft(name, union.get());
                     }
 
-                    Statement lastStmt = (caseStatement.getCode() instanceof BlockStatement && !((BlockStatement) caseStatement.getCode()).isEmpty()
-                                        ? DefaultGroovyMethods.last(((BlockStatement) caseStatement.getCode()).getStatements()) : caseStatement.getCode());
+                    Statement lastStmt = (caseStatement.getCode() instanceof BlockStatement block && !block.isEmpty())
+                                            ? DefaultGroovyMethods.last(block.getStatements()) : caseStatement.getCode();
                     if (lastStmt instanceof BreakStatement || lastStmt instanceof ContinueStatement || lastStmt instanceof ReturnStatement || lastStmt instanceof ThrowStatement) {
-                        type = null;
+                        types.clear();
                     }
                 }
-                if (type != null) {
-                    type = WideningCategories.lowestUpperBound(scopes.getLast().lookupName(name).type, type);
-                    defaultScope.updateVariableSoft(name, type);
+
+                if (!types.isEmpty()) {
+                    types.add(scopes.getLast().lookupName(name).type);
+                    defaultScope.updateVariableSoft(name, union.get());
                 }
             }
 
@@ -3289,12 +3295,17 @@ out:    if (inferredTypes[0] == null) {
             return (vi != null && (vi.type == null || (!vi.type.equals(type) && StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(type, vi.type))));
         };
 
+        java.util.function.Predicate<ClassNode> isIntersectionOrUnionType = (type) -> {
+            String text = type.getText();
+            return text.contains(" & ") || text.contains(" | ");
+        };
+
         java.util.function.BinaryOperator<ClassNode> intersection = (type1, type2) -> {
             // TODO: sealed interface and trait with self type(s)
             ClassNode   superclass = null;
             ClassNode[] interfaces = null;
             if (!type2.isInterface()) {
-                if (type1 instanceof WideningCategories.LowestUpperBoundClassNode) {
+                if (isIntersectionOrUnionType.test(type1)) {
                     if (!type2.equals(type1.getSuperClass()) && StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(type2, type1.getSuperClass())) {
                         superclass = type2;
                         interfaces = Stream.of(type1.getInterfaces()).filter(i -> !type2.implementsInterface(i)).toArray(ClassNode[]::new);
@@ -3306,7 +3317,7 @@ out:    if (inferredTypes[0] == null) {
                     return VariableScope.VOID_CLASS_NODE;
                 }
             } else if (!GeneralUtils.isOrImplements(type1, type2)) {
-                if (type1 instanceof WideningCategories.LowestUpperBoundClassNode) {
+                if (isIntersectionOrUnionType.test(type1)) {
                     superclass = type1.getUnresolvedSuperClass();
                     interfaces = (ClassNode[]) ArrayUtils.add(type1.getInterfaces(), type2);
                 } else if (type1.isInterface()) {
@@ -3333,14 +3344,14 @@ out:    if (inferredTypes[0] == null) {
             switch (be.getOperation().getType()) {
             case Types.LOGICAL_AND:
                 // check for "x instanceof T && ... && ..." flow typing
-                Map<String, ClassNode[]> types = inferInstanceOfType(be.getLeftExpression(), scope);
+                Map<String, ClassNode[]> hardTypes1 = inferInstanceOfType(be.getLeftExpression(), scope);
                 //        or "... && ... && x instanceof T" flow typing
-                Map<String, ClassNode[]> other = inferInstanceOfType(be.getRightExpression(), scope);
-                if (types.isEmpty()) {
-                    types = other;
-                } else if (!other.isEmpty()) {
-                    for (Map.Entry<String, ClassNode[]> entry : other.entrySet()) {
-                        types.merge(entry.getKey(), entry.getValue(), (t1, t2) -> {
+                Map<String, ClassNode[]> hardTypes2 = inferInstanceOfType(be.getRightExpression(), scope);
+                if (hardTypes1.isEmpty()) {
+                    hardTypes1 = hardTypes2;
+                } else if (!hardTypes2.isEmpty()) {
+                    for (Map.Entry<String, ClassNode[]> entry : hardTypes2.entrySet()) {
+                        hardTypes1.merge(entry.getKey(), entry.getValue(), (t1, t2) -> {
                             // TODO: Can "x !instanceof T && ..." be merged?
                             if (t1[1] != null || t2[1] != null) return null;
 
@@ -3356,7 +3367,41 @@ out:    if (inferredTypes[0] == null) {
                         });
                     }
                 }
-                return types;
+                return hardTypes1;
+            case Types.LOGICAL_OR:
+                // check for "x instanceof T || ..." flow typing
+                Map<String, ClassNode[]> softTypes1 = inferInstanceOfType(be.getLeftExpression(), scope);
+                //        or "... || x instanceof T" flow typing
+                Map<String, ClassNode[]> softTypes2 = inferInstanceOfType(be.getRightExpression(), scope);
+                if (!softTypes1.isEmpty() || !softTypes2.isEmpty()) {
+                    Map<String, ClassNode[]> types = new HashMap<>();
+                    Set<String> names = new HashSet<>();
+                    names.addAll(softTypes1.keySet());
+                    names.addAll(softTypes2.keySet());
+                    for (String name : names) {
+                        ClassNode[] value = new ClassNode[2];
+
+                        ClassNode[] lhs = softTypes1.getOrDefault(name, new ClassNode[2]);
+                        ClassNode[] rhs = softTypes2.getOrDefault(name, new ClassNode[2]);
+                        if (lhs[1] != null || rhs[1] != null) {
+                            // TODO: Can "x !instanceof T || ..." be merged?
+                        } else if (lhs[0] != null && rhs[0] != null) {
+                            value[0] = GroovyUtils.intersect(List.of(lhs[0], rhs[0]));
+                        } else if (lhs[0] != null) {
+                            ClassNode xxxxxx = Optional.ofNullable(scope.lookupName(name)).map(vi -> vi.type).orElse(VariableScope.OBJECT_CLASS_NODE);
+                            value[0] = GroovyUtils.intersect(List.of(lhs[0], xxxxxx));
+                        } else if (rhs[0] != null) {
+                            ClassNode xxxxxx = Optional.ofNullable(scope.lookupName(name)).map(vi -> vi.type).orElse(VariableScope.OBJECT_CLASS_NODE);
+                            value[0] = GroovyUtils.intersect(List.of(xxxxxx, rhs[0]));
+                        }
+
+                        if (value[0] != null || value[1] != null) {
+                            types.put(name, value);
+                        }
+                    }
+                    return types;
+                }
+                break;
             case Types.KEYWORD_IN:
             case Types.COMPARE_NOT_IN:
                 if (!(be.getRightExpression() instanceof ClassExpression)) {
@@ -3434,7 +3479,7 @@ out:    if (inferredTypes[0] == null) {
 
     private static Map<String, ClassNode[]> instanceOfBinding(final String name, final ClassNode type, final Token operator) {
         var value = !operator.getText().startsWith("!") ? new ClassNode[] {type, null} : new ClassNode[] {null, type};
-        var types = new java.util.HashMap<String, ClassNode[]>(4);
+        var types = new HashMap<String, ClassNode[]>(4);
         types.put(name, value);
         return types;
     }

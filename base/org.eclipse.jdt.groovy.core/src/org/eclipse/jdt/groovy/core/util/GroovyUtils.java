@@ -53,6 +53,7 @@ import org.codehaus.groovy.ast.expr.TernaryExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
+import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.ast.tools.WideningCategories.LowestUpperBoundClassNode;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.runtime.MetaClassHelper;
@@ -452,8 +453,31 @@ public class GroovyUtils {
         }).booleanValue();
     }
 
+    /**
+     * Produces a type that represents "any-of" given types.
+     */
     public static ClassNode intersect(List<ClassNode> types) {
-        assert types != null && types.size() > 1;
+        Set<ClassNode> flat = new LinkedHashSet<>();
+        for (ClassNode type : types) {
+            if (type.getName().startsWith("<UnionType:")) { // STC package-private union type
+                Collections.addAll(flat, ReflectionUtils.executePrivateMethod(type.getClass(), "getDelegates", type));
+            } else if (type instanceof IntersectionType or) {
+                flat.addAll(or.types);
+            } else {
+                flat.add(type);
+            }
+        }
+
+        if (flat.size() == 1) return flat.iterator().next();
+
+        types = new ArrayList<>(flat);
+        for (ClassNode type : types) {
+            if (type instanceof LowestUpperBoundClassNode) {
+                // reduce (Number & I) or (Number & J) to Number
+                return WideningCategories.lowestUpperBound(types);
+            }
+        }
+
         return new IntersectionType(types);
     }
 

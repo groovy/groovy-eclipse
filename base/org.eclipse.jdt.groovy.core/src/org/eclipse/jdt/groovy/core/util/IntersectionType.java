@@ -15,14 +15,17 @@
  */
 package org.eclipse.jdt.groovy.core.util;
 
-import static org.codehaus.groovy.ast.tools.WideningCategories.lowestUpperBound;
+import static org.eclipse.jdt.core.Flags.AccAbstract;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -32,24 +35,41 @@ import org.codehaus.groovy.ast.MixinNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.transform.ASTTransformation;
 
 class IntersectionType extends ClassNode {
 
     final List<ClassNode> types;
 
-    IntersectionType(List<ClassNode> types) {
-        super(string(types), 0, lowestUpperBound(types));
+    IntersectionType(final List<ClassNode> types) {
+        super(makeName(types), AccAbstract, findSuper(types), findFaces(types), MixinNode.EMPTY_ARRAY);
         this.types = types;
     }
 
-    private static String string(List<ClassNode> types) {
-        StringJoiner sj = new StringJoiner(" or ", "(", ")");
-        for (ClassNode cn: types) sj.add(cn.toString(false));
+    private static String makeName(final List<ClassNode> types) {
+        StringJoiner sj = new StringJoiner(" | ", "(", ")");
+        for (ClassNode t : types) sj.add(t.toString(false));
         return sj.toString();
     }
 
-    //
+    private static ClassNode findSuper(final List<ClassNode> types) {
+        var upper = WideningCategories.lowestUpperBound(types);
+        if (upper instanceof WideningCategories.LowestUpperBoundClassNode) {
+            upper = upper.getUnresolvedSuperClass();
+        } else if (upper.isInterface()) {
+            upper = ClassHelper.OBJECT_TYPE;
+        }
+        return upper;
+    }
+
+    private static ClassNode[] findFaces(final List<ClassNode> types) {
+        var upper = WideningCategories.lowestUpperBound(types);
+        if (upper.isInterface()) return new ClassNode[]{upper};
+        return Optional.ofNullable(upper.getUnresolvedInterfaces(false)).orElse(ClassNode.EMPTY_ARRAY);
+    }
+
+    //--------------------------------------------------------------------------
 
     @Override
     public void lazyClassInit() {
@@ -67,7 +87,7 @@ class IntersectionType extends ClassNode {
 
     @Override
     public String getNameWithoutPackage() {
-        return getName();
+        return types.stream().map(ClassNode::getNameWithoutPackage).collect(Collectors.joining(" | ", "(", ")"));
     }
 
     @Override
