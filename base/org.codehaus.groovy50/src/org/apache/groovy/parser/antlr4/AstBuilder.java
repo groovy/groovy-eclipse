@@ -1139,7 +1139,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             if (statementInfoList.isEmpty()) {
                 throw createParsingFailedException("`case` or `default` branches are expected", ctx.LBRACE());
             }
-
+            /* GRECLIPSE edit
             Boolean isArrow = statementInfoList.get(0).getV2();
             if (!isArrow && statementInfoList.stream().noneMatch(e -> {
                 Boolean hasYieldOrThrowStatement = e.getV3();
@@ -1193,11 +1193,50 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             callClosure.setImplicitThis(false);
 
             return configureAST(callClosure, ctx);
+            */
+            else {
+                var tuple = last(statementInfoList);
+                if (!tuple.getV2() && !tuple.getV3()) { // if no arrow, yield or throw is required
+                    throw createParsingFailedException("`yield` or `throw` is expected", tuple.getV1().get(0));
+                }
+            }
+
+            List<CaseStatement> caseStatements = new ArrayList<>();
+            Statement defaultStatement = null;
+
+            for (var tuple : statementInfoList) {
+                for (Statement s : tuple.getV1()) {
+                    if (s instanceof CaseStatement c) {
+                        if (defaultStatement != null) {
+                            throw createParsingFailedException("default case should appear last", defaultStatement);
+                        }
+                        caseStatements.add(c);
+                    } else if (isTrue(s, IS_SWITCH_DEFAULT)) {
+                        if (defaultStatement != null) {
+                            throw createParsingFailedException("switch expression should have only one default case", s);
+                        }
+                        defaultStatement = s;
+                    }
+                }
+            }
+
+            Statement statement = configureAST(
+                    new SwitchStatement(
+                            this.visitExpressionInPar(ctx.expressionInPar()),
+                            caseStatements,
+                            defaultStatement != null ? defaultStatement : EmptyStatement.INSTANCE
+                    ),
+                    ctx);
+            statement = createBlockStatement(List.of(statement));
+
+            MethodCallExpression immediateExecution = callX(closureX(null, statement), CALL_STR);
+            immediateExecution.setImplicitThis(false);
+            return immediateExecution;
+            // GRECLIPSE end
         } finally {
             switchExpressionRuleContextStack.pop();
         }
     }
-    private int switchExpressionVariableSeq;
 
     @Override
     public Tuple3<List<Statement>, Boolean, Boolean> visitSwitchBlockStatementExpressionGroup(SwitchBlockStatementExpressionGroupContext ctx) {

@@ -5173,6 +5173,32 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 3, "java.lang.Object");
     }
 
+    @Test // GROOVY-9272
+    public void testSwitchClassCase10() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40));
+
+        String contents =
+            "void test(obj) {\n" +
+            "  switch (obj) {\n" +
+            "   case Number -> obj\n" +
+            "   case String -> obj\n" +
+            "  }\n" +
+            "  obj\n" +
+            "}\n";
+
+        int offset = contents.indexOf("switch (obj") + 8;
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+
+        offset = contents.indexOf("obj", offset + 3);
+        assertType(contents, offset, offset + 3, "java.lang.Number");
+
+        offset = contents.indexOf("obj", offset + 3);
+        assertType(contents, offset, offset + 3, "java.lang.String");
+
+        offset = contents.indexOf("obj", offset + 3);
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-9854
     public void testSwitchClosureCase1() {
         String contents =
