@@ -4,7 +4,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.codebrowsing.test;singleton:=true
 Bundle-Name: Groovy Code Browsing Tests
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 6.0.0.qualifier
+Bundle-Version: 6.1.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.codebrowsing.tests
-Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="6.0.0",
- org.codehaus.groovy.eclipse.tests;bundle-version="6.0.0"
+Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="6.1.0",
+ org.codehaus.groovy.eclipse.tests;bundle-version="6.1.0"

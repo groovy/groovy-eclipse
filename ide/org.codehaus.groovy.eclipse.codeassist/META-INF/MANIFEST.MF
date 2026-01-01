@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.codeassist;singleton:=true
 Bundle-Name: Groovy Code Assist
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 6.0.0.qualifier
+Bundle-Version: 6.1.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.codeassist,
  org.codehaus.groovy.eclipse.codeassist.completions,
  org.codehaus.groovy.eclipse.codeassist.creators,
@@ -12,7 +12,7 @@ Export-Package: org.codehaus.groovy.eclipse.codeassist,
  org.codehaus.groovy.eclipse.codeassist.proposals,
  org.codehaus.groovy.eclipse.codeassist.relevance,
  org.codehaus.groovy.eclipse.codeassist.requestor
-Require-Bundle: org.codehaus.groovy.eclipse.ui;bundle-version="6.0.0",
+Require-Bundle: org.codehaus.groovy.eclipse.ui;bundle-version="6.1.0",
  org.eclipse.ui.editors
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist

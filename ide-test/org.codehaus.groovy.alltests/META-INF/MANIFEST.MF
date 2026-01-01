@@ -4,7 +4,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-SymbolicName: org.codehaus.groovy.alltests;singleton:=true
 Bundle-Name: Groovy Test Suites
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 6.0.0.qualifier
+Bundle-Version: 6.1.0.qualifier
 Export-Package: org.codehaus.groovy.alltests
 Import-Package: org.codehaus.groovy.eclipse.codeassist.tests,
  org.codehaus.groovy.eclipse.codebrowsing.tests,
@@ -17,5 +17,5 @@ Import-Package: org.codehaus.groovy.eclipse.codeassist.tests,
  org.codehaus.groovy.eclipse.refactoring.test.extract,
  org.codehaus.groovy.eclipse.refactoring.test.formatter,
  org.codehaus.groovy.eclipse.refactoring.test.rename
-Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="6.0.0",
- org.codehaus.groovy.eclipse.compilerResolver;bundle-version="6.0.0"
+Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="6.1.0",
+ org.codehaus.groovy.eclipse.compilerResolver;bundle-version="6.1.0"

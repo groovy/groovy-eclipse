@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import org.codehaus.groovy.eclipse.dsl.script.PointcutFactory
 // first thing to do is to check that versions are correct
 // for this script to be evaluated any further, all conditions must be met
 // also supports grailsTooling and sts, which are synonyms and correspond to the STS version eg- 2.6.0
-assertVersion(groovy: '3.0.25', groovyEclipse: '6.0.0')
+assertVersion(groovy: '3.0.25', groovyEclipse: '6.1.0')
 
 // You can store shared pointcuts in a variable
 // This particular pointcut matches all join points that are inside of a
