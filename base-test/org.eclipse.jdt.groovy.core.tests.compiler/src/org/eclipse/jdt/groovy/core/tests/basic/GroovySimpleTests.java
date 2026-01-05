@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2247,7 +2247,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-8659
+    @Test // GROOVY-8659
     public void testOverriding_FinalMethod2() {
         //@formatter:off
         String[] sources = {
@@ -2272,7 +2272,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n" : "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-11548 and GROOVY-11758
+    @Test // GROOVY-11548 and GROOVY-11758
     public void testOverriding_FinalMethod3() {
         //@formatter:off
         String[] sources = {
@@ -2298,10 +2298,65 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\tclass Foo extends Bar implements Baz {\n" +
             "\t      ^^^\n" +
             (isAtLeastGroovy(40)
-            ? "Groovy:inherited final method getSomething() from Bar cannot shadow the public method in Baz\n"
+            ? "Groovy:protected method getSomething() from Bar cannot shadow the public method in Baz\n"
             : "Groovy:You are not allowed to override the final method getSomething() from class 'Bar'.\n"
             ) +
             "----------\n");
+    }
+
+    @Test // GROOVY-11548
+    public void testOverriding_FinalMethod4() {
+        //@formatter:off
+        String[] sources = {
+            "Bar.groovy",
+            "class Bar {\n" +
+            "  protected final getSomething() {}\n" +
+            "}\n",
+
+            "Baz.java",
+            "interface Baz {\n" +
+            "  default Object getSomething() { return null; }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "class Foo extends Bar implements Baz {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass Foo extends Bar implements Baz {\n" +
+            "\t      ^^^\n" +
+            "Groovy:protected method getSomething() from Bar cannot shadow the public method in Baz\n" +
+            "----------\n");
+    }
+
+    @Test // GROOVY-11548
+    public void testOverriding_FinalMethod5() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "class Foo extends Bar implements Baz {\n" +
+            "  static main(args) {\n" +
+            "    print(new Foo().m())\n" +
+            "  }\n" +
+            "}\n",
+
+            "Bar.groovy",
+            "class Bar {\n" +
+            "  final String m() { return 'Bar' }\n" +
+            "}\n",
+
+            "Baz.java",
+            "interface Baz {\n" +
+            "  default String m() { return \"Baz\"; }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Bar");
     }
 
     @Test
@@ -2330,7 +2385,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testOverriding_ReducedVisibility1a() {
+    public void testOverriding_ReducedVisibility2() {
         //@formatter:off
         String[] sources = {
             "Bar.groovy",
@@ -2355,7 +2410,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testOverriding_ReducedVisibility1b() {
+    public void testOverriding_ReducedVisibility3() {
         //@formatter:off
         String[] sources = {
             "Bar.groovy",
@@ -2380,7 +2435,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testOverriding_ReducedVisibility2() {
+    public void testOverriding_ReducedVisibility4() {
         //@formatter:off
         String[] sources = {
             "Bar.groovy",
@@ -2405,7 +2460,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testOverriding_ReducedVisibility2a() {
+    public void testOverriding_ReducedVisibility5() {
         //@formatter:off
         String[] sources = {
             "Bar.groovy",
@@ -2430,7 +2485,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testOverriding_ReducedVisibility3() {
+    public void testOverriding_ReducedVisibility6() {
         //@formatter:off
         String[] sources = {
             "Bar.groovy",
@@ -2455,7 +2510,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testOverriding_ReducedVisibility3a() {
+    public void testOverriding_ReducedVisibility7() {
         //@formatter:off
         String[] sources = {
             "Bar.java",
@@ -2477,6 +2532,45 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\t             ^^^^^\n" +
             "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was package-private\n" +
             "----------\n");
+    }
+
+    @Test // GROOVY-11830
+    public void testOverriding_ReducedVisibility8() {
+        for (String spec : new String[] {"protected", "", "private"}) {
+            //@formatter:off
+            String[] sources = {
+                "Bar.java",
+                "public class Bar {\n" +
+                "  " + spec + " void proc() {}\n" +
+                "}\n",
+
+                "Baz.java",
+                "public interface Baz {\n" +
+                "  void proc();\n" +
+                "}\n",
+
+                "Foo.groovy",
+                "class Foo extends Bar implements Baz {\n" +
+                "}\n",
+            };
+            //@formatter:on
+
+            runNegativeTest(sources, ("private".equals(spec)
+                ?
+                "----------\n" +
+                "1. WARNING in Bar.java (at line 2)\n" +
+                "\tprivate void proc() {}\n" +
+                "\t             ^^^^^^\n" +
+                "The method proc() from the type Bar is never used locally\n"
+                : "") +
+                "----------\n" +
+                "1. ERROR in Foo.groovy (at line 1)\n" +
+                "\tclass Foo extends Bar implements Baz {\n" +
+                "\t      ^^^\n" +
+                "Groovy:" + (!spec.isEmpty() ? spec : "package-private") +
+                " method proc() from Bar cannot shadow the public method in Baz\n" +
+                "----------\n");
+        }
     }
 
     @Test

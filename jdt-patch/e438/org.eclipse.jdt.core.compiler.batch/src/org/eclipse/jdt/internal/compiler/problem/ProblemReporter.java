@@ -3717,6 +3717,9 @@ private void inheritedMethodReducesVisibility(int sourceStart, int sourceEnd, Me
 		sourceEnd);
 }
 public void inheritedMethodReducesVisibility(SourceTypeBinding type, MethodBinding concreteMethod, MethodBinding[] abstractMethods) {
+	// GROOVY add
+	if (type.scope == null || type.scope.shouldReport(IProblem.InheritedMethodReducesVisibility))
+	// GROOVY end
 	inheritedMethodReducesVisibility(type.sourceStart(), type.sourceEnd(), concreteMethod, abstractMethods);
 }
 public void inheritedMethodReducesVisibility(TypeParameter typeParameter, MethodBinding concreteMethod, MethodBinding[] abstractMethods) {

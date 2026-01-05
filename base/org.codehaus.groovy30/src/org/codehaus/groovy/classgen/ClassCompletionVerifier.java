@@ -18,7 +18,6 @@
  */
 package org.codehaus.groovy.classgen;
 
-import org.apache.groovy.ast.tools.AnnotatedNodeUtils;
 import org.apache.groovy.ast.tools.ClassNodeUtils;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
@@ -48,13 +47,14 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.reflect.Modifier.isAbstract;
 import static java.lang.reflect.Modifier.isFinal;
+import static java.lang.reflect.Modifier.isInterface;
 import static java.lang.reflect.Modifier.isNative;
 import static java.lang.reflect.Modifier.isPrivate;
 import static java.lang.reflect.Modifier.isStatic;
@@ -62,8 +62,11 @@ import static java.lang.reflect.Modifier.isStrict;
 import static java.lang.reflect.Modifier.isSynchronized;
 import static java.lang.reflect.Modifier.isTransient;
 import static java.lang.reflect.Modifier.isVolatile;
+import static org.apache.groovy.util.BeanUtils.capitalize;
+import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE;
 import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
 import static groovyjarjarasm.asm.Opcodes.ACC_FINAL;
+import static groovyjarjarasm.asm.Opcodes.ACC_INTERFACE;
 import static groovyjarjarasm.asm.Opcodes.ACC_NATIVE;
 import static groovyjarjarasm.asm.Opcodes.ACC_PRIVATE;
 import static groovyjarjarasm.asm.Opcodes.ACC_PROTECTED;
@@ -74,7 +77,6 @@ import static groovyjarjarasm.asm.Opcodes.ACC_SYNCHRONIZED;
 import static groovyjarjarasm.asm.Opcodes.ACC_SYNTHETIC;
 import static groovyjarjarasm.asm.Opcodes.ACC_TRANSIENT;
 import static groovyjarjarasm.asm.Opcodes.ACC_VOLATILE;
-
 /**
  * Checks that a class satisfies various conditions including:
  * <ul>
@@ -85,51 +87,43 @@ import static groovyjarjarasm.asm.Opcodes.ACC_VOLATILE;
  * </ul>
  */
 public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
-
     private static final String[] INVALID_NAME_CHARS = {".", ":", "/", ";", "[", "<", ">"};
     // the groovy.compiler.strictNames system property is experimental and may change default value or be removed in a future version of Groovy
-    private final boolean strictNames = Boolean.getBoolean("groovy.compiler.strictNames");
-    private boolean inConstructor, inStaticConstructor;
-    private final SourceUnit source;
+    private final boolean strictNames = Boolean.parseBoolean(System.getProperty("groovy.compiler.strictNames", "false"));
     private ClassNode currentClass;
+    private final SourceUnit source;
+    private boolean inConstructor = false;
+    private boolean inStaticConstructor = false;
 
-    public ClassCompletionVerifier(final SourceUnit source) {
+    public ClassCompletionVerifier(SourceUnit source) {
         this.source = source;
-    }
-
-    @Override
-    protected SourceUnit getSourceUnit() {
-        return source;
     }
 
     public ClassNode getClassNode() {
         return currentClass;
     }
 
-    @Override
-    public void visitClass(final ClassNode node) {
-        ClassNode previousClass = currentClass;
+    public void visitClass(ClassNode node) {
+        ClassNode oldClass = currentClass;
         currentClass = node;
-        try {
-            checkImplementsAndExtends(node);
-            if (source != null && !source.getErrorCollector().hasErrors()) {
-                checkClassForIncorrectModifiers(node);
-                checkInterfaceMethodVisibility(node);
-                checkAbstractMethodVisibility(node);
-                checkClassForExtendingFinalOrSealed(node);
-                checkMethodsForIncorrectName(node);
-                checkMethodsForWeakerAccess(node);
-                checkMethodsForOverridingFinal(node);
-                checkNoAbstractMethodsNonAbstractClass(node);
-                checkClassExtendsAllSelfTypes(node);
-                checkNoStaticMethodWithSameSignatureAsNonStatic(node);
-                checkGenericsUsage(node, node.getUnresolvedInterfaces());
-                checkGenericsUsage(node, node.getUnresolvedSuperClass());
-            }
-            super.visitClass(node);
-        } finally {
-            currentClass = previousClass;
+        checkImplementsAndExtends(node);
+        if (source != null && !source.getErrorCollector().hasErrors()) {
+            checkClassForIncorrectModifiers(node);
+            checkInterfaceMethodVisibility(node);
+            checkAbstractMethodVisibility(node);
+            checkClassForOverwritingFinal(node);
+            checkMethodsForIncorrectModifiers(node);
+            checkMethodsForIncorrectName(node);
+            checkMethodsForWeakerAccess(node);
+            checkMethodsForOverridingFinal(node);
+            checkNoAbstractMethodsNonabstractClass(node);
+            checkClassExtendsAllSelfTypes(node);
+            checkNoStaticMethodWithSameSignatureAsNonStatic(node);
+            checkGenericsUsage(node, node.getUnresolvedInterfaces());
+            checkGenericsUsage(node, node.getUnresolvedSuperClass());
         }
+        super.visitClass(node);
+        currentClass = oldClass;
     }
 
     private void checkNoStaticMethodWithSameSignatureAsNonStatic(final ClassNode node) {
@@ -151,7 +145,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
                 ClassNode cn = declaringClass.getOuterClass();
                 if (cn == null && declaringClass.isResolved()) {
                     // in case of a precompiled class, the outerclass is unknown
-                    Class<?> typeClass = declaringClass.getTypeClass();
+                    Class typeClass = declaringClass.getTypeClass();
                     typeClass = typeClass.getEnclosingClass();
                     if (typeClass != null) {
                         cn = ClassHelper.make(typeClass);
@@ -181,7 +175,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void checkInterfaceMethodVisibility(final ClassNode node) {
+    private void checkInterfaceMethodVisibility(ClassNode node) {
         if (!node.isInterface()) return;
         for (MethodNode method : node.getMethods()) {
             if (method.isPrivate()) {
@@ -192,9 +186,10 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void checkAbstractMethodVisibility(final ClassNode node) {
+    private void checkAbstractMethodVisibility(ClassNode node) {
         // we only do check abstract classes (including enums), no interfaces or non-abstract classes
-        if (!node.isAbstract() || node.isInterface()) return;
+        if (!isAbstract(node.getModifiers()) || isInterface(node.getModifiers())) return;
+
         for (MethodNode method : node.getAbstractMethods()) {
             if (method.isPrivate()) {
                 addError("Method '" + method.getName() + "' from " + getDescription(node) +
@@ -203,61 +198,63 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void checkNoAbstractMethodsNonAbstractClass(final ClassNode node) {
-        if (node.isAbstract()) return;
+    private void checkNoAbstractMethodsNonabstractClass(ClassNode node) {
+        if (isAbstract(node.getModifiers())) return;
         for (MethodNode method : node.getAbstractMethods()) {
             MethodNode sameArgsMethod = node.getMethod(method.getName(), method.getParameters());
-            if (sameArgsMethod == null) {
+            if (null == sameArgsMethod) {
                 sameArgsMethod = ClassHelper.GROOVY_OBJECT_TYPE.getMethod(method.getName(), method.getParameters());
-                if (sameArgsMethod != null && !sameArgsMethod.isAbstract() && sameArgsMethod.getReturnType().equals(method.getReturnType())) {
-                    continue;
+                if (null != sameArgsMethod && !sameArgsMethod.isAbstract() && method.getReturnType().equals(sameArgsMethod.getReturnType())) {
+                    return;
                 }
             }
 
-            String what; ASTNode where = node;
-            if (sameArgsMethod == null || sameArgsMethod.getReturnType().equals(method.getReturnType())) {
-                what = "Can't have an abstract method in a non-abstract class." +
+            if (sameArgsMethod==null || method.getReturnType().equals(sameArgsMethod.getReturnType())) {
+                addError("Can't have an abstract method in a non-abstract class." +
                         " The " + getDescription(node) + " must be declared abstract or" +
-                        " the " + getDescription(method) + " must be implemented.";
+                        " the " + getDescription(method) + " must be implemented.", node);
             } else {
-                what = "Abstract " + getDescription(method) + " is not implemented but a " +
-                        "method of the same name but different return type is defined: " +
-                        (sameArgsMethod.isStatic() ? "static " : "") + getDescription(sameArgsMethod);
-                where = method;
+                addError("Abstract "+getDescription(method)+" is not implemented but a " +
+                                "method of the same name but different return type is defined: "+
+                                (sameArgsMethod.isStatic()?"static ":"")+
+                                getDescription(sameArgsMethod), method
+                );
             }
-            addError(what, where);
         }
     }
 
-    private void checkClassExtendsAllSelfTypes(final ClassNode node) {
-        if (node.isInterface()) return;
-        for (ClassNode anInterface : GeneralUtils.getInterfacesAndSuperInterfaces(node)) {
-            if (Traits.isTrait(anInterface)) {
-                LinkedHashSet<ClassNode> selfTypes = new LinkedHashSet<ClassNode>();
-                for (ClassNode type : Traits.collectSelfTypes(anInterface, selfTypes, true, false)) {
-                    if (type.isInterface() && !node.implementsInterface(type)) {
-                        addError(getDescription(node)
-                            + " implements " + getDescription(anInterface)
-                            + " but does not implement self type " + getDescription(type),
-                            anInterface);
-                    } else if (!type.isInterface() && !node.isDerivedFrom(type)) {
-                        addError(getDescription(node)
-                            + " implements " + getDescription(anInterface)
-                            + " but does not extend self type " + getDescription(type),
-                            anInterface);
+    private void checkClassExtendsAllSelfTypes(ClassNode node) {
+        int modifiers = node.getModifiers();
+        if (!isInterface(modifiers)) {
+            for (ClassNode anInterface : GeneralUtils.getInterfacesAndSuperInterfaces(node)) {
+                if (Traits.isTrait(anInterface)) {
+                    LinkedHashSet<ClassNode> selfTypes = new LinkedHashSet<ClassNode>();
+                    for (ClassNode type : Traits.collectSelfTypes(anInterface, selfTypes, true, false)) {
+                        if (type.isInterface() && !node.implementsInterface(type)) {
+                            addError(getDescription(node)
+                                    + " implements " + getDescription(anInterface)
+                                    + " but does not implement self type " + getDescription(type),
+                                    anInterface);
+                        } else if (!type.isInterface() && !node.isDerivedFrom(type)) {
+                            addError(getDescription(node)
+                                            + " implements " + getDescription(anInterface)
+                                            + " but does not extend self type " + getDescription(type),
+                                    anInterface);
+                        }
                     }
                 }
             }
         }
     }
 
-    private void checkClassForIncorrectModifiers(final ClassNode node) {
+    private void checkClassForIncorrectModifiers(ClassNode node) {
         checkClassForAbstractAndFinal(node);
         checkClassForOtherModifiers(node);
     }
 
-    private void checkClassForAbstractAndFinal(final ClassNode node) {
-        if (!node.isAbstract() || !isFinal(node.getModifiers())) return;
+    private void checkClassForAbstractAndFinal(ClassNode node) {
+        if (!isAbstract(node.getModifiers())) return;
+        if (!isFinal(node.getModifiers())) return;
         if (node.isInterface()) {
             addError("The " + getDescription(node) + " must not be final. It is by definition abstract.", node);
         } else {
@@ -265,7 +262,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void checkClassForOtherModifiers(final ClassNode node) {
+    private void checkClassForOtherModifiers(ClassNode node) {
         checkClassForModifier(node, isTransient(node.getModifiers()), "transient");
         checkClassForModifier(node, isVolatile(node.getModifiers()), "volatile");
         checkClassForModifier(node, isNative(node.getModifiers()), "native");
@@ -276,131 +273,67 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         // don't check synchronized here as it overlaps with ACC_SUPER
     }
 
-    private void checkMethodForModifier(final MethodNode node, final boolean condition, final String modifierName) {
+    private void checkMethodForModifier(MethodNode node, boolean condition, String modifierName) {
         if (!condition) return;
         addError("The " + getDescription(node) + " has an incorrect modifier " + modifierName + ".", node);
     }
 
-    private void checkClassForModifier(final ClassNode node, final boolean condition, final String modifierName) {
+    private void checkClassForModifier(ClassNode node, boolean condition, String modifierName) {
         if (!condition) return;
         addError("The " + getDescription(node) + " has an incorrect modifier " + modifierName + ".", node);
     }
 
-    private static String getDescription(final ClassNode node) {
-        return (node.isInterface() ? (Traits.isTrait(node) ? "trait" : "interface") : "class") + " '" + node.getName() + "'";
+    private static String getDescription(ClassNode node) {
+        return (node.isInterface() ? (Traits.isTrait(node)?"trait":"interface") : "class") + " '" + node.getName() + "'";
     }
 
-    private static String getDescription(final MethodNode node) {
+    private static String getDescription(MethodNode node) {
         return "method '" + node.getTypeDescriptor() + "'";
     }
 
-    private static String getDescription(final FieldNode node) {
+    private static String getDescription(FieldNode node) {
         return "field '" + node.getName() + "'";
     }
 
-    private static String getDescription(final PropertyNode node) {
-        return "property '" + node.getName() + "'";
-    }
-
-    private static String getDescription(final Parameter node) {
+    private static String getDescription(Parameter node) {
         return "parameter '" + node.getName() + "'";
     }
 
-    private void checkAbstractDeclaration(final MethodNode methodNode) {
-        if (!methodNode.isAbstract() || currentClass.isAbstract()) return;
-
+    private void checkAbstractDeclaration(MethodNode methodNode) {
+        if (!methodNode.isAbstract()) return;
+        if (isAbstract(currentClass.getModifiers())) return;
         addError("Can't have an abstract method in a non-abstract class." +
                 " The " + getDescription(currentClass) + " must be declared abstract or the method '" +
                 methodNode.getTypeDescriptor() + "' must not be abstract.", methodNode);
     }
 
-    private void checkClassForExtendingFinalOrSealed(final ClassNode cn) {
-        boolean isFinal = isFinal(cn.getModifiers());
-        boolean isSealed = Boolean.TRUE.equals(cn.getNodeMetaData(groovy.transform.Sealed.class));
-        boolean isNonSealed = cn.getAnnotations().stream().anyMatch(an -> an.getClassNode().getName().equals("groovy.transform.NonSealed")); // GROOVY-11768
-
-        ClassNode sc = cn.getSuperClass();
-        if (sc != null && isFinal(sc.getModifiers())) {
-            addError("You are not allowed to extend the final " + getDescription(sc) + ".", cn);
-        }
-
-        if (isFinal && isNonSealed) {
-            addError("The " + getDescription(cn) + " cannot be both final and non-sealed.", cn);
-        }
-        if (isSealed) {
-            if (isFinal) {
-                addError("The " + getDescription(cn) + " cannot be both final and sealed.", cn);
-            }
-            if (isNonSealed) {
-                addError("The " + getDescription(cn) + " cannot be both sealed and non-sealed.", cn);
-            }
-            if (cn.getPermittedSubclasses().isEmpty()) {
-                addError("Sealed " + getDescription(cn) + " has no explicit or implicit permitted subclasses.", cn);
-            }
-        }
-
-        boolean sealedSuper = sc != null && sc.isSealed();
-        boolean nonSealedSuper = sc != null && isNonSealed(sc);
-        boolean sealedInterface = Arrays.stream(cn.getInterfaces()).anyMatch(ClassNode::isSealed);
-        boolean nonSealedInterface = Arrays.stream(cn.getInterfaces()).anyMatch(this::isNonSealed);
-
-        if (isNonSealed && !(sealedSuper || sealedInterface || nonSealedSuper || nonSealedInterface)) {
-            addError("The " + getDescription(cn) + " cannot be non-sealed as it has no sealed parent.", cn);
-        }
-        if (sealedSuper) {
-            checkSealedParent(cn, sc);
-        }
-        if (sealedInterface) {
-            for (ClassNode si : cn.getInterfaces()) {
-                if (si.isSealed()) {
-                    checkSealedParent(cn, si);
-                }
-            }
-        }
+    private void checkClassForOverwritingFinal(ClassNode cn) {
+        ClassNode superCN = cn.getSuperClass();
+        if (superCN == null) return;
+        if (!isFinal(superCN.getModifiers())) return;
+        String msg = "You are not allowed to overwrite the final " + getDescription(superCN) + ".";
+        addError(msg, cn);
     }
 
-    private boolean isNonSealed(final ClassNode cn) {
-        if (cn.isPrimaryClassNode()
-                && Boolean.TRUE.equals(cn.getNodeMetaData(groovy.transform.NonSealed.class))) {
-            return true;
-        }
-        ClassNode sc = cn.getSuperClass(); // GROOVY-11292, GROOVY-11750: check super class
-        return (sc != null && sc.isSealed() && !(cn.isSealed() || isFinal(cn.getModifiers())));
-    }
-
-    private void checkSealedParent(final ClassNode cn, final ClassNode parent) {
-        boolean found = false;
-        for (ClassNode permitted : parent.getPermittedSubclasses()) {
-            if (permitted.equals(cn)) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            addError("The " + getDescription(cn) + " is not a permitted subclass of the sealed " + getDescription(parent) + ".", cn);
-        }
-    }
-
-    private void checkImplementsAndExtends(final ClassNode node) {
-        ClassNode sn = node.getSuperClass();
-        if (sn != null && sn.isInterface() && !node.isInterface()) {
-            addError("You are not allowed to extend the " + getDescription(sn) + ", use implements instead.", node);
+    private void checkImplementsAndExtends(ClassNode node) {
+        ClassNode cn = node.getSuperClass();
+        if (cn.isInterface() && !node.isInterface()) {
+            addError("You are not allowed to extend the " + getDescription(cn) + ", use implements instead.", node);
         }
         for (ClassNode anInterface : node.getInterfaces()) {
-            if (!anInterface.isInterface()) {
-                addError("You are not allowed to implement the " + getDescription(anInterface) + ", use extends instead.", node);
-            } else if (anInterface.isSealed()) {
-                checkSealedParent(node, anInterface);
+            cn = anInterface;
+            if (!cn.isInterface()) {
+                addError("You are not allowed to implement the " + getDescription(cn) + ", use extends instead.", node);
             }
         }
     }
 
-    private void checkMethodsForIncorrectName(final ClassNode cn) {
+    private void checkMethodsForIncorrectName(ClassNode cn) {
         if (!strictNames) return;
         List<MethodNode> methods = cn.getAllDeclaredMethods();
         for (MethodNode mNode : methods) {
-            if (mNode.isConstructor() || mNode.isStaticConstructor()) continue;
             String name = mNode.getName();
+            if (name.equals("<init>") || name.equals("<clinit>")) continue;
             // Groovy allows more characters than Character.isValidJavaIdentifier() would allow
             // if we find a good way to encode special chars we could remove (some of) these checks
             for (String ch : INVALID_NAME_CHARS) {
@@ -411,7 +344,21 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void checkMethodsForWeakerAccess(final ClassNode cn) {
+    private void checkMethodsForIncorrectModifiers(ClassNode cn) {
+        if (!cn.isInterface()) return;
+        for (MethodNode method : cn.getMethods()) {
+            if (method.isFinal()) {
+                addError("The " + getDescription(method) + " from " + getDescription(cn) +
+                        " must not be final. It is by definition abstract.", method);
+            }
+            if (method.isStatic() && !isConstructor(method)) {
+                addError("The " + getDescription(method) + " from " + getDescription(cn) +
+                        " must not be static. Only fields may be static in an interface.", method);
+            }
+        }
+    }
+
+    private void checkMethodsForWeakerAccess(ClassNode cn) {
         for (MethodNode method : cn.getMethods()) {
             checkMethodForWeakerAccessPrivileges(method, cn);
         }
@@ -435,6 +382,10 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         // GRECLIPSE end
     }
 
+    private static boolean isConstructor(MethodNode method) {
+        return method.getName().equals("<clinit>");
+    }
+
     private void checkMethodsForOverridingFinal(final ClassNode cn) {
         final int skips = ACC_SYNTHETIC | ACC_STATIC | ACC_PRIVATE;
         for (MethodNode method : cn.getMethods()) {
@@ -443,7 +394,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
             Parameter[] params = method.getParameters();
             for (MethodNode superMethod : cn.getSuperClass().getMethods(method.getName())) {
                 if ((superMethod.getModifiers() & skips + ACC_FINAL) == ACC_FINAL
-                        && ParameterUtils.parametersEqual(params, superMethod.getParameters())) {
+                        && hasEqualParameterTypes(params, superMethod.getParameters())) {
                     StringBuilder sb = new StringBuilder();
                     sb.append("You are not allowed to override the final method ");
                     if (method.getName().contains(" ")) {
@@ -463,7 +414,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void appendParamsDescription(final Parameter[] parameters, final StringBuilder msg) {
+    private void appendParamsDescription(Parameter[] parameters, StringBuilder msg) {
         msg.append('(');
         boolean needsComma = false;
         for (Parameter parameter : parameters) {
@@ -477,7 +428,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         msg.append(')');
     }
 
-    private void addWeakerAccessError(final ClassNode cn, final MethodNode method, final Parameter[] parameters, final MethodNode superMethod) {
+    private void addWeakerAccessError(ClassNode cn, MethodNode method, Parameter[] parameters, MethodNode superMethod) {
         StringBuilder msg = new StringBuilder();
         msg.append(method.getName());
         appendParamsDescription(parameters, msg);
@@ -507,46 +458,49 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     }
     // GRECLIPSE end
 
-    @Override
-    public void visitMethod(final MethodNode node) {
+    private static boolean hasEqualParameterTypes(Parameter[] first, Parameter[] second) {
+        if (first.length != second.length) return false;
+        for (int i = 0; i < first.length; i++) {
+            String ft = first[i].getType().getName();
+            String st = second[i].getType().getName();
+            if (ft.equals(st)) continue;
+            return false;
+        }
+        return true;
+    }
+
+    protected SourceUnit getSourceUnit() {
+        return source;
+    }
+
+    public void visitMethod(MethodNode node) {
         inConstructor = false;
         inStaticConstructor = node.isStaticConstructor();
         checkAbstractDeclaration(node);
         checkRepetitiveMethod(node);
         checkOverloadingPrivateAndPublic(node);
-        checkMethodForIncorrectModifiers(node);
+        checkMethodModifiers(node);
         checkGenericsUsage(node, node.getParameters());
         checkGenericsUsage(node, node.getReturnType());
         for (Parameter param : node.getParameters()) {
-            if (ClassHelper.isPrimitiveVoid(param.getType())) {
+            if (param.getType().equals(VOID_TYPE)) {
                 addError("The " + getDescription(param) + " in " +  getDescription(node) + " has invalid type void", param);
             }
         }
         super.visitMethod(node);
     }
 
-    private void checkMethodForIncorrectModifiers(final MethodNode node) {
-        if (node.isFinal() && currentClass.isInterface()) {
-            addError("The " + getDescription(node) + " from " + getDescription(currentClass) + " must not be final. It is by definition abstract.", node);
-        } else if (node.isStatic() && currentClass.isInterface()) {
-            if (!node.isStaticConstructor()) addError("The " + getDescription(node) + " from " + getDescription(currentClass) + " must not be static. Only fields may be static in an interface.", node);
-        } else if (node.isAbstract() && (node.isStatic() || node.isFinal())) {
-            addError("The " + getDescription(node) + " can only be one of abstract, static, final.", node); // GROOVY-11634
-        }
-
-        if (currentClass.isInterface()) {
-            checkMethodForModifier(node, isNative(node.getModifiers()), "native");
+    private void checkMethodModifiers(MethodNode node) {
+        // don't check volatile here as it overlaps with ACC_BRIDGE
+        // additional modifiers not allowed for interfaces
+        if ((this.currentClass.getModifiers() & ACC_INTERFACE) != 0) {
             checkMethodForModifier(node, isStrict(node.getModifiers()), "strictfp");
             checkMethodForModifier(node, isSynchronized(node.getModifiers()), "synchronized");
-        }
-        // transient overlaps with varargs but we do not add varargs until AsmClassGenerator
-        // but we might have varargs set from @Delegate of varargs method, so skip generated
-        if (!AnnotatedNodeUtils.isGenerated(node)) {
-            checkMethodForModifier(node, isTransient(node.getModifiers()), "transient");
+            checkMethodForModifier(node, isNative(node.getModifiers()), "native");
         }
     }
 
-    private void checkMethodForWeakerAccessPrivileges(final MethodNode mn, final ClassNode cn) {
+    private void checkMethodForWeakerAccessPrivileges(MethodNode mn, ClassNode cn) {
         if (mn.isPublic()) return;
         // GRECLIPSE add
         if (mn.isStatic()) return;
@@ -557,7 +511,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
             if (superMethod.isStatic()) continue;
             // GRECLIPSE end
             Parameter[] superParams = superMethod.getParameters();
-            if (!ParameterUtils.parametersEqual(params, superParams)) continue;
+            if (!hasEqualParameterTypes(params, superParams)) continue;
             if ((mn.isPrivate() && !superMethod.isPrivate())
                     || (mn.isProtected() && !superMethod.isProtected() && !superMethod.isPackageScope() && !superMethod.isPrivate())
                     || (!mn.isPrivate() && !mn.isProtected() && !mn.isPublic() && (superMethod.isPublic() || superMethod.isProtected()))) {
@@ -567,8 +521,8 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void checkOverloadingPrivateAndPublic(final MethodNode node) {
-        if (node.isStaticConstructor()) return;
+    private void checkOverloadingPrivateAndPublic(MethodNode node) {
+        if (isConstructor(node)) return;
         boolean hasPrivate = node.isPrivate();
         boolean hasPublic = node.isPublic();
         for (MethodNode method : currentClass.getMethods(node.getName())) {
@@ -586,8 +540,8 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void checkRepetitiveMethod(final MethodNode node) {
-        if (node.isStaticConstructor()) return;
+    private void checkRepetitiveMethod(MethodNode node) {
+        if (isConstructor(node)) return;
         for (MethodNode method : currentClass.getMethods(node.getName())) {
             if (method == node) continue;
             if (!method.getDeclaringClass().equals(node.getDeclaringClass())) continue;
@@ -598,7 +552,8 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void addErrorIfParamsAndReturnTypeEqual(final Parameter[] p2, final Parameter[] p1, final MethodNode node, final MethodNode element) {
+    private void addErrorIfParamsAndReturnTypeEqual(Parameter[] p2, Parameter[] p1,
+                                                    MethodNode node, MethodNode element) {
         boolean isEqual = true;
         for (int i = 0; i < p2.length; i++) {
             isEqual &= p1[i].getType().equals(p2[i].getType());
@@ -606,42 +561,39 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
         isEqual &= node.getReturnType().equals(element.getReturnType());
         if (isEqual) {
-            addError("Repetitive method name/signature for " + getDescription(node) + " in " + getDescription(currentClass) + ".", node);
+            addError("Repetitive method name/signature for " + getDescription(node) +
+                    " in " + getDescription(currentClass) + ".", node);
         }
     }
 
-    @Override
-    public void visitField(final FieldNode node) {
+    public void visitField(FieldNode node) {
         if (currentClass.getDeclaredField(node.getName()) != node) {
             addError("The " + getDescription(node) + " is declared multiple times.", node);
         }
         checkInterfaceFieldModifiers(node);
         checkInvalidFieldModifiers(node);
         checkGenericsUsage(node, node.getType());
-        if (ClassHelper.isPrimitiveVoid(node.getType())) {
+        if (node.getType().equals(VOID_TYPE)) {
             addError("The " + getDescription(node) + " has invalid type void", node);
         }
         super.visitField(node);
     }
 
-    @Override
-    public void visitProperty(final PropertyNode node) {
-        if (currentClass.getProperty(node.getName()) != node) {
-            addError("The " + getDescription(node) + " is declared multiple times.", node);
-        }
+    public void visitProperty(PropertyNode node) {
         checkDuplicateProperties(node);
         checkGenericsUsage(node, node.getType());
         super.visitProperty(node);
     }
 
-    private void checkDuplicateProperties(final PropertyNode node) {
+    private void checkDuplicateProperties(PropertyNode node) {
         ClassNode cn = node.getDeclaringClass();
         String name = node.getName();
-        String getterName = node.getGetterNameOrDefault();
+        String getterName = "get" + capitalize(name);
         if (Character.isUpperCase(name.charAt(0))) {
-            for (PropertyNode otherNode : cn.getProperties()) {
-                String otherName = otherNode.getName();
-                if (node != otherNode && getterName.equals(otherNode.getGetterNameOrDefault())) {
+            for (PropertyNode propNode : cn.getProperties()) {
+                String otherName = propNode.getField().getName();
+                String otherGetterName = "get" + capitalize(otherName);
+                if (node != propNode && getterName.equals(otherGetterName)) {
                     String msg = "The field " + name + " and " + otherName + " on the class " +
                             cn.getName() + " will result in duplicate JavaBean properties, which is not allowed";
                     addError(msg, node);
@@ -650,7 +602,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void checkInterfaceFieldModifiers(final FieldNode node) {
+    private void checkInterfaceFieldModifiers(FieldNode node) {
         if (!currentClass.isInterface()) return;
         if ((node.getModifiers() & (ACC_PUBLIC | ACC_STATIC | ACC_FINAL)) == 0 ||
                 (node.getModifiers() & (ACC_PRIVATE | ACC_PROTECTED)) != 0) {
@@ -659,14 +611,13 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void checkInvalidFieldModifiers(final FieldNode node) {
+    private void checkInvalidFieldModifiers(FieldNode node) {
         if ((node.getModifiers() & (ACC_FINAL | ACC_VOLATILE)) == (ACC_FINAL | ACC_VOLATILE)) {
             addError("Illegal combination of modifiers, final and volatile, for field '" + node.getName() + "'", node);
         }
     }
 
-    @Override
-    public void visitBinaryExpression(final BinaryExpression expression) {
+    public void visitBinaryExpression(BinaryExpression expression) {
         if (expression.getOperation().getType() == Types.LEFT_SQUARE_BRACKET &&
                 expression.getRightExpression() instanceof MapEntryExpression) {
             addError("You tried to use a map entry for an index operation, this is not allowed. " +
@@ -681,7 +632,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void checkSuperOrThisOnLHS(final Expression expression) {
+    private void checkSuperOrThisOnLHS(Expression expression) {
         if (!(expression instanceof VariableExpression)) return;
         VariableExpression ve = (VariableExpression) expression;
         if (ve.isThisExpression()) {
@@ -691,7 +642,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void checkFinalFieldAccess(final Expression expression) {
+    private void checkFinalFieldAccess(Expression expression) {
         if (!(expression instanceof VariableExpression) && !(expression instanceof PropertyExpression)) return;
         Variable v = null;
         if (expression instanceof VariableExpression) {
@@ -712,7 +663,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
 
             /*
              *  if it is static final but not accessed inside a static constructor, or,
-             *  if it is an instance final but not accessed inside an instance constructor, it is an error
+             *  if it is an instance final but not accessed inside a instance constructor, it is an error
              */
             boolean isFinal = fn.isFinal();
             boolean isStatic = fn.isStatic();
@@ -723,24 +674,21 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    @Override
-    public void visitConstructor(final ConstructorNode node) {
+    public void visitConstructor(ConstructorNode node) {
         inConstructor = true;
         inStaticConstructor = node.isStaticConstructor();
         checkGenericsUsage(node, node.getParameters());
         super.visitConstructor(node);
     }
 
-    @Override
-    public void visitCatchStatement(final CatchStatement cs) {
-        if (!(cs.getExceptionType().isDerivedFrom(ClassHelper.THROWABLE_TYPE))) {
+    public void visitCatchStatement(CatchStatement cs) {
+        if (!(cs.getExceptionType().isDerivedFrom(ClassHelper.make(Throwable.class)))) {
             addError("Catch statement parameter type is not a subclass of Throwable.", cs);
         }
         super.visitCatchStatement(cs);
     }
 
-    @Override
-    public void visitMethodCallExpression(final MethodCallExpression mce) {
+    public void visitMethodCallExpression(MethodCallExpression mce) {
         super.visitMethodCallExpression(mce);
         Expression aexp = mce.getArguments();
         if (aexp instanceof TupleExpression) {
@@ -754,7 +702,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     }
 
     @Override
-    public void visitDeclarationExpression(final DeclarationExpression expression) {
+    public void visitDeclarationExpression(DeclarationExpression expression) {
         super.visitDeclarationExpression(expression);
         if (expression.isMultipleAssignmentDeclaration()) return;
         checkInvalidDeclarationModifier(expression, ACC_ABSTRACT, "abstract");
@@ -767,37 +715,35 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         checkInvalidDeclarationModifier(expression, ACC_SYNCHRONIZED, "synchronized");
         checkInvalidDeclarationModifier(expression, ACC_TRANSIENT, "transient");
         checkInvalidDeclarationModifier(expression, ACC_VOLATILE, "volatile");
-        if (ClassHelper.isPrimitiveVoid(expression.getVariableExpression().getOriginType())) {
+        if (expression.getVariableExpression().getOriginType().equals(VOID_TYPE)) {
             addError("The variable '" + expression.getVariableExpression().getName() + "' has invalid type void", expression);
         }
     }
 
-    private void checkInvalidDeclarationModifier(final DeclarationExpression expression, int modifier, String modName) {
+    private void checkInvalidDeclarationModifier(DeclarationExpression expression, int modifier, String modName) {
         if ((expression.getVariableExpression().getModifiers() & modifier) != 0) {
             addError("Modifier '" + modName + "' not allowed here.", expression);
         }
     }
 
-    private void checkForInvalidDeclaration(final Expression exp) {
+    private void checkForInvalidDeclaration(Expression exp) {
         if (!(exp instanceof DeclarationExpression)) return;
         addError("Invalid use of declaration inside method call.", exp);
     }
 
-    @Override
-    public void visitConstantExpression(final ConstantExpression expression) {
+    public void visitConstantExpression(ConstantExpression expression) {
         super.visitConstantExpression(expression);
         checkStringExceedingMaximumLength(expression);
     }
 
-    @Override
-    public void visitGStringExpression(final GStringExpression expression) {
+    public void visitGStringExpression(GStringExpression expression) {
         super.visitGStringExpression(expression);
         for (ConstantExpression ce : expression.getStrings()) {
             checkStringExceedingMaximumLength(ce);
         }
     }
 
-    private void checkStringExceedingMaximumLength(final ConstantExpression expression) {
+    private void checkStringExceedingMaximumLength(ConstantExpression expression) {
         Object value = expression.getValue();
         if (value instanceof String) {
             String s = (String) value;
@@ -807,37 +753,37 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void checkGenericsUsage(final ASTNode ref, final ClassNode[] nodes) {
+    private void checkGenericsUsage(ASTNode ref, ClassNode[] nodes) {
         for (ClassNode node : nodes) {
             checkGenericsUsage(ref, node);
         }
     }
 
-    private void checkGenericsUsage(final ASTNode ref, final Parameter[] params) {
+    private void checkGenericsUsage(ASTNode ref, Parameter[] params) {
         for (Parameter p : params) {
             checkGenericsUsage(ref, p.getType());
         }
     }
 
-    private void checkGenericsUsage(final ASTNode ref, final ClassNode node) {
+    private void checkGenericsUsage(ASTNode ref, ClassNode node) {
         if (node.isArray()) {
             checkGenericsUsage(ref, node.getComponentType());
         } else if (!node.isRedirectNode() && node.isUsingGenerics()) {
             addError(
-                    "A transform used a generics-containing ClassNode "+ node +
-                    " for " + getRefDescriptor(ref) +
+                    "A transform used a generics containing ClassNode "+ node + " " +
+                    "for "+getRefDescriptor(ref) +
                     "directly. You are not supposed to do this. " +
-                    "Please create a clean ClassNode using ClassNode#getPlainNodeReference() " +
-                    "and #setGenericsTypes(GenericsType[]) on it or use GenericsUtils.makeClassSafe* " +
-                    "and use the new ClassNode instead of the original one. Otherwise, " +
-                    "the compiler will create incorrect descriptors potentially leading to " +
-                    "NullPointerExceptions in the TypeResolver class. If this is not your own " +
-                    "doing, please report this bug to the writer of the transform.",
+                    "Please create a new ClassNode referring to the old ClassNode " +
+                    "and use the new ClassNode instead of the old one. Otherwise " +
+                    "the compiler will create wrong descriptors and a potential " +
+                    "NullPointerException in TypeResolver in the OpenJDK. If this is " +
+                    "not your own doing, please report this bug to the writer of the " +
+                    "transform.",
                     ref);
         }
     }
 
-    private static String getRefDescriptor(final ASTNode ref) {
+    private static String getRefDescriptor(ASTNode ref) {
         if (ref instanceof FieldNode) {
             FieldNode f = (FieldNode) ref;
             return "the field "+f.getName()+" ";
@@ -853,4 +799,5 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
         return "<unknown with class "+ref.getClass()+"> ";
     }
+
 }

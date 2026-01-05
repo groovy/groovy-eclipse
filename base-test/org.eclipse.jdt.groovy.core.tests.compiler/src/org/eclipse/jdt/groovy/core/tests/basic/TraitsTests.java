@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1342,7 +1342,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Script.groovy (at line 7)\n" +
             "\tclass MyClass extends MySuperClass implements MyTrait {}\n" +
             "\t      ^^^^^^^\n" +
-            "The inherited method MySuperClass.m() cannot hide the public abstract method in MyTrait\n" +
+            "Groovy:protected method m() from MySuperClass cannot shadow the public method in MyTrait\n" +
             "----------\n");
     }
 
@@ -3479,7 +3479,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "\tclass C extends B implements A {\n" +
             "\t      ^\n" +
             (isAtLeastGroovy(40)
-            ? "Groovy:inherited final method getId() from B cannot shadow the public method in A\n"
+            ? "Groovy:protected method getId() from B cannot shadow the public method in A\n"
             : "Groovy:You are not allowed to override the final method getId() from class 'B'.\n"
             ) +
             "----------\n");
