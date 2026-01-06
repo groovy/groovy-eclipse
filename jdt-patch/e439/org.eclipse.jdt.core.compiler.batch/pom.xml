@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (c) 2012, 2026 Eclipse Foundation and others.
+  All rights reserved. This program and the accompanying materials
+  are made available under the terms of the Eclipse Distribution License v1.0
+  which accompanies this distribution, and is available at
+  http://www.eclipse.org/org/documents/edl-v10.php
+
+  Contributors:
+     Igor Fedorenko - initial implementation
+     Eric Milles    - adapted for greclipse build
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <relativePath>../../../pom.xml</relativePath>
+    <groupId>org.codehaus.groovy.eclipse</groupId>
+    <artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
+    <version>6.1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>org.eclipse.jdt.core.compiler.batch</artifactId>
+  <version>3.45.0-SNAPSHOT</version>
+  <packaging>eclipse-plugin</packaging>
+
+  <properties>
+    <compilerBaselineMode>warn</compilerBaselineMode>
+    <compilerBaselineReplace>common</compilerBaselineReplace>
+    <defaultSigning-excludeInnerJars>true</defaultSigning-excludeInnerJars>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+		<artifactId>maven-antrun-plugin</artifactId>
+		<version>1.8</version>
+		<executions>
+			<execution>
+				<phase>prepare-package</phase>
+				<configuration>
+					<target>
+						<replace token="bundle_qualifier," value="${buildQualifier}," dir="${project.build.directory}/classes">
+							<include name="org/eclipse/jdt/internal/compiler/batch/messages.properties"/>
+						</replace>
+						<replace token="bundle_version" value="${unqualifiedVersion}" dir="${project.build.directory}/classes">
+							<include name="org/eclipse/jdt/internal/compiler/batch/messages.properties"/>
+						</replace>
+					</target>
+				</configuration>
+				<goals>
+					<goal>run</goal>
+				</goals>
+			</execution>
+		</executions>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-p2-plugin</artifactId>
+        <version>${tycho-version}</version>
+        <configuration>
+          <baselineMode>${compilerBaselineMode}</baselineMode>
+          <baselineReplace>${compilerBaselineReplace}</baselineReplace>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attached-p2-metadata</id>
+            <phase>package</phase>
+            <goals>
+              <goal>p2-metadata</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.3.0</version>
+        <executions>
+          <!--
+            Replace '\' Windows file separators by '/' in order to expand the new property 'compiler-message-properties'
+            into a string literal in Maven Enforcer rule 'evaluateBeanshell' further below
+          --> 
+          <execution>
+            <id>compiler-message-properties</id>
+            <goals>
+              <goal>regex-property</goal>
+            </goals>
+            <configuration>
+              <name>compiler-message-properties</name>
+              <value>${project.basedir}/src/org/eclipse/jdt/internal/compiler/batch/messages.properties</value>
+              <regex>\\</regex>
+              <replacement>/</replacement>
+              <failIfNoMatch>false</failIfNoMatch>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.6.1</version>
+        <executions>
+          <execution>
+            <id>no-tabs-in-compiler-messages</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <evaluateBeanshell>
+                  <message>
+                    Compiler message resource file ${compiler-message-properties} must not contain tab characters, please use spaces instead!
+                  </message>
+                  <condition><![CDATA[
+                    FileReader fileReader = new FileReader("${compiler-message-properties}");
+                    BufferedReader bufferReader = new BufferedReader(fileReader);
+                    boolean containsTab = false;
+                    String line;
+                    while((line = bufferReader.readLine()) != null) {
+                      if (line.contains("\t")) {
+                        if (!containsTab) {
+                          System.out.println("Lines containing tab characters detected in resource file:");
+                          containsTab = true;
+                        }
+                        System.out.println(line);
+                      }
+                    }
+                    fileReader.close();
+                    bufferReader.close();
+                    !containsTab
+                  ]]></condition>
+                </evaluateBeanshell>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

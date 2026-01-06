@@ -93,6 +93,39 @@
 
 	<profiles>
 		<profile>
+			<id>e4.39</id>
+			<repositories>
+				<repository>
+					<id>2026-03</id>
+					<layout>p2</layout>
+					<url>https://download.eclipse.org/releases/2026-03</url>
+				</repository>
+				<repository>
+					<id>eclipse</id>
+					<layout>p2</layout>
+					<url>https://download.eclipse.org/eclipse/updates/4.39</url>
+				</repository>
+				<repository>
+					<id>milestone</id>
+					<layout>p2</layout>
+					<url>https://download.eclipse.org/eclipse/updates/4.39-I-builds/I20260103-1800</url>
+				</repository>
+			</repositories>
+			<modules>
+				<module>jdt-patch/e439/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e439/org.eclipse.jdt.core.compiler.batch</module>
+				<module>jdt-patch/e439/org.eclipse.jdt.core.tests.builder</module>
+				<module>jdt-patch/e439/org.eclipse.jdt.core.tests.builder.mockcompiler</module>
+				<module>jdt-patch/e439/org.eclipse.jdt.core.tests.compiler</module>
+				<module>jdt-patch/e439/Feature-org.codehaus.groovy.jdt.patch</module>
+			</modules>
+			<properties>
+				<deploy.target>e4.39</deploy.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2603'</greclipse.build.qualifier>
+			</properties>
+		</profile>
+
+		<profile>
 			<id>e4.38</id>
 			<repositories>
 				<repository>
