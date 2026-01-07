@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package org.eclipse.jdt.internal.compiler.lookup;
 
 /**
  * This represents a method binding whose parameter and return type we want to resolve lazily.  It is
- * currently intended for use representing the getX/setX and isX methods you would get for a groovy
+ * currently intended for use representing the getX/setX and isX methods you would get for a Groovy
  * property (it therefore only supports 0 or 1 parameter, it doesn't need to support more for now).
  * Upon finding the method is unresolved, the code in SourceTypeBinding.resolveTypesFor(MethodBinding)
  * would normally look for a method declaration from which to discover the parameter and return type
