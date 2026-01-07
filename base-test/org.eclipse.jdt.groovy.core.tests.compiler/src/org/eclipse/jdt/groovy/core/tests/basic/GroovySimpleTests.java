@@ -2272,40 +2272,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n" : "");
     }
 
-    @Test // GROOVY-11548 and GROOVY-11758
-    public void testOverriding_FinalMethod3() {
-        //@formatter:off
-        String[] sources = {
-            "Bar.groovy",
-            "class Bar {\n" +
-            "  protected final getSomething() {}\n" +
-            "}\n",
-
-            "Baz.groovy",
-            "trait Baz {\n" +
-            "  def something = null\n" +
-            "}\n",
-
-            "Foo.groovy",
-            "class Foo extends Bar implements Baz {\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar implements Baz {\n" +
-            "\t      ^^^\n" +
-            (isAtLeastGroovy(40)
-            ? "Groovy:protected method getSomething() from Bar cannot shadow the public method in Baz\n"
-            : "Groovy:You are not allowed to override the final method getSomething() from class 'Bar'.\n"
-            ) +
-            "----------\n");
-    }
-
     @Test // GROOVY-11548
-    public void testOverriding_FinalMethod4() {
+    public void testOverriding_FinalMethod3() {
         //@formatter:off
         String[] sources = {
             "Bar.groovy",
@@ -2334,7 +2302,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test // GROOVY-11548
-    public void testOverriding_FinalMethod5() {
+    public void testOverriding_FinalMethod4() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",

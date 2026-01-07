@@ -1391,29 +1391,61 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "trait T {\n" +
-            "  def m() { 'T' }\n" +
+            "trait A {\n" +
+            "  def m() { 'A' }\n" +
             "}\n" +
-            "class C {\n" +
-            "  final m() { 'C' }\n" +
+            "class B {\n" +
+            "  final m() { 'B' }\n" +
             "}\n" +
-            "class D extends C implements T {\n" +
+            "class C extends B implements A {\n" +
             "}\n" +
-            "print new D().m()\n",
+            "print new C().m()\n",
         };
         //@formatter:on
 
         if (isAtLeastGroovy(40)) {
-            runConformTest(sources, "C"); // GROOVY-11548
+            runConformTest(sources, "B");
         } else {
-            runNegativeTest(sources,
+            runNegativeTest(sources, // GROOVY-11548
                 "----------\n" +
                 "1. ERROR in Script.groovy (at line 7)\n" +
-                "\tclass D extends C implements T {\n" +
+                "\tclass C extends B implements A {\n" +
                 "\t      ^\n" +
-                "Groovy:You are not allowed to override the final method m() from class 'C'.\n" +
+                "Groovy:You are not allowed to override the final method m() from class 'B'.\n" +
                 "----------\n");
         }
+    }
+
+    @Test // final method of superclass cannot implement/override trait method
+    public void testTraits54a() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "trait A {\n" +
+            "  java.lang.Object something = null\n" +
+            "}\n",
+
+            "B.groovy",
+            "class B {\n" +
+            "  protected final getSomething() {}\n" +
+            "}\n",
+
+            "C.groovy",
+            "class C extends B implements A {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in C.groovy (at line 1)\n" +
+            "\tclass C extends B implements A {\n" +
+            "\t      ^\n" +
+            (!isAtLeastGroovy(40)
+            ? "Groovy:You are not allowed to override the final method getSomething() from class 'B'.\n" // GROOVY-11548
+            : "Groovy:protected method getSomething() from B cannot shadow the public method in A\n" // GROOVY-11758
+            ) +
+            "----------\n");
     }
 
     @Test // final trait method cannot be overridden by subclass
@@ -1421,13 +1453,13 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "trait T {\n" +
-            "  final m() { 'T' }\n" +
+            "trait A {\n" +
+            "  final m() { 'A' }\n" +
             "}\n" +
-            "class C implements T {\n" +
+            "class B implements A {\n" +
             "}\n" +
-            "class D extends C {\n" +
-            "  def m() { 'D' }\n" +
+            "class C extends B {\n" +
+            "  def m() { 'C' }\n" +
             "}\n",
         };
         //@formatter:on
@@ -1435,9 +1467,9 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Script.groovy (at line 7)\n" +
-            "\tdef m() { 'D' " + "}\n" +
+            "\tdef m() { 'C' " + "}\n" +
             "\t    ^^^\n" +
-            "Groovy:You are not allowed to override the final method m() from class 'C'.\n" +
+            "Groovy:You are not allowed to override the final method m() from class 'B'.\n" +
             "----------\n");
     }
 
@@ -1741,30 +1773,58 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "Main.java",
             "public class Main {\n" +
             "  public static void main(String[] args) {\n" +
-            "    System.out.print(C.m());\n" +
+            "    System.out.print(C.getP());\n" +
             "  }\n" +
             "}\n",
 
-            "C.groovy",
+            "Types.groovy",
             "trait T {\n" +
-            "  static m() { 'T' }\n" +
+            "  static String p = 'T'\n" +
             "}\n" +
             "class C implements T {\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "T");
+        org.junit.Assert.assertThrows("not yet implemented", AssertionError.class, () -> runConformTest(sources, "T"));
     }
 
     @Test
     public void testTraits70() {
         //@formatter:off
         String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.print(tee().getP());\n" +
+            "  }\n" +
+            "  private static T tee() {\n" +
+            "    return new C();\n" +
+            "  }\n" +
+            "}\n",
+
+            "C.groovy",
+            "trait T {\n" +
+            "  int p = 42\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testTraits71() {
+        //@formatter:off
+        String[] sources = {
             "Main.groovy",
             "class Main extends C {\n" +
             "  static main(args) {\n" +
-            "    // TODO\n" +
+            "    Main pojo = new Main()\n" +
+            "    pojo.one();\n" +
+            "    pojo.two();\n" +
             "  }\n" +
             "}\n",
 
@@ -1774,17 +1834,21 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
             "T.groovy",
             "trait T {\n" +
-            "  void one() {}\n" +
+            "  void one() {\n" +
+            "    print '1'\n" +
+            "  }\n" +
             "}\n",
 
             "U.groovy",
             "trait U {\n" +
-            "  void two() {}\n" +
+            "  void two() {\n" +
+            "    print '2'\n" +
+            "  }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources);
+        runConformTest(sources, "12");
     }
 
     @Test // trait forwarding

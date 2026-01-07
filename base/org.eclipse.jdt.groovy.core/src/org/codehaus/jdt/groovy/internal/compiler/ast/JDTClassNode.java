@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,7 +68,6 @@ import org.eclipse.jdt.internal.compiler.lookup.DelegateMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
-import org.eclipse.jdt.internal.compiler.lookup.MemberTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.RawTypeBinding;
@@ -139,10 +138,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     private static String getName(final TypeBinding tb) {
         if (tb instanceof ArrayBinding) {
-            return String.valueOf(((ArrayBinding) tb).signature());
-        } else if (tb instanceof MemberTypeBinding) {
-            MemberTypeBinding mtb = (MemberTypeBinding) tb;
-            return CharOperation.toString(mtb.compoundName);
+            return String.valueOf(tb.signature());
         } else if (tb instanceof ReferenceBinding) {
             return CharOperation.toString(((ReferenceBinding) tb).compoundName);
         } else {
@@ -151,12 +147,10 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     private static int getMods(final TypeBinding tb) {
-        if (tb instanceof ReferenceBinding) {
-            return ((ReferenceBinding) tb).modifiers;
-        } else {
-            // FIXASC need to be smarter here? Who is affected?
-            return Flags.AccPublic;
+        if (tb instanceof ReferenceBinding rb) {
+            return rb.modifiers;
         }
+        return Flags.AccPublic; // FIXASC: Be smarter here? Who is affected?
     }
 
     @Override
@@ -165,13 +159,9 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             synchronized (lazyInitLock) {
                 if (lazyInitDone || lazyInitStarted) return; lazyInitStarted = true;
 
-                if (jdtBinding instanceof SourceTypeBinding) {
-                    SourceTypeBinding sourceTypeBinding = (SourceTypeBinding) jdtBinding;
-                    if (sourceTypeBinding.scope != null) {
-                        TypeDeclaration typeDecl = sourceTypeBinding.scope.referenceContext;
-                        if (typeDecl instanceof GroovyTypeDeclaration) {
-                            groovyTypeDecl = (GroovyTypeDeclaration) typeDecl;
-                        }
+                if (jdtBinding instanceof SourceTypeBinding sourceTypeBinding && sourceTypeBinding.scope != null) {
+                    if (sourceTypeBinding.scope.referenceContext instanceof GroovyTypeDeclaration typeDecl) {
+                        groovyTypeDecl = typeDecl;
                     }
                 }
 
@@ -248,30 +238,28 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                         addMethod(mNode);
                     }
                 }
-            } else if (jdtBinding instanceof SourceTypeBinding && (jdtBinding.tagBits & TagBits.HasMissingType) == 0) {
-                SourceTypeBinding sourceTypeBinding = (SourceTypeBinding) jdtBinding;
-                if (sourceTypeBinding.isPrototype()) {
-                    ClassScope classScope = sourceTypeBinding.scope;
-                    // a null scope indicates it has already been "cleaned up" (CompilationUnitDeclaration#cleanUp())
-                    if (classScope != null) {
-                        CompilationUnitScope cuScope = classScope.compilationUnitScope();
-                        LookupEnvironment environment = classScope.environment();
-                        cuScope.verifyMethods(environment.methodVerifier());
-                    }
-                    // Synthetic bindings are created for features like covariance, where the method implementing an interface method uses a
-                    // different return type (interface I { A foo(); } class C implements I { AA foo(); } - this needs a method 'A foo()' in C.
-                    SyntheticMethodBinding[] syntheticMethodBindings = sourceTypeBinding.syntheticMethods();
-                    if (syntheticMethodBindings != null) {
-                        for (SyntheticMethodBinding syntheticBinding : syntheticMethodBindings) {
-                            if (syntheticBinding.isConstructor()) {
-                                ConstructorNode cNode = constructorBindingToConstructorNode(syntheticBinding);
-                                pairs.add(new Object[] {syntheticBinding, cNode});
-                                addConstructor(cNode);
-                            } else {
-                                MethodNode mNode = methodBindingToMethodNode(syntheticBinding);
-                                pairs.add(new Object[] {syntheticBinding, mNode});
-                                addMethod(mNode);
-                            }
+            } else if ((jdtBinding.tagBits & TagBits.HasMissingType) == 0 &&
+                    jdtBinding instanceof SourceTypeBinding sourceTypeBinding && sourceTypeBinding.isPrototype()) {
+                ClassScope classScope = sourceTypeBinding.scope;
+                // a null scope indicates it has already been "cleaned up" (CompilationUnitDeclaration#cleanUp())
+                if (classScope != null) {
+                    CompilationUnitScope cuScope = classScope.compilationUnitScope();
+                    LookupEnvironment environment = classScope.environment();
+                    cuScope.verifyMethods(environment.methodVerifier());
+                }
+                // Synthetic bindings are created for features like covariance, where the method implementing an interface method uses a
+                // different return type "interface I { A foo(); } class C implements I { AA foo(); }" requires a method "A foo()" in C.
+                SyntheticMethodBinding[] syntheticMethodBindings = sourceTypeBinding.syntheticMethods();
+                if (syntheticMethodBindings != null) {
+                    for (SyntheticMethodBinding syntheticBinding : syntheticMethodBindings) {
+                        if (syntheticBinding.isConstructor()) {
+                            ConstructorNode cNode = constructorBindingToConstructorNode(syntheticBinding);
+                            pairs.add(new Object[] {syntheticBinding, cNode});
+                            addConstructor(cNode);
+                        } else {
+                            MethodNode mNode = methodBindingToMethodNode(syntheticBinding);
+                            pairs.add(new Object[] {syntheticBinding, mNode});
+                            addMethod(mNode);
                         }
                     }
                 }
@@ -304,44 +292,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
             if (groovyTypeDecl != null && isTrait()) {
                 putNodeMetaData("trait.fields", groovyTypeDecl.getClassNode().getFields());
-
-                for (PropertyNode pNode : getProperties()) {
-                    String pName = pNode.getName(), capitalizedName = org.apache.groovy.util.BeanUtils.capitalize(pName);
-                    int mMods = Flags.AccPublic | (pNode.getModifiers() & Flags.AccStatic);
-                    if (pNode.getType().equals(ClassHelper.boolean_TYPE)) {
-                        // only generate accessor method(s) if one or both are not explicitly declared
-                        if (getDeclaredMethod("get" + capitalizedName, Parameter.EMPTY_ARRAY) != null) continue;
-
-                        MethodNode mNode = addMethod("is" + capitalizedName, mMods, pNode.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
-                        if (!(mNode instanceof JDTNode)) {
-                            mNode.setNameStart(pNode.getField().getNameStart());
-                            mNode.setNameEnd(pNode.getField().getNameEnd());
-                            mNode.setSynthetic(true);
-
-                            mNode = addMethod("get" + capitalizedName, mMods, pNode.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
-                            if (!(mNode instanceof JDTNode)) {
-                                mNode.setNameStart(pNode.getField().getNameStart());
-                                mNode.setNameEnd(pNode.getField().getNameEnd());
-                                mNode.setSynthetic(true);
-                            }
-                        }
-                    } else {
-                        MethodNode mNode = addMethod("get" + capitalizedName, mMods, pNode.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
-                        if (!(mNode instanceof JDTNode)) {
-                            mNode.setNameStart(pNode.getField().getNameStart());
-                            mNode.setNameEnd(pNode.getField().getNameEnd());
-                            mNode.setSynthetic(true);
-                        }
-                    }
-                    if (!Flags.isFinal(pNode.getModifiers())) {
-                        MethodNode mNode = addMethod("set" + capitalizedName, mMods, ClassHelper.VOID_TYPE, new Parameter[] {new Parameter(pNode.getType(), pName)}, ClassNode.EMPTY_ARRAY, null);
-                        if (!(mNode instanceof JDTNode)) {
-                            mNode.setNameStart(pNode.getField().getNameStart());
-                            mNode.setNameEnd(pNode.getField().getNameEnd());
-                            mNode.setSynthetic(true);
-                        }
-                    }
-                }
             }
         } catch (AbortCompilation e) {
             throw e;
@@ -356,7 +306,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
         if (methodBinding.declaringClass instanceof BinaryTypeBinding) {
             for (AnnotationBinding a : methodBinding.getAnnotations()) {
-                if (a.getAnnotationType().debugName().equals("org.codehaus.groovy.transform.trait.Traits.Implemented")) {
+                String annoTypeName = a.getAnnotationType().debugName();
+                if ("org.codehaus.groovy.transform.trait.Traits.Implemented".equals(annoTypeName)) {
                     return true;
                 }
             }
@@ -407,6 +358,15 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 case "invokeMethod":
                     methodNode.setOriginal(ClassHelper.GROOVY_OBJECT_TYPE.getMethod(methodNode.getName(), parameters));
                     break;
+                default:
+                    if (groovyTypeDecl != null) {
+                        var propertyName = Introspector.decapitalize(methodNode.getName().substring(methodNode.getName().startsWith("is") ? 2 : 3));
+                        var propertyNode = groovyTypeDecl.getClassNode().getProperty(propertyName);
+                        if (propertyNode != null) {
+                            methodNode.setNameStart(propertyNode.getField().getNameStart());
+                            methodNode.setNameEnd(propertyNode.getField().getNameEnd());
+                        }
+                    }
                 }
             }
             return methodNode;
@@ -449,8 +409,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             // if the field binding is for a real source field, we should be able to see any initializer in it
             if (typeDeclaration != null) {
                 FieldDeclaration fieldDecl = typeDeclaration.declarationOf(fieldBinding);
-                if (fieldDecl instanceof FieldDeclarationWithInitializer) {
-                    initializerExpression = ((FieldDeclarationWithInitializer) fieldDecl).getGroovyInitializer();
+                if (fieldDecl instanceof FieldDeclarationWithInitializer withInit) {
+                    initializerExpression = withInit.getGroovyInitializer();
                 }
             }
         } else if (c instanceof BooleanConstant) {

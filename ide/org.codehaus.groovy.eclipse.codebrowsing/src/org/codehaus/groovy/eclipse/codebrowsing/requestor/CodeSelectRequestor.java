@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -567,6 +567,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     return true;
                 }
             }
+        }
+        if (node.isSynthetic() && !node.getAnnotations(new ClassNode(Traits.Implemented.class)).isEmpty()) {
+            return true;
         }
         // check for @Newify, @Sortable, @Singleton, etc. -- synthetic method that exists on declaring class
         if (node.getEnd() < 1 && !(node instanceof JDTMethodNode) && !declaringType.getMethods(name).isEmpty() &&

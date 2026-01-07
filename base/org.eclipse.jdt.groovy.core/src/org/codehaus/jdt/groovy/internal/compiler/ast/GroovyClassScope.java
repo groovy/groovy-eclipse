@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -38,6 +39,7 @@ import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
@@ -96,7 +98,8 @@ public class GroovyClassScope extends ClassScope {
     @Override
     protected MethodBinding[] augmentMethodBindings(final MethodBinding[] methodBindings) {
         SourceTypeBinding sourceType = referenceContext.binding;
-        if (sourceType == null || sourceType.isInterface() || sourceType.isAnnotationType()) {
+        if (sourceType == null || sourceType.isAnnotationType() ||
+                (sourceType.isInterface() && !traitHelper.isTrait(sourceType))) {
             return methodBindings;
         }
 
@@ -143,15 +146,15 @@ public class GroovyClassScope extends ClassScope {
         }
 
         // create property accessors without resolving the types
-        if (referenceContext instanceof GroovyTypeDeclaration) {
-            boolean isRecord = (referenceContext.modifiers & 0x1000000) != 0; // 3.26+: isRecord()
-            for (PropertyNode property : ((GroovyTypeDeclaration) referenceContext).getClassNode().getProperties()) {
+        if (referenceContext instanceof GroovyTypeDeclaration groovyTypeDecl) {
+            for (PropertyNode property : groovyTypeDecl.getClassNode().getProperties()) {
                 int modifiers = getModifiers(property);
                 if (Flags.isPackageDefault(modifiers)) continue;
+                if (Flags.isStatic(modifiers) && sourceType.isInterface()) continue; // trait
 
                 String capitalizedName = org.apache.groovy.util.BeanUtils.capitalize(property.getName());
 
-                if (!isRecord && ClassHelper.boolean_TYPE.equals(property.getType())) {
+                if (!groovyTypeDecl.isRecord() && ClassHelper.boolean_TYPE.equals(property.getType())) {
                     if (!createGetterMethod(property, "get" + capitalizedName, modifiers, methodBindings).isPresent()) {
                         continue; // only generate accessor method(s) if one or both are not explicitly declared
                     }
@@ -162,7 +165,7 @@ public class GroovyClassScope extends ClassScope {
                                 .ifPresent(groovyMethods::add);
                         });
                 } else {
-                    String propertyAccessorName = isRecord ? property.getName() : "get" + capitalizedName;
+                    String propertyAccessorName = groovyTypeDecl.isRecord() ? property.getName() : "get" + capitalizedName;
                     createGetterMethod(property, propertyAccessorName, modifiers, methodBindings) // TODO: PropertyNode#getGetterNameOrDefault
                         .ifPresent(groovyMethods::add);
                 }
@@ -233,6 +236,10 @@ public class GroovyClassScope extends ClassScope {
             }
         }
 
+        if (groovyMethods.isEmpty()) {
+            return methodBindings;
+        }
+
         int m = methodBindings.length, n = m + groovyMethods.size();
         MethodBinding[] methods = Arrays.copyOf(methodBindings, n);
         for (int i = m, j = 0; i < n; i += 1, j += 1) {
@@ -253,6 +260,15 @@ public class GroovyClassScope extends ClassScope {
         return unitScope.environment.getResolvedType(GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT, this);
     }
 
+    private ReferenceBinding getGroovyTraitsImplemented() {
+        final char[][] groovyTraitsImplemented = CharOperation.splitOn('.',
+            "org.codehaus.groovy.transform.trait.Traits$Implemented".toCharArray());
+
+        CompilationUnitScope unitScope = compilationUnitScope();
+        unitScope.recordQualifiedReference(groovyTraitsImplemented);
+        return unitScope.environment.getResolvedType(groovyTraitsImplemented, this);
+    }
+
     private ReferenceBinding getGroovyTransformInternal() {
         CompilationUnitScope unitScope = compilationUnitScope();
         unitScope.recordQualifiedReference(GroovyCompilationUnitScope.GROOVY_TRANSFORM_INTERNAL);
@@ -267,6 +283,10 @@ public class GroovyClassScope extends ClassScope {
 
     private int getModifiers(final PropertyNode propertyNode) {
         int modifiers = (propertyNode.getModifiers() & 0xF);
+
+        if (traitHelper.isTrait(referenceContext.binding)) {
+            modifiers |= Flags.AccAbstract;
+        }
 
         if (propertyNode.getType().isUsingGenerics()) {
             modifiers |= ExtraCompilerModifiers.AccGenericSignature;
@@ -386,11 +406,22 @@ public class GroovyClassScope extends ClassScope {
             }
         }
 
-        if (ClassHelper.isPrimitiveType(propertyNode.getType())) {
-            TypeBinding returnType = Scope.getBaseType(propertyNode.getType().getName().toCharArray());
-            return asGenerated(new MethodBinding(modifiers, nameChars, returnType, Binding.NO_PARAMETERS, Binding.NO_EXCEPTIONS, referenceContext.binding));
+        MethodBinding methodBinding;
+        TypeReference typeReference = propertyNode.getNodeMetaData(TypeReference.class);
+
+        ClassNode propertyType = propertyNode.getType();
+        if (ClassHelper.isPrimitiveType(propertyType) &&
+                propertyType.getTypeAnnotations().isEmpty()) {
+            TypeBinding returnType = Scope.getBaseType(propertyType.getName().toCharArray());
+            methodBinding = new MethodBinding(modifiers, nameChars, returnType, Binding.NO_PARAMETERS, Binding.NO_EXCEPTIONS, referenceContext.binding);
+        } else if (typeReference != null) {
+            TypeBinding returnType = typeReference.resolveType(this);
+            methodBinding = new MethodBinding(modifiers, nameChars, returnType, Binding.NO_PARAMETERS, Binding.NO_EXCEPTIONS, referenceContext.binding);
+        } else {
+            String propertyName = propertyNode.getName();
+            methodBinding = new LazilyResolvedMethodBinding(true, propertyName, modifiers, nameChars, Binding.NO_EXCEPTIONS, referenceContext.binding);
         }
-        return asGenerated(new LazilyResolvedMethodBinding(true, propertyNode.getName(), modifiers, nameChars, Binding.NO_EXCEPTIONS, referenceContext.binding));
+        return traitHelper.isTrait(referenceContext.binding) ? asImplemented(methodBinding) : asGenerated(methodBinding);
     }
 
     private Optional<MethodBinding> createSetterMethod(final PropertyNode propertyNode, final String methodName, final int modifiers, final MethodBinding[] methodBindings) {
@@ -413,17 +444,35 @@ public class GroovyClassScope extends ClassScope {
             }
         }
 
-        if (ClassHelper.isPrimitiveType(propertyNode.getType())) {
-            TypeBinding[] parameterTypes = {Scope.getBaseType(propertyNode.getType().getName().toCharArray())};
-            return asGenerated(new MethodBinding(modifiers, nameChars, TypeBinding.VOID, parameterTypes, Binding.NO_EXCEPTIONS, referenceContext.binding));
+        MethodBinding methodBinding;
+        TypeReference typeReference = propertyNode.getNodeMetaData(TypeReference.class);
+
+        ClassNode propertyType = propertyNode.getType();
+        int va = (propertyType.isArray() ? Flags.AccVarargs : 0); // GROOVY-10249: see AsmClassGenerator#visitConstructorOrMethod
+
+        if (ClassHelper.isPrimitiveType(propertyType) &&
+                propertyType.getTypeAnnotations().isEmpty()) {
+            TypeBinding[] parameterTypes = {Scope.getBaseType(propertyType.getName().toCharArray())};
+            methodBinding = new MethodBinding(modifiers, nameChars, TypeBinding.VOID, parameterTypes, Binding.NO_EXCEPTIONS, referenceContext.binding);
+        } else if (typeReference != null) {
+            TypeBinding[] parameterTypes = {typeReference.resolveType(this)};
+            methodBinding = new MethodBinding(modifiers | va, nameChars, TypeBinding.VOID, parameterTypes, Binding.NO_EXCEPTIONS, referenceContext.binding);
+        } else {
+            String propertyName = propertyNode.getName();
+            methodBinding = new LazilyResolvedMethodBinding(false, propertyName, modifiers | va, nameChars, Binding.NO_EXCEPTIONS, referenceContext.binding);
         }
-        int va = (propertyNode.getType().isArray() ? Flags.AccVarargs : 0); // GROOVY-10249: see AsmClassGenerator#visitConstructorOrMethod
-        return asGenerated(new LazilyResolvedMethodBinding(false, propertyNode.getName(), modifiers | va, nameChars, Binding.NO_EXCEPTIONS, referenceContext.binding));
+        return traitHelper.isTrait(referenceContext.binding) ? asImplemented(methodBinding) : asGenerated(methodBinding);
     }
 
-    private Optional<MethodBinding> asGenerated(final MethodBinding methodBinding) {
+    private Optional<MethodBinding> asGenerated  (final MethodBinding methodBinding) {
         AnnotationBinding atGenerated = new AnnotationBinding(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS);
         return asOptional(methodBinding, atGenerated);
+    }
+
+    private Optional<MethodBinding> asImplemented(final MethodBinding methodBinding) {
+        AnnotationBinding atGenerated = new AnnotationBinding(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        AnnotationBinding atImplemented = new AnnotationBinding(getGroovyTraitsImplemented(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        return asOptional(methodBinding, atGenerated, atImplemented);
     }
 
     private Optional<MethodBinding> asInternal(final MethodBinding methodBinding) {
