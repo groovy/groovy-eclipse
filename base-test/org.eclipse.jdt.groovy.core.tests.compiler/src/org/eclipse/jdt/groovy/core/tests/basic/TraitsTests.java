@@ -1773,20 +1773,20 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "Main.java",
             "public class Main {\n" +
             "  public static void main(String[] args) {\n" +
-            "    System.out.print(C.getP());\n" +
+            "    System.out.print(C.getP().toUpperCase());\n" +
             "  }\n" +
             "}\n",
 
             "Types.groovy",
             "trait T {\n" +
-            "  static String p = 'T'\n" +
+            "  static String p = 't'\n" +
             "}\n" +
             "class C implements T {\n" +
             "}\n",
         };
         //@formatter:on
 
-        org.junit.Assert.assertThrows("not yet implemented", AssertionError.class, () -> runConformTest(sources, "T"));
+        runConformTest(sources, "T");
     }
 
     @Test

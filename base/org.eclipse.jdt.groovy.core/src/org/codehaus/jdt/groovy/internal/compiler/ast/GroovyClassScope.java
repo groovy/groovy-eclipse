@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.CastExpression;
@@ -150,7 +151,6 @@ public class GroovyClassScope extends ClassScope {
             for (PropertyNode property : groovyTypeDecl.getClassNode().getProperties()) {
                 int modifiers = getModifiers(property);
                 if (Flags.isPackageDefault(modifiers)) continue;
-                if (Flags.isStatic(modifiers) && sourceType.isInterface()) continue; // trait
 
                 String capitalizedName = org.apache.groovy.util.BeanUtils.capitalize(property.getName());
 
@@ -231,6 +231,14 @@ public class GroovyClassScope extends ClassScope {
                     method = new MethodBinding(method, sourceType);
                     method.modifiers &= ~Flags.AccPrivate;
                     method.modifiers |=  Flags.AccPublic;
+                    int i = 0;
+                    for (AnnotationBinding ab : method.getAnnotations()) {
+                        if (ab.toString().equals("@Implemented")) { // TODO: Replace with @TraitBridge(traitClass=?, desc="?")
+                            method.setAnnotations((AnnotationBinding[]) ArrayUtils.remove(method.getAnnotations(), i), false);
+                            break;
+                        }
+                        i += 1;
+                    }
                     groovyMethods.add(method);
                 }
             }
@@ -284,8 +292,12 @@ public class GroovyClassScope extends ClassScope {
     private int getModifiers(final PropertyNode propertyNode) {
         int modifiers = (propertyNode.getModifiers() & 0xF);
 
-        if (traitHelper.isTrait(referenceContext.binding)) {
-            modifiers |= Flags.AccAbstract;
+        if (referenceContext.binding.isInterface()) {//trait
+            if (!Flags.isStatic(modifiers)) {
+                modifiers |= Flags.AccAbstract;
+            } else {
+                modifiers ^= Flags.AccPublic | Flags.AccPrivate;
+            }
         }
 
         if (propertyNode.getType().isUsingGenerics()) {
@@ -303,7 +315,7 @@ public class GroovyClassScope extends ClassScope {
             }
         }
 
-        if (propertyNode.getField().getAnnotations().stream().map(anno -> anno.getClassNode().getName())
+        if (propertyNode.getField().getAnnotations().stream().map(tag -> tag.getClassNode().getName())
                 .anyMatch(name -> name.equals("Deprecated") || name.equals("java.lang.Deprecated"))) {
             modifiers |= Flags.AccDeprecated;
         }
