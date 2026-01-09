@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,13 +50,19 @@ public final class Java9Tests extends GroovyCompilerTestSuite {
             "C.groovy",
             "class C implements I {\n" +
             "  static main(args) {\n" +
-            "    print 'works'\n" +
+            "    I i = new C()\n" +
+            "    i.proc()\n" +
             "  }\n" +
             "}\n",
 
             "I.java",
             "public interface I {\n" +
-            "  private void proc() {}\n" +
+            "  default void proc() {\n" +
+            "    System.out.print(secret());\n" +
+            "  }\n" +
+            "  private String secret() {\n" +
+            "    return \"works\";\n" +
+            "  }\n" +
             "}\n",
         };
         //@formatter:on

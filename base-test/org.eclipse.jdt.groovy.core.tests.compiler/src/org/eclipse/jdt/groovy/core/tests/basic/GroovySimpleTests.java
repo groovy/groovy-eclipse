@@ -4220,17 +4220,15 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "    I i = new C()\n" +
             "    print i.foo()\n" +
             "  }\n" +
+            "  String foo() {\n" +
+            "    'foobar'\n" +
+            "  }\n" +
             "}\n",
 
             "p/I.java",
             "package p;\n" +
             "interface I {\n" +
-            "  default String foo() {\n" +
-            "    return \"foo\" + bar();\n" +
-            "  }\n" +
-            "  private String bar() {\n" +
-            "    return \"bar\";\n" +
-            "  }\n" +
+            "  String foo();\n" +
             "}\n",
         };
         //@formatter:on
