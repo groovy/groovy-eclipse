@@ -16,6 +16,8 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import static org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration.ENUM_CONSTANT;
+import static org.eclipse.jdt.internal.compiler.lookup.TypeConstants.BEANS;
+import static org.eclipse.jdt.internal.compiler.lookup.TypeConstants.JAVA;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -125,11 +128,16 @@ public class GroovyClassScope extends ClassScope {
             TypeBinding bindingJLS = getJavaLangString();
             TypeBinding bindingGLM = getGroovyLangMetaClass();
 
+            Consumer<MethodBinding> markTransient = (methodBinding) -> {
+                AnnotationBinding atTransient = environment().createAnnotation(getJavaBeansTransient(), Binding.NO_ELEMENT_VALUE_PAIRS);
+                methodBinding.setAnnotations((AnnotationBinding[]) ArrayUtils.add(methodBinding.getAnnotations(), atTransient), false);
+            };
+
             // Now add the groovy.lang.GroovyObject methods:
             //   Object invokeMethod(String name, Object args);
             //   Object getProperty(String propertyName);
             //   void setProperty(String propertyName, Object newValue);
-            //   MetaClass getMetaClass();
+            //   @Transient MetaClass getMetaClass();
             //   void setMetaClass(MetaClass metaClass);
 
             // Note: javac/ecj doesn't see synthetic methods when considering if a type implements an interface; so don't make these synthetic
@@ -140,8 +148,8 @@ public class GroovyClassScope extends ClassScope {
                 .ifPresent(groovyMethods::add);
             createMethod("setProperty", new TypeBinding[] {bindingJLS, bindingJLO}, TypeBinding.VOID, methodBindings)
                 .ifPresent(groovyMethods::add);
-            createMethod("getMetaClass", Binding.NO_TYPES, bindingGLM, methodBindings) // TODO: @java.beans.Transient
-                .ifPresent(groovyMethods::add);
+            createMethod("getMetaClass", Binding.NO_TYPES, bindingGLM, methodBindings)
+                .ifPresent(markTransient.andThen(groovyMethods::add)); // GROOVY-8284
             createMethod("setMetaClass", new TypeBinding[] {bindingGLM}, TypeBinding.VOID, methodBindings)
                 .ifPresent(groovyMethods::add);
         }
@@ -254,6 +262,14 @@ public class GroovyClassScope extends ClassScope {
             methods[i] = groovyMethods.get(j);
         }
         return methods;
+    }
+
+    private ReferenceBinding getJavaBeansTransient() {
+        final char[][] javaBeansTransient = {JAVA, BEANS, "Transient".toCharArray()};
+
+        CompilationUnitScope unitScope = compilationUnitScope();
+        unitScope.recordQualifiedReference(javaBeansTransient);
+        return unitScope.environment.getResolvedType(javaBeansTransient, this);
     }
 
     private ReferenceBinding getGroovyLangMetaClass() {
@@ -477,19 +493,19 @@ public class GroovyClassScope extends ClassScope {
     }
 
     private Optional<MethodBinding> asGenerated  (final MethodBinding methodBinding) {
-        AnnotationBinding atGenerated = new AnnotationBinding(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        AnnotationBinding atGenerated = environment().createAnnotation(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS);
         return asOptional(methodBinding, atGenerated);
     }
 
     private Optional<MethodBinding> asImplemented(final MethodBinding methodBinding) {
-        AnnotationBinding atGenerated = new AnnotationBinding(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS);
-        AnnotationBinding atImplemented = new AnnotationBinding(getGroovyTraitsImplemented(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        AnnotationBinding atGenerated = environment().createAnnotation(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        AnnotationBinding atImplemented = environment().createAnnotation(getGroovyTraitsImplemented(), Binding.NO_ELEMENT_VALUE_PAIRS);
         return asOptional(methodBinding, atGenerated, atImplemented);
     }
 
     private Optional<MethodBinding> asInternal(final MethodBinding methodBinding) {
-        AnnotationBinding atGenerated = new AnnotationBinding(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS);
-        AnnotationBinding atInternal = new AnnotationBinding(getGroovyTransformInternal(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        AnnotationBinding atGenerated = environment().createAnnotation(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        AnnotationBinding atInternal = environment().createAnnotation(getGroovyTransformInternal(), Binding.NO_ELEMENT_VALUE_PAIRS);
         return asOptional(methodBinding, atGenerated, atInternal);
     }
 
