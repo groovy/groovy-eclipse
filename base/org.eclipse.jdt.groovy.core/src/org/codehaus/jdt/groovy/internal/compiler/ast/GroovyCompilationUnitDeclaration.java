@@ -15,10 +15,13 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
-import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.isGenerated;
-import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.markAsGenerated;
-import static org.codehaus.groovy.runtime.DefaultGroovyMethods.plus;
+import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.*;
 import static org.codehaus.groovy.runtime.StringGroovyMethods.find;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.plus;
+import static org.codehaus.groovy.transform.trait.Traits.TRAIT_CLASSNODE;
+import static org.codehaus.groovy.transform.trait.Traits.IMPLEMENTED_CLASSNODE;
+import static org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitScope.GROOVY_TRANSFORM;
+import static org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitScope.GROOVY_TRANSFORM_TRAIT;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -193,6 +196,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
     private static final boolean DEBUG_TASK_TAGS = Boolean.parseBoolean(Platform.getDebugOption("org.codehaus.groovy.eclipse.core/debug/tasktags"));
 
     public static boolean defaultCheckGenerics = Boolean.parseBoolean(Platform.getDebugOption("org.codehaus.groovy.eclipse.core/debug/generics"));
+
+    private static final ClassNode GENERATED_CLASSNODE = ClassHelper.makeCached(groovy.transform.Generated.class);
 
     private final CompilationUnit compilationUnit;
 
@@ -590,12 +595,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
     public void finalizeProblems() {
         boolean isReconcile = (compilationUnit.allowTransforms && !compilerOptions.parseLiteralExpressionsAsConstants);
 
-        if (isScript && !isReconcile && groovySourceUnit instanceof EclipseSourceUnit && ((EclipseSourceUnit) groovySourceUnit).getEclipseFile() != null) {
+        if (isScript && !isReconcile && groovySourceUnit instanceof EclipseSourceUnit esu && esu.getEclipseFile() != null) {
             CategorizedProblem[] problems = compilationResult.problems;
             if (problems != null && problems.length > 0) {
+                char[] eclipseFilePath = esu.getEclipseFile().getFullPath().toString().toCharArray();
                 for (CategorizedProblem problem : problems) {
-                    if (problem != null && CharOperation.equals(problem.getOriginatingFileName(),
-                            ((EclipseSourceUnit) groovySourceUnit).getEclipseFile().getFullPath().toString().toCharArray())) {
+                    if (problem != null && Arrays.equals(problem.getOriginatingFileName(), eclipseFilePath)) {
                         compilationResult.removeProblem(problem);
                     }
                 }
@@ -888,23 +893,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private Boolean checkTraitAlias;
 
         private boolean isTrait(final ClassNode classNode) {
-            if (classNode == null) {
-                return false;
-            }
             if (checkTraitAlias == null) {
                 for (ImportReference i : imports) {
-                    String importSpec = i.toString();
-
-                    if ("groovy.transform.Trait".equals(importSpec)) {
-                        checkTraitAlias = Boolean.TRUE;
-                        break;
-                    }
-                    if (importSpec.endsWith(".Trait")) {
-                        checkTraitAlias = Boolean.FALSE;
-                        break;
-                    }
-                    if ("groovy.transform.*".equals(importSpec)) {
-                        checkTraitAlias = Boolean.TRUE;
+                    if (!i.isStatic()) {
+                        if ((i.bits & ASTNode.OnDemand) != 0) {
+                            if (CharOperation.equals(i.tokens, GROOVY_TRANSFORM)) {
+                                checkTraitAlias = Boolean.TRUE;
+                            }
+                        } else if (Arrays.equals(i.getSimpleName(), GROOVY_TRANSFORM_TRAIT[2])) {
+                            checkTraitAlias = CharOperation.equals(i.tokens, GROOVY_TRANSFORM_TRAIT);
+                            break;
+                        }
+                        // TODO: If CharOperation.equals(i.tokens, GROOVY_TRANSFORM_TRAIT) then i.getSimpleName() is alias
                     }
                 }
                 if (checkTraitAlias == null) {
@@ -913,12 +913,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
 
             for (AnnotationNode annotation : classNode.getAnnotations()) {
-                String annotationType = annotation.getClassNode().getName();
-
-                if ("groovy.transform.Trait".equals(annotationType)) {
-                    return true;
-                }
-                if (Boolean.TRUE.equals(checkTraitAlias) && "Trait".equals(annotationType)) {
+                ClassNode annotationType = annotation.getClassNode();
+                if (TRAIT_CLASSNODE.equals(annotationType) ||
+                        (checkTraitAlias && "Trait".equals(annotationType.getName()))) {
                     return true;
                 }
             }
@@ -1253,7 +1250,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                 } else {
                     typeDeclaration.name = classNode.getNameWithoutPackage().toCharArray();
-                    if (!CharOperation.equals(typeDeclaration.name, mainName)) {
+                    if (!Arrays.equals(typeDeclaration.name, mainName)) {
                         typeDeclaration.bits |= ASTNode.IsSecondaryType;
                     }
                     typeDeclarations.add(typeDeclaration);
@@ -1294,7 +1291,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                 innerTypeDeclaration.allocation.enumConstant = fieldDeclaration;
                                 fieldDeclaration.initialization = innerTypeDeclaration.allocation;
                             } else if (fieldDeclaration.initialization == null) {
-                                if (CharOperation.equals(fieldDeclaration.type.getLastToken(), TypeConstants.OBJECT) || GroovyUtils.isAnonymous(fieldDeclaration.initializer.getType())) {
+                                if (Arrays.equals(fieldDeclaration.type.getLastToken(), TypeConstants.OBJECT) || GroovyUtils.isAnonymous(fieldDeclaration.initializer.getType())) {
                                     fieldDeclaration.initialization = innerTypeDeclaration.allocation;
                                 } else { // in case of indirect anon. inner like "Type foo = bar(1, '2', new Baz() { ... })", fool JDT with "Type foo = (Type) (Object) new Baz() { ... }"
                                     fieldDeclaration.initialization = new CastExpression(innerTypeDeclaration.allocation, createTypeReferenceForClassNode(ClassHelper.OBJECT_TYPE));
@@ -1477,7 +1474,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             // add default constructor if no other constructors exist (and not anonymous/interface/trait)
             } else if (constructorNodes.isEmpty() && !isAnon && !classNode.isInterface() && !isTrait(classNode)) {
                 ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                constructorDecl.annotations = createAnnotations(ClassHelper.make(groovy.transform.Generated.class));
+                constructorDecl.annotations = createAnnotations(GENERATED_CLASSNODE);
                 if (!isEnum) {
                     if (classNode.getObjectInitializerStatements().isEmpty()) {
                         constructorDecl.bits |= ASTNode.IsDefaultConstructor;
@@ -1496,7 +1493,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 if (isEnum) { // named arguments constructor
                     constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                    constructorDecl.annotations = createAnnotations(ClassHelper.make(groovy.transform.Generated.class));
+                    constructorDecl.annotations = createAnnotations(GENERATED_CLASSNODE);
                     constructorDecl.arguments = createArguments(new Parameter[] {
                         new Parameter(ClassHelper.makeWithoutCaching(java.util.LinkedHashMap.class, false), "__namedArgs")
                     });
@@ -1564,7 +1561,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     for (Argument[] variantArgs : getVariantsAllowingForDefaulting(constructorNode.getParameters(), constructorDecl.arguments)) {
                         ConstructorDeclaration variantDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
                         variantDecl.annotations = createAnnotations(isGenerated(constructorNode) ? constructorNode.getAnnotations()
-                            : plus(constructorNode.getAnnotations(), new AnnotationNode(ClassHelper.make(groovy.transform.Generated.class))));
+                            : plus(constructorNode.getAnnotations(), new AnnotationNode(GENERATED_CLASSNODE)));
                         variantDecl.arguments = variantArgs;
                         variantDecl.bits = (constructorDecl.bits & ~ASTNode.IsCanonicalConstructor);
                         variantDecl.javadoc = constructorDecl.javadoc;
@@ -1623,27 +1620,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
 
                     if (isTrait) {
-                        if (methodNode.isFinal()) {
-                            methodDecl.modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
-                        } else if (methodNode.isStatic()) {
-                            if (unitDeclaration.compilerOptions.targetJDK >= ClassFileConstants.JDK9) {
-                                methodDecl.modifiers ^= Flags.AccPublic | Flags.AccPrivate; // hide from JDT
-                            } else if (unitDeclaration.compilerOptions.targetJDK < ClassFileConstants.JDK1_8) {
-                                methodDecl.modifiers ^= Flags.AccStatic | ExtraCompilerModifiers.AccModifierProblem;
-                            }
-                        }
-                        if (methodNode.isPublic() && !methodNode.isAbstract()) {
-                            Annotation[] implemented = createAnnotations(org.codehaus.groovy.transform.trait.Traits.IMPLEMENTED_CLASSNODE);
-                            methodDecl.annotations = methodDecl.annotations == null ? implemented : ArrayUtils.concat(methodDecl.annotations, implemented);
-                        }
+                        adjustMethodForTraitRestrictions(methodDecl, methodNode);
                     }
 
                     if (methodNode.hasDefaultValue()) {
                         for (Argument[] variantArgs : getVariantsAllowingForDefaulting(methodNode.getParameters(), methodDecl.arguments)) {
                             AbstractMethodDeclaration variantDecl = createMethodDeclaration(classNode, methodNode);
-                            variantDecl.annotations = ArrayUtils.concat(
-                                variantDecl.annotations != null ? variantDecl.annotations : new Annotation[0],
-                                createAnnotations(ClassHelper.make(groovy.transform.Generated.class)));
+                            if (variantDecl.annotations == null) {
+                                variantDecl.annotations = createAnnotations(GENERATED_CLASSNODE);
+                            } else {
+                                variantDecl.annotations = ArrayUtils.concat(variantDecl.annotations, createAnnotations(GENERATED_CLASSNODE));
+                            }
                             variantDecl.arguments = variantArgs;
 
                             variantDecl.declarationSourceStart = 0;
@@ -1654,6 +1641,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             variantDecl.bodyEnd = -1;
 
                             if (addUnlessDuplicate(methodDeclarations, variantDecl)) {
+                                if (isTrait) {
+                                    adjustMethodForTraitRestrictions(variantDecl, methodNode);
+                                }
                                 unitDeclaration.sourceEnds.put(variantDecl, methodNode.getNameEnd());
                             }
                         }
@@ -2760,7 +2750,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
         private boolean isAliasForType(ImportReference importReference, char[] typeName) {
             if (importReference instanceof AliasImportReference && !importReference.isStatic()) {
-                return CharOperation.equals(importReference.getSimpleName(), typeName);
+                return Arrays.equals(importReference.getSimpleName(), typeName);
             }
             return false;
         }
@@ -3088,7 +3078,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                         List<ConstructorNode> generated = new ArrayList<>();
 
-                        AnnotationNode anno = new AnnotationNode(ClassHelper.make(groovy.transform.TupleConstructor.class));
+                        AnnotationNode anno = new AnnotationNode(ClassHelper.makeCached(groovy.transform.TupleConstructor.class));
                         if (isType("groovy.transform.Immutable", annotationType))
                             anno.addMember("defaults", ConstantExpression.FALSE);
                         else if (isType("groovy.transform.RecordType", annotationType)) {
@@ -3231,7 +3221,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             boolean isDuplicate = false;
 
             for (AbstractMethodDeclaration aMethodDecl : methodDeclarations) {
-                if (CharOperation.equals(aMethodDecl.selector, newDeclaration.selector)) {
+                if (Arrays.equals(aMethodDecl.selector, newDeclaration.selector)) {
                     Argument[] mdArgs = aMethodDecl.arguments;
                     Argument[] vmdArgs = newDeclaration.arguments;
                     int mdArgsLen = mdArgs == null ? 0 : mdArgs.length;
@@ -3256,6 +3246,22 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
 
             return !isDuplicate ? methodDeclarations.add(newDeclaration) : false;
+        }
+
+        private void adjustMethodForTraitRestrictions(AbstractMethodDeclaration methodDecl, MethodNode methodNode) {
+            if (methodNode.isFinal()) {
+                methodDecl.modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
+            } else if (methodNode.isStatic()) {
+                if (unitDeclaration.compilerOptions.targetJDK >= ClassFileConstants.JDK9) {
+                    methodDecl.modifiers ^= Flags.AccPublic | Flags.AccPrivate; // hide from JDT
+                } else if (unitDeclaration.compilerOptions.targetJDK < ClassFileConstants.JDK1_8) {
+                    methodDecl.modifiers ^= Flags.AccStatic | ExtraCompilerModifiers.AccModifierProblem;
+                }
+            }
+            if (!methodNode.isAbstract()) {
+                Annotation[] implemented = createAnnotations(IMPLEMENTED_CLASSNODE);
+                methodDecl.annotations = methodDecl.annotations == null ? implemented : ArrayUtils.concat(methodDecl.annotations, implemented);
+            }
         }
 
         private static boolean recordRefactor() {

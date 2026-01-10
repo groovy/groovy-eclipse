@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import static org.eclipse.jdt.internal.compiler.codegen.ConstantPool.JavaLangStringSignature;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -28,7 +29,6 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.eclipse.jdt.core.Signature;
-import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.impl.StringConstant;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
@@ -135,7 +135,7 @@ public class JDTAnnotationNode extends AnnotationNode {
 
         char[] sig = b.signature();
 
-        if (CharOperation.equals(sig, JavaLangStringSignature)) {
+        if (Arrays.equals(sig, JavaLangStringSignature)) {
             return new ConstantExpression(((Constant) value).stringValue());
         }
 

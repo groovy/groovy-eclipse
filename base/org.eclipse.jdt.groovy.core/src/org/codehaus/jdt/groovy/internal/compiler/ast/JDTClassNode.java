@@ -768,7 +768,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     public boolean isTrait() {
         if (isTrait == null) {
-            if (isInterface() && !isAnnotationDefinition() && !CharOperation.equals(jdtBinding.compoundName[0], TypeConstants.JAVA)) {
+            if (isInterface() && !isAnnotationDefinition() && !Arrays.equals(jdtBinding.compoundName[0], TypeConstants.JAVA)) {
                 if (groovyTypeDecl != null) {
                     isTrait = org.codehaus.groovy.transform.trait.Traits.isTrait(groovyTypeDecl.getClassNode());
                 } else {

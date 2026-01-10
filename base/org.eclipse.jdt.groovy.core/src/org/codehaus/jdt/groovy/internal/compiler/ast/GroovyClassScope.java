@@ -44,11 +44,13 @@ import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.impl.StringConstant;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
+import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
@@ -186,19 +188,21 @@ public class GroovyClassScope extends ClassScope {
         }
 
         Map<String, MethodBinding> traitMethods = new HashMap<>();
-        for (ReferenceBinding face : superInterfaces) {
-            if (traitHelper.isTrait(face)) {
-                ReferenceBinding helperBinding = traitHelper.getHelperBinding(face);
-                for (MethodBinding method : face.availableMethods()) {
-                    if (!method.isSynthetic() && isNotActuallyAbstract(method, helperBinding)) {
-                        if ((method.modifiers & ExtraCompilerModifiers.AccModifierProblem) != 0) { // Java 7: +static, -abstract
-                            method.modifiers ^= Flags.AccStatic | Flags.AccAbstract | ExtraCompilerModifiers.AccModifierProblem;
-                        }
-                        if ((method.modifiers & ExtraCompilerModifiers.AccBlankFinal) != 0) { // +final
-                            method.modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
-                        }
-                        if (method.isPublic() || method.isStatic()) {
-                            traitMethods.putIfAbsent(getMethodAsString(method), method);
+        if (!sourceType.isInterface()) {
+            for (ReferenceBinding face : superInterfaces) {
+                if (face != null && traitHelper.isTrait(face)) {
+                    ReferenceBinding helperBinding = traitHelper.getHelperBinding(face);
+                    for (MethodBinding method : face.availableMethods()) {
+                        if (!method.isSynthetic() && isNotActuallyAbstract(method, helperBinding)) {
+                            if ((method.modifiers & ExtraCompilerModifiers.AccModifierProblem) != 0) { // Java 7: +static, -abstract
+                                method.modifiers ^= Flags.AccStatic | Flags.AccAbstract | ExtraCompilerModifiers.AccModifierProblem;
+                            }
+                            if ((method.modifiers & ExtraCompilerModifiers.AccBlankFinal) != 0) { // +final
+                                method.modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
+                            }
+                            if (method.isPublic() || method.isStatic()) {
+                                traitMethods.putIfAbsent(getMethodAsString(method), method);
+                            }
                         }
                     }
                 }
@@ -226,28 +230,14 @@ public class GroovyClassScope extends ClassScope {
             for (String key : canBeOverridden) {
                 MethodBinding method = traitMethods.remove(key);
                 if (method != null) {
-                    // the trait method overrides a superclass method
-                    method = new MethodBinding(method, sourceType);
-                    method.modifiers &= ~Flags.AccAbstract;
-                    method.modifiers &= ~Flags.AccPrivate;
-                    groovyMethods.add(method);
+                    // trait method overrides superclass method
+                    groovyMethods.add(traitHelper.bridge(method));
                 }
             }
 
             for (MethodBinding method : traitMethods.values()) {
                 if (method.isStatic()) {
-                    method = new MethodBinding(method, sourceType);
-                    method.modifiers &= ~Flags.AccPrivate;
-                    method.modifiers |=  Flags.AccPublic;
-                    int i = 0;
-                    for (AnnotationBinding ab : method.getAnnotations()) {
-                        if (ab.toString().equals("@Implemented")) { // TODO: Replace with @TraitBridge(traitClass=?, desc="?")
-                            method.setAnnotations((AnnotationBinding[]) ArrayUtils.remove(method.getAnnotations(), i), false);
-                            break;
-                        }
-                        i += 1;
-                    }
-                    groovyMethods.add(method);
+                    groovyMethods.add(traitHelper.bridge(method));
                 }
             }
         }
@@ -264,12 +254,12 @@ public class GroovyClassScope extends ClassScope {
         return methods;
     }
 
-    private ReferenceBinding getJavaBeansTransient() {
-        final char[][] javaBeansTransient = {JAVA, BEANS, "Transient".toCharArray()};
+    private static final char[][] JAVA_BEANS_TRANSIENT = {JAVA, BEANS, "Transient".toCharArray()};
 
+    private ReferenceBinding getJavaBeansTransient() {
         CompilationUnitScope unitScope = compilationUnitScope();
-        unitScope.recordQualifiedReference(javaBeansTransient);
-        return unitScope.environment.getResolvedType(javaBeansTransient, this);
+        unitScope.recordQualifiedReference(JAVA_BEANS_TRANSIENT);
+        return unitScope.environment.getResolvedType(JAVA_BEANS_TRANSIENT, this);
     }
 
     private ReferenceBinding getGroovyLangMetaClass() {
@@ -291,6 +281,15 @@ public class GroovyClassScope extends ClassScope {
         CompilationUnitScope unitScope = compilationUnitScope();
         unitScope.recordQualifiedReference(groovyTraitsImplemented);
         return unitScope.environment.getResolvedType(groovyTraitsImplemented, this);
+    }
+
+    private ReferenceBinding getGroovyTraitsTraitBridge() {
+        final char[][] groovyTraitsTraitBridge = CharOperation.splitOn('.',
+            "org.codehaus.groovy.transform.trait.Traits$TraitBridge".toCharArray());
+
+        CompilationUnitScope unitScope = compilationUnitScope();
+        unitScope.recordQualifiedReference(groovyTraitsTraitBridge);
+        return unitScope.environment.getResolvedType(groovyTraitsTraitBridge, GroovyClassScope.this);
     }
 
     private ReferenceBinding getGroovyTransformInternal() {
@@ -323,7 +322,7 @@ public class GroovyClassScope extends ClassScope {
         // if @PackageScope was detected by GCUD, field's modifiers will show it
         char[] nameChars = propertyNode.getName().toCharArray();
         for (FieldDeclaration field : referenceContext.fields) {
-            if (CharOperation.equals(field.name, nameChars)) {
+            if (Arrays.equals(field.name, nameChars)) {
                 if (Flags.isPackageDefault(field.modifiers)) {
                     modifiers &= ~Flags.AccPublic;
                 }
@@ -396,12 +395,12 @@ public class GroovyClassScope extends ClassScope {
     private Optional<MethodBinding> createMethod(final String methodName, final TypeBinding[] parameterTypes, final TypeBinding returnType, final MethodBinding[] methodBindings) {
         final char[] nameChars = methodName.toCharArray();
         for (MethodBinding methodBinding : methodBindings) {
-            if (CharOperation.equals(nameChars, methodBinding.selector)) {
+            if (Arrays.equals(nameChars, methodBinding.selector)) {
                 ((SourceTypeBinding) methodBinding.declaringClass).resolveTypesFor(methodBinding);
                 boolean equalParameters = (parameterTypes.length == methodBinding.parameters.length);
                 if (equalParameters) {
                     for (int i = 0, n = parameterTypes.length; i < n; i += 1) {
-                        if (!CharOperation.equals(parameterTypes[i].signature(), methodBinding.parameters[i].signature())) {
+                        if (!Arrays.equals(parameterTypes[i].signature(), methodBinding.parameters[i].signature())) {
                             equalParameters = false;
                             break;
                         }
@@ -419,7 +418,7 @@ public class GroovyClassScope extends ClassScope {
     private Optional<MethodBinding> createGetterMethod(final PropertyNode propertyNode, final String methodName, final int modifiers, final MethodBinding[] methodBindings) {
         final char[] nameChars = methodName.toCharArray();
         for (MethodBinding methodBinding : methodBindings) {
-            if (CharOperation.equals(nameChars, methodBinding.selector)) {
+            if (Arrays.equals(nameChars, methodBinding.selector)) {
                 if ((methodBinding.modifiers & ExtraCompilerModifiers.AccUnresolved) != 0) {
                     Argument[] arguments = methodBinding.sourceMethod().arguments;
                     if (arguments == null || arguments.length == 0) {
@@ -449,13 +448,13 @@ public class GroovyClassScope extends ClassScope {
             String propertyName = propertyNode.getName();
             methodBinding = new LazilyResolvedMethodBinding(true, propertyName, modifiers, nameChars, Binding.NO_EXCEPTIONS, referenceContext.binding);
         }
-        return traitHelper.isTrait(referenceContext.binding) ? asImplemented(methodBinding) : asGenerated(methodBinding);
+        return referenceContext.binding.isInterface() ? asImplemented(methodBinding) : asGenerated(methodBinding);
     }
 
     private Optional<MethodBinding> createSetterMethod(final PropertyNode propertyNode, final String methodName, final int modifiers, final MethodBinding[] methodBindings) {
         final char[] nameChars = methodName.toCharArray();
         for (MethodBinding methodBinding : methodBindings) {
-            if (CharOperation.equals(nameChars, methodBinding.selector)) {
+            if (Arrays.equals(nameChars, methodBinding.selector)) {
                 if ((methodBinding.modifiers & ExtraCompilerModifiers.AccUnresolved) != 0) {
                     Argument[] arguments = methodBinding.sourceMethod().arguments;
                     if (arguments != null && arguments.length == 1) {
@@ -489,7 +488,7 @@ public class GroovyClassScope extends ClassScope {
             String propertyName = propertyNode.getName();
             methodBinding = new LazilyResolvedMethodBinding(false, propertyName, modifiers | va, nameChars, Binding.NO_EXCEPTIONS, referenceContext.binding);
         }
-        return traitHelper.isTrait(referenceContext.binding) ? asImplemented(methodBinding) : asGenerated(methodBinding);
+        return referenceContext.binding.isInterface() ? asImplemented(methodBinding) : asGenerated(methodBinding);
     }
 
     private Optional<MethodBinding> asGenerated  (final MethodBinding methodBinding) {
@@ -576,43 +575,44 @@ public class GroovyClassScope extends ClassScope {
         private boolean toBeInitialized = true;
 
         private void initialize() {
-            ImportBinding[] imports = referenceContext.scope.compilationUnitScope().imports;
+            ImportBinding[] imports = compilationUnitScope().imports;
             if (imports != null) {
                 for (ImportBinding i : imports) {
-                    String importedType = new String(i.readableName());
-                    if ("groovy.transform.Trait".equals(importedType)) {
-                        lookForTraitAlias = true;
-                        break;
-                    }
-                    if (importedType.endsWith(".Trait")) {
-                        lookForTraitAlias = false;
-                        break;
-                    }
-                    if ("groovy.transform.*".equals(importedType)) {
-                        lookForTraitAlias = true;
+                    if (i.isStatic()) continue;
+                    if (i.onDemand) {
+                        if (CharOperation.equals(i.compoundName, GroovyCompilationUnitScope.GROOVY_TRANSFORM)) {
+                            lookForTraitAlias = true;
+                        }
+                    } else {
+                        if (CharOperation.equals(i.compoundName, GroovyCompilationUnitScope.GROOVY_TRANSFORM_TRAIT)) {
+                            lookForTraitAlias = true;
+                            break;
+                        }
+                        if (Arrays.equals(ArrayUtils.lastElement(i.compoundName), GroovyCompilationUnitScope.GROOVY_TRANSFORM_TRAIT[2])) {
+                            lookForTraitAlias = false;
+                            break;
+                        }
                     }
                 }
                 toBeInitialized = true;
             }
         }
 
-        private boolean isTrait(final ReferenceBinding referenceBinding) {
-            if (referenceBinding != null) {
-                if (toBeInitialized) {
-                    initialize();
-                }
-                AnnotationBinding[] annotations = referenceBinding.getAnnotations();
-                if (annotations != null) {
-                    for (AnnotationBinding annotation : annotations) {
-                        if (annotation != null) {
-                            ReferenceBinding annotationType = annotation.getAnnotationType();
-                            String annotationName = CharOperation.toString(annotationType.compoundName);
-                            if ("groovy.transform.Trait".equals(annotationName)) {
-                                return true;
-                            }
-                            if (lookForTraitAlias && "Trait".equals(annotationName)) {
-                                return true;
-                            }
+        private boolean isTrait(final ReferenceBinding interfaceBinding) {
+            if (toBeInitialized) {
+                initialize();
+            }
+            AnnotationBinding[] annotations = interfaceBinding.getAnnotations();
+            if (annotations != null) {
+                for (AnnotationBinding annotation : annotations) {
+                    if (annotation != null) {
+                        char[][] annotationType = annotation.getAnnotationType().compoundName;
+                        if (CharOperation.equals(annotationType, GroovyCompilationUnitScope.GROOVY_TRANSFORM_TRAIT)) {
+                            return true;
+                        }
+                        if (lookForTraitAlias && annotationType.length == 1 &&
+                                Arrays.equals(annotationType[0], GroovyCompilationUnitScope.GROOVY_TRANSFORM_TRAIT[2])) {
+                            return true;
                         }
                     }
                 }
@@ -620,11 +620,45 @@ public class GroovyClassScope extends ClassScope {
             return false;
         }
 
+        private MethodBinding bridge(final MethodBinding traitMethodBinding) {
+            int access = traitMethodBinding.modifiers;
+            access &= ~Flags.AccAbstract;
+            access &= ~Flags.AccPrivate;
+            access |=  Flags.AccPublic;
+
+            var mb = new MethodBinding(access, traitMethodBinding.selector,
+                traitMethodBinding.returnType, traitMethodBinding.parameters,
+                traitMethodBinding.thrownExceptions, referenceContext.binding);
+
+            var aba = traitMethodBinding.getAnnotations();
+            int i = aba.length - 1;
+            for (; i >= 0; i -= 1) {
+                char[][] nameParts = aba[i].getAnnotationType().compoundName;
+                if (nameParts.length == 7) {
+                    if (Arrays.equals(nameParts[6], "Implemented".toCharArray())) break;
+                } else if (nameParts.length == 6) {
+                    if (Arrays.equals(nameParts[5], "Traits$Implemented".toCharArray())) break;
+                }
+            }
+            if (i != -1) {
+                aba = aba.clone();
+            } else { i = aba.length;
+                aba = Arrays.copyOf(aba, i + 1);
+            }
+            aba[i] = environment().createAnnotation(getGroovyTraitsTraitBridge(), new ElementValuePair[] {
+                new ElementValuePair("traitClass".toCharArray(), traitMethodBinding.declaringClass, null),
+                new ElementValuePair("desc".toCharArray(), StringConstant.fromValue(String.valueOf(mb.signature())), null),
+            });
+            mb.setAnnotations(aba, false);
+
+            return mb;
+        }
+
         private ReferenceBinding getHelperBinding(final ReferenceBinding interfaceBinding) {
             if (interfaceBinding instanceof BinaryTypeBinding) {
                 StringBuilder nameBuilder = new StringBuilder();
                 nameBuilder.append(interfaceBinding.sourceName);
-                nameBuilder.append("$Trait$Helper");
+                nameBuilder.append("$Trait$Helper"); // Traits.TRAIT_HELPER
                 ReferenceBinding helperBinding = compilationUnitScope().findType(
                     nameBuilder.toString().toCharArray(), interfaceBinding.fPackage, interfaceBinding.fPackage);
                 if (helperBinding != null) {
