@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2025 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -585,31 +585,6 @@ protected void acceptSourceMethod(
 		if(CharOperation.prefixEquals("lambda$".toCharArray(), selector)) { //$NON-NLS-1$
 			addElement(type.getMethod(name, parameterSignatures));
 		}
-		// GROOVY add -- check for bean property match
-		if (this.elementIndex < 0 && uniqueKey != null &&
-				LanguageSupportFactory.isInterestingProject(type.getJavaProject().getProject()) &&
-				LanguageSupportFactory.isInterestingSourceFile(type.getCompilationUnit().getElementName())) {
-
-			if (name.matches("(?:get|set|is).*") && parameterTypeNames.length == (selector[0] == 's' ? 1 : 0)) { //$NON-NLS-1$
-				String prop = java.beans.Introspector.decapitalize(name.substring(selector[0] == 'i' ? 2 : 3));
-				for (IField field : type.getFields()) {
-					if (field.getElementName().equals(prop) && Flags.isPrivate(field.getFlags())) {
-						String key = String.valueOf(uniqueKey).replace(name + '(', prop + ')');
-						if (selector[0] == 's') key = key.substring(0, key.lastIndexOf(')'));
-						else key = key.replace("))", ")"); //$NON-NLS-1$ //$NON-NLS-2$
-
-						ResolvedSourceField property = new ResolvedSourceField(
-							(JavaElement) type,
-							prop,
-							key);
-						property.setOccurrenceCount(1);
-						addElement(property);
-						break;
-					}
-				}
-			}
-		}
-		// GROOVY end
 	} catch (JavaModelException e) {
 		return;
 	}
@@ -629,6 +604,31 @@ protected void acceptSourceMethod(
 					 }
 				}
 			}
+			// GROOVY add -- check for bean property match
+			if (this.elementIndex == -1 && uniqueKey != null &&
+					(selector[0] == 'g' || selector[0] == 's' || selector[0] == 'i') &&
+					LanguageSupportFactory.isInterestingProject(type.getJavaProject().getProject()) &&
+					LanguageSupportFactory.isInterestingSourceFile(type.getCompilationUnit().getElementName())) {
+
+				if (name.matches("(?:get|set|is).+") && parameterTypeNames.length == (selector[0] == 's' ? 1 : 0)) { //$NON-NLS-1$
+					String prop = java.beans.Introspector.decapitalize(name.substring(selector[0] == 'i' ? 2 : 3));
+					for (IField field : type.getFields()) {
+						if (field.getElementName().equals(prop) && Flags.isPrivate(field.getFlags())) {
+							String key = String.valueOf(uniqueKey).replace(name + '(', prop + ')');
+							if (selector[0] == 's') key = key.substring(0, key.lastIndexOf(')'));
+							else key = key.replace("))", ")"); //$NON-NLS-1$ //$NON-NLS-2$
+
+							var property = new ResolvedSourceField(
+								(JavaElement) type,
+								prop,
+								key);
+							addElement(property);
+							break;
+						}
+					}
+				}
+			}
+			// GROOVY end
 		} catch (JavaModelException e) {
 			// Do Nothing
 		}

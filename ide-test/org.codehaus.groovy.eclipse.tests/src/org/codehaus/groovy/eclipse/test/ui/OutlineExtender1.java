@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,7 +104,6 @@ public class OutlineExtender1 implements IOutlineExtender, IProjectNature {
 
         public TType(final IOJavaElement parent, final String name) {
             super(parent, new ConstantExpression(name), name);
-            this.name = name;
         }
 
         @Override
@@ -137,7 +136,6 @@ public class OutlineExtender1 implements IOutlineExtender, IProjectNature {
 
         public TMethod(final OType parent, final String name, final String returnType) {
             super(parent, new ConstantExpression(name), name);
-            this.name = name;
             this.returnType = returnType;
         }
 
@@ -158,7 +156,6 @@ public class OutlineExtender1 implements IOutlineExtender, IProjectNature {
 
         public TField(final OType parent, final String name, final String typeSignature) {
             super(parent, new ConstantExpression(name), name);
-            this.name = name;
             this.typeSignature = typeSignature;
         }
 

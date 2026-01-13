@@ -1,6 +1,5 @@
-// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2004, 2025 IBM Corporation and others.
+ * Copyright (c) 2004, 2017 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -26,7 +25,7 @@ public abstract class NamedMember extends Member {
 	 * This element's name, or an empty <code>String</code> if this
 	 * element does not have a name.
 	 */
-	protected String name; // GROOVY edit
+	final protected String name;
 
 	public NamedMember(JavaElement parent, String name) {
 		super(parent);

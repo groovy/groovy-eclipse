@@ -109,7 +109,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
     }
 
     public IJavaElement[] getRequestedElements() {
-        return requestedElements.toArray(new IJavaElement[requestedElements.size()]);
+        return requestedElements.toArray(IJavaElement[]::new);
     }
 
     private void putRequestedElement(final IJavaElement requestedElement) {
