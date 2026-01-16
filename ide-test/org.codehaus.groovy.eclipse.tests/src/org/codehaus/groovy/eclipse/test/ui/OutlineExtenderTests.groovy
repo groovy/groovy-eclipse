@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -172,7 +172,7 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
         // update content
         GroovyEditor editor = (GroovyEditor) openInEditor(tu)
         JavaSourceViewer viewer = (JavaSourceViewer) editor.viewer
-        viewer.textWidget.selection = 0
+        viewer.textWidget.setSelection(0)
         viewer.textWidget.insert('Long field3 = 100 \n')
         buildProject()
         tu.refresh()

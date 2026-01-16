@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,8 +96,8 @@ final class RenameTypeTests extends RefactoringTestSuite {
             renameHandles = ParticipantTesting.createHandles(classA)
         }
         RenameJavaElementDescriptor descriptor = createRefactoringDescriptor(classA, newName)
-        descriptor.updateReferences = updateReferences
-        descriptor.updateTextualOccurrences = updateTextualMatches
+        descriptor.setUpdateReferences(updateReferences)
+        descriptor.setUpdateTextualOccurrences(updateTextualMatches)
         Refactoring refactoring = createRefactoring(descriptor)
         RefactoringStatus result = performRefactoring(refactoring, false)
         assert result == null || result.isOK() : 'was supposed to pass'

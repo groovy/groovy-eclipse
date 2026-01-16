@@ -30,7 +30,6 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilePhase;
-import org.codehaus.groovy.runtime.ArrayGroovyMethods;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
@@ -54,6 +53,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getCodeAsBlock;
 import static org.codehaus.groovy.ast.tools.ParameterUtils.parametersEqual;
+import static org.codehaus.groovy.runtime.ArrayGroovyMethods.asBoolean;
 import static org.codehaus.groovy.transform.RecordTypeASTTransformation.recordNative;
 import static org.codehaus.groovy.transform.trait.Traits.isTrait;
 import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
@@ -523,8 +523,8 @@ public class ClassNode extends AnnotatedNode {
             this.interfaces = interfaces;
             /* GRECLIPSE edit
             if (interfaces != null && !usesGenerics && isPrimaryNode) {
-                for (int i = 0, n = interfaces.length; i < n; i += 1) {
-                    usesGenerics |= interfaces[i].isUsingGenerics();
+                for (ClassNode anInterface : interfaces) {
+                    usesGenerics |= anInterface.isUsingGenerics();
                 }
             }
             */
@@ -979,10 +979,11 @@ public class ClassNode extends AnnotatedNode {
      * @return method node or null
      */
     public MethodNode getDeclaredMethod(String name, Parameter[] parameters) {
-        boolean zeroParameters = !ArrayGroovyMethods.asBoolean(parameters);
+        boolean zeroParameters = !asBoolean(parameters);
         for (MethodNode method : getDeclaredMethods(name)) {
-            if (zeroParameters ? method.getParameters().length == 0
-                    : parametersEqual(method.getParameters(), parameters)) {
+            Parameter[] methodParameters = method.getParameters();
+            if (zeroParameters ? methodParameters.length == 0
+                    : parametersEqual(methodParameters, parameters)) {
                 return method;
             }
         }
@@ -996,8 +997,11 @@ public class ClassNode extends AnnotatedNode {
      * @return method node or null
      */
     public MethodNode getMethod(String name, Parameter[] parameters) {
+        boolean zeroParameters = !asBoolean(parameters);
         for (MethodNode method : getMethods(name)) {
-            if (parametersEqual(method.getParameters(), parameters)) {
+            Parameter[] methodParameters = method.getParameters();
+            if (zeroParameters ? methodParameters.length == 0
+                    : parametersEqual(methodParameters, parameters)) {
                 return method;
             }
         }
@@ -1151,7 +1155,7 @@ public class ClassNode extends AnnotatedNode {
                 }
             }
             // GROOVY-11381:
-            if (getterMethod == null && ArrayGroovyMethods.asBoolean(getInterfaces())) {
+            if (getterMethod == null && asBoolean(getInterfaces())) {
                 for (ClassNode anInterface : getAllInterfaces()) {
                     MethodNode method = anInterface.getDeclaredMethod(getterName, Parameter.EMPTY_ARRAY);
                     if (method != null && method.isDefault() && (booleanReturnOnly ? ClassHelper.isPrimitiveBoolean(method.getReturnType()) : !method.isVoidMethod())) {
@@ -1252,7 +1256,7 @@ public class ClassNode extends AnnotatedNode {
             }
         }
 
-faces:  if (method == null && ArrayGroovyMethods.asBoolean(getInterfaces())) { // GROOVY-11323
+faces:  if (method == null && asBoolean(getInterfaces())) { // GROOVY-11323
             for (ClassNode cn : getAllInterfaces()) {
                 for (MethodNode mn : cn.getDeclaredMethods(name)) {
                     if (mn.isPublic() && !mn.isStatic() && hasCompatibleNumberOfArgs(mn, nArgs) && (nArgs == 0

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,8 +44,8 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
         |'''.stripMargin()
     private static final String CLOSURECONTENTS = 'def x = { t -> print t }'
 
-    private void setDGMFilter(String... filter) {
-        GroovyContentAssist.default.filteredDGMs = filter as Set
+    private void setDGMFilter(String[] names) {
+        GroovyContentAssist.getDefault().setFilteredDGMs(Set.of(names))
     }
 
     private org.codehaus.jdt.groovy.model.GroovyCompilationUnit createGroovy() {

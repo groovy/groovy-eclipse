@@ -764,12 +764,20 @@ class GrapeIvy implements GrapeEngine {
         @NamedParam(value='root', type=String, required=true),
         @NamedParam(value='m2Compatible', type=Boolean, required=false)
     ]) Map<String, Object> args) {
+        /* GRECLIPSE edit
         def resolver = new IBiblioResolver(
             name: (String) args.name,
             root: (String) args.root,
             settings: (ResolverSettings) settings,
             m2compatible: (boolean) args.getOrDefault('m2Compatible', Boolean.TRUE)
         )
+        */
+        def resolver = new IBiblioResolver()
+        resolver.setName((String) args.name)
+        resolver.setRoot((String) args.root)
+        resolver.setSettings((ResolverSettings) settings)
+        resolver.setM2compatible((boolean) args.getOrDefault('m2Compatible',true))
+        // GRECLIPSE end
 
         def chainResolver = (ChainResolver) settings.getResolver('downloadGrapes')
         chainResolver.resolvers.add(0, resolver)

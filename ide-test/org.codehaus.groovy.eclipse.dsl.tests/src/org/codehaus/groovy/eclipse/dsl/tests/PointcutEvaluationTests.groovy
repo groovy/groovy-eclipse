@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,8 +65,8 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
         @Override
         VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
             if (result?.scope != null) {
-                context.currentScope = result.scope
-                context.targetType = result.type
+                context.setCurrentScope(result.scope)
+                context.setTargetType(result.type)
                 context.resetBinding()
                 Collection<?> matchResult = toMatch.matches(context, result.type)
                 BindingSet bindingSet = context.currentBinding

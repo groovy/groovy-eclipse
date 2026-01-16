@@ -277,9 +277,7 @@ public final class ExpressionUtils {
                     e = transformInlineConstants(fn.getInitialValueExpression(), attrType);
                     if (e instanceof ConstantExpression) {
                         // GRECLIPSE add
-                        if (e instanceof ConstantExpression) {
-                            return clone((ConstantExpression) e, exp);
-                        }
+                        e = clone((ConstantExpression) e, exp);
                         // GRECLIPSE end
                         return e;
                     }
@@ -302,7 +300,7 @@ public final class ExpressionUtils {
                     Expression e = transformInlineConstants(fn.getInitialValueExpression(), attrType);
                     // GRECLIPSE add
                     if (e instanceof ConstantExpression) {
-                        return clone((ConstantExpression) e, exp);
+                        e = clone((ConstantExpression) e, exp);
                     }
                     // GRECLIPSE end
                     if (e != null) {

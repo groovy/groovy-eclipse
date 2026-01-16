@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -5782,11 +5782,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @AutoFinal @CompileStatic
     private void assertHighlighting(String contents, HighlightedTypedPosition... expectedPositions) {
         def references = new GatherSemanticReferences(addGroovySource(contents, "Highlighting${++counter}"))
-        references.factory = new TypeInferencingVisitorFactory() {
+        references.@factory = new TypeInferencingVisitorFactory() {
             @Override
             TypeInferencingVisitorWithRequestor createVisitor(GroovyCompilationUnit gcu) {
                 def visitor = super.createVisitor(gcu)
-                visitor.debug = true // enable checks
+                visitor.@debug = true // enable checks
                 return visitor
             }
         }
