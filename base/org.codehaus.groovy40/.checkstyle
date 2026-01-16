@@ -39,7 +39,7 @@
         <file-match-pattern match-pattern="groovy/ast/tools/WideningCategories.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/(Annotation|Enum)Visitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AsmClassGenerator.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/(ClassCompletion|Extended)Verifier.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/ExtendedVerifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/GeneratorContext.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/Verifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/WriterController.java" include-pattern="false" />

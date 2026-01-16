@@ -419,10 +419,8 @@ public class ClassNode extends AnnotatedNode {
         if (superClass != null) {
             usesGenerics = superClass.isUsingGenerics();
         }
-        if (interfaces != null) {
-            for (int i = 0; i < interfaces.length && !usesGenerics; ) {
-                 usesGenerics = interfaces[i++].isUsingGenerics();
-            }
+        if (!usesGenerics && interfaces != null) {
+            usesGenerics = stream(interfaces).anyMatch(ClassNode::isUsingGenerics);
         }
         */
         methods = new MapOfLists();

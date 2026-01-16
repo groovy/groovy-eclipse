@@ -93,7 +93,7 @@ import static org.codehaus.groovy.ast.tools.ClosureUtils.getParametersSafe;
 public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     public static final String[] DEFAULT_IMPORTS = {"java.lang.", "java.util.", "java.io.", "java.net.", "groovy.lang.", "groovy.util."};
-    public static final String[] EMPTY_STRING_ARRAY = new String[0];
+    public static final String[] EMPTY_STRING_ARRAY = {};
     public static final String QUESTION_MARK = "?";
 
     // GRECLIPSE private->public
@@ -287,20 +287,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (!canSeeTypeVars(node.getModifiers(), node.getDeclaringClass())) {
             genericParameterNames = Collections.emptyMap();
         }
-        // GRECLIPSE add
         try {
-        // GRECLIPSE end
-        if (!fieldTypesChecked.contains(node)) {
-            resolveOrFail(node.getType(), node);
-        }
-        super.visitField(node);
-        // GRECLIPSE add
+            if (!fieldTypesChecked.contains(node)) {
+                resolveOrFail(node.getType(), node);
+            }
+            super.visitField(node);
         } finally {
-        // GRECLIPSE end
-        genericParameterNames = oldNames;
-        // GRECLIPSE add
+            genericParameterNames = oldNames;
         }
-        // GRECLIPSE end
     }
 
     @Override
@@ -309,20 +303,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (!canSeeTypeVars(node.getModifiers(), node.getDeclaringClass())) {
             genericParameterNames = Collections.emptyMap();
         }
-        // GRECLIPSE add
         try {
-        // GRECLIPSE end
-        resolveOrFail(node.getType(), node);
-        fieldTypesChecked.add(node.getField());
+            resolveOrFail(node.getType(), node);
+            fieldTypesChecked.add(node.getField());
 
-        super.visitProperty(node);
-        // GRECLIPSE add
+            super.visitProperty(node);
         } finally {
-        // GRECLIPSE end
-        genericParameterNames = oldNames;
-        // GRECLIPSE add
+            genericParameterNames = oldNames;
         }
-        // GRECLIPSE end
     }
 
     private static boolean canSeeTypeVars(final int mods, final ClassNode node) {
