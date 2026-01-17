@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 public class DSLContributionGroup extends ContributionGroup {
 
     private static final String NO_NAME = "";
-    private static final String NO_TYPE = "java.lang.Object";
+    private static final String NO_TYPE = ClassHelper.OBJECT;
     private static final ParameterContribution[] NO_PARAMS = {};
 
     /**
@@ -459,7 +459,7 @@ public class DSLContributionGroup extends ContributionGroup {
         if (resolved == VariableScope.OBJECT_CLASS_NODE && !clazz.getCanonicalName().equals(NO_TYPE)) {
             // likely that we are trying to resolve a class that is defined inside of a DSLD itself
             try {
-                resolved = ClassHelper.make(clazz);
+                resolved = ClassHelper.make(clazz, false);
             } catch (Exception e) {
                 GroovyDSLCoreActivator.logException(e);
             }
@@ -517,11 +517,6 @@ public class DSLContributionGroup extends ContributionGroup {
 
     public void setProvider(final String value) {
         provider = value;
-    }
-
-    @Deprecated(since = "5.1.0")
-    public void provider(final Object value) {
-        setProvider(asString(value));
     }
 
     /**

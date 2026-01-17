@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ abstract class GroovyEclipseTestSuite {
 
     @BeforeClass
     static final void setUpTestSuite() {
-        ErrorDialog.AUTOMATED_MODE = true
+        ErrorDialog.@AUTOMATED_MODE = true
         SafeRunnable.setIgnoreErrors(true)
         this.testProject = new TestProject()
         def projectScope = new ProjectScope(testProject.project)
@@ -79,9 +79,9 @@ abstract class GroovyEclipseTestSuite {
             }
         }
 
+        JavaCore.setOptions(JavaCore.getDefaultOptions())
         groovyPlugin.preferenceStore.with(defaults)
         javaPlugin.preferenceStore.with(defaults)
-        JavaCore.options = JavaCore.defaultOptions
 
         testProject?.dispose()
         testProject = null
