@@ -18,6 +18,7 @@ import java.io.IOException;
 import junit.framework.Test;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "rawtypes" })
@@ -464,4 +465,39 @@ public void testIssue147() throws Exception {
 	String expectedOutput = "java.lang.invoke.MethodHandle.invoke(java.lang.Object)";
 	checkDisassembledClassFile(OUTPUT_DIR + File.separator + "X.class", "X", expectedOutput);
 }
+public void testGH4744() throws Exception {
+	if (this.complianceLevel < ClassFileConstants.JDK21) {
+		return;
+	}
+	String libPath = this.getCompilerTestsPluginDirectoryPath() + File.separator + "workspace" + File.separator + "gh4744.jar";
+		this.runConformTest(
+			new String[] {
+					"Trigger.java",
+					"""
+						import java.lang.annotation.Retention;
+						import java.lang.annotation.Target;
+						import static java.lang.annotation.ElementType.TYPE;
+						import static java.lang.annotation.RetentionPolicy.SOURCE;
+						@Trigger
+						@Retention(SOURCE)
+						@Target(TYPE)
+						public @interface Trigger {}
+					"""
+			},
+			"\"" + OUTPUT_DIR +  File.separator + "Trigger.java\"" +
+					" -cp " + libPath + // relative
+					" -source " + CompilerOptions.getLatestVersion() +
+					" -target " + CompilerOptions.getLatestVersion() + " " +
+					" -processor DumpProcessor ",
+					"",
+					"1. INFO: Test simpleName=Test\n"
+					+ "2. INFO: Test ctor params: javacWorksNotEcj:int\n"
+					+ "3. INFO: Test ctor params: bothWork1:short\n"
+					+ "4. INFO: Test ctor params: bothWork2:double\n"
+					+ "5. INFO: Test method params: test1(javacWorksNotEcj:int)\n"
+					+ "6. INFO: Test method params: test2(bothWork1:int)\n"
+					+ "7. INFO: Test method params: test3(bothWork2:int)\n"
+					+ "7 problems (7 infos)\n",
+					true);
+	}
 }

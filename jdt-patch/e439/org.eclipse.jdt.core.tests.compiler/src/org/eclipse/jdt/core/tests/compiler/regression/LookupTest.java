@@ -1228,7 +1228,7 @@ public void test036() {
 		"3. ERROR in q\\Y.java (at line 5)\n" +
 		"	class Z extends Y implements p.X.I {	\n" +
 		"	      ^\n" +
-		"The inherited method Y.foo() cannot hide the public abstract method in X.I\n" +
+		"The inherited method Y.foo() cannot reduce the visibility of the public abstract method in X.I\n" +
 		"----------\n");
 }
 // 30805 Abstract non-visible method diagnosis fooled by intermediate declarations

@@ -49611,7 +49611,7 @@ public void test1463() {
 		"1. ERROR in BaseType.java (at line 4)\n" +
 		"	interface SubType<T extends BaseType & java.io.Closeable> extends BaseType {\n" +
 		"	                  ^\n" +
-		"The inherited method Object.clone() cannot hide the public abstract method in BaseType\n" +
+		"The inherited method Object.clone() cannot reduce the visibility of the public abstract method in BaseType\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=319603

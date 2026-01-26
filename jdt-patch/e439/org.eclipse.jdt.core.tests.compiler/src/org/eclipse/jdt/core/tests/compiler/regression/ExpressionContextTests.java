@@ -106,13 +106,8 @@ public void test003() {
 			"----------\n" +
 			"1. ERROR in X.java (at line 10)\n" +
 			"	Object p = (int & I & J) () -> {};\n" +
-			"	            ^^^\n" +
-			"Base types are not allowed in intersection cast operator\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 10)\n" +
-			"	Object p = (int & I & J) () -> {};\n" +
-			"	                         ^^^^^\n" +
-			"The target type of this expression must be a functional interface\n" +
+			"	           ^^^^^^^^^^^^^\n" +
+			"Syntax error on token(s), misplaced construct(s)\n" +
 			"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=399773, [1.8][compiler] Cast expression should allow for additional bounds to form intersection types
@@ -613,8 +608,8 @@ public void test021() {
 			"----------\n" +
 			"1. ERROR in X.java (at line 6)\n" +
 			"	return \"Hello\" + () -> {};\n" +
-			"	                 ^^^^^\n" +
-			"The target type of this expression must be a functional interface\n" +
+			"	               ^\n" +
+			"Syntax error on token \"+\", invalid AssignmentOperator\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 9)\n" +
 			"	return \"Hello\" + (I)(() -> {});\n" +

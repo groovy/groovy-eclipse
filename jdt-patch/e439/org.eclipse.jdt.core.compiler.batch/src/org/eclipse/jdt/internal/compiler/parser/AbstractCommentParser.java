@@ -375,6 +375,8 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 									pushText(this.textStart, textEndPosition);
 								}
 								refreshInlineTagPosition(previousPosition);
+							} else if ((this.source[this.index] == '\n' || this.source[this.index] == '\r') && !shouldAbortDueToJavadocTag(previousPosition) ) {
+								pushText(previousPosition, this.index); // Enables adding closing curly brackets to node elements in Javadoc when the TagElement spans multiple lines
 							}
 							if (!isFormatterParser && !treatAsText && (!this.inlineReturn || this.inlineReturnOpenBraces <= 0))
 								this.textStart = this.index;
@@ -409,6 +411,9 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 						// https://bugs.eclipse.org/bugs/show_bug.cgi?id=206345: count opening braces when ignoring tags
 						if (considerTagAsPlainText) {
 							openingBraces++;
+							if (this.source[this.index] == '\n' || this.source[this.index] == '\r') {
+								pushText(this.textStart, this.index); // Enables adding opening curly brackets to node elements in Javadoc when the TagElement spans multiple lines
+							}
 						} else if (this.inlineTagStarted) {
 							if (this.tagValue == TAG_RETURN_VALUE) {
 								this.inlineReturn= true;
@@ -545,13 +550,43 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 				refreshInlineTagPosition(textEndPosition);
 				setInlineTagStarted(false);
 			} else if (this.lineStarted && this.textStart != -1 && this.textStart <= textEndPosition && (this.textStart < this.starPosition || this.starPosition == lastStarPosition || this.markdown)) {
-				pushText(this.textStart, textEndPosition);
+				if (!(invalidInlineTagLineEnd > 0 && nextCharacter == '}' && this.markdown && this.index == this.javadocEnd))
+					pushText(this.textStart, textEndPosition);
 			}
 			updateDocComment();
 		} catch (Exception ex) {
 			validComment = false;
 		}
 		return validComment;
+	}
+
+	/**
+	 * Scans backwards from current position to find if `{ @` pattern exists
+	 * before a newline. Returns true immediately when pattern is found.
+	 */
+	protected boolean shouldAbortDueToJavadocTag(int currPos) {
+	    int pos = currPos - 1;
+	    if (this.source == null || pos < 0 || pos >= this.source.length) {
+	        return false;
+	    }
+
+	    while (pos >= 0) {
+	        char currentChar = this.source[pos];
+
+	        // If encounter a newline, stop scanning
+	        if (currentChar == '\n' || currentChar == '\r') {
+	        	pos--;
+	            break;
+	        }
+
+	        // Check for pattern
+	        if (currentChar == '@' && pos > 0 && this.source[pos - 1] == '{') {
+	            return true;
+	        }
+
+	        pos--;
+	    }
+	    return false;
 	}
 
 	protected void addFragmentToInlineReturn() {

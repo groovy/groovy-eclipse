@@ -13358,4 +13358,129 @@ public void testBug550255() {
 		+ "1 problem (1 warning)\n",
 		true);
 }
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4750
+// Compilation error not raised with ECJ when warnings are raised
+public void testIssue4750() {
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			public class X {
+				public void testIssue() throws Exception {
+					int N_ITERATIONS = 10;
+					while (N_ITERATIONS-- > 0) {
+						Object index = 0;
+						Runnable thread = new Runnable() {
+							@Override
+							public void run() {
+								System.out.println(index + 1);
+							}
+						};
+					}
+				}
+			}
+			""",
+		},
+		"\"" + OUTPUT_DIR +  File.separator + "X.java\""
+		+ " -sourcepath \"" + OUTPUT_DIR + "\""
+		+ " -d \"" + OUTPUT_DIR + "\"",
+		"",
+		"----------\n" +
+		"1. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/X.java (at line 5)\n" +
+		"	Object index = 0;\n" +
+		"	       ^^^^^\n" +
+		"The value of the local variable index is not used\n" +
+		"----------\n" +
+		"2. WARNING in ---OUTPUT_DIR_PLACEHOLDER---/X.java (at line 6)\n" +
+		"	Runnable thread = new Runnable() {\n" +
+		"	         ^^^^^^\n" +
+		"The value of the local variable thread is not used\n" +
+		"----------\n" +
+		"3. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/X.java (at line 9)\n" +
+		"	System.out.println(index + 1);\n" +
+		"	                   ^^^^^^^^^\n" +
+		"The operator + is undefined for the argument type(s) Object, int\n" +
+		"----------\n" +
+		"3 problems (1 error, 2 warnings)\n",
+		true);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4750
+// Compilation error not raised with ECJ when warnings are raised
+public void testIssue4750_nowarn() {
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			public class X {
+				public void testIssue() throws Exception {
+					int N_ITERATIONS = 10;
+					while (N_ITERATIONS-- > 0) {
+						Object index = 0;
+						Runnable thread = new Runnable() {
+							@Override
+							public void run() {
+								System.out.println(index + 1);
+							}
+						};
+					}
+				}
+			}
+			""",
+		},
+		"\"" + OUTPUT_DIR +  File.separator + "X.java\""
+		+ " -sourcepath \"" + OUTPUT_DIR + "\""
+		+ " -nowarn -d \"" + OUTPUT_DIR + "\"",
+		"",
+		"----------\n" +
+		"1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/X.java (at line 9)\n" +
+		"	System.out.println(index + 1);\n" +
+		"	                   ^^^^^^^^^\n" +
+		"The operator + is undefined for the argument type(s) Object, int\n" +
+		"----------\n" +
+		"1 problem (1 error)\n",
+		true);
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4768
+// Internal Compiler Error when a static field with custom annotation references a generic type parameter T
+public void testIssue4768(){
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			import java.lang.annotation.*;
+			@interface CompileTimeConstant {}
+
+			class FunctionPointerContainer<T> {
+			    @CompileTimeConstant
+			    public static final T VALUE = null;
+			}
+
+			public class X {
+			    public static void main(String[] args) {
+			        FunctionPointerContainer<Integer> nestedContainer = new FunctionPointerContainer<>();
+			        Integer value = nestedContainer.VALUE;
+			    }
+			}
+			""",
+		},
+
+		"\"" + OUTPUT_DIR +  File.separator + "X.java\""
+		+ " -sourcepath \"" + OUTPUT_DIR + "\""
+		+ " -nowarn -d \"" + OUTPUT_DIR + "\"",
+		"",
+		"----------\n" +
+		"1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/X.java (at line 6)\n" +
+		"	public static final T VALUE = null;\n" +
+		"	                    ^\n" +
+		"Cannot make a static reference to the non-static type T\n" +
+		"----------\n" +
+		"2. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/X.java (at line 12)\n" +
+		"	Integer value = nestedContainer.VALUE;\n" +
+		"	                                ^^^^^\n" +
+		"VALUE cannot be resolved or is not a field\n" +
+		"----------\n" +
+		"2 problems (2 errors)\n",
+
+		true);
+}
 }

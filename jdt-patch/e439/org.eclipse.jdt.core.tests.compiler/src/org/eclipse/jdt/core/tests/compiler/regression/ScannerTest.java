@@ -1327,7 +1327,7 @@ public class ScannerTest extends AbstractRegressionTest {
 			"2. ERROR in X.java (at line 4)\n" +
 			"	System.out.println(Hello\\u205fworld);\n" +
 			"	                        ^^^^^^\n" +
-			"Syntax error on token \"Invalid Character\", invalid AssignmentOperator\n" +
+			"Syntax error on token \"Invalid Character\", -> expected\n" +
 			"----------\n");
 	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=458795

@@ -1708,12 +1708,7 @@ public class RecordPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 4)\n" +
 				"	case Rectangle(int x, int y) r -> 1;\n" +
 				"	                           ^\n" +
-				"Syntax error, insert \":\" to complete SwitchLabel\n" +
-				"----------\n" +
-				"2. ERROR in X.java (at line 4)\n" +
-				"	case Rectangle(int x, int y) r -> 1;\n" +
-				"	                                  ^\n" +
-				"Syntax error, insert \"AssignmentOperator Expression\" to complete Expression\n" +
+				"Syntax error on token \")\", -> expected after this token\n" +
 				"----------\n");
 	}
 	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2004

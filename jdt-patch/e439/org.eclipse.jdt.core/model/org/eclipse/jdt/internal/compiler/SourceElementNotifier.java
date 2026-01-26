@@ -536,6 +536,8 @@ protected void notifySourceElementRequestor(AbstractVariableDeclaration fieldDec
 			}
 			if (isInRange) {
 				int currentModifiers = fieldDeclaration.modifiers;
+				if (fieldDeclaration instanceof RecordComponent component && component.isVarArgs())
+					currentModifiers |= ClassFileConstants.AccVarargs;
 
 				// remember deprecation so as to not lose it below
 				boolean deprecated = (currentModifiers & ClassFileConstants.AccDeprecated) != 0 || hasDeprecatedAnnotation(fieldDeclaration.annotations);

@@ -8261,7 +8261,6 @@ public void testBug459967_Array_clone_b() {
 		"----------\n");
 }
 public void testBug448709_allocationExpression1() {
-	// inference prioritizes constraint (<@Nullable T>) over expected type (@NonNull String), hence a null type mismatch results
 	runNegativeTestWithLibs(
 		new String[] {
 			"X.java",
@@ -8278,10 +8277,10 @@ public void testBug448709_allocationExpression1() {
 		},
 		getCompilerOptions(),
 		"----------\n" +
-		"1. ERROR in X.java (at line 8)\n" +
+		"1. WARNING in X.java (at line 8)\n" +
 		"	return zork(new FI<>());\n" +
-		"	            ^^^^^^^^^^\n" +
-		"Null type mismatch (type annotations): required \'F0<@NonNull String>\' but this expression has type \'@NonNull FI<@Nullable String>\', corresponding supertype is \'F0<@Nullable String>\'\n" +
+		"	       ^^^^^^^^^^^^^^^^\n" +
+		"Null type safety (type annotations): The expression of type \'String\' needs unchecked conversion to conform to \'@NonNull String\'\n" +
 		"----------\n");
 }
 public void testBug448709_allocationExpression2() {
@@ -10251,7 +10250,7 @@ public void testBug484741Invoke() {
 			"test/TestInterdepInvoke.java",
 			"package test;\n" +
 			"\n" +
-			"import org.eclipse.jdt.annotation.Nullable;\n" +
+			"import org.eclipse.jdt.annotation.*;\n" +
 			"\n" +
 			"public class TestInterdepInvoke {\n" +
 			"	static <T, E extends T> T f1(E e) {\n" +
@@ -10291,6 +10290,9 @@ public void testBug484741Invoke() {
 			"	// -------- invocations of f2 --------\n" +
 			"\n" +
 			"	static <T21, E21 extends T21> T21 g21(E21 e) {\n" +
+			"		return f2(e);\n" +
+			"	}\n" +
+			"	static <T21, @NonNull E21 extends T21> T21 g21a(E21 e) { // override hind from f2.<E>\n" +
 			"		return f2(e);\n" +
 			"	}\n" +
 			"\n" +
@@ -10355,22 +10357,32 @@ public void testBug484741Invoke() {
 		"	       ^^^^^\n" +
 		"Null type mismatch (type annotations): required \'T12\' but this expression has type \'@Nullable E12 extends T12\', where \'T12\' is a free type variable\n" +
 		"----------\n" +
-		"3. ERROR in test\\TestInterdepInvoke.java (at line 61)\n" +
+		"3. ERROR in test\\TestInterdepInvoke.java (at line 43)\n" +
+		"	return f2(e);\n" +
+		"	       ^^^^^\n" +
+		"Null type mismatch (type annotations): required \'T21\' but this expression has type \'@Nullable E21 extends T21\', where \'T21\' is a free type variable\n" +
+		"----------\n" +
+		"4. ERROR in test\\TestInterdepInvoke.java (at line 50)\n" +
+		"	return f2(e);\n" +
+		"	       ^^^^^\n" +
+		"Null type mismatch (type annotations): required \'T22\' but this expression has type \'@Nullable E22 extends T22\', where \'T22\' is a free type variable\n" +
+		"----------\n" +
+		"5. ERROR in test\\TestInterdepInvoke.java (at line 64)\n" +
 		"	return f3(e); // error 3 expected\n" +
 		"	       ^^^^^\n" +
 		"Null type mismatch (type annotations): required \'T31\' but this expression has type \'@Nullable E31 extends T31\', where \'T31\' is a free type variable\n" +
 		"----------\n" +
-		"4. ERROR in test\\TestInterdepInvoke.java (at line 65)\n" +
+		"6. ERROR in test\\TestInterdepInvoke.java (at line 68)\n" +
 		"	return f3(e); // error 4 expected\n" +
 		"	       ^^^^^\n" +
 		"Null type mismatch (type annotations): required \'T32\' but this expression has type \'@Nullable E32 extends T32\', where \'T32\' is a free type variable\n" +
 		"----------\n" +
-		"5. ERROR in test\\TestInterdepInvoke.java (at line 79)\n" +
+		"7. ERROR in test\\TestInterdepInvoke.java (at line 82)\n" +
 		"	return f4(e); /// error 5 expected\n" +
 		"	       ^^^^^\n" +
 		"Null type mismatch (type annotations): required \'T41\' but this expression has type \'@Nullable E41 extends T41\', where \'T41\' is a free type variable\n" +
 		"----------\n" +
-		"6. ERROR in test\\TestInterdepInvoke.java (at line 83)\n" +
+		"6. ERROR in test\\TestInterdepInvoke.java (at line 86)\n" +
 		"	return f4(e); // error 6 expected\n" +
 		"	       ^^^^^\n" +
 		"Null type mismatch (type annotations): required \'T42\' but this expression has type \'@Nullable E42 extends T42\', where \'T42\' is a free type variable\n" +

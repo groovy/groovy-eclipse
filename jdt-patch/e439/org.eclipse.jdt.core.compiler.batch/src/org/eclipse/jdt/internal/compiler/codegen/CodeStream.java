@@ -4364,7 +4364,7 @@ public void invoke(byte opcode, MethodBinding methodBinding, TypeBinding declari
 		case Opcodes.OPC_invokespecial :
 			receiverAndArgsSize = 1; // receiver
 			if (methodBinding.isConstructor()) {
-				if (declaringClass.isNestedType()) {
+				if (declaringClass.hasEnclosingInstanceContext()) {
 					ReferenceBinding nestedType = (ReferenceBinding) declaringClass;
 					// enclosing instances
 					receiverAndArgsSize += nestedType.getEnclosingInstancesSlotSize();

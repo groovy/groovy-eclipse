@@ -8989,6 +8989,174 @@ public void testIssue4433() throws Exception {
 			},
 			"class X$A");
 }
+public void testLambdaAsAssignmentRHS() {
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				"""
+				import java.util.function.Consumer;
+
+				public class X {
+					Consumer<Boolean> xx;
+					void foo() {
+						this.xx = (f) -> { System.out.println(f); };
+						this.xx.accept(true);
+						this.xx.accept(false);
+						this.xx.accept(true);
+					}
+					public static void main(String [] args) {
+                        new X().foo();
+                    }
+				}
+				""",
+			},
+			"true\nfalse\ntrue"
+			);
+}
+// Test that a lambda featuring in the production `ConditionalExpression ::= ConditionalOrExpression '?' Expression ':' LambdaExpression` is handled properly.
+public void testLambdaInTernary_01() {
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				"""
+				import java.util.function.Supplier;
+
+				public class X {
+				    public static void main(String[] args) {
+				    	Supplier<String> s = () -> "Hello ";
+						boolean b = true;
+						Supplier<String> sup = b ? s : () -> { return "World!"; };
+						System.out.print(sup.get());
+						b = false;
+						sup = b ? s : () -> { return "World!"; };
+						System.out.println(sup.get());
+					}
+				}
+				""",
+			},
+			"Hello World!"
+			);
+}
+// Test that a lambda featuring in the production `ConditionalExpression ::= ConditionalOrExpression '?' Expression ':' CastedLambdaExpression` is handled properly.
+public void testLambdaInTernary_02() {
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				"""
+				import java.util.function.Supplier;
+
+				public class X {
+				    public static void main(String[] args) {
+				    	Supplier<String> s = () -> "Hello ";
+						boolean b = true;
+						Supplier<String> sup = b ? s : (Supplier<String>) () -> { return "World!"; };
+						System.out.print(sup.get());
+						b = false;
+						sup = b ? s : (Supplier<String>) () -> { return "World!"; };
+						System.out.println(sup.get());
+					}
+				}
+				""",
+			},
+			"Hello World!"
+			);
+}
+// Test that a lambda featuring in the production `ConditionalExpression_NotName ::= ConditionalOrExpression_NotName '?' Expression ':' LambdaExpression` is handled properly.
+public void testLambdaInTernary_03() {
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				"""
+				import java.util.function.Supplier;
+
+				public class X {
+				    public static void main(String[] args) {
+				    	Supplier<String> s = () -> "Hello ";
+						boolean a = false;
+						Supplier<String> sup  = (!a ? s : () -> { return "World"; });
+						System.out.print(sup.get());
+						a = true;
+						sup  = (!a ? s : () -> { return "World!"; });
+						System.out.println(sup.get());
+					}
+				}
+				""",
+			},
+			"Hello World!"
+			);
+}
+// Test that a lambda featuring in the production `ConditionalExpression_NotName ::= ConditionalOrExpression_NotName '?' Expression ':' CastedLambdaExpression` is handled properly.
+public void testLambdaInTernary_04() {
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				"""
+				import java.util.function.Supplier;
+
+				public class X {
+				    public static void main(String[] args) {
+				    	Supplier<String> s = () -> "Hello ";
+						boolean a = false;
+						Supplier<String> sup  = (!a ? s : (Supplier<String>) () -> { return "World"; });
+						System.out.print(sup.get());
+						a = true;
+						sup  = (!a ? s : (Supplier<String>) () -> { return "World!"; });
+						System.out.println(sup.get());
+					}
+				}
+				""",
+			},
+			"Hello World!"
+			);
+}
+// Test that a lambda featuring in the production `ConditionalExpression_NotName ::= Name '?' Expression ':' LambdaExpression` is handled properly.
+public void testLambdaInTernary_05() {
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				"""
+				import java.util.function.Supplier;
+
+				public class X {
+					public static void main(String[] args) {
+				    	Supplier<String> s = () -> "Hello ";
+						boolean a = true, b = false;
+						Supplier<String> sup  = (a ? s : () -> { return "World"; });
+						System.out.print(sup.get());
+						a = false;
+						sup  = (a ? s : () -> { return "World!"; });
+						System.out.println(sup.get());
+					}
+				}
+				""",
+			},
+			"Hello World!"
+			);
+}
+// Test that a lambda featuring in the production `ConditionalExpression_NotName ::= Name '?' Expression ':' CastedLambdaExpression` is handled properly.
+public void testLambdaInTernary_06() {
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				"""
+			import java.util.function.Supplier;
+
+			public class X {
+				public static void main(String[] args) {
+			    	Supplier<String> s = () -> "Hello ";
+					boolean a = true, b = false;
+					Supplier<String> sup  = (a ? s : (Supplier<String>) () -> { return "World"; });
+					System.out.print(sup.get());
+					a = false;
+					sup  = (a ? s : (Supplier<String>) () -> { return "World!"; });
+					System.out.println(sup.get());
+				}
+			}
+				""",
+			},
+			"Hello World!"
+			);
+}
 public static Class testClass() {
 	return LambdaExpressionsTest.class;
 }

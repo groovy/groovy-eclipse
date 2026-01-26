@@ -7058,5 +7058,23 @@ public void testGH4314c() {
 		},
 		"");
 }
+
+public void testGH4557() {
+    runConformTest(new String[] {
+            "Test.java",
+            """
+            import java.util.List;
+            public class Test {
+                public static void main(List<?> l) {
+                    get(get(get(l)));
+                }
+                public static <T> List<?> get(List<T> l) {
+                    return l;
+                }
+            }
+            """
+        },
+        "");
+}
 }
 

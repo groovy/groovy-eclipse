@@ -5769,7 +5769,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"1. ERROR in X.java (at line 5)\n" +
 				"	case AAABBB -> 1;\n" +
 				"	                ^\n" +
-				"Syntax error on token \";\", [ expected\n" +
+				"Syntax error on token \";\", , expected\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 6)\n" +
 				"	(I)()->();\n" +
@@ -5782,11 +5782,6 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"Syntax error, insert \")\" to complete Expression\n" +
 				"----------\n" +
 				"4. ERROR in X.java (at line 6)\n" +
-				"	(I)()->();\n" +
-				"	        ^\n" +
-				"Syntax error, insert \"]\" to complete ArrayAccess\n" +
-				"----------\n" +
-				"5. ERROR in X.java (at line 6)\n" +
 				"	(I)()->();\n" +
 				"	        ^\n" +
 				"Syntax error, insert \":\" to complete SwitchLabel\n" +
@@ -6141,20 +6136,9 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"----------\n" +
 				"1. ERROR in X.java (at line 5)\n" +
 				"	new ArrayList<>().stream().filter(p -> p != null)\n" +
-				"	                                            ^^^^^\n" +
-				"Syntax error on tokens, delete these tokens\n" +
-				"----------\n" +
-				"2. ERROR in X.java (at line 8)\n" +
-				"	}\n" +
-				"	^\n" +
-				"Syntax error, insert \")\" to complete Expression\n" +
-				"----------\n" +
-				"3. ERROR in X.java (at line 8)\n" +
-				"	}\n" +
-				"	^\n" +
+				"	                                                ^\n" +
 				"Syntax error, insert \";\" to complete BlockStatements\n" +
-				"----------\n"
-				);
+				"----------\n");
 	}
 	public void testBug571833_01() {
 		runConformTest(

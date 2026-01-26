@@ -111,7 +111,6 @@ $Terminals
 	BeginLambda
 	BeginIntersectionCast
 	BeginTypeArguments
-	ElidedSemicolonAndRightBrace
 	AT308
 	AT308DOTDOTDOT
 	CaseArrow
@@ -1751,7 +1750,6 @@ PrimaryNoNewArray -> ArrayAccess
 --                   Start of rules for JSR 335
 -----------------------------------------------------------------------
 
-PrimaryNoNewArray -> LambdaExpression
 PrimaryNoNewArray -> ReferenceExpression
 /:$readableName Expression:/
 
@@ -1857,15 +1855,10 @@ TypeElidedFormalParameter ::= '_'
 /:$readableName TypeElidedFormalParameter:/
 /:$compliance 21:/
 
--- A lambda body of the form x is really '{' return x; '}'
-LambdaBody -> ElidedLeftBraceAndReturn Expression ElidedSemicolonAndRightBrace
+LambdaBody ::= Expression
+/.$putCase consumeLambdaBodyExpression(); $break ./
 LambdaBody -> Block
 /:$readableName LambdaBody:/
-/:$compliance 1.8:/
-
-ElidedLeftBraceAndReturn ::= $empty
-/.$putCase consumeElidedLeftBraceAndReturn(); $break ./
-/:$readableName ElidedLeftBraceAndReturn:/
 /:$compliance 1.8:/
 
 -----------------------------------------------------------------------
@@ -2085,6 +2078,22 @@ CastExpression ::= PushLPAREN Name Dims AdditionalBoundsListOpt PushRPAREN Insid
 /.$putCase consumeCastExpressionWithNameArray(); $break ./
 /:$readableName CastExpression:/
 
+---- Lambda cast rules below are copy + pasted from reference cast rules above - these don't reduce to UnaryExpressionNotPlusMinus or UnaryExpressionNotPlusMinus_NotName
+---- (as does CastExpression) but reduce to top level expression (via NakedOrCastedLambdaExpression) - this is done to avoid grammar ambiguities.
+---- See https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1045#issuecomment-1859297833 and https://github.com/eclipse-jdt/eclipse.jdt.core/issues/1045#issuecomment-1859302896
+
+CastedLambdaExpression ::= PushLPAREN Name OnlyTypeArgumentsForCastExpression Dimsopt AdditionalBoundsListOpt PushRPAREN InsideCastExpression NakedOrCastedLambdaExpression
+/.$putCase consumeCastExpressionWithGenericsArray(); $break ./
+CastedLambdaExpression ::= PushLPAREN Name OnlyTypeArgumentsForCastExpression '.' ClassOrInterfaceType Dimsopt AdditionalBoundsListOpt PushRPAREN InsideCastExpressionWithQualifiedGenerics NakedOrCastedLambdaExpression
+/.$putCase consumeCastExpressionWithQualifiedGenericsArray(); $break ./
+CastedLambdaExpression ::= PushLPAREN Name PushRPAREN InsideCastExpressionLL1 NakedOrCastedLambdaExpression
+/.$putCase consumeCastExpressionLL1(); $break ./
+CastedLambdaExpression ::=  BeginIntersectionCast PushLPAREN CastNameAndBounds PushRPAREN InsideCastExpressionLL1WithBounds NakedOrCastedLambdaExpression
+/.$putCase consumeCastExpressionLL1WithBounds(); $break ./
+CastedLambdaExpression ::= PushLPAREN Name Dims AdditionalBoundsListOpt PushRPAREN InsideCastExpression NakedOrCastedLambdaExpression
+/.$putCase consumeCastExpressionWithNameArray(); $break ./
+/:$readableName CastedLambdaExpression:/
+
 AdditionalBoundsListOpt ::= $empty
 /.$putCase consumeZeroAdditionalBounds(); $break ./
 /:$readableName AdditionalBoundsListOpt:/
@@ -2188,6 +2197,8 @@ ConditionalOrExpression ::= ConditionalOrExpression '||' ConditionalAndExpressio
 ConditionalExpression -> ConditionalOrExpression
 ConditionalExpression ::= ConditionalOrExpression '?' Expression ':' ConditionalExpression
 /.$putCase consumeConditionalExpression(OperatorIds.QUESTIONCOLON) ; $break ./
+ConditionalExpression ::= ConditionalOrExpression '?' Expression ':' NakedOrCastedLambdaExpression
+/.$putCase consumeConditionalExpression(OperatorIds.QUESTIONCOLON) ; $break ./
 /:$readableName Expression:/
 
 AssignmentExpression -> ConditionalExpression
@@ -2195,7 +2206,7 @@ AssignmentExpression -> Assignment
 /:$readableName Expression:/
 /:$recovery_template Identifier:/
 
-Assignment ::= PostfixExpression AssignmentOperator AssignmentExpression
+Assignment ::= PostfixExpression AssignmentOperator Expression
 /.$putCase consumeAssignment(); $break ./
 /:$readableName Assignment:/
 
@@ -2234,10 +2245,11 @@ AssignmentOperator ::= '|='
 /:$readableName AssignmentOperator:/
 /:$recovery_template =:/
 
--- For handling lambda expressions, we need to know when a full Expression
--- has been reduced.
-Expression ::= AssignmentExpression
-/.$putCase consumeExpression(); $break ./
+NakedOrCastedLambdaExpression -> LambdaExpression
+NakedOrCastedLambdaExpression -> CastedLambdaExpression
+
+Expression -> AssignmentExpression
+Expression -> NakedOrCastedLambdaExpression
 /:$readableName Expression:/
 /:$recovery_template Identifier:/
 
@@ -2834,7 +2846,11 @@ ConditionalOrExpression_NotName ::= Name '||' ConditionalAndExpression
 ConditionalExpression_NotName -> ConditionalOrExpression_NotName
 ConditionalExpression_NotName ::= ConditionalOrExpression_NotName '?' Expression ':' ConditionalExpression
 /.$putCase consumeConditionalExpression(OperatorIds.QUESTIONCOLON) ; $break ./
+ConditionalExpression_NotName ::= ConditionalOrExpression_NotName '?' Expression ':' NakedOrCastedLambdaExpression
+/.$putCase consumeConditionalExpression(OperatorIds.QUESTIONCOLON) ; $break ./
 ConditionalExpression_NotName ::= Name '?' Expression ':' ConditionalExpression
+/.$putCase consumeConditionalExpressionWithName(OperatorIds.QUESTIONCOLON) ; $break ./
+ConditionalExpression_NotName ::= Name '?' Expression ':' NakedOrCastedLambdaExpression
 /.$putCase consumeConditionalExpressionWithName(OperatorIds.QUESTIONCOLON) ; $break ./
 /:$readableName Expression:/
 
@@ -2843,6 +2859,7 @@ AssignmentExpression_NotName -> Assignment
 /:$readableName Expression:/
 
 Expression_NotName -> AssignmentExpression_NotName
+Expression_NotName -> NakedOrCastedLambdaExpression
 /:$readableName Expression:/
 -----------------------------------------------
 -- 1.5 features : end of generics
@@ -3119,3 +3136,4 @@ UNDERSCORE ::= '_'
 
 $end
 -- need a carriage return after the $end
+

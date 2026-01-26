@@ -14,7 +14,6 @@
 package org.eclipse.jdt.internal.compiler.parser.diagnose;
 
 import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameLBRACE;
-import static org.eclipse.jdt.internal.compiler.parser.TerminalToken.TokenNameNotAToken;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -2258,13 +2257,10 @@ public class DiagnoseParser implements ParserBasicInformation, ConflictedParser 
 	            	addedTokens = new int[Parser.scope_rhs.length - Parser.scope_suffix[- nameIndex]];
 	            }
 
-	            int insertedToken = TokenNameNotAToken.tokenNumber();
-				for (int i = Parser.scope_suffix[- nameIndex]; Parser.scope_rhs[i] != 0; i++) {
+	            for (int i = Parser.scope_suffix[- nameIndex]; Parser.scope_rhs[i] != 0; i++) {
 					buf.append(Parser.readableName[Parser.scope_rhs[i]]);
 					if (Parser.scope_rhs[i + 1] != 0) // any more symbols to print?
 						buf.append(' ');
-					else
-						insertedToken = Parser.reverse_index[Parser.scope_rhs[i]];
 
 					if(addedTokens != null) {
 	                	int tmpAddedToken = Parser.reverse_index[Parser.scope_rhs[i]];
@@ -2303,10 +2299,6 @@ public class DiagnoseParser implements ParserBasicInformation, ConflictedParser 
 	            }
 
 				if (scopeNameIndex != 0) {
-					if (insertedToken == TerminalToken.TokenNameElidedSemicolonAndRightBrace.tokenNumber()) {
-						reportMisplacedConstruct(errorStart, errorEnd, false);
-						break;
-					}
 					if(this.reportProblem) problemReporter().parseErrorInsertToComplete(
 						errorStart,
 						errorEnd,
@@ -2478,14 +2470,11 @@ public class DiagnoseParser implements ParserBasicInformation, ConflictedParser 
 	            if(this.recoveryScanner != null) {
 	            	addedTokens = new int[Parser.scope_rhs.length - Parser.scope_suffix[- nameIndex]];
 	            }
-	            int insertedToken = TokenNameNotAToken.tokenNumber();
 	            for (int i = Parser.scope_suffix[- nameIndex]; Parser.scope_rhs[i] != 0; i++) {
 
 	                buf.append(Parser.readableName[Parser.scope_rhs[i]]);
 	                if (Parser.scope_rhs[i+1] != 0)
 	                     buf.append(' ');
-	                else
-	                	insertedToken = Parser.reverse_index[Parser.scope_rhs[i]];
 
 	                if(addedTokens != null) {
 	                	int tmpAddedToken = Parser.reverse_index[Parser.scope_rhs[i]];
@@ -2521,10 +2510,6 @@ public class DiagnoseParser implements ParserBasicInformation, ConflictedParser 
 	            	this.recoveryScanner.insertTokens(addedTokens, completedToken, errorEnd);
 	            }
 	            if (scopeNameIndex != 0) {
-	            	if (insertedToken == TerminalToken.TokenNameElidedSemicolonAndRightBrace.tokenNumber()) {
-	            		reportMisplacedConstruct(errorStart, errorEnd, false);
-	            		break;
-					}
 	                if(this.reportProblem) problemReporter().parseErrorInsertToComplete(
 						errorStart,
 						errorEnd,

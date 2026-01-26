@@ -2473,7 +2473,7 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 			"1. ERROR in X.java (at line 6)\n" +
 			"	I x = new I(){};\n" +
 			"	          ^^^\n" +
-			"The inherited method Object.clone() cannot hide the public abstract method in I\n" +
+			"The inherited method Object.clone() cannot reduce the visibility of the public abstract method in I\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 6)\n" +
 			"	I x = new I(){};\n" +
@@ -3284,5 +3284,361 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 			""";
 		runner.javacTestOptions = JavacHasABug.JavacBug8337980;
 		runner.runNegativeTest();
+	}
+	// disabled because https://github.com/eclipse-jdt/eclipse.jdt.core/pull/4727 had to be reverted
+	public void _testGH1600() {
+		runConformTest(new String[] {"TestField.java",
+			"""
+			public class TestField extends CustomField {
+				@Override
+				public void setReadOnly(boolean readOnly) {
+					// Eclipse shows this compile error: Cannot directly invoke the abstract
+					// method setReadOnly(boolean) for the type HasValue
+					super.setReadOnly(readOnly);
+				}
+			}
+
+			abstract class CustomField extends AbstractField implements HasValue {}
+
+			abstract class AbstractField implements HasValueAndElement {}
+
+			interface HasValue {
+				void setReadOnly(boolean readOnly);
+			}
+
+			interface HasValueAndElement extends HasValue {
+				@Override
+				default void setReadOnly(boolean readOnly) {
+				}
+			}
+			"""});
+	}
+	public void testGH1600_2() {
+		runConformTest(new String[] {"Test.java",
+			"""
+			interface I0 {
+				default void m() throws Exception {}
+				default Number n() throws Exception { return 0l; }
+			}
+			interface I2 extends I0 {
+				@Override abstract void m() throws Exception;
+				@Override abstract Integer n() throws Exception;
+			}
+			class C2 implements I2 {
+				@Override public Integer n() throws Exception { return 13; }
+				@Override public void m() {}
+			}
+			public class Test {
+				void test1(I0 i) throws Exception {
+					if (i instanceof I2)
+						((I2) i).m();
+					else
+						System.out.print("no");
+				}
+				void test2(I0 i0) throws Exception {
+					Integer i = ((I2) i0).n();
+					System.out.print(i);
+				}
+				public static void main(String... args) throws Exception {
+					Test t = new Test();
+					t.test1(new I0() {});
+					t.test2(new C2());
+				}
+			}
+			"""},
+			"no13");
+	}
+	// Additional test case from https://github.com/eclipse-jdt/eclipse.jdt.core/pull/4727#issuecomment-3771030157
+	public void testGH1600_3() {
+		runNegativeTest(new String[] {"Test.java",
+			"""
+			interface SuperIntf {
+				public default int foo() {
+					return -1;
+				}
+			}
+			interface TestIntf extends SuperIntf {
+				@Override
+				public int foo();
+			}
+			abstract class SuperClass implements TestIntf {
+			}
+			class TestedClass extends SuperClass {
+				@Override
+				public int foo() {
+					return 0;
+				}
+				class InnerClass {
+					int foo() {
+						return 1;
+					}
+					int bar() {
+						return TestedClass.super.foo();
+					}
+				}
+			}
+			"""},
+			"----------\n" +
+			"1. ERROR in Test.java (at line 22)\r\n" +
+			"	return TestedClass.super.foo();\r\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Cannot directly invoke the abstract method foo() for the type TestIntf\n" +
+			"----------\n");
+	}
+
+	// Additional test case from https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4763
+	public void testGH1600_4_from_issue4763() {
+		runConformTest(new String[] {"eclipsebugpoc/MainClass.java",
+			"""
+			package eclipsebugpoc;
+
+			import java.util.List;
+
+			import eclipsebugpoc.containers.Box;
+			import eclipsebugpoc.containers.ShoeBox;
+			import eclipsebugpoc.data.PocDto;
+			import eclipsebugpoc.data.PocEntity;
+
+			public class MainClass {
+
+				public static void main(String[] args) {
+					PocEntity[] entities = new PocEntity[] {
+						new PocEntity(1L, "POC 1", 10),
+						new PocEntity(2L, "POC 2", 20),
+						new PocEntity(3L, "POC 3", 30),
+					};
+
+					Box<PocEntity> boxEnts = new ShoeBox<PocEntity>(List.of(entities));
+
+					Box<PocDto> boxDtos = makeBoxForDTO(boxEnts);
+
+					System.out.println("boxDtos contains %d elements".formatted(boxDtos.count()));
+				}
+
+				public static Box<PocDto> makeBoxForDTO(Box<PocEntity> entities) {
+					return entities.map(MainClass::entityToDto);
+				}
+
+				public static PocDto entityToDto(PocEntity ent) {
+					return new PocDto(ent.getId(), ent.getName(), ent.getLength());
+				}
+			}
+			""",
+			"eclipsebugpoc/containers/Box.java",
+			"""
+			package eclipsebugpoc.containers;
+
+			import java.util.function.Function;
+
+			public interface Box<T> extends Streamable<T> {
+				@Override
+				<U> Box<U> map(Function<? super T, ? extends U> converter);
+
+				public Integer count();
+			}
+			""",
+			"eclipsebugpoc/containers/BoxImpl.java",
+			"""
+			package eclipsebugpoc.containers;
+
+			import java.util.ArrayList;
+			import java.util.Iterator;
+			import java.util.List;
+			import java.util.function.Function;
+			import java.util.stream.Collectors;
+
+			public abstract class BoxImpl<T> implements Box<T> {
+				private final List<T> content = new ArrayList<>();
+
+				public BoxImpl(List<T> content) {
+					this.content.addAll(content);
+				}
+				@Override
+				public Integer count() {
+					return this.content.size();
+				}
+
+				@Override
+				public Iterator<T> iterator() {
+					return this.content.iterator();
+				}
+
+				protected <U> List<U> getConvertedContent(Function<? super T, ? extends U> converter) {
+					return this.stream().map(converter::apply).collect(Collectors.toList());
+				}
+			}
+			""",
+			"eclipsebugpoc/containers/LazyStreamable.java",
+			"""
+			package eclipsebugpoc.containers;
+
+			import java.util.Iterator;
+			import java.util.function.Supplier;
+			import java.util.stream.Stream;
+
+			final class LazyStreamable<T> implements Streamable<T> {
+
+				private final Supplier<? extends Stream<T>> stream;
+
+				private LazyStreamable(Supplier<? extends Stream<T>> stream) {
+					this.stream = stream;
+				}
+
+				public static <T> LazyStreamable<T> of(Supplier<? extends Stream<T>> stream) {
+					return new LazyStreamable<>(stream);
+				}
+
+				@Override
+				public Iterator<T> iterator() {
+					return stream().iterator();
+				}
+
+				@Override
+				public Stream<T> stream() {
+					return stream.get();
+				}
+
+				public Supplier<? extends Stream<T>> getStream() {
+					return this.stream;
+				}
+
+				@Override
+				public String toString() {
+					return "LazyStreamable(stream=" + this.getStream() + ")";
+				}
+			}
+			""",
+			"eclipsebugpoc/containers/ShoeBox.java",
+			"""
+			package eclipsebugpoc.containers;
+
+			import java.util.List;
+			import java.util.function.Function;
+
+			public class ShoeBox<T> extends BoxImpl<T> {
+				public ShoeBox(List<T> content) {
+					super(content);
+				}
+
+				@Override
+				public <U> ShoeBox<U> map(Function<? super T, ? extends U> converter) {
+					return new ShoeBox<>(getConvertedContent(converter));
+				}
+			}
+			""",
+			"eclipsebugpoc/containers/Streamable.java",
+			"""
+			package eclipsebugpoc.containers;
+
+			import java.util.Arrays;
+			import java.util.function.Function;
+			import java.util.function.Supplier;
+			import java.util.stream.Stream;
+			import java.util.stream.StreamSupport;
+
+			@FunctionalInterface
+			public interface Streamable<T> extends Iterable<T> {
+				@SafeVarargs
+				static <T> Streamable<T> of(T... t) {
+					return () -> Arrays.asList(t).iterator();
+				}
+
+				default Stream<T> stream() {
+					return StreamSupport.stream(spliterator(), false);
+				}
+
+				default <R> Streamable<R> map(Function<? super T, ? extends R> mapper) {
+					return Streamable.of(() -> stream().map(mapper));
+				}
+
+				static <T> Streamable<T> of(Supplier<? extends Stream<T>> supplier) {
+					return LazyStreamable.of(supplier);
+				}
+			}
+			""",
+			"eclipsebugpoc/data/PocDto.java",
+			"""
+			package eclipsebugpoc.data;
+
+			public class PocDto {
+				private Long id;
+				private String name;
+				private Integer size;
+
+				public PocDto(Long id, String name, Integer size) {
+					this.id = id;
+					this.name = name;
+					this.size = size;
+				}
+
+				public Long getId() {
+					return id;
+				}
+
+				public void setId(Long id) {
+					this.id = id;
+				}
+
+				public String getName() {
+					return name;
+				}
+
+				public void setName(String name) {
+					this.name = name;
+				}
+
+				public Integer getSize() {
+					return size;
+				}
+
+				public void setSize(Integer size) {
+					this.size = size;
+				}
+
+			}
+			""",
+			"eclipsebugpoc/data/PocEntity.java",
+			"""
+			package eclipsebugpoc.data;
+
+			public class PocEntity {
+				private Long id;
+				private String name;
+				private Integer length;
+
+				public PocEntity(Long id, String name, Integer length) {
+					this.id = id;
+					this.name = name;
+					this.length = length;
+				}
+
+				public Long getId() {
+					return id;
+				}
+
+				public void setId(Long id) {
+					this.id = id;
+				}
+
+				public String getName() {
+					return name;
+				}
+
+				public void setName(String name) {
+					this.name = name;
+				}
+
+				public Integer getLength() {
+					return length;
+				}
+
+				public void setLength(Integer length) {
+					this.length = length;
+				}
+			}
+			""",
+
+			},
+			"boxDtos contains 3 elements");
 	}
 }

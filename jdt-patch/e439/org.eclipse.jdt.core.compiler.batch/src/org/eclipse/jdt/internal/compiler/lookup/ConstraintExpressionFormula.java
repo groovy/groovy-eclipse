@@ -428,6 +428,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 				ParameterizedTypeBinding gbeta = inferenceContext.environment.createParameterizedType(
 						parameterizedType.genericType(), betas, parameterizedType.enclosingType(), parameterizedType.getTypeAnnotations());
 				inferenceContext.currentBounds.captures.put(gbeta, parameterizedType); // established: both types have nonnull arguments
+				inferenceContext.currentBounds.allCaptures.put(gbeta, parameterizedType); // established: both types have nonnull arguments
 				if (InferenceContext18.SHOULD_WORKAROUND_BUG_JDK_8054721) {
 					for (int i = 0, length = arguments.length; i < length; i++) {
 						if (arguments[i].isWildcard()) {

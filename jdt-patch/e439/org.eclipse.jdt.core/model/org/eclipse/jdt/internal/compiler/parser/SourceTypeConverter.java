@@ -17,28 +17,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.parser;
 
-/**
- * Converter from source element type to parsed compilation unit.
- *
- * Limitation:
- * | The source element field does not carry any information for its constant part, thus
- * | the converted parse tree will not include any field initializations.
- * | Therefore, any binary produced by compiling against converted source elements will
- * | not take advantage of remote field constant inlining.
- * | Given the intended purpose of the conversion is to resolve references, this is not
- * | a problem.
- */
-
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
-import org.eclipse.jdt.core.IAnnotatable;
-import org.eclipse.jdt.core.IAnnotation;
-import org.eclipse.jdt.core.IField;
-import org.eclipse.jdt.core.IImportDeclaration;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.ILocalVariable;
-import org.eclipse.jdt.core.ISourceRange;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.Signature;
+
+import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.*;
@@ -55,6 +36,17 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.*;
 import org.eclipse.jdt.internal.core.util.Util;
 
+/**
+ * Converter from source element type to parsed compilation unit.
+ *
+ * Limitation:
+ * | The source element field does not carry any information for its constant part, thus
+ * | the converted parse tree will not include any field initializations.
+ * | Therefore, any binary produced by compiling against converted source elements will
+ * | not take advantage of remote field constant inlining.
+ * | Given the intended purpose of the conversion is to resolve references, this is not
+ * | a problem.
+ */
 public class SourceTypeConverter extends TypeConverter {
 
 	/*
@@ -134,16 +126,6 @@ public class SourceTypeConverter extends TypeConverter {
 
 		if (sourceTypes.length == 0) return this.unit;
 		SourceTypeElementInfo topLevelTypeInfo = (SourceTypeElementInfo) sourceTypes[0];
-		// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/342
-		boolean couldBeVarargs = false;
-		if (topLevelTypeInfo.getHandle().isRecord()) {
-			for (IField field: topLevelTypeInfo.getHandle().getRecordComponents()) {
-				if (Signature.getTypeSignatureKind(field.getTypeSignature()) == Signature.ARRAY_TYPE_SIGNATURE) {
-					couldBeVarargs = true;
-					break;
-				}
-			}
-		}
 		org.eclipse.jdt.core.ICompilationUnit cuHandle = topLevelTypeInfo.getHandle().getCompilationUnit();
 		this.cu = (ICompilationUnit) cuHandle;
 		// GROOVY add
@@ -154,8 +136,7 @@ public class SourceTypeConverter extends TypeConverter {
 		final CompilationUnitElementInfo compilationUnitElementInfo = (CompilationUnitElementInfo) ((JavaElement) this.cu).getElementInfo();
 		if (
 				(compilationUnitElementInfo.annotationNumber >= CompilationUnitElementInfo.ANNOTATION_THRESHOLD_FOR_DIET_PARSE ||
-				(compilationUnitElementInfo.hasFunctionalTypes && (this.flags & LOCAL_TYPE) != 0) ||
-				couldBeVarargs)) {
+				(compilationUnitElementInfo.hasFunctionalTypes && (this.flags & LOCAL_TYPE) != 0))) {
 			// If more than 10 annotations, diet parse as this is faster, but not if
 			// the client wants local and anonymous types to be converted (https://bugs.eclipse.org/bugs/show_bug.cgi?id=254738)
 			// Also see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=405843
@@ -281,6 +262,9 @@ public class SourceTypeConverter extends TypeConverter {
 		component.declarationSourceEnd = componentInfo.getDeclarationSourceEnd();
 		component.type = createTypeReference(componentInfo.getTypeName(), start, end);
 
+		if (Flags.isVarargs(componentHandle.getFlags())) {
+			component.type.bits |= ASTNode.IsVarArgs;
+		}
 		/* convert annotations */
 		component.annotations = convertAnnotations(componentHandle);
 		return component;

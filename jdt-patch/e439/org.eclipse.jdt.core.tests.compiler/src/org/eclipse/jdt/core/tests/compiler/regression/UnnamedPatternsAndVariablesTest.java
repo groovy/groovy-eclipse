@@ -246,24 +246,12 @@ public class UnnamedPatternsAndVariablesTest extends AbstractBatchCompilerTest {
 					}
 				}
 				"""},
-				"""
-				----------
-				1. ERROR in A.java (at line 4)
-					Function<Integer, String> myFunc = Integer _ -> "Hello";
-					                                   ^^^^^^^
-				Syntax error, insert ":: IdentifierOrNew" to complete ReferenceExpression
-				----------
-				2. ERROR in A.java (at line 4)
-					Function<Integer, String> myFunc = Integer _ -> "Hello";
-					                                   ^^^^^^^
-				Syntax error, insert ";" to complete BlockStatements
-				----------
-				3. ERROR in A.java (at line 4)
-					Function<Integer, String> myFunc = Integer _ -> "Hello";
-					                                                ^^^^^^^
-				Syntax error, insert "AssignmentOperator Expression" to complete Expression
-				----------
-				""");
+				"----------\n" +
+				"1. ERROR in A.java (at line 4)\n" +
+				"	Function<Integer, String> myFunc = Integer _ -> \"Hello\";\n" +
+				"	                                           ^\n" +
+				"Syntax error on token \"_\", delete this token\n" +
+				"----------\n");
 	}
 
 	public void testLambdaBiFunctionBracketedWithOneNamedParam() {
@@ -664,7 +652,7 @@ public class UnnamedPatternsAndVariablesTest extends AbstractBatchCompilerTest {
 				1. ERROR in X.java (at line 5)
 					return _;
 					       ^
-				Syntax error, insert "-> LambdaBody" to complete Expression
+				Syntax error, insert "-> LambdaBody" to complete LambdaExpression
 				----------
 				""");
 	}

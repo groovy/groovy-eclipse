@@ -321,12 +321,15 @@ public abstract class AbstractMethodDeclaration
 		}
 		int problemResetPC = 0;
 		CompilationResult unitResult = null;
+		CategorizedProblem problems[] = new CategorizedProblem[0];
 		int problemCount = 0;
 		if (classScope != null) {
 			TypeDeclaration referenceContext = classScope.referenceContext;
 			if (referenceContext != null) {
 				unitResult = referenceContext.compilationResult();
 				problemCount = unitResult.problemCount;
+				if (problemCount > 0)
+					System.arraycopy(unitResult.problems, 0, (problems = new CategorizedProblem[problemCount]), 0, problemCount);
 			}
 		}
 		boolean restart = false;
@@ -347,6 +350,7 @@ public abstract class AbstractMethodDeclaration
 					// reset the problem count to prevent reporting the same warning twice
 					if (unitResult != null) {
 						unitResult.problemCount = problemCount;
+						unitResult.problems = problems;
 					}
 					restart = true;
 				} else if (e.compilationResult == CodeStream.RESTART_CODE_GEN_FOR_UNUSED_LOCALS_MODE) {
@@ -356,6 +360,7 @@ public abstract class AbstractMethodDeclaration
 					// reset the problem count to prevent reporting the same warning twice
 					if (unitResult != null) {
 						unitResult.problemCount = problemCount;
+						unitResult.problems = problems;
 					}
 					restart = true;
 				} else {
@@ -367,8 +372,7 @@ public abstract class AbstractMethodDeclaration
 		// produce a problem method accounting for this fatal error
 		if (abort) {
 			int problemsLength;
-			CategorizedProblem[] problems =
-				this.scope.referenceCompilationUnit().compilationResult.getAllProblems();
+			problems = this.scope.referenceCompilationUnit().compilationResult.getAllProblems();
 			CategorizedProblem[] problemsCopy = new CategorizedProblem[problemsLength = problems.length];
 			System.arraycopy(problems, 0, problemsCopy, 0, problemsLength);
 			classFile.addProblemMethod(this, this.binding, problemsCopy, problemResetPC);

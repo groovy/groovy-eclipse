@@ -2537,6 +2537,7 @@ public ModuleBinding module() {
 	return null;
 }
 
+@Override
 public boolean hasEnclosingInstanceContext() {
 	// This method intentionally disregards early construction contexts (JEP 513).
 	// Details of how each outer level is handled are coordinated in

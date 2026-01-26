@@ -1889,6 +1889,45 @@ public void testIssue4550() {
 		);
 }
 
+public void testGH4635() {
+	runConformTest(new String[] {
+		"Test.java",
+		"""
+		import java.util.stream.Stream;
+		import java.util.Objects;
+		public class Test {
+		    static class Obj<T> {
+		    }
+
+		    public static void main(String[] args) {
+		        String arg = "";
+
+		        Stream<Obj<?>> stream11 = Stream.of(newObj());
+		        Stream<Obj<?>> stream21 = Stream.of(newObj2(arg));
+
+		        Stream<Obj<?>> stream12 = Stream.of(newObj(), newObj());
+		        Stream<Obj<?>> stream22 = Stream.of(newObj2(arg), newObj2(arg));
+
+		        //Stream<Obj<?>> stream11f = Stream.of(newObj()).filter(Objects::nonNull); // javac & eclipse KO
+		        //Stream<Obj<?>> stream21f = Stream.of(newObj2(arg)).filter(Objects::nonNull); // javac & eclipse KO
+
+		        Stream<Obj<?>> stream12f = Stream.of(newObj(), newObj()).filter(Objects::nonNull);
+		        Stream<Obj<?>> stream22f = Stream.of(newObj2(arg), newObj2(arg)).filter(Objects::nonNull); // javac OK, eclipse KO
+		    }
+
+		    public static Obj<?> newObj() {
+		        return new Obj<>();
+		    }
+
+		    public static <T> Obj<?> newObj2(T arg) {
+		        return new Obj<>();
+		    }
+		}
+		"""
+
+	});
+}
+
 public static Class<GenericsRegressionTest_9> testClass() {
 	return GenericsRegressionTest_9.class;
 }

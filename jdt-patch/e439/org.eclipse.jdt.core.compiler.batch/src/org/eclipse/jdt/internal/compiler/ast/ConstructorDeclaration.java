@@ -235,11 +235,12 @@ public void analyseCode(ClassScope classScope, InitializationFlowContext initial
 			CompilerOptions compilerOptions = this.scope.compilerOptions();
 			boolean enableSyntacticNullAnalysisForFields = compilerOptions.enableSyntacticNullAnalysisForFields;
 			int complaintLevel = (nonStaticFieldInfoReachMode & FlowInfo.UNREACHABLE) == 0 ? Statement.NOT_COMPLAINED : Statement.COMPLAINED_FAKE_REACHABLE;
+			boolean foundConstructor = this.constructorCall != null;
 			for (Statement stat : this.statements) {
-				if (mode == AnalysisMode.REST && lateConstructorCall != null) {
+				if (mode == AnalysisMode.REST && !foundConstructor) {
 					if (stat == lateConstructorCall) {	// if true this is where we start analysing
 						markFieldsAsInitializedAfterThisCall(lateConstructorCall, flowInfo);
-						lateConstructorCall = null; 	// no more checking for subsequent statements
+						foundConstructor = true; 	// no more checking for subsequent statements
 					}
 					continue;							// skip statements already processed during PROLOGUE analysis
 				} else if (mode == AnalysisMode.PROLOGUE && stat instanceof ExplicitConstructorCall ctorCall) {
@@ -283,7 +284,8 @@ public void analyseCode(ClassScope classScope, InitializationFlowContext initial
 
 		// check missing blank final field initializations (plus @NonNull)
 		if ((this.constructorCall != null)
-			&& (this.constructorCall.accessMode != ExplicitConstructorCall.This)) {
+			&& (this.constructorCall.accessMode != ExplicitConstructorCall.This)
+			|| lateConstructorCall != null && lateConstructorCall.accessMode != ExplicitConstructorCall.This) {
 			flowInfo = flowInfo.mergedWith(constructorContext.initsOnReturn);
 			FieldBinding[] fields = this.binding.declaringClass.fields();
 			doFieldReachAnalysis(flowInfo, fields);

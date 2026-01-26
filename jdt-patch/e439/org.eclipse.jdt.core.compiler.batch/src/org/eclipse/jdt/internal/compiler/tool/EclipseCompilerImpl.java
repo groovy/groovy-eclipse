@@ -489,7 +489,12 @@ public class EclipseCompilerImpl extends Main {
 		// The code is now moved to handleLocations() which is invoked just before compilation
 		validateClasspathOptions(bootclasspaths, endorsedDirClasspaths, extdirsClasspaths);
 	}
-
+	@Override
+	protected void handleSingleModuleCompilation() {
+		if (!this.fileManager.hasLocation(StandardLocation.MODULE_SOURCE_PATH)) {
+			super.handleSingleModuleCompilation();
+		}
+	}
 	protected void handleLocations() {
 		ArrayList<FileSystem.Classpath> fileSystemClasspaths = new ArrayList<>();
 		EclipseFileManager eclipseJavaFileManager = null;

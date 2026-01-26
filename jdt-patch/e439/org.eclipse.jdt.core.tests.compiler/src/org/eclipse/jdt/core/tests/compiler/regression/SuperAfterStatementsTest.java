@@ -3589,5 +3589,33 @@ public class SuperAfterStatementsTest extends AbstractRegressionTest9 {
 	        "counter=1\n" +
 	        "1");
 	}
+	public void testIssue4720() {
+		runNegativeTest(new String[] {
+			"Test.java",
+			"""
+			public class Test {
+				private final Object o;
+
+				public Test() {
+					System.out.println();
+					super();
+				}
+			}
+			"""
+			},
+			"""
+			----------
+			1. WARNING in Test.java (at line 2)
+				private final Object o;
+				                     ^
+			The value of the field Test.o is not used
+			----------
+			2. ERROR in Test.java (at line 4)
+				public Test() {
+				       ^^^^^^
+			The blank final field o may not have been initialized
+			----------
+			""");
+	}
 }
 

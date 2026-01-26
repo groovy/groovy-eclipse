@@ -994,7 +994,7 @@ private VariableBinding resolveTypeFor(VariableBinding variable) {
 		return this.prototype.resolveTypeFor(variable);
 
 	if ((variable.modifiers & ExtraCompilerModifiers.AccUnresolved) == 0)
-		return variable;
+		return variable.type == null ? null : variable; // don't allow a prior resolution error to be masked.
 
 	MethodScope initializationScope = variable.isStatic()
 		? this.scope.referenceContext.staticInitializerScope

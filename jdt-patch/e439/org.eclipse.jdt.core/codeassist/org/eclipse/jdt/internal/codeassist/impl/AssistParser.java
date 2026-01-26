@@ -2440,8 +2440,6 @@ protected int resumeAfterRecovery() {
 	this.genericsLengthPtr = -1;
 	this.genericsPtr = -1;
 
-	this.valueLambdaNestDepth = -1;
-
 	this.modifiers = ClassFileConstants.AccDefault;
 	this.modifiersSourceStart = -1;
 

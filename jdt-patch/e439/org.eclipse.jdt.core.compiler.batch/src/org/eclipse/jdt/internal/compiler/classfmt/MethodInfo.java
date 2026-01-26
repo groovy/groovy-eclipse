@@ -518,8 +518,6 @@ private void decodeLocalVariableAttribute(int offset, int codeLength) {
 				if (!CharOperation.equals(localVariableName, ConstantPool.This)) {
 					names[argumentNamesIndex++] = CharDeduplication.intern(localVariableName);
 				}
-			} else {
-				break;
 			}
 			readOffset += 10;
 		}

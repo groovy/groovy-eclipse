@@ -910,7 +910,7 @@ public class MethodVerifyTest extends AbstractComparableTest {
 			"1. ERROR in X.java (at line 1)\n" +
 			"	abstract class X1 extends A implements I {}\n" +
 			"	               ^^\n" +
-			"The inherited method A.foo(T) cannot hide the public abstract method in I\n" +
+			"The inherited method A.foo(T) cannot reduce the visibility of the public abstract method in I\n" +
 			"----------\n"
 			// <T>foo(T) in A cannot implement <T>foo(T) in I; attempting to assign weaker access privileges; was public
 		);
@@ -2591,7 +2591,7 @@ public class MethodVerifyTest extends AbstractComparableTest {
 			"1. ERROR in X.java (at line 1)\n" +
 			"	public abstract class X extends Y implements I { }\n" +
 			"	                      ^\n" +
-			"The inherited method Y.foo(A) cannot hide the public abstract method in I\n" +
+			"The inherited method Y.foo(A) cannot reduce the visibility of the public abstract method in I\n" +
 			"----------\n" +
 			"2. WARNING in X.java (at line 3)\n" +
 			"	class Y { void foo(A a) {} }\n" +

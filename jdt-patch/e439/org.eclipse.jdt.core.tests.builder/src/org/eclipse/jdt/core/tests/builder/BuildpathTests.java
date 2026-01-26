@@ -1018,24 +1018,52 @@ public void test0100() throws JavaModelException {
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=143025
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4745
 public void testMissingOutputFolder() throws JavaModelException {
 	IPath projectPath = env.addProject("P"); //$NON-NLS-1$
+	IJavaProject p = env.getJavaProject(projectPath);
 	env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-	env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+	IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 	IPath bin = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-
+	env.addExternalJars(projectPath, Util.getJavaClassLibs());
+	env.addClass(root, "q", "Y", """
+			package q;
+			public class Y {}
+			""");
 	fullBuild();
 	expectingNoProblems();
+	IPath expectedClassFilePath = bin.append("q").append("Y.class");
+	expectingPresenceOf(new IPath[]{ expectedClassFilePath });
 
 	env.removeFolder(bin);
+	expectingNoPresenceOf(new IPath[]{ expectedClassFilePath });
 
 	incrementalBuild();
 	expectingNoProblems();
 	expectingPresenceOf(bin); // check that bin folder was recreated and is marked as derived
-	if (!env.getProject(projectPath).getFolder("bin").isDerived())
+	if (!env.getProject(projectPath).getFolder("bin").isDerived()) {
 		fail("output folder is not derived");
+	}
+	expectingNoPresenceOf(new IPath[]{ expectedClassFilePath });
+
+	// now enable the (disabled by default) preference and try again
+	p.setOption(JavaCore.CORE_JAVA_BUILD_RECREATE_MODIFIED_CLASS_FILES_IN_OUTPUT_FOLDER, JavaCore.ENABLED);
+
+	env.removeFolder(bin);
+	expectingNoPresenceOf(new IPath[]{ expectedClassFilePath });
+
+	incrementalBuild();
+	expectingNoProblems();
+	expectingPresenceOf(bin); // check that bin folder was recreated and is marked as derived
+	if (!env.getProject(projectPath).getFolder("bin").isDerived()) {
+		fail("output folder is not derived");
+	}
+
+	expectingPresenceOf(new IPath[]{ expectedClassFilePath });
 	env.removeProject(projectPath);
 }
+
+
 @Override
 protected void tearDown() throws Exception {
 	super.tearDown();

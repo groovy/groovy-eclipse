@@ -21,6 +21,7 @@ import static java.util.stream.Collectors.toMap;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.util.Tuples.Pair;
@@ -56,7 +57,6 @@ class BoundSet {
 		Set<TypeBound> sameBounds;
 		Set<TypeBound> subBounds;
 		TypeBinding	instantiation;
-		Map<InferenceVariable,TypeBound> inverseBounds; // from right inference variable to bound
 		Set<InferenceVariable> dependencies;
 		public ThreeSets() {
 			// empty, the sets are lazily initialized
@@ -137,18 +137,6 @@ class BoundSet {
 			useNullHints(nullHints, rights, variable.environment);
 			InferenceContext18.sortTypes(rights);
 			return rights;
-		}
-		// pre: beta is a prototype
-		public boolean hasDependency(InferenceVariable beta) {
-			if(this.dependencies != null && this.dependencies.contains(beta))
-				return true;
-			if (this.inverseBounds != null) {
-				if (this.inverseBounds.containsKey(beta)) {
-					// TODO: not yet observed in tests
-					return true;
-				}
-			}
-			return false;
 		}
 		/** Total number of type bounds in this container. */
 		public int size() {
@@ -322,6 +310,16 @@ class BoundSet {
 	 * On both sides we only enter types with nonnull arguments.
 	 */
 	HashMap<ParameterizedTypeBinding,ParameterizedTypeBinding> captures = new LinkedHashMap<>();
+	/**
+	 * NON-JLS: maintain a separate set alongside {@link #captures}:
+	 * <dl>
+	 * <dt>captures<dd>IC18.resumeSuspendedInference() will reset these to avoid captures from nested
+	 * 	inference spilling blindly into the current inference.<br>
+	 *  {@link InferenceContext18#collectDependencies(BoundSet, boolean, boolean[])} considers only "local" {@link #captures}.
+	 * <dt>allCaptures<dd>Still {@link #hasCaptureBound(Set)} and {@link #incorporate(InferenceContext18)} will
+	 * 	operate on {@link #allCaptures}.
+	 */
+	HashMap<ParameterizedTypeBinding,ParameterizedTypeBinding> allCaptures = new LinkedHashMap<>();
 	/** 18.1.3 bullet 5: throws α */
 	Set<InferenceVariable> inThrows = new LinkedHashSet<>();
 
@@ -375,6 +373,7 @@ class BoundSet {
 		}
 		copy.inThrows.addAll(this.inThrows);
 		copy.captures.putAll(this.captures);
+		copy.allCaptures.putAll(this.allCaptures);
 		if (this.incorporatedBounds.length > 0)
 			System.arraycopy(this.incorporatedBounds, 0, copy.incorporatedBounds = new TypeBound[this.incorporatedBounds.length], 0, this.incorporatedBounds.length);
 		if (this.unincorporatedBoundsCount > 0)
@@ -384,6 +383,9 @@ class BoundSet {
 	}
 
 	public void addBound(TypeBound bound, LookupEnvironment environment) {
+		if (InferenceContext18.DEBUG) {
+			System.out.println("Adding "+bound); //$NON-NLS-1$
+		}
 
 		if (bound.relation == ReductionResult.SUBTYPE && bound.right.id == TypeIds.T_JavaLangObject)
 			return;
@@ -432,9 +434,6 @@ class BoundSet {
 				three = this.boundsPerVariable.get(rightIV);
 				if (three == null)
 					this.boundsPerVariable.put(rightIV, (three = new ThreeSets()));
-				if (three.inverseBounds == null)
-					three.inverseBounds = new HashMap<>();
-				three.inverseBounds.put(rightIV, bound);
 			}
 		}
 	}
@@ -455,6 +454,7 @@ class BoundSet {
 		this.inThrows.addAll(that.inThrows);
 		if (includeCaptureBounds) {
 			this.captures.putAll(that.captures);
+			this.allCaptures.putAll(that.allCaptures);
 		}
 	}
 
@@ -488,7 +488,7 @@ class BoundSet {
 
 	// Driver for the real workhorse - Implements generational incorporation a la generational garbage collector.
 	boolean incorporate(InferenceContext18 context) throws InferenceFailureException {
-		if (this.unincorporatedBoundsCount == 0 && this.captures.isEmpty())
+		if (this.unincorporatedBoundsCount == 0 && this.allCaptures.isEmpty())
 			return true;
 
 		try {
@@ -631,7 +631,8 @@ class BoundSet {
 				} while (first != next && ++iteration <= 2);
 			}
 		}
-		for (Entry<ParameterizedTypeBinding, ParameterizedTypeBinding> capt : this.captures.entrySet()) {
+		Set<ParameterizedTypeBinding> capturesToRemove = new HashSet<>();
+		for (Entry<ParameterizedTypeBinding, ParameterizedTypeBinding> capt : this.allCaptures.entrySet()) {
 			ParameterizedTypeBinding gAlpha = capt.getKey();
 			ParameterizedTypeBinding gA = capt.getValue();
 			ReferenceBinding g = (ReferenceBinding) gA.original();
@@ -690,7 +691,8 @@ class BoundSet {
 										System.arraycopy(otherBounds, 0, allBounds, 1, n-1);
 										bi = context.environment.createIntersectionType18(allBounds);
 									}
-									addTypeBoundsFromWildcardBound(context, theta, wildcardBinding.boundKind, t, r, bi);
+									if (addTypeBoundsFromWildcardBound(context, theta, wildcardBinding.boundKind, t, r, bi))
+										capturesToRemove.add(gAlpha);
 								}
 							}
 						}
@@ -701,24 +703,38 @@ class BoundSet {
 							while (it.hasNext()) {
 								TypeBound bound = it.next();
 								if (!(bound.right instanceof InferenceVariable)) {
-									if (wildcardBinding.boundKind == Wildcard.SUPER)
+									if (wildcardBinding.boundKind == Wildcard.SUPER) {
 										reduceOneConstraint(context, ConstraintTypeFormula.create(bound.right, t, ReductionResult.SUBTYPE));
-									else
+										capturesToRemove.add(gAlpha);
+									} else {
 										return false;
+									}
 								}
 							}
 						}
 					}
 				} else {
 					addBound(new TypeBound(alpha, ai, ReductionResult.SAME), context.environment);
+					capturesToRemove.add(gAlpha);
 				}
 			}
 		}
-		this.captures.clear();
+		if (InferenceContext18.DEBUG) {
+			if (!capturesToRemove.isEmpty()) {
+				for (ParameterizedTypeBinding toRemove : capturesToRemove) {
+					System.out.println("Removing capture bound " + //$NON-NLS-1$
+							String.valueOf(toRemove.shortReadableName()) +
+							"=capture("+String.valueOf(this.captures.get(toRemove).shortReadableName())+")"); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+			}
+		}
+		capturesToRemove.stream().forEach(c -> this.allCaptures.remove(c));
 		return true;
 	}
 
-	void addTypeBoundsFromWildcardBound(InferenceContext18 context, InferenceSubstitution theta, int boundKind, TypeBinding t,
+	// try to infer and reduce a new constraint based on details of a given capture bound
+	// return true iff a new constraint has been added indeed
+	boolean addTypeBoundsFromWildcardBound(InferenceContext18 context, InferenceSubstitution theta, int boundKind, TypeBinding t,
 			TypeBinding r, TypeBinding bi) throws InferenceFailureException {
 		ConstraintFormula formula = null;
 		if (boundKind == Wildcard.EXTENDS) {
@@ -729,8 +745,11 @@ class BoundSet {
 		} else {
 			formula = ConstraintTypeFormula.create(theta.substitute(theta, bi), r, ReductionResult.SUBTYPE);
 		}
-		if (formula != null)
+		if (formula != null) {
 			reduceOneConstraint(context, formula);
+			return true;
+		}
+		return false;
 	}
 
 	private ConstraintTypeFormula combineSameSame(TypeBound boundS, TypeBound boundT, Map<InferenceVariable,TypeBound> properTypesByInferenceVariable) {
@@ -765,6 +784,12 @@ class BoundSet {
 			InferenceVariable alpha = boundLeft.left;
 			TypeBinding left = boundRight.left; // no substitution since S inference variable and (S != α) per precondition
 			TypeBinding right = boundRight.right.substituteInferenceVariable(alpha, u);
+			// FIXME: the following looks good by common sense, be it for performance reasons,
+			//        but it creates regressions in GenericTypeTest (4), GenericsRegressionTest (1), GenericsRegressionTest_1_8 (1)
+			//        Note that it would "fix" DubiousOutcomeTest.testGH1591
+			//        See also the 'speculative addition' in ConstraintTypeFormula.reduce()
+//			if (TypeBinding.equalsEquals(right, boundRight.right))
+//				return null; // no new information
 			return ConstraintTypeFormula.create(left, right, ReductionResult.SAME, boundLeft.isSoft||boundRight.isSoft);
 		}
 		return null;
@@ -981,7 +1006,14 @@ class BoundSet {
 	 */
 	public boolean reduceOneConstraint(InferenceContext18 context, ConstraintFormula currentConstraint) throws InferenceFailureException {
 		Object result = currentConstraint.reduce(context);
+		if (InferenceContext18.DEBUG_FINE) {
+			System.out.println("Reduced\t"+currentConstraint+"\n  to   \t"+result); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 		if (result == ReductionResult.FALSE) {
+			if (InferenceContext18.DEBUG) {
+				if (!InferenceContext18.DEBUG_FINE)
+					System.out.println("Couldn't reduce constraint "+currentConstraint+ " in\n"+context); //$NON-NLS-1$ //$NON-NLS-2$
+			}
 			return false;
 		}
 		if (result == ReductionResult.TRUE)
@@ -1005,85 +1037,9 @@ class BoundSet {
 		return true; // no FALSE encountered
 	}
 
-	/**
-	 * Helper for resolution (18.4):
-	 * Does this bound set define a direct dependency between the two given inference variables?
-	 */
-	public boolean dependsOnResolutionOf(InferenceVariable alpha, InferenceVariable beta) {
-		alpha = alpha.prototype();
-		beta = beta.prototype();
-		if (TypeBinding.equalsEquals(alpha, beta))
-			return true; // An inference variable α depends on the resolution of itself.
-		boolean betaIsInCaptureLhs = false;
-		for (Entry<ParameterizedTypeBinding, ParameterizedTypeBinding> entry : this.captures.entrySet()) { // TODO: optimization: consider separate index structure (by IV)
-			ParameterizedTypeBinding g = entry.getKey();
-			for (int i = 0; i < g.arguments.length; i++) {
-				if (TypeBinding.equalsEquals(g.arguments[i], alpha)) {
-					// An inference variable α appearing on the left-hand side of a bound of the form G<..., α, ...> = capture(G<...>)
-					// depends on the resolution of every other inference variable mentioned in this bound (on both sides of the = sign).
-					ParameterizedTypeBinding captured = entry.getValue();
-					if (captured.mentionsAny(new TypeBinding[]{beta}, -1/*don't care about index*/))
-						return true;
-					if (g.mentionsAny(new TypeBinding[]{beta}, i)) // exclude itself
-						return true;
-				} else if (TypeBinding.equalsEquals(g.arguments[i], beta)) {
-					betaIsInCaptureLhs = true;
-				}
-			}
-		}
-		if (betaIsInCaptureLhs) { // swap α and β in the rule text to cover "then β depends on the resolution of α"
-			ThreeSets sets = this.boundsPerVariable.get(beta);
-			if (sets != null && sets.hasDependency(alpha))
-				return true;
-		} else {
-			ThreeSets sets = this.boundsPerVariable.get(alpha);
-			if (sets != null && sets.hasDependency(beta))
-				return true;
-		}
-		return false;
-	}
-
-	List<Set<InferenceVariable>> computeConnectedComponents(InferenceVariable[] inferenceVariables) {
-		// create all dependency edges (as bi-directional):
-		Map<InferenceVariable, Set<InferenceVariable>> allEdges = new HashMap<>();
-		for (int i = 0; i < inferenceVariables.length; i++) {
-			InferenceVariable iv1 = inferenceVariables[i];
-			Set<InferenceVariable> targetSet = new LinkedHashSet<>();
-			allEdges.put(iv1, targetSet); // eventually ensures: forall iv in inferenceVariables : allEdges.get(iv) != null
-			for (int j = 0; j < i; j++) {
-				InferenceVariable iv2 = inferenceVariables[j];
-				if (dependsOnResolutionOf(iv1, iv2) || dependsOnResolutionOf(iv2, iv1)) {
-					targetSet.add(iv2);
-					allEdges.get(iv2).add(iv1);
-				}
-			}
-		}
-		// collect all connected IVs into one component:
-		Set<InferenceVariable> visited = new LinkedHashSet<>();
-		List<Set<InferenceVariable>> allComponents = new ArrayList<>();
-		for (InferenceVariable inferenceVariable : inferenceVariables) {
-			Set<InferenceVariable> component = new LinkedHashSet<>();
-			addConnected(component, inferenceVariable, allEdges, visited);
-			if (!component.isEmpty())
-				allComponents.add(component);
-		}
-		return allComponents;
-	}
-
-	private void addConnected(Set<InferenceVariable> component, InferenceVariable seed,
-			Map<InferenceVariable, Set<InferenceVariable>> allEdges, Set<InferenceVariable> visited)
-	{
-		if (visited.add(seed)) {
-			// add all IVs starting from seed and reachable via any in allEdges:
-			component.add(seed);
-			for (InferenceVariable next : allEdges.get(seed))
-				addConnected(component, next, allEdges, visited);
-		}
-	}
-
 	// helper for 18.4
 	public boolean hasCaptureBound(Set<InferenceVariable> variableSet) {
-		for (ParameterizedTypeBinding g : this.captures.keySet()) {
+		for (ParameterizedTypeBinding g : this.allCaptures.keySet()) {
 			for (TypeBinding argument : g.arguments)
 				if (variableSet.contains(argument))
 					return true;
@@ -1134,6 +1090,13 @@ class BoundSet {
 		// appears as RHS the bound is by construction an inference variable,too.
 	}
 
+	public TypeBinding[] sameBounds(InferenceVariable variable) {
+		ThreeSets three = this.boundsPerVariable.get(variable.prototype());
+		if (three == null || three.sameBounds == null)
+			return Binding.NO_TYPES;
+		return three.sameBounds.stream().map(b -> b.right).collect(Collectors.toList()).toArray(TypeBinding[]::new);
+	}
+
 	// debugging:
 	@Override
 	public String toString() {
@@ -1142,7 +1105,7 @@ class BoundSet {
 		for (TypeBound bound : flattened) {
 			buf.append('\t').append(bound.toString()).append('\n');
 		}
-		buf.append("Capture Bounds:"); //$NON-NLS-1$
+		buf.append("Local Capture Bounds:"); //$NON-NLS-1$
 		if (this.captures.isEmpty()) {
 			buf.append(" <empty>\n"); //$NON-NLS-1$
 		} else {
@@ -1151,6 +1114,20 @@ class BoundSet {
 				String lhs = String.valueOf(entry.getKey().shortReadableName());
 				String rhs = String.valueOf(entry.getValue().shortReadableName());
 				buf.append('\t').append(lhs).append(" = capt(").append(rhs).append(")\n"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		}
+		buf.append("Other Capture Bounds:"); //$NON-NLS-1$
+		if (this.allCaptures.isEmpty()) {
+			buf.append(" <empty>\n"); //$NON-NLS-1$
+		} else {
+			buf.append('\n');
+			for (Entry<ParameterizedTypeBinding, ParameterizedTypeBinding> entry : this.allCaptures.entrySet()) {
+				if (this.captures.containsKey(entry.getKey()))
+					continue;
+				String lhs = String.valueOf(entry.getKey().shortReadableName());
+				String rhs = String.valueOf(entry.getValue().shortReadableName());
+				buf.append('\t');
+				buf.append(lhs).append(" = capt(").append(rhs).append(")\n"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}
 		return buf.toString();

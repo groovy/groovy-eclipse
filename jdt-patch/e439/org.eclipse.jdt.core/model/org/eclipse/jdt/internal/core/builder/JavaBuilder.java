@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import org.eclipse.core.resources.ICommand;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -42,6 +43,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
@@ -562,7 +564,7 @@ private boolean hasJdtCoreSettingsChange(Map<IProject, IResourceDelta> deltas) {
 	return resourceDelta.findMember(JDT_CORE_SETTINGS_PATH) != null;
 }
 
-private boolean hasClasspathChanged() {
+protected boolean hasClasspathChanged() {
 	return hasClasspathChanged(CompilationGroup.MAIN) || hasClasspathChanged(CompilationGroup.TEST);
 }
 
@@ -686,6 +688,11 @@ private int initializeBuilder(int kind, boolean forBuild) throws CoreException {
 			builtProjects = new LinkedHashSet<>();
 		}
 		builtProjects.add(projectName);
+
+		if (kind != CLEAN_BUILD && kind != FULL_BUILD) {
+			// check if we need to switch to full build due to missing output folder(s)
+			kind = checkOutputFolders(this.javaProject, kind);
+		}
 	}
 
 	this.binaryLocationsPerProject = new HashMap<>(3);
@@ -876,6 +883,60 @@ private void recordNewState(State state) {
 	}
 	// state.dump();
 	JavaModelManager.getJavaModelManager().setLastBuiltState(this.currentProject, state);
+}
+
+/**
+ * Checks whether all output folders for the given project exist on disk.
+ *
+ * @param project
+ *                    The Java project to check
+ * @return If any output folder is missing, {@link IncrementalProjectBuilder#FULL_BUILD} is returned and original
+ *         <code>buildKind</code> argument otherwise.
+ */
+protected int checkOutputFolders(IJavaProject project, int buildKind) {
+	if (!JavaCore.ENABLED
+			.equals(project.getOption(JavaCore.CORE_JAVA_BUILD_RECREATE_MODIFIED_CLASS_FILES_IN_OUTPUT_FOLDER, true))) {
+		return buildKind;
+	}
+	try {
+		boolean checkDefault = true;
+		IWorkspaceRoot root = project.getProject().getWorkspace().getRoot();
+		for (IClasspathEntry entry : project.getRawClasspath()) {
+			if (entry.getEntryKind() != IClasspathEntry.CPE_SOURCE) {
+				continue;
+			}
+			IPath outputLocation = entry.getOutputLocation();
+			if (outputLocation == null && checkDefault) {
+				outputLocation = project.getOutputLocation();
+				checkDefault = false;
+			}
+			if (outputLocation != null) {
+				IContainer outputContainer;
+				if(outputLocation.segmentCount() == 1) {
+					outputContainer = project.getProject();
+				} else {
+					outputContainer = root.getFolder(outputLocation);
+				}
+				if (!existsOnDisk(outputContainer)) {
+					return FULL_BUILD;
+				}
+			}
+		}
+	} catch (JavaModelException e) {
+		// If we can't read the classpath, just return the original build kind
+	}
+	return buildKind;
+}
+
+private static boolean existsOnDisk(IContainer defaultOutputLocation) {
+	boolean exists = defaultOutputLocation.exists();
+	// Resource is not present in workspace model
+	if (!exists) {
+		return false;
+	}
+	// check that the folder *really* exists on disk and is a folder
+	IPath location = defaultOutputLocation.getLocation();
+	return location != null && location.toFile().isDirectory();
 }
 
 /**

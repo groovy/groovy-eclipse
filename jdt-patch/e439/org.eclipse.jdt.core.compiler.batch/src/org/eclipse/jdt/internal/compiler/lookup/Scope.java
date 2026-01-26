@@ -2024,6 +2024,7 @@ public abstract class Scope {
 			FieldBinding problemField = null;
 			if ((mask & Binding.VARIABLE) != 0) {
 				boolean insideStaticContext = false;
+				boolean insideLocalRecordContext = false;
 				boolean insideConstructorCall = false;
 				boolean insideTypeAnnotation = false;
 
@@ -2053,6 +2054,11 @@ public abstract class Scope {
 							LocalVariableBinding variableBinding = scope.findVariable(name);
 							// looks in this scope only
 							if (variableBinding != null) {
+								if (insideLocalRecordContext) {
+									return new ProblemLocalVariableBinding(
+											variableBinding,
+											ProblemReasons.NonStaticReferenceInStaticContext);
+								}
 								if (foundField != null && foundField.isValidBinding())
 									return new ProblemFieldBinding(
 										foundField, // closest match
@@ -2157,6 +2163,7 @@ public abstract class Scope {
 							depth++;
 							shouldTrackOuterLocals = true;
 							insideStaticContext |= receiverType.isStatic();
+							insideLocalRecordContext |= receiverType.isRecord() && receiverType.isLocalType();
 							// 1EX5I8Z - accessing outer fields within a constructor call is permitted
 							// in order to do so, we change the flag as we exit from the type, not the method
 							// itself, because the class scope is used to retrieve the fields.

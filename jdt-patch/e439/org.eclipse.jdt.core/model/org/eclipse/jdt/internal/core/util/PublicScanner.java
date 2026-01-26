@@ -162,7 +162,6 @@ public class PublicScanner implements IScanner, ITerminalSymbols {
 			case TokenNameEQUAL : nextToken = ITerminalSymbols.TokenNameEQUAL; break;
 			case TokenNameEQUAL_EQUAL : nextToken = ITerminalSymbols.TokenNameEQUAL_EQUAL; break;
 			case TokenNameERROR : nextToken = ITerminalSymbols.TokenNameERROR; break;
-			case TokenNameElidedSemicolonAndRightBrace : nextToken = getNextToken(); break;
 			case TokenNameFloatingPointLiteral : nextToken = ITerminalSymbols.TokenNameFloatingPointLiteral; break;
 			case TokenNameGREATER : nextToken = ITerminalSymbols.TokenNameGREATER; break;
 			case TokenNameGREATER_EQUAL : nextToken = ITerminalSymbols.TokenNameGREATER_EQUAL; break;

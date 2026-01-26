@@ -29,6 +29,7 @@ public class CaptureBinding18 extends CaptureBinding {
 		super(contextType, sourceName, start, end, captureID, environment);
 		this.originalName = originalName;
 		this.prototype = this;
+		this.superInterfaces = Binding.NO_SUPERINTERFACES;
 	}
 
 	private CaptureBinding18(CaptureBinding18 prototype) {
@@ -65,6 +66,14 @@ public class CaptureBinding18 extends CaptureBinding {
 		if (this.superclass == null)
 			this.superclass = javaLangObject;
 		return true;
+	}
+
+	@Override
+	public ReferenceBinding setSuperClass(ReferenceBinding superclass) {
+		if (this.upperBounds == null) {
+			this.upperBounds = new ReferenceBinding[] { superclass };
+		}
+		return super.setSuperClass(superclass);
 	}
 
 	@Override

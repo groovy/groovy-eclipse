@@ -983,6 +983,8 @@ public TypeBinding reportError(BlockScope scope) {
 		scope.problemReporter().invalidField(this, (FieldBinding) this.binding);
 	} else if (this.binding instanceof ProblemReferenceBinding || this.binding instanceof MissingTypeBinding) {
 		scope.problemReporter().invalidType(this, (TypeBinding) this.binding);
+	} else if (this.binding instanceof ProblemLocalVariableBinding plvb && plvb.problemId() == ProblemReasons.NonStaticReferenceInStaticContext) {
+		scope.problemReporter().recordStaticReferenceToOuterLocalVariable(plvb.closestMatch, this);
 	} else {
 		scope.problemReporter().unresolvableReference(this, this.binding);
 	}

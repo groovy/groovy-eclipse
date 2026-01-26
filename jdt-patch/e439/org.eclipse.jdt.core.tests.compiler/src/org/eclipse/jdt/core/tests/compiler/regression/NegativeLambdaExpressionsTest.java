@@ -7562,9 +7562,9 @@ public void test383096() {
 					"}\n"
 			},
 			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
-			"	I t2 = () -> 42;\n" +
-			"	       ^^^^^^^^\n" +
+			"1. ERROR in X.java (at line 4)\n" +
+			"	I t1 = f -> {{};\n" +
+			"	       ^^^^\n" +
 			"The target type of this expression must be a functional interface\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 6)\n" +
@@ -7862,18 +7862,8 @@ public void test405134a() {
 			"----------\n" +
 			"1. ERROR in X.java (at line 11)\n" +
 			"	static Foo1 f1 = af1 -> (a1,b1) -> {int uniqueName = 4; return uniqueName};\n" +
-			"	                                                                         ^\n" +
-			"Syntax error on token \"}\", delete this token\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 12)\n" +
-			"	}\n" +
-			"	^\n" +
-			"Syntax error, insert \";\" to complete FieldDeclaration\n" +
-			"----------\n" +
-			"3. ERROR in X.java (at line 12)\n" +
-			"	}\n" +
-			"	^\n" +
-			"Syntax error, insert \"}\" to complete InterfaceBody\n" +
+			"	                                                               ^^^^^^^^^^\n" +
+			"Syntax error, insert \";\" to complete ReturnStatement\n" +
 			"----------\n",
 			true);
 }
@@ -8228,13 +8218,13 @@ public void test425512cd() throws Exception {
 		"----------\n" +
 		"1. ERROR in X.java (at line 7)\n" +
 		"	I i = (int [] & I) (i) -> {};\n" +
-		"	       ^^^^^^\n" +
-		"Arrays are not allowed in intersection cast operator\n" +
+		"	       ^^^^^^^^^^^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
 		"----------\n" +
 		"2. ERROR in X.java (at line 7)\n" +
 		"	I i = (int [] & I) (i) -> {};\n" +
-		"	                   ^^^^^^\n" +
-		"The target type of this expression must be a functional interface\n" +
+		"	                           ^\n" +
+		"Syntax error, insert \")\" to complete Expression\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=425512, [1.8][compiler] Arrays should be allowed in intersection casts
@@ -8255,13 +8245,13 @@ public void test425512ce() throws Exception {
 		"----------\n" +
 		"1. ERROR in X.java (at line 7)\n" +
 		"	I i = (int [] & Serializable) (i) -> {};\n" +
-		"	       ^^^^^^\n" +
-		"Arrays are not allowed in intersection cast operator\n" +
+		"	       ^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
 		"----------\n" +
 		"2. ERROR in X.java (at line 7)\n" +
 		"	I i = (int [] & Serializable) (i) -> {};\n" +
-		"	                              ^^^^^^\n" +
-		"The target type of this expression must be a functional interface\n" +
+		"	                                      ^\n" +
+		"Syntax error, insert \")\" to complete Expression\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=425621, [1.8][compiler] Missing error for raw type in constructor reference with explicit type arguments
@@ -10299,10 +10289,15 @@ public void testGH125() {
 		"	                                                       ^^^\n" +
 		"The parameter how is hiding a field from type ParserBug\n" +
 		"----------\n" +
-		"2. ERROR in ParserBug.java (at line 20)\n" +
-		"	.recompute(()->true?0:false?1:2)\n" +
-		"	                              ^\n" +
-		"Syntax error on token(s), misplaced construct(s)\n" +
+		"2. ERROR in ParserBug.java (at line 21)\n" +
+		"	)) //Umantched parentheses\n" +
+		"	^^\n" +
+		"Syntax error on tokens, delete these tokens\n" +
+		"----------\n" +
+		"3. ERROR in ParserBug.java (at line 38)\n" +
+		"	))))))) // Not even for this many\n" +
+		"	^^^^^^^\n" +
+		"Syntax error on tokens, delete these tokens\n" +
 		"----------\n");
 }
 
@@ -10323,8 +10318,8 @@ public void testGH367() {
 		"----------\n" +
 		"1. ERROR in EclipseParserBug.java (at line 4)\n" +
 		"	IntStream.range(0, src.length).parallel().forEach(i -> dst[i] = src[i]))); 	  \n" +
-		"	                                                                     ^\n" +
-		"Syntax error on token(s), misplaced construct(s)\n" +
+		"	                                                                       ^^\n" +
+		"Syntax error on tokens, delete these tokens\n" +
 		"----------\n");
 }
 
@@ -10362,8 +10357,9 @@ public void testGH859() {
 		"----------\n" +
 		"1. ERROR in CFSXXX.java (at line 15)\n" +
 		"	setSupplier(() -> x -> System.out.println(\"x\" + x); );\n" +
-		"	                                                 ^\n" +
-		"Syntax error on token(s), misplaced construct(s)\n");
+		"	                                                  ^\n" +
+		"Syntax error on token \";\", delete this token\n" +
+		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=553601
 // Compile without errors invalid source code
@@ -10391,8 +10387,228 @@ public void test553601() {
 		"----------\n" +
 		"1. ERROR in TestOptional3.java (at line 10)\n" +
 		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                 ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"2. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                  ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"3. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                   ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"4. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                    ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"5. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                     ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"6. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                      ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"7. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                       ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"8. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                        ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"9. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                         ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"10. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                          ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"11. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                           ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"12. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                            ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"13. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                             ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"14. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                              ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"15. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                               ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"16. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"17. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                 ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"18. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                  ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"19. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                   ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"20. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                    ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"21. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                     ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"22. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                      ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"23. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                       ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"24. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                        ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"25. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                         ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"26. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                          ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"27. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
 		"	                                                           ^\n" +
 		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"28. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                            ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"29. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                             ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"30. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                              ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"31. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                               ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"32. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                                ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"33. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                                 ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"34. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                                  ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"35. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                                   ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"36. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                                    ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"37. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                                     ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"38. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                                      ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"39. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                                       ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"40. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                                        ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"41. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                                         ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"42. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                                          ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"43. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                                           ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"44. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                                            ^\n" +
+		"Syntax error on token(s), misplaced construct(s)\n" +
+		"----------\n" +
+		"45. ERROR in TestOptional3.java (at line 10)\n" +
+		"	.orElseThrow(() -> new Exception()))))))))))))))))))))))))))))))))))))))))))))));\n" +
+		"	                                                                               ^\n" +
+		"Syntax error on token \")\", delete this token\n" +
 		"----------\n");
 }
 
@@ -10732,6 +10948,31 @@ this.runNegativeTest(
 		"	@interface X {\n" +
 		"	           ^\n" +
 		"Invalid '@FunctionalInterface' annotation; X is not a functional interface\n" +
+		"----------\n");
+}
+
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/903
+// Internal/synthetic token name ElidedSemicolonAndRightBrace shows up in compile error messages
+public void testIssue903() {
+this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			public class X {
+			    public interface S<T> {
+			        T s(T t);
+			    }
+			    public void f() {
+			    	S<?> s = v -> v ) ;
+			    }
+			}
+			"""
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 6)\n" +
+		"	S<?> s = v -> v ) ;\n" +
+		"	                ^\n" +
+		"Syntax error on token \")\", delete this token\n" +
 		"----------\n");
 }
 
