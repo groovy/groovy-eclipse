@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -134,8 +134,10 @@ import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
@@ -2238,20 +2240,21 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     private Optional<IType> findAnonType(final ClassNode type, final IJavaElement enclosing) {
         try {
             for (IJavaElement child : ((IMember) enclosing).getChildren()) {
-                if (child instanceof IType && ((IType) child).isAnonymous() &&
+                if (child.getElementType() == IJavaElement.TYPE && ((IType) child).isAnonymous() &&
                         type.getName().endsWith("$" + ((SourceType) child).localOccurrenceCount)) {
                     return Optional.of((IType) child);
                 }
             }
 
-            if (enclosing instanceof IType) {
+            if (enclosing.getElementType() == IJavaElement.TYPE) {
                 for (IJavaElement child : ((IType) enclosing).getChildren()) {
-                    if (child instanceof org.eclipse.jdt.internal.core.Initializer) {
+                    if (child.getElementType() == IJavaElement.INITIALIZER || (child.getElementType() == IJavaElement.METHOD &&
+                                child.getElementName().equals("run") && isInRange(type, ((IMethod) child).getSourceRange()))) {
                         Optional<IType> result = findAnonType(type, child);
                         if (result.isPresent()) return result;
                     }
                 }
-            } else if (enclosing instanceof IMethod) {
+            } else if (enclosing.getElementType() == IJavaElement.METHOD) {
                 // check for method with AIC in default argument expression
                 MethodNode methodNode = findMethodNode((IMethod) enclosing);
                 if (methodNode != null && methodNode.getOriginal() != methodNode) {
@@ -3490,6 +3493,10 @@ out:    if (inferredTypes[0] == null) {
 
     private static boolean isEnumInit(final StaticMethodCallExpression node) {
         return (node.getOwnerType().isEnum() && node.getMethodAsString().equals("$INIT"));
+    }
+
+    private static boolean isInRange(final ASTNode n, final ISourceRange sr) {
+        return SourceRange.isAvailable(sr) && sr.getOffset() <= n.getStart() && (sr.getOffset() + sr.getLength()) >= n.getEnd();
     }
 
     private static boolean isLazy(final FieldNode fieldNode) {

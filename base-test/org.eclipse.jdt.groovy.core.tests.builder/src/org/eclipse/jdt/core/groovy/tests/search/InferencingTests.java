@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2325,7 +2325,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testFieldWithInitializer1a() {
+    public void testFieldWithInitializer2() {
         String contents =
             "class C {\n" +
             "  def m() {\n" +
@@ -2338,78 +2338,78 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testFieldWithInitializer2() {
-        String contents =
-            "class C {\n" +
-            "  static x = 42\n" +
-            "  def m() {\n" +
-            "    x\n" +
-            "  }\n" +
-            "}\n";
-        assertType(contents, "x", "java.lang.Integer");
-    }
-
-    @Test
-    public void testFieldWithInitializer2a() {
-        String contents =
-            "class C {\n" +
-            "  def m() {\n" +
-            "    x\n" +
-            "  }\n" +
-            "  static x = 42\n" +
-            "}\n";
-        int offset = contents.indexOf('x');
-        assertType(contents, offset, offset + 1, "java.lang.Integer");
-    }
-
-    @Test
     public void testFieldWithInitializer3() {
         String contents =
             "class C {\n" +
-            "  def x\n" +
-            "  C() {\n" +
-            "    x = 42\n" +
-            "  }\n" +
+            "  static x = 42\n" +
             "  def m() {\n" +
             "    x\n" +
             "  }\n" +
             "}\n";
         assertType(contents, "x", "java.lang.Integer");
-    }
-
-    @Test
-    public void testFieldWithInitializer3a() {
-        String contents =
-            "class C {\n" +
-            "  C() {\n" +
-            "    x = 42\n" +
-            "  }\n" +
-            "  def x\n" +
-            "  def m() {\n" +
-            "    x\n" +
-            "  }\n" +
-            "}\n";
-        assertType(contents, "x", "java.lang.Integer");
-    }
-
-    @Test
-    public void testFieldWithInitializer3b() {
-        String contents =
-            "class C {\n" +
-            "  def m() {\n" +
-            "    x\n" +
-            "  }\n" +
-            "  C() {\n" +
-            "    x = 42\n" +
-            "  }\n" +
-            "  def x\n" +
-            "}\n";
-        int offset = contents.indexOf('x');
-        assertType(contents, offset, offset + 1, "java.lang.Integer");
     }
 
     @Test
     public void testFieldWithInitializer4() {
+        String contents =
+            "class C {\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "  static x = 42\n" +
+            "}\n";
+        int offset = contents.indexOf('x');
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+    }
+
+    @Test
+    public void testFieldWithInitializer5() {
+        String contents =
+            "class C {\n" +
+            "  def x\n" +
+            "  C() {\n" +
+            "    x = 42\n" +
+            "  }\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "x", "java.lang.Integer");
+    }
+
+    @Test
+    public void testFieldWithInitializer6() {
+        String contents =
+            "class C {\n" +
+            "  C() {\n" +
+            "    x = 42\n" +
+            "  }\n" +
+            "  def x\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "x", "java.lang.Integer");
+    }
+
+    @Test
+    public void testFieldWithInitializer7() {
+        String contents =
+            "class C {\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "  C() {\n" +
+            "    x = 42\n" +
+            "  }\n" +
+            "  def x\n" +
+            "}\n";
+        int offset = contents.indexOf('x');
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+    }
+
+    @Test
+    public void testFieldWithInitializer8() {
         String contents =
             "class C {\n" +
             "  def x\n" +
@@ -2424,7 +2424,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testFieldWithInitializer5() {
+    public void testFieldWithInitializer9() {
         String contents =
             "class C {\n" +
             "  static x\n" +
@@ -2439,7 +2439,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testFieldWithInitializer6() {
+    public void testFieldWithInitializer10() {
         String contents =
             "class C {\n" +
             "  def x\n" +
@@ -2455,7 +2455,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testFieldWithInitializer6a() {
+    public void testFieldWithInitializer11() {
         String contents =
             "import javax.annotation.PostConstruct\n" +
             "class C {\n" +
@@ -2472,7 +2472,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testFieldWithInitializer6b() {
+    public void testFieldWithInitializer12() {
         String contents =
             "import javax.annotation.PostConstruct\n" +
             "class C {\n" +
@@ -2487,6 +2487,28 @@ public final class InferencingTests extends InferencingTestSuite {
             "}\n";
         int offset = contents.indexOf('x', contents.indexOf("def"));
         assertType(contents, offset, offset + 1, "java.lang.Object"); // TODO: Make independent of declaration order?
+    }
+
+    @Test
+    public void testFieldWithInitializer13() {
+        String contents =
+            "class C extends Script {\n" +
+            "  def x = new Object(){}\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "x", "java.lang.Object");
+    }
+
+    @Test
+    public void testFieldWithInitializer14() {
+        String contents =
+            "@groovy.transform.Field def x = new Object(){}\n" +
+            "def m() {\n" +
+            "  x\n" +
+            "}\n";
+        assertType(contents, "x", "java.lang.Object");
     }
 
     @Test // GRECLIPSE-731
@@ -2517,6 +2539,12 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testLocalWithInitializer5() {
         String contents = "def foo() {}\nString xxx\nxxx = foo()\nxxx";
         assertType(contents, "xxx", "java.lang.String");
+    }
+
+    @Test
+    public void testLocalWithInitializer6() {
+        String contents = "def xxx = new Thread(){}\nxxx";
+        assertType(contents, "xxx", "java.lang.Thread");
     }
 
     @Test
