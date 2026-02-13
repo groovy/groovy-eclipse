@@ -1044,7 +1044,7 @@ public TypeBinding resolveType(BlockScope scope) {
 								&& methodScope.lastVisibleFieldID >= 0
 								&& fieldBinding.id >= methodScope.lastVisibleFieldID
 								&& (!fieldBinding.isStatic() || methodScope.isStatic)) {
-							if (methodScope.insideTypeAnnotation && fieldBinding.id == methodScope.lastVisibleFieldID) {
+							if (methodScope.insideTypeDeclarationAnnotations && fieldBinding.id == methodScope.lastVisibleFieldID) {
 								// false alarm, location is NOT a field initializer but the value in a memberValuePair
 							} else {
 								scope.problemReporter().forwardReference(this, this.indexOfFirstFieldBinding-1, fieldBinding);

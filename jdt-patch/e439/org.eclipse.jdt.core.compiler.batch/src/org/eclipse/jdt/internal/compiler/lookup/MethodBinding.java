@@ -1425,17 +1425,6 @@ public boolean doesParameterLengthMatch(int suggestedParameterLength) {
 	int len = this.parameters.length;
 	return len <= suggestedParameterLength || (isVarargs() && len == suggestedParameterLength + 1);
 }
-public void updateTypeVariableBinding(TypeVariableBinding previousBinding, TypeVariableBinding updatedBinding) {
-	TypeVariableBinding[] bindings = this.typeVariables;
-	if (bindings != null) {
-		for (int i = 0; i < bindings.length; i++) {
-			if (bindings[i] == previousBinding) { //$IDENTITY-COMPARISON$
-				bindings[i] = updatedBinding;
-			}
-		}
-	}
-}
-
 /**
  * Identifies whether the method has Polymorphic signature based on <a href=https://docs.oracle.com/javase/specs/jls/se11/html/jls-15.html#jls-15.12.3>jls-15.12.3</a><br/>
  *

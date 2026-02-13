@@ -69,7 +69,7 @@ public class BlockScope extends Scope {
 	public final static VariableBinding[] NoEnclosingInstanceInStaticContext = {};
 
 	// annotation support
-	public boolean insideTypeAnnotation = false;
+	public boolean insideTypeDeclarationAnnotations = false;
 	public Statement blockStatement;
 	public boolean resolvingGuardExpression = false;
 

@@ -1638,6 +1638,22 @@ public final class CompletionEngine
 		this.uninterestingBindings[this.uninterestingBindingsPtr] = binding;
 	}
 
+	// Returns whether the arguments appearing before completion node are compatible
+	private boolean areParametersCompatibleWith(MethodBinding method, TypeBinding[] argTypes, int minArgLength) {
+		for (int a = minArgLength; --a >= 0;){
+			if (argTypes[a] != null) { // can be null if it could not be resolved properly
+				TypeBinding argType = argTypes[a].erasure();
+				TypeBinding paramType = method.isVarargs()
+						? ((ArrayBinding) method.parameters[a]).elementsType()
+						: method.parameters[a];
+				paramType = paramType.erasure();
+				if (!argType.isCompatibleWith(paramType)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 	// this code is derived from MethodBinding#areParametersCompatibleWith(TypeBinding[])
 	private final boolean areParametersCompatibleWith(TypeBinding[] parameters, TypeBinding[] arguments, boolean isVarargs) {
 		int paramLength = parameters.length;
@@ -1650,7 +1666,7 @@ public final class CompletionEngine
 				TypeBinding lastArgument = arguments[lastIndex];
 				if (TypeBinding.notEquals(varArgType, lastArgument) && !lastArgument.isCompatibleWith(varArgType))
 					return false;
-			} else if (paramLength < argLength) { // all remainig argument types must be compatible with the elementsType of varArgType
+			} else if (paramLength < argLength) { // all remaining argument types must be compatible with the elementsType of varArgType
 				TypeBinding varArgType = ((ArrayBinding) parameters[lastIndex]).elementsType();
 				for (int i = lastIndex; i < argLength; i++)
 					if (TypeBinding.notEquals(varArgType, arguments[i]) && !arguments[i].isCompatibleWith(varArgType))
@@ -6022,13 +6038,9 @@ public final class CompletionEngine
 					int paramLength = parameters.length;
 					if (minArgLength > paramLength)
 						continue next;
-					for (int a = minArgLength; --a >= 0;)
-						if (argTypes[a] != null) { // can be null if it could not be resolved properly
-							if (!argTypes[a].isCompatibleWith(constructor.parameters[a])
-								// check if this type pair is parameterized types and their erasure types matches
-									&& !argTypes[a].erasure().isCompatibleWith(constructor.parameters[a].erasure()))
-								continue next;
-						}
+
+					if (areParametersCompatibleWith(constructor, argTypes, minArgLength))
+						continue next;
 
 					constructorsFound.add(new Object[] { constructor, currentType });
 					if (noCollection) {
@@ -9434,13 +9446,8 @@ public final class CompletionEngine
 			if (minArgLength > method.parameters.length)
 				continue next;
 
-			for (int a = minArgLength; --a >= 0;){
-				if (argTypes[a] != null) { // can be null if it could not be resolved properly
-					if (!argTypes[a].isCompatibleWith(method.parameters[a])) {
-						continue next;
-					}
-				}
-			}
+			if (areParametersCompatibleWith(method, argTypes, minArgLength))
+				continue next;
 
 			boolean prefixRequired = false;
 

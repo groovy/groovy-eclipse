@@ -527,13 +527,19 @@ public class JavaProject
 			// Get cached preferences if exist
 			JavaModelManager.PerProjectInfo perProjectInfo = JavaModelManager.getJavaModelManager().getPerProjectInfo(this.project, false);
 			if (perProjectInfo != null && perProjectInfo.preferences != null) {
-				IEclipsePreferences eclipseParentPreferences = (IEclipsePreferences) perProjectInfo.preferences.parent();
-				if (this.preferencesNodeListener != null) {
-					eclipseParentPreferences.removeNodeChangeListener(this.preferencesNodeListener);
+				try {
+					IEclipsePreferences eclipseParentPreferences = (IEclipsePreferences) perProjectInfo.preferences.parent();
+					if (this.preferencesNodeListener != null) {
+						eclipseParentPreferences.removeNodeChangeListener(this.preferencesNodeListener);
+						this.preferencesNodeListener = null;
+					}
+					if (this.preferencesChangeListener != null) {
+						perProjectInfo.preferences.removePreferenceChangeListener(this.preferencesChangeListener);
+						this.preferencesChangeListener = null;
+					}
+				} catch (IllegalStateException e) {
+					// Ignore, the preferences have already been removed
 					this.preferencesNodeListener = null;
-				}
-				if (this.preferencesChangeListener != null) {
-					perProjectInfo.preferences.removePreferenceChangeListener(this.preferencesChangeListener);
 					this.preferencesChangeListener = null;
 				}
 			}
@@ -3616,7 +3622,6 @@ public class JavaProject
 	 * @see JavaProject#getSharedProperty(String key)
 	 */
 	public void setSharedProperty(String key, String value) throws CoreException {
-
 		IFile rscFile = this.project.getFile(key);
 		byte[] bytes = value.getBytes(StandardCharsets.UTF_8); // .classpath always encoded with UTF-8
 		// update the resource content

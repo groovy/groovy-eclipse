@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2025 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -3567,6 +3567,16 @@ public final class JavaCore extends Plugin {
 	public static final String JAVA_SOURCE_CONTENT_TYPE = JavaCore.PLUGIN_ID+".javaSource" ; //$NON-NLS-1$
 
 	/**
+	 * Value of the content-type for Java-derived source files (e.g. Kotlin). Use this value to retrieve the Java content type
+	 * from the content type manager, and to add new Java-derived extensions to this content type.
+	 *
+	 * @see org.eclipse.core.runtime.content.IContentTypeManager#getContentType(String)
+	 * @see #getJavaDerivedExtensions()
+	 * @since 3.45
+	 */
+	public static final String JAVA_DERIVED_SOURCE_CONTENT_TYPE = JavaCore.PLUGIN_ID+".javaDerivedSource" ; //$NON-NLS-1$
+
+	/**
 	 * The ID of the Eclipse built-in formatter.
 	 *
 	 * @see #JAVA_FORMATTER
@@ -4557,6 +4567,21 @@ public final class JavaCore extends Plugin {
 	 */
 	public static String[] getJavaLikeExtensions() {
 		return CharOperation.toStrings(Util.getJavaLikeExtensions());
+	}
+
+	/**
+	 * Returns the list of known Java-derived extensions (e.g. Kotlin .kt)
+	 * Java derived extension are defined in the {@link org.eclipse.core.runtime.Platform#getContentTypeManager()
+	 * content type manager} for the {@link #JAVA_DERIVED_SOURCE_CONTENT_TYPE}.
+	 * <p>
+	 * Note that a Java-derived extension doesn't include the leading dot ('.').
+	 * </p>
+	 *
+	 * @return the list of known Java-like extensions.
+	 * @since 3.45
+	 */
+	public static String[] getJavaDerivedExtensions() {
+		return CharOperation.toStrings(Util.getJavaDerivedExtensions());
 	}
 
 	/**

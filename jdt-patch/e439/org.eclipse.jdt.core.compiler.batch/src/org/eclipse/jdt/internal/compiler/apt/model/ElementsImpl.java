@@ -221,8 +221,10 @@ public class ElementsImpl implements Elements {
 			}
 		}
 		for (MethodBinding method : binding.methods()) {
-			if (!directMembers && method.isStatic())
-				continue;
+			if (!directMembers &&
+				(method.isPrivate() || (binding.isInterface() && method.isStatic()))) {
+					continue;
+			}
 			if (!method.isSynthetic() && (directMembers || (!method.isPrivate() && !method.isConstructor()))) {
 				String methodName = new String(method.selector);
 				Set<MethodBinding> sameNamedMethods = methods.get(methodName);

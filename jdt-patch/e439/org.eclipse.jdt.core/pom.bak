@@ -17,7 +17,7 @@
     <version>4.39.0-SNAPSHOT</version>
   </parent>
   <artifactId>org.eclipse.jdt.core</artifactId>
-  <version>3.44.100-SNAPSHOT</version>
+  <version>3.45.0-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
 
   <properties>

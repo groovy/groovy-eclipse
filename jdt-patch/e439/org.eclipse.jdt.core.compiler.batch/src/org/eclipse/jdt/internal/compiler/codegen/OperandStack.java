@@ -65,7 +65,7 @@ public class OperandStack {
 		*/
 		this.stack.push(switch(typeBinding.id) {
 			case TypeIds.T_boolean, TypeIds.T_byte, TypeIds.T_short, TypeIds.T_char -> TypeBinding.INT;
-			default -> erasure(typeBinding);
+			default -> typeBinding;
 		});
 	}
 
@@ -179,7 +179,7 @@ public class OperandStack {
 		TypeBinding elementType = ((ArrayBinding) pop()).elementsType();
 		boolean wellFormed = switch (elementType.id) {
 			case TypeIds.T_boolean, TypeIds.T_byte, TypeIds.T_short, TypeIds.T_char -> TypeBinding.equalsEquals(valueType, TypeBinding.INT);
-			default -> valueType.isCompatibleWith(elementType);
+			default -> valueType.isCompatibleWith(elementType) || erasure(valueType).isCompatibleWith(erasure(elementType));
 		};
 		if (!wellFormed)
 			throw new AssertionError("array store with invalid types"); //$NON-NLS-1$

@@ -346,6 +346,8 @@ public abstract class Engine implements ITypeRequestor {
 			int length = methods.length;
 			for (int i = 0; i < length; i++) {
 				AbstractMethodDeclaration method = methods[i];
+				if (type.isImplicitType() && method.isClinit())
+					continue;
 				if (method.bodyStart > position + 1)
 					continue;
 

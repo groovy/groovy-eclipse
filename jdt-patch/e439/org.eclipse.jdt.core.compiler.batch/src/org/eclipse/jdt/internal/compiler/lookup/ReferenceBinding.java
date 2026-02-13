@@ -92,7 +92,7 @@ abstract public class ReferenceBinding extends TypeBinding {
 	char[] constantPoolName;
 	char[] signature;
 
-	private Map<TypeBinding, Boolean> compatibleCache;
+	protected Map<TypeBinding, Boolean> compatibleCache;
 
 	int typeBits; // additional bits characterizing this type
 	protected MethodBinding [] singleAbstractMethod;
@@ -329,6 +329,16 @@ public boolean canBeSeenBy(PackageBinding invocationPackage) {
  */
 public boolean canBeSeenBy(ReferenceBinding receiverType, ReferenceBinding invocationType) {
 	if (isPublic()) return true;
+
+	if (isPrivate()) {
+		// JLS 6.6-5: A private class member or constructor is accessible only within the body of the top level
+		// class (§7.6) that encloses the declaration of the member or constructor => we should forbid access from top level class `header`.
+		ReferenceBinding topLevelType = invocationType.outermostEnclosingType();
+		if (topLevelType instanceof SourceTypeBinding sourceType
+				&& sourceType.scope != null
+				&& sourceType.scope.referenceContext.staticInitializerScope.insideTypeDeclarationAnnotations)
+			return false;
+	}
 
 	if (isStatic())
 		receiverType = receiverType.actualType(); // outer generics are irrelevant

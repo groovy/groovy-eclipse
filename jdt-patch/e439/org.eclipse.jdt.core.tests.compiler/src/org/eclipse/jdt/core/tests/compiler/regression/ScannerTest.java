@@ -957,7 +957,7 @@ public class ScannerTest extends AbstractRegressionTest {
 		 *    }
 		 * }
 		 */
-		this.runConformTest(
+		this.runNegativeTest(
 				new String[] {
 					"_X.java",
 					"import java.lang.reflect.Field;\n" +
@@ -991,7 +991,122 @@ public class ScannerTest extends AbstractRegressionTest {
 					"	}\n" +
 					"}"
 				},
-				"SUCCESS");
+				"----------\n" +
+				"1. ERROR in _X.java (at line 5)\n" +
+				"	String i\\u0001;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"2. ERROR in _X.java (at line 6)\n" +
+				"	String i\\u0002;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"3. ERROR in _X.java (at line 7)\n" +
+				"	String i\\u0003;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"4. ERROR in _X.java (at line 8)\n" +
+				"	String i\\u0004;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"5. ERROR in _X.java (at line 9)\n" +
+				"	String i\\u0005;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"6. ERROR in _X.java (at line 10)\n" +
+				"	String i\\u0006;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"7. ERROR in _X.java (at line 11)\n" +
+				"	String i\\u0007;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"8. ERROR in _X.java (at line 12)\n" +
+				"	String i\\u0008;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"9. ERROR in _X.java (at line 13)\n" +
+				"	String i\\u000e;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"10. ERROR in _X.java (at line 14)\n" +
+				"	String i\\u000f;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"11. ERROR in _X.java (at line 15)\n" +
+				"	String i\\u0010;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"12. ERROR in _X.java (at line 16)\n" +
+				"	String i\\u0011;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"13. ERROR in _X.java (at line 17)\n" +
+				"	String i\\u0012;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"14. ERROR in _X.java (at line 18)\n" +
+				"	String i\\u0013;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"15. ERROR in _X.java (at line 19)\n" +
+				"	String i\\u0014;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"16. ERROR in _X.java (at line 20)\n" +
+				"	String i\\u0015;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"17. ERROR in _X.java (at line 21)\n" +
+				"	String i\\u0016;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"18. ERROR in _X.java (at line 22)\n" +
+				"	String i\\u0017;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"19. ERROR in _X.java (at line 23)\n" +
+				"	String i\\u0018;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"20. ERROR in _X.java (at line 24)\n" +
+				"	String i\\u0019;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"21. ERROR in _X.java (at line 25)\n" +
+				"	String i\\u001a;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"22. ERROR in _X.java (at line 26)\n" +
+				"	String i\\u001b;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n" +
+				"23. ERROR in _X.java (at line 27)\n" +
+				"	String i\\u007f;\n" +
+				"	       ^^^^^^^\n" +
+				"Duplicate local variable i\n" +
+				"----------\n");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=264950
 	public void test046() {
@@ -1879,5 +1994,112 @@ public class ScannerTest extends AbstractRegressionTest {
 			assertTrue("Should not have InvalidInputException", false);
 		}
 	}
-
+	public void testIssue4001_1() {
+		this.runConformTest(
+			new String[] {
+				"X.java",
+				"""
+				public class X {
+					String fieldWithUnicode\u0001Char = "";
+					public static void main(String[] args) {
+						try {
+							Class<?> clazz = Class.forName("X");
+							java.lang.reflect.Method method = clazz.getDeclaredMethod("methodWithUnicode\u0001Char");
+							System.out.println("Method found: " + method.getName());
+						} catch (ClassNotFoundException e) {
+							System.out.println("Class not found.");
+						} catch (NoSuchMethodException e) {
+							System.out.println("Method not found.");
+						}
+						try {
+							Class<?> clazz = Class.forName("X");
+							java.lang.reflect.Field field = clazz.getDeclaredField("fieldWithUnicode\u0001Char");
+							System.out.println("Field found: " + field.getName());
+						} catch (ClassNotFoundException e) {
+							System.out.println("Class not found.");
+						} catch (NoSuchFieldException e) {
+							System.out.println("Field not found.");
+						}
+					}
+					public static void methodWithUnicode\u0001Char() {
+					}
+				}""",
+			},
+			"Method not found.\n" +
+			"Field not found.");
+	}
+	public void testIssue4001_2() {
+		this.runConformTest(
+			new String[] {
+				"X.java",
+				"""
+				public class X {
+					String fieldWithUnicode\u0001Char = "";
+					public static void main(String[] args) {
+						try {
+							Class<?> clazz = Class.forName("X");
+							java.lang.reflect.Method method = clazz.getDeclaredMethod("methodWithUnicodeChar");
+							System.out.println("Method found: " + method.getName());
+							method.invoke(null);
+						} catch (ClassNotFoundException e) {
+							System.out.println("Class not found.");
+						} catch (NoSuchMethodException e) {
+							System.out.println("Method not found.");
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						try {
+							Class<?> clazz = Class.forName("X");
+							java.lang.reflect.Field field = clazz.getDeclaredField("fieldWithUnicodeChar");
+							System.out.println("Field found: " + field.getName());
+						} catch (ClassNotFoundException e) {
+							System.out.println("Class not found.");
+						} catch (NoSuchFieldException e) {
+							System.out.println("Field not found.");
+						}
+					}
+					public static void methodWithUnicode\u0001Char() {
+						String fieldWithUnicode\u0001Char = "Hello";
+						System.out.println(fieldWithUnicodeChar);
+					}
+				}""",
+			},
+			"Method found: methodWithUnicodeChar\n" +
+			"Hello\n" +
+			"Field found: fieldWithUnicodeChar");
+	}
+	public void testIssue4001_3() {
+		this.runConformTest(
+			new String[] {
+				"X.java",
+				"""
+				public class X {
+					String fieldWithUnicode\u0001Char = "";
+					public static void main(String[] args) {
+						try {
+							Class<?> clazz = Class.forName("X");
+							java.lang.reflect.Method method = clazz.getDeclaredMethod("methodWithUnicodeChar");
+							System.out.println("Method found: " + method.getName());
+						} catch (ClassNotFoundException e) {
+							System.out.println("Class not found.");
+						} catch (NoSuchMethodException e) {
+							System.out.println("Method not found.");
+						}
+						try {
+							Class<?> clazz = Class.forName("X");
+							java.lang.reflect.Field method = clazz.getDeclaredField("fieldWithUnicodeChar");
+							System.out.println("Field found: " + method.getName());
+						} catch (ClassNotFoundException e) {
+							System.out.println("Class not found.");
+						} catch (NoSuchFieldException e) {
+							System.out.println("Field not found.");
+						}
+					}
+					public static void methodWithUnicode\u0001Char() {
+					}
+				}""",
+			},
+			"Method found: methodWithUnicodeChar\n" +
+			"Field found: fieldWithUnicodeChar");
+	}
 }

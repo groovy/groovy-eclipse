@@ -23,7 +23,6 @@ public class CaptureBinding18 extends CaptureBinding {
 
 	TypeBinding[] upperBounds;
 	private final char[] originalName;
-	private final CaptureBinding18 prototype;
 
 	public CaptureBinding18(ReferenceBinding contextType, char[] sourceName, char[] originalName, int start, int end, int captureID, LookupEnvironment environment) {
 		super(contextType, sourceName, start, end, captureID, environment);
@@ -303,14 +302,19 @@ public class CaptureBinding18 extends CaptureBinding {
 		return true;
 	}
 
+	@Override
+	public CaptureBinding18 prototype() {
+		return (CaptureBinding18) this.prototype;
+	}
+
 	int recursionLevel = 0; // used to give a hint at recursive types without going into infinity
 
 	@Override
 	public char[] readableName() {
 		if (this.lowerBound == null && this.firstBound != null) {
-			if (this.prototype.recursionLevel < 2) {
+			if (this.prototype().recursionLevel < 2) {
 				try {
-					this.prototype.recursionLevel ++;
+					this.prototype().recursionLevel++;
 					if (this.upperBounds != null && this.upperBounds.length > 1) {
 						StringBuilder sb = new StringBuilder();
 						sb.append(this.upperBounds[0].readableName());
@@ -323,7 +327,7 @@ public class CaptureBinding18 extends CaptureBinding {
 					}
 					return this.firstBound.readableName();
 				} finally {
-					this.prototype.recursionLevel--;
+					this.prototype().recursionLevel--;
 				}
 			} else {
 				return this.originalName;
@@ -335,9 +339,9 @@ public class CaptureBinding18 extends CaptureBinding {
 	@Override
 	public char[] shortReadableName() {
 		if (this.lowerBound == null && this.firstBound != null) {
-			if (this.prototype.recursionLevel < 2) {
+			if (this.prototype().recursionLevel < 2) {
 				try {
-					this.prototype.recursionLevel++;
+					this.prototype().recursionLevel++;
 					if (this.upperBounds != null && this.upperBounds.length > 1) {
 						StringBuilder sb = new StringBuilder();
 						sb.append(this.upperBounds[0].shortReadableName());
@@ -350,7 +354,7 @@ public class CaptureBinding18 extends CaptureBinding {
 					}
 					return this.firstBound.shortReadableName();
 				} finally {
-					this.prototype.recursionLevel--;
+					this.prototype().recursionLevel--;
 				}
 			} else {
 				return this.originalName;

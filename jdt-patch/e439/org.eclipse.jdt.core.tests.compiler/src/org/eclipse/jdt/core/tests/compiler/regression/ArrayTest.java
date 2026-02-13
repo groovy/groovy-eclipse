@@ -21,12 +21,14 @@ import junit.framework.Test;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class ArrayTest extends AbstractRegressionTest {
 
 	static {
 //		TESTS_NUMBERS = new int[] { 1 };
+//		TESTS_NAMES = new String [] { "testIssue4789" };
 	}
 	public ArrayTest(String name) {
 		super(name);
@@ -549,5 +551,34 @@ public void test019() throws Exception {
 			"}\n",
 		},
 		"SUCCESS");
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4789
+// Internal compiler error caused by AssertionError: array store with invalid types
+public void testIssue4789() throws Exception {
+	if (this.complianceLevel < ClassFileConstants.JDK14)
+		return;
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"""
+			public class X {
+			    public static void main(String [] args) {
+			        // works fine with explicit type: BaseInterface
+			        // and also works if there is no option choosing
+			        var value = args != null ? new Record1() : new Record2();
+			        // anytime this array is constructed as BaseInterface[], it breaks (including varargs)
+			        var ignored = new BaseInterface[] {value};
+			        System.out.println(ignored.getClass());
+			    }
+
+			    public interface BaseInterface {}
+			    public static class BaseClass {}
+
+			    public static class Record1 extends BaseClass implements BaseInterface {}
+			    public static class Record2 extends BaseClass implements BaseInterface {}
+		    }
+			"""
+		},
+		"class [LX$BaseInterface;");
 }
 }

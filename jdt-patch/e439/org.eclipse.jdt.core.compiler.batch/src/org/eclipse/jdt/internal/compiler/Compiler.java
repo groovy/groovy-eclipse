@@ -619,7 +619,7 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 				needToPrint = false;
 			}
 		}
-		if (needToPrint) {
+		if (needToPrint || this.options.verbose) {
 			/* dump a stack trace to the console */
 			internalException.printStackTrace();
 		}

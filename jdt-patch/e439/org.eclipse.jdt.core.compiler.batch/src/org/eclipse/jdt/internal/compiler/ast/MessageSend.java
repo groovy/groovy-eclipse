@@ -1233,10 +1233,6 @@ public boolean isPolyExpression(MethodBinding resolutionCandidate) {
 
 	if (resolutionCandidate != null) {
 		if (resolutionCandidate.returnType != null && resolutionCandidate.returnType.id != TypeIds.T_void) {
-			if (resolutionCandidate instanceof ParameterizedGenericMethodBinding pgmb) {
-				if (pgmb.wasInferred)
-					return true; // if already determined
-			}
 			// resolution may have prematurely instantiated the generic method, we need the original, though:
 			MethodBinding candidateOriginal = resolutionCandidate.original();
 			return candidateOriginal.returnType.mentionsAny(candidateOriginal.typeVariables(), -1);

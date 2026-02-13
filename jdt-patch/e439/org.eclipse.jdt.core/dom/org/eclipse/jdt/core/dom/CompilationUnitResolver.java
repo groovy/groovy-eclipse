@@ -1367,6 +1367,14 @@ class CompilationUnitResolver extends Compiler {
 			return unit;
 		} catch (AbortCompilation e) {
 			this.handleInternalException(e, unit);
+			if(e.isSilent) {
+				if (e.silentException == null) {
+					if (this.monitor != null) {
+						this.monitor.setCanceled(true);
+					}
+					throw new OperationCanceledException();
+				}
+			}
 			return unit == null ? this.unitsToProcess[0] : unit;
 		} catch (Error | RuntimeException e) {
 			this.handleInternalException(e, unit, null);

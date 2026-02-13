@@ -155,7 +155,7 @@ public class AnnotationDiscoveryVisitor extends ASTVisitor {
 			// when we get here, it is guaranteed that class type parameters are connected, but method type parameters may not be.
 			MethodBinding methodBinding = (MethodBinding) binding.declaringElement;
 			((SourceTypeBinding) methodBinding.declaringClass).resolveTypesFor(methodBinding);
-			this.resolveAnnotations(scope, annotations, binding);
+			this.resolveAnnotations(scope, annotations, typeParameter.binding /* treat as volatile as Scope.preprocessTypeVariables() called by resolveTypesFor() may modify!!! */);
 		}
 		return false;
 	}
@@ -248,10 +248,10 @@ public class AnnotationDiscoveryVisitor extends ASTVisitor {
 		if (length == 0)
 			return;
 
-		boolean old = scope.insideTypeAnnotation;
-		scope.insideTypeAnnotation = true;
+		boolean old = scope.insideTypeDeclarationAnnotations;
+		scope.insideTypeDeclarationAnnotations = true;
 		currentBinding.getAnnotationTagBits();
-		scope.insideTypeAnnotation = old;
+		scope.insideTypeDeclarationAnnotations = old;
 		ElementImpl element = (ElementImpl) this._factory.newElement(currentBinding);
 		AnnotationBinding [] annotationBindings = element.getPackedAnnotationBindings(); // discovery is never in terms of repeating annotation.
 		for (AnnotationBinding binding : annotationBindings) {

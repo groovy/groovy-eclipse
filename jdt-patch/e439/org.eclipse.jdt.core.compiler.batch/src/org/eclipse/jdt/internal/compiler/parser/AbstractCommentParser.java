@@ -181,7 +181,6 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 			boolean isDomParser = (this.kind & DOM_PARSER) != 0;
 			boolean isFormatterParser = (this.kind & FORMATTER_COMMENT_PARSER) != 0;
 			int lastStarPosition = -1;
-			boolean isTagElementClose = false;
 
 			// Init scanner position
 			this.markdown = this.source[this.javadocStart + 1] == '/';
@@ -350,9 +349,6 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 						// Fix bug 51650
 						this.textStart = -1;
 						this.markdownHelper.resetAtLineEnd();
-						if (this.inlineTagStarted && this.markdown) {
-							isTagElementClose = true;
-						}
 						break;
 					case '}' :
 						if (verifText && this.tagValue == TAG_RETURN_VALUE && this.returnStatement != null) {
@@ -366,6 +362,10 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 							}
 						}
 						boolean isLiteralOrCode = this.tagValue == TAG_LITERAL_VALUE || this.tagValue == TAG_CODE_VALUE;
+						boolean shouldCloseInlineTag =
+						        this.inlineTagStarted
+						        && !considerTagAsPlainText
+						        && !(isLiteralOrCode && openingBraces != 0);
 						if (this.inlineTagStarted) {
 							textEndPosition = this.index - 1;
 							boolean treatAsText= considerTagAsPlainText || (this.inlineReturn && this.inlineReturnOpenBraces > 0);
@@ -380,12 +380,8 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 							}
 							if (!isFormatterParser && !treatAsText && (!this.inlineReturn || this.inlineReturnOpenBraces <= 0))
 								this.textStart = this.index;
-							if (!isTagElementClose && this.markdown) {  //The comment parser should create a TagElement only if the previous one is closed - markdown.
+							if (shouldCloseInlineTag) {
 								setInlineTagStarted(false);
-							} else if (!this.markdown) {
-								if (!(isLiteralOrCode && openingBraces != 0)) {
-							        setInlineTagStarted(false);
-							    }
 							}
 							if (this.inlineReturn) {
 								if (this.inlineReturnOpenBraces > 0) {
@@ -479,6 +475,10 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 										lineHasStar = true;
 									}
 								}
+							}
+						} else {
+							if (this.index == this.javadocEnd) {
+								pushText(this.textStart, this.javadocEnd);
 							}
 						}
 						break;

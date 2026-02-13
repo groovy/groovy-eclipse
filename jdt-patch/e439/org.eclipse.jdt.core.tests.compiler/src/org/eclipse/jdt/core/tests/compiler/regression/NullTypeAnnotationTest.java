@@ -14231,7 +14231,7 @@ public void testBug501564() {
 		new String[] {
 			"xxx/Foo.java",
 			"package xxx;\n" +
-			"import org.eclipse.jdt.annotation.NonNullByDefault;\n" +
+			"import org.eclipse.jdt.annotation.*;\n" +
 			"import org.eclipse.jdt.annotation.DefaultLocation;\n" +
 			"\n" +
 			"class Generic<E1 extends Generic<E1>> { \n" +
@@ -14240,33 +14240,10 @@ public void testBug501564() {
 			"    static <E2 extends Generic<E2>> Bar<E2> foo() {\n" +
 			"        return new Bar<>();\n" +
 			"    }\n" +
-			"\n" +
-			"    @NonNullByDefault(DefaultLocation.TYPE_PARAMETER)\n" +
-			"    static class Bar<E3 extends Generic<E3>> { }\n" +
-			"}\n" +
-			"",
-		},
-		getCompilerOptions(),
-		"----------\n" +
-		"1. ERROR in xxx\\Foo.java (at line 8)\n" +
-		"	static <E2 extends Generic<E2>> Bar<E2> foo() {\n" +
-		"	                                    ^^\n" +
-		"Null constraint mismatch: The type \'E2 extends Generic<E2>\' is not a valid substitute for the type parameter \'@NonNull E3 extends Generic<E3 extends Generic<E3>>\'\n" +
-		"----------\n"
-	);
-}
-public void testBug501564interface() {
-	runNegativeTestWithLibs(
-		new String[] {
-			"xxx/Foo.java",
-			"package xxx;\n" +
-			"import org.eclipse.jdt.annotation.NonNullByDefault;\n" +
-			"import org.eclipse.jdt.annotation.DefaultLocation;\n" +
-			"\n" +
-			"interface Generic<E1 extends Generic<E1>> { \n" +
-			"}\n" +
-			"class Foo { \n" +
-			"    static <E2 extends Generic<E2>> Bar<E2> foo() {\n" +
+			"    static <E2 extends Generic<E2>> Bar<E2> foo2() {\n" +
+			"        return new Bar<@NonNull E2>();\n" +
+			"    }\n" +
+			"    static <@NonNull E2 extends Generic<E2>> Bar<E2> foo3() {\n" +
 			"        return new Bar<>();\n" +
 			"    }\n" +
 			"\n" +
@@ -14280,7 +14257,62 @@ public void testBug501564interface() {
 		"1. ERROR in xxx\\Foo.java (at line 8)\n" +
 		"	static <E2 extends Generic<E2>> Bar<E2> foo() {\n" +
 		"	                                    ^^\n" +
-		"Null constraint mismatch: The type \'E2 extends Generic<E2>\' is not a valid substitute for the type parameter \'@NonNull E3 extends Generic<E3 extends Generic<E3>>\'\n" +
+		"Null constraint mismatch: The type \'E2 extends Generic<E2>\' is not a valid substitute for the type parameter \'@NonNull E3 extends Generic<@NonNull E3>\'\n" +
+		"----------\n" +
+		"2. ERROR in xxx\\Foo.java (at line 9)\n" +
+		"	return new Bar<>();\n" +
+		"	       ^^^^^^^^^^^\n" +
+		"Null constraint mismatch: The type \'E2 extends Generic<E2>\' is not a valid substitute for the type parameter \'E3\' extends Generic<@NonNull E3\' extends Generic<@NonNull E3\'>>\'\n" +
+		"----------\n" +
+		"3. ERROR in xxx\\Foo.java (at line 11)\n" +
+		"	static <E2 extends Generic<E2>> Bar<E2> foo2() {\n" +
+		"	                                    ^^\n" +
+		"Null constraint mismatch: The type \'E2 extends Generic<E2>\' is not a valid substitute for the type parameter \'@NonNull E3 extends Generic<@NonNull E3>\'\n" +
+		"----------\n"
+	);
+}
+public void testBug501564interface() {
+	runNegativeTestWithLibs(
+		new String[] {
+			"xxx/Foo.java",
+			"package xxx;\n" +
+			"import org.eclipse.jdt.annotation.*;\n" +
+			"import org.eclipse.jdt.annotation.DefaultLocation;\n" +
+			"\n" +
+			"interface Generic<E1 extends Generic<E1>> { \n" +
+			"}\n" +
+			"class Foo { \n" +
+			"    static <E2 extends Generic<E2>> Bar<E2> foo() {\n" +
+			"        return new Bar<>();\n" +
+			"    }\n" +
+			"    static <E2 extends Generic<E2>> Bar<E2> foo2() {\n" +
+			"        return new Bar<@NonNull E2>();\n" +
+			"    }\n" +
+			"    static <@NonNull E2 extends Generic<E2>> Bar<E2> foo3() {\n" +
+			"        return new Bar<>();\n" +
+			"    }\n" +
+			"\n" +
+			"    @NonNullByDefault(DefaultLocation.TYPE_PARAMETER)\n" +
+			"    static class Bar<E3 extends Generic<E3>> { }\n" +
+			"}\n" +
+			"",
+		},
+		getCompilerOptions(),
+		"----------\n" +
+		"1. ERROR in xxx\\Foo.java (at line 8)\n" +
+		"	static <E2 extends Generic<E2>> Bar<E2> foo() {\n" +
+		"	                                    ^^\n" +
+		"Null constraint mismatch: The type \'E2 extends Generic<E2>\' is not a valid substitute for the type parameter \'@NonNull E3 extends Generic<@NonNull E3>\'\n" +
+		"----------\n" +
+		"2. ERROR in xxx\\Foo.java (at line 9)\n" +
+		"	return new Bar<>();\n" +
+		"	       ^^^^^^^^^^^\n" +
+		"Null constraint mismatch: The type \'E2 extends Generic<E2>\' is not a valid substitute for the type parameter \'E3\' extends Generic<@NonNull E3\' extends Generic<@NonNull E3\'>>\'\n" +
+		"----------\n" +
+		"3. ERROR in xxx\\Foo.java (at line 11)\n" +
+		"	static <E2 extends Generic<E2>> Bar<E2> foo2() {\n" +
+		"	                                    ^^\n" +
+		"Null constraint mismatch: The type \'E2 extends Generic<E2>\' is not a valid substitute for the type parameter \'@NonNull E3 extends Generic<@NonNull E3>\'\n" +
 		"----------\n"
 	);
 }
@@ -19823,5 +19855,29 @@ public void testGH4717_nullExit() {
 			----------
 			""";
 	runner.runNegativeTest();
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4494
+// Trouble annotating explicit receiver with ECJ (works fine with javac)
+public void testGH4494() throws Exception {
+	runConformTest(new String[] {
+			"AnnotatedExplicitReceiverError.java",
+			"""
+			import java.lang.annotation.ElementType;
+			import java.lang.annotation.Target;
+
+			public class AnnotatedExplicitReceiverError {
+			    @Target({ ElementType.TYPE_USE})
+			    private static @interface A { }
+
+			    @Target({ ElementType.TYPE_USE, ElementType.TYPE_PARAMETER })
+			    private static @interface F { }
+
+			    static class P<@A T> {
+			        public void explicitReceiver(@F P<T> this) { // error here
+			        }
+			    }
+			}
+			"""
+	});
 }
 }

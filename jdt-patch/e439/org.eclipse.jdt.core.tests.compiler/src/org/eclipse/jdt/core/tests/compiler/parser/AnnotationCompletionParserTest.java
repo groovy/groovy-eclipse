@@ -4663,6 +4663,9 @@ public void test0117(){
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
 		"public class X {\n" +
+		"  int var;\n" +
+		"  {\n" +
+		"  }\n" +
 		"  public X() {\n" +
 		"  }\n" +
 		"  void bar() {\n" +
@@ -4695,6 +4698,9 @@ public void test0118(){
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
 		"public class X {\n" +
+		"  int var;\n" +
+		"  {\n" +
+		"  }\n" +
 		"  public X() {\n" +
 		"  }\n" +
 		"  void bar() {\n" +
@@ -4857,6 +4863,9 @@ public void test0121(){
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
 		"public class X {\n" +
+		"  int var;\n" +
+		"  {\n" +
+		"  }\n" +
 		"  public X() {\n" +
 		"  }\n" +
 		"  void bar() {\n" +

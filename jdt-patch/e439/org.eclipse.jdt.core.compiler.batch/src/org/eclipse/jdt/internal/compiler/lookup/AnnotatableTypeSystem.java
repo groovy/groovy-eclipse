@@ -235,12 +235,16 @@ public class AnnotatableTypeSystem extends TypeSystem {
 				ArrayBinding arrayBinding = (ArrayBinding) type;
 				annotatedType = getArrayType(arrayBinding.leafComponentType, arrayBinding.dimensions, flattenedAnnotations(annotations));
 				break;
+			case Binding.TYPE_PARAMETER:
+				// simplified version given that type parameters have only one level of annotations.
+				// this also spares the below algorithm the need to specifically handle Binding.AWAITED_ANNOTATIONS
+				annotatedType = getAnnotatedType(type, null, annotations[0]);
+				break;
 			case Binding.BASE_TYPE:
 			case Binding.TYPE:
 			case Binding.GENERIC_TYPE:
 			case Binding.PARAMETERIZED_TYPE:
 			case Binding.RAW_TYPE:
-			case Binding.TYPE_PARAMETER:
 			case Binding.WILDCARD_TYPE:
 			case Binding.INTERSECTION_TYPE:
 			case Binding.INTERSECTION_TYPE18:
@@ -373,6 +377,8 @@ public class AnnotatableTypeSystem extends TypeSystem {
 			return true;
 		if (someType != null && someType.hasTypeAnnotations())
 			return true;
+		if (annotations == Binding.AWAITED_ANNOTATIONS)
+			return true;
 		for (int i = 0, length = annotations == null ? 0 : annotations.length; i < length; i++)
 			if (annotations [i] != null)
 				return true;
@@ -420,31 +426,6 @@ public class AnnotatableTypeSystem extends TypeSystem {
 		if (index != length)
 			throw new IllegalStateException();
 		return series;
-	}
-
-	/**
-	 * Forcefully register the given type as a derived type.
-	 * If it itself is already registered as the key unannotated type of its family,
-	 * create a clone to play that role from now on and swap types in the types cache.
-	 */
-	@Override
-	public void forceRegisterAsDerived(TypeVariableBinding derived) {
-		int id = derived.id;
-		TypeBinding[] derivedTypes = getDerivedTypes(derived);
-		if (id != TypeIds.NoId && derivedTypes != null) {
-			TypeBinding unannotated = derivedTypes[0];
-			if (unannotated == derived) { //$IDENTITY-COMPARISON$
-				// was previously registered as unannotated, replace by a fresh clone to remain unannotated:
-				derivedTypes[0] = unannotated = derived.clone(null);
-				if (derived.updateWhenSettingTypeAnnotations != null) {
-					derived.updateWhenSettingTypeAnnotations.accept((TypeVariableBinding) unannotated);
-				}
-			}
-			// proceed as normal:
-			cacheDerivedType(unannotated, derived);
-		} else {
-			throw new IllegalStateException("Type was not yet registered as expected: "+derived); //$NON-NLS-1$
-		}
 	}
 
 	@Override

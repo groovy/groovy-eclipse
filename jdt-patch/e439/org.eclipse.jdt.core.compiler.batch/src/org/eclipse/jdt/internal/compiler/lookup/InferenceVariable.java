@@ -85,7 +85,6 @@ public class InferenceVariable extends TypeVariableBinding {
 	InvocationSite site;
 	TypeBinding typeParameter;
 	long nullHints; // one of TagBits.{AnnotationNonNull,AnnotationNullable} may steer inference into inferring nullness as well; set both bits to request avoidance.
-	private InferenceVariable prototype;
 	int varId; // this is used for constructing a source name like T#0.
 	public boolean isFromInitialSubstitution; 	// further ivars created during 18.5.2 (for capture bounds) set this to false
 												// to mark that they don't participate in any theta substitution
@@ -135,7 +134,7 @@ public class InferenceVariable extends TypeVariableBinding {
 
 	@Override
 	public InferenceVariable prototype() {
-		return this.prototype;
+		return (InferenceVariable) this.prototype;
 	}
 
 	@Override

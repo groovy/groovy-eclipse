@@ -1120,6 +1120,14 @@ public TypeBinding createIntersectionType18(ReferenceBinding[] intersectingTypes
 			}
 		});
 	}
+	int j = 0;
+	for (int i = 1; i < intersectingTypes.length; i++) {
+		if (!TypeBinding.equalsEquals(intersectingTypes[j], intersectingTypes[i])) {
+			intersectingTypes[++j] = intersectingTypes[i];
+		}
+	}
+	if (j < intersectingTypes.length)
+		intersectingTypes = Arrays.copyOfRange(intersectingTypes, 0, j+1);
 	return this.typeSystem.getIntersectionType18(intersectingTypes);
 }
 

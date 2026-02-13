@@ -267,6 +267,9 @@
 		base-type="org.eclipse.core.runtime.text"
 		priority="high"				
 		file-extensions="java"/>
+	<content-type id="javaDerivedSource" name="%javaDerivedSourceName"
+		base-type="org.eclipse.core.runtime.text"
+		priority="high"/>
 	<!-- declares a content type for Java class files -->
     <content-type id="javaClass" name="%javaClassName" 
         priority="high"				

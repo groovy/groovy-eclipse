@@ -971,7 +971,7 @@ class BoundSet {
 			return Collections.emptyList();
 		List<ConstraintTypeFormula> result = new ArrayList<>();
 		for (Pair<TypeBinding> pair : superPairs) {
-			// future JLS should apply upwards projection according to https://mail.openjdk.org/pipermail/compiler-dev/2024-May/026579.html
+			// NON-JLS: should apply upwards projection according to https://mail.openjdk.org/pipermail/compiler-dev/2024-May/026579.html
 			TypeBinding g_s = pair.left().upwardsProjection(context.scope);
 			TypeBinding g_t = pair.right().upwardsProjection(context.scope);
 			result.addAll(typeArgumentEqualityConstraints(g_s, g_t, boundS.isSoft || boundT.isSoft));

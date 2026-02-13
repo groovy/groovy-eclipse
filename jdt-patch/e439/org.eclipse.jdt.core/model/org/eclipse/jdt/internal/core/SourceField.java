@@ -137,7 +137,7 @@ protected char getHandleMementoDelimiter() {
 public JavaElement getPrimaryElement(boolean checkOwner) {
 	if (checkOwner) {
 		CompilationUnit cu = (CompilationUnit)getAncestor(COMPILATION_UNIT);
-		if (cu.isPrimary()) return this;
+		if (cu == null || cu.isPrimary()) return this;
 	}
 	IJavaElement primaryParent =this.getParent().getPrimaryElement(false);
 	return (JavaElement)((IType)primaryParent).getField(this.name);

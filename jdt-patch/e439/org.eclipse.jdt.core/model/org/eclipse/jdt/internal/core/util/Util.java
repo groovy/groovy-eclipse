@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -129,6 +129,8 @@ public class Util {
 	private static final String EMPTY_ARGUMENT = "   "; //$NON-NLS-1$
 
 	private static char[][] JAVA_LIKE_EXTENSIONS;
+
+	private static char[][] JAVA_DERIVED_EXTENSIONS;
 
 	private static final char[] BOOLEAN = "boolean".toCharArray(); //$NON-NLS-1$
 	private static final char[] BYTE = "byte".toCharArray(); //$NON-NLS-1$
@@ -841,35 +843,60 @@ public class Util {
 	 * Returns the registered Java like extensions.
 	 */
 	public static char[][] getJavaLikeExtensions() {
-		if (JAVA_LIKE_EXTENSIONS == null) {
-			IContentType javaContentType = Platform.getContentTypeManager().getContentType(JavaCore.JAVA_SOURCE_CONTENT_TYPE);
-			HashSet fileExtensions = new HashSet();
-			// content types derived from java content type should be included (https://bugs.eclipse.org/bugs/show_bug.cgi?id=121715)
-			IContentType[] contentTypes = Platform.getContentTypeManager().getAllContentTypes();
-			for (IContentType contentType : contentTypes) {
-				if (contentType.isKindOf(javaContentType)) { // note that javaContentType.isKindOf(javaContentType) == true
-					String[] fileExtension = contentType.getFileSpecs(IContentType.FILE_EXTENSION_SPEC);
+		if (JAVA_LIKE_EXTENSIONS != null) {
+			return JAVA_LIKE_EXTENSIONS;
+		}
+		JAVA_LIKE_EXTENSIONS = getJavaRelatedExtensions(JavaCore.JAVA_SOURCE_CONTENT_TYPE);
+		return JAVA_LIKE_EXTENSIONS;
+	}
+	/**
+	 * Returns the registered Java derived extensions.
+	 */
+	public static char[][] getJavaDerivedExtensions() {
+		// Better handle non-java sources: https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4738
+		if (JAVA_DERIVED_EXTENSIONS != null) {
+			return JAVA_DERIVED_EXTENSIONS;
+		}
+		JAVA_DERIVED_EXTENSIONS = getJavaRelatedExtensions(JavaCore.JAVA_DERIVED_SOURCE_CONTENT_TYPE);
+		return JAVA_DERIVED_EXTENSIONS;
+	}
+
+	private static char[][] getJavaRelatedExtensions(String contentTypeId){
+		IContentType javaContentType = Platform.getContentTypeManager().getContentType(contentTypeId);
+		HashSet fileExtensions = new HashSet();
+		IContentType[] contentTypes = Platform.getContentTypeManager().getAllContentTypes();
+		for (IContentType contentType : contentTypes) {
+			if (contentType.isKindOf(javaContentType)) { // note that javaContentType.isKindOf(javaContentType) == true
+				String[] fileExtension = contentType.getFileSpecs(IContentType.FILE_EXTENSION_SPEC);
+				if (fileExtension != null) {
 					for (String extension : fileExtension) {
-						fileExtensions.add(extension);
+						if (!SuffixConstants.EXTENSION_java.equals(extension)) {
+							fileExtensions.add(extension);
+						}
 					}
 				}
 			}
-			int length = fileExtensions.size();
-			// note that file extensions contains "java" as it is defined in JDT Core's plugin.xml
-			char[][] extensions = new char[length][];
-			extensions[0] = SuffixConstants.EXTENSION_java.toCharArray(); // ensure that "java" is first
-			int index = 1;
-			Iterator iterator = fileExtensions.iterator();
-			while (iterator.hasNext()) {
-				String fileExtension = (String) iterator.next();
-				if (SuffixConstants.EXTENSION_java.equals(fileExtension))
-					continue;
-				extensions[index++] = fileExtension.toCharArray();
-			}
-			JAVA_LIKE_EXTENSIONS = extensions;
 		}
-		return JAVA_LIKE_EXTENSIONS;
+		boolean includeJavaType = JavaCore.JAVA_SOURCE_CONTENT_TYPE.equals(contentTypeId);
+		char[][] extensions;
+		int index = 1;
+		if(includeJavaType) {
+			extensions = new char[fileExtensions.size() + 1][];
+			extensions[0] = SuffixConstants.EXTENSION_java.toCharArray(); // ensure that "java" is first
+			index = 1;
+
+		} else {
+			extensions = new char[fileExtensions.size()][];
+			index = 0;
+		}
+		Iterator iterator = fileExtensions.iterator();
+		while (iterator.hasNext()) {
+			String fileExtension = (String) iterator.next();
+			extensions[index++] = fileExtension.toCharArray();
+		}
+		return extensions;
 	}
+
 	/**
 	 * Get the jdk level of this root.
 	 * The value can be:
@@ -1608,9 +1635,21 @@ public class Util {
 	 * Note this is the index of the '.' even if it is not considered part of the extension.
 	 */
 	public static int indexOfJavaLikeExtension(String fileName) {
+		return indexOfJavaRelatedExtension(fileName, getJavaLikeExtensions());
+	}
+
+	/*
+	 * Returns the index of the Java derived extension of the given file name
+	 * or -1 if it doesn't end with a known Java like extension.
+	 * Note this is the index of the '.' even if it is not considered part of the extension.
+	 */
+	public static int indexOfJavaDerivedExtension(String fileName) {
+		return indexOfJavaRelatedExtension(fileName, getJavaDerivedExtensions());
+	}
+
+	private static int indexOfJavaRelatedExtension(String fileName, char[][] javaRelatedExtensions) {
 		int fileNameLength = fileName.length();
-		char[][] javaLikeExtensions = getJavaLikeExtensions();
-		extensions: for (char[] extension : javaLikeExtensions) {
+		extensions: for (char[] extension : javaRelatedExtensions) {
 			int extensionLength = extension.length;
 			int extensionStart = fileNameLength - extensionLength;
 			int dotIndex = extensionStart - 1;
@@ -2774,14 +2813,34 @@ public class Util {
 	}
 
 	/**
+	 * Returns true if the given name ends with one of the known java-derived extension.
+	 * (implementation is not creating extra strings)
+	 */
+	public final static boolean isJavaDerivedFileName(String name) {
+		if (name == null) return false;
+		return indexOfJavaDerivedExtension(name) != -1;
+	}
+
+	/**
 	 * Returns true if the given name ends with one of the known java like extension.
 	 * (implementation is not creating extra strings)
 	 */
 	public final static boolean isJavaLikeFileName(char[] fileName) {
+		return isJavaRelatedFileName(fileName, getJavaLikeExtensions());
+	}
+
+	/**
+	 * Returns true if the given name ends with one of the known java derived extension.
+	 * (implementation is not creating extra strings)
+	 */
+	public final static boolean isJavaDerivedFileName(char[] fileName) {
+		return isJavaRelatedFileName(fileName, getJavaDerivedExtensions());
+	}
+
+	private final static boolean isJavaRelatedFileName(char[] fileName, char[][] javaRelatedExtensions) {
 		if (fileName == null) return false;
 		int fileNameLength = fileName.length;
-		char[][] javaLikeExtensions = getJavaLikeExtensions();
-		extensions: for (char[] extension : javaLikeExtensions) {
+		extensions: for (char[] extension : javaRelatedExtensions) {
 			int extensionLength = extension.length;
 			int extensionStart = fileNameLength - extensionLength;
 			if (extensionStart-1 < 0) continue;

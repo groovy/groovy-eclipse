@@ -265,7 +265,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		}
 		manageEnclosingInstanceAccessIfNecessary(currentScope, flowInfo);
 		updateMaxFieldCount(); // propagate down the max field count
-		internalAnalyseCode(flowContext, flowInfo);
+		internalAnalyseCode(flowContext, flowInfo.unconditionalFieldLessCopy()); // discards info about fields of enclosing classes
 	} catch (AbortType e) {
 		this.ignoreFurtherInvestigation = true;
 	}
@@ -301,7 +301,7 @@ public void analyseCode(ClassScope currentScope, FlowContext flowContext, FlowIn
 		}
 		manageEnclosingInstanceAccessIfNecessary(currentScope, flowInfo);
 		updateMaxFieldCount(); // propagate down the max field count
-		internalAnalyseCode(flowContext, flowInfo);
+		internalAnalyseCode(flowContext, flowInfo.unconditionalFieldLessCopy()); // discards info about fields of enclosing classes
 	} catch (AbortType e) {
 		this.ignoreFurtherInvestigation = true;
 	}
@@ -745,8 +745,8 @@ private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
 	InitializationFlowContext initializerContext = new InitializationFlowContext(parentContext, this, flowInfo, flowContext, this.initializerScope);
 	// no static initializer in local classes, thus no need to set parent:
 	InitializationFlowContext staticInitializerContext = new InitializationFlowContext(null, this, flowInfo, flowContext, this.staticInitializerScope);
-	FlowInfo nonStaticFieldInfo = flowInfo.unconditionalFieldLessCopy();	// discards info about fields of inclosing classes
-	FlowInfo staticFieldInfo = flowInfo.unconditionalFieldLessCopy();
+	FlowInfo nonStaticFieldInfo = flowInfo.copy();
+	FlowInfo staticFieldInfo = flowInfo.copy();
 
 	if (JavaFeature.FLEXIBLE_CONSTRUCTOR_BODIES.isSupported(this.scope.compilerOptions())) {
 		if (this.methods != null) {
@@ -857,7 +857,7 @@ private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
 		}
 	}
 	if (this.methods != null) {
-		UnconditionalFlowInfo outerInfo = flowInfo.unconditionalFieldLessCopy();
+		FlowInfo outerInfo = flowInfo.copy();
 		if (nonStaticFieldInfo instanceof UnconditionalDualFlowInfo udfi) {
 			nonStaticFieldInfo = udfi.getMainInits(); // drop info from prologues
 		} else if (nonStaticFieldInfo instanceof DualFlowInfo dfi) {
@@ -1915,15 +1915,6 @@ public void updateSupertypesWithAnnotations(Map<ReferenceBinding,ReferenceBindin
 protected ReferenceBinding updateWithAnnotations(TypeReference typeRef, ReferenceBinding previousType,
 		Map<ReferenceBinding, ReferenceBinding> outerUpdates, Map<ReferenceBinding, ReferenceBinding> updates)
 {
-	if (!TESTING_GH_2158
-			&& previousType instanceof ParameterizedTypeBinding previousPTB
-			&& previousPTB.original() instanceof SourceTypeBinding previousOriginal
-			&& previousOriginal.supertypeAnnotationsUpdated) {
-		// re-initialized parameterized type with updated annotations from the original:
-		typeRef.resolvedType = this.scope.environment().createParameterizedType(previousOriginal,		// <- has been updated
-				previousPTB.arguments, previousType.enclosingType(), previousType.getAnnotations());	// <- no changes here
-	}
-
 	typeRef.updateWithAnnotations(this.scope, 0);
 	ReferenceBinding updatedType = (ReferenceBinding) typeRef.resolvedType;
 	if (updatedType instanceof ParameterizedTypeBinding) {
@@ -1937,10 +1928,8 @@ protected ReferenceBinding updateWithAnnotations(TypeReference typeRef, Referenc
 	if (previousType != null) {
 		if (previousType.id == TypeIds.T_JavaLangObject && ((this.binding.tagBits & TagBits.HierarchyHasProblems) != 0))
 			return previousType; // keep this cycle breaker
-		if (previousType != updatedType) { //$IDENTITY-COMPARISON$
+		if (previousType != updatedType) //$IDENTITY-COMPARISON$
 			updates.put(previousType, updatedType);
-			this.binding.supertypeAnnotationsUpdated = true;
-		}
 	}
 	return updatedType;
 }

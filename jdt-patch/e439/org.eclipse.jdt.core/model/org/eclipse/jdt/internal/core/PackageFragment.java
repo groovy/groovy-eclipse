@@ -283,11 +283,12 @@ public IClassFile[] getClassFiles() throws JavaModelException {
 
 /**
  * @see IPackageFragment#getCompilationUnit(String)
- * @exception IllegalArgumentException if the name does not end with ".java"
+ * @exception IllegalArgumentException if the name does not end with java-like or java-derived file extension
  */
 @Override
 public ICompilationUnit getCompilationUnit(String cuName) {
-	if (!org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(cuName)) {
+	if (!org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(cuName)
+			&& !org.eclipse.jdt.internal.core.util.Util.isJavaDerivedFileName(cuName)) {
 		throw new IllegalArgumentException(Messages.convention_unit_notJavaName);
 	}
 	/* GROOVY edit

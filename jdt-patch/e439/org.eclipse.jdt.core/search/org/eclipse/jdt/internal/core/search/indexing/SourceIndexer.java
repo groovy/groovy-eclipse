@@ -410,11 +410,22 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 	 */
 	boolean indexDocumentFromDOM() {
 		var unit = getUnit();
+		String documentPath = this.document.getPath();
+		char[] source = null;
+		char[] name = null;
+		try {
+			source = this.document.getCharContents();
+			name = documentPath.toCharArray();
+		} catch(Exception e){
+			// ignore
+		}
+		if (source == null || name == null) return false; // could not retrieve document info (e.g. resource was discarded)
+
 		ASTParser astParser = ASTParser.newParser(AST.getJLSLatest()); // we don't seek exact compilation the more tolerant the better here
 		if (unit != null) {
 			astParser.setSource(unit);
 		} else {
-			astParser.setSource(this.document.getCharContents());
+			astParser.setSource(source);
 		}
 		astParser.setStatementsRecovery(true);
 		astParser.setResolveBindings(this.document.shouldIndexResolvedDocument());

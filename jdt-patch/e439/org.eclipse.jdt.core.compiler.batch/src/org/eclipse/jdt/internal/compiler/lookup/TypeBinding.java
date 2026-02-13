@@ -45,6 +45,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
+import org.eclipse.jdt.internal.compiler.util.Util;
 
 /*
  * Not all fields defined by this type (& its subclasses) are initialized when it is created.
@@ -183,9 +184,13 @@ public String annotatedDebugName() {
 		buffer.append('.');
 	}
 	AnnotationBinding [] annotations = getTypeAnnotations();
-	for (int i = 0, length = annotations == null ? 0 : annotations.length; i < length; i++) {
-		buffer.append(annotations[i]);
-		buffer.append(' ');
+	if (annotations == Binding.AWAITED_ANNOTATIONS) {
+		buffer.append("@<Awaited ...> "); //$NON-NLS-1$
+	} else {
+		for (int i = 0, length = annotations == null ? 0 : annotations.length; i < length; i++) {
+			buffer.append(annotations[i]);
+			buffer.append(' ');
+		}
 	}
 	buffer.append(sourceName());
 	return buffer.toString();
@@ -1644,7 +1649,7 @@ final public AnnotationBinding[] getTypeAnnotations() {
 
 public void setTypeAnnotations(AnnotationBinding[] annotations, boolean evalNullAnnotations) {
 	this.tagBits |= TagBits.HasTypeAnnotations;
-	if (annotations == null || annotations.length == 0)
+	if (annotations == null || (annotations.length == 0 && Util.effectivelyEqual(annotations, this.typeAnnotations)))
 		return;
 	this.typeAnnotations = annotations;
 	if (evalNullAnnotations) {

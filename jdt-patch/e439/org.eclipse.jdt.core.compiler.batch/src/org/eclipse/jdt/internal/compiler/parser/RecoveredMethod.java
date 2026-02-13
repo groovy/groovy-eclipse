@@ -45,7 +45,6 @@ public class RecoveredMethod extends RecoveredElement {
 	public int localTypeCount;
 
 	public RecoveredBlock methodBody;
-	public boolean discardBody = true;
 
 	int pendingModifiers;
 	int pendingModifersSourceStart = -1;

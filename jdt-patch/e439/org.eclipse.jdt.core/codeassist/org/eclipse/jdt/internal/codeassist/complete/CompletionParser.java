@@ -2890,6 +2890,13 @@ protected void consumeEnterAnonymousClassBody(boolean qualified) {
 	super.consumeEnterAnonymousClassBody(qualified);
 }
 @Override
+protected void consumeEnterMemberValueArrayInitializer() {
+	if(this.currentElement != null) {
+		this.currentElement.foundOpeningBrace = true;
+		super.consumeEnterMemberValueArrayInitializer();
+	}
+}
+@Override
 protected void consumeEnterVariable() {
 	this.identifierPtr--;
 	this.identifierLengthPtr--;

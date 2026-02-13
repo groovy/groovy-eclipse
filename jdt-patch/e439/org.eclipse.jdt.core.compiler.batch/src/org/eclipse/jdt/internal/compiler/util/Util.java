@@ -41,6 +41,8 @@ import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
 import org.eclipse.jdt.internal.compiler.batch.Main;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
+import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
@@ -1516,6 +1518,12 @@ public class Util implements SuffixConstants {
 				return false;
 		}
 		return true;
+	}
+
+	public static boolean effectivelyEqual(AnnotationBinding [] one, AnnotationBinding [] two) {
+		if (one == Binding.AWAITED_ANNOTATIONS || two == Binding.AWAITED_ANNOTATIONS)
+			return one == two;
+		return effectivelyEqual((Object []) one, (Object []) two);
 	}
 
 	public static void appendEscapedChar(StringBuilder buffer, char c, boolean stringLiteral) {

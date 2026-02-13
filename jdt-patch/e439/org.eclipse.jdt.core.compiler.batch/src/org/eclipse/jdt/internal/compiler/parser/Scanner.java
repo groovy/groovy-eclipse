@@ -460,19 +460,43 @@ public void checkTaskTag(int commentStart, int commentEnd) throws InvalidInputEx
 public char[] getCurrentIdentifierSource() {
 	//return the token REAL source (aka unicodes are precomputed)
 	if (this.withoutUnicodePtr != 0) {
-		//0 is used as a fast test flag so the real first char is in position 1
-		char[] result = new char[this.withoutUnicodePtr];
-		System.arraycopy(
-			this.withoutUnicodeBuffer,
-			1,
-			result,
-			0,
-			this.withoutUnicodePtr);
-		return result;
+//		//0 is used as a fast test flag so the real first char is in position 1
+		return getIdentifierIgnoringIgnorable(this.withoutUnicodeBuffer, 1, this.withoutUnicodePtr);
 	}
 	int length = this.currentPosition - this.startPosition;
 	if (length == this.eofPosition) return this.source;
-	return this.deduplication.sharedCopyOfRange(this.source, this.startPosition, this.currentPosition);
+	return getIdentifierIgnoringIgnorable(this.source, this.startPosition, this.currentPosition - this.startPosition);
+}
+public char[] getIdentifierIgnoringIgnorable(char[] originalSource, int start, int length) {
+
+	if (length <= 0) return CharOperation.NO_CHAR;
+
+	int ignorableCount = 0;
+	int end = start + length;
+	for (int i = start; i < end; i++) {
+		if (Character.isIdentifierIgnorable(originalSource[i])) {
+			ignorableCount++;
+		}
+	}
+
+	// If nothing to remove, return a shared copy of the original
+	if (ignorableCount == 0) {
+		return this.deduplication.sharedCopyOfRange(originalSource, start, end);
+	}
+
+	int newLength = length - ignorableCount;
+	if (newLength <= 0) return CharOperation.NO_CHAR;
+
+	char[] compacted = new char[newLength];
+	int newEnd = 0;
+	for (int i = start; i < end; i++) {
+		char c = originalSource[i];
+		if (!Character.isIdentifierIgnorable(c)) {
+			compacted[newEnd++] = c;
+		}
+	}
+	// Return a deduplicated/shared copy of the compacted result
+	return this.deduplication.sharedCopyOfRange(compacted, 0, newEnd);
 }
 
 public int getCurrentTokenEndPosition(){

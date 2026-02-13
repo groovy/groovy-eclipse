@@ -1927,6 +1927,112 @@ public void testGH4635() {
 
 	});
 }
+public void testGH4604() {
+	runConformTest(new String[] {
+			"X.java",
+			"""
+			import java.util.concurrent.*;
+			import java.util.stream.*;
+			public class X {
+				public static void main(String[] args) {
+					CompletableFuture.allOf(Stream.of(1)
+						.map(value -> future(value))
+						.toArray(CompletableFuture[]::new));
+				}
+
+				public static <T> CompletableFuture<?> future(T t) {
+					return CompletableFuture.completedFuture(t);
+				}
+			}
+			"""
+		});
+}
+public void testGH4699_1() {
+	if (this.complianceLevel < ClassFileConstants.JDK10) return; // uses 'var'
+	runConformTest(new String[] {
+			"EclipseBug.java",
+			"""
+			public class EclipseBug {
+				void error1() {
+					var someObject = getObject(); // <<--- Compiler complains here
+				}
+				private SomeObject<? extends SomeType<?, ? extends SpecialLocation>, ? extends SpecialLocation, ?> getObject() {
+					return null;
+				}
+				static interface SomeLocation { }
+				static interface SpecialLocation extends SomeLocation { }
+
+				static interface SomeType<O extends SomeObject<? extends SomeType<?, L>, L, ? extends SomeObject<?, ?, ?>>, L extends SomeLocation> { }
+
+				public interface SomeObject<T extends SomeType<?, L>, L extends SomeLocation, P extends SomeObject<?, ?, ?>> { }
+			}
+			"""
+		});
+}
+public void testGH4699_full() {
+	if (this.complianceLevel < ClassFileConstants.JDK10) return; // uses 'var'
+	runConformTest(new String[] {
+			"EclipseBug.java",
+			"""
+			public class EclipseBug {
+
+				void error1() {
+					var someObject = getObject();
+				}
+
+				void error2(SomeObject<? extends SomeType<?, ? extends SpecialLocation>, ? extends SpecialLocation, ?> theObject) {
+					method(theObject);
+				}
+
+				void error3(SomeObject<? extends SomeType<?, ? extends SpecialLocation>, ? extends SpecialLocation, ?> theObject) {
+					SomeObject<? extends SomeType<?, ? extends SpecialLocation>, ? extends SpecialLocation, ?> theObject2 = theObject;
+				}
+
+				void method(SomeObject<? extends SomeType<?, ? extends SpecialLocation>, ? extends SpecialLocation, ?> theObject) { }
+
+				private SomeObject<? extends SomeType<?, ? extends SpecialLocation>, ? extends SpecialLocation, ?> getObject() {
+					return null;
+				}
+
+				static interface SomeLocation { }
+				static interface SpecialLocation extends SomeLocation { }
+				static interface SomeType<O extends SomeObject<? extends SomeType<?, L>, L, ? extends SomeObject<?, ?, ?>>, L extends SomeLocation> { }
+				public interface SomeObject<T extends SomeType<?, L>, L extends SomeLocation, P extends SomeObject<?, ?, ?>> { }
+			}
+			"""
+		});
+}
+
+public void testGH4810() {
+	runConformTest(new String[] {
+			"Repro.java",
+			"""
+			import java.util.concurrent.Callable;
+			public class Repro {
+				Object test() {
+					try {
+						return myMethod(new MyCallable<>() {
+							@Override
+							public Object call() {
+								return new Object();
+							}
+						});
+					} catch (Exception e) {
+						e.printStackTrace();
+						return null;
+					}
+				}
+				<T, E extends Exception> T myMethod(MyCallable<T, E> callable) throws E {
+					return callable.call();
+				}
+			}
+			interface MyCallable<U, F extends Exception> extends Callable<U> {
+				@Override
+				U call() throws F;
+			}
+			"""
+	});
+}
 
 public static Class<GenericsRegressionTest_9> testClass() {
 	return GenericsRegressionTest_9.class;

@@ -1416,6 +1416,7 @@ public class ClassScope extends Scope {
 		boolean previousFlag = environment().enterSuperTypeLookup(sourceType);
 		if ((sourceType.tagBits & TagBits.BeginHierarchyCheck) == 0) {
 			sourceType.tagBits |= TagBits.BeginHierarchyCheck;
+			preprocessTypeVariables(this.referenceContext.binding.typeVariables, this.referenceContext.typeParameters);
 			boolean noProblems = connectSuperclass();
 			noProblems &= connectSuperInterfaces();
 			if ((sourceType.typeBits & (TypeIds.BitAutoCloseable|TypeIds.BitCloseable)) != 0) {
@@ -1459,6 +1460,7 @@ public class ClassScope extends Scope {
 		boolean previousFlag = environment().enterSuperTypeLookup(sourceType);
 		try {
 			sourceType.tagBits |= TagBits.BeginHierarchyCheck;
+			preprocessTypeVariables(this.referenceContext.binding.typeVariables, this.referenceContext.typeParameters);
 			boolean noProblems = connectSuperclass();
 			noProblems &= connectSuperInterfaces();
 			environment().typesBeingConnected.remove(sourceType);

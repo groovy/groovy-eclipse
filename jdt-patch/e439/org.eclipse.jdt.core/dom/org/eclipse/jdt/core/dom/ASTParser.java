@@ -1243,7 +1243,9 @@ public class ASTParser {
 						key = ((BinaryModule) element).getKey(true);
 					else
 						throw new IllegalArgumentException(element + " has an unexpected type"); //$NON-NLS-1$
-					binaryElementPositions.put(key, i);
+					if (key != null) {
+						binaryElementPositions.put(key, i);
+					}
 				} catch (JavaModelException e) {
 					throw new IllegalArgumentException(element + " does not exist", e); //$NON-NLS-1$
 				}

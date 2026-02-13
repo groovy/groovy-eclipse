@@ -45465,12 +45465,17 @@ public void test1357() {
 				"}\n", // =================
 			},
 			"----------\n" +
-			"1. ERROR in X.java (at line 8)\n" +
+			"1. ERROR in X.java (at line 7)\n" +
+			"	@Ann(X.Private.class) // Private is not visible here\n" +
+			"	     ^^^^^^^^^\n" +
+			"The type X.Private is not visible\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 8)\n" +
 			"	public abstract class X implements Map<X.Private,Secondary.SecondaryPrivate> {\n" +
 			"	                                       ^^^^^^^^^\n" +
 			"The type X.Private is not visible\n" +
 			"----------\n" +
-			"2. ERROR in X.java (at line 8)\n" +
+			"3. ERROR in X.java (at line 8)\n" +
 			"	public abstract class X implements Map<X.Private,Secondary.SecondaryPrivate> {\n" +
 			"	                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 			"The type Secondary.SecondaryPrivate is not visible\n" +

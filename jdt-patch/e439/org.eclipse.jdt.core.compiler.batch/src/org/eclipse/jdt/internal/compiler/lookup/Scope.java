@@ -855,16 +855,32 @@ public abstract class Scope {
 		return null; // incompatible
 	}
 
+	/* If the type variables will eventually come to be type annotated (express declaration site type annotations or applicable null defaults),
+	 * proactively create an "annotatable" variant now. When integrating annotations into hierarchy, we can then apply annotations `in place'.
+	 * Doing this now, ahead of connecting super types ensures that all references to the type variables in various AST nodes, will see the
+	 * annotatable variant being created here and once that gets annotated, all AST nodes into which the type variable binding was fanned out
+	 * by resolution will automatically see the update.
+	 */
+	void preprocessTypeVariables(TypeVariableBinding [] typeVariables, TypeParameter [] typeParameters) {
+		if (environment().typeSystem instanceof AnnotatableTypeSystem) {
+			int length;
+			if (typeVariables != null && typeParameters != null && (length = typeVariables.length) == typeParameters.length) {
+				for (int i = 0; i < length; i++) {
+					TypeParameter typeParameter = typeParameters[i];
+					TypeVariableBinding typeVariable = typeVariables[i];
+					if (typeParameter.binding != typeVariable) //$IDENTITY-COMPARISON$
+						throw new AssertionError("Unexpected type variable"); //$NON-NLS-1$
+					if ((typeParameter.bits & ASTNode.HasTypeAnnotations) != 0 || hasDefaultNullnessFor(Binding.DefaultLocationTypeParameter, typeParameter.sourceStart()))
+						typeParameters[i].binding = typeVariables[i] = (TypeVariableBinding) environment().createAnnotatedType(typeVariable, new AnnotationBinding [][] { Binding.AWAITED_ANNOTATIONS });
+				}
+			}
+		}
+	}
+
 	/**
 	 * Connect type variable supertypes, and returns true if no problem was detected
 	 */
 	protected boolean connectTypeVariables(TypeParameter[] typeParameters, boolean checkForErasedCandidateCollisions) {
-		/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=305259 - We used to not bother with connecting
-		   type variables if source level is < 1.5. This creates problems in the reconciler if a 1.4
-		   project references the generified API of a 1.5 project. The "current" project's source
-		   level cannot decide this question for some other project. Now, if we see type parameters
-		   at all, we assume that the concerned java element has some legitimate business with them.
-		 */
 		if (typeParameters == null || typeParameters.length == 0) return true;
 		Map<TypeBinding, Object> invocations = new HashMap<>(2);
 		boolean noProblems = true;
@@ -1026,7 +1042,6 @@ public abstract class Scope {
 	}
 
 	public TypeVariableBinding[] createTypeVariables(TypeParameter[] typeParameters, Binding declaringElement) {
-		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=324850, If they exist at all, process type parameters irrespective of source level.
 		if (typeParameters == null || typeParameters.length == 0)
 			return Binding.NO_TYPE_VARIABLES;
 
@@ -2045,7 +2060,7 @@ public abstract class Scope {
 							methodScope = (MethodScope) scope;
 							insideStaticContext |= methodScope.isStatic;
 							insideConstructorCall |= methodScope.isConstructorCall;
-							insideTypeAnnotation = methodScope.insideTypeAnnotation;
+							insideTypeAnnotation = methodScope.insideTypeDeclarationAnnotations;
 
 							//$FALL-THROUGH$ could duplicate the code below to save a cast - questionable optimization
 						case BLOCK_SCOPE :
@@ -2590,7 +2605,7 @@ public abstract class Scope {
 					methodScope = (MethodScope) scope;
 					insideStaticContext |= methodScope.isStatic;
 					insideConstructorCall |= methodScope.isConstructorCall;
-					insideTypeAnnotation = methodScope.insideTypeAnnotation;
+					insideTypeAnnotation = methodScope.insideTypeDeclarationAnnotations;
 					break;
 				case CLASS_SCOPE :
 					ClassScope classScope = (ClassScope) scope;
@@ -3365,7 +3380,7 @@ public abstract class Scope {
 							}
 						}
 						insideStaticContext |= methodScope.isStatic;
-						insideTypeAnnotation = methodScope.insideTypeAnnotation;
+						insideTypeAnnotation = methodScope.insideTypeDeclarationAnnotations;
 						//$FALL-THROUGH$
 					case BLOCK_SCOPE :
 						ReferenceBinding localType = ((BlockScope) scope).findLocalType(name); // looks in this scope only
@@ -3758,7 +3773,7 @@ public abstract class Scope {
 				Object value = invocations.get(mec);
 				if (value instanceof TypeBinding[]) {
 					TypeBinding[] invalidInvocations = (TypeBinding[]) value;
-					if (areSignificantlyDifferent(invalidInvocations[0], invalidInvocations[1])) {
+					if (TypeDeclaration.TESTING_GH_2158 || areSignificantlyDifferent(invalidInvocations[0], invalidInvocations[1])) {
 						problemReporter().superinterfacesCollide(invalidInvocations[0].erasure(), typeRef, invalidInvocations[0], invalidInvocations[1]);
 						type.tagBits |= TagBits.HierarchyHasProblems;
 						return true;

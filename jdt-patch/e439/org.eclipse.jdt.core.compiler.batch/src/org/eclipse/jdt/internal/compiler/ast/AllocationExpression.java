@@ -130,7 +130,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	ReferenceBinding[] thrownExceptions;
 	if (((thrownExceptions = this.binding.thrownExceptions).length) != 0) {
 		if ((this.bits & ASTNode.Unchecked) != 0 && this.genericTypeArguments == null) {
-			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=277643, align with javac on JLS 15.12.2.6
+			// NON-JLS https://bugs.eclipse.org/bugs/show_bug.cgi?id=277643, align with javac on JLS 15.12.2.6
 			thrownExceptions = currentScope.environment().convertToRawTypes(this.binding.thrownExceptions, true, true);
 		}
 		// check exception handling

@@ -523,7 +523,7 @@ public IPackageFragment getPackageFragment() {
 public JavaElement getPrimaryElement(boolean checkOwner) {
 	if (checkOwner) {
 		CompilationUnit cu = (CompilationUnit)getAncestor(COMPILATION_UNIT);
-		if (cu.isPrimary()) return this;
+		if (cu == null || cu.isPrimary()) return this;
 	}
 	IJavaElement primaryParent = this.getParent().getPrimaryElement(false);
 	switch (primaryParent.getElementType()) {

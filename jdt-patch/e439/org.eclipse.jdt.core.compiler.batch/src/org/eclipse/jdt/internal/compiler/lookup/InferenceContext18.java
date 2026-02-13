@@ -95,15 +95,13 @@ public class InferenceContext18 {
 	public final static boolean DEBUG = false;
 	public final static boolean DEBUG_FINE = false;
 
-	/** to conform with javac regarding https://bugs.openjdk.java.net/browse/JDK-8026527 */
+	/** NON-JLS: to conform with javac regarding https://bugs.openjdk.java.net/browse/JDK-8026527 */
 	static final boolean SIMULATE_BUG_JDK_8026527 = true;
 
-	/** Temporary workaround until we know fully what to do with https://bugs.openjdk.java.net/browse/JDK-8054721
-	 *  It looks likely that we have a bug independent of this JLS bug in that we clear the capture bounds eagerly.
-	*/
+	/** NON-JLS: Temporary workaround until we know fully what to do with https://bugs.openjdk.java.net/browse/JDK-8054721 */
 	static final boolean SHOULD_WORKAROUND_BUG_JDK_8054721 = true; // See https://bugs.eclipse.org/bugs/show_bug.cgi?id=437444#c24 onwards
 
-	static final boolean SHOULD_WORKAROUND_BUG_JDK_8153748 = true; // emulating javac behaviour after private email communication
+	static final boolean SHOULD_WORKAROUND_BUG_JDK_8153748 = true; // NON-JLS emulating javac behaviour after private email communication
 
 	/**
 	 * NON-JLS: Detail flag to control the extent of {@link #SIMULATE_BUG_JDK_8026527}.
@@ -153,11 +151,11 @@ public class InferenceContext18 {
 	ReferenceBinding object; // java.lang.Object
 	public BoundSet b2;
 	private BoundSet b3;
-	/** Not per JLS: inbox for emulation of how javac passes type bounds from inner to outer */
+	/** NON-JLS: inbox for emulation of how javac passes type bounds from inner to outer */
 	private BoundSet innerInbox;
-	/** Not per JLS: signal when current is ready to directly merge all bounds from inner. */
+	/** NON-JLS: signal when current is ready to directly merge all bounds from inner. */
 	private boolean directlyAcceptingInnerBounds = false;
-	/** Not per JLS: pushing bounds from inner to outer may have to be deferred till after overload resolution, store here a runnable to perform the push. */
+	/** NON-JLS: pushing bounds from inner to outer may have to be deferred till after overload resolution, store here a runnable to perform the push. */
 	private Runnable pushToOuterJob = null;
 	// the following two flags control to what degree we continue with incomplete information:
 	private boolean isInexactVarargsInference = false;
@@ -490,13 +488,13 @@ public class InferenceContext18 {
 		}
 	}
 
-	// ---  not per JLS: emulate how javac passes type bounds from inner to outer: ---
-	/** Not per JLS: push current bounds to outer inference if outer is ready for it. */
+	// ---  NON-JLS: emulate how javac passes type bounds from inner to outer: ---
+	/** NON-JLS: push current bounds to outer inference if outer is ready for it. */
 	private void pushBoundsToOuter() {
 		pushBoundsTo(this.outerContext);
 	}
 
-	/** Not per JLS: invent more bubbling up of inner bounds. */
+	/** NON-JLS: invent more bubbling up of inner bounds. */
 	public void pushBoundsTo(InferenceContext18 outer) {
 		if (outer != null && outer.stepCompleted >= APPLICABILITY_INFERRED) {
 			boolean deferred = outer.currentInvocation instanceof Invocation; // need to wait till after overload resolution?
@@ -517,14 +515,14 @@ public class InferenceContext18 {
 			}
 		}
 	}
-	/** Not JLS: after overload resolution is done, perform the push of type bounds to outer inference, if any. */
+	/** NON-JLS: after overload resolution is done, perform the push of type bounds to outer inference, if any. */
 	public void flushBoundOutbox() {
 		if (this.pushToOuterJob != null) {
 			this.pushToOuterJob.run();
 			this.pushToOuterJob = null;
 		}
 	}
-	/** Not JLS: merge pending bounds of inner inference into current. */
+	/** NON-JLS: merge pending bounds of inner inference into current. */
 	private void mergeInnerBounds() {
 		if (this.innerInbox != null) {
 			this.currentBounds.addBounds(this.innerInbox, this.environment, false);
@@ -535,7 +533,7 @@ public class InferenceContext18 {
 	interface InferenceOperation {
 		boolean perform() throws InferenceFailureException;
 	}
-	/** Not per JLS: if operation succeeds merge new bounds from inner into current. */
+	/** NON-JLS: if operation succeeds merge new bounds from inner into current. */
 	private boolean collectingInnerBounds(InferenceOperation operation) throws InferenceFailureException {
 		boolean result = operation.perform();
 		if (result)
@@ -549,7 +547,7 @@ public class InferenceContext18 {
 	private ReductionResult addJDK_8153748ConstraintsFromInvocation(Expression[] arguments, MethodBinding method, InferenceSubstitution substitution)
 			throws InferenceFailureException
 	{
-		// not per JLS, trying to mimic javac behavior
+		// NON-JLS, trying to mimic javac behavior
 		boolean constraintAdded = false;
 		if (arguments != null) {
 			for (int i = 0; i < arguments.length; i++) {
@@ -686,7 +684,7 @@ public class InferenceContext18 {
 			throws InferenceFailureException
 	{
 		boolean substFIsProperType = substF.isProperType(true);
-		// -- not per JLS, emulate javac behavior:
+		// -- NON-JLS, emulate javac behavior:
 		substF = Scope.substitute(getResultSubstitution(this.b3), substF);
 		// --
 
@@ -1176,12 +1174,24 @@ public class InferenceContext18 {
 				final int numVars = variableSet.size();
 				if (numVars > 0) {
 					final InferenceVariable[] variables = variableSet.toArray(new InferenceVariable[numVars]);
+					// NON-JLS: prioritize ivars in 'inThrows' as those may pull in new information by extra rule below (=RuntimeException)
+					BoundSet tSet = tmpBoundSet;
+					Arrays.sort(variables, (v1, v2) -> {
+						int r1 = tSet.inThrows.contains(v1) ? -1 : 0;
+						int r2 = tSet.inThrows.contains(v2) ? -1 : 0;
+						return r1 - r2;
+					});
+					//
 					variables: if (!isRecordPatternTypeInference && !tmpBoundSet.hasCaptureBound(variableSet)) {
 						// try to instantiate this set of variables in a fresh copy of the bound set:
 						BoundSet prevBoundSet = tmpBoundSet;
 						tmpBoundSet = tmpBoundSet.copy();
 						for (int j = 0; j < variables.length; j++) {
 							InferenceVariable variable = variables[j];
+							if (tmpBoundSet.isInstantiated(variable)) { // NON-JLS: may happen when exception bound has been incorporated
+								toResolveSet.remove(variable);
+								continue;
+							}
 							// try lower bounds:
 							TypeBinding[] lowerBounds = tmpBoundSet.lowerBounds(variable, true/*onlyProper*/);
 							if (lowerBounds != Binding.NO_TYPES) {
@@ -1195,6 +1205,11 @@ public class InferenceContext18 {
 								if (tmpBoundSet.inThrows.contains(variable.prototype()) && tmpBoundSet.hasOnlyTrivialExceptionBounds(variable, upperBounds)) {
 									TypeBinding runtimeException = this.scope.getType(TypeConstants.JAVA_LANG_RUNTIMEEXCEPTION, 3);
 									tmpBoundSet.addBound(new TypeBound(variable, runtimeException, ReductionResult.SAME), this.environment);
+									// NON-JLS: propagate RuntimeException to equivalent ivars:
+									if (!tmpBoundSet.incorporate(this)) {
+										tmpBoundSet = prevBoundSet;// clean-up for second attempt
+										break variables;
+									}
 								} else {
 									// try upper bounds:
 									TypeBinding glb = this.object;
