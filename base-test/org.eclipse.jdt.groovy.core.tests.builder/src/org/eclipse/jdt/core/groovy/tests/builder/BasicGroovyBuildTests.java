@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +28,10 @@ import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -262,7 +263,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         fullBuild(paths[0]);
 
-        expectingProblemsFor(paths[0], Arrays.asList(
+        expectingProblemsFor(paths[0], List.of(
             "Problem : The project was not built since its build path is incomplete. Cannot find the class file for groovy.lang.GroovyObject." +
                 " Fix the build path then try building this project [ resource : </Project> range : <-1,-1> category : <10> severity : <2>]",
             "Problem : The type groovy.lang.GroovyObject cannot be resolved. It is indirectly referenced from required .class files" +
@@ -282,7 +283,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         fullBuild(paths[0]);
 
-        expectingProblemsFor(paths[0], Arrays.asList(
+        expectingProblemsFor(paths[0], List.of(
             "Problem : The project was not built since its build path is incomplete. Cannot find the class file for groovy.lang.GroovyObject." +
                 " Fix the build path then try building this project [ resource : </Project> range : <-1,-1> category : <10> severity : <2>]",
             "Problem : The type groovy.lang.GroovyObject cannot be resolved. It is indirectly referenced from required .class files" +
@@ -1725,17 +1726,43 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     @Test
+    public void testAnnotationCollectorSingleProject() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        //@formatter:off
+        env.addGroovyClass(paths[1], "com.demo", "Meta",
+            "package com.demo\n" +
+            "\n" +
+            "@groovy.transform.AnnotationCollector\n" +
+            "@groovy.transform.Canonical\n" +
+            "@interface Meta {}\n");
+
+        IPath pogo = env.addGroovyClass(paths[1], "com.demo", "Pogo",
+            "package com.demo\n" +
+            "\n" +
+            "@Meta\n" +
+            "class Pogo {}\n");
+        //@formatter:on
+
+        assertEquals(Set.of(), ReconcilerUtils.reconcile(env.getUnit(pogo)));
+
+        fullBuild();
+        expectingNoProblems();
+        expectingCompiledClasses("com.demo.Meta", "com.demo.Meta$CollectorHelper", "com.demo.Pogo");
+    }
+
+    @Test
     public void testAnnotationCollectorMultiProject() throws Exception {
         // Construct 'annotation' project that defines annotation using 'AnnotationsCollector'
         IPath[] paths = createSimpleProject("annotation", true);
 
         //@formatter:off
-        env.addGroovyClass(paths[1], "com.demo", "MyAnnotation",
+        env.addGroovyClass(paths[1], "com.demo", "Meta",
             "package com.demo\n" +
             "\n" +
             "@groovy.transform.AnnotationCollector\n" +
-            "@Deprecated\n" +
-            "@interface MyAnnotation {}\n");
+            "@groovy.transform.Canonical\n" +
+            "@interface Meta {}\n");
         //@formatter:on
 
         IPath annotationProject = paths[0];
@@ -1746,16 +1773,18 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addRequiredProjectWithoutTestCode(paths[0], annotationProject);
 
         //@formatter:off
-        env.addGroovyClass(paths[1], "com.demo", "Widget",
+        IPath pogo = env.addGroovyClass(paths[1], "com.demo", "Pogo",
             "package com.demo\n" +
             "\n" +
-            "@MyAnnotation\n" +
-            "class Widget {}\n");
+            "@Meta\n" +
+            "class Pogo {}\n");
         //@formatter:on
+
+        assertEquals(Set.of(), ReconcilerUtils.reconcile(env.getUnit(pogo)));
 
         fullBuild();
         expectingNoProblems();
-        expectingCompiledClasses("com.demo.MyAnnotation", "com.demo.MyAnnotation$CollectorHelper", "com.demo.Widget");
+        expectingCompiledClasses("com.demo.Meta", "com.demo.Meta$CollectorHelper", "com.demo.Pogo");
     }
 
     @Test
@@ -1775,7 +1804,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "@NotNull @Length @groovy.transform.AnnotationCollector @interface ISBN {}\n");
 
         //@formatter:off
-        env.addGroovyClass(paths[1], "Book",
+        IPath book = env.addGroovyClass(paths[1], "Book",
             "import java.lang.annotation.Annotation;\n" +
             "import java.lang.reflect.Field;\n" +
             "\n" +
@@ -1791,6 +1820,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "  }\n" +
             "}\n");
         //@formatter:on
+
+        assertEquals(Set.of(), ReconcilerUtils.reconcile(env.getUnit(book)));
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -1816,9 +1847,12 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "}\n");
         //@formatter:on
 
+        assertEquals(Set.of(), ReconcilerUtils.reconcile(env.getUnit(book)));
+
         incrementalBuild(paths[0]);
-        expectingCompiledClasses("Book");
         expectingNoProblems();
+        expectingCompiledClasses("Book");
+
         executeClass(paths[0], "Book", "@NotNull()\n@Length()\n", "");
     }
 
@@ -2978,7 +3012,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         fullBuild(paths[0]);
         expectingNoProblems();
-        assertEquals(Collections.emptySet(), ReconcilerUtils.reconcile(env.getUnit(c)));
+        assertEquals(Set.of(), ReconcilerUtils.reconcile(env.getUnit(c)));
         expectingCompiledClasses("C", "T", "T$Trait$FieldHelper", "T$Trait$Helper", "T$Trait$StaticFieldHelper");
     }
 
@@ -3035,8 +3069,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         fullBuild(paths[0]);
         expectingNoProblems();
+        assertEquals(Set.of(), ReconcilerUtils.reconcile(env.getUnit(d)));
         expectingCompiledClasses("p.C", "p.D", "p.T", "p.T$Trait$Helper");
-        assertEquals(Collections.emptySet(), ReconcilerUtils.reconcile(env.getUnit(d)));
     }
 
     @Test
@@ -3331,17 +3365,17 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         foo = env.addGroovyClass(paths[1], "test", "Foo", baseType.replace("m1()", "mx(){}"));
 
         incrementalBuild(paths[0]);
-        expectingProblemsFor(foo, Arrays.asList(
+        expectingProblemsFor(foo, List.of(
             "Problem : Groovy:" + (!isParrotParser() ? "Abstract methods do not define a body."
                 : "You defined an abstract method[mx] with a body. Try removing the method body") +
             " [ resource : </Project/src/test/Foo.groovy> range : <36,56> category : <60> severity : <2>]",
             "Problem : The declared package \"\" does not match the expected package \"test\"" +
             " [ resource : </Project/src/test/Foo.groovy> range : <0,1> category : <60> severity : <2>]"));
-        expectingProblemsFor(bar, Arrays.asList(
+        expectingProblemsFor(bar, List.of(
             "Problem : Groovy:Method \'m1\' from class \'test.Bar\' does not override method from its superclass or interfaces" +
             " but is annotated with @Override. [ resource : </Project/src/test/Bar.groovy> range : <39,48> category : <60> severity : <2>]",
             "Problem : Groovy:unable to resolve class Foo [ resource : </Project/src/test/Bar.groovy> range : <31,34> category : <60> severity : <2>]"));
-        expectingProblemsFor(baz, Arrays.asList(
+        expectingProblemsFor(baz, List.of(
             "Problem : Groovy:Method \'m1\' from class \'test.Baz\' does not override method from its superclass or interfaces" +
             " but is annotated with @Override. [ resource : </Project/src/test/Baz.groovy> range : <39,48> category : <60> severity : <2>]",
             "Problem : Groovy:unable to resolve class Foo [ resource : </Project/src/test/Baz.groovy> range : <31,34> category : <60> severity : <2>]"));
@@ -3607,7 +3641,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.getProject(paths[0]).refreshLocal(1, null);
 
         expectingNoProblems();
-        assertEquals(Collections.emptySet(), ReconcilerUtils.reconcile(env.getUnit(main)));
+        assertEquals(Set.of(), ReconcilerUtils.reconcile(env.getUnit(main)));
     }
 
     @Test
@@ -3698,7 +3732,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         fullBuild(projectB);
         expectingCompiledClasses("script");
-        expectingProblemsFor(projectB, Arrays.asList("Problem : Groovy:unable to resolve class p.Test" +
+        expectingProblemsFor(projectB, List.of("Problem : Groovy:unable to resolve class p.Test" +
             " [ resource : </ProjectB/src/script.groovy> range : <17,23> category : <60> severity : <2>]"));
     }
 
@@ -3721,7 +3755,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         // TODO: expectingNoProblems(); // no cycle error; build order could be ProjectA:main, ProjectB:main, ProjectA:test, ProjectB:test
         Version jdt = JavaCore.getPlugin().getBundle().getVersion();
         boolean newCycleError = (jdt.getMajor() > 3 || jdt.getMinor() >= 20);
-        expectingProblemsFor(projectA, Arrays.asList(
+        expectingProblemsFor(projectA, List.of(
             "Problem : " + (newCycleError
                 ? "One or more cycles were detected in the build path of project 'ProjectA'. The paths towards the cycle and cycle are:\n->"
                 : "A cycle was detected in the build path of project 'ProjectA'. The cycle consists of projects ") +
@@ -3729,7 +3763,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "Problem : The project cannot be built until build path errors are resolved" +
                 " [ resource : </ProjectA> range : <-1,-1> category : <10> severity : <2>]"
         ));
-        expectingProblemsFor(projectB, Arrays.asList(
+        expectingProblemsFor(projectB, List.of(
             "Problem : " + (newCycleError
                 ? "One or more cycles were detected in the build path of project 'ProjectB'. The paths towards the cycle and cycle are:\n->"
                 : "A cycle was detected in the build path of project 'ProjectB'. The cycle consists of projects ") +

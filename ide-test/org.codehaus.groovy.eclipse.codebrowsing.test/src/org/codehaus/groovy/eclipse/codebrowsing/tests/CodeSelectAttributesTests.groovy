@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,8 +68,8 @@ final class CodeSelectAttributesTests extends BrowsingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/959
     void testCodeSelectOnAttributeName3() {
         addGroovySource '''\
-            |@groovy.transform.EqualsAndHashCode
             |@groovy.transform.AnnotationCollector
+            |@groovy.transform.EqualsAndHashCode
             |@interface A {
             |}
             |'''.stripMargin(), 'A'

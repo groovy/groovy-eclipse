@@ -19,7 +19,6 @@
 package org.codehaus.groovy.transform;
 
 import groovy.lang.GroovyRuntimeException;
-import groovy.lang.MissingClassException;
 import groovy.transform.AnnotationCollector;
 import org.apache.groovy.ast.tools.ClassNodeUtils;
 import org.codehaus.groovy.GroovyBugError;
@@ -42,7 +41,6 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,7 +53,7 @@ import java.util.Set;
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
-import static org.codehaus.groovy.transform.trait.TraitComposer.COMPILESTATIC_CLASSNODE;
+import static org.codehaus.groovy.transform.sc.StaticCompilationVisitor.COMPILESTATIC_CLASSNODE;
 import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
 import static groovyjarjarasm.asm.Opcodes.ACC_ANNOTATION;
 import static groovyjarjarasm.asm.Opcodes.ACC_ENUM;
@@ -76,12 +74,12 @@ public class AnnotationCollectorTransform {
     public static List<AnnotationNode> getMeta(ClassNode cn) {
         List<AnnotationNode> meta = cn.getNodeMetaData(AnnotationCollector.class);
         if (meta == null) {
-            if (cn.isPrimaryClassNode()) {
+            if (cn.isPrimaryClassNode()/*GRECLIPSE add*/|| !cn.hasClass()) {
                 meta = getTargetListFromAnnotations(cn);
             } else {
                 meta = getTargetListFromClass(cn);
             }
-            cn.setNodeMetaData(AnnotationCollector.class, meta);
+            cn.putNodeMetaData(AnnotationCollector.class, meta);
         }
         return meta;
     }
@@ -264,8 +262,8 @@ public class AnnotationCollectorTransform {
         List<AnnotationNode> ret = new ArrayList<>(annotations.size());
         for (AnnotationNode an : annotations) {
             ClassNode type = an.getClassNode();
-            if (type.getName().equals(AnnotationCollector.class.getName())
-                    || "java.lang.annotation".equals(type.getPackageName())
+            if ("java.lang.annotation".equals(type.getPackageName())
+                    || "groovy.transform.AnnotationCollector".equals(type.getName())
                     || "org.apache.groovy.lang.annotation.Incubating".equals(type.getName())) continue;
             AnnotationNode toAdd = new AnnotationNode(type);
             copyMembers(an, toAdd);
@@ -286,37 +284,36 @@ public class AnnotationCollectorTransform {
     }
 
     private static List<AnnotationNode> getTargetListFromClass(final ClassNode alias) {
+        /* GRECLIPSE edit
         ClassNode cn = getSerializeClass(alias);
         Class<?> c = cn.getTypeClass();
-        Object[][] data;
+        */
+        Class<?> c = alias.getTypeClass();
+        var ac = c.getAnnotation(AnnotationCollector.class);
+        if (ac != null) {
+            Class<?> sc = ac.serializeClass();
+            // 2.5.3 and above gets from annotation attribute, otherwise self
+            if (sc != null && sc != groovy.transform.Undefined.CLASS.class) {
+                c = sc;
+            }
+        }
+        // GRECLIPSE end
         try {
             Method m = c.getMethod("value");
-            if (!Modifier.isStatic(m.getModifiers()))
+            if ((m.getModifiers() & ACC_STATIC) == 0) {
                 throw new NoSuchMethodException("non-static value()");
-
-            data = (Object[][]) m.invoke(null);
-            return makeListOfAnnotations(data);
+            }
+            return makeListOfAnnotations((Object[][]) m.invoke(null));
         } catch (NoSuchMethodException | ClassCastException e) {
-            throw new GroovyRuntimeException("Expecting static method `Object[][] value()`" +
-                    " in " + cn.toString(false) + ". Was it compiled from a Java source?");
+            throw new GroovyRuntimeException("Expecting static method 'value()'" +
+                    " in " + c.getName() + ". Was it compiled from a Java source?");
         } catch (Exception e) {
             throw new GroovyBugError(e);
         }
     }
 
-    // 2.5.3 and above gets from annotation attribute otherwise self
+    /* GRECLIPSE edit
     private static ClassNode getSerializeClass(final ClassNode alias) {
-        // GRECLIPSE add -- serializeClass is not available through AST in JDTClassNode for source reference
-        try {
-            Class<?> c = alias.getTypeClass();
-            AnnotationCollector ac = c.getAnnotation(AnnotationCollector.class);
-            Class<?> sc = ac.serializeClass();
-            if (!sc.equals(AnnotationCollector.class)) {
-                return new ClassNode(sc);
-            }
-        } catch (GroovyBugError | MissingClassException | NullPointerException ignore) {
-        }
-        // GRECLIPSE end
         List<AnnotationNode> collectors = alias.getAnnotations(new ClassNode(AnnotationCollector.class));
         if (!collectors.isEmpty()) {
             assert collectors.size() == 1;
@@ -331,6 +328,7 @@ public class AnnotationCollectorTransform {
         }
         return alias;
     }
+    */
 
     private static List<AnnotationNode> makeListOfAnnotations(final Object[][] data) {
         if (data.length == 0) {

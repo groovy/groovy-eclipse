@@ -2797,6 +2797,32 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/959
     void testAnnoElems9() {
+        addGroovySource '''\
+            |@groovy.transform.AnnotationCollector([
+            | groovy.transform.EqualsAndHashCode,
+            | groovy.transform.TupleConstructor
+            |])
+            |@interface A {
+            |}
+            |'''.stripMargin(), 'A'
+
+        buildProject()
+
+        String contents = '''\
+            |@A(excludes = 'temporary')
+            |class C {
+            |  def temporary
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('excludes'), 8, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('temporary'), 9, FIELD))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/959
+    void testAnnoElems10() {
         String contents = '''\
             |@groovy.transform.AutoExternalize(excludes = 'temporary')
             |class C {
@@ -2811,7 +2837,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1556
-    void testAnnoElems10() {
+    void testAnnoElems11() {
         String contents = '''\
             |import groovy.transform.*
             |@NamedVariant(coerce=false)
@@ -2828,7 +2854,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1155
-    void testAnnoElems11() {
+    void testAnnoElems12() {
         String contents = '''\
             |import org.codehaus.groovy.control.*
             |class C {
@@ -2867,7 +2893,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1197
-    void testAnnoElems12() {
+    void testAnnoElems13() {
         String contents = '''\
             |@groovy.transform.AutoImplement(code={
             |  throw new UnsupportedOperationException()
@@ -2886,7 +2912,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/421
-    void testAnnoElems13() {
+    void testAnnoElems14() {
         String contents = '''\
             |@groovy.transform.TupleConstructor(pre={
             |  assert number.intValue() >= 42
@@ -2920,7 +2946,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/421
-    void testAnnoElems14() {
+    void testAnnoElems15() {
         for (annotation in ['Canonical','Immutable']) {
             String contents = """\
                 |@groovy.transform.$annotation(pre={
