@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,9 +38,9 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.codeassist.tests.GenericCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.GroovyLikeCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.GuessingCompletionTests,
+    org.codehaus.groovy.eclipse.codeassist.tests.ImportCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.InferencingCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.InnerTypeCompletionTests,
-    org.codehaus.groovy.eclipse.codeassist.tests.ImportCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.LocalVariableCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.MethodCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.NewFieldCompletionTests,
@@ -114,16 +114,16 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.refactoring.test.extract.StaticFragmentCheckerTests,
     org.codehaus.groovy.eclipse.refactoring.test.formatter.FindIndentsTests,
     org.codehaus.groovy.eclipse.refactoring.test.formatter.FormatterPreferencesTests,
-    org.codehaus.groovy.eclipse.refactoring.test.formatter.GroovyFormatterTests,
     org.codehaus.groovy.eclipse.refactoring.test.formatter.GroovyDocumentScannerTests,
+    org.codehaus.groovy.eclipse.refactoring.test.formatter.GroovyFormatterTests,
     org.codehaus.groovy.eclipse.refactoring.test.formatter.SemicolonRemoverTests,
     org.codehaus.groovy.eclipse.refactoring.test.formatter.WhitespaceRemoverTests,
+    org.codehaus.groovy.eclipse.refactoring.test.rename.MoveCURefactoringTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.RenameFieldTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.RenameLocalTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.RenameMethodTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.RenamePackageTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.RenameTypeTests,
-    org.codehaus.groovy.eclipse.refactoring.test.rename.MoveCURefactoringTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.SyntheticAccessorRenamingTests,
 
     // org.codehaus.groovy.eclipse.ui.tests

@@ -2661,13 +2661,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } else if (node.isEnum()) {
                 modifiers &= ~(Flags.AccAbstract | Flags.AccFinal);
             }
-            if (!(node instanceof InnerClassNode)) {
+            if (!(node instanceof InnerClassNode innerClass)) {
                 modifiers &= ~(Flags.AccProtected | Flags.AccPrivate | Flags.AccStatic);
-            } else if (((InnerClassNode) node).isAnonymous()) {
+            } else if (innerClass.isAnonymous()) {
                 modifiers &= ~(Flags.AccEnum | Flags.AccPublic);
             }
-            if (/*node.isSyntheticPublic() && */!isMetaAnnotation(node) && hasPackageScopeXform(node, PackageScopeTarget.CLASS)) {
-                modifiers &= ~Flags.AccPublic;
+            if (!isMetaAnnotation(node)) {
+                if (hasAnnotation(node, "groovy.transform.Final")) {
+                    modifiers |= Flags.AccFinal;
+                }
+                if (/*node.isSyntheticPublic() && */hasPackageScopeXform(node, PackageScopeTarget.CLASS)) {
+                    modifiers &= ~Flags.AccPublic;
+                }
             }
             return modifiers;
         }
@@ -2678,6 +2683,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             // native and non-native (aka emulated) record fields are final
             if (!type.isAnnotationDefinition() && hasAnnotation(type, "groovy.transform.RecordType")) {
                 modifiers |= Flags.AccFinal + ExtraCompilerModifiers.AccRecord;
+            } else if (hasAnnotation(node, "groovy.transform.Final")) {
+                modifiers |= Flags.AccFinal;
             }
             if (type.getProperty(node.getName()) != null && hasPackageScopeXform(node, PackageScopeTarget.FIELDS)) {
                 modifiers &= ~Flags.AccPrivate;
@@ -2692,6 +2699,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
             if (node.getCode() == null) {
                 modifiers |= ExtraCompilerModifiers.AccSemicolonBody;
+            }
+            if (hasAnnotation(node, "groovy.transform.Final")) {
+                modifiers |= Flags.AccFinal;
             }
             if (node.isSyntheticPublic() && hasPackageScopeXform(node, PackageScopeTarget.METHODS)) {
                 modifiers &= ~Flags.AccPublic;
@@ -2710,7 +2720,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private boolean hasAnnotation(AnnotatedNode node, String type) {
             for (AnnotationNode anno : node.getAnnotations()) {
                 if (isType(type,anno.getClassNode().getName()))
-                    return true;
+                    return !(anno.getMember("enabled") instanceof ConstantExpression e && e.isFalseExpression());
             }
             return false;
         }
