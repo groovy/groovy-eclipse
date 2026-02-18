@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.lang.reflect.Modifier;
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.junit.Test;
 
 /**
@@ -100,12 +101,15 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
 
+        TypeDeclaration type = getCUDeclFor("Foo.groovy").types[0];
+        assertTrue("Expected public but was: " + Modifier.toString(type.modifiers), Modifier.isPublic(type.modifiers));
+
         FieldDeclaration field = findField(getCUDeclFor("Foo.groovy"), "field");
         assertTrue("Expected package-private but was: " + Modifier.toString(field.modifiers), isPackagePrivate(field.modifiers));
     }
 
     @Test
-    public void testPackageScope3a() {
+    public void testPackageScope4() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -120,12 +124,15 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
 
+        TypeDeclaration type = getCUDeclFor("Foo.groovy").types[0];
+        assertTrue("Expected public but was: " + Modifier.toString(type.modifiers), Modifier.isPublic(type.modifiers));
+
         FieldDeclaration field = findField(getCUDeclFor("Foo.groovy"), "field");
         assertTrue("Expected package-private but was: " + Modifier.toString(field.modifiers), isPackagePrivate(field.modifiers));
     }
 
     @Test
-    public void testPackageScope3b() {
+    public void testPackageScope5() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -140,12 +147,15 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
 
+        TypeDeclaration type = getCUDeclFor("Foo.groovy").types[0];
+        assertTrue("Expected public but was: " + Modifier.toString(type.modifiers), Modifier.isPublic(type.modifiers));
+
         FieldDeclaration field = findField(getCUDeclFor("Foo.groovy"), "field");
         assertTrue("Expected package-private but was: " + Modifier.toString(field.modifiers), isPackagePrivate(field.modifiers));
     }
 
     @Test
-    public void testPackageScope4() {
+    public void testPackageScope6() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -163,7 +173,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testPackageScope5() {
+    public void testPackageScope7() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -177,12 +187,15 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
 
+        TypeDeclaration type = getCUDeclFor("Foo.groovy").types[0];
+        assertTrue("Expected public but was: " + Modifier.toString(type.modifiers), Modifier.isPublic(type.modifiers));
+
         MethodDeclaration method = findMethod(getCUDeclFor("Foo.groovy"), "method");
         assertTrue("Expected package-private but was: " + Modifier.toString(method.modifiers), isPackagePrivate(method.modifiers));
     }
 
     @Test
-    public void testPackageScope5a() {
+    public void testPackageScope8() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -197,12 +210,15 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
 
+        TypeDeclaration type = getCUDeclFor("Foo.groovy").types[0];
+        assertTrue("Expected public but was: " + Modifier.toString(type.modifiers), Modifier.isPublic(type.modifiers));
+
         MethodDeclaration method = findMethod(getCUDeclFor("Foo.groovy"), "method");
         assertTrue("Expected package-private but was: " + Modifier.toString(method.modifiers), isPackagePrivate(method.modifiers));
     }
 
     @Test
-    public void testPackageScope5b() {
+    public void testPackageScope9() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -217,12 +233,15 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
 
+        TypeDeclaration type = getCUDeclFor("Foo.groovy").types[0];
+        assertTrue("Expected public but was: " + Modifier.toString(type.modifiers), Modifier.isPublic(type.modifiers));
+
         MethodDeclaration method = findMethod(getCUDeclFor("Foo.groovy"), "method");
         assertTrue("Expected package-private but was: " + Modifier.toString(method.modifiers), isPackagePrivate(method.modifiers));
     }
 
     @Test
-    public void testPackageScope6() {
+    public void testPackageScope10() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -237,12 +256,15 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
 
+        TypeDeclaration type = getCUDeclFor("Foo.groovy").types[0];
+        assertTrue("Expected package-private but was: " + Modifier.toString(type.modifiers), isPackagePrivate(type.modifiers));
+
         MethodDeclaration method = findMethod(getCUDeclFor("Foo.groovy"), "method");
         assertTrue("Expected package-private but was: " + Modifier.toString(method.modifiers), isPackagePrivate(method.modifiers));
     }
 
     @Test // @PackageScope only applies to synthetic public members
-    public void testPackageScope7() {
+    public void testPackageScope11() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -269,7 +291,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
     }
 
     @Test // @PackageScope only applies to synthetic public members
-    public void testPackageScope8() {
+    public void testPackageScope12() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -296,7 +318,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-8940
-    public void testPackageScope9() {
+    public void testPackageScope13() {
         //@formatter:off
         String[] sources = {
             "Tag.groovy",
@@ -307,5 +329,55 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1658
+    public void testPackageScope14() {
+        //@formatter:off
+        String[] sources = {
+            "Tag.groovy",
+            "@groovy.transform.AnnotationCollector\n" +
+            "@groovy.transform.PackageScope\n" +
+            "@interface Tag {\n" +
+            "  String value()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        TypeDeclaration type = getCUDeclFor("Tag.groovy").types[0];
+        assertTrue("Expected public but was: " + Modifier.toString(type.modifiers), Modifier.isPublic(type.modifiers));
+
+        MethodDeclaration method = findMethod(getCUDeclFor("Tag.groovy"), "value");
+        assertTrue("Expected public but was: " + Modifier.toString(method.modifiers), Modifier.isPublic(method.modifiers));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1658
+    public void testPackageScope15() {
+        //@formatter:off
+        String[] sources = {
+            "Tag.groovy",
+            "import groovy.transform.*\n" +
+            "import static groovy.transform.PackageScopeTarget.*\n" +
+            "@PackageScope([CLASS, FIELDS, METHODS])\n" +
+            "@AnnotationCollector\n" +
+            "@interface Tag {\n" +
+            "  String fixed\n" +
+            "  String value()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        TypeDeclaration type = getCUDeclFor("Tag.groovy").types[0];
+        assertTrue("Expected public but was: " + Modifier.toString(type.modifiers), Modifier.isPublic(type.modifiers));
+
+        FieldDeclaration field = findField(getCUDeclFor("Tag.groovy"), "fixed");
+        assertTrue("Expected public but was: " + Modifier.toString(field.modifiers), Modifier.isPublic(field.modifiers));
+
+        MethodDeclaration method = findMethod(getCUDeclFor("Tag.groovy"), "value");
+        assertTrue("Expected public but was: " + Modifier.toString(method.modifiers), Modifier.isPublic(method.modifiers));
     }
 }

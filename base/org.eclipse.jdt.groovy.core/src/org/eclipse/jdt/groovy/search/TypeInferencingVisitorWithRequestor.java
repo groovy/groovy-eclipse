@@ -3504,7 +3504,7 @@ out:    if (inferredTypes[0] == null) {
     }
 
     private static boolean isMetaAnnotation(final ClassNode classNode) {
-        return isNotEmpty(GroovyUtils.getAnnotations(classNode, "groovy.transform.AnnotationCollector"));
+        return classNode.isAnnotationDefinition() && isNotEmpty(GroovyUtils.getAnnotations(classNode, "groovy.transform.AnnotationCollector"));
     }
 
     private static boolean isNotEmpty(final List<?> list) {

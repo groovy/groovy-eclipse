@@ -1704,7 +1704,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             }
                         }
                     }
-                } else {
+                } else if (!classNode.isAnnotationDefinition()) {
                     // present as static and with self parameter if @Category(T)
                     for (AnnotationNode annotation : classNode.getAnnotations()) {
                         if (isType("groovy.lang.Category", annotation.getClassNode().getName())) {
@@ -2666,7 +2666,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } else if (((InnerClassNode) node).isAnonymous()) {
                 modifiers &= ~(Flags.AccEnum | Flags.AccPublic);
             }
-            if (/*node.isSyntheticPublic() &&*/ hasPackageScopeXform(node, PackageScopeTarget.CLASS)) {
+            if (/*node.isSyntheticPublic() && */!isMetaAnnotation(node) && hasPackageScopeXform(node, PackageScopeTarget.CLASS)) {
                 modifiers &= ~Flags.AccPublic;
             }
             return modifiers;
@@ -2674,12 +2674,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
         private int getModifiers(FieldNode node) {
             int modifiers = node.getModifiers();
+            var type = node.getDeclaringClass();
             // native and non-native (aka emulated) record fields are final
-            if (node.getDeclaringClass().getAnnotations().stream().anyMatch(annotation ->
-                    isType("groovy.transform.RecordType", annotation.getClassNode().getName()))) {
+            if (!type.isAnnotationDefinition() && hasAnnotation(type, "groovy.transform.RecordType")) {
                 modifiers |= Flags.AccFinal + ExtraCompilerModifiers.AccRecord;
             }
-            if (node.getDeclaringClass().getProperty(node.getName()) != null && hasPackageScopeXform(node, PackageScopeTarget.FIELDS)) {
+            if (type.getProperty(node.getName()) != null && hasPackageScopeXform(node, PackageScopeTarget.FIELDS)) {
                 modifiers &= ~Flags.AccPrivate;
             }
             return modifiers;
@@ -2705,6 +2705,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 modifiers &= ~Flags.AccPublic;
             }
             return modifiers;
+        }
+
+        private boolean hasAnnotation(AnnotatedNode node, String type) {
+            for (AnnotationNode anno : node.getAnnotations()) {
+                if (isType(type,anno.getClassNode().getName()))
+                    return true;
+            }
+            return false;
         }
 
         private boolean hasPackageScopeXform(AnnotatedNode node, PackageScopeTarget type) {
@@ -2742,7 +2750,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     return val[0];
                 }
             }
-            if (member) { // check for @PackageScope(XXX) on class
+            if (member && !isMetaAnnotation(node.getDeclaringClass())) { // check for @PackageScope(XXX) on enclosing class
                 return hasPackageScopeXform(node.getDeclaringClass(), type);
             }
             return false;
@@ -2755,9 +2763,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             return false;
         }
 
+        private boolean isMetaAnnotation(ClassNode classNode) {
+            return classNode.isAnnotationDefinition() && hasAnnotation(classNode, "groovy.transform.AnnotationCollector");
+        }
+
         private boolean isNonSealed(ClassNode classNode) {
-            return classNode.getAnnotations().stream().anyMatch(annotation ->
-                isType("groovy.transform.NonSealed", annotation.getClassNode().getName()));
+            return !classNode.isAnnotationDefinition() && hasAnnotation(classNode, "groovy.transform.NonSealed");
         }
 
         private boolean isRecord(ClassNode classNode) {
@@ -2766,12 +2777,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         private boolean isSealed(ClassNode classNode) {
-            return classNode.getAnnotations().stream().anyMatch(annotation ->
-                isType("groovy.transform.Sealed", annotation.getClassNode().getName()));
+            return !classNode.isAnnotationDefinition() && hasAnnotation(classNode, "groovy.transform.Sealed");
         }
 
         private boolean isTrait(ClassNode classNode) {
-            return unitDeclaration.traitHelper.isTrait(classNode);
+            return !classNode.isAnnotationDefinition() && unitDeclaration.traitHelper.isTrait(classNode);
         }
 
         /**
