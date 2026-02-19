@@ -133,7 +133,11 @@ public abstract class Traits {
         ClassNode fieldHelperClassNode = null;
         ClassNode staticFieldHelperClassNode = null;
         Iterator<InnerClassNode> innerClasses = trait.redirect().getInnerClasses();
+        /* GRECLIPSE edit -- GROOVY-11743, et al.
         if (innerClasses != null && innerClasses.hasNext()) {
+        */
+        if (trait.isPrimaryClassNode() || !trait.hasClass()) {
+        // GRECLIPSE end
             // trait declared in same unit
             while (innerClasses.hasNext()) {
                 ClassNode icn = innerClasses.next();

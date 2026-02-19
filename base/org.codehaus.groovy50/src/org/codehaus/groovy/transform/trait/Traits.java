@@ -131,9 +131,13 @@ public abstract class Traits {
         ClassNode fieldHelperClassNode = null;
         ClassNode staticFieldHelperClassNode = null;
         var innerClasses = trait.redirect().getInnerClasses();
+        /* GRECLIPSE edit -- GROOVY-11743, et al.
         if (innerClasses != null && innerClasses.hasNext() ) {
+        */
+        if (trait.isPrimaryClassNode() || !trait.hasClass()) {
+        // GRECLIPSE end
             // trait declared in same unit
-            do {
+            while (innerClasses.hasNext()) {
                 ClassNode icn = innerClasses.next();
                 if (icn.getName().endsWith(Traits.TRAIT_HELPER)) {
                     helperClassNode = icn;
@@ -142,8 +146,8 @@ public abstract class Traits {
                 } else if (icn.getName().endsWith(Traits.STATIC_FIELD_HELPER)) {
                     staticFieldHelperClassNode = icn;
                 }
-            } while (innerClasses.hasNext());
-        } else if (!trait.isPrimaryClassNode()) { // GROOVY-11743
+            }
+        } else {
             // precompiled trait
             try {
                 String helperClassName = Traits.helperClassName(trait);
