@@ -144,6 +144,7 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.test.core.util.TokenStreamTests,
     org.codehaus.groovy.eclipse.test.debug.BreakpointLocationTests,
     org.codehaus.groovy.eclipse.test.debug.DebugBreakpointsTests,
+    org.codehaus.groovy.eclipse.test.debug.EvaluationEngineTests,
     org.codehaus.groovy.eclipse.test.launch.GroovyScriptLaunchShortcutTests,
     org.codehaus.groovy.eclipse.test.search.FindOccurrencesTests,
     org.codehaus.groovy.eclipse.test.ui.BracketInserterTests,

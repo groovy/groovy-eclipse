@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,8 +57,9 @@ public class JDIMetaClass implements MetaClass {
     //--------------------------------------------------------------------------
 
     @Override
-    public Object getAttribute(Class sender, Object receiver, String messageName, boolean useSuper) {
-        throw new IllegalArgumentException("Not implemented (Groovy-Eclipse)");
+    public Object getAttribute(Class sender, Object receiver, String attribute, boolean isSuper) {
+        if (isSuper) throw new IllegalArgumentException("Not implemented (Groovy-Eclipse)");
+        return getAttribute(receiver, attribute);
     }
 
     @Override
@@ -103,8 +104,9 @@ public class JDIMetaClass implements MetaClass {
     }
 
     @Override
-    public Object getProperty(Class sender, Object receiver, String property, boolean isCallToSuper, boolean fromInsideClass) {
-        throw new IllegalArgumentException("Not implemented (Groovy-Eclipse)");
+    public Object getProperty(Class sender, Object receiver, String property, boolean isSuper, boolean fromInsideClass) {
+        if (isSuper) throw new IllegalArgumentException("Not implemented (Groovy-Eclipse)");
+        return getProperty(receiver, property);
     }
 
     @Override
@@ -173,8 +175,9 @@ public class JDIMetaClass implements MetaClass {
     }
 
     @Override
-    public Object invokeMethod(Class sender, Object receiver, String methodName, Object[] arguments, boolean isCallToSuper, boolean fromInsideClass) {
-        throw new IllegalArgumentException("Not implemented (Groovy-Eclipse)");
+    public Object invokeMethod(Class sender, Object receiver, String methodName, Object[] arguments, boolean isSuper, boolean fromInsideClass) {
+        if (isSuper) throw new IllegalArgumentException("Not implemented (Groovy-Eclipse)");
+        return invokeMethod(receiver, methodName, arguments);
     }
 
     @Override
@@ -286,8 +289,9 @@ public class JDIMetaClass implements MetaClass {
     }
 
     @Override
-    public void setAttribute(Class sender, Object receiver, String messageName, Object messageValue, boolean useSuper, boolean fromInsideClass) {
-        throw new IllegalArgumentException("Not implemented (Groovy-Eclipse)");
+    public void setAttribute(Class sender, Object receiver, String attribute, Object newValue, boolean isSuper, boolean fromInsideClass) {
+        if (isSuper) throw new IllegalArgumentException("Not implemented (Groovy-Eclipse)");
+        setAttribute(receiver, attribute, newValue);
     }
 
     @Override
@@ -301,8 +305,9 @@ public class JDIMetaClass implements MetaClass {
     }
 
     @Override
-    public void setProperty(Class sender, Object receiver, String property, Object value, boolean isCallToSuper, boolean fromInsideClass) {
-        throw new IllegalArgumentException("Not implemented (Groovy-Eclipse)");
+    public void setProperty(Class sender, Object receiver, String property, Object newValue, boolean isSuper, boolean fromInsideClass) {
+        if (isSuper) throw new IllegalArgumentException("Not implemented (Groovy-Eclipse)");
+        setProperty(receiver, property, newValue);
     }
 
     @Override

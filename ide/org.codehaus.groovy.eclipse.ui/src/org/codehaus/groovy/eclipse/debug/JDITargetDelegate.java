@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import java.util.Set;
 
 import groovy.lang.Closure;
 import groovy.lang.GString;
+import groovy.lang.GroovyRuntimeException;
 import groovy.lang.GroovySystem;
 import groovy.lang.MetaClass;
 import groovy.lang.Script;
@@ -605,7 +606,7 @@ public class JDITargetDelegate {
                 if (typeClass != null) {
                     referencedClasses.add(typeClass);
                 }
-            } catch (GroovyBugError e) {
+            } catch (GroovyBugError | GroovyRuntimeException e) {
                 // could be that this is a class reference of a class defined in the script
                 if (classNode.getModule().getDescription().equals("____Eval.groovy") && !classNode.getName().equals(syntheticScriptName)) {
                     // try to load it, but don't try to load the generated script class

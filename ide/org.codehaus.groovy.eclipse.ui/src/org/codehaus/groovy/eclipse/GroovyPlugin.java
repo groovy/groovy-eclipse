@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,8 @@
  */
 package org.codehaus.groovy.eclipse;
 
-import java.util.AbstractMap;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.codehaus.groovy.eclipse.adapters.ClassFileEditorAdapterFactory;
 import org.codehaus.groovy.eclipse.adapters.GroovyIFileEditorInputAdapterFactory;
@@ -163,7 +161,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
             public void launchChanged(ILaunch launch) {
                 for (IDebugTarget target : launch.getDebugTargets()) {
                     if (target instanceof org.eclipse.jdt.debug.core.IJavaDebugTarget) try { //@formatter:off
-                        if (ReflectionUtils.throwableGetPrivateField(target.getClass(), "fEngines", target) == null) {
+                        if (((Map<?,?>) ReflectionUtils.throwableGetPrivateField(target.getClass(), "fEngines", target)).isEmpty()) {
                             ReflectionUtils.throwableSetPrivateField(target.getClass(), "fEngines", target, evalEngineInterceptor(target));
                         }
                     } catch (Exception e) {
@@ -252,28 +250,20 @@ public class GroovyPlugin extends AbstractUIPlugin {
 
     //--------------------------------------------------------------------------
 
+    @SuppressWarnings("serial")
     private static Object evalEngineInterceptor(IDebugTarget target) {
-        return Collections.synchronizedMap(new AbstractMap<org.eclipse.jdt.core.IJavaProject, org.eclipse.jdt.debug.eval.IAstEvaluationEngine>() {
-
-            private Set<Entry<org.eclipse.jdt.core.IJavaProject, org.eclipse.jdt.debug.eval.IAstEvaluationEngine>> entries = new HashSet<>(2);
-
-            @Override
-            public  Set<Entry<org.eclipse.jdt.core.IJavaProject, org.eclipse.jdt.debug.eval.IAstEvaluationEngine>> entrySet() {
-                return entries;
-            }
+        return new ConcurrentHashMap<org.eclipse.jdt.core.IJavaProject, org.eclipse.jdt.debug.eval.IAstEvaluationEngine>() {
 
             @Override
             public org.eclipse.jdt.debug.eval.IAstEvaluationEngine get(Object key) {
-                if (!containsKey(key) && key instanceof org.eclipse.jdt.core.IJavaProject) {
-                    org.eclipse.jdt.core.IJavaProject javaProject = (org.eclipse.jdt.core.IJavaProject) key;
+                var value = super.get(key);
+                if (value == null && key instanceof org.eclipse.jdt.core.IJavaProject javaProject) {
                     if (org.codehaus.jdt.groovy.model.GroovyNature.hasGroovyNature(javaProject.getProject())) {
-                        org.eclipse.jdt.debug.eval.IAstEvaluationEngine evalEngine =
-                            new org.codehaus.groovy.eclipse.debug.EvaluationEngine(javaProject, (org.eclipse.jdt.debug.core.IJavaDebugTarget) target);
-                        entries.add(new SimpleEntry<>(javaProject, evalEngine));
-                        return evalEngine;
+                        value = new org.codehaus.groovy.eclipse.debug.EvaluationEngine(javaProject, (org.eclipse.jdt.debug.core.IJavaDebugTarget) target);
+                        super.put(javaProject, value);
                     }
                 }
-                return super.get(key);
+                return value;
             }
 
             @Override
@@ -287,9 +277,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
                         return entry.setValue(value);
                     }
                 }
-                entries.add(new SimpleEntry<>(key, value));
-                return null;
+                return super.put(key, value);
             }
-        });
+        };
     }
 }
