@@ -23,7 +23,7 @@ import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.util.Util;
 
 public class ClasspathMultiReleaseJar extends ClasspathJar {
-	private static final String META_INF_VERSIONS = "META-INF/versions/"; //$NON-NLS-1$
+	private static final String META_INF_VERSIONS = Util.METAINF_VERSIONS;
 	private static final int META_INF_LENGTH = META_INF_VERSIONS.length();
 	private volatile String[] supportedVersions;
 

@@ -14,12 +14,8 @@
 package org.eclipse.jdt.core.tests.builder;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import junit.framework.Test;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.tests.util.Util;
@@ -32,19 +28,6 @@ public class Bug571363Test extends BuilderTests {
 
 	public static Test suite() {
 		return buildTestSuite(Bug571363Test.class);
-	}
-
-	/**
-	 * Returns the OS path to the directory that contains this plugin.
-	 */
-	protected String getCompilerTestsPluginDirectoryPath() {
-		try {
-			URL platformURL = Platform.getBundle("org.eclipse.jdt.core.tests.builder").getEntry("/");
-			return new File(FileLocator.toFileURL(platformURL).getFile()).getAbsolutePath();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
 	}
 
 	public void _testBug571363() throws JavaModelException, Exception {

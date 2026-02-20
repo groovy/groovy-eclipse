@@ -23,6 +23,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IOrdinaryClassFile;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
@@ -46,7 +47,6 @@ import org.eclipse.jdt.internal.core.util.DeduplicationUtil;
 import org.eclipse.jdt.internal.core.util.ResourceCompilationUnit;
 import org.eclipse.jdt.internal.core.util.Util;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
 public abstract class HierarchyBuilder {
 	/**
 	 * The hierarchy being built.
@@ -67,7 +67,7 @@ public abstract class HierarchyBuilder {
 	 * for the types in the region (in other words, it contains
 	 * no supertypes outside the region).
 	 */
-	protected Map infoToHandle;
+	protected Map<IGenericType, IJavaElement> infoToHandle;
 	/*
 	 * The dot-separated fully qualified name of the focus type, or null of none.
 	 */
@@ -104,7 +104,7 @@ public abstract class HierarchyBuilder {
 					this,
 					new DefaultProblemFactory());
 		}
-		this.infoToHandle = new HashMap(5);
+		this.infoToHandle = new HashMap<>(5);
 		this.focusQualifiedName = focusType == null ? null : focusType.getFullyQualifiedName();
 	}
 

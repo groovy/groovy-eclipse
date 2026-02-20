@@ -109,7 +109,7 @@ protected Set<String> readPackageNames() {
 IModule initializeModule() {
 	IModule mod = null;
 	try (ZipFile file = new ZipFile(this.zipFilename)) {
-		String releasePath = "META-INF/versions/" + this.compliance + '/' + IModule.MODULE_INFO_CLASS; //$NON-NLS-1$
+		String releasePath = Util.METAINF_VERSIONS + this.compliance + '/' + IModule.MODULE_INFO_CLASS;
 		ClassFileReader classfile = null;
 		try {
 			classfile = ClassFileReader.read(file, releasePath);

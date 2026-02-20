@@ -1394,6 +1394,10 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 
 		class Visitor extends ASTVisitor {
 			@Override
+			public boolean visit(LambdaExpression lambdaExpression, BlockScope blockScope) {
+				return lambdaExpression.scope == null ? false : super.visit(lambdaExpression, blockScope); // don't descend into an unresolved lambda, it is recipe for NPE.
+			}
+			@Override
 			public boolean visit(ConstructorDeclaration constructorDeclaration, ClassScope scope) {
 				if (constructorDeclaration.selector == assistIdentifier){
 					if (constructorDeclaration.binding != null) {

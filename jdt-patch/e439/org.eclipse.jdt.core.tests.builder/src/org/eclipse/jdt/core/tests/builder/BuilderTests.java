@@ -17,10 +17,12 @@ import static org.eclipse.jdt.core.tests.util.AbstractCompilerTest.F_12;
 import static org.eclipse.jdt.core.tests.util.AbstractCompilerTest.F_9;
 import static org.eclipse.jdt.core.tests.util.AbstractCompilerTest.getPossibleComplianceLevels;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,7 +32,9 @@ import java.util.List;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -636,6 +640,16 @@ public class BuilderTests extends TestCase {
 			jarPath = env.addInternalJar(projectPath, jarName, jarContent);
 		}
 		return jarPath;
+	}
+
+
+	/**
+	 * Returns the OS path to the directory that contains this plugin.
+	 * @throws IOException
+	 */
+	protected static String getCompilerTestsPluginDirectoryPath() throws IOException {
+		URL platformURL = Platform.getBundle("org.eclipse.jdt.core.tests.builder").getEntry("/");
+		return new File(FileLocator.toFileURL(platformURL).getFile()).getAbsolutePath();
 	}
 
 	protected static void expectCompileProblem(IPath project, String expectedProblemMessage) {

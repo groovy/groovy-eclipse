@@ -40,13 +40,14 @@ public class JEP441SnippetsTest extends AbstractRegressionTest9 {
 				new String[] {
 					"X.java",
 					"""
+					import java.util.Locale;
 					public class X {
 
 						static String formatterPatternSwitch(Object obj) {
 						    return switch (obj) {
 						        case Integer i -> String.format("int %d", i);
 						        case Long l    -> String.format("long %d", l);
-						        case Double d  -> String.format("double %f", d);
+						        case Double d  -> String.format(Locale.US, "double %f", d);
 						        case String s  -> String.format("String %s", s);
 						        default        -> obj.toString();
 						    };

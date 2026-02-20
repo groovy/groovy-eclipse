@@ -243,7 +243,7 @@ public class ModuleFinder {
 	private static IModule extractModuleFromArchive(File file, Classpath pathEntry, String path, String release) {
 		try (ZipFile zipFile = new ZipFile(file)) {
 			if (release != null) {
-				String releasePath = "META-INF/versions/" + release + "/" + path; //$NON-NLS-1$ //$NON-NLS-2$
+				String releasePath = Util.METAINF_VERSIONS + release + "/" + path; //$NON-NLS-1$
 				ZipEntry entry = zipFile.getEntry(releasePath);
 				if (entry != null) {
 					path = releasePath;

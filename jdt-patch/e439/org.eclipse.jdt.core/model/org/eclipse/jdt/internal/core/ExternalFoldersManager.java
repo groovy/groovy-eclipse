@@ -17,10 +17,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -151,12 +151,16 @@ public class ExternalFoldersManager {
 			return false;
 		}
 		// Test if this an absolute path in local file system (not the workspace path)
-		File externalFolder = externalPath.toFile();
-		if (Files.isRegularFile(externalFolder.toPath())) {
+		BasicFileAttributes externalAttributes = null;
+		try {
+			externalAttributes = Files.readAttributes(externalPath.toPath(), BasicFileAttributes.class);
+		} catch (IOException e) { // assume not existing
+		}
+		if (externalAttributes != null && externalAttributes.isRegularFile()) {
 			manager.addExternalFile(externalPath, true);
 			return false;
 		}
-		if (Files.isDirectory(externalFolder.toPath())) {
+		if (externalAttributes != null && externalAttributes.isDirectory()) {
 			return true;
 		}
 		// this can be now only full workspace path or an external path to a not existing file or folder

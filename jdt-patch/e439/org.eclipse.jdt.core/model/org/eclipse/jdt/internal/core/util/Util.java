@@ -15,6 +15,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.util;
 
+import static org.eclipse.jdt.internal.compiler.util.Util.EMPTY_STRING;
+import static org.eclipse.jdt.internal.compiler.util.Util.LINE_SEPARATOR;
+import static org.eclipse.jdt.internal.compiler.util.Util.getBytesAsCharArray;
+import static org.eclipse.jdt.internal.compiler.util.Util.isClassFileName;
 import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 
 import java.io.File;
@@ -131,6 +135,14 @@ public class Util {
 	private static char[][] JAVA_LIKE_EXTENSIONS;
 
 	private static char[][] JAVA_DERIVED_EXTENSIONS;
+
+	/**
+	 * The jar entry path under which JDK expects compiler to place class files for multi-release JARs. See
+	 * https://docs.oracle.com/javase/9/docs/specs/jar/jar.html#multi-release-jar-files.
+	 * <p>
+	 * The value is "META-INF/versions/".
+	 */
+	public static String METAINF_VERSIONS = org.eclipse.jdt.internal.compiler.util.Util.METAINF_VERSIONS;
 
 	private static final char[] BOOLEAN = "boolean".toCharArray(); //$NON-NLS-1$
 	private static final char[] BYTE = "byte".toCharArray(); //$NON-NLS-1$
@@ -716,7 +728,7 @@ public class Util {
 			for (IResource member : members) {
 				if (member.getType() == IResource.FOLDER) {
 					return findFirstClassFile((IFolder)member);
-				} else if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(member.getName())) {
+				} else if (isClassFileName(member.getName())) {
 					return (IFile) member;
 				}
 			}
@@ -898,7 +910,7 @@ public class Util {
 	}
 
 	/**
-	 * Get the jdk level of this root.
+	 * Get the lowest jdk compliance level required by given library.
 	 * The value can be:
 	 * <ul>
 	 * <li>{@code major<<16 + minor} : see predefined constants on ClassFileConstants </li>
@@ -934,7 +946,9 @@ public class Util {
 							for (Enumeration<? extends ZipEntry> e= jar.entries(); e.hasMoreElements();) {
 								ZipEntry member= e.nextElement();
 								String entryName= member.getName();
-								if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(entryName)) {
+								// Ignore class files in META-INF/versions as they are provided for higher JLS and not
+								// relevant to determine the lowest jdk level supported by the multi-release jar
+								if (isClassFileName(entryName) && !entryName.startsWith(METAINF_VERSIONS)) {
 									reader = ClassFileReader.read(jar, entryName);
 									break;
 								}
@@ -1002,7 +1016,7 @@ public class Util {
 		}
 
 		// system line delimiter
-		return org.eclipse.jdt.internal.compiler.util.Util.LINE_SEPARATOR;
+		return LINE_SEPARATOR;
 	}
 
 	/**
@@ -1180,7 +1194,7 @@ public class Util {
 						// this means the current argument is over
 						String currentArgumentContents = String.valueOf(buffer);
 						if (EMPTY_ARGUMENT.equals(currentArgumentContents)) {
-							currentArgumentContents = org.eclipse.jdt.internal.compiler.util.Util.EMPTY_STRING;
+							currentArgumentContents = EMPTY_STRING;
 						}
 						result[count++] = currentArgumentContents;
 						if (count > length) {
@@ -1197,7 +1211,7 @@ public class Util {
 		// process last argument
 		String currentArgumentContents = String.valueOf(buffer);
 		if (EMPTY_ARGUMENT.equals(currentArgumentContents)) {
-			currentArgumentContents = org.eclipse.jdt.internal.compiler.util.Util.EMPTY_STRING;
+			currentArgumentContents = EMPTY_STRING;
 		}
 		result[count++] = currentArgumentContents;
 		if (count > length) {
@@ -1233,7 +1247,7 @@ public class Util {
 	public static char[] getResourceContentsAsCharArray(IFile file, String encoding) throws JavaModelException {
 		// Get resource contents
 		try {
-			return org.eclipse.jdt.internal.compiler.util.Util.getBytesAsCharArray(file.readAllBytes(), encoding);
+			return getBytesAsCharArray(file.readAllBytes(), encoding);
 		} catch (CoreException e) {
 			throw new JavaModelException(e, IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST);
 		}
@@ -1544,7 +1558,7 @@ public class Util {
 		char[] fileName = referenceBinding.getFileName();
 		if (referenceBinding.isLocalType() || referenceBinding.isAnonymousType()) {
 			// local or anonymous type
-			if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(fileName)) {
+			if (isClassFileName(fileName)) {
 				int jarSeparator = CharOperation.indexOf(IDependent.JAR_FILE_ENTRY_SEPARATOR, fileName);
 				int pkgEnd = CharOperation.lastIndexOf('/', fileName); // pkgEnd is exclusive
 				if (pkgEnd == -1)
@@ -1593,7 +1607,7 @@ public class Util {
 			TypeBinding declaringTypeBinding = typeBinding.enclosingType();
 			if (declaringTypeBinding == null) {
 				// top level type
-				if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(fileName)) {
+				if (isClassFileName(fileName)) {
 					ClassFile classFile = (ClassFile) getClassFile(fileName);
 					if (classFile == null) return null;
 					return (JavaElement) classFile.getType();

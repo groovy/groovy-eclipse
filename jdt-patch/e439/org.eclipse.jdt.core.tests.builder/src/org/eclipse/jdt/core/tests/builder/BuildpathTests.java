@@ -757,7 +757,7 @@ public void testMissingLibrary4() throws JavaModelException {
 	env.removeProject(projectPath);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=172345
-public void testIncompatibleJdkLEvelOnProject() throws JavaModelException {
+public void testIncompatibleJdkLevelOnProject() throws JavaModelException {
 
 	// Create project
 	IPath projectPath = env.addProject("Project");
@@ -812,9 +812,41 @@ public void testIncompatibleJdkLEvelOnProject() throws JavaModelException {
 	// Remove project to avoid side effect on other tests
 	env.removeProject(projectPath);
 }
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4826
+public void testIncompatibleJdkLevelOnMrJar() throws Exception {
+
+	// Create project
+	IPath projectPath = env.addProject("testIncompatibleJdkLevelOnMrJar");
+	IJavaProject project = env.getJavaProject(projectPath);
+	project.setOption(JavaCore.COMPILER_RELEASE, JavaCore.ENABLED);
+	project.setOption(JavaCore.COMPILER_COMPLIANCE, "1.8");
+	project.setOption(JavaCore.COMPILER_SOURCE, "1.8");
+	project.setOption(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, "1.8");
+	
+	// The multi-release jar contains Java 8 classes in base directory and multiple
+	// higher versions of base class in META-INF/versions/ directories
+	String mrJar = getCompilerTestsPluginDirectoryPath() + File.separator + "workspace" + File.separator + "multi-release-example.jar";
+	env.addExternalJars(projectPath, new String[] {mrJar});
+
+	// Build it expecting no problem
+	fullBuild();
+	expectingNoProblems();
+
+	// Change project incompatible jdk level preferences to error, perform incremental build and expect no problems
+	project.setOption(JavaCore.CORE_INCOMPATIBLE_JDK_LEVEL, CompilerOptions.ERROR);
+	env.waitForManualRefresh();
+	incrementalBuild();
+	env.waitForAutoBuild();
+
+	// There should be no problems reported if the jar contains Java 8 compatible classes
+	expectingNoProblems();
+
+	// Remove project to avoid side effect on other tests
+	env.removeProject(projectPath);
+}
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=172345
-public void testIncompatibleJdkLEvelOnWksp() throws JavaModelException {
+public void testIncompatibleJdkLevelOnWksp() throws JavaModelException {
 
 	// Save preference
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();

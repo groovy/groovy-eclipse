@@ -916,17 +916,6 @@ public JavadocParser javadocParser;
 // used for recovery
 protected int lastJavadocEnd;
 public org.eclipse.jdt.internal.compiler.ReadManager readManager;
-final protected boolean parsingJava8Plus = true;
-protected boolean parsingJava9Plus;
-protected boolean parsingJava10Plus;
-protected boolean parsingJava14Plus;
-protected boolean parsingJava15Plus;
-protected boolean parsingJava17Plus;
-protected boolean parsingJava18Plus;
-protected boolean parsingJava21Plus;
-protected boolean parsingJava22Plus;
-protected boolean previewEnabled;
-protected boolean parsingJava11Plus;
 protected int unstackedAct = ERROR_ACTION;
 private boolean haltOnSyntaxError = false;
 private boolean tolerateDefaultClassMethods = false;
@@ -945,16 +934,6 @@ public Parser(ProblemReporter problemReporter, boolean optimizeStringLiterals) {
 	this.options = problemReporter.options;
 	this.optimizeStringLiterals = optimizeStringLiterals;
 	initializeScanner();
-	this.parsingJava9Plus = this.options.sourceLevel >= ClassFileConstants.JDK9;
-	this.parsingJava10Plus = this.options.sourceLevel >= ClassFileConstants.JDK10;
-	this.parsingJava11Plus = this.options.sourceLevel >= ClassFileConstants.JDK11;
-	this.parsingJava14Plus = this.options.sourceLevel >= ClassFileConstants.JDK14;
-	this.parsingJava15Plus = this.options.sourceLevel >= ClassFileConstants.JDK15;
-	this.parsingJava17Plus = this.options.sourceLevel >= ClassFileConstants.JDK17;
-	this.parsingJava18Plus = this.options.sourceLevel >= ClassFileConstants.JDK18;
-	this.parsingJava21Plus = this.options.sourceLevel >= ClassFileConstants.JDK21;
-	this.parsingJava22Plus = this.options.sourceLevel >= ClassFileConstants.JDK22;
-	this.previewEnabled = this.options.sourceLevel == ClassFileConstants.getLatestJDKLevel() && this.options.enablePreviewFeatures;
 	this.astLengthStack = new int[50];
 	this.expressionLengthStack = new int[30];
 	this.typeAnnotationLengthStack = new int[30];
@@ -1155,7 +1134,7 @@ protected void checkAndSetModifiers(int flag){
 	of a list of several modifiers. The startPosition
 	is zeroed when a copy of modifiers-buffer is push
 	onto the this.astStack. */
-	if (flag == ClassFileConstants.AccStrictfp && this.parsingJava17Plus) {
+	if (flag == ClassFileConstants.AccStrictfp && isParsingJava17Plus()) {
 		problemReporter().StrictfpNotRequired(this.scanner.startPosition, this.scanner.currentPosition - 1);
 	}
 
@@ -4826,7 +4805,7 @@ protected void consumeInterfaceMethodDeclaration(boolean hasSemicolonBody) {
 	boolean isDefault = (md.modifiers & ExtraCompilerModifiers.AccDefaultMethod) != 0;
 	boolean isStatic = (md.modifiers & ClassFileConstants.AccStatic) != 0;
 	boolean isPrivate = (md.modifiers & ClassFileConstants.AccPrivate) != 0;
-	boolean bodyAllowed = (this.parsingJava9Plus && isPrivate) || isDefault || isStatic;
+	boolean bodyAllowed = (isParsingJava9Plus() && isPrivate) || isDefault || isStatic;
 	if (bodyAllowed && hasSemicolonBody) {
 		md.modifiers |= ExtraCompilerModifiers.AccSemicolonBody; // avoid complaints regarding undocumented empty body
 	}
@@ -8278,7 +8257,7 @@ protected void consumeLambdaHeader() {
 		if (argument.isReceiver()) {
 			problemReporter().illegalThis(argument);
 		}
-		if (this.parsingJava8Plus && !JavaFeature.UNNAMMED_PATTERNS_AND_VARS.isSupported(this.options) && argument.name.length == 1 && argument.name[0] == '_')
+		if (!JavaFeature.UNNAMMED_PATTERNS_AND_VARS.isSupported(this.options) && argument.name.length == 1 && argument.name[0] == '_')
 			problemReporter().illegalUseOfUnderscoreAsAnIdentifier(argument.sourceStart, argument.sourceEnd, true, false); // true == lambdaParameter
 	}
 	LambdaExpression lexp = (LambdaExpression) this.astStack[this.astPtr];
@@ -8933,7 +8912,7 @@ protected void consumeSwitchStatementOrExpression(boolean isStmt) {
 	if (isStmt)
 		pushOnAstStack(switchStatement);
 	else {
-		if (!this.parsingJava14Plus)
+		if (!isParsingJava14Plus())
 			problemReporter().switchExpressionsNotSupported(switchStatement);
 		pushOnExpressionStack(switchStatement);
 	}
@@ -9175,9 +9154,9 @@ protected void consumeSwitchLabels(boolean shouldConcat, boolean isSwitchRule) {
 
 	CaseStatement caseStatement = new CaseStatement(labelExpressions, sourceStart, sourceEnd);
 	caseStatement.isSwitchRule = isSwitchRule;
-	if (labelExpressions.length > 1 && !this.parsingJava14Plus)
+	if (labelExpressions.length > 1 && !isParsingJava14Plus())
 		problemReporter().multiConstantCaseLabelsNotSupported(caseStatement);
-	if (isSwitchRule && !this.parsingJava14Plus)
+	if (isSwitchRule && !isParsingJava14Plus())
 		problemReporter().arrowInCaseStatementsNotSupported(caseStatement);
 
 	// Look for $fall-through$ tag in leading comment for case statement
@@ -10287,7 +10266,7 @@ public MethodDeclaration convertToMethodDeclaration(ConstructorDeclaration c, Co
 }
 
 protected TypeReference augmentTypeWithAdditionalDimensions(TypeReference typeReference, int additionalDimensions, Annotation[][] additionalAnnotations, boolean isVarargs) {
-	if (this.parsingJava10Plus && typeReference instanceof SingleTypeReference singleTypeRef && CharOperation.equals(singleTypeRef.token, TypeConstants.VAR))
+	if (isParsingJava10Plus() && typeReference instanceof SingleTypeReference singleTypeRef && CharOperation.equals(singleTypeRef.token, TypeConstants.VAR))
 		problemReporter().varLocalCannotBeArray(singleTypeRef);
 	return typeReference.augmentTypeWithAdditionalDimensions(additionalDimensions, additionalAnnotations, isVarargs);
 }
@@ -10796,7 +10775,7 @@ protected void annotateTypeReference(Wildcard ref) {
 }
 protected final TypeReference getTypeReference(int dim) {
 	TypeReference typeRef = constructTypeReference(dim);
-	if (this.parsingJava10Plus && typeRef instanceof ArrayTypeReference singleTypeRef && CharOperation.equals(singleTypeRef.token, TypeConstants.VAR)) {
+	if (isParsingJava10Plus() && typeRef instanceof ArrayTypeReference singleTypeRef && CharOperation.equals(singleTypeRef.token, TypeConstants.VAR)) {
 		if (singleTypeRef.isParameterizedTypeReference())
 			problemReporter().varCannotBeUsedWithTypeArguments(singleTypeRef);
 		if (singleTypeRef.dimensions() > 0)
@@ -12167,7 +12146,7 @@ public ASTNode[] parseClassBodyDeclarations(char[] source, int offset, int lengt
 	try {
 		this.diet = true;
 		this.dietInt = 0;
-		this.tolerateDefaultClassMethods = this.parsingJava8Plus;
+		this.tolerateDefaultClassMethods = true;
 		parse();
 	} catch (AbortCompilation ex) {
 		this.lastAct = ERROR_ACTION;
@@ -12446,8 +12425,8 @@ protected void pushIdentifier(char [] identifier, long position) {
 			stackLength);
 	}
 	this.identifierLengthStack[this.identifierLengthPtr] = 1;
-	if (this.parsingJava8Plus && !JavaFeature.UNNAMMED_PATTERNS_AND_VARS.isSupported(this.options) && identifier.length == 1 && identifier[0] == '_' && !this.processingLambdaParameterList)
-		problemReporter().illegalUseOfUnderscoreAsAnIdentifier((int) (position >>> 32), (int) position, this.parsingJava9Plus, false);
+	if (!JavaFeature.UNNAMMED_PATTERNS_AND_VARS.isSupported(this.options) && identifier.length == 1 && identifier[0] == '_' && !this.processingLambdaParameterList)
+		problemReporter().illegalUseOfUnderscoreAsAnIdentifier((int) (position >>> 32), (int) position, isParsingJava9Plus(), false);
 }
 protected void pushIdentifier() {
 	/*push the consumeToken on the identifier stack.
@@ -13313,12 +13292,33 @@ public boolean automatonWillShift(TerminalToken token) {
 
 @Override
 public boolean isParsingJava14() {
-	return this.parsingJava14Plus;
+	return isParsingJava14Plus();
 }
 @Override
 public boolean isParsingModuleDeclaration() {
 	// It can be a null in case of a Vanguard parser, which means no module to be dealt with.
-	return (this.parsingJava9Plus && this.compilationUnit != null && this.compilationUnit.isModuleInfo());
+	return (isParsingJava9Plus() && this.compilationUnit != null && this.compilationUnit.isModuleInfo());
+}
+
+protected boolean isParsingJava9Plus() {
+	return this.options != null && this.options.sourceLevel >= ClassFileConstants.JDK9;
+}
+
+protected boolean isParsingJava10Plus() {
+	return this.options != null && this.options.sourceLevel >= ClassFileConstants.JDK10;
+}
+
+protected boolean isParsingJava14Plus() {
+	return this.options != null && this.options.sourceLevel >= ClassFileConstants.JDK14;
+}
+
+protected boolean isParsingJava17Plus() {
+	return this.options != null && this.options.sourceLevel >= ClassFileConstants.JDK17;
+}
+
+protected boolean isPreviewEnabled() {
+	return this.options != null && this.options.sourceLevel == ClassFileConstants.getLatestJDKLevel()
+			&& this.options.enablePreviewFeatures;
 }
 // GROOVY add
 public void reset() {

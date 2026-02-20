@@ -11806,4 +11806,59 @@ public void testIssue4749() throws Exception {
 				"Cannot make a static reference to the non-static variable args\n" +
 				"----------\n");
 }
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4835
+// Constant referenced in annotation is not recognized as a constant value
+public void testIssue4835() throws Exception {
+	this.runConformTest(
+		new String[] {
+					"testing/X.java",
+					"""
+					package testing;
+
+					import testing.X.JsonProperties;
+
+					import java.lang.annotation.ElementType;
+					import java.lang.annotation.Retention;
+					import java.lang.annotation.RetentionPolicy;
+					import java.lang.annotation.Target;
+
+					@Target({ElementType.ANNOTATION_TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+					@Retention(RetentionPolicy.RUNTIME)
+
+					@interface JsonProperty {
+						String value();
+					}
+
+					@Target({ElementType.ANNOTATION_TYPE, ElementType.TYPE,
+					    ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.FIELD})
+					@Retention(RetentionPolicy.RUNTIME)
+
+					@interface JsonPropertyOrder {
+					    public String[] value() default { };
+					}
+
+
+					@JsonPropertyOrder({
+						JsonProperties.CONSTANT_ONE,
+						JsonProperties.CONSTANT_TWO,
+					})
+					public record X(
+					    @JsonProperty(JsonProperties.CONSTANT_ONE) String attributeOne, // Error in this line
+					    @JsonProperty(JsonProperties.CONSTANT_TWO) String attributeTwo) {
+
+						class JsonProperties {
+
+							public static final String CONSTANT_ONE = "one";
+
+							public static final String CONSTANT_TWO = "two";
+						}
+
+						public static void main(String [] args) {
+                            System.out.println("OK!");
+                        }
+					}
+					""",
+	            },
+		"OK!");
+}
 }

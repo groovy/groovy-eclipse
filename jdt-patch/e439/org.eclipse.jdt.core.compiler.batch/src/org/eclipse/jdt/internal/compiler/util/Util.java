@@ -242,6 +242,14 @@ public class Util implements SuffixConstants {
 	public static final int[] EMPTY_INT_ARRAY= new int[0];
 
 	/**
+	 * The jar entry path under which JDK expects compiler to place class files for multi-release JARs. See
+	 * https://docs.oracle.com/javase/9/docs/specs/jar/jar.html#multi-release-jar-files.
+	 * <p>
+	 * The value is "META-INF/versions/".
+	 */
+	public static String METAINF_VERSIONS = "META-INF/versions/"; //$NON-NLS-1$
+
+	/**
 	 * Build all the directories and subdirectories corresponding to the packages names
 	 * into the directory specified in parameters.
 	 *

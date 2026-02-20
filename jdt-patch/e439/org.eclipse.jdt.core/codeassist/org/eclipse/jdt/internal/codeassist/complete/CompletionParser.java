@@ -4299,7 +4299,7 @@ protected void consumeToken(TerminalToken token) {
 			case TokenNameIdentifier:
 				if (this.inReferenceExpression)
 					break;
-				if (JavaFeature.SWITCH_EXPRESSIONS.isSupported(this.scanner.complianceLevel, this.previewEnabled)
+				if (JavaFeature.SWITCH_EXPRESSIONS.isSupported(this.scanner.complianceLevel, isPreviewEnabled())
 						&& isInsideSwitch() && checkYieldKeyword()) {
 					pushOnElementStack(K_YIELD_KEYWORD);
 					// Take the short cut here.

@@ -127,7 +127,7 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 			ZipFile jar = null;
 			try {
 				jar = getJar();
-				String version = "META-INF/versions/";  //$NON-NLS-1$
+				String version = Util.METAINF_VERSIONS;
 				List<String> versions = new ArrayList<>();
 				if (projectLevel >= ClassFileConstants.JDK9 && jar.getEntry(version) != null) {
 					int earliestJavaVersion = ClassFileConstants.MAJOR_VERSION_9;

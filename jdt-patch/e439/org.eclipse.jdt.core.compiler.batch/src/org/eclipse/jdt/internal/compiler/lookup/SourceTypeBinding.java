@@ -1446,7 +1446,7 @@ public FieldBinding getField(char[] fieldName, boolean needResolve) {
 	if ((this.tagBits & TagBits.AreFieldsComplete) != 0)
 		return ReferenceBinding.binarySearch(fieldName, this.fields);
 
-	if ((this.tagBits & TagBits.HasUnresolvedComponents) != 0)
+	if (needResolve && (this.tagBits & TagBits.HasUnresolvedComponents) != 0)
 		components();
 
 	FieldBinding[] theFields = unResolvedFields();
