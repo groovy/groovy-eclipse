@@ -2780,8 +2780,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |}
             |'''.stripMargin(), 'A'
 
-        buildProject()
-
         String contents = '''\
             |@A(excludes = 'temporary')
             |class C {
@@ -2805,8 +2803,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |@interface A {
             |}
             |'''.stripMargin(), 'A'
-
-        buildProject()
 
         String contents = '''\
             |@A(excludes = 'temporary')

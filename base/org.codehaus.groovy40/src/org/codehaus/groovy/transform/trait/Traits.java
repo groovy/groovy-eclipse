@@ -149,6 +149,17 @@ public abstract class Traits {
                     staticFieldHelperClassNode = icn;
                 }
             }
+            // GRECLIPSE add -- GROOVY-7909
+            if (helperClassNode == null) {
+                helperClassNode = new ClassNode(
+                    Traits.helperClassName(trait),
+                    Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_ABSTRACT | Opcodes.ACC_SYNTHETIC,
+                    ClassHelper.OBJECT_TYPE
+                ){{
+                    isPrimaryNode = false;
+                }};
+            }
+            // GRECLIPSE end
         } else {
             // precompiled trait
             try {

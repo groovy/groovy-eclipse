@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1309,7 +1309,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     protected static boolean isTraitHelper(final ClassNode candidate) {
-        return Flags.isSynthetic(candidate.getModifiers()) && candidate.getName().endsWith("Helper") && candidate.getName().contains("$Trait$") && Traits.isTrait(candidate.getOuterClass());
+        return candidate.isAbstract() && Flags.isSynthetic(candidate.getModifiers()) && candidate.getName().endsWith("Helper") && candidate.getName().contains("$Trait$");
     }
 
     /**

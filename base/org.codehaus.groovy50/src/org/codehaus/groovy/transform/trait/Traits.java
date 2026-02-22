@@ -176,6 +176,18 @@ public abstract class Traits {
         if (helperClassNode != null) {
             helperClassNode = GenericsUtils.makeClassSafe0(helperClassNode, typeArguments);
         }
+        // GRECLIPSE add -- GROOVY-7909
+        else {
+            helperClassNode = new ClassNode(
+                Traits.helperClassName(trait),
+                Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_ABSTRACT | Opcodes.ACC_SYNTHETIC,
+                ClassHelper.OBJECT_TYPE
+            ){{
+                isPrimaryNode = false;
+                setGenericsTypes(typeArguments);
+            }};
+        }
+        // GRECLIPSE end
         if (fieldHelperClassNode != null) {
             fieldHelperClassNode = GenericsUtils.makeClassSafe0(fieldHelperClassNode, typeArguments);
         }
