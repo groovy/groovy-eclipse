@@ -28,6 +28,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -186,6 +187,11 @@ public abstract class Traits {
                 isPrimaryNode = false;
                 setGenericsTypes(typeArguments);
             }};
+            for (MethodNode m : trait.getMethods()) {
+                if ((m.isPublic() || m.isPrivate()) && !m.isAbstract() && !m.isStaticConstructor()) {
+                    helperClassNode.addMethod(helperMethod(trait, m));
+                }
+            }
         }
         // GRECLIPSE end
         if (fieldHelperClassNode != null) {
@@ -193,6 +199,24 @@ public abstract class Traits {
         }
         return new TraitHelpersTuple(helperClassNode, fieldHelperClassNode, staticFieldHelperClassNode);
     }
+
+    // GRECLIPSE add
+    private static MethodNode helperMethod(final ClassNode trait, final MethodNode method) {
+        int mods = (method.isPublic() ? Opcodes.ACC_PUBLIC : Opcodes.ACC_PRIVATE) | Opcodes.ACC_STATIC;
+        var self = !method.isStatic() ? trait : GenericsUtils.makeClassSafe0(ClassHelper.CLASS_Type, new GenericsType(trait));
+
+        var methodParams = method.getParameters();
+        var helperParams = new Parameter[methodParams.length + 1];
+        helperParams[0] = new Parameter(self, "traitImplementer");
+        System.arraycopy(methodParams, 0, helperParams, 1, methodParams.length);
+
+        MethodNode m = new MethodNode(method.getName(), mods, method.getReturnType(), helperParams, method.getExceptions(), null);
+        m.addAnnotation(Traits.IMPLEMENTED_CLASSNODE);
+        m.setGenericsTypes(method.getGenericsTypes());
+        m.setOriginal(method);
+        return m;
+    }
+    // GRECLIPSE end
 
     /**
      * Returns true if the specified class node is a trait.

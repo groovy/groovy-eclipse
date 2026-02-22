@@ -5697,7 +5697,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |  Number getFoo() { 'foo' }
             |}
             |'''.stripMargin(), 'T', 'p'
-        buildProject()
 
         String contents = '''\
             |class C implements p.T {
