@@ -736,7 +736,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     @Override
     public boolean hasClass() {
-        if (clazz == null && !unfindable) {
+        if (clazz == null && !unfindable && jdtBinding.actualType() instanceof BinaryTypeBinding) {
             // Some AST transforms are written such that they refer to typeClass on a ClassNode.
             // This is not available within Eclipse. However, we can support it in a rudimentary
             // fashion by attempting a class load using the transform loader (if it's available).

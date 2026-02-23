@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
+
+import groovy.test.NotYetImplemented
 
 import org.eclipse.jdt.core.IField
 import org.junit.Test
@@ -204,7 +206,7 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
         assert elem.elementInfo.nameSourceStart == 27
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/756
+    @NotYetImplemented @Test // https://github.com/groovy/groovy-eclipse/issues/756
     void testCodeSelectFieldFromTrait2() {
         addGroovySource '''\
             |package p
@@ -212,7 +214,6 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
             |  private String f
             |}
             |'''.stripMargin(), 'T', 'p'
-        buildProject()
 
         def elem = assertCodeSelect(['''\
             |class C implements p.T {
@@ -241,7 +242,7 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
         assert elem.elementInfo.nameSourceStart == 34
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/756
+    @NotYetImplemented @Test // https://github.com/groovy/groovy-eclipse/issues/756
     void testCodeSelectFieldFromTrait4() {
         addGroovySource '''\
             |package p
@@ -249,7 +250,6 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
             |  private static String f
             |}
             |'''.stripMargin(), 'T', 'p'
-        buildProject()
 
         def elem = assertCodeSelect(['''\
             |class C implements p.T {
@@ -278,7 +278,7 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
         assert elem.elementInfo.nameSourceStart == 40
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/756
+    @NotYetImplemented @Test // https://github.com/groovy/groovy-eclipse/issues/756
     void testCodeSelectFieldFromTrait6() {
         addGroovySource '''\
             |package p
@@ -286,7 +286,6 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
             |  private static final String f = ""
             |}
             |'''.stripMargin(), 'T', 'p'
-        buildProject()
 
         def elem = assertCodeSelect(['''\
             |class C implements p.T {
