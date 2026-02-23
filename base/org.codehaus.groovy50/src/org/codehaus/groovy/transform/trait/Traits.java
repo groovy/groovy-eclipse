@@ -179,19 +179,8 @@ public abstract class Traits {
         }
         // GRECLIPSE add -- GROOVY-7909
         else {
-            helperClassNode = new ClassNode(
-                Traits.helperClassName(trait),
-                Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_ABSTRACT | Opcodes.ACC_SYNTHETIC,
-                ClassHelper.OBJECT_TYPE
-            ){{
-                isPrimaryNode = false;
-                setGenericsTypes(typeArguments);
-            }};
-            for (MethodNode m : trait.getMethods()) {
-                if ((m.isPublic() || m.isPrivate()) && !m.isAbstract() && !m.isStaticConstructor()) {
-                    helperClassNode.addMethod(helperMethod(trait, m));
-                }
-            }
+            helperClassNode = new HelperClassStub(trait);
+            helperClassNode.setGenericsTypes(typeArguments);
         }
         // GRECLIPSE end
         if (fieldHelperClassNode != null) {
@@ -201,20 +190,42 @@ public abstract class Traits {
     }
 
     // GRECLIPSE add
-    private static MethodNode helperMethod(final ClassNode trait, final MethodNode method) {
-        int mods = (method.isPublic() ? Opcodes.ACC_PUBLIC : Opcodes.ACC_PRIVATE) | Opcodes.ACC_STATIC;
-        var self = !method.isStatic() ? trait : GenericsUtils.makeClassSafe0(ClassHelper.CLASS_Type, new GenericsType(trait));
+    private static class HelperClassStub extends ClassNode {
 
-        var methodParams = method.getParameters();
-        var helperParams = new Parameter[methodParams.length + 1];
-        helperParams[0] = new Parameter(self, "traitImplementer");
-        System.arraycopy(methodParams, 0, helperParams, 1, methodParams.length);
+        private final ClassNode trait;
 
-        MethodNode m = new MethodNode(method.getName(), mods, method.getReturnType(), helperParams, method.getExceptions(), null);
-        m.addAnnotation(Traits.IMPLEMENTED_CLASSNODE);
-        m.setGenericsTypes(method.getGenericsTypes());
-        m.setOriginal(method);
-        return m;
+        @Override
+        public ClassNode getOuterClass() {
+            return trait;
+        }
+
+        HelperClassStub(final ClassNode trait) {
+            super(Traits.helperClassName(trait), Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_ABSTRACT | Opcodes.ACC_SYNTHETIC, ClassHelper.OBJECT_TYPE);
+            this.isPrimaryNode = false;
+            this.trait = trait;
+
+            for (MethodNode m : trait.getMethods()) {
+                if ((m.isPublic() || m.isPrivate()) && !m.isAbstract() && !m.isStaticConstructor()) {
+                    addMethod(helperMethod(m));
+                }
+            }
+        }
+
+        private MethodNode helperMethod(final MethodNode method) {
+            int mods = (method.isPublic() ? Opcodes.ACC_PUBLIC : Opcodes.ACC_PRIVATE) | Opcodes.ACC_STATIC;
+            var self = !method.isStatic() ? trait : GenericsUtils.makeClassSafe0(ClassHelper.CLASS_Type, new GenericsType(trait));
+
+            var methodParams = method.getParameters();
+            var helperParams = new Parameter[methodParams.length + 1];
+            helperParams[0] = new Parameter(self, "traitImplementer");
+            System.arraycopy(methodParams, 0, helperParams, 1, methodParams.length);
+
+            MethodNode m = new MethodNode(method.getName(), mods, method.getReturnType(), helperParams, method.getExceptions(), null);
+            m.addAnnotation(Traits.IMPLEMENTED_CLASSNODE);
+            m.setGenericsTypes(method.getGenericsTypes());
+            m.setOriginal(method);
+            return m;
+        }
     }
     // GRECLIPSE end
 
@@ -448,7 +459,7 @@ public abstract class Traits {
      */
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-     public @interface TraitBridge {
+    public @interface TraitBridge {
         /**
          * @return the trait class
          */
