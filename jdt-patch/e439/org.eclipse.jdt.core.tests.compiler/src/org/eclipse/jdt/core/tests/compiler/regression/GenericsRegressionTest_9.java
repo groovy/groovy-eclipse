@@ -2034,6 +2034,46 @@ public void testGH4810() {
 	});
 }
 
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4864
+// Cannot infer type arguments with ecj 3.44.0 but not with 3.43.0
+public void testIssue4864() {
+	runConformTest(new String[] {
+			"X.java",
+			"""
+			import java.util.Locale;
+
+			public class X {
+
+				interface TypeConverter<T> {
+					T convert(String s) throws Exception;
+				}
+
+				class EnumConverter<E extends Enum<E>> implements TypeConverter<E> {
+					private Class<E> clazz;
+
+					EnumConverter(Class<E> clazz) {
+						this.clazz = clazz;
+					}
+
+					@Override
+					public E convert(String s) {
+						return valueOf(clazz, s);
+					}
+
+					<T extends Enum<T>> T valueOf(Class<T> enumType, String name) {
+						return Enum.valueOf(enumType, name.toUpperCase(Locale.ENGLISH));
+					}
+				}
+
+				TypeConverter<?> findCompatibleConverter(Class<?> clazz) {
+					EnumConverter<? extends Enum> converter = new EnumConverter<>(clazz.asSubclass(Enum.class));
+					return converter;
+				}
+			}
+			"""
+	});
+}
+
 public static Class<GenericsRegressionTest_9> testClass() {
 	return GenericsRegressionTest_9.class;
 }

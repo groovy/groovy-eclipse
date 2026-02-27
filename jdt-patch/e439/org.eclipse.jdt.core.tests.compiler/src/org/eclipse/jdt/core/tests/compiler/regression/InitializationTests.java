@@ -669,6 +669,34 @@ public void testIssue4416d_withPrologue() {
 			"""
 	});
 }
+public void testGH4865() {
+	runConformTest(new String[] {
+			"Foo.java",
+			"""
+			import java.util.Comparator;
+			public class Foo {
+				private final String greeting;
+
+				public Foo() {
+					this.greeting = "Hello";
+
+					Comparator<String> comp = new Comparator<String>() {
+
+						{
+							System.out.println(greeting);
+						}
+
+						@Override
+						public int compare(String o1, String o2) {
+							System.out.println(greeting);
+							return o1.compareTo(o2);
+						}
+					};
+				}
+			}
+			"""
+	});
+}
 public static Class testClass() {
 	return InitializationTests.class;
 }
