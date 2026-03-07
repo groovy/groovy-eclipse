@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2025 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -148,7 +148,6 @@ public SourceTypeBinding(SourceTypeBinding prototype) {
 	this.permittedTypes = prototype.permittedTypes;
 	this.fields = prototype.fields;
 	this.methods = prototype.methods;
-//	this.components = prototype.components;
 	this.memberTypes = prototype.memberTypes;
 	this.typeVariables = prototype.typeVariables;
 	this.environment = prototype.environment;
@@ -2229,7 +2228,7 @@ private MethodBinding resolveTypesWithSuspendedTempErrorHandlingPolicy(MethodBin
 		TypeBinding[] newParameters = new TypeBinding[size];
 		for (int i = 0; i < size; i++) {
 			Argument arg = arguments[i];
-			if (arg.annotations != null) {
+			if (arg.annotations != null && arg.annotations.length>0) { // GROOVY
 				method.tagBits |= TagBits.HasParameterAnnotations;
 			}
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=322817

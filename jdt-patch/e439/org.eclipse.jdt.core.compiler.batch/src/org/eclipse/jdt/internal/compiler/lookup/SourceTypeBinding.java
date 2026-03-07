@@ -2176,7 +2176,7 @@ private MethodBinding resolveTypesWithSuspendedTempErrorHandlingPolicy(MethodBin
 		TypeBinding[] newParameters = new TypeBinding[size];
 		for (int i = 0; i < size; i++) {
 			Argument arg = arguments[i];
-			if (arg.annotations != null) {
+			if (arg.annotations != null && arg.annotations.length>0) { // GROOVY
 				method.tagBits |= TagBits.HasParameterAnnotations;
 			}
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=322817

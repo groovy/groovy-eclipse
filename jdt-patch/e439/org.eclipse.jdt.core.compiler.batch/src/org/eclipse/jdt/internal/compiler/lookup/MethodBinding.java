@@ -736,21 +736,14 @@ public AnnotationBinding[][] getParameterAnnotations() {
 	if (allParameterAnnotations == null && (this.tagBits & TagBits.HasParameterAnnotations) != 0) {
 		allParameterAnnotations = new AnnotationBinding[length][];
 		// forward reference to method, where param annotations have not yet been associated to method
-		if (this.declaringClass instanceof SourceTypeBinding) {
-			SourceTypeBinding sourceType = (SourceTypeBinding) this.declaringClass;
-			if (sourceType.scope != null) {
-				AbstractMethodDeclaration methodDecl = sourceType.scope.referenceType().declarationOf(originalMethod);
-				for (int i = 0; i < length; i++) {
-					Argument argument = methodDecl.arguments[i];
-					if (argument.annotations != null) {
-						ASTNode.resolveAnnotations(methodDecl.scope, argument.annotations, argument.binding);
-						allParameterAnnotations[i] = argument.binding.getAnnotations();
-					} else {
-						allParameterAnnotations[i] = Binding.NO_ANNOTATIONS;
-					}
-				}
-			} else {
-				for (int i = 0; i < length; i++) {
+		if (this.declaringClass instanceof SourceTypeBinding sourceType && sourceType.scope != null && // GROOVY -- null safety
+				sourceType.scope.referenceType().declarationOf(originalMethod) instanceof AbstractMethodDeclaration methodDecl) {
+			for (int i = 0; i < length; i++) {
+				Argument argument = methodDecl.arguments[i];
+				if (argument.annotations != null) {
+					ASTNode.resolveAnnotations(methodDecl.scope, argument.annotations, argument.binding);
+					allParameterAnnotations[i] = argument.binding.getAnnotations();
+				} else {
 					allParameterAnnotations[i] = Binding.NO_ANNOTATIONS;
 				}
 			}
