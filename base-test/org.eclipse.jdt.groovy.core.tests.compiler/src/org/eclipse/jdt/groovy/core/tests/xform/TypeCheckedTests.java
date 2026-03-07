@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -7903,5 +7903,32 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "Groovy:[Static type checking] - Cannot call java.util.Map#computeIfAbsent(java.lang.String, java.util.function.Function<? super java.lang.String, ? extends java.lang.Long>) with arguments [java.lang.String, groovy.lang.Closure<java.lang.Integer>]\n"
             ) +
             "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked11864() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.ASTTest(phase=org.codehaus.groovy.control.CompilePhase.INSTRUCTION_SELECTION, value={\n" +
+            "  def type = org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE\n" +
+            "  type = lookup('x').get(0).expression.getNodeMetaData(type)\n" +
+            "  assert type.name == 'java.lang.Number'\n" +
+            "})\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def test(Number n) {\n" +
+            "  if (Boolean.getBoolean('on')) {\n" +
+            "    if (n instanceof Long) {\n" +
+            "      return n\n" +
+            "    }\n" +
+            "    throw new IllegalArgumentException()\n" +
+            "  }\n" +
+            "x:n\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
     }
 }
