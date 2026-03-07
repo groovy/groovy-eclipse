@@ -7931,4 +7931,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "");
     }
+
+    @Test
+    public void testTypeChecked11870() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Pogo {\n" +
+            "  private List<Long> x\n" +
+            "  List<Long> getList() { x }\n" +
+            "  void setList(List<Long> list) { x = list }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void proc(List<Pogo> pogos) {\n" +
+            "  for (pogo in pogos) {\n" +
+            "    pogo.list = []\n" + // Cannot assign ArrayList<Object> to: List<Long>
+            "    def item = 42L\n" +
+            "    pogo.list.add(item)\n" +
+            "  }\n" +
+            "}\n" +
+            "def pogo = new Pogo()\n" +
+            "proc([ pogo ])\n" +
+            "assert pogo.list[0] == 42L\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
 }
