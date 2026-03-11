@@ -135,6 +135,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.addMethodGenerics;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpec;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.createGenericsSpec;
 import static org.codehaus.groovy.ast.tools.PropertyNodeUtils.adjustPropertyModifiersForMethod;
+import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.STATIC_COMPILE_NODE;
 
 /**
  * Verifies the AST node and adds any default AST code before bytecode generation occurs.
@@ -1163,6 +1164,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             if (value != null) newMethod.putNodeMetaData("rparen.offset", value);
             // GRECLIPSE end
             newMethod.putNodeMetaData(DEFAULT_PARAMETER_GENERATED, Boolean.TRUE);
+            newMethod.putNodeMetaData(STATIC_COMPILE_NODE, method.getNodeMetaData(STATIC_COMPILE_NODE));
         });
     }
 
