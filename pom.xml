@@ -24,7 +24,7 @@
 		<groovy-eclipse-compiler-version>3.9.1</groovy-eclipse-compiler-version>
 
 		<!-- This should align with the oldest supported Groovy version. -->
-		<groovy-eclipse-batch-version>3.0.25-04</groovy-eclipse-batch-version>
+		<groovy-eclipse-batch-version>3.0.25-05</groovy-eclipse-batch-version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -104,11 +104,6 @@
 					<id>eclipse</id>
 					<layout>p2</layout>
 					<url>https://download.eclipse.org/eclipse/updates/4.39</url>
-				</repository>
-				<repository>
-					<id>milestone</id>
-					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.39-I-builds/I20260226-0420</url>
 				</repository>
 			</repositories>
 			<modules>

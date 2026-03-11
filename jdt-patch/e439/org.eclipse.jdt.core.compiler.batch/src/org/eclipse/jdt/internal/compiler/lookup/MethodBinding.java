@@ -722,7 +722,7 @@ public Object getDefaultValue() {
 }
 
 /**
- * @return the annotations for each of the method parameters or <code>null></code>
+ * @return the annotations for each of the method parameters or <code>null</code>
  * 	if there's no parameter or no annotation at all.
  */
 public AnnotationBinding[][] getParameterAnnotations() {
@@ -735,9 +735,10 @@ public AnnotationBinding[][] getParameterAnnotations() {
 	AnnotationBinding[][] allParameterAnnotations = holder == null ? null : holder.getParameterAnnotations();
 	if (allParameterAnnotations == null && (this.tagBits & TagBits.HasParameterAnnotations) != 0) {
 		allParameterAnnotations = new AnnotationBinding[length][];
+		AbstractMethodDeclaration methodDecl;
 		// forward reference to method, where param annotations have not yet been associated to method
-		if (this.declaringClass instanceof SourceTypeBinding sourceType && sourceType.scope != null && // GROOVY -- null safety
-				sourceType.scope.referenceType().declarationOf(originalMethod) instanceof AbstractMethodDeclaration methodDecl) {
+		if (this.declaringClass instanceof SourceTypeBinding sourceType && sourceType.scope != null &&
+				(methodDecl = sourceType.scope.referenceType().declarationOf(originalMethod)) != null) { // GROOVY -- null safety
 			for (int i = 0; i < length; i++) {
 				Argument argument = methodDecl.arguments[i];
 				if (argument.annotations != null) {

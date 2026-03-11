@@ -503,9 +503,8 @@ public MethodBinding createDefaultConstructorWithBinding(MethodBinding inherited
 public FieldDeclaration declarationOf(FieldBinding fieldBinding) {
 	if (fieldBinding != null && this.fields != null) {
 		for (FieldDeclaration field : this.fields) {
-			FieldDeclaration fieldDecl;
-			if ((fieldDecl = field).binding == fieldBinding)
-				return fieldDecl;
+			if (field.binding == fieldBinding)
+				return field;
 		}
 	}
 	return null;
@@ -517,9 +516,8 @@ public FieldDeclaration declarationOf(FieldBinding fieldBinding) {
 public TypeDeclaration declarationOf(MemberTypeBinding memberTypeBinding) {
 	if (memberTypeBinding != null && this.memberTypes != null) {
 		for (TypeDeclaration memberType : this.memberTypes) {
-			TypeDeclaration memberTypeDecl;
-			if (TypeBinding.equalsEquals((memberTypeDecl = memberType).binding, memberTypeBinding))
-				return memberTypeDecl;
+			if (TypeBinding.equalsEquals(memberType.binding, memberTypeBinding))
+				return memberType;
 		}
 	}
 	return null;
@@ -531,10 +529,8 @@ public TypeDeclaration declarationOf(MemberTypeBinding memberTypeBinding) {
 public AbstractMethodDeclaration declarationOf(MethodBinding methodBinding) {
 	if (methodBinding != null && this.methods != null) {
 		for (AbstractMethodDeclaration method : this.methods) {
-			AbstractMethodDeclaration methodDecl;
-
-			if ((methodDecl = method).binding == methodBinding)
-				return methodDecl;
+			if (method.binding == methodBinding)
+				return method;
 		}
 	}
 	return null;
