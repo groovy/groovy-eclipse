@@ -2171,7 +2171,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             char[] typeName = name.substring(0, pos + 2).toCharArray();
 
-            if (unitDeclaration.imports.length > 0) {
+            if (!node.isResolved() && unitDeclaration.imports.length > 0) {
                 char[][] compoundName = CharOperation.splitOn('.', typeName);
                 for (ImportReference importReference : unitDeclaration.imports) {
                     if (isAliasForType(importReference, compoundName[0])) {
@@ -2220,7 +2220,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             char[] typeName = name.toCharArray();
 
-            if (unitDeclaration.imports.length > 0) {
+            if (!node.isResolved() && unitDeclaration.imports.length > 0) {
                 char[][] compoundName = CharOperation.splitOn('.', typeName);
                 for (ImportReference importReference : unitDeclaration.imports) {
                     if (isAliasForType(importReference, compoundName[0])) {
@@ -2355,7 +2355,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
             }
 
-            String name = classNode.getName().replace('$', '.');
+            String name = classNode.getName();
+            if (name.lastIndexOf('$') != -1) {
+                name = name.replace('$', '.');
+            }
 
             if (name.length() == 1 && name.charAt(0) == '?') {
                 TypeReference tr = new Wildcard(Wildcard.UNBOUND);
@@ -2378,12 +2381,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 return tr;
             }
 
-            char[] typeName = name.toCharArray();
-            char[][] compoundName = CharOperation.splitOn('.', typeName);
+            char[][] compoundName = CharOperation.splitOn('.', name.toCharArray());
 
-            if (unitDeclaration.imports != null) {
+            if (!classNode.isResolved() && unitDeclaration.imports != null) {
+                char[] firstToken = compoundName[0];
                 for (ImportReference importReference : unitDeclaration.imports) {
-                    if (isAliasForType(importReference, compoundName[0])) {
+                    if (isAliasForType(importReference, firstToken)) {
                         if (compoundName.length == 1) {
                             compoundName = importReference.getImportName();
                         } else {
@@ -2396,12 +2399,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             if (compoundName.length == 1) {
                 if (typeArguments == null) {
-                    TypeReference t = verify(new SingleTypeReference(typeName, toPos(sourceStart, sourceEnd - 1)));
+                    TypeReference t = verify(new SingleTypeReference(compoundName[0], toPos(sourceStart, sourceEnd - 1)));
                     if (!checkGenerics) t.bits |= ASTNode.IgnoreRawTypeCheck;
                     return t;
                 } else {
                     TypeReference[] typeRefs = typeArguments.toArray(new TypeReference[typeArguments.size()]);
-                    return new ParameterizedSingleTypeReference(typeName, typeRefs, 0, toPos(sourceStart, sourceEnd - 1));
+                    return new ParameterizedSingleTypeReference(compoundName[0], typeRefs, 0, toPos(sourceStart, sourceEnd - 1));
                 }
             } else {
                 if (typeArguments == null) {
@@ -2767,10 +2770,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         private boolean isAliasForType(ImportReference importReference, char[] typeName) {
-            if (importReference instanceof AliasImportReference && !importReference.isStatic()) {
-                return Arrays.equals(importReference.getSimpleName(), typeName);
-            }
-            return false;
+            return importReference.modifiers == 0 &&
+                (importReference.bits & ASTNode.OnDemand) == 0 &&
+                (importReference instanceof AliasImportReference) &&
+                Arrays.equals(importReference.getSimpleName(), typeName);
         }
 
         private boolean isMetaAnnotation(ClassNode classNode) {
