@@ -441,16 +441,20 @@ public class GroovyUtils {
     }
 
     public static boolean implementsTrait(ClassNode concreteType) {
-        return concreteType.getNodeMetaData(Traits.class, x -> {
-            ClassNode type = concreteType.redirect();
-            do {
-                if (Traits.isTrait(type) || Stream.of(type.getInterfaces()).anyMatch(Traits::isTrait)) {
-                    return Boolean.TRUE;
-                }
-                type = type.getSuperClass();
-            } while (type != null && type != ClassHelper.OBJECT_TYPE);
-            return Boolean.FALSE;
-        }).booleanValue();
+        Boolean it = concreteType.getNodeMetaData(Traits.class);
+        if (it != null) return it.booleanValue();
+
+        ClassNode type = concreteType.redirect();
+        do {
+            if (Traits.isTrait(type) || Stream.of(type.getInterfaces()).anyMatch(Traits::isTrait)) {
+                concreteType.putNodeMetaData(Traits.class, Boolean.TRUE);
+                return true;
+            }
+            type = type.getSuperClass();
+        } while (type != null && !type.equals(ClassHelper.OBJECT_TYPE));
+
+        concreteType.putNodeMetaData(Traits.class, Boolean.FALSE);
+        return false;
     }
 
     /**

@@ -141,7 +141,7 @@ public interface NodeMetaDataHandler {
         if (metaDataMap == null) {
             return Collections.emptyMap();
         }
-        return new HashMap<>(metaDataMap);
+        return Collections.unmodifiableMap(metaDataMap);
     }
 
     Map<?, ?> getMetaDataMap();
