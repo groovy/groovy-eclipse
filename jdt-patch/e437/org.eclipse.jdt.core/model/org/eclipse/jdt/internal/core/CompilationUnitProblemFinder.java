@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2025 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -220,13 +220,14 @@ public class CompilationUnitProblemFinder extends Compiler {
 		};
 	}
 
-	private static boolean isTestSource(ICompilationUnit cu) {
+	private static boolean isTestSource(IJavaProject project, ICompilationUnit cu) {
 		// GROOVY add
-		if (JavaProject.hasJavaNature(cu.getJavaProject().getProject()) && cu.getResource() != null)
+		var resource = cu.getResource();
+		if (resource != null)
 		// GROOVY end
 		try {
-			IClasspathEntry[] resolvedClasspath = cu.getJavaProject().getResolvedClasspath(true);
-			final IPath resourcePath = cu.getResource().getFullPath();
+			IClasspathEntry[] resolvedClasspath = project.getResolvedClasspath(true);
+			final IPath resourcePath = resource.getFullPath();
 			for (IClasspathEntry e : resolvedClasspath) {
 				if (e.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
 					if (e.isTest()) {
@@ -244,10 +245,13 @@ public class CompilationUnitProblemFinder extends Compiler {
 	}
 
 	private static int getRelease(IJavaProject project, ICompilationUnit cu) {
-		if (cu.getResource() != null) // GROOVY add
+		// GROOVY add
+		var resource = cu.getResource();
+		if (resource != null)
+		// GROOVY end
 		try {
 			IClasspathEntry[] rawClasspath = project.getRawClasspath();
-			IPath resourcePath = cu.getResource().getFullPath();
+			final IPath resourcePath = resource.getFullPath();
 			for (IClasspathEntry e : rawClasspath) {
 				if (e.getEntryKind() == IClasspathEntry.CPE_SOURCE && e.getPath().isPrefixOf(resourcePath)) {
 					String value = ClasspathEntry.getExtraAttribute(e, IClasspathAttribute.RELEASE);
@@ -281,10 +285,13 @@ public class CompilationUnitProblemFinder extends Compiler {
 		CompilationUnitProblemFinder problemFinder = null;
 		CompilationUnitDeclaration unit = null;
 		try {
-			int release = getRelease(project, unitElement);
-			environment = new CancelableNameEnvironment(project, workingCopyOwner, monitor, !isTestSource(unitElement), release);
+			// GROOVY add
+			var hasJavaNature = JavaProject.hasJavaNature(project.getProject());
+			// GROOVY end
+			int release = hasJavaNature ? getRelease(project, unitElement) : JavaProject.NO_RELEASE;
+			environment = new CancelableNameEnvironment(project, workingCopyOwner, monitor, !hasJavaNature || !isTestSource(project, unitElement), release);
 			problemFactory = new CancelableProblemFactory(monitor);
-			CompilerOptions compilerOptions = getCompilerOptions(project.getOptions(true), creatingAST, (reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
+			CompilerOptions compilerOptions = getCompilerOptions(project.getOptions(true), creatingAST, ((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0));
 			boolean ignoreMethodBodies = (reconcileFlags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
 			compilerOptions.ignoreMethodBodies = ignoreMethodBodies;
 			if (release >= JavaProject.FIRST_MULTI_RELEASE) {
