@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,10 +80,11 @@ public class TestProject {
         javaProject.setOption(CompilerOptions.OPTION_Source, "11");
         javaProject.setOption(CompilerOptions.OPTION_Compliance, "11");
         javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "11");
+        javaProject.setOption(CompilerOptions.OPTION_Release, CompilerOptions.ENABLED);
 
         javaProject.setRawClasspath(new IClasspathEntry[] {
             JavaCore.newSourceEntry(srcFolder.getFullPath()),
-            GroovyRuntime.newGroovyClasspathContainerEntry(false, false, false),
+            GroovyRuntime.newGroovyClasspathContainerEntry(true, false, false),
             JavaRuntime.getDefaultJREContainerEntry()}, binFolder.getFullPath(), null);
 
         sourceFolder = javaProject.findPackageFragmentRoot(srcFolder.getFullPath());

@@ -72,9 +72,9 @@ import org.osgi.framework.Version;
 public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     private IPath[] createModularProject(final String name, final boolean isGroovy) throws Exception {
-        assumeTrue(JavaCore.compareJavaVersions(System.getProperty("java.version"), "9") >= 0);
+        assumeTrue(JavaCore.compareJavaVersions(System.getProperty("java.version"), "11") >= 0);
 
-        IPath prjPath = env.addProject(name, "9");
+        IPath prjPath = env.addProject(name, "11");
         if (isGroovy) {
             env.addGroovyJars(prjPath);
         } else {

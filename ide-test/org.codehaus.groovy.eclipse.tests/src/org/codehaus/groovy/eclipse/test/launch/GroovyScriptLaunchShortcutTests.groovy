@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import static org.eclipse.jdt.core.JavaCore.getPlugin as getJavaPlugin
 import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchShortcut
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.groovy.eclipse.test.TestProject
@@ -275,15 +276,22 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/779
     void testScriptLaunch13() {
-        def unit = addGroovySource('''\
-            |@GrabConfig(systemClassLoader=true)
-            |@Grab('mysql:mysql-connector-java:5.1.49')
-            |def xxx
-            |
-            |println "Why won't this run?"
-            |'''.stripMargin(), 'Launch')
-        def type = unit.getType('Launch')
-        launchScriptAndAssertExitValue(type)
+        def project = packageFragmentRoot.javaProject
+        GroovyRuntime.removeGroovyClasspathContainer(project)
+        GroovyRuntime.appendClasspathEntry(project, GroovyRuntime.newGroovyClasspathContainerEntry(false, false, false))
+        try {
+            def unit = addGroovySource('''\
+                |@GrabConfig(systemClassLoader=true)
+                |@Grab('mysql:mysql-connector-java:5.1.49')
+                |def xxx
+                |
+                |println "This should finish"
+                |'''.stripMargin(), 'Launch')
+            def type = unit.getType('Launch')
+            launchScriptAndAssertExitValue(type)
+        } finally {
+            GroovyRuntime.addGroovyClasspathContainer(project, true)
+        }
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1163

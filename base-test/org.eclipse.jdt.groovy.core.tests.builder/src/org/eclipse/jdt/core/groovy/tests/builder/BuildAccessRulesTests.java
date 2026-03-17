@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
         src = env.getPackageFragmentRootPath(prj, "src");
         env.setClasspath(prj, new IClasspathEntry[] {
             JavaCore.newSourceEntry(src),
-            GroovyRuntime.newGroovyClasspathContainerEntry(false, false, null),
+            GroovyRuntime.newGroovyClasspathContainerEntry(false, false, false),
             JavaCore.newContainerEntry(JavaRuntime.newDefaultJREContainerPath(),
                 new IAccessRule[] {JavaCore.newAccessRule(new Path("java/beans/**"), IAccessRule.K_NON_ACCESSIBLE)}, null, false),
         });

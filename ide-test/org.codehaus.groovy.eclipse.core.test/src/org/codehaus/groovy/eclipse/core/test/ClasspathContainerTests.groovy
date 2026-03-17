@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.jdt.core.IClasspathContainer
-import org.junit.After
+import org.eclipse.jdt.core.IClasspathEntry
 import org.junit.Before
 import org.junit.Test
 
@@ -34,11 +34,6 @@ final class ClasspathContainerTests extends GroovyEclipseTestSuite {
         groovyPlugin.setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, false)
     }
 
-    @After
-    void tearDown() {
-        groovyPlugin.setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true )
-    }
-
     IClasspathContainer getContainer() {
         packageFragmentRoot.javaProject.with { jp ->
             javaModelManager.getClasspathContainer(GroovyRuntime.findClasspathEntry(jp, { it.path.segment(0) == GroovyClasspathContainer.ID }).get().path, jp)
@@ -47,17 +42,14 @@ final class ClasspathContainerTests extends GroovyEclipseTestSuite {
 
     @Test
     void testClasspathContainerType() {
-        assert container.class == GroovyClasspathContainer
+        assert container instanceof GroovyClasspathContainer
     }
 
     @Test
     void testMinimalClasspathContainerContents() {
-        packageFragmentRoot.javaProject.with { jp ->
-            GroovyRuntime.removeGroovyClasspathContainer(jp)
-            GroovyRuntime.addGroovyClasspathContainer(jp, true)
-        }
+        GroovyRuntime.addGroovyClasspathContainer(packageFragmentRoot.javaProject, true)
 
-        def entries = container.classpathEntries
+        IClasspathEntry[] entries = container.classpathEntries
         def groovyAllEntries = entries.findAll { it.path.toPortableString() =~ /\bgroovy(-all)?-\d/ }
         def nonPluginEntries = entries.findAll { !it.path.toPortableString().contains('/org.codehaus.groovy') }
 
@@ -67,12 +59,9 @@ final class ClasspathContainerTests extends GroovyEclipseTestSuite {
 
     @Test
     void testMaximalClasspathContainerContents() {
-        packageFragmentRoot.javaProject.with { jp ->
-            GroovyRuntime.removeGroovyClasspathContainer(jp)
-            GroovyRuntime.addGroovyClasspathContainer(jp, false)
-        }
+        GroovyRuntime.addGroovyClasspathContainer(packageFragmentRoot.javaProject, false)
 
-        def entries = container.classpathEntries
+        IClasspathEntry[] entries = container.classpathEntries
         def groovyAllEntries = entries.findAll { it.path.toPortableString() =~ /\bgroovy(-all)?-\d/ }
 
         assert groovyAllEntries.size() == 1 : "Mutiple groovy-all found in the Groovy classpath container: $groovyAllEntries"
