@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.test.debug
 import static org.eclipse.debug.core.DebugPlugin.getDefault as getDebugPlugin
 import static org.eclipse.jdt.debug.core.JDIDebugModel.createLineBreakpoint
 import static org.eclipse.jdt.internal.debug.core.JDIDebugPlugin.getDefault as getJdiPlugin
+import static org.eclipse.jdt.internal.debug.ui.display.JavaInspectExpression.getErrorMessages
 import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.*
 
 import java.util.concurrent.SynchronousQueue
@@ -55,7 +56,7 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
 
         try {
             IEvaluationResult result = evaluate('args[0]', thread)
-            assert !result.hasErrors() : result.errorMessages[0]
+            assert !result.hasErrors() : getErrorMessages(result)[0]
             assert result.value.valueString == 'foo'
         } finally {
             launch.terminate()
@@ -74,7 +75,7 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
 
         try {
             IEvaluationResult result = evaluate('args.first()', thread)
-            assert !result.hasErrors() : result.errorMessages[0]
+            assert !result.hasErrors() : getErrorMessages(result)[0]
             assert result.value.valueString == 'foo'
         } finally {
             launch.terminate()
@@ -93,7 +94,7 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
 
         try {
             IEvaluationResult result = evaluate('"baz" in args', thread)
-            assert !result.hasErrors() : result.errorMessages[0]
+            assert !result.hasErrors() : getErrorMessages(result)[0]
             assert result.value.booleanValue
         } finally {
             launch.terminate()
@@ -112,7 +113,7 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
 
         try {
             IEvaluationResult result = evaluate('"buzz" !in args', thread)
-            assert !result.hasErrors() : result.errorMessages[0]
+            assert !result.hasErrors() : getErrorMessages(result)[0]
             assert result.value.booleanValue
         } finally {
             launch.terminate()
@@ -131,7 +132,7 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
 
         try {
             IEvaluationResult result = evaluate('args[2] <=> args[1]', thread)
-            assert !result.hasErrors() : result.errorMessages[0]
+            assert !result.hasErrors() : getErrorMessages(result)[0]
             assert result.value.intValue > 0 // 'baz' > 'bar'
         } finally {
             launch.terminate()
@@ -151,7 +152,7 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
 
         try {
             IEvaluationResult result = evaluate('i - 81', thread)
-            assert !result.hasErrors() : result.errorMessages[0]
+            assert !result.hasErrors() : getErrorMessages(result)[0]
             assert result.value.intValue == 42
         } finally {
             launch.terminate()
@@ -170,7 +171,7 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
 
         try {
             IEvaluationResult result = evaluate('args.collect(String.&toUpperCase).first()', thread)
-            assert !result.hasErrors() : result.errorMessages[0]
+            assert !result.hasErrors() : getErrorMessages(result)[0]
             assert result.value.valueString == 'FOO'
         } finally {
             launch.terminate()
@@ -189,7 +190,7 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
 
         try {
             IEvaluationResult result = evaluate('Arrays.stream(args).map(String::toUpperCase).skip(1).findFirst().get()', thread)
-            assert !result.hasErrors() : result.errorMessages[0]
+            assert !result.hasErrors() : getErrorMessages(result)[0]
             assert result.value.valueString == 'BAR'
         } finally {
             launch.terminate()
@@ -209,7 +210,7 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
 
         try {
             IEvaluationResult result = evaluate('getProperty() instanceof ConstantExpression', thread, thread.findVariable('pe').value)
-            assert !result.hasErrors() : result.errorMessages[0]
+            assert !result.hasErrors() : getErrorMessages(result)[0]
             assert result.value.booleanValue
         } finally {
             launch.terminate()
@@ -229,7 +230,7 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
 
         try {
             IEvaluationResult result = evaluate('getProperty() !instanceof VariableExpression', thread, thread.findVariable('pe').value)
-            assert !result.hasErrors() : result.errorMessages[0]
+            assert !result.hasErrors() : getErrorMessages(result)[0]
             assert result.value.booleanValue
         } finally {
             launch.terminate()
@@ -248,7 +249,7 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
 
         try {
             IEvaluationResult result = evaluate('getState() instanceof State', thread, thread.threadObject) // State is an inner class
-            assert !result.hasErrors() : result.errorMessages[0]
+            assert !result.hasErrors() : getErrorMessages(result)[0]
             assert result.value.booleanValue
         } finally {
             launch.terminate()
@@ -268,7 +269,7 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
 
         try {
             IEvaluationResult result = evaluate('compile("") !== null', thread) // StaticImportVisitor and JDIScriptLoader transforms
-            assert !result.hasErrors() : result.errorMessages[0]
+            assert !result.hasErrors() : getErrorMessages(result)[0]
             assert result.value.booleanValue
         } finally {
             launch.terminate()
@@ -288,8 +289,48 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
 
         try {
             IEvaluationResult result = evaluate('1 == 1', thread)
-            assert !result.hasErrors() : result.errorMessages[0]
+            assert !result.hasErrors() : getErrorMessages(result)[0]
             assert result.value.booleanValue
+        } finally {
+            launch.terminate()
+        }
+    }
+
+    @Test
+    void testEvalSnippet14() {
+        def (launch, thread) = runToLine(3, '''\
+            |public class Main {
+            |  public static void main(String[] args) {
+            |    System.out.println("hello world");
+            |  }
+            |}
+            |'''.stripMargin())
+
+        try {
+            IEvaluationResult result = evaluate('x(', thread)
+            assert result.hasErrors()
+            String report = getErrorMessages(result)[0]
+            assert report.startsWith('Unexpected input: \'x(\'')
+        } finally {
+            launch.terminate()
+        }
+    }
+
+    @Test
+    void testEvalSnippet15() {
+        def (launch, thread) = runToLine(3, '''\
+            |public class Main {
+            |  public static void main(String[] args) {
+            |    System.out.println("hello world");
+            |  }
+            |}
+            |'''.stripMargin())
+
+        try {
+            IEvaluationResult result = evaluate('this.foo', thread)
+            assert result.hasErrors()
+            String report = getErrorMessages(result)[0]
+            assert report.startsWith('An exception occurred: groovy.lang.MissingPropertyException')
         } finally {
             launch.terminate()
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,9 +46,9 @@ import org.eclipse.jdt.debug.core.IJavaThread;
 import org.eclipse.jdt.debug.core.IJavaValue;
 import org.eclipse.jdt.debug.eval.IAstEvaluationEngine;
 import org.eclipse.jdt.debug.eval.ICompiledExpression;
-import org.eclipse.jdt.debug.eval.IEvaluationEngine;
 import org.eclipse.jdt.debug.eval.IEvaluationListener;
 import org.eclipse.jdt.debug.eval.IEvaluationResult;
+import org.eclipse.jdt.internal.debug.eval.EvaluationResult;
 import org.osgi.framework.wiring.BundleWiring;
 
 public class EvaluationEngine implements IAstEvaluationEngine {
@@ -258,86 +258,26 @@ public class EvaluationEngine implements IAstEvaluationEngine {
     //--------------------------------------------------------------------------
 
     private IEvaluationResult withError(DebugException exception, IJavaThread thread, String source) {
-        EvaluationResult result = new EvaluationResult();
-        result.errorMessages = new String[0];
-        result.exception = exception;
-        result.snippet = source;
-        result.thread = thread;
+        EvaluationResult result = new EvaluationResult(this, source, thread);
+        result.setException(exception);
         // com.sun.jdi.InvocationException: retrieve message from target
-        result.errorMessages = org.eclipse.jdt.internal.debug.ui.display.JavaInspectExpression.getErrorMessages(result);
-        result.errorMessages[0] = result.errorMessages[0].replaceFirst("^startup failed:\\s+Script_[0-9a-f]+\\.groovy:\\s\\d+:\\s*", "");
+        var errorMessages = org.eclipse.jdt.internal.debug.ui.display.JavaInspectExpression.getErrorMessages(result);
+        if (errorMessages[0].startsWith("startup failed:")) { // strip internal script name and line number from message
+            String substring = errorMessages[0].replaceFirst("^startup failed:\\s+Script_[0-9a-f]+\\.groovy:\\s\\d+:\\s*", "");
+            return withError(substring, thread, source);
+        }
         return result;
     }
 
     private IEvaluationResult withError(CharSequence message, IJavaThread thread, String source) {
-        String[] messageAsArray = new String[] {message.toString()};
-        EvaluationResult result = new EvaluationResult();
-        result.errorMessages = messageAsArray;
-        result.snippet = source;
-        result.thread = thread;
+        EvaluationResult result = new EvaluationResult(this, source, thread);
+        result.addError(message.toString());
         return result;
     }
 
     private IEvaluationResult withValue(IJavaValue value, IJavaThread thread, String source) {
-        EvaluationResult result = new EvaluationResult();
-        result.snippet = source;
-        result.thread = thread;
-        result.value = value;
+        EvaluationResult result = new EvaluationResult(this, source, thread);
+        result.setValue(value);
         return result;
-    }
-
-    private class EvaluationResult implements IEvaluationResult {
-
-        DebugException exception;
-        String[] errorMessages;
-        boolean terminated;
-        IJavaThread thread;
-        IJavaValue value;
-        String snippet;
-
-        @Override
-        public IEvaluationEngine getEvaluationEngine() {
-            return EvaluationEngine.this;
-        }
-
-        @Override
-        public DebugException getException() {
-            return exception;
-        }
-
-        @Override
-        public String[] getErrorMessages() {
-            return errorMessages;
-        }
-
-        @Override
-        public Message[] getErrors() {
-            return java.util.Arrays.stream(getErrorMessages()).map(it -> new Message(it, -1)).toArray(Message[]::new);
-        }
-
-        @Override
-        public boolean hasErrors() {
-            return org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean(getErrorMessages());
-        }
-
-        @Override
-        public boolean isTerminated() {
-            return terminated;
-        }
-
-        @Override
-        public IJavaThread getThread() {
-            return thread;
-        }
-
-        @Override
-        public IJavaValue getValue() {
-            return value;
-        }
-
-        @Override
-        public String getSnippet() {
-            return snippet;
-        }
     }
 }
