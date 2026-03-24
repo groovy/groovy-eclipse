@@ -8,7 +8,7 @@ Groovy-Eclipse is intended to be developed using Eclipse. Download and install [
 
 ### Install Groovy-Eclipse
 
-On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Install* window, paste the Groovy-Eclipse update site `https://groovy.jfrog.io/artifactory/plugins-release/e4.39` into the *Work with:* field and press enter. Check the box next to "Main Package", then click the *Next* button a couple of times, accept the license agreement, and let Eclipse restart.
+On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Install* window, paste the Groovy-Eclipse update site `https://groovy.jfrog.io/artifactory/plugins-release/e4.39` into the *Work with:* field and press enter. Check the box next to "Main Package" and "More Compilers > Groovy Compiler 3.0", then click the *Next* button a couple of times, accept the license agreement, and let Eclipse restart.
 
 ### Setup Groovy Compiler
 

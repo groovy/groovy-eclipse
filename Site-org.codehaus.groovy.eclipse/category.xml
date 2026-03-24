@@ -16,7 +16,7 @@
 
    <category-def name="org.codehaus.groovy.compilers" label="More Compilers (optional)">
       <description>
-         The Groovy 3.0 compiler is installed automatically, but you may install any other Groovy compiler as well.
+         The Groovy 5.0 compiler is installed automatically, but you may install any other Groovy compiler as well.
       </description>
    </category-def>
 
@@ -34,27 +34,27 @@
    <feature id="org.codehaus.groovy.eclipse.feature.source" url="features/org.codehaus.groovy.eclipse.feature.source_6.1.0.qualifier.jar" version="6.1.0.qualifier">
       <category name="org.codehaus.groovy.eclipse.sdk"/>
    </feature>
-
-   <!--feature id="org.codehaus.groovy.jdt.patch" url="features/org.codehaus.groovy.jdt.patch_6.1.0.qualifier.jar" version="6.1.0.qualifier" patch="true">
+   <!--
+   <feature id="org.codehaus.groovy.jdt.patch" url="features/org.codehaus.groovy.jdt.patch_6.1.0.qualifier.jar" version="6.1.0.qualifier" patch="true">
       <category name="org.codehaus.groovy.eclipse"/>
-   </feature-->
+   </feature>
 
-   <!--feature id="org.codehaus.groovy.jdt.patch.source" url="features/org.codehaus.groovy.jdt.patch.source_6.1.0.qualifier.jar" version="6.1.0.qualifier">
+   <feature id="org.codehaus.groovy.jdt.patch.source" url="features/org.codehaus.groovy.jdt.patch.source_6.1.0.qualifier.jar" version="6.1.0.qualifier">
       <category name="org.codehaus.groovy.eclipse.sdk"/>
-   </feature-->
-
-   <!--feature id="org.codehaus.groovy30.feature" url="features/org.codehaus.groovy30.feature_6.1.0.qualifier.jar" version="6.1.0.qualifier">
+   </feature>
+   -->
+   <feature id="org.codehaus.groovy30.feature" url="features/org.codehaus.groovy30.feature_6.1.0.qualifier.jar" version="6.1.0.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
-   </feature-->
+   </feature>
 
    <feature id="org.codehaus.groovy40.feature" url="features/org.codehaus.groovy40.feature_6.1.0.qualifier.jar" version="6.1.0.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
-
+   <!--
    <feature id="org.codehaus.groovy50.feature" url="features/org.codehaus.groovy50.feature_6.1.0.qualifier.jar" version="6.1.0.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
-
+   -->
    <feature id="org.codehaus.groovy.m2eclipse.feature" url="features/org.codehaus.groovy.m2eclipse.feature_6.1.0.qualifier.jar" version="6.1.0.qualifier">
       <category name="org.codehaus.groovy.m2eclipse"/>
    </feature>
