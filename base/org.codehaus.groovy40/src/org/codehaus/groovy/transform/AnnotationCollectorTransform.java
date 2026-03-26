@@ -69,6 +69,10 @@ import static groovyjarjarasm.asm.Opcodes.ACC_STATIC;
  * @see AnnotationCollectorTransform#visit(AnnotationNode, AnnotationNode, AnnotatedNode, SourceUnit)
  */
 public class AnnotationCollectorTransform {
+    /* GRECLIPSE edit
+    private static final ClassNode ANNOTATIONCOLLECTOR_ANNOTATION = ClassHelper.make(AnnotationCollector.class);
+    */
+    private static final String ANNOTATIONCOLLECTOR_CLASS_NAME = AnnotationCollector.class.getName();
 
     // GRECLIPSE private->public
     public static List<AnnotationNode> getMeta(ClassNode cn) {
@@ -79,6 +83,7 @@ public class AnnotationCollectorTransform {
             } else {
                 meta = getTargetListFromClass(cn);
             }
+            // GRECLIPSE set->put
             cn.putNodeMetaData(AnnotationCollector.class, meta);
         }
         return meta;
@@ -102,7 +107,7 @@ public class AnnotationCollectorTransform {
         public void transformClass(ClassNode cn) {
             AnnotationNode collector = null;
             for (AnnotationNode an : cn.getAnnotations()) {
-                if (an.getClassNode().getName().equals(AnnotationCollector.class.getName())) {
+                if (an.getClassNode().getName().equals(ANNOTATIONCOLLECTOR_CLASS_NAME)) {
                     collector = an;
                     break;
                 }
@@ -128,7 +133,7 @@ public class AnnotationCollectorTransform {
                 helper = new InnerClassNode(cn, cn.getName() + "$CollectorHelper",
                         ACC_PUBLIC | ACC_STATIC | ACC_FINAL, ClassHelper.OBJECT_TYPE.getPlainNodeReference());
                 cn.getModule().addClass(helper);
-                helper.addAnnotation(new AnnotationNode(COMPILESTATIC_CLASSNODE));
+                helper.addAnnotation(COMPILESTATIC_CLASSNODE);
                 collector.setMember("serializeClass", new ClassExpression(helper.getPlainNodeReference()));
             }
 
@@ -263,7 +268,7 @@ public class AnnotationCollectorTransform {
         for (AnnotationNode an : annotations) {
             ClassNode type = an.getClassNode();
             if ("java.lang.annotation".equals(type.getPackageName())
-                    || "groovy.transform.AnnotationCollector".equals(type.getName())
+                    || ANNOTATIONCOLLECTOR_CLASS_NAME.equals(type.getName())
                     || "org.apache.groovy.lang.annotation.Incubating".equals(type.getName())) continue;
             AnnotationNode toAdd = new AnnotationNode(type);
             copyMembers(an, toAdd);
@@ -287,6 +292,7 @@ public class AnnotationCollectorTransform {
         /* GRECLIPSE edit
         ClassNode cn = getSerializeClass(alias);
         Class<?> c = cn.getTypeClass();
+        Object[][] data;
         */
         Class<?> c = alias.getTypeClass();
         var ac = c.getAnnotation(AnnotationCollector.class);
@@ -314,14 +320,14 @@ public class AnnotationCollectorTransform {
 
     /* GRECLIPSE edit
     private static ClassNode getSerializeClass(final ClassNode alias) {
-        List<AnnotationNode> collectors = alias.getAnnotations(new ClassNode(AnnotationCollector.class));
+        List<AnnotationNode> collectors = alias.getAnnotations(ANNOTATIONCOLLECTOR_ANNOTATION);
         if (!collectors.isEmpty()) {
             assert collectors.size() == 1;
             AnnotationNode collectorNode = collectors.get(0);
             Expression serializeClass = collectorNode.getMember("serializeClass");
             if (serializeClass instanceof ClassExpression) {
                 ClassNode serializeClassType = serializeClass.getType();
-                if (!serializeClassType.getName().equals(AnnotationCollector.class.getName())) {
+                if (!serializeClassType.getName().equals(ANNOTATIONCOLLECTOR_CLASS_NAME)) {
                     return serializeClassType;
                 }
             }
