@@ -304,6 +304,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     private static void checkForDuplicateDefaultMethods(final ClassNode node) {
         /* GRECLIPSE edit -- JDT yields better error
         if (node.getInterfaces().length < 2) return;
+
         Map<String, MethodNode> defaultMethods = new HashMap<>(8);
         Set<String> declared = node.getAllDeclaredMethods().stream()
             .filter(m -> !m.isDefault())
@@ -457,7 +458,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         for (MethodNode mn : cn.getMethods()) {
             if (mn.isSynthetic()) continue;
             String mySig = MethodNodeUtils.methodDescriptorWithoutReturnType(mn);
-            if (descriptors.contains(mySig)) {
+            if (!descriptors.add(mySig)) {
                 if (mn.isScriptBody() || mySig.equals(scriptBodySignatureWithoutReturnType(cn))) {
                     throw new RuntimeParserException("The method " + mn.getText() +
                             " is a duplicate of the one declared for this script's body code", sourceOf(mn));
@@ -466,7 +467,6 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                             " duplicates another method of the same signature", sourceOf(mn));
                 }
             }
-            descriptors.add(mySig);
         }
     }
 
@@ -474,11 +474,10 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         Set<String> descriptors = new HashSet<>();
         for (ConstructorNode cons : cn.getDeclaredConstructors()) {
             String mySig = MethodNodeUtils.methodDescriptorWithoutReturnType(cons);
-            if (descriptors.contains(mySig)) {
+            if (!descriptors.add(mySig)) {
                 throw new RuntimeParserException("The constructor " + cons.getText() +
                     " duplicates another constructor of the same signature", sourceOf(cons));
             }
-            descriptors.add(mySig);
         }
     }
 

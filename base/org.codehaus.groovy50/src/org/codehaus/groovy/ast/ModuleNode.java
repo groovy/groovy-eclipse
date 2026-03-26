@@ -19,6 +19,7 @@
 package org.codehaus.groovy.ast;
 
 import org.apache.groovy.ast.tools.ClassNodeUtils;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -484,6 +485,17 @@ public class ModuleNode extends ASTNode {
             if (!statementBlock.isEmpty()) classNode.addMethod(methodNode); else
             // GRECLIPSE end
             ClassNodeUtils.addGeneratedMethod(classNode, methodNode, true);
+
+            new CodeVisitorSupport() {
+                @Override
+                public void visitConstructorCallExpression(final ConstructorCallExpression cce) {
+                    if (cce.isUsingAnonymousInnerClass()) { // GROOVY-11854
+                        cce.getType().setEnclosingMethod(methodNode);
+                    }
+                    super.visitConstructorCallExpression(cce);
+                }
+            }
+            .visit(statementBlock);
         } else {
             fields.forEach(classNode::addField);
             classNode.addAnnotations(existingRun.getAnnotations());

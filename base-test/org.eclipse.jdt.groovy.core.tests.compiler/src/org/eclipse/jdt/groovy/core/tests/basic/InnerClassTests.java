@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -526,7 +526,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "A.groovy",
-            "class A {" +
+            "class A {\n" +
             "  def foo = new Runnable() {\n" +
             "    void run() {\n" +
             "      println 'hi!'\n" +
@@ -562,7 +562,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "A.groovy",
-            "class A {" +
+            "class A {\n" +
             "  @Lazy def foo = new Runnable() {\n" +
             "    void run() {\n" +
             "      println 'hi!'\n" +
@@ -590,6 +590,38 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
+            "}");
+    }
+
+    @Test
+    public void testAnonymousInnerClass2b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "A.foo.run()\n",
+
+            "A.groovy",
+            "interface A {\n" +
+            "  def foo = new Runnable() {\n" +
+            "    void run() {\n" +
+            "      println 'hi!'\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "hi!");
+
+        checkGCUDeclaration("A.groovy",
+            "public interface A {\n" +
+            "  public static final java.lang.Object foo = new Runnable() {\n" +
+            "    x() {\n" +
+            "      super();\n" +
+            "    }\n" +
+            "    public void run() {\n" +
+            "    }\n" +
+            "  };\n" +
             "}");
     }
 

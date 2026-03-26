@@ -853,17 +853,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             // GRECLIPSE add -- GROOVY-7971, GROOVY-8965, GROOVY-10702, et al.
             if (op == LOGICAL_OR) typeCheckingContext.pushTemporaryTypeInfo();
             // GRECLIPSE end
+            ClassNode lType;
             leftExpression.visit(this);
-            ClassNode lType = getType(leftExpression);
-            var setterInfo  = removeSetterInfo(leftExpression);
-            if (setterInfo != null) { assert op != LOGICAL_OR ;
+            var setterInfo = removeSetterInfo(leftExpression);
+            if (setterInfo != null) { assert op != LOGICAL_OR;
                 if (ensureValidSetter(expression, leftExpression, rightExpression, setterInfo)) {
                     return;
                 }
+                lType = getType(leftExpression); // GROOVY-11870
             } else {
                 if (op == EQUAL) {
                     lType = getOriginalDeclarationType(leftExpression);
                     applyTargetType(lType, rightExpression);
+                } else {
+                    lType = getType(leftExpression);
                 }
                 // GRECLIPSE add
                 if (op == LOGICAL_OR) {
@@ -4230,9 +4233,11 @@ trying: for (ClassNode[] signature : signatures) {
             visitStatement(ifElse);
             ifElse.getBooleanExpression().visit(this);
 
+            var tti = Map.copyOf(typeCheckingContext.temporaryIfBranchTypeInformation.peek()); // GROOVY-11864
+
             thenPath.visit(this);
 
-            Map<Object, List<ClassNode>> tti = typeCheckingContext.temporaryIfBranchTypeInformation.pop();
+            typeCheckingContext.temporaryIfBranchTypeInformation.pop();
             // GROOVY-6099: isolate assignment tracking
             restoreTypeBeforeConditional();
 
@@ -5317,11 +5322,15 @@ trying: for (ClassNode[] signature : signatures) {
         }
 
         if (node instanceof ListExpression) {
-            return inferListExpressionType((ListExpression) node);
+            type = inferListExpressionType((ListExpression) node);
+            node.putNodeMetaData(INFERRED_TYPE, type);
+            return type;
         }
 
         if (node instanceof MapExpression) {
-            return inferMapExpressionType((MapExpression) node);
+            type = inferMapExpressionType((MapExpression) node);
+            node.putNodeMetaData(INFERRED_TYPE, type);
+            return type;
         }
 
         if (node instanceof RangeExpression) {

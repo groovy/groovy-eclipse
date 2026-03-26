@@ -345,7 +345,7 @@ public class AsmClassGenerator extends ClassGenerator {
                 MethodNode enclosingMethod = classNode.getEnclosingMethod();
                 if (enclosingMethod != null) {
                     classVisitor.visitOuterClass(
-                            BytecodeHelper.getClassInternalName(classNode.getOuterClass()),
+                            BytecodeHelper.getClassInternalName(enclosingMethod.getDeclaringClass()),
                             enclosingMethod.getName(), BytecodeHelper.getMethodDescriptor(enclosingMethod));
                 }
             }
@@ -458,9 +458,6 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     private void makeInnerClassEntry(final ClassNode innerClass) {
-        ClassNode outerClass = innerClass.getOuterClass();
-        maybeInnerClassEntry(outerClass); // GROOVY-9842
-
         String innerClassName = innerClass.getName();
         String innerClassInternalName = BytecodeHelper.getClassInternalName(innerClassName);
         {
@@ -469,7 +466,8 @@ public class AsmClassGenerator extends ClassGenerator {
         }
         String outerClassInternalName;
         if (innerClass.getEnclosingMethod() == null) {
-            outerClassInternalName = BytecodeHelper.getClassInternalName(outerClass.getName());
+            maybeInnerClassEntry(innerClass.getOuterClass()); // GROOVY-9842
+            outerClassInternalName = BytecodeHelper.getClassInternalName(innerClass.getOuterClass().getName());
         } else {
             outerClassInternalName = null; // local inner classes don't specify the outer class name
             if (innerClass instanceof InnerClassNode && ((InnerClassNode) innerClass).isAnonymous()) innerClassName = null;
@@ -1484,15 +1482,8 @@ public class AsmClassGenerator extends ClassGenerator {
         } else {
             PropertyExpression pexp = thisPropX(/*implicit-this*/true, expression.getName());
             pexp.getProperty().setSourcePosition(expression);
-            pexp.setType(expression.getType());
             pexp.copyNodeMetaData(expression);
             pexp.visit(this);
-
-            if (!compileStack.isLHS() && !expression.isDynamicTyped()) {
-                ClassNode variableType = controller.getTypeChooser()
-                    .resolveType(expression, controller.getClassNode());
-                controller.getOperandStack().doGroovyCast(variableType);
-            }
         }
 
         if (!compileStack.isLHS()) {
