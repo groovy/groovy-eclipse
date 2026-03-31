@@ -4206,7 +4206,7 @@ public final class InferencingTests extends InferencingTestSuite {
         String contents =
             "def val = new Object()\n" +
             "if (val instanceof Number || val instanceof CharSequence) {\n" +
-            "  println val\n" +
+            "  println val.size()\n" +
             "}\n" +
             "val";
 

@@ -441,6 +441,10 @@ public class GroovyUtils {
     }
 
     public static boolean implementsTrait(ClassNode concreteType) {
+        if (concreteType instanceof IntersectionType it) {
+            return it.types.stream().allMatch(GroovyUtils::implementsTrait);
+        }
+
         Boolean it = concreteType.getNodeMetaData(Traits.class);
         if (it != null) return it.booleanValue();
 
