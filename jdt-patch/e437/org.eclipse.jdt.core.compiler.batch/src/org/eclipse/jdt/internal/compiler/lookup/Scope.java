@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2025 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -2020,7 +2020,7 @@ public abstract class Scope {
 			env.missingClassFileLocation = invocationSite;
 			Binding binding = null;
 			FieldBinding problemField = null;
-			if ((mask & Binding.VARIABLE) != 0) {
+		out:if ((mask & Binding.VARIABLE) != 0) {
 				boolean insideStaticContext = false;
 				boolean insideConstructorCall = false;
 				boolean insideTypeAnnotation = false;
@@ -2188,8 +2188,17 @@ public abstract class Scope {
 				}
 
 				// at this point the scope is a compilation unit scope & need to check for imported static fields
+				// GROOVY add
+				var imports = unitScope.imports;
+			fi: if (imports != null) {
+					for (int i = unitScope.getDefaultImports().length; i < imports.length; i++) {
+						if (imports[i].isStatic()) break fi;
+					}
+					break out;
+				}
+				// GROOVY end
 				unitScope.faultInImports(); // ensure static imports are resolved
-				ImportBinding[] imports = unitScope.imports;
+				imports= unitScope.imports;
 				if (imports != null) {
 					// check single static imports
 					for (ImportBinding importBinding : imports) {

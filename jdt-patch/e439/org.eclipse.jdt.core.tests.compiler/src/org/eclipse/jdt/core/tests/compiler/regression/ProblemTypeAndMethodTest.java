@@ -9980,79 +9980,71 @@ public void testGH3047() throws Exception {
 			"""
 		};
 	runner.classLibraries = new String[0];
-	if (this.complianceLevel <= ClassFileConstants.JDK13) {
-		runner.expectedCompilerLog =
-			"""
-			----------
-			1. ERROR in resources\\examples\\mockito\\MockingFromFinder.java (at line 1)
-				package examples.mockito;
-				^
-			The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files
-			----------
-			2. ERROR in resources\\examples\\mockito\\MockingFromFinder.java (at line 2)
-				public class MockingFromFinder{}
-				             ^^^^^^^^^^^^^^^^^
-			Implicit super constructor Object() is undefined for default constructor. Must define an explicit constructor
-			----------
-			----------
-			1. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 1)
-				package examples.mockito;
-				^
-			The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files
-			----------
-			2. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 2)
-				public class MockingWhileAdding {
-				             ^^^^^^^^^^^^^^^^^^
-			Implicit super constructor Object() is undefined for default constructor. Must define an explicit constructor
-			----------
-			3. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 9)
-				public static class Adder implements IOperation {
-				                    ^^^^^
-			Implicit super constructor Object() is undefined for default constructor. Must define an explicit constructor
-			----------
-			""";
-	} else {
-		runner.expectedCompilerLog =
-			"""
-			----------
-			1. ERROR in resources\\examples\\mockito\\MockingFromFinder.java (at line 1)
-				package examples.mockito;
-				^
-			The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files
-			----------
-			2. ERROR in resources\\examples\\mockito\\MockingFromFinder.java (at line 1)
-				package examples.mockito;
-				^
-			The type java.lang.Error cannot be resolved. It is indirectly referenced from required .class files
-			----------
-			3. ERROR in resources\\examples\\mockito\\MockingFromFinder.java (at line 1)
-				package examples.mockito;
-				^
-			The type java.lang.String cannot be resolved. It is indirectly referenced from required .class files
-			----------
-			4. ERROR in resources\\examples\\mockito\\MockingFromFinder.java (at line 2)
-				public class MockingFromFinder{}
-				             ^^^^^^^^^^^^^^^^^
-			Implicit super constructor Object() is undefined for default constructor. Must define an explicit constructor
-			----------
-			----------
-			1. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 1)
-				package examples.mockito;
-				^
-			The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files
-			----------
-			2. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 2)
-				public class MockingWhileAdding {
-				             ^^^^^^^^^^^^^^^^^^
-			Implicit super constructor Object() is undefined for default constructor. Must define an explicit constructor
-			----------
-			3. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 9)
-				public static class Adder implements IOperation {
-				                    ^^^^^
-			Implicit super constructor Object() is undefined for default constructor. Must define an explicit constructor
-			----------
-			""";
-	}
+	runner.expectedCompilerLog =
+"""
+----------
+1. ERROR in resources\\examples\\mockito\\MockingFromFinder.java (at line 1)
+	package examples.mockito;
+	^
+The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files
+----------
+2. ERROR in resources\\examples\\mockito\\MockingFromFinder.java (at line 2)
+	public class MockingFromFinder{}
+	             ^^^^^^^^^^^^^^^^^
+Implicit super constructor Object() is undefined for default constructor. Must define an explicit constructor
+----------
+----------
+1. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 1)
+	package examples.mockito;
+	^
+The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files
+----------
+2. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 2)
+	public class MockingWhileAdding {
+	             ^^^^^^^^^^^^^^^^^^
+Implicit super constructor Object() is undefined for default constructor. Must define an explicit constructor
+----------
+3. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 3)
+	public static void calculateWithAdder(int x, int y) {
+	                                          ^
+The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files
+----------
+4. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 3)
+	public static void calculateWithAdder(int x, int y) {
+	                                                 ^
+The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files
+----------
+5. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 4)
+	IOperation adder = new Adder()::execute;
+	           ^^^^^
+The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files
+----------
+6. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 7)
+	int execute(int x, int y);
+	                ^
+The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files
+----------
+7. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 7)
+	int execute(int x, int y);
+	                       ^
+The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files
+----------
+8. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 9)
+	public static class Adder implements IOperation {
+	                    ^^^^^
+Implicit super constructor Object() is undefined for default constructor. Must define an explicit constructor
+----------
+9. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 10)
+	public int execute(int x, int y) {
+	                       ^
+The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files
+----------
+10. ERROR in resources\\examples\\mockito\\MockingWhileAdding.java (at line 10)
+	public int execute(int x, int y) {
+	                              ^
+The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files
+----------
+""";
 	runner.runNegativeTest();
 }
 public void testGH3451() {
