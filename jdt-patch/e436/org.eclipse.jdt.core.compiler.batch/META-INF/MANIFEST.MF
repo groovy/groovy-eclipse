@@ -11,7 +11,7 @@ Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Export-Package: META-INF.services,
  org.eclipse.jdt.core.compiler;
-  x-friends:="org.eclipse.jdt.core",
+  x-friends:="org.eclipse.jdt.core,org.eclipse.jdt.junit",
  org.eclipse.jdt.core.compiler.batch,
  org.eclipse.jdt.internal.antadapter;
   x-friends:="org.eclipse.jdt.core",
