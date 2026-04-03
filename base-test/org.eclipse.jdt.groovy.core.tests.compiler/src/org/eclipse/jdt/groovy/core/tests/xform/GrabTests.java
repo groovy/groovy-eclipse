@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,77 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "}\n",
 
             "Test.groovy",
-            "@Grab('joda-time:joda-time:2.12.5;transitive=false')\n" +
+            "@Grab('joda-time:joda-time:2.14.1;transitive=false')\n" +
             "import org.joda.time.DateTime\n" +
             "def now = new DateTime()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testGrab2() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "@interface A { String value() }\n",
+
+            "C.groovy",
+            "@Grab('org.apache.commons:commons-lang3:3.20.0')\n" +
+            "import org.apache.commons.lang3.StringUtils\n" +
+            "@A(StringUtils.SPACE) class C {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testGrab3() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "@interface A { String value() }\n",
+
+            "C.groovy",
+            "@Grab('org.apache.commons:commons-lang3:3.20.0')\n" +
+            "import static org.apache.commons.lang3.StringUtils.SPACE\n" +
+            "@A(SPACE) class C {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testGrab4() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "@interface A { String value() }\n",
+
+            "C.groovy",
+            "@Grab('org.apache.commons:commons-lang3:3.20.0')\n" +
+            "import static org.apache.commons.lang3.StringUtils.SPACE as BLANK\n" +
+            "@A(BLANK) class C {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testGrab5() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "@interface A { String value() }\n",
+
+            "C.groovy",
+            "@Grab('org.apache.commons:commons-lang3:3.20.0')\n" +
+            "import static org.apache.commons.lang3.StringUtils.*\n" +
+            "@A(SPACE) class C {}\n",
         };
         //@formatter:on
 
@@ -56,7 +124,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Test.groovy",
             "@Grapes([\n" +
-            "  @Grab('joda-time:joda-time:2.12.5;transitive=false'),\n" +
+            "  @Grab('joda-time:joda-time:2.14.1;transitive=false'),\n" +
             "  @Grab(group='org.aspectj', module='aspectjweaver', version='1.x')\n" +
             "])\n" +
             "class Test {\n" +
@@ -88,7 +156,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
-            "@Grab('org.apache.logging.log4j:log4j-core:2.22.0')\n" +
+            "@Grab('org.apache.logging.log4j:log4j-core:2.25.4')\n" +
             "org.apache.logging.log4j.core.async.AsyncLogger log\n",
         };
         //@formatter:on

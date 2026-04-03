@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -453,17 +453,14 @@ public class JDTResolver extends ResolveVisitor {
             }
         }
 
-        // rudimentary grab support; if the compilation unit has our special classloader and a grab has occurred, try to find the class through it
-        if (compilationUnit.getClassLoader() instanceof GrapeAwareGroovyClassLoader) {
-            GrapeAwareGroovyClassLoader loader = (GrapeAwareGroovyClassLoader) compilationUnit.getClassLoader();
-            if (loader.grabbed) {
-                try {
-                    Class<?> c = loader.loadClass(type.getName(), false, true);
-                    if (DEBUG) log("resolveToOuter (grab)", type, true);
-                    type.setRedirect(ClassHelper.make(c));
-                    return true;
-                } catch (ClassNotFoundException | CompilationFailedException ignore) {
-                }
+        // rudimentary grab support; if the compilation unit has grape-aware loader and a grab has occurred, try to find the class with it
+        if (compilationUnit.getClassLoader() instanceof GrapeAwareGroovyClassLoader loader && loader.grabbed) {
+            try {
+                Class<?> c = loader.loadClass(type.getName(), false, true);
+                if (DEBUG) log("resolveToOuter (grab)", type, true);
+                type.setRedirect(ClassHelper.make(c));
+                return true;
+            } catch (ClassNotFoundException | CompilationFailedException ignore) {
             }
         }
 

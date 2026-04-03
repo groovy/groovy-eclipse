@@ -678,7 +678,8 @@ public Binding findImport(char[][] compoundName, boolean findStaticImports, bool
 		return findSingleImport(compoundName, Binding.TYPE | Binding.FIELD | Binding.METHOD, findStaticImports);
 	}
 }
-private Binding findImport(char[][] compoundName, int length) {
+// GROOVY private->protected
+protected Binding findImport(char[][] compoundName, int length) {
 	recordQualifiedReference(compoundName);
 	ModuleBinding module = module();
 	Binding binding = length == 0 ? this.environment.defaultPackage : this.environment.getTopLevelPackage(compoundName[0]); // GROOVY edit
