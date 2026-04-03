@@ -705,7 +705,7 @@ public Binding findImport(char[][] compoundName, boolean findStaticImports, bool
 protected Binding findImport(char[][] compoundName, int length) {
 	recordQualifiedReference(compoundName);
 	ModuleBinding module = module();
-	Binding binding = length == 0 ? this.environment.defaultPackage : this.environment.getTopLevelPackage(compoundName[0]); // GROOVY edit
+	Binding binding = this.environment.getTopLevelPackage(compoundName[0]);
 	int i = 1;
 	foundNothingOrType: if (binding != null) {
 		PackageBinding packageBinding = (PackageBinding) binding;
@@ -755,7 +755,11 @@ protected Binding findImport(char[][] compoundName, int length) {
 
 	while (i < length) {
 		type = (ReferenceBinding)this.environment.convertToRawType(type, false /*do not force conversion of enclosing types*/); // type imports are necessarily raw for all except last
+		/* GROOVY edit
 		if (!type.canBeSeenBy(this.fPackage))
+		*/
+		if (!canBeSeenBy(type, this.fPackage))
+		// GROOVY end
 			return new ProblemReferenceBinding(CharOperation.subarray(compoundName, 0, i), type, ProblemReasons.NotVisible);
 
 		char[] name = compoundName[i++];

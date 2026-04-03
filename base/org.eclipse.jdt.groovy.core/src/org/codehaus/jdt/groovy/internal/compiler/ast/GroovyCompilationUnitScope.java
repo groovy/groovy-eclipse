@@ -137,6 +137,15 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
     @Override
     protected Binding findImport(char[][] compoundName, int length) {
+        if (length == 0) return environment.defaultPackage;
+        if (length == 1) { // GROOVY-8389: import static Type.name
+            for (SourceTypeBinding topLevelType : topLevelTypes) {
+                if (CharOperation.equals(topLevelType.sourceName, compoundName[0])) {
+                    return topLevelType;
+                }
+            }
+        }
+
         Binding binding = super.findImport(compoundName, length); // normal import resolve
         if (!binding.isValidBinding() && binding.problemId() == ProblemReasons.NotFound) {
             var sourceUnit = ((GroovyCompilationUnitDeclaration) referenceContext).getSourceUnit();
@@ -147,9 +156,9 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
                     String fileName = c.getSimpleName() + ".class";
                     try (var s = c.getResourceAsStream(fileName)) {
                         IBinaryType bType = org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader.read(s, fileName);
-                        PackageBinding pBind = environment().createPackage(CharOperation.subarray(compoundName, 0, length - 1)); // TODO: inner class
+                        PackageBinding pBind = environment.createPackage(CharOperation.subarray(compoundName, 0, length - 1)); // TODO: inner class
 
-                        binding = environment().createBinaryTypeFrom(bType, pBind, null);
+                        binding = environment.createBinaryTypeFrom(bType, pBind, null);
                     }
                 } catch (ClassNotFoundException ignore) {
                 } catch (Exception | LinkageError nope) {
@@ -198,10 +207,8 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
     @Override
     protected void reportImportProblem(ImportReference importReference, Binding importBinding) {
-        if (importBinding instanceof ProblemReferenceBinding pr && pr.problemId() == ProblemReasons.NotFound) {
-            return; // groovy resolver will report not-found types
-        }
-        super.reportImportProblem(importReference, importBinding);
+        if (importBinding.problemId() != ProblemReasons.NotFound)
+            super.reportImportProblem(importReference, importBinding);
     }
 
     @Override
