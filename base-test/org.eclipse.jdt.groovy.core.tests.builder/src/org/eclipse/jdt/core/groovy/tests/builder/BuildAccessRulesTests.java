@@ -58,7 +58,7 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
         });
         fullBuild(prj);
 
-        problemFormat = "Problem : Access restriction: The type '%s' is not API (restriction on required library '##')" +
+        problemFormat = "Problem : Access restriction: The type '%s' is not ## (restriction on required library '##')" +
                                     " [ resource : </Project/src/Foo.groovy> range : <%d,%d> category : <150> severity : <2>]";
     }
 
