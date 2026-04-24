@@ -21,5 +21,10 @@
   </parent>
   <artifactId>org.eclipse.jdt.core.tests.builder.mockcompiler</artifactId>
   <version>1.0.200-SNAPSHOT</version>
-  <packaging>eclipse-plugin</packaging>
+  <!-- Workaround for API baselines tycho problem: don't add this bundle to baselines check -->
+  <packaging>eclipse-test-plugin</packaging>
+  <properties>
+    <!-- This plugin is used by tests but has no tests itself, see packaging comment above -->
+    <failIfNoTests>false</failIfNoTests>
+  </properties>
 </project>

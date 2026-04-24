@@ -32,6 +32,7 @@ import org.apache.tools.ant.taskdefs.compilers.DefaultCompilerAdapter;
 import org.apache.tools.ant.types.Commandline;
 import org.apache.tools.ant.types.Commandline.Argument;
 import org.apache.tools.ant.types.Path;
+import org.apache.tools.ant.util.FileUtils;
 import org.apache.tools.ant.util.JavaEnvUtils;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.antadapter.AntAdapterMessages;
@@ -174,6 +175,9 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 		cmd.createArgument().setValue("-sourcepath"); //$NON-NLS-1$
 		createClasspathArgument(cmd, sourcepath);
 
+		// There is a circularity problem if JavaEnvUtils is initialized before FileUtils on Windows
+		// https://github.com/eclipse-platform/eclipse.platform/issues/2605
+		FileUtils.getFileUtils();
 		final String javaVersion = JavaEnvUtils.getJavaVersion();
 		String memoryParameterPrefix = javaVersion.equals(JavaEnvUtils.JAVA_1_1) ? "-J-" : "-J-X";//$NON-NLS-1$//$NON-NLS-2$
 		if (this.memoryInitialSize != null) {

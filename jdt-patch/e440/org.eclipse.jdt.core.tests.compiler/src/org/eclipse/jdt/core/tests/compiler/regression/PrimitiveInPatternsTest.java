@@ -12,9 +12,12 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
+import java.io.IOException;
 import java.util.Map;
 import junit.framework.Test;
 import org.eclipse.jdt.core.tests.util.PreviewTest;
+import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
+import org.eclipse.jdt.core.util.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -27,7 +30,7 @@ public class PrimitiveInPatternsTest extends AbstractRegressionTest9 {
 	static {
 //		TESTS_NUMBERS = new int [] { 1 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "testIssue3536" };
+//		TESTS_NAMES = new String[] { "testSwitchPrimitiveboolean_04" };
 	}
 	private String extraLibPath;
 	public static Class<?> testClass() {
@@ -7510,4 +7513,105 @@ public class PrimitiveInPatternsTest extends AbstractRegressionTest9 {
 			},
 			"1");
 	}
+
+	public void testSwitchPrimitiveboolean_01() throws IOException, ClassFormatException {
+		runConformTest(new String[] { "X.java",
+				"""
+				public class X {
+
+				    public static int primitiveSwitch(boolean b) {
+				    	return switch(b) {
+				    	case true -> 100;
+				    	case false -> 200;
+				    	};
+				    }
+
+				    public static void main(String[] args) {
+				        System.out.println(primitiveSwitch(true));
+				        System.out.println(primitiveSwitch(false));
+					}
+				}
+				"""
+			},
+			"100\n"+
+			"200");
+		String expectedOutput = "invokedynamic 1 typeSwitch(boolean, int)";
+		verifyClassFile(expectedOutput, "X.class", ClassFileBytesDisassembler.SYSTEM);
+	}
+
+	public void testSwitchPrimitiveboolean_02() throws IOException, ClassFormatException {
+		runConformTest(new String[] { "X.java",
+				"""
+				public class X {
+					public static int primitiveSwitch(float f) {
+						return switch (f) {
+						case 1.0f -> 100;
+						//		case 0.999999999f -> 200;
+						default -> 300;
+						};
+					}
+
+					public static void main(String[] args) {
+						System.out.println(primitiveSwitch(1.0f));
+
+					}
+				}
+				"""
+			},
+			"100");
+		String expectedOutput =
+		"	Method arguments:\n" +
+		"		#50 1.0\n";
+		verifyClassFile(expectedOutput, "X.class", ClassFileBytesDisassembler.SYSTEM);
+	}
+	public void testSwitchPrimitiveboolean_03() throws IOException, ClassFormatException {
+		runConformTest(new String[] { "X.java",
+				"""
+				public class X {
+					public static int primitiveSwitch(long l) {
+						return switch (l) {
+						case 10L -> 100;
+						default -> 300;
+						};
+					}
+
+					public static void main(String[] args) {
+						System.out.println(primitiveSwitch(10L));
+
+					}
+				}
+				"""
+			},
+			"100");
+		String expectedOutput =
+		"	Method arguments:\n" +
+		"		#31 10\n";
+		verifyClassFile(expectedOutput, "X.class", ClassFileBytesDisassembler.SYSTEM);
+	}
+
+	public void testSwitchPrimitiveboolean_04() throws IOException, ClassFormatException {
+		runConformTest(new String[] { "X.java",
+				"""
+				public class X {
+					public static int primitiveSwitch(double d) {
+						return switch (d) {
+						case 10.0 -> 100;
+						default -> 300;
+						};
+					}
+
+					public static void main(String[] args) {
+						System.out.println(primitiveSwitch(10.0));
+
+					}
+				}
+				"""
+			},
+			"100");
+		String expectedOutput =
+		"	Method arguments:\n" +
+		"		#31 10.0\n";
+		verifyClassFile(expectedOutput, "X.class", ClassFileBytesDisassembler.SYSTEM);
+	}
+
 }

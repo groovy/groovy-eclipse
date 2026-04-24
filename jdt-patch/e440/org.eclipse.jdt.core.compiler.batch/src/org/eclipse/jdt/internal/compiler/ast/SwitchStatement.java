@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2025 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -540,7 +540,7 @@ public class SwitchStatement extends Expression {
 		switch (eType.id) {
 			case TypeIds.T_JavaLangLong, TypeIds.T_JavaLangFloat, TypeIds.T_JavaLangDouble:
 				return true;
-			case TypeIds.T_long, TypeIds.T_double, TypeIds.T_float :
+			case TypeIds.T_boolean, TypeIds.T_long, TypeIds.T_double, TypeIds.T_float :
 				if (this.isPrimitiveSwitch)
 					return true;
 			// note: if no patterns are present we optimize Boolean to use unboxing rather than indy typeSwitch

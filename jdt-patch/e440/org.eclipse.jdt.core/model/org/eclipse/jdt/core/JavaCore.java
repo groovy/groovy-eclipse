@@ -3319,6 +3319,12 @@ public final class JavaCore extends Plugin {
 	public static final String VERSION_26 = "26"; //$NON-NLS-1$
 	/**
 	 * Configurable option value: {@value}.
+	 * @since 3.46
+	 * @category OptionValue
+	 */
+	public static final String VERSION_27 = "27"; //$NON-NLS-1$
+	/**
+	 * Configurable option value: {@value}.
 	 * @since 3.4
 	 * @category OptionValue
 	 */

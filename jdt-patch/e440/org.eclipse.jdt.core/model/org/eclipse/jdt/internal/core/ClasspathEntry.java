@@ -1843,7 +1843,7 @@ public class ClasspathEntry implements IClasspathEntry {
 
 		IProject project = javaProject.getProject();
 		IPath projectPath= project.getFullPath();
-		String projectName = javaProject.getElementName();
+		final String projectName = javaProject.getElementName();
 
 		/* validate output location */
 		if (projectOutputLocation == null) {
@@ -2163,7 +2163,7 @@ public class ClasspathEntry implements IClasspathEntry {
 						if (hasTest && !hasMain) {
 							return new JavaModelStatus(IJavaModelStatusConstants.MAIN_ONLY_PROJECT_DEPENDS_ON_TEST_ONLY_PROJECT,
 									Messages.bind(Messages.classpath_main_only_project_depends_on_test_only_project,
-											new String[] { prereqProject.getElementName() }));
+											new String[] { projectName, prereqProject.getElementName() }));
 						}
 					}
 				}

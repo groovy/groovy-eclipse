@@ -1191,7 +1191,7 @@ class DocCommentParser extends AbstractCommentParser {
 
 	private void pushSnippetText(char[] text, int start, int end, boolean addNewLine, Object snippetTag, boolean isExternalSnippet) {
 		// Create text element
-		String textToBeAdded= new String( text, start, end-start);
+		String textToBeAdded= new String( text, start, end-start).stripTrailing();
 		AbstractTextElement textElem= null;
 		if (isExternalSnippet && textToBeAdded.indexOf("*/") > 0) { //$NON-NLS-1$
 			textElem = this.ast.newJavaDocTextElement();

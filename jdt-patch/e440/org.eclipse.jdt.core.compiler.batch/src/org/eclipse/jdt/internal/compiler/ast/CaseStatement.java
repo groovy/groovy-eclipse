@@ -327,12 +327,11 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	int pc = codeStream.position;
 	this.targetLabel.place();
 
-	if (containsPatternVariable(true)) {
+	if (this.constantExpressions.length > 0 && this.constantExpressions[0] instanceof Pattern pattern && (!pattern.isUnguarded() || pattern.containsPatternVariable(true))) {
 
 		BranchLabel patternMatchLabel = new BranchLabel(codeStream);
 		BranchLabel matchFailLabel = new BranchLabel(codeStream);
 
-		Pattern pattern = (Pattern) this.constantExpressions[0];
 		codeStream.load(this.swich.selector);
 		pattern.generateCode(currentScope, codeStream, patternMatchLabel, matchFailLabel);
 		codeStream.goto_(patternMatchLabel);

@@ -9870,4 +9870,82 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 			"A null case label has to be either the only expression in a case label or the first expression followed only by a default\n" +
 			"----------\n");
 	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5000
+	// Switch guards are not respected when record has no components
+	public void testIssue5000() throws Exception {
+		runConformTest(
+			new String[] {
+				"X.java",
+				"""
+				sealed interface Union {
+					record Foo() implements Union {
+					}
+
+					record Bar() implements Union {
+					}
+				}
+
+				public class X {
+					public static void main(String[] args) {
+						Union foo = new Union.Foo();
+
+						var f = switch (foo) {
+							case Union.Foo() when "".equals("abc") -> {
+								yield "bad";
+							}
+							case Union.Foo() -> {
+								yield "good";
+							}
+							case Union.Bar() -> {
+								yield "bar";
+							}
+						};
+
+						System.out.println(f);
+					}
+				}
+				"""
+			},
+			"good");
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5000
+	// Switch guards are not respected when record has no components
+	public void testIssue5000_2() throws Exception {
+		runConformTest(
+			new String[] {
+				"X.java",
+				"""
+				sealed interface Union {
+					record Foo() implements Union {
+					}
+
+					record Bar() implements Union {
+					}
+				}
+
+				public class X {
+					public static void main(String[] args) {
+						Union foo = new Union.Foo();
+
+						var f = switch (foo) {
+							case Union.Foo() when "abc".equals("abc") -> {
+								yield "bad";
+							}
+							case Union.Foo() -> {
+								yield "good";
+							}
+							case Union.Bar() -> {
+								yield "bar";
+							}
+						};
+
+						System.out.println(f);
+					}
+				}
+				"""
+			},
+			"bad");
+	}
 }

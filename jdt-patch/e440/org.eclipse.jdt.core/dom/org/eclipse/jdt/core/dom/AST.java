@@ -541,7 +541,7 @@ public final class AST {
 	 * up to and including Java SE 26(aka JDK 26).
 	 * </p>
 	 *
-	 * @since 3.45
+	 * @since 3.46
 	 */
 	public static final int JLS26 = 26;
 	/**

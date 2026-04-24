@@ -1924,6 +1924,15 @@ public class Disassembler extends ClassFileBytesDisassembler {
 				case IConstantPoolConstant.CONSTANT_Integer:
 					arguments[i] = Integer.toString(constantPoolEntry.getIntegerValue());
 					break;
+				case IConstantPoolConstant.CONSTANT_Float:
+					arguments[i] = Float.toString(constantPoolEntry.getFloatValue());
+					break;
+				case IConstantPoolConstant.CONSTANT_Long:
+					arguments[i] = Long.toString(constantPoolEntry.getLongValue());
+					break;
+				case IConstantPoolConstant.CONSTANT_Double:
+					arguments[i] = Double.toString(constantPoolEntry.getDoubleValue());
+					break;
 				case IConstantPoolConstant.CONSTANT_MethodHandle:
 					// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.8
 					// If the value of the reference_kind item is 5 (REF_invokeVirtual), 6 (REF_invokeStatic),
