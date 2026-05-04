@@ -4686,7 +4686,7 @@ public final class InferencingTests extends InferencingTestSuite {
             if (test[2].split(" & ").length <= (!test[2].contains(expect) ? 1 : 2))
                 expect = test[2]; // !(x instanceof T) ? ... : ___ for single guard
             assertType(contents.toString(), offset, offset + 6, expect);
-            if (isAtLeastGroovy(50))
+            if (isAtLeastGroovy(50) && types.length < 2) // GROOVY-11983
                 assertType("@groovy.transform.TypeChecked " + contents, offset + 30, offset + 36, expect);
         }
     }

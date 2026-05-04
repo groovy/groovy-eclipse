@@ -1062,6 +1062,11 @@ public class CompilerConfiguration {
 
     /**
      * Checks if invoke dynamic is enabled.
+     * <p>
+     * Enabled by default since Groovy 4. Can be disabled by setting
+     * the system property {@code groovy.target.indy} to {@code false}
+     * or by setting the {@code indy} optimization option to {@code false}.
+     * The ability to disable may be removed in a future version.
      */
     public boolean isIndyEnabled() {
         return !Boolean.FALSE.equals(getOptimizationOptions().get(INVOKEDYNAMIC));

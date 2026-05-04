@@ -46,6 +46,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -414,14 +415,29 @@ public class GroovyUtils {
 
     public static Expression getTraitFieldExpression(MethodCallExpression call) {
         Expression objExpr = call.getObjectExpression();
-        if (objExpr instanceof TernaryExpression) {
-            objExpr = ((TernaryExpression) objExpr).getTrueExpression();
+
+        // old trait receiver transformer
+        // 1) $static$self
+        // 2) (T$Trait$FieldHelper) $self
+        // 3) self instanceof Class? self: self.getClass() -- self is (1) or (2)
+
+        // new trait receiver transformer
+        // 1) $static$self
+        // 2) (T$Trait$FieldHelper) $self
+        // 3) $self.getClass()
+
+        if (objExpr instanceof TernaryExpression e) {
+            objExpr = e.getTrueExpression(); // $static$self or (T$Trait$FieldHelper) $self
         }
+        if (objExpr instanceof CastExpression e) {
+            objExpr = e.getExpression(); // $self
+        } else if (objExpr instanceof MethodCallExpression e && "getClass".equals(e.getMethodAsString())) {
+            objExpr = e.getObjectExpression(); // $self
+        }
+
         ClassNode objType = objExpr.getType();
-        if (objType.getName().endsWith("$Trait$FieldHelper")) {
-            objType = objType.getOuterClass(); // look for ((T$Trait$FieldHelper)$self).T__name$get()
-        } else if (objType.equals(ClassHelper.CLASS_Type) && asBoolean(objType.getGenericsTypes())) {
-            objType = objType.getGenericsTypes()[0].getType(); // look for $static$self.T__name$get()
+        if (objType.equals(ClassHelper.CLASS_Type) && asBoolean(objType.getGenericsTypes())) {
+            objType = objType.getGenericsTypes()[0].getType();
         }
         if (Traits.isTrait(objType) && call.getMethod() instanceof ConstantExpression) {
             Matcher m = Pattern.compile(".+__(\\p{javaJavaIdentifierPart}+)\\$[gs]et").matcher(call.getMethodAsString());
