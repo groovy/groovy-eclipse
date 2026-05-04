@@ -932,7 +932,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 }
 
                 @Override
-                public void visitVariableExpression(VariableExpression ve) {
+                public void visitVariableExpression(final VariableExpression ve) {
                     nodes.push(ve);
                     // before this/super ctor call completes, only params and static or outer members are accessible
                     if (inSpecialConstructorCall() && (ve.isThisExpression() || ve.isSuperExpression() || isNonStaticMemberAccess(ve))) {
@@ -951,7 +951,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                     return nodes.stream().anyMatch(it -> it instanceof ConstructorCallExpression && ((ConstructorCallExpression) it).isSpecialCall());
                 }
 
-                private boolean isNonStaticMemberAccess(VariableExpression ve) {
+                private boolean isNonStaticMemberAccess(final VariableExpression ve) {
                     Variable variable = ve.getAccessedVariable();
                     return !inClosure() && variable != null && !isStatic(variable.getModifiers())
                         && !(variable instanceof DynamicVariable) && !(variable instanceof Parameter);

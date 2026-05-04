@@ -74,7 +74,6 @@ class ASTTestTransformation implements ASTTransformation, CompilationUnitAware {
                 ClassNode type = ClassHelper.makeWithoutCaching(CompilePhase.name)
                 type.setRedirect(p.getObjectExpression().getType())
                 p.getObjectExpression().setType(type)
-
                 p.getObjectExpression().setSourcePosition(member.objectExpression)
                 p.getProperty().setSourcePosition(member.property)
                 p.setSourcePosition(member)
