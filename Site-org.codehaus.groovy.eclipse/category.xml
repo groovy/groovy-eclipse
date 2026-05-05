@@ -55,6 +55,10 @@
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
    -->
+   <feature id="org.codehaus.groovy60.feature" url="features/org.codehaus.groovy60.feature_6.2.0.qualifier.jar" version="6.2.0.qualifier">
+      <category name="org.codehaus.groovy.compilers"/>
+   </feature>
+
    <feature id="org.codehaus.groovy.m2eclipse.feature" url="features/org.codehaus.groovy.m2eclipse.feature_6.2.0.qualifier.jar" version="6.2.0.qualifier">
       <category name="org.codehaus.groovy.m2eclipse"/>
    </feature>

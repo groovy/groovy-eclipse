@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,29 +17,16 @@ package org.codehaus.groovy.alltests
 
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils
 import org.eclipse.core.runtime.Platform
-import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestName
-import org.osgi.framework.Version
 
 /**
  * Ensures the proper compiler level is being used.
  */
 final class SanityTests {
 
-    @Rule
-    public TestName test = new TestName()
-
-    @Before
-    void setUp() {
-        println '----------------------------------------'
-        println 'Starting: ' + test.methodName
-    }
-
     @Test
     void testCompilerVersion() {
-        Version groovyVersion = CompilerUtils.activeGroovyBundle.version
+        def    groovyVersion = CompilerUtils.activeGroovyBundle.version
         assert groovyVersion.major == CompilerUtils.workspaceCompilerLevel.majorVersion
         assert groovyVersion.minor == CompilerUtils.workspaceCompilerLevel.minorVersion
 
@@ -49,6 +36,6 @@ final class SanityTests {
 
         int major = groovyVersion.major,
             minor = groovyVersion.minor
-        assert "${major}.${minor}" == '5.0'
+        assert "${major}.${minor}" ==~ /[3-6]\.0/
     }
 }

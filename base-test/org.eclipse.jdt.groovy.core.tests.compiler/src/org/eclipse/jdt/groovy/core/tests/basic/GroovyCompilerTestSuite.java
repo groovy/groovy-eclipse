@@ -40,6 +40,7 @@ import org.eclipse.jdt.core.tests.util.CompilerTestSetup;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.core.util.ClassFormatException;
+import org.eclipse.jdt.groovy.core.tests.GroovyBundle;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
@@ -94,7 +95,12 @@ public abstract class GroovyCompilerTestSuite {
         long javaSpec = CompilerOptions.versionToJdkLevel(System.getProperty("java.specification.version"));
         List<Object[]> params = new ArrayList<>();
         for (long jdk : new long[] {JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14, JDK15, JDK16, JDK17, JDK18, JDK19, JDK20, JDK21, JDK22, JDK23, JDK24, JDK25, JDK26}) {
-            if (jdk == javaSpec || (jdk < javaSpec && (/*jdk == JDK8 || */jdk == JDK11 || jdk == JDK17 || jdk == JDK21 || jdk == JDK25))) { // current and LTS
+            if (jdk == javaSpec || (jdk < javaSpec && ( // current and LTS
+                    (jdk == JDK8  && !GroovyBundle.isAtLeastGroovy(50)) ||
+                    (jdk == JDK11 && !GroovyBundle.isAtLeastGroovy(60)) ||
+                    jdk == JDK17 ||
+                    jdk == JDK21 ||
+                    jdk == JDK25))) {
                 params.add(new Object[] {jdk, CompilerOptions.versionFromJdkLevel(jdk)});
             }
         }
@@ -141,8 +147,8 @@ public abstract class GroovyCompilerTestSuite {
                 String[] cps = super.getDefaultClassPaths();
                 String[] newcps = Arrays.copyOf(cps, cps.length + 2);
 
-                String[] groovyVersions = {"5.0.6", "4.0.32", "3.0.25-indy"};
-                String[] ivyVersions = {"2.5.3", "2.5.2", "2.5.1", "2.5.0"};
+                String[] groovyVersions = {"6.0.0", "5.0.6", "4.0.32", "3.0.25-indy"};
+                String[] ivyVersions = {"2.6.0", "2.5.3"};
                 try {
                     URL groovyJar = null;
                     for (String groovyVer : groovyVersions) {

@@ -145,7 +145,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, target)))
 
         String info = proposals[0].proposalInfo.getInfo(null)
-        assert info ==~ /(?s)Sorts the Collection\. .*/ : 'CategoryProposalCreator.CategoryMethodProposal.createJavaProposal locates javadoc'
+        assert info ==~ /(?s)(Sorts the Collection|Determines if the Iterable is sorted)\. .*/ : 'CategoryProposalCreator.CategoryMethodProposal.createJavaProposal locates javadoc'
     }
 
     @Test

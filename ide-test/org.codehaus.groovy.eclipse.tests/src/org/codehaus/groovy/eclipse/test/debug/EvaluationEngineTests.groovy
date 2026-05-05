@@ -330,7 +330,8 @@ final class EvaluationEngineTests extends GroovyEclipseTestSuite {
             IEvaluationResult result = evaluate('this.foo', thread)
             assert result.hasErrors()
             String report = getErrorMessages(result)[0]
-            assert report.startsWith('An exception occurred: groovy.lang.MissingPropertyException')
+            assert report.startsWith('An exception occurred: ')
+            assert report =~ /groovy.lang.MissingPropertyException|org.codehaus.groovy.runtime.metaclass.MissingPropertyExceptionNoStack/
         } finally {
             launch.terminate()
         }

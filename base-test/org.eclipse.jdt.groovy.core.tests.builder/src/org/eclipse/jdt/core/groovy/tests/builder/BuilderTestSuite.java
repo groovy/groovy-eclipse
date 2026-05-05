@@ -284,7 +284,7 @@ public abstract class BuilderTestSuite {
 
         @Override
         public IPath addProject(final String projectName) {
-            return addProject(projectName, "11");
+            return addProject(projectName, "17");
         }
 
         @Override

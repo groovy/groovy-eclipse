@@ -77,9 +77,9 @@ public class TestProject {
 
         addNature(JavaCore.NATURE_ID);
         javaProject = JavaCore.create(project);
-        javaProject.setOption(CompilerOptions.OPTION_Source, "11");
-        javaProject.setOption(CompilerOptions.OPTION_Compliance, "11");
-        javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "11");
+        javaProject.setOption(CompilerOptions.OPTION_Source, "17");
+        javaProject.setOption(CompilerOptions.OPTION_Compliance, "17");
+        javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "17");
         javaProject.setOption(CompilerOptions.OPTION_Release, CompilerOptions.ENABLED);
 
         javaProject.setRawClasspath(new IClasspathEntry[] {

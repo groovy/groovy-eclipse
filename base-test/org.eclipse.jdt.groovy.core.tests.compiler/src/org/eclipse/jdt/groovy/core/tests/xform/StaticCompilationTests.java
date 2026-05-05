@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2354,13 +2354,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 11)\n" +
-            "\tassert x.peek() in 1..2\n" +
-            "\t       ^^^^^^^^" + (isParrotParser() ? "" : "^") + "\n" +
-            "Groovy:[Static type checking] - Cannot find matching method (java.util.AbstractCollection & java.io.Serializable & java.lang.Cloneable & java.util.SequencedCollection)#peek()\n" +
-            "----------\n");
+        if (isAtLeastGroovy(60)) {
+            runConformTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 11)\n" +
+                "\tassert x.peek() in 1..2\n" +
+                "\t       ^^^^^^^^" + (isParrotParser() ? "" : "^") + "\n" +
+                "Groovy:[Static type checking] - Cannot find matching method (java.util.AbstractCollection & java.io.Serializable & java.lang.Cloneable & java.util.SequencedCollection)#peek()\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -3597,13 +3601,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 4)\n" +
-            "\to.floatValue()\n" +
-            "\t^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#floatValue()\n" +
-            "----------\n");
+        if (isAtLeastGroovy(60)) {
+            runConformTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 4)\n" +
+                "\to.floatValue()\n" +
+                "\t^^^^^^^^^^^^^^\n" +
+                "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#floatValue()\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -6925,7 +6933,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    this.val = v\n" +
             "  }\n" +
             "  String toString() {\n" +
-            "    val as String\n" +
+            "    (val as String)\n" +
             "  }\n" +
             "  def <T> Value<T> replace(Supplier<T> supplier) {\n" +
             "    new Value<>(supplier.get())\n" +
@@ -6977,7 +6985,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    this.val = v\n" +
             "  }\n" +
             "  String toString() {\n" +
-            "    val as String\n" +
+            "    (val as String)\n" +
             "  }\n" +
             "  def <T> Value<T> replace(Supplier<T> supplier) {\n" +
             "    new Value<>(supplier.get())\n" +

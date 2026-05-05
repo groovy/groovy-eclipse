@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ public enum SpecifiedVersion {
     _30(3, 0, "30"),
     _40(4, 0, "40"),
     _50(5, 0, "50"),
+    _60(6, 0, "60"),
     DONT_CARE(0, 0, "-1"),
     UNSPECIFIED(0, 0, "0");
 
@@ -130,6 +131,12 @@ public enum SpecifiedVersion {
                         case 0:
                             return _50;
                         }
+                        break;
+                    case 6:
+                        switch (minor) {
+                        case 0:
+                            return _60;
+                        }
                     }
                 } catch (NumberFormatException ignore) {
                 }
@@ -197,10 +204,14 @@ public enum SpecifiedVersion {
         case "50":
         case "5.0":
             return _50;
+
+        case "60":
+        case "6.0":
+            return _60;
         }
 
         System.out.println("Invalid Groovy compiler level: " + compilerLevel +
-            "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23, 2.3, 24, 2.4, 25, 2.5, 26, 2.6, 30, 3.0, 40, 4.0, 50 or 5.0");
+            "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23, 2.3, 24, 2.4, 25, 2.5, 26, 2.6, 30, 3.0, 40, 4.0, 50, 5.0, 60 or 6.0");
 
         return UNSPECIFIED;
     }
@@ -236,20 +247,25 @@ public enum SpecifiedVersion {
             case 6:
                 return _26;
             }
+            break;
         case 3:
-            switch (ver.getMinor()) {
-            case 0:
+            if (ver.getMinor() == 0) {
                 return _30;
             }
+            break;
         case 4:
-            switch (ver.getMinor()) {
-            case 0:
+            if (ver.getMinor() == 0) {
                 return _40;
             }
+            break;
         case 5:
-            switch (ver.getMinor()) {
-            case 0:
+            if (ver.getMinor() == 0) {
                 return _50;
+            }
+            break;
+        case 6:
+            if (ver.getMinor() == 0) {
+                return _60;
             }
         }
         return UNSPECIFIED;

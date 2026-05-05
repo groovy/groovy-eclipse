@@ -3482,7 +3482,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "    this.val = v\n" +
             "  }\n" +
             "  String toString() {\n" +
-            "    val as String\n" +
+            "    (val as String)\n" +
             "  }\n" +
             "  def <T> Value<T> replace(Supplier<T> supplier) {\n" +
             "    new Value<>(supplier.get())\n" +
@@ -7164,7 +7164,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 3)\n" +
             "\to instanceof Map || o instanceof List ? o.entrySet() : null\n" +
             "\t                                        ^^^^^^^^^^^^" + (isParrotParser() ? "" : "^") + "\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#entrySet()\n" +
+            "Groovy:[Static type checking] - Cannot find matching method " + (isAtLeastGroovy(60) ? "(java.util.Map | java.util.List)" : "java.lang.Object") + "#entrySet()\n" +
             "----------\n");
     }
 

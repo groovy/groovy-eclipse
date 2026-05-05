@@ -3442,7 +3442,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\tbreak words\n" +
             "\t^^^^^^^^^^^\n" +
             "Groovy:" + (!isParrotParser()
-                ? "the break statement with named label is only allowed inside loops\n"
+                ? "the break statement with named label is only allowed inside " + (isAtLeastGroovy(60) ? "control statements" : "loops") + "\n"
                 : "break statement is only allowed inside loops or switches\n") +
             "----------\n");
     }
