@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,11 +96,6 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in X.groovy (at line 1)\n" +
             "\t@ package p\n" +
-            "\t^^\n" +
-            "Groovy:class ? is not an annotation in @?\n" +
-            "----------\n" +
-            "2. ERROR in X.groovy (at line 1)\n" +
-            "\t@ package p\n" +
             "\t ^\n" +
             "Groovy:unable to resolve class ? for annotation\n" +
             "----------\n");
@@ -145,11 +140,6 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in X.groovy (at line 1)\n" +
             "\t@ int x\n" +
-            "\t^^\n" +
-            "Groovy:class ? is not an annotation in @?\n" +
-            "----------\n" +
-            "2. ERROR in X.groovy (at line 1)\n" +
-            "\t@ int x\n" +
             "\t ^\n" +
             "Groovy:unable to resolve class ? for annotation\n" +
             "----------\n");
@@ -172,11 +162,6 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in X.groovy (at line 1)\n" +
-            "\t@ class X {}\n" +
-            "\t^^\n" +
-            "Groovy:class ? is not an annotation in @?\n" +
-            "----------\n" +
-            "2. ERROR in X.groovy (at line 1)\n" +
             "\t@ class X {}\n" +
             "\t ^\n" +
             "Groovy:unable to resolve class ? for annotation\n" +
@@ -202,11 +187,6 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in X.groovy (at line 1)\n" +
             "\t@Deprecated @ class X {}\n" +
-            "\t            ^^\n" +
-            "Groovy:class ? is not an annotation in @?\n" +
-            "----------\n" +
-            "2. ERROR in X.groovy (at line 1)\n" +
-            "\t@Deprecated @ class X {}\n" +
             "\t             ^\n" +
             "Groovy:unable to resolve class ? for annotation\n" +
             "----------\n");
@@ -231,11 +211,6 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in X.groovy (at line 1)\n" +
             "\t@ @Deprecated class X {}\n" +
-            "\t^^\n" +
-            "Groovy:class ? is not an annotation in @?\n" +
-            "----------\n" +
-            "2. ERROR in X.groovy (at line 1)\n" +
-            "\t@ @Deprecated class X {}\n" +
             "\t ^\n" +
             "Groovy:unable to resolve class ? for annotation\n" +
             "----------\n");
@@ -259,11 +234,6 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in X.groovy (at line 1)\n" +
-            "\t@Deprecated @ @SuppressWarnings('nls') class X {}\n" +
-            "\t            ^^\n" +
-            "Groovy:class ? is not an annotation in @?\n" +
-            "----------\n" +
-            "2. ERROR in X.groovy (at line 1)\n" +
             "\t@Deprecated @ @SuppressWarnings('nls') class X {}\n" +
             "\t             ^\n" +
             "Groovy:unable to resolve class ? for annotation\n" +
@@ -291,11 +261,6 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in X.groovy (at line 2)\n" +
             "\t@ def x\n" +
-            "\t^^\n" +
-            "Groovy:class ? is not an annotation in @?\n" +
-            "----------\n" +
-            "2. ERROR in X.groovy (at line 2)\n" +
-            "\t@ def x\n" +
             "\t ^\n" +
             "Groovy:unable to resolve class ? for annotation\n" +
             "----------\n");
@@ -322,11 +287,6 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in X.groovy (at line 2)\n" +
-            "\t@ void x() {}\n" +
-            "\t^^\n" +
-            "Groovy:class ? is not an annotation in @?\n" +
-            "----------\n" +
-            "2. ERROR in X.groovy (at line 2)\n" +
             "\t@ void x() {}\n" +
             "\t ^\n" +
             "Groovy:unable to resolve class ? for annotation\n" +

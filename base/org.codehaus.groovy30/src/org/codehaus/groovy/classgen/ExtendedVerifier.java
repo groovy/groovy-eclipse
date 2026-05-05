@@ -162,6 +162,11 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
         }
         Map<String, List<AnnotationNode>> nonSourceAnnotations = new LinkedHashMap<>();
         for (AnnotationNode unvisited : node.getAnnotations()) {
+            // GRECLIPSE add -- unresolved annotation type
+            if (!(unvisited.getClassNode().isResolved() ||
+                  unvisited.getClassNode().isPrimaryClassNode()))
+                continue;
+            // GRECLIPSE end
             AnnotationNode visited;
             {
                 ErrorCollector errorCollector = new ErrorCollector(source.getConfiguration());
@@ -252,8 +257,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
                 ClassNode cn = (ClassNode) node;
                 cn.setModifiers(cn.getModifiers() | Opcodes.ACC_DEPRECATED);
             // GRECLIPSE add
-            } else if (node instanceof DeclarationExpression) {
-                DeclarationExpression decl = (DeclarationExpression) node;
+            } else if (node instanceof DeclarationExpression decl) {
                 if (!decl.isMultipleAssignmentDeclaration()) {
                     VariableExpression ve = decl.getVariableExpression();
                     ve.setModifiers(ve.getModifiers() | /*Flags.AccDeprecated*/0x100000);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -266,20 +266,15 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "4. ERROR in Bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +
-            "\t^^^^^^^^^^^^\n" +
-            "Groovy:class ScriptMixin is not an annotation in @ScriptMixin\n" +
-            "----------\n" +
-            "5. ERROR in Bad.groovy (at line 2)\n" +
-            "\t@ScriptMixin(C.class)\n" +
             "\t ^^^^^^^^^^^\n" +
             "Groovy:unable to resolve class ScriptMixin for annotation\n" +
             "----------\n" +
-            "6. ERROR in Bad.groovy (at line 2)\n" +
+            "5. ERROR in Bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +
             "\t             ^\n" +
             "Groovy:unable to find class 'C.class' for annotation attribute constant\n" +
             "----------\n" +
-            "7. ERROR in Bad.groovy (at line 4)\n" +
+            "6. ERROR in Bad.groovy (at line 4)\n" +
             "\t@Override\n" +
             "\t^^^^^^^^^\n" +
             "Groovy:Method 'toString' from class 'Bad' does not override method from its superclass or interfaces but is annotated with @Override.\n" +
