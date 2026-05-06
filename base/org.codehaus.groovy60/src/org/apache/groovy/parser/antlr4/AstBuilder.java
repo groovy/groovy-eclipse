@@ -748,6 +748,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         ModifierManager modifierManager = new ModifierManager(this, this.visitVariableModifiersOpt(ctx.variableModifiersOpt()));
         modifierManager.processParameter(valueParameter);
         // GRECLIPSE add
+        modifierManager.get(VAL).ifPresent(val -> valueParameter.setNodeMetaData("reserved.type.name", val));
         modifierManager.get(VAR).ifPresent(var -> valueParameter.setNodeMetaData("reserved.type.name", var));
 
         valueParameter.setNameStart(valueParameter.getStart());
@@ -2278,6 +2279,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 createGroovyTokenByType(ctx.ASSIGN().getSymbol(), Types.ASSIGN),
                 visitVariableInitializer(ctx.variableInitializer())           );
         // GRECLIPSE add
+        modifierManager.get(VAL).ifPresent(val ->
+                de.setNodeMetaData("reserved.type.name", val));
         modifierManager.get(VAR).ifPresent(var ->
                 de.setNodeMetaData("reserved.type.name", var));
         // GRECLIPSE end
@@ -2312,6 +2315,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         if (size > 0) {
             for (DeclarationExpression e : declarationExpressionList) {
                 // GRECLIPSE add
+                modifierManager.get(VAL).ifPresent(val -> e.setNodeMetaData("reserved.type.name", val));
                 modifierManager.get(VAR).ifPresent(var -> e.setNodeMetaData("reserved.type.name", var));
                 // GRECLIPSE end
                 modifierManager.processVariableExpression(e.getVariableExpression());

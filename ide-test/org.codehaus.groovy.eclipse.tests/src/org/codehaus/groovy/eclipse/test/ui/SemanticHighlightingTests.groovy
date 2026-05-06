@@ -1901,6 +1901,123 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // GROOVY-9630
+    void testValKeyword0() {
+        String contents = '''\
+            |def val
+            |val = null
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('val'),     3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, VARIABLE))
+    }
+
+    @Test
+    void testValKeyword1() {
+        String contents = '''\
+            |def abc = null
+            |int ijk = null
+            |val xyz = null
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('abc'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('ijk'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('xyz'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, isParrotParser() && isAtLeastGroovy(60) ? RESERVED : UNKNOWN))
+    }
+
+    @Test
+    void testValKeyword2() {
+        String contents = 'val val = null'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, isParrotParser() && isAtLeastGroovy(60) ? RESERVED : UNKNOWN),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, VARIABLE))
+    }
+
+    @Test
+    void testValKeyword3() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String contents = 'val (x, y, z) = [1, 2, 3]'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('y'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('z'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('3'), 1, NUMBER))
+    }
+
+    @Test
+    void testValKeyword4() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String contents = '''\
+            |for (val item : list) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('item'), 4, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('list'), 4, UNKNOWN))
+    }
+
+    @Test
+    void testValKeyword5() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String contents = '''\
+            |for (val item in list) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('item'), 4, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('list'), 4, UNKNOWN))
+    }
+
+    @Test
+    void testValKeyword6() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String contents = '''\
+            |for (val i = 0; i < n; i += 1) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('i ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('i <'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('n'), 1, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('i +'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER))
+    }
+
+    @Test
+    void testValKeyword7() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String contents = '''\
+            |try (val str = getClass().getResourceAsStream('rsrc')) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('str'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('getClass'), 'getClass'.length(), METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('getResourceAsStream'), 'getResourceAsStream'.length(), METHOD_CALL))
+    }
+
+    @Test // GROOVY-9630
     void testVarKeyword0() {
         String contents = '''\
             |def var
