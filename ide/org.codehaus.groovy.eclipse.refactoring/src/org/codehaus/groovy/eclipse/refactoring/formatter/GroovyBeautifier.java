@@ -90,10 +90,12 @@ public class GroovyBeautifier {
                 }
                 posCLEnd = positionLastTokenOfClosure;
             }
-            // ignore closure on one line
+            // ignore closure on one line, unless that line exceeds the configured max length
             if (clExp.getLineNumber() == clExp.getLastLineNumber()) {
-                ignoreToken.add(formatter.getTokens().get(posCLEnd));
-                continue;
+                if (!exceedsMaxLineLength(clExp.getLineNumber()) || !hasStatements(clExp)) {
+                    ignoreToken.add(formatter.getTokens().get(posCLEnd));
+                    continue;
+                }
             }
 
             if (clExp.getCode() instanceof BlockStatement) {
@@ -189,6 +191,24 @@ public class GroovyBeautifier {
             }
         }
         return false;
+    }
+
+    private boolean hasStatements(ClosureExpression node) {
+        return (node.getCode() instanceof BlockStatement) &&
+            !((BlockStatement) node.getCode()).getStatements().isEmpty();
+    }
+
+    private boolean exceedsMaxLineLength(int lineNumber) {
+        try {
+            IDocument doc = formatter.getProgressDocument();
+            int lineIndex = lineNumber - 1; // line numbers are 1-based
+            if (lineIndex < 0 || lineIndex >= doc.getNumberOfLines()) {
+                return false;
+            }
+            return doc.getLineInformation(lineIndex).getLength() > preferences.getMaxLineLength();
+        } catch (BadLocationException e) {
+            return false;
+        }
     }
 
     private void replaceNLSWithSpace(MultiTextEdit container, int startPos, int endPos) throws BadLocationException {
