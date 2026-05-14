@@ -1,0 +1,18 @@
+###prop
+setPreferences=true
+maxLineLegth=100
+###src
+def sphinxJson = addTaskLocal([name: BUILD_DOCS_JSON, type: SphinxDocumentationTask]) { type = SphinxDocType.JSON }
+def short_one = doStuff() { foo() }
+def empty_one = doStuff() {}
+def long_with_params = aMethodWithAReallyLongName(arg1, arg2) { it, ix -> doSomethingMeaningful(it, ix) }
+###exp
+def sphinxJson = addTaskLocal([name: BUILD_DOCS_JSON, type: SphinxDocumentationTask]) {
+	type = SphinxDocType.JSON
+}
+def short_one = doStuff() { foo() }
+def empty_one = doStuff() {}
+def long_with_params = aMethodWithAReallyLongName(arg1, arg2) { it, ix ->
+	doSomethingMeaningful(it, ix)
+}
+###end
