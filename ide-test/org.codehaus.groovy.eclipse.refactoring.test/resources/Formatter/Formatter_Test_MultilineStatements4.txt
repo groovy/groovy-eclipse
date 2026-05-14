@@ -9,8 +9,8 @@ println 'hello'
 }
 
 ###exp
-String appPath,controller,clazz
-new File(appPath,controller).eachLine { String line->
+String appPath, controller, clazz
+new File(appPath, controller).eachLine { String line->
 	if(line=~/def index = \{ \}/) {
 		// fragile!
 		println 'hello'

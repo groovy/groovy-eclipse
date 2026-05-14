@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,6 +63,8 @@ public class GroovyBeautifier {
             formatLists(edits);
             correctBraces(edits);
             removeUnnecessarySemicolons(edits);
+            removeUnnecessaryWhitespace(edits);
+            addAdditionalSpacing(edits);
 
             return edits;
         } finally {
@@ -148,10 +150,10 @@ public class GroovyBeautifier {
                         previous = tokens.getLastTokenBefore(previous);
                     }
                     String prefix = (wrap ? formatter.getNewLine() : previous.getType() == GroovyTokenTypeBridge.LBRACK ? "" : " ");
-                    replaceWhiteSpaceAfter(edits, previous, prefix);
+                    replaceWhiteSpaceAfter(edits, previous, prefix, true, true);
                 }
                 String suffix = (wrap || penultimate.getType() == GroovyTokenTypeBridge.SL_COMMENT ? formatter.getNewLine() : "");
-                replaceWhiteSpaceAfter(edits, penultimate, suffix);
+                replaceWhiteSpaceAfter(edits, penultimate, suffix, true, true);
             } catch (Exception e) {
                 Util.log(e);
             }
@@ -162,18 +164,23 @@ public class GroovyBeautifier {
      * Creates edit that replaces whitespace tokens immediately following given
      * token with specified string.
      */
-    private void replaceWhiteSpaceAfter(MultiTextEdit edits, Token token, String replacement) {
+    private void replaceWhiteSpaceAfter(MultiTextEdit edits, Token token, String replacement,
+            boolean allWhitespaces, boolean atLeastOneWhitespaceFound) {
         GroovyDocumentScanner tokens = formatter.getTokens();
         try {
             Token first = tokens.getNextToken(token); // first whitespace token (if any)
             Token last = first; // first non-whitespace token
-            // if no white space tokens where found then first and last will be the same token (i.e. token just after the given token)
-            while (isWhiteSpace(last.getType())) {
+            // if no white space tokens where found then first and last will be the same
+            // token (i.e. token just after the given token)
+            while ((allWhitespaces & isWhiteSpace(last.getType())) ||
+                    (!allWhitespaces & last.getType() == GroovyTokenTypeBridge.WS)) {
                 last = tokens.getNextToken(last);
             }
             int offset = tokens.getEnd(token);
-            int length = tokens.getOffset(last) - offset;
-            addEdit(new ReplaceEdit(offset, length, replacement), edits);
+            if (atLeastOneWhitespaceFound || (offset < tokens.getOffset(last))) {
+                int length = tokens.getOffset(last) - offset;
+                addEdit(new ReplaceEdit(offset, length, replacement), edits);
+            }
         } catch (BadLocationException e) {
             Util.log(e);
         }
@@ -342,6 +349,181 @@ public class GroovyBeautifier {
         }
     }
 
+    private void addAdditionalSpacing(MultiTextEdit edits) {
+        try {
+            for (Token token : formatter.getTokens().getTokens(formatter.selection)) {
+                Token nextToken = formatter.getTokens().getNextToken(token);
+                int tokenType = token.getType();
+                int nextTokenType = nextToken.getType();
+
+                boolean addSpaceAfter = false;
+
+                // TODO how to differentiate between Generics and 1 < 2?
+
+                if ((
+                        isValueToken(token) ||
+                        tokenType == GroovyTokenTypeBridge.IDENT ||
+                        nextTokenType == GroovyTokenTypeBridge.STRING_LITERAL
+                    ) && (
+                        //nextTokenType == GroovyTokenTypeBridge.GT ||
+                        //nextTokenType == GroovyTokenTypeBridge.LT ||
+                        nextTokenType == GroovyTokenTypeBridge.GE ||
+                        nextTokenType == GroovyTokenTypeBridge.LE ||
+                        nextTokenType == GroovyTokenTypeBridge.NOT_EQUAL ||
+                        nextTokenType == GroovyTokenTypeBridge.EQUAL ||
+                        nextTokenType == GroovyTokenTypeBridge.ASSIGN
+                    )
+                ) {
+                    addSpaceAfter = true;
+                }
+
+                if ((
+                        //tokenType == GroovyTokenTypeBridge.GT ||
+                        //tokenType == GroovyTokenTypeBridge.LT ||
+                        tokenType == GroovyTokenTypeBridge.GE ||
+                        tokenType == GroovyTokenTypeBridge.LE ||
+                        tokenType == GroovyTokenTypeBridge.NOT_EQUAL ||
+                        tokenType == GroovyTokenTypeBridge.EQUAL ||
+                        tokenType == GroovyTokenTypeBridge.ASSIGN
+                    ) && (
+                        (isValueToken(nextToken) || nextTokenType == GroovyTokenTypeBridge.IDENT) ||
+                        nextTokenType == GroovyTokenTypeBridge.STRING_LITERAL
+                    )
+                ) {
+                    addSpaceAfter = true;
+                }
+
+                if (tokenType == GroovyTokenTypeBridge.COLON) {
+                    addSpaceAfter = true;
+                }
+
+                if (tokenType == GroovyTokenTypeBridge.COMMA && nextTokenType == GroovyTokenTypeBridge.IDENT) {
+                    addSpaceAfter = true;
+                }
+
+                int tokenEndOffset = formatter.getOffsetOfTokenEnd(token);
+                int nextTokenStartOffset = formatter.getOffsetOfToken(nextToken);
+
+                if (addSpaceAfter) {
+                    if (tokenEndOffset == nextTokenStartOffset) {
+                        addEdit(new InsertEdit(tokenEndOffset, " "), edits);
+                    } else {
+                        //replaceWhiteSpaceAfter(edits, token, " ", false, false);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Util.log(e);
+        }
+    }
+
+    private void removeUnnecessaryWhitespace(MultiTextEdit edits) {
+        try {
+            for (Token token : formatter.getTokens().getTokens(formatter.selection)) {
+                Token nextToken = formatter.getTokens().getNextToken(token);
+                int tokenType = token.getType();
+                int nextTokenType = nextToken.getType();
+
+                boolean removeAllWhitespaces = false;
+                boolean collapseAllWhitespaces = true;
+
+                if (nextTokenType == GroovyTokenTypeBridge.COMMA) {
+                    removeAllWhitespaces = true;
+                }
+
+                // TODO: both Map<String, String> and 1 < 2 match here, how to differentiate them?
+                if (tokenType == GroovyTokenTypeBridge.IDENT && nextTokenType == GroovyTokenTypeBridge.LT) {
+                    //removeAllWhitespaces = true;
+                }
+
+                if ((tokenType == GroovyTokenTypeBridge.LT && nextTokenType == GroovyTokenTypeBridge.IDENT) ||
+                    (tokenType == GroovyTokenTypeBridge.IDENT && nextTokenType == GroovyTokenTypeBridge.GT)) {
+                    removeAllWhitespaces = true;
+                }
+
+                if (tokenType == GroovyTokenTypeBridge.LPAREN || nextTokenType == GroovyTokenTypeBridge.RPAREN) {
+                    removeAllWhitespaces = true;
+                }
+
+                if (tokenType == GroovyTokenTypeBridge.LBRACK || nextTokenType == GroovyTokenTypeBridge.RBRACK) {
+                    removeAllWhitespaces = true;
+                }
+
+                if (tokenType == GroovyTokenTypeBridge.IDENT && nextTokenType == GroovyTokenTypeBridge.LPAREN) {
+                    removeAllWhitespaces = true;
+                }
+
+                if (tokenType == GroovyTokenTypeBridge.IDENT && nextTokenType == GroovyTokenTypeBridge.COMMA) {
+                    removeAllWhitespaces = true;
+                }
+
+                if ((tokenType == GroovyTokenTypeBridge.GT && nextTokenType == GroovyTokenTypeBridge.GT) ||
+                    (tokenType == GroovyTokenTypeBridge.LT && nextTokenType == GroovyTokenTypeBridge.LT)) {
+                    removeAllWhitespaces = true;
+                }
+
+                if (tokenType == GroovyTokenTypeBridge.STRING_CTOR_START && (
+                        nextTokenType == GroovyTokenTypeBridge.STRING_CTOR_END ||
+                        nextTokenType == GroovyTokenTypeBridge.EOF)) {
+                    collapseAllWhitespaces = false;
+                }
+
+                if (removeAllWhitespaces) {
+                    replaceWhiteSpaceAfter(edits, token, "", false, false);
+                } else if (collapseAllWhitespaces) {
+                    replaceWhiteSpaceAfter(edits, token, " ", false, false);
+                }
+            }
+        } catch (Exception e) {
+            Util.log(e);
+        }
+    }
+
+    private boolean isValueToken(Token token) {
+        return List.of(
+            GroovyTokenTypeBridge.NUM_INT,
+            GroovyTokenTypeBridge.NUM_LONG,
+            GroovyTokenTypeBridge.NUM_DOUBLE,
+            GroovyTokenTypeBridge.NUM_FLOAT,
+            GroovyTokenTypeBridge.NUM_BIG_INT,
+            GroovyTokenTypeBridge.NUM_BIG_DECIMAL
+        ).contains(token.getType());
+    }
+/*
+    private boolean isValueLiteralToken(Token token) {
+        return List.of(
+            GroovyTokenTypeBridge.LITERAL_boolean,
+            GroovyTokenTypeBridge.LITERAL_byte,
+            GroovyTokenTypeBridge.LITERAL_char,
+            GroovyTokenTypeBridge.LITERAL_short,
+            GroovyTokenTypeBridge.LITERAL_int,
+            GroovyTokenTypeBridge.LITERAL_long,
+            GroovyTokenTypeBridge.LITERAL_double,
+            GroovyTokenTypeBridge.LITERAL_float,
+            GroovyTokenTypeBridge.IDENT
+        ).contains(token.getType());
+    }
+
+    private boolean isWhitespaceBeforeTokenNeeded(Token nextToken) {
+        return !(
+            nextToken.getType() == GroovyTokenTypeBridge.COMMA ||
+            nextToken.getType() == GroovyTokenTypeBridge.RBRACK ||
+            nextToken.getType() == GroovyTokenTypeBridge.RPAREN ||
+            nextToken.getType() == GroovyTokenTypeBridge.LBRACK ||
+            nextToken.getType() == GroovyTokenTypeBridge.LPAREN
+        ) || (
+            nextToken.getType() == GroovyTokenTypeBridge.EQUAL ||
+            nextToken.getType() == GroovyTokenTypeBridge.NOT_EQUAL ||
+            nextToken.getType() == GroovyTokenTypeBridge.ASSIGN ||
+            nextToken.getType() == GroovyTokenTypeBridge.NUM_BIG_DECIMAL ||
+            nextToken.getType() == GroovyTokenTypeBridge.NUM_BIG_INT ||
+            nextToken.getType() == GroovyTokenTypeBridge.NUM_DOUBLE ||
+            nextToken.getType() == GroovyTokenTypeBridge.NUM_FLOAT ||
+            nextToken.getType() == GroovyTokenTypeBridge.NUM_INT ||
+            nextToken.getType() == GroovyTokenTypeBridge.NUM_LONG
+        );
+    }
+*/
     private void addEdit(TextEdit edit, TextEdit container) {
         if (edit != null &&
             edit.getOffset() >= formatter.formatOffset &&
