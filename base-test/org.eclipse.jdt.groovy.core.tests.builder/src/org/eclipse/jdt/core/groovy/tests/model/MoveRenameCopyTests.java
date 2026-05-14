@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,23 +19,20 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.junit.Test;
 
 public final class MoveRenameCopyTests extends BuilderTestSuite {
 
+    //@formatter:off
     private static final String GROOVY_CLASS_CONTENTS =
-        //@formatter:off
         "class Groovy {\n" +
         "  Groovy() { }\n" +
         "  Groovy(arg1) { }\n" +
         "}";
-        //@formatter:on
+    //@formatter:on
 
     private static final String GROOVY_SCRIPT_CONTENTS =
         "def x = 9";
@@ -126,17 +123,12 @@ public final class MoveRenameCopyTests extends BuilderTestSuite {
 
     private GroovyCompilationUnit createSimpleGroovyProject(String pack, String contents) throws Exception {
         IPath projectPath = env.addProject("Project");
-        env.addGroovyNature("Project");
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
         expectingNoProblems();
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
 
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
-        IPath path = env.addGroovyClass(root, "", "Groovy", contents);
-        IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
-        return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
+        IPath root = env.getPackageFragmentRootPath(projectPath, "src");
+        IPath path = env.addGroovyClass(root, "Groovy", contents);
+        return env.getUnit(path);
     }
 }

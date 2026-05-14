@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@ package org.codehaus.groovy.eclipse.maven.testing
 class Example {
     Helper help
     JavaClass j
-    def show() {
+    void show() {
         println 'Hello World'
-        foo "foo" bar "hello"  // some Groovy 1.8 syntax
-    } 
+        foo 'foo' bar 'hello' // some Groovy 1.8 syntax
+    }
     Example foo(x) { this }
-    def bar(x) { println x }
+    void bar(x) { println x }
 }

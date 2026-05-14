@@ -11,7 +11,11 @@
             class="org.codehaus.groovy.eclipse.astviews.ASTView"
             icon="platform:/plugin/org.codehaus.groovy.eclipse/$nl$/groovy16.png"
             id="org.codehaus.groovy.eclipse.astviews.ASTView"
-            name="Groovy AST Viewer">
+            name="Groovy AST Viewer"
+            restorable="false">
+         <description>
+            Inspect the Abstract Syntax Tree (AST) of a Groovy source
+         </description>
       </view>
    </extension>
 </plugin>

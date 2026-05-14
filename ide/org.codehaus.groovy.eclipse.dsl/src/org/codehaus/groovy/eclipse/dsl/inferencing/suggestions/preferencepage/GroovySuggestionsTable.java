@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,6 +116,8 @@ public class GroovySuggestionsTable {
             return weight;
         }
     }
+
+    //--------------------------------------------------------------------------
 
     public GroovySuggestionsTable(List<IProject> projects) {
         this.projects = projects != null ? projects : new ArrayList<>();
@@ -448,58 +450,6 @@ public class GroovySuggestionsTable {
         return false;
     }
 
-    protected static class ViewerContentProvider implements ITreePathContentProvider {
-        @Override
-        public Object[] getElements(Object inputElement) {
-            if (inputElement instanceof Collection) {
-                List<Object> suggestedTypes = new ArrayList<>();
-                Collection<?> topLevel = (Collection<?>) inputElement;
-                for (Object possibleTypeSuggestion : topLevel) {
-                    if (possibleTypeSuggestion instanceof GroovySuggestionDeclaringType) {
-                        suggestedTypes.add(possibleTypeSuggestion);
-                    }
-                }
-                return suggestedTypes.toArray();
-            }
-            return null;
-        }
-
-        @Override
-        public Object[] getChildren(TreePath path) {
-            Object lastElement = path.getLastSegment();
-            if (lastElement instanceof GroovySuggestionDeclaringType) {
-                GroovySuggestionDeclaringType treeElement = (GroovySuggestionDeclaringType) lastElement;
-
-                List<IGroovySuggestion> properties = treeElement.getSuggestions();
-
-                if (properties != null) {
-                    return properties.toArray();
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public TreePath[] getParents(Object element) {
-            return new TreePath[] {};
-        }
-
-        @Override
-        public boolean hasChildren(TreePath path) {
-            return getChildren(path) != null;
-        }
-
-        @Override
-        public void dispose() {
-            // nothing for now
-        }
-
-        @Override
-        public void inputChanged(Viewer viewer, Object e1, Object e2) {
-            // nothing for now
-        }
-    }
-
     /**
      * Always returns a non-null selection list. May be empty if no selections
      * are present.
@@ -509,43 +459,6 @@ public class GroovySuggestionsTable {
             return ((IStructuredSelection) viewer.getTreeViewer().getSelection()).toList();
         }
         return Collections.EMPTY_LIST;
-    }
-
-    protected static class ViewerLabelProvider extends ColumnLabelProvider {
-        @Override
-        public void update(ViewerCell cell) {
-            Object element = cell.getElement();
-            int index = cell.getColumnIndex();
-
-            cell.setText(getColumnText(element, index));
-            cell.setImage(getColumnImage(element, index));
-            cell.setFont(getFont(element));
-        }
-
-        public Image getColumnImage(Object element, int index) {
-            return null;
-        }
-
-        @Override
-        public Font getFont(Object element) {
-            return super.getFont(element);
-        }
-
-        public String getColumnText(Object element, int index) {
-            ColumnTypes[] values = ColumnTypes.values();
-            if (index < values.length) {
-                ColumnTypes colType = values[index];
-
-                String text = null;
-                switch (colType) {
-                case SUGGESTIONS:
-                    text = getDisplayString(element);
-                    break;
-                }
-                return text;
-            }
-            return null;
-        }
     }
 
     protected static String getDisplayString(Object element) {
@@ -610,6 +523,8 @@ public class GroovySuggestionsTable {
         });
         return button;
     }
+
+    //--------------------------------------------------------------------------
 
     public static class SuggestionViewerSorter extends TreeViewerSorter {
         @Override
@@ -697,5 +612,94 @@ public class GroovySuggestionsTable {
         }
 
         protected abstract String getCompareString(TreeColumn column, Object rowItem);
+    }
+
+    protected static class ViewerLabelProvider extends ColumnLabelProvider {
+        @Override
+        public void update(ViewerCell cell) {
+            Object element = cell.getElement();
+            int index = cell.getColumnIndex();
+
+            cell.setText(getColumnText(element, index));
+            cell.setImage(getColumnImage(element, index));
+            cell.setFont(getFont(element));
+        }
+
+        public Image getColumnImage(Object element, int index) {
+            return null;
+        }
+
+        @Override
+        public Font getFont(Object element) {
+            return super.getFont(element);
+        }
+
+        public String getColumnText(Object element, int index) {
+            ColumnTypes[] values = ColumnTypes.values();
+            if (index < values.length) {
+                ColumnTypes colType = values[index];
+
+                String text = null;
+                switch (colType) {
+                case SUGGESTIONS:
+                    text = getDisplayString(element);
+                    break;
+                }
+                return text;
+            }
+            return null;
+        }
+    }
+
+    protected static class ViewerContentProvider implements ITreePathContentProvider {
+        @Override
+        public Object[] getElements(Object inputElement) {
+            if (inputElement instanceof Collection) {
+                List<Object> suggestedTypes = new ArrayList<>();
+                Collection<?> topLevel = (Collection<?>) inputElement;
+                for (Object possibleTypeSuggestion : topLevel) {
+                    if (possibleTypeSuggestion instanceof GroovySuggestionDeclaringType) {
+                        suggestedTypes.add(possibleTypeSuggestion);
+                    }
+                }
+                return suggestedTypes.toArray();
+            }
+            return null;
+        }
+
+        @Override
+        public Object[] getChildren(TreePath path) {
+            Object lastElement = path.getLastSegment();
+            if (lastElement instanceof GroovySuggestionDeclaringType) {
+                GroovySuggestionDeclaringType treeElement = (GroovySuggestionDeclaringType) lastElement;
+
+                List<IGroovySuggestion> properties = treeElement.getSuggestions();
+
+                if (properties != null) {
+                    return properties.toArray();
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public TreePath[] getParents(Object element) {
+            return new TreePath[] {};
+        }
+
+        @Override
+        public boolean hasChildren(TreePath path) {
+            return getChildren(path) != null;
+        }
+
+        @Override
+        public void dispose() {
+            // nothing for now
+        }
+
+        @Override
+        public void inputChanged(Viewer viewer, Object e1, Object e2) {
+            // nothing for now
+        }
     }
 }

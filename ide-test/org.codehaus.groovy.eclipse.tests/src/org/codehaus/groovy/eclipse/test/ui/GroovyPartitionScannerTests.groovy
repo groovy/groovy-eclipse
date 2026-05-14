@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,7 +26,8 @@ final class GroovyPartitionScannerTests {
     private final GroovyPartitionScanner scanner = new GroovyPartitionScanner()
 
     private void tryString(String string, int start, String expectedContentType) {
-        scanner.setRange(new Document(string), start, string.length())
+        Document document = new Document(string)
+        scanner.setRange(document, start, string.length())
         IToken token = scanner.nextToken()
         assert token.data == expectedContentType : "Incorrect content type for \'$string\'"
     }
@@ -73,17 +74,17 @@ final class GroovyPartitionScannerTests {
 
     @Test
     void testComment() {
-        tryString('/* blah\n' +
-                  ' * blah\n' +
-                  ' */',
-                  0, IJavaPartitions.JAVA_MULTI_LINE_COMMENT)
+        tryString('''\
+            |/* blah
+            | * blah
+            | */'''.stripMargin(), 0, IJavaPartitions.JAVA_MULTI_LINE_COMMENT)
     }
 
     @Test
     void testJavaDoc() {
-        tryString('/** blah\n' +
-                  ' * blah\n' +
-                  ' */',
-                0, IJavaPartitions.JAVA_DOC)
+        tryString('''\
+            |/** blah
+            | * blah
+            | */'''.stripMargin(), 0, IJavaPartitions.JAVA_DOC)
     }
 }

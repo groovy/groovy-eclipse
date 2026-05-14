@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.tools.ParameterUtils;
 import org.codehaus.groovy.control.CompilePhase;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
@@ -47,10 +48,10 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static org.apache.groovy.ast.tools.MethodNodeUtils.getCodeAsBlock;
 
 /**
  * Represents a class in the AST.
@@ -88,7 +89,7 @@ import static java.util.stream.Collectors.joining;
  *  through a Class instance
  * <li> Labels:<br>
  * ClassNodes created through ClassHelper.makeWithoutCaching. They
- * are place holders, its redirect points to the real structure, which can
+ * are placeholders, its redirect points to the real structure, which can
  * be a label too, but following all redirects it should end with a ClassNode
  * from one of the other two categories. If ResolveVisitor finds such a
  * node, it tries to set the redirects. Any such label created after
@@ -140,7 +141,18 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     private String name;
     private int modifiers;
+    /* GRECLIPSE edit
     private boolean syntheticPublic;
+    */
+    private int bits;
+    private boolean bit(int mask) {
+        return (bits & mask) != 0;
+    }
+    private void    bit(int mask, boolean b) {
+        if (b) bits |=  mask;
+        else   bits &= ~mask;
+    }
+    // GRECLIPSE end
     private ClassNode[] interfaces;
     private MixinNode[] mixins;
     private List<Statement> objectInitializers;
@@ -149,14 +161,16 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     // GRECLIPSE private->protected
     protected MapOfLists methods;
     private List<MethodNode> methodsList;
-    private LinkedList<FieldNode> fields;
+    private List<FieldNode> fields;
     private List<PropertyNode> properties;
     private Map<String, FieldNode> fieldIndex;
+    /* GRECLIPSE edit
     private ModuleNode module;
     private CompileUnit compileUnit;
     private boolean staticClass;
     private boolean scriptBody;
     private boolean script;
+    */
     private ClassNode superClass;
     protected boolean isPrimaryNode;
     protected List<InnerClassNode> innerClasses;
@@ -169,26 +183,23 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     // use this to synchronize access for the lazy init
     protected final Object lazyInitLock = new Object();
 
-    // clazz!=null when resolved
-    protected Class clazz;
+    protected Class clazz; // not null when resolved
     // only false when this classNode is constructed from a class
     // GRECLIPSE private->protected
     protected volatile boolean lazyInitDone = true;
-    // not null if if the ClassNode is an array
+    // not null if the ClassNode is an array
     private ClassNode componentType;
     // if not null this instance is handled as proxy
     // for the redirect
     private ClassNode redirect;
-    // flag if the classes or its members are annotated
+    /* GRECLIPSE edit
     private boolean annotated;
-
-    // type spec for generics
+    */
     private GenericsType[] genericsTypes;
+    /* GRECLIPSE edit
     private boolean usesGenerics;
-
-    // if set to true the name getGenericsTypes consists
-    // of 1 element describing the name of the placeholder
     private boolean placeholder;
+    */
 
     /**
      * Returns the {@code ClassNode} this node is a proxy for or the node itself.
@@ -303,7 +314,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         clazz = c;
         lazyInitDone = false;
         isPrimaryNode = false;
-        Optional.ofNullable(getCompileUnit()).ifPresent(cu -> cu.addClass(this));
     }
 
     /**
@@ -319,22 +329,29 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                                          "A redirect() call is missing somewhere!");
             }
             if (lazyInitDone) return;
-            VMPluginFactory.getPlugin().configureClassNode(compileUnit, this);
+            VMPluginFactory.getPlugin().configureClassNode(getCompileUnit(), this);
             lazyInitDone = true;
         }
     }
 
-    /**
-     * Tracks the enclosing method for local inner classes.
-     */
+    /* GRECLIPSE edit
     private MethodNode enclosingMethod;
+    */
 
     public MethodNode getEnclosingMethod() {
+        /* GRECLIPSE edit
         return redirect().enclosingMethod;
+        */
+        return redirect().getNodeMetaData(MethodNode.class);
+        // GRECLIPSE end
     }
 
     public void setEnclosingMethod(MethodNode enclosingMethod) {
+        /* GRECLIPSE edit
         redirect().enclosingMethod = enclosingMethod;
+        */
+        redirect().putNodeMetaData(MethodNode.class, enclosingMethod);
+        // GRECLIPSE end
     }
 
     /**
@@ -346,11 +363,19 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return {@code true} if node is public but had no explicit public modifier
      */
     public boolean isSyntheticPublic() {
+        /* GRECLIPSE edit
         return syntheticPublic;
+        */
+        return bit(0x1);
+        // GRECLIPSE end
     }
 
     public void setSyntheticPublic(boolean syntheticPublic) {
+        /* GRECLIPSE edit
         this.syntheticPublic = syntheticPublic;
+        */
+        bit(0x1, syntheticPublic);
+        // GRECLIPSE end
     }
 
     /**
@@ -377,21 +402,33 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         this.mixins = mixins;
 
         isPrimaryNode = true;
+        /* GRECLIPSE edit
         if (superClass != null) {
             usesGenerics = superClass.isUsingGenerics();
         }
-        if (!usesGenerics && interfaces != null) {
-            usesGenerics = stream(interfaces).anyMatch(ClassNode::isUsingGenerics);
+        if (interfaces != null) {
+            for (int i = 0; i < interfaces.length && !usesGenerics; ) {
+                 usesGenerics = interfaces[i++].isUsingGenerics();
+            }
         }
+        */
         methods = new MapOfLists();
-        methodsList = Collections.emptyList();
+        methodsList = Collections.EMPTY_LIST;
     }
 
     /**
      * Sets the superclass of this {@code ClassNode}.
      */
     public void setSuperClass(ClassNode superClass) {
+        /* GRECLIPSE edit
         redirect().superClass = superClass;
+        */
+        if (redirect != null) {
+            redirect.setSuperClass(superClass);
+        } else {
+            setUnresolvedSuperClass(superClass);
+        }
+        // GRECLIPSE end
     }
 
     /**
@@ -402,7 +439,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             return redirect.getFields();
         lazyClassInit();
         if (fields == null)
-            fields = new LinkedList<>();
+            fields = new ArrayList<>();
         return fields;
     }
 
@@ -454,7 +491,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      */
     public List<MethodNode> getAbstractMethods() {
         return getDeclaredMethodsMap().values().stream()
-            .filter(MethodNode::isAbstract).collect(Collectors.toList());
+            .filter(MethodNode::isAbstract).collect(toList());
     }
 
     public List<MethodNode> getAllDeclaredMethods() {
@@ -463,17 +500,15 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public Set<ClassNode> getAllInterfaces() {
         Set<ClassNode> result = new LinkedHashSet<>();
+        if (isInterface()) result.add(this);
         getAllInterfaces(result);
         return result;
     }
 
     private void getAllInterfaces(Set<ClassNode> set) {
-        if (isInterface()) {
-            set.add(this);
-        }
         for (ClassNode face : getInterfaces()) {
-            set.add(face);
-            face.getAllInterfaces(set);
+            if (set.add(face)) // GROOVY-11036
+                face.getAllInterfaces(set);
         }
     }
 
@@ -541,7 +576,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public ModuleNode getModule() {
+        /* GRECLIPSE edit
         return redirect().module;
+        */
+        return redirect().getNodeMetaData(ModuleNode.class);
+        // GRECLIPSE end
     }
 
     public PackageNode getPackage() {
@@ -549,10 +588,14 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public void setModule(ModuleNode module) {
+        /* GRECLIPSE edit
         redirect().module = module;
         if (module != null) {
             redirect().compileUnit = module.getUnit();
         }
+        */
+        redirect().putNodeMetaData(ModuleNode.class, module);
+        // GRECLIPSE end
     }
 
     public void addField(FieldNode node) {
@@ -568,12 +611,12 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         node.setDeclaringClass(r);
         node.setOwner(r);
         if (r.fields == null)
-            r.fields = new LinkedList<>();
+            r.fields = new ArrayList<>();
         if (r.fieldIndex == null)
             r.fieldIndex = new LinkedHashMap<>();
 
         if (isFirst) {
-            r.fields.addFirst(node);
+            r.fields.add(0, node);
         } else {
             r.fields.add(node);
         }
@@ -642,7 +685,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         node.setDeclaringClass(this);
         ClassNode r = redirect();
         if (r.methodsList.isEmpty()) {
-            r.methodsList = new ArrayList<>();
+            r.methodsList = new ArrayList<>(8);
         }
         r.methodsList.add(node);
         r.methods.put(node.getName(), node);
@@ -715,30 +758,27 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public void addInterface(ClassNode type) {
-        // let's check if it already implements an interface
-        boolean skip = false;
         ClassNode[] interfaces = getInterfaces();
         for (ClassNode face : interfaces) {
-            if (type.equals(face)) {
-                skip = true;
-                break;
-            }
+            if (face.equals(type)) return;
         }
-        if (!skip) {
-            ClassNode[] newInterfaces = new ClassNode[interfaces.length + 1];
-            System.arraycopy(interfaces, 0, newInterfaces, 0, interfaces.length);
-            newInterfaces[interfaces.length] = type;
-            redirect().interfaces = newInterfaces;
-        }
+        final int n = interfaces.length;
+
+        System.arraycopy(interfaces, 0, interfaces = new ClassNode[n + 1], 0, n);
+        interfaces[n] = type; // append interface
+        setInterfaces(interfaces);
     }
 
+    @Override
     public boolean equals(Object that) {
         if (that == this) return true;
         if (!(that instanceof ClassNode)) return false;
         if (redirect != null) return redirect.equals(that);
-        return (((ClassNode) that).getText().equals(getText()));
+        if (componentType != null) return componentType.equals(((ClassNode) that).componentType);
+        return ((ClassNode) that).getText().equals(getText()); // arrays could be "T[]" or "[LT;"
     }
 
+    @Override
     public int hashCode() {
         return (redirect != null ? redirect.hashCode() : getText().hashCode());
     }
@@ -757,7 +797,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             MixinNode[] newMixins = new MixinNode[mixins.length + 1];
             System.arraycopy(mixins, 0, newMixins, 0, mixins.length);
             newMixins[mixins.length] = mixin;
-            redirect().mixins = newMixins;
+            setMixins(newMixins);
         }
     }
 
@@ -812,7 +852,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (outer == null) {
             return Collections.emptyList();
         }
-        List<ClassNode> result = new LinkedList<>();
+        List<ClassNode> result = new ArrayList<>(4);
         do {
             result.add(outer);
         } while ((outer = outer.getOuterClass()) != null);
@@ -836,10 +876,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     private MethodNode getOrAddStaticConstructorNode() {
-        MethodNode method = null;
-        List<MethodNode> declaredMethods = getDeclaredMethods("<clinit>");
+        MethodNode method;
+        final String classInitializer = "<clinit>";
+        List<MethodNode> declaredMethods = getDeclaredMethods(classInitializer);
         if (declaredMethods.isEmpty()) {
-            method = addMethod("<clinit>", ACC_STATIC, ClassHelper.VOID_TYPE, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, new BlockStatement());
+            method = addMethod(classInitializer, ACC_STATIC, ClassHelper.VOID_TYPE, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, new BlockStatement());
             method.setSynthetic(true);
         } else {
             method = declaredMethods.get(0);
@@ -849,19 +890,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public void addStaticInitializerStatements(List<Statement> staticStatements, boolean fieldInit) {
         MethodNode method = getOrAddStaticConstructorNode();
-        BlockStatement block = null;
-        Statement statement = method.getCode();
-        if (statement == null) {
-            block = new BlockStatement();
-        } else if (statement instanceof BlockStatement) {
-            block = (BlockStatement) statement;
-        } else {
-            block = new BlockStatement();
-            block.addStatement(statement);
-        }
+        BlockStatement block = getCodeAsBlock(method);
 
         // while anything inside a static initializer block is appended
-        // we don't want to append in the case we have a initialization
+        // we don't want to append in the case we have an initialization
         // expression of a static field. In that case we want to add
         // before the other statements
         if (!fieldInit) {
@@ -902,7 +934,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     /**
-     * This methods returns a list of all methods of the given name
+     * This method returns a list of all methods of the given name
      * defined in the current class
      * @return the method list
      * @see #getMethods(String)
@@ -915,7 +947,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     /**
-     * This methods creates a list of all methods with this name of the
+     * This method creates a list of all methods with this name of the
      * current class and of all super classes
      * @return the methods list
      * @see #getDeclaredMethods(String)
@@ -970,12 +1002,15 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (type.equals(ClassHelper.OBJECT_TYPE)) {
             return true;
         }
-        ClassNode node = this;
-        while (node != null) {
+        if (this.isArray() && type.isArray()
+                && type.getComponentType().equals(ClassHelper.OBJECT_TYPE)
+                && !ClassHelper.isPrimitiveType(this.getComponentType())){
+            return true;
+        }
+        for (ClassNode node = this; node != null; node = node.getSuperClass()) {
             if (type.equals(node)) {
                 return true;
             }
-            node = node.getSuperClass();
         }
         return false;
     }
@@ -1043,7 +1078,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * classes, not interfaces.
      */
     public boolean declaresInterface(ClassNode classNode) {
-        ClassNode[] interfaces = redirect().getInterfaces();
+        ClassNode[] interfaces = getInterfaces();
         for (ClassNode face : interfaces) {
             if (face.equals(classNode)) {
                 return true;
@@ -1114,16 +1149,23 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     public CompileUnit getCompileUnit() {
         if (redirect != null)
             return redirect.getCompileUnit();
+        /* GRECLIPSE edit
         if (compileUnit == null && module != null) {
             compileUnit = module.getUnit();
         }
         return compileUnit;
+        */
+        return Optional.ofNullable(getModule()).map(ModuleNode::getUnit).orElse(null);
+        // GRECLIPSE end
     }
 
+    @Deprecated
     protected void setCompileUnit(CompileUnit cu) {
+        /* GRECLIPSE edit
         if (redirect != null)
             redirect.setCompileUnit(cu);
         if (compileUnit != null) compileUnit = cu;
+        */
     }
 
     /**
@@ -1175,11 +1217,14 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
         // visit the method nodes added while iterating,
         // e.g. synthetic method for constructor reference
-        List<MethodNode> changedMethodList = new ArrayList<>(getMethods());
-        boolean changed = changedMethodList.removeAll(methodList);
-        if (changed) {
-            for (MethodNode mn : changedMethodList) {
-                visitor.visitMethod(mn);
+        final List<MethodNode> newMethodList = getMethods();
+        if (newMethodList.size() > methodList.size()) { // if the newly added method nodes found, visit them
+            List<MethodNode> changedMethodList = new ArrayList<>(newMethodList);
+            boolean changed = changedMethodList.removeAll(methodList);
+            if (changed) {
+                for (MethodNode mn : changedMethodList) {
+                    visitor.visitMethod(mn);
+                }
             }
         }
     }
@@ -1193,14 +1238,13 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         boolean booleanReturnOnly = getterName.startsWith("is");
         for (MethodNode method : getDeclaredMethods(getterName)) {
             if (getterName.equals(method.getName())
-                    && ClassHelper.VOID_TYPE != method.getReturnType()
-                    && method.getParameters().length == 0
+                    && method.getParameters().length == 0 && !method.isVoidMethod()
                     && (!booleanReturnOnly || ClassHelper.Boolean_TYPE.equals(ClassHelper.getWrapper(method.getReturnType())))) {
                 // GROOVY-7363: There can be multiple matches for a getter returning a generic parameter type, due to
                 // the generation of a bridge method. The real getter is really the non-bridge, non-synthetic one as it
                 // has the most specific and exact return type of the two. Picking the bridge method results in loss of
                 // type information, as it down-casts the return type to the lower bound of the generic parameter.
-                if (getterMethod == null || getterMethod.isSynthetic()) {
+                if (getterMethod == null || (getterMethod.getModifiers() & ACC_SYNTHETIC) != 0) {
                     getterMethod = method;
                 }
             }
@@ -1224,8 +1268,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     public MethodNode getSetterMethod(String setterName, boolean voidOnly) {
         for (MethodNode method : getDeclaredMethods(setterName)) {
             if (setterName.equals(method.getName())
-                    && (!voidOnly || ClassHelper.VOID_TYPE == method.getReturnType())
-                    && method.getParameters().length == 1) {
+                    && method.getParameters().length == 1
+                    && (!voidOnly || method.isVoidMethod())) {
                 return method;
             }
         }
@@ -1240,32 +1284,57 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * Is this class declared in a static method (such as a closure / inner class declared in a static method)
      */
     public boolean isStaticClass() {
+        /* GRECLIPSE edit
         return redirect().staticClass;
+        */
+        return redirect().bit(0x2);
+        // GRECLIPSE end
     }
 
     public void setStaticClass(boolean staticClass) {
+        /* GRECLIPSE edit
         redirect().staticClass = staticClass;
+        */
+        redirect().bit(0x2, staticClass);
+        // GRECLIPSE end
     }
 
     /**
      * @return {@code true} if this inner class or closure was declared inside a script body
      */
     public boolean isScriptBody() {
+        /* GRECLIPSE edit
         return redirect().scriptBody;
+        */
+        return redirect().bit(0x4);
+        // GRECLIPSE end
     }
 
     public void setScriptBody(boolean scriptBody) {
+        /* GRECLIPSE edit
         redirect().scriptBody = scriptBody;
+        */
+        redirect().bit(0x4, scriptBody);
+        // GRECLIPSE end
     }
 
     public boolean isScript() {
+        /* GRECLIPSE edit
         return redirect().script || isDerivedFrom(ClassHelper.SCRIPT_TYPE);
+        */
+        return redirect().bit(0x8) || isDerivedFrom(ClassHelper.SCRIPT_TYPE);
+        // GRECLIPSE end
     }
 
     public void setScript(boolean script) {
+        /* GRECLIPSE edit
         redirect().script = script;
+        */
+        redirect().bit(0x8, script);
+        // GRECLIPSE end
     }
 
+    @Override
     public String toString() {
         return toString(true);
     }
@@ -1278,144 +1347,127 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         StringBuilder ret = new StringBuilder(!placeholder ? getName() : getUnresolvedName());
         GenericsType[] genericsTypes = getGenericsTypes();
         if (!placeholder && genericsTypes != null && genericsTypes.length > 0) {
+            /* GRECLIPSE edit -- GROOVY-9800
             ret.append(" <");
             ret.append(stream(genericsTypes).map(this::genericTypeAsString).collect(joining(", ")));
             ret.append(">");
+            */
+            ret.append('<');
+            for (int i = 0, n = genericsTypes.length; i < n; i += 1) {
+                if (i != 0) ret.append(", ");
+                ret.append(genericsTypes[i]);
+            }
+            ret.append('>');
+            // GRECLIPSE end
         }
         if (showRedirect && redirect != null) {
-            ret.append(" -> ").append(redirect.toString());
+            ret.append(" -> ").append(redirect);
         }
         return ret.toString();
     }
 
     /**
-     * Avoids a recursive definition of toString. The default {@code toString}
-     * in {@link GenericsType} calls {@code ClassNode.toString()}, which would
-     * call {@code GenericsType.toString()} without this method.
-     */
-    private String genericTypeAsString(GenericsType genericsType) {
-        String name = genericsType.getName();
-        if (genericsType.getUpperBounds() != null) {
-            return name + " extends " + stream(genericsType.getUpperBounds())
-                        .map(this::toStringTerminal).collect(joining(" & "));
-        } else if (genericsType.getLowerBound() != null) {
-            return name + " super " + toStringTerminal(genericsType.getLowerBound());
-        } else {
-            return name;
-        }
-    }
-
-    private String toStringTerminal(ClassNode classNode) {
-        if (classNode.equals(this)) {
-            return classNode.getName();
-        } else {
-            return classNode.toString(false);
-        }
-    }
-
-    /**
-     * Returns true if the given method has a possibly matching instance method with the given name and arguments.
+     * Determines if the type has a possibly-matching instance method with the given name and arguments.
      *
      * @param name      the name of the method of interest
      * @param arguments the arguments to match against
      * @return true if a matching method was found
      */
-    public boolean hasPossibleMethod(String name, Expression arguments) {
-        int count = 0;
-
+    public boolean hasPossibleMethod(final String name, final Expression arguments) {
+        int count;
         if (arguments instanceof TupleExpression) {
-            TupleExpression tuple = (TupleExpression) arguments;
-            // TODO this won't strictly be true when using list expansion in argument calls
-            count = tuple.getExpressions().size();
+            // TODO: this won't strictly be true when using list expansion in argument calls
+            count = ((TupleExpression) arguments).getExpressions().size();
+        } else {
+            count = 0;
         }
-        ClassNode node = this;
-        do {
-            for (MethodNode method : getMethods(name)) {
-                if (hasCompatibleNumberOfArgs(method, count) && !method.isStatic()) {
+
+        for (ClassNode cn = this; cn != null; cn = cn.getSuperClass()) {
+            for (MethodNode mn : cn.getDeclaredMethods(name)) {
+                if (!mn.isStatic() && hasCompatibleNumberOfArgs(mn, count)) {
                     return true;
                 }
             }
-            node = node.getSuperClass();
+            for (ClassNode in : cn.getAllInterfaces()) {
+                for (MethodNode mn : in.getDeclaredMethods(name)) {
+                    if (mn.isDefault() && hasCompatibleNumberOfArgs(mn, count)) {
+                        return true;
+                    }
+                }
+            }
         }
-        while (node != null);
 
         return false;
     }
 
-    public MethodNode tryFindPossibleMethod(String name, Expression arguments) {
-        int count = 0;
+    public MethodNode tryFindPossibleMethod(final String name, final Expression arguments) {
+        List<Expression> args = arguments instanceof TupleExpression ? ((TupleExpression) arguments).getExpressions() : Collections.singletonList(arguments);
+        int nArgs = args.size(); // TODO: this isn't strictly accurate when using spread argument expansion
+        MethodNode method = null;
 
-        if (arguments instanceof TupleExpression) {
-            TupleExpression tuple = (TupleExpression) arguments;
-            // TODO this won't strictly be true when using list expansion in argument calls
-            count = tuple.getExpressions().size();
-        } else {
-            return null;
-        }
-
-        MethodNode res = null;
-        ClassNode node = this;
-        TupleExpression args = (TupleExpression) arguments;
-        do {
-            for (MethodNode method : node.getMethods(name)) {
-                if (hasCompatibleNumberOfArgs(method, count)) {
+        for (ClassNode cn = this; cn != null; cn = cn.getSuperClass()) {
+            for (MethodNode mn : cn.getDeclaredMethods(name)) {
+                if (hasCompatibleNumberOfArgs(mn, nArgs)) {
                     boolean match = true;
-                    for (int i = 0; i < count; i += 1) {
-                        if (!hasCompatibleType(args, method, i)) {
+                    for (int i = 0; i < nArgs; i += 1) {
+                        if (!hasCompatibleType(args.get(i), mn, i)) {
                             match = false;
                             break;
                         }
                     }
                     if (match) {
-                        if (res == null) {
-                            res = method;
+                        if (method == null) {
+                            method = mn;
+                        } else if (cn.equals(this)
+                                || method.getParameters().length != nArgs) {
+                            return null;
                         } else {
-                            if (res.getParameters().length != count)
-                                return null;
-                            if (node.equals(this))
-                                return null;
-
-                            match = true;
-                            for (int i = 0; i < count; i += 1) {
+                            for (int i = 0; i < nArgs; i += 1) {
                                 // prefer super method if it matches better
-                                if (!hasExactMatchingCompatibleType(res, method, i)) {
-                                    match = false;
-                                    break;
+                                if (!hasExactMatchingCompatibleType(method, mn, i)) {
+                                    return null;
                                 }
-                            }
-                            if (!match) {
-                                return null;
                             }
                         }
                     }
                 }
             }
-            node = node.getSuperClass();
         }
-        while (node != null);
 
-        return res;
+faces:  if (method == null && DefaultGroovyMethods.asBoolean(getInterfaces())) { // GROOVY-11323
+            for (ClassNode cn : getAllInterfaces()) {
+                for (MethodNode mn : cn.getDeclaredMethods(name)) {
+                    if (mn.isPublic() && !mn.isStatic() && hasCompatibleNumberOfArgs(mn, nArgs) && (nArgs == 0
+                            || IntStream.range(0,nArgs).allMatch(i -> hasCompatibleType(args.get(i),mn,i)))) {
+                        method = mn;
+                        break faces;
+                    }
+                }
+            }
+        }
+
+        return method;
     }
 
-    private boolean hasExactMatchingCompatibleType(MethodNode current, MethodNode newCandidate, int i) {
-        int lastParamIndex = newCandidate.getParameters().length - 1;
-        return current.getParameters()[i].getType().equals(newCandidate.getParameters()[i].getType())
-                || (isPotentialVarArg(newCandidate, lastParamIndex) && i >= lastParamIndex && current.getParameters()[i].getType().equals(newCandidate.getParameters()[lastParamIndex].getType().componentType));
+    private static boolean hasExactMatchingCompatibleType(final MethodNode match, final MethodNode maybe, final int i) {
+        int lastParamIndex = maybe.getParameters().length - 1;
+        return (i <= lastParamIndex && match.getParameters()[i].getType().equals(maybe.getParameters()[i].getType()))
+                || (i >= lastParamIndex && isPotentialVarArg(maybe, lastParamIndex) && match.getParameters()[i].getType().equals(maybe.getParameters()[lastParamIndex].getType().getComponentType()));
     }
 
-    private boolean hasCompatibleType(TupleExpression args, MethodNode method, int i) {
+    private static boolean hasCompatibleType(final Expression arg, final MethodNode method, final int i) {
         int lastParamIndex = method.getParameters().length - 1;
-        return (i <= lastParamIndex && args.getExpression(i).getType().isDerivedFrom(method.getParameters()[i].getType()))
-                || (isPotentialVarArg(method, lastParamIndex) && i >= lastParamIndex  && args.getExpression(i).getType().isDerivedFrom(method.getParameters()[lastParamIndex].getType().componentType));
+        return (i <= lastParamIndex && arg.getType().isDerivedFrom(method.getParameters()[i].getType()))
+                || (i >= lastParamIndex && isPotentialVarArg(method, lastParamIndex) && arg.getType().isDerivedFrom(method.getParameters()[lastParamIndex].getType().getComponentType()));
     }
 
-    private boolean hasCompatibleNumberOfArgs(MethodNode method, int count) {
+    private static boolean hasCompatibleNumberOfArgs(final MethodNode method, final int nArgs) {
         int lastParamIndex = method.getParameters().length - 1;
-        return method.getParameters().length == count || (isPotentialVarArg(method, lastParamIndex) && count >= lastParamIndex);
+        return nArgs == method.getParameters().length || (nArgs >= lastParamIndex && isPotentialVarArg(method, lastParamIndex));
     }
 
-    private boolean isPotentialVarArg(MethodNode newCandidate, int lastParamIndex) {
-        return lastParamIndex >= 0 && newCandidate.getParameters()[lastParamIndex].getType().isArray();
+    private static boolean isPotentialVarArg(final MethodNode method, final int lastParamIndex) {
+        return lastParamIndex >= 0 && method.getParameters()[lastParamIndex].getType().isArray();
     }
 
     /**
@@ -1426,7 +1478,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @param arguments the arguments to match against
      * @return {@code true} if a matching method was found
      */
-    public boolean hasPossibleStaticMethod(String name, Expression arguments) {
+    public boolean hasPossibleStaticMethod(final String name, final Expression arguments) {
         return ClassNodeUtils.hasPossibleStaticMethod(this, name, arguments, false);
     }
 
@@ -1478,16 +1530,27 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * Marks if the current class uses annotations or not.
      */
     public void setAnnotated(boolean annotated) {
+        /* GRECLIPSE edit
         this.annotated = annotated;
+        */
+        bit(0x10, annotated);
+        // GRECLIPSE end
     }
 
     public boolean isAnnotated() {
+        /* GRECLIPSE edit
         return this.annotated;
+        */
+        return bit(0x10);
+        // GRECLIPSE end
     }
 
     public GenericsType asGenericsType() {
         if (!isGenericsPlaceHolder()) {
             return new GenericsType(this);
+        } else if (genericsTypes != null
+                && genericsTypes[0].getUpperBounds() != null) {
+            return genericsTypes[0];
         } else {
             ClassNode upper = (redirect != null ? redirect : this);
             return new GenericsType(this, new ClassNode[]{upper}, null);
@@ -1499,25 +1562,55 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public void setGenericsTypes(GenericsType[] genericsTypes) {
+        /* GRECLIPSE edit
         usesGenerics = usesGenerics || genericsTypes != null;
+        */
         this.genericsTypes = genericsTypes;
     }
 
     public void setGenericsPlaceHolder(boolean placeholder) {
+        /* GRECLIPSE edit
         usesGenerics = usesGenerics || placeholder;
         this.placeholder = placeholder;
+        */
+        bit(0x20, placeholder);
+        // GRECLIPSE end
     }
 
     public boolean isGenericsPlaceHolder() {
+        /* GRECLIPSE edit
         return placeholder;
+        */
+        return bit(0x20);
+        // GRECLIPSE end
     }
 
     public boolean isUsingGenerics() {
+        /* GRECLIPSE edit -- GROOVY-10763
         return usesGenerics;
+        */
+        if (genericsTypes != null) {
+            return true;
+        } else if (redirect != null) {
+            return isGenericsPlaceHolder();
+        } else if (isPrimaryNode) { // compile target
+            ClassNode sc = getUnresolvedSuperClass();
+            if (sc != null && sc.isUsingGenerics()) {
+                return true;
+            }
+            ClassNode[] interfaces = getInterfaces();
+            for (int i = 0; i < interfaces.length; ++i) {
+                if (interfaces[i].isUsingGenerics()) return true;
+            }
+        }
+        return false;
+        // GRECLIPSE end
     }
 
     public void setUsingGenerics(boolean usesGenerics) {
+        /* GRECLIPSE edit
         this.usesGenerics = usesGenerics;
+        */
     }
 
     public ClassNode getPlainNodeReference() {
@@ -1535,6 +1628,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return isInterface() && (getModifiers() & ACC_ANNOTATION) != 0;
     }
 
+    @Override
     public List<AnnotationNode> getAnnotations() {
         if (redirect != null)
             return redirect.getAnnotations();
@@ -1542,6 +1636,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return super.getAnnotations();
     }
 
+    @Override
     public List<AnnotationNode> getAnnotations(ClassNode type) {
         if (redirect != null)
             return redirect.getAnnotations(type);
@@ -1611,20 +1706,13 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public boolean hasInconsistentHierarchy() {
-        return ((redirect().bits) & BIT_INCONSISTENT_HIERARCHY) != 0;
+        return redirect().bit(0x100);
     }
 
-    public void setHasInconsistentHierarchy(boolean b) {
-        if (b) {
-            redirect().bits |= BIT_INCONSISTENT_HIERARCHY;
-        } else {
-            redirect().bits &= ~BIT_INCONSISTENT_HIERARCHY;
-        }
+    public void setHasInconsistentHierarchy(final boolean cycle) {
+        redirect().bit(0x100, cycle);
     }
 
-    private static final int BIT_INCONSISTENT_HIERARCHY = 1;
-
-    private int bits;
     private int nameStart;
 
     /**
@@ -1634,8 +1722,27 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return nameStart > 0 ? nameStart : getStart();
     }
 
-    public void setNameStart2(int offset) {
+    public void setNameStart2(final int offset) {
         nameStart = offset;
+    }
+
+    @Override
+    public void setSourcePosition(final ASTNode node) {
+        super.setSourcePosition(node);
+        if (node instanceof ClassNode) {
+            setNameStart2(((ClassNode) node).getNameStart2());
+        }
+    }
+
+    public void addTypeAnnotations(final List<AnnotationNode> x) {
+    }
+
+    public List<AnnotationNode> getTypeAnnotations() {
+        return Collections.emptyList();
+    }
+
+    public List<ClassNode> getPermittedSubclasses() {
+        return Collections.emptyList();
     }
     // GRECLIPSE end
 }

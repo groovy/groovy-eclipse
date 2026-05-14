@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,18 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-
 import java.util.Map;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
- * Test cases for {@link groovy.transform.Canonical}, at al.
+ * Test cases for {@link groovy.transform.Canonical}, et al.
  */
 public final class CanonicalTests extends GroovyCompilerTestSuite {
 
-    @Test @Ignore("https://github.com/groovy/groovy-eclipse/issues/421")
+    @Test // https://github.com/groovy/groovy-eclipse/issues/421
     public void testCanonical1() {
         //@formatter:off
         String[] sources = {
@@ -164,26 +161,96 @@ public final class CanonicalTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Foo.groovy (at line 1)\n" +
-            (isAtLeastGroovy(25)
-                ?
-                "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
-                "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-                "Groovy:Annotation collector got unmapped names [doesNotExist].\n"
-                :
-                "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
-                "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-                "Groovy:'doesNotExist'is not part of the annotation Canonical in @groovy.transform.Canonical\n" +
-                "----------\n" +
-                "2. ERROR in Foo.groovy (at line 1)\n" +
-                "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
-                "\t                            ^^^^^^^^^^^^^^^^^\n" +
-                "The attribute doesNotExist is undefined for the annotation type Canonical\n" +
-                "----------\n" +
-                "3. ERROR in Foo.groovy (at line 1)\n" +
-                "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
-                "\t                                         ^^^^\n" +
-                "Groovy:Unexpected type java.lang.Object in @groovy.transform.Canonical\n"
-            ) +
+            "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
+            "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:Annotation collector got unmapped names [doesNotExist].\n" +
             "----------\n");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1216
+    public void testCanonical7() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Outer {\n" +
+            "  @groovy.transform.Canonical(defaults=false, includeNames=true)\n" +
+            "  static class Inner {\n" +
+            "    String foo\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked void test() {\n" +
+            "  print new Outer.Inner('bar')\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Outer$Inner(foo:bar)");
+    }
+
+    @Test
+    public void testCanonical8() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Outer {\n" +
+            "  @groovy.transform.Canonical(defaults=false, includeNames=true)\n" +
+            "  static class Inner {\n" +
+            "    String foo\n" +
+            "    private baz\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked void test() {\n" +
+            "  print new Outer.Inner('bar')\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Outer$Inner(foo:bar)");
+    }
+
+    @Test
+    public void testCanonical9() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Outer {\n" +
+            "  @groovy.transform.Canonical(defaults=false, includeFields=true, includeNames=true)\n" +
+            "  static class Inner {\n" +
+            "    String foo\n" +
+            "    private baz\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked void test() {\n" +
+            "  print new Outer.Inner('bar',null)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Outer$Inner(foo:bar, baz:null)");
+    }
+
+    @Test // GROOVY-10238
+    public void testCanonical10() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Outer {\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  @groovy.transform.Canonical\n" +
+            "  static class Inner {\n" +
+            "    Map<String,Object> map = [:].withDefault { new Object() }\n" + // NoSuchMethodError: java.util.Map.withDefault(Lgroovy/lang/Closure;)
+            "  }\n" +
+            "}\n" +
+            "def obj = new Outer.Inner()\n" +
+            "assert obj.toString() == 'Outer$Inner([:])'\n" +
+            "assert obj.map['foo'] != null\n" +
+            "assert obj.toString() != 'Outer$Inner([:])'\n" ,
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 }

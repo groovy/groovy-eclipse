@@ -35,12 +35,10 @@ import org.codehaus.groovy.control.io.URLReaderSource;
 import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
+import org.codehaus.groovy.control.messages.WarningMessage;
 import org.codehaus.groovy.syntax.Reduction;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.tools.Utilities;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
 
 import java.io.File;
 import java.io.IOException;
@@ -182,6 +180,7 @@ public class SourceUnit extends ProcessingUnit {
         return false;
     }
 
+    @Deprecated
     protected boolean isEofToken(groovyjarjarantlr.Token token) {
         return token.getType() == groovyjarjarantlr.Token.EOF_TYPE;
     }
@@ -251,15 +250,28 @@ public class SourceUnit extends ProcessingUnit {
             throw new GroovyBugError("SourceUnit not ready for convert()");
         }
 
-        //
-        // Build the AST
+        buildAST();
 
+        /* GRECLIPSE edit
+        String property = (String) AccessController.doPrivileged((PrivilegedAction) () -> System.getProperty("groovy.ast"));
+
+        if ("xml".equals(property)) {
+            XStreamUtils.serialize(name, ast);
+        }
+        */
+    }
+
+    /**
+     * Builds the AST.
+     */
+    public ModuleNode buildAST() {
+        if (this.ast == null)
         try {
             this.ast = parserPlugin.buildAST(this, this.classLoader, this.cst);
             this.ast.setDescription(this.name);
         } catch (SyntaxException e) {
             if (this.ast == null) {
-                // Create a dummy ModuleNode to represent a failed parse - in case a later phase attempts to use the ast
+                // create an empty ModuleNode to represent a failed parse, in case a later phase attempts to use the AST
                 this.ast = new ModuleNode(this);
             }
             getErrorCollector().addError(new SyntaxErrorMessage(e, this));
@@ -276,13 +288,7 @@ public class SourceUnit extends ProcessingUnit {
         }
         // GRECLIPSE end
 
-        /* GRECLIPSE edit
-        String property = (String) AccessController.doPrivileged((PrivilegedAction) () -> System.getProperty("groovy.ast"));
-
-        if ("xml".equals(property)) {
-            XStreamUtils.serialize(name, ast);
-        }
-        */
+        return this.ast;
     }
 
     //---------------------------------------------------------------------------
@@ -303,6 +309,8 @@ public class SourceUnit extends ProcessingUnit {
                 if (column > 40) {
                     int start = column - 30 - 1;
                     int end = (column + 10 > text.length() ? text.length() : column + 10 - 1);
+                    if (start >= text.length() || end < start)
+                        return null; // can happen with CR only files GROOVY-10676
                     sample = "   " + text.substring(start, end) + Utilities.eol() + "   " +
                             marker.substring(start);
                 } else {
@@ -386,8 +394,8 @@ public class SourceUnit extends ProcessingUnit {
             }
             return code;
         } catch (Exception e) {
-            Platform.getLog(org.osgi.framework.FrameworkUtil.getBundle(this.getClass())).log(
-                new Status(IStatus.ERROR, "org.codehaus.groovy", "Error reading Groovy source", e));
+            getErrorCollector().addWarning(WarningMessage.LIKELY_ERRORS,
+                "Error reading Groovy source at offset " + offset, null, this);
         }
         return null;
     }

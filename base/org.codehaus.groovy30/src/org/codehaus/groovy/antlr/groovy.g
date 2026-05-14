@@ -284,9 +284,11 @@ tokens {
     public GroovyLexer getLexer() { return lexer; }
     public void setFilename(String f) { lexer.setFilename(f); super.setFilename(f); }
 
+    /* GRECLIPSE edit
     @Deprecated
     public void setSourceBuffer(SourceBuffer sourceBuffer) {
     }
+    */
 
     /**
      * Creates an AST node with the token type and text passed in, but
@@ -637,14 +639,13 @@ compilationUnit
         ( sep! (statement[sepToken])? )*
         EOF!
     ;
-// GRECLIPSE add
+    // GRECLIPSE add
     exception
     catch [RecognitionException e] {
-        // report the error but don't throw away what we've successfully parsed
         reportError(e);
-        #compilationUnit = (AST) currentAST.root;
+        #compilationUnit = currentAST.root;
     }
-// GRECLIPSE end
+    // GRECLIPSE end
 
 /** A Groovy script or simple expression.  Can be anything legal inside {...}. */
 snippetUnit
@@ -654,35 +655,32 @@ snippetUnit
 // Package statement: optional annotations followed by "package" then the package identifier
 packageDefinition
         {Token first = LT(1);}
-    /* GRECLIPSE edit -- missing identifier recovery
-    :   an:annotationsOpt! "package"! id:identifier!
-    */
-    :   an:annotationsOpt! "package"! (id:identifier!)?
-    // GRECLIPSE end
+    :   an:annotationsOpt! "package"! (id:identifier!)? // GRECLIPSE edit
         {
             // GRECLIPSE add
-            if (#id == null) {
-               #id = missingIdentifier(LT(0), null);
-               reportError("Invalid package specification", LT(0).getLine(), LT(0).getColumn() - 1);
-            }
+            if (#id == null) throw new NoViableAltException(first, getFilename());
             // GRECLIPSE end
             #packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)), an, id);
         }
     ;
+    // GRECLIPSE add
+    exception
+    catch [RecognitionException e] {
+        if (LA(0) != LITERAL_package) rewind(mark() - 1);
+        reportError("Invalid package statement", LT(1).getLine(), LT(1).getColumn() - 1);
+
+        #id = missingIdentifier(LT(0), null); #id.setText("java.lang");
+        #packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(0)), an, id);
+    }
+    // GRECLIPSE end
 
 // Import statement: import followed by a package or class name
 importStatement
         {Token first = LT(1); boolean isStatic = false;}
-    /* GRECLIPSE edit -- missing identifier recovery
-    :   an:annotationsOpt "import"! ("static"! {isStatic = true;})? is:identifierStar!
-    */
-    :   an:annotationsOpt "import"! ("static"! {isStatic = true;})? (is:identifierStar!)?
-    // GRECLIPSE end
+    :   an:annotationsOpt "import"! ("static"! {isStatic = true;})? (is:identifierStar!)? // GRECLIPSE edit
         {
             // GRECLIPSE add
-            if (#is == null) {
-                #is = missingIdentifier(LT(0), null);
-            }
+            if (#is == null) throw new NoViableAltException(first, getFilename());
             // GRECLIPSE end
             if (!isStatic) {
                 #importStatement = #(create(IMPORT,"import",first,LT(1)), an, is);
@@ -691,6 +689,20 @@ importStatement
             }
         }
     ;
+    // GRECLIPSE add
+    exception
+    catch [RecognitionException e] {
+        if (LA(0) != LITERAL_import && LA(0) != LITERAL_static) rewind(mark() - 1);
+        reportError("Invalid import statement", LT(1).getLine(), LT(1).getColumn() - 1);
+
+        #is = missingIdentifier(LT(1), null); #is.setText("java.lang.Object");
+        if (!isStatic) {
+            #importStatement = #(create(IMPORT,"import",first,LT(1)), an, is);
+        } else {
+            #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)), an, is);
+        }
+    }
+    // GRECLIPSE end
 
 // Protected type definitions production for reuse in other productions
 protected typeDefinitionInternal[AST mods]
@@ -1016,7 +1028,7 @@ identifier {Token first = LT(1);}
         {#identifier = #i1;}
     ;
 
-identifierStar {Token first = LT(1); int start = mark();} // GRECLIPSE add
+identifierStar {Token first = LT(1);}
     :   i1:IDENT!
         (   options { greedy = true; } :
             d1:DOT! nls! i2:IDENT!
@@ -1028,22 +1040,6 @@ identifierStar {Token first = LT(1); int start = mark();} // GRECLIPSE add
             {#i1 = #(create(LITERAL_as,"as",first,LT(1)), i1, alias);}
         )?
         {#identifierStar = #i1;}
-        // GRECLIPSE add
-        /* RECOVERY: notes:
-         * The start of parsing this structure was marked.  If there is a problem an exception
-         * is caught, error logged, fake ast node created (to satisfy the parent rule) and
-         * we jump back to the start of this line and proceed to the end of it, hoping
-         * that parsing can continue on the next.
-         */
-        exception
-        catch [RecognitionException e] {
-            reportError("Invalid import", first);
-            #identifierStar = #(create(DOT,".",first,LT(1)),i1,#(create(STAR,"*",null)));
-            // Give up on this line and just go to the next
-            rewind(start);
-            consumeUntil(NLS);
-        }
-        // GRECLIPSE end
     ;
 
 modifiersInternal
@@ -2046,35 +2042,31 @@ statement[int prevToken]
     // side-effects.
     // The prevToken is used to check for dumb expressions like +1.
     |    es:expressionStatement[prevToken]
-        //{#statement = #(create(EXPR,"EXPR",first,LT(1)), es);}
 
-    // If-else statement
-    |   "if"! LPAREN! ale:assignmentLessExpression! RPAREN! nlsWarn! ifCbs:compatibleBodyStatement!
+    // If-then-else statement
+    |   "if"! LPAREN! condExpr:assignmentLessExpression! RPAREN! nlsWarn! (skipStmt:SEMI! | thenStmt:compatibleBodyStatement!)
         (
-            // CONFLICT: the old "dangling-else" problem...
-            //           ANTLR generates proper code matching
-            //                       as soon as possible.  Hush warning.
-            options {
-                    warnWhenFollowAmbig = false;
-            }
-        :   // lookahead to check if we're entering an 'else' clause
             ( (sep!)? "else"! )=>
-            (sep!)?  // allow SEMI here for compatibility with Java
-            "else"! nlsWarn! elseCbs:compatibleBodyStatement!
+            (sep!)? // "if (cond) 1; else 2" -- dangling SEMI!
+            "else"! nlsWarn! elseStmt:compatibleBodyStatement!
         )?
-        {#statement = #(create(LITERAL_if,"if",first,LT(1)), ale, ifCbs, elseCbs);}
+        {
+            if (#skipStmt != null)
+                #statement = #(create(LITERAL_if,"if",first,LT(1)),condExpr,skipStmt,elseStmt);
+            else
+                #statement = #(create(LITERAL_if,"if",first,LT(1)),condExpr,thenStmt,elseStmt);
+        }
 
     // For statement
     |   forStatement
 
     // While statement
-    |   "while"! LPAREN! sce=while_sce:strictContextExpression[false]! RPAREN! nlsWarn!
-        (s:SEMI! | while_cbs:compatibleBodyStatement!)
+    |   "while"! LPAREN! sce=whileExpr:strictContextExpression[false]! RPAREN! nlsWarn! (emptyStmt:SEMI! | whileStmt:compatibleBodyStatement!)
         {
-            if (#s != null)
-                #statement = #(create(LITERAL_while,"Literal_while",first,LT(1)), while_sce, s);
+            if (#emptyStmt != null)
+                #statement = #(create(LITERAL_while,"Literal_while",first,LT(1)),whileExpr,emptyStmt);
             else
-                #statement = #(create(LITERAL_while,"Literal_while",first,LT(1)), while_sce, while_cbs);
+                #statement = #(create(LITERAL_while,"Literal_while",first,LT(1)),whileExpr,whileStmt);
         }
 
     // GRECLIPSE add
@@ -2128,9 +2120,9 @@ statement[int prevToken]
             // by a recovery rule in the else clause parsing.  And 'if (f.', where even the trailing parenthesis
             // is missing, which is dealt with here by noticing the condition exists but ifCbs_AST is null.
             // Create a basic if statement and soldier on.
-            else if (#ale != null && #ifCbs == null) {
+            else if (#condExpr != null && #thenStmt == null) {
                 // likely missing close paren
-                #statement = #(create(LITERAL_if,"if",first,LT(1)), ale, ifCbs, elseCbs);
+                #statement = #(create(LITERAL_if,"if",first,LT(1)), condExpr, thenStmt, elseStmt);
             }
             else {
                 throw e;
@@ -2700,21 +2692,20 @@ pathElement[AST prefix] {Token operator = LT(1);}
     :
         { #pathElement = prefix; }
         ( nls!
-            ( SPREAD_DOT!     // Spread operator:  x*.y  ===  x?.collect{it.y}
+            ( SPREAD_DOT!     // Spread operator: x*.y === x?.collect{it.y}
             |
-              OPTIONAL_DOT!   // Optional-null operator:  x?.y  === (x==null)?null:x.y
+              OPTIONAL_DOT!   // Null-safe operator: x?.y === (x==null)?null:x.y
             |
-              MEMBER_POINTER! // Member pointer operator: foo.&y == foo.metaClass.getMethodPointer(foo, "y")
+              MEMBER_POINTER! // Reference operator: x.&y === x.metaClass.getMethodPointer(x,"y")
             |
-              DOT!            // The all-powerful dot.
+              DOT!            // The all-powerful dot
             )
         ) nls!
         (ta:typeArguments!)?
         /* GRECLIPSE edit -- missing identifier recovery
         np:namePart!
-        { #pathElement = #(create(operator.getType(),operator.getText(),prefix,LT(1)), prefix, ta, np); }
         */
-        (np:namePart!)?
+        ( (declarationStart) => nls! | (np:namePart!)? )
         {
             if (#np == null) {
                 GroovySourceToken ident = new GroovySourceToken(IDENT);
@@ -2724,23 +2715,24 @@ pathElement[AST prefix] {Token operator = LT(1);}
                 ident.setColumnLast(((SourceInfo) LT(0)).getColumnLast());
                 #np = #(create(ident.getType(),ident.getText(),ident,null));
                 reportError(new NoViableAltException(LT(1), getFilename()));
+                while (LA(0) == NLS) rewind(mark() - 1); // give back spaces
             }
-            #pathElement = #(create(operator.getType(),operator.getText(),prefix,LT(1)), prefix, ta, np);
         }
         // GRECLIPSE end
+        { #pathElement = #(create(operator.getType(),operator.getText(),prefix,LT(1)), prefix, ta, np); }
     |
         mca:methodCallArgs[prefix]!
-        {   #pathElement = #mca;  }
+        { #pathElement = #mca; }
     |
         // Can always append a block, as foo{bar}
         apb:appendedBlock[prefix]!
-        {   #pathElement = #apb;  }
+        { #pathElement = #apb; }
     |
         // Element selection is always an option, too.
         // In Groovy, the stuff between brackets is a general argument list,
         // since the bracket operator is transformed into a method call.
         ipa:indexPropertyArgs[prefix]!
-        {   #pathElement = #ipa;  }
+        { #pathElement = #ipa; }
     ;
 
 pathElementStart!
@@ -2756,7 +2748,7 @@ pathElementStart!
 /** This is the grammar for what can follow a dot:  x.a, x.@a, x.&a, x.'a', etc.
  *  Note: <code>typeArguments</code> is handled by the caller of <code>namePart</code>.
  */
-namePart  {Token first = LT(1);}
+namePart
     :
         (   ats:AT^     {#ats.setType(SELECT_SLOT);}  )?
         // foo.@bar selects the field (or attribute), not property
@@ -3929,10 +3921,15 @@ options {
         return "["+ttn+",\""+t.getText()+"\"]";
     }
 
-    protected GroovyRecognizer parser;  // little-used link; TODO: get rid of
+    protected GroovyRecognizer parser;
+    // GRECLIPSE add
+    public void reportError(String message) {
+        parser.reportError(message, getLine(), getColumn());
+    }
+    // GRECLIPSE end
     private void require(boolean z, String problem, String solution) throws SemanticException {
         // TODO: Direct to a common error handler, rather than through the parser.
-        if (!z && parser!=null)  parser.requireFailed(problem, solution);
+        if (!z && parser!=null) parser.requireFailed(problem, solution);
         if (!z) {
             int lineNum = inputState.getLine(), colNum = inputState.getColumn();
             throw new SemanticException(problem + ";\n   solution: " + solution, getFilename(), lineNum, colNum);

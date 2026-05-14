@@ -82,6 +82,12 @@ public class CompilerConfiguration {
     public static final String JDK13 = "13";
     /** This (<code>"14"</code>) is the value for targetBytecode to compile for a JDK 14. */
     public static final String JDK14 = "14";
+    /** This (<code>"15"</code>) is the value for targetBytecode to compile for a JDK 15. */
+    public static final String JDK15 = "15";
+    /** This (<code>"16"</code>) is the value for targetBytecode to compile for a JDK 16. */
+    public static final String JDK16 = "16";
+    /** This (<code>"17"</code>) is the value for targetBytecode to compile for a JDK 17. */
+    public static final String JDK17 = "17";
 
     /**
      * This constant is for comparing targetBytecode to ensure it is set to JDK 1.5 or later.
@@ -111,7 +117,10 @@ public class CompilerConfiguration {
             JDK11, Opcodes.V11,
             JDK12, Opcodes.V12,
             JDK13, Opcodes.V13,
-            JDK14, Opcodes.V14
+            JDK14, Opcodes.V14,
+            JDK15, Opcodes.V15,
+            JDK16, Opcodes.V16,
+            JDK17, Opcodes.V17
     );
 
     /**
@@ -119,11 +128,11 @@ public class CompilerConfiguration {
      */
     public static final String[] ALLOWED_JDKS = JDK_TO_BYTECODE_VERSION_MAP.keySet().toArray(new String[JDK_TO_BYTECODE_VERSION_MAP.size()]);
 
-    public static final int ASM_API_VERSION = Opcodes.ASM7;
-
     /**
-     * The default source encoding.
+     * The ASM API version used when loading/parsing classes and generating proxy adapter classes.
      */
+    public static final int ASM_API_VERSION = Opcodes.ASM9;
+
     public static final String DEFAULT_SOURCE_ENCODING = "UTF-8";
 
     /**
@@ -431,20 +440,9 @@ public class CompilerConfiguration {
         defaultScriptExtension = getSystemPropertySafe("groovy.default.scriptExtension", ".groovy");
 
         optimizationOptions = new HashMap<>(4);
-        handleOptimizationOption(optimizationOptions, INVOKEDYNAMIC, "groovy.target.indy");
-        handleOptimizationOption(optimizationOptions, GROOVYDOC, "groovy.attach.groovydoc");
-        handleOptimizationOption(optimizationOptions, RUNTIME_GROOVYDOC, "groovy.attach.runtime.groovydoc");
-    }
-
-    private void handleOptimizationOption(final Map<String, Boolean> options, final String optionName, final String sysOptionName) {
-        String propValue = getSystemPropertySafe(sysOptionName);
-        boolean optionEnabled = propValue == null
-                ? (DEFAULT != null && Boolean.TRUE.equals(DEFAULT.getOptimizationOptions().get(optionName)))
-                : Boolean.parseBoolean(propValue);
-
-        if (optionEnabled) {
-            options.put(optionName, Boolean.TRUE);
-        }
+        if (getBooleanSafe("groovy.target.indy"             )) optimizationOptions.put(INVOKEDYNAMIC    , Boolean.TRUE);
+        if (getBooleanSafe("groovy.attach.groovydoc"        )) optimizationOptions.put(GROOVYDOC        , Boolean.TRUE);
+        if (getBooleanSafe("groovy.attach.runtime.groovydoc")) optimizationOptions.put(RUNTIME_GROOVYDOC, Boolean.TRUE);
     }
 
     /**
@@ -466,7 +464,7 @@ public class CompilerConfiguration {
     public CompilerConfiguration(final CompilerConfiguration configuration) {
         setWarningLevel(configuration.getWarningLevel());
         setTargetDirectory(configuration.getTargetDirectory());
-        setClasspathList(new LinkedList<String>(configuration.getClasspath()));
+        setClasspathList(configuration.getClasspath());
         setVerbose(configuration.getVerbose());
         setDebug(configuration.getDebug());
         setParameters(configuration.getParameters());
@@ -482,6 +480,8 @@ public class CompilerConfiguration {
         if (jointCompilationOptions != null) {
             jointCompilationOptions = new HashMap<>(jointCompilationOptions);
         }
+        // TODO GROOVY-9585: add line below once gradle build issues fixed
+//        compilationCustomizers.addAll(configuration.getCompilationCustomizers());
         setJointCompilationOptions(jointCompilationOptions);
         setPluginFactory(configuration.getPluginFactory());
         setDisabledGlobalASTTransformations(configuration.getDisabledGlobalASTTransformations());
@@ -675,8 +675,8 @@ public class CompilerConfiguration {
         text = configuration.getProperty("groovy.disabled.global.ast.transformations");
         if (text != null) {
             String[] classNames = text.split(",\\s*}");
-            Set<String> blacklist = new HashSet<>(Arrays.asList(classNames));
-            setDisabledGlobalASTTransformations(blacklist);
+            Set<String> disabledTransforms = new HashSet<>(Arrays.asList(classNames));
+            setDisabledGlobalASTTransformations(disabledTransforms);
         }
     }
 
@@ -728,11 +728,7 @@ public class CompilerConfiguration {
      */
     @Deprecated
     public void setOutput(final PrintWriter output) {
-        if (output == null) {
-            this.output = new PrintWriter(NullWriter.DEFAULT);
-        } else {
-            this.output = output;
-        }
+        this.output = (output != null ? output : new PrintWriter(NullWriter.DEFAULT));
     }
 
     /**
@@ -740,6 +736,13 @@ public class CompilerConfiguration {
      */
     public File getTargetDirectory() {
         return this.targetDirectory;
+    }
+
+    /**
+     * Sets the target directory.
+     */
+    public void setTargetDirectory(final File directory) {
+        this.targetDirectory = directory;
     }
 
     /**
@@ -755,13 +758,6 @@ public class CompilerConfiguration {
         } else {
             this.targetDirectory = null;
         }
-    }
-
-    /**
-     * Sets the target directory.
-     */
-    public void setTargetDirectory(final File directory) {
-        this.targetDirectory = directory;
     }
 
     /**
@@ -866,19 +862,8 @@ public class CompilerConfiguration {
 
     public ParserPluginFactory getPluginFactory() {
         if (pluginFactory == null) {
-            /* GRECLIPSE edit
             pluginFactory = !Boolean.parseBoolean(getSystemPropertySafe("groovy.antlr4", "true"))
                                 ? ParserPluginFactory.antlr2() : ParserPluginFactory.antlr4();
-            */
-            pluginFactory = new ParserPluginFactory() {
-                @Override
-                public ParserPlugin createParserPlugin() {
-                    return !getBooleanSafe("groovy.antlr4")
-                        ? ParserPluginFactory.antlr2().createParserPlugin()
-                        : ParserPluginFactory.antlr4().createParserPlugin();
-                }
-            };
-            // GRECLIPSE end
         }
         return pluginFactory;
     }
@@ -929,8 +914,18 @@ public class CompilerConfiguration {
     }
 
     /**
-     * Sets the bytecode compatibility level. The parameter can take one of the values
-     * in {@link #ALLOWED_JDKS}.
+     * Returns the compiler bytecode compatibility level. Defaults to the minimum
+     * officially supported bytecode version for any particular Groovy version.
+     *
+     * @return bytecode compatibility level
+     */
+    public String getTargetBytecode() {
+        return targetBytecode;
+    }
+
+    /**
+     * Sets the bytecode compatibility level. The parameter can take one of the
+     * values in {@link #ALLOWED_JDKS}.
      *
      * @param version the bytecode compatibility level
      */
@@ -944,24 +939,19 @@ public class CompilerConfiguration {
             this.targetBytecode = version;
         }
         */
-        int index = Arrays.binarySearch(ALLOWED_JDKS, version);
+        int index;
+        try { ALLOWED_JDKS[5] = "1.9"; // 9 is out of order for binary search
+            index = Arrays.binarySearch(ALLOWED_JDKS, (!version.startsWith("1") && !version.startsWith("2")) ? "1." + version : version);
+        } finally {
+            ALLOWED_JDKS[5] = "9";
+        }
         if (index >= 0) {
-            targetBytecode = version; // exact match
+            targetBytecode = ALLOWED_JDKS[index];
         } else {
             index = Math.abs(index) - 2; // closest version
             targetBytecode = ALLOWED_JDKS[Math.max(0, index)];
         }
         // GRECLIPSE end
-    }
-
-    /**
-     * Retrieves the compiler bytecode compatibility level. Defaults to the minimum
-     * officially supported bytecode version for any particular Groovy version.
-     *
-     * @return bytecode compatibility level
-     */
-    public String getTargetBytecode() {
-        return this.targetBytecode;
     }
 
     /**
@@ -1078,23 +1068,20 @@ public class CompilerConfiguration {
      * Checks if invoke dynamic is enabled.
      */
     public boolean isIndyEnabled() {
-        Boolean indyEnabled = getOptimizationOptions().get(INVOKEDYNAMIC);
-        return Optional.ofNullable(indyEnabled).orElse(Boolean.FALSE);
+        return Boolean.TRUE.equals(getOptimizationOptions().get(INVOKEDYNAMIC));
     }
 
     /**
      * Checks if groovydoc is enabled.
      */
     public boolean isGroovydocEnabled() {
-        Boolean groovydocEnabled = getOptimizationOptions().get(GROOVYDOC);
-        return Optional.ofNullable(groovydocEnabled).orElse(Boolean.FALSE);
+        return Boolean.TRUE.equals(getOptimizationOptions().get(GROOVYDOC));
     }
 
     /**
      * Checks if runtime groovydoc is enabled.
      */
     public boolean isRuntimeGroovydocEnabled() {
-        Boolean runtimeGroovydocEnabled = getOptimizationOptions().get(RUNTIME_GROOVYDOC);
-        return Optional.ofNullable(runtimeGroovydocEnabled).orElse(Boolean.FALSE);
+        return Boolean.TRUE.equals(getOptimizationOptions().get(RUNTIME_GROOVYDOC));
     }
 }

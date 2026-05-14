@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,12 +32,6 @@ public interface PreferenceConstants {
      * the classpath
      */
     String GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL = "groovy.classpath.use.groovy.lib.global";
-
-    /**
-     * toggles whether the global default is to add the groovy lib folder to the
-     * classpath
-     */
-    String GROOVY_CLASSPATH_USE_GROOVY_LIB = "groovy.classpath.use.groovy,lib";
 
     String GROOVY_JUNIT_MONOSPACE_FONT = "groovy.junit.monospace.font";
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,6 +53,7 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.groovy.search.ITypeResolver;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
@@ -113,8 +114,11 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
         int lastDotIndex = CharOperation.lastIndexOf('.', completionChars);
         // check for unqualified or fully-qualified (by packages) expression
         if (lastDotIndex < 0 || environment.nameLookup.isPackage(CharOperation.toStrings(CharOperation.splitOn('.', completionChars, 0, lastDotIndex)))) {
-
-            environment.findConstructorDeclarations(completionChars, requestor.options.camelCaseMatch, requestor, monitor);
+            int matchRule = SearchPattern.R_PREFIX_MATCH;
+            if (requestor.options.camelCaseMatch) matchRule |= SearchPattern.R_CAMELCASE_MATCH;
+          //if (requestor.options.substringMatch) matchRule |= SearchPattern.R_SUBSTRING_MATCH;
+            if (requestor.options.subwordMatch)   matchRule |= SearchPattern.R_SUBWORD_MATCH;
+            environment.findConstructorDeclarations(completionChars, matchRule, false, requestor, monitor);
         } else {
             // qualified expression; requires manual inner types checking
 
@@ -125,7 +129,7 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
                 if (outerType != null && outerType.exists() && qualifier.endsWith(outerType.getElementName()))
                 try {
                     for (IType innerType : outerType.getTypes()) {
-                        if (ProposalUtils.matches(pattern, innerType.getElementName(), requestor.options.camelCaseMatch, requestor.options.substringMatch)) {
+                        if (ProposalUtils.matches(pattern, innerType.getElementName(), requestor.options.camelCaseMatch, requestor.options.subwordMatch)) {
                             int extraFlags = 0; //ConstructorPattern.decodeExtraFlags(innerType.getFlags())
 
                             boolean hasConstructor = false;
@@ -155,9 +159,8 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
             ClassNode outerTypeNode = resolver.resolve(qualifier);
             if (!ClassHelper.DYNAMIC_TYPE.equals(outerTypeNode)) {
                 checker.accept(environment.nameLookup.findType(outerTypeNode.getName(), false, 0));
-            } else if (qualifier.indexOf('.') < 0) {
-                // unknown qualifier; search for types with exact matching
-                environment.findTypes(qualifier.toCharArray(), true, false, 0, requestor, monitor);
+            } else if (qualifier.indexOf('.') < 0) { // unknown qualifier; search for types with exact matching
+                environment.findTypes(qualifier.toCharArray(), true, SearchPattern.R_PREFIX_MATCH, 0, requestor, monitor);
                 List<ICompletionProposal> proposals = requestor.processAcceptedTypes(resolver);
                 for (ICompletionProposal proposal : proposals) {
                     if (proposal instanceof AbstractJavaCompletionProposal) {

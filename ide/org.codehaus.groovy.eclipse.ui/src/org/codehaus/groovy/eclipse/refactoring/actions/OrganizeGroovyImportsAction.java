@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,7 +21,6 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.ui.actions.ActionMessages;
 import org.eclipse.jdt.internal.ui.actions.CleanUpAction;
 import org.eclipse.jdt.internal.ui.actions.MultiOrganizeImportAction;
@@ -39,16 +38,16 @@ import org.eclipse.ui.IWorkbenchPartSite;
 
 public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
 
-    public OrganizeGroovyImportsAction(IWorkbenchPartSite site) {
+    public OrganizeGroovyImportsAction(final IWorkbenchPartSite site) {
         super(site);
     }
 
-    public OrganizeGroovyImportsAction(JavaEditor editor) {
+    public OrganizeGroovyImportsAction(final JavaEditor editor) {
         super(editor);
     }
 
     @Override
-    public void run(ICompilationUnit unit) {
+    public void run(final ICompilationUnit unit) {
         if (!(unit instanceof GroovyCompilationUnit)) {
             super.run(unit);
         } else {
@@ -69,8 +68,8 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
                 boolean success = action.calculateAndApplyMissingImports();
                 if (!success) {
                     IStatusLineManager manager = editor.getEditorSite().getActionBars().getStatusLineManager();
-                    if (manager != null)
-                        manager.setMessage(Messages.format(ActionMessages.OrganizeImportsAction_multi_error_parse, BasicElementLabels.getPathLabel(unit.getPath(), false)));
+                    if (manager != null) manager.setMessage(ActionMessages.bind(
+                        ActionMessages.OrganizeImportsAction_multi_error_parse, BasicElementLabels.getPathLabel(unit.getPath(), false)));
                 }
             } catch (Exception e) {
                 GroovyPlugin.getDefault().logError("Error organizing imports for " + unit.getElementName(), e);
@@ -79,7 +78,7 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
     }
 
     @Override
-    public void run(IStructuredSelection selection) {
+    public void run(final IStructuredSelection selection) {
         MultiOrganizeImportAction delegate = getDelegate();
         ICompilationUnit[] units = delegate.getCompilationUnits(selection);
         if (units.length <= 1) {
@@ -98,7 +97,7 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
         // override the final field's MultiOrganizeImportAction with our import clean-up
         MultiOrganizeImportAction override = new MultiOrganizeImportAction(getSite()) {
             @Override
-            protected ICleanUp[] getCleanUps(ICompilationUnit[] units) {
+            protected ICleanUp[] getCleanUps(final ICompilationUnit[] units) {
                 return new ICleanUp[] {new GroovyImportsCleanUp()};
             }
         };
@@ -106,7 +105,7 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
         return override;
     }
 
-    protected OrganizeGroovyImports.IChooseImportQuery newChooseImportQuery(JavaEditor editor) {
+    protected OrganizeGroovyImports.IChooseImportQuery newChooseImportQuery(final JavaEditor editor) {
         return (TypeNameMatch[][] choices, ISourceRange[] ranges) -> {
             return (TypeNameMatch[]) ReflectionUtils.executePrivateMethod(OrganizeImportsAction.class, "doChooseImports",
                 new Class[] {TypeNameMatch[][].class, ISourceRange[].class, JavaEditor.class}, this, new Object[] {choices, ranges, editor});

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,7 +28,6 @@ import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.internal.corext.fix.CleanUpConstants;
 import org.eclipse.jdt.internal.corext.fix.FixMessages;
 import org.eclipse.jdt.internal.corext.fix.ImportsFix;
-import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.ui.actions.ActionMessages;
 import org.eclipse.jdt.internal.ui.fix.ImportsCleanUp;
 import org.eclipse.jdt.internal.ui.viewsupport.BasicElementLabels;
@@ -55,7 +54,8 @@ public class GroovyImportsCleanUp extends AbstractGroovyCleanUp {
     }
 
     @Override
-    public RefactoringStatus checkPreConditions(IJavaProject project, ICompilationUnit[] compilationUnits, IProgressMonitor monitor) throws CoreException {
+    public RefactoringStatus checkPreConditions(final IJavaProject project, final ICompilationUnit[] compilationUnits, final IProgressMonitor monitor)
+            throws CoreException {
         List<ICompilationUnit> groovyUnits = new ArrayList<>(compilationUnits.length);
         //List<ICompilationUnit> otherUnits = new ArrayList<>(compilationUnits.length);
         for (ICompilationUnit unit : compilationUnits) {
@@ -72,18 +72,18 @@ public class GroovyImportsCleanUp extends AbstractGroovyCleanUp {
     }
 
     @Override
-    public RefactoringStatus checkPostConditions(IProgressMonitor monitor) throws CoreException {
+    public RefactoringStatus checkPostConditions(final IProgressMonitor monitor) throws CoreException {
         return javaCleanUp.checkPostConditions(monitor);
     }
 
     @Override
-    public ICleanUpFix createFix(CleanUpContext context) throws CoreException {
+    public ICleanUpFix createFix(final CleanUpContext context) throws CoreException {
         ICompilationUnit unit = context.getCompilationUnit();
         if (!(unit instanceof GroovyCompilationUnit)) {
             return javaCleanUp.createFix(context);
         }
 
-        final boolean hasAmbiguity[] = new boolean[] {false};
+        boolean[] hasAmbiguity = new boolean[1];
         OrganizeGroovyImports op = new OrganizeGroovyImports((GroovyCompilationUnit) unit, (choices, ranges) -> {
             hasAmbiguity[0] = true;
             return new TypeNameMatch[0];
@@ -93,9 +93,9 @@ public class GroovyImportsCleanUp extends AbstractGroovyCleanUp {
             status = new RefactoringStatus();
         }
         if (hasAmbiguity[0]) {
-            status.addInfo(Messages.format(ActionMessages.OrganizeImportsAction_multi_error_unresolvable, getLocationString(unit)));
+            status.addInfo(ActionMessages.bind(ActionMessages.OrganizeImportsAction_multi_error_unresolvable, getLocationString(unit)));
         } else if (edit == null) {
-            status.addInfo(Messages.format(ActionMessages.OrganizeImportsAction_multi_error_parse, getLocationString(unit)));
+            status.addInfo(ActionMessages.bind(ActionMessages.OrganizeImportsAction_multi_error_parse, getLocationString(unit)));
         }
 
         if (edit == null || (edit instanceof MultiTextEdit && edit.getChildrenSize() == 0)) {
@@ -104,7 +104,7 @@ public class GroovyImportsCleanUp extends AbstractGroovyCleanUp {
         return new ImportsFix(edit, unit, FixMessages.ImportsFix_OrganizeImports_Description);
     }
 
-    private static String getLocationString(ICompilationUnit unit) {
+    private static String getLocationString(final ICompilationUnit unit) {
         return BasicElementLabels.getPathLabel(unit.getPath(), false);
     }
 }

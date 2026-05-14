@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,12 +15,13 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import static org.eclipse.jdt.groovy.core.util.GroovyUtils.makeType;
+
 import java.util.Optional;
 import java.util.function.Function;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -103,7 +104,7 @@ public class ConstructorReferenceSearchRequestor implements ITypeRequestor {
             if (findReferences && node instanceof ConstructorCallExpression) {
                 ConstructorCallExpression call = (ConstructorCallExpression) node;
                 String typeName = result.declaringType.getName().replace('$', '.');
-                Parameter[] parameters = ((ConstructorNode) result.declaration).getOriginal().getParameters();
+                Parameter[] parameters = ((ConstructorNode) result.declaration).getParameters();
                 if (typeName.equals(declaringQualifiedName) && hasMatchingParameters(parameters)) {
                     reportSearchMatch(enclosingElement, element -> {
                         boolean isConstructor = true, isSynthetic = false, isSuperInvocation = call.isSuperCall(), isWithinComment = false;
@@ -141,13 +142,5 @@ public class ConstructorReferenceSearchRequestor implements ITypeRequestor {
             return true;
         }
         return false;
-    }
-
-    protected static ClassNode makeType(String typeName) {
-        int i = typeName.indexOf('[');
-        if (i < 0) {
-            return ClassHelper.make(typeName);
-        }
-        return makeType(typeName.substring(0, i)).makeArray();
     }
 }

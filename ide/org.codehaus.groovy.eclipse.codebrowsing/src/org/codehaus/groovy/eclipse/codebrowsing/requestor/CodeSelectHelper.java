@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,9 @@ import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -35,16 +37,17 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ICodeSelectHelper;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.groovy.core.util.GroovyCodeVisitorAdapter;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 
 public class CodeSelectHelper implements ICodeSelectHelper {
 
     @Override
-    public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length) {
+    public IJavaElement[] select(final GroovyCompilationUnit unit, int start, int length) {
         char[] contents = unit.getContents();
         // expand zero-length selection to include adjacent identifier characters
-        if (length == 0) {
+        if (start >= 0 && length == 0) {
             // TODO: Use the ExpressionFinder or TokenStream to do this?
             while (start > 0 && Character.isJavaIdentifierPart(contents[start - 1])) {
                 start -= 1;
@@ -73,6 +76,11 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                 Object[] result = findNodeForRegion(module, select);
                 ASTNode node = (ASTNode) result[0];
                 Region region = (Region) result[1];
+                // check for name that begins with '$' and revert GRECLIPSE-1330
+                if (node != null && start > 0 && node.getStart() == start - 1 && contents[start - 1] == '$') {
+                    start -= 1;
+                    length += 1;
+                }
                 if (node instanceof AnnotatedNode && !isKeyword(node, contents, start, length) && !isStringLiteral(node, contents, start, length)) {
                     // shortcut: check to see if we are looking for this type itself
                     if (isTypeDeclaration(node, module)) {
@@ -82,11 +90,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                     CodeSelectRequestor requestor = createRequestor(node, region, select, unit);
                     TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
                     visitor.visitCompilationUnit(requestor);
-
-                    IJavaElement element = requestor.getRequestedElement();
-                    if (element != null) {
-                        return new IJavaElement[] {element};
-                    }
+                    return requestor.getRequestedElements();
                 }
             } catch (RuntimeException e) {
                 if (event != null) {
@@ -102,12 +106,12 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         return new IJavaElement[0];
     }
 
-    public ASTNode selectASTNode(GroovyCompilationUnit unit, int start, int length) {
+    public ASTNode selectASTNode(final GroovyCompilationUnit unit, final int start, final int length) {
         ModuleNode module = unit.getModuleNode();
         if (module != null) {
             String event = null;
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.CODE_SELECT, "Code select starting on " + unit.getElementName() + " at [ " + start + "," + length + " ]");
+                GroovyLogManager.manager.log(TraceCategory.CODE_SELECT, "Code select on " + unit.getElementName() + " at [ " + start + "," + length + " ]");
                 event = "Code select: " + unit.getElementName();
                 GroovyLogManager.manager.logStart(event);
             }
@@ -143,81 +147,107 @@ public class CodeSelectHelper implements ICodeSelectHelper {
      * @param nodeRegion the source range for {@code node}
      * @param selectRegion the source range for the selection
      */
-    protected CodeSelectRequestor createRequestor(ASTNode node, Region nodeRegion, Region selectRegion, GroovyCompilationUnit unit) {
+    protected CodeSelectRequestor createRequestor(final ASTNode node, final Region nodeRegion, final Region selectRegion, final GroovyCompilationUnit unit) {
         return new CodeSelectRequestor(node, nodeRegion, selectRegion, unit);
     }
 
     /**
      * @return array of {@link ASTNode} and {@link Region}
      */
-    protected Object[] findNodeForRegion(ModuleNode module, Region r) {
+    protected Object[] findNodeForRegion(final ModuleNode module, final Region r) {
         ASTNodeFinder finder = new ASTNodeFinder(r);
         finder.doVisit(module);
 
         return new Object[] {finder.result, finder.sloc};
     }
 
-    protected static boolean isKeyword(ASTNode node, char[] contents, int start, int length) {
-        boolean keyword = false;
-        // "null"
-        if (node instanceof ConstantExpression && ((ConstantExpression) node).isNullExpression()) {
-            keyword = true;
+    protected static boolean isKeyword(final ASTNode node, final char[] contents, final int start, final int length) {
+        if (node instanceof Expression) {
+            boolean[] keyword = new boolean[1];
+
+            node.visit(new GroovyCodeVisitorAdapter() {
+
+                @Override public void visitCastExpression(final CastExpression expr) {
+                    // something " as " something
+                    keyword[0] = (expr.isCoerce() && length == 2 && String.valueOf(contents, start, length).equals("as"));
+                }
+
+                @Override public void visitClassExpression(final ClassExpression expr) {
+                    // something ".class"
+                    keyword[0] = (length == 5 && String.valueOf(contents, start, length).equals("class"));
+                }
+
+                @Override public void visitConstantExpression(final ConstantExpression expr) {
+                    // "null" or "true" or "false" or "Type.this" or "Type.super"
+                    keyword[0] = (expr.isNullExpression() || expr.isTrueExpression() || expr.isFalseExpression() ||
+                        (length == 4 && expr.getText().equals("this")) || (length == 5 && expr.getText().equals("super")));
+                }
+
+                @Override public void visitConstructorCallExpression(final ConstructorCallExpression expr) {
+                    // "new " something
+                    keyword[0] = (length == 3 && start < expr.getNameStart() && String.valueOf(contents, start, length).equals("new"));
+                }
+
+                @Override public void visitMethodCallExpression(final MethodCallExpression expr) {
+                    // something " in " something
+                    keyword[0] = (expr.getMethodAsString().equals("isCase") && length == 2 && String.valueOf(contents, start, length).equals("in"));
+                }
+
+                @Override public void visitMethodPointerExpression(final MethodPointerExpression expr) {
+                    // something "::" something
+                    keyword[0] = (length == 2 /*&& String.valueOf(contents, start, length).equals("::")*/);
+                }
+
+                @Override public void visitVariableExpression(final VariableExpression expr) {
+                    // "this." something
+                    keyword[0] = (expr.isThisExpression());
+                }
+            });
+
+            return keyword[0];
         }
-        // "true" or "false"
-        else if (node instanceof ConstantExpression && ClassHelper.boolean_TYPE.equals(((ConstantExpression) node).getType())) {
-            keyword = true;
+
+        if (node instanceof ImportNode) {
+            ImportNode imp = (ImportNode) node;
+            switch (length) {
+            case 1:
+                // import something ".*"
+                if (imp.isStar() && start == node.getEnd() - 1)
+                    return true;
+                break;
+            case 2:
+                // import something " as " something
+                if (imp.getAliasExpr() != null && String.valueOf(contents, start, length).equals("as"))
+                    return true;
+                break;
+            case 6:
+                // "import " or "import static " something
+                if (start == node.getStart() || imp.isStatic() && start < node.getStart() + 14 /*"import static ".length()*/)
+                    return true;
+                break;
+            }
         }
-        // "this." something
-        else if (node instanceof VariableExpression && ((VariableExpression) node).isThisExpression()) {
-            keyword = true;
-        }
-        // something ".class"
-        else if (node instanceof ClassExpression && length == 5) {
-            keyword = String.valueOf(contents, start, length).equals("class");
-        }
+
         // "def " or "var " or "final " something
-        else if (node == ClassHelper.DYNAMIC_TYPE && length >= 3) {
-            keyword = String.valueOf(contents, start, length).matches("def|var|final");
+        if (length >= 3 && String.valueOf(contents, start, length).matches("def|var|final")) {
+            return true;
         }
-        // "new " something
-        else if (node instanceof ConstructorCallExpression && length == 3 && start < ((ConstructorCallExpression) node).getNameStart()) {
-            keyword = String.valueOf(contents, start, length).equals("new");
-        }
-        // something " as " something
-        else if (node instanceof CastExpression && ((CastExpression) node).isCoerce() && length == 2) {
-            keyword = String.valueOf(contents, start, length).equals("as");
-        }
-        // something " in " something
-        else if (node instanceof MethodCallExpression && ((MethodCallExpression) node).getMethodAsString().equals("isCase") && length == 2) {
-            keyword = String.valueOf(contents, start, length).equals("in");
-        }
-        // "import " or "import static " something
-        else if (node instanceof ImportNode && length == 6 && (start == node.getStart() ||
-                ((ImportNode) node).isStatic() && start < node.getStart() + 14 /*"import static ".length()*/)) {
-            keyword = true;
-        }
-        else if (node instanceof ImportNode && ((ImportNode) node).getAliasExpr() != null && length == 2) {
-            keyword = String.valueOf(contents, start, length).equals("as");
-        }
-        else if (node instanceof ImportNode && ((ImportNode) node).isStar() && length == 1 && start == node.getEnd() - 1) {
-            keyword = true;
-        }
-        return keyword;
+
+        return false;
     }
 
-    protected static boolean isStringLiteral(ASTNode node, char[] contents, int start, int length) {
-        if (node instanceof ConstantExpression && ClassHelper.STRING_TYPE.equals(((ConstantExpression) node).getType())) {
+    protected static boolean isStringLiteral(final ASTNode node, final char[] contents, final int start, final int length) {
+        if (node instanceof ConstantExpression && ((ConstantExpression) node).getType().equals(ClassHelper.STRING_TYPE)) {
             return (start > node.getStart() && length < node.getLength());
         } else if (node instanceof MethodNode) {
-            return (start > ((MethodNode) node).getNameStart() &&
-                start + length <= ((MethodNode) node).getNameEnd());
+            return (start > ((MethodNode) node).getNameStart() && start + length <= ((MethodNode) node).getNameEnd());
         }
         return false;
     }
 
-    protected static boolean isTypeDeclaration(ASTNode node, ModuleNode module) {
-        // don't use inner class nodes since they really should resolve to the super type
-        if (node instanceof ClassNode && ((ClassNode) node).getOuterClass() == null) {
+    protected static boolean isTypeDeclaration(final ASTNode node, final ModuleNode module) {
+        // not inner class nodes since they really should resolve to the super type
+        if (node instanceof ClassNode && ((ClassNode) node).getOuterClass() == null && !((ClassNode) node).isGenericsPlaceHolder()) {
             for (ClassNode clazz : module.getClasses()) {
                 if (clazz.equals(node)) {
                     return true;
@@ -227,7 +257,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         return false;
     }
 
-    protected static IJavaElement[] returnThisNode(ASTNode node, GroovyCompilationUnit unit) {
+    protected static IJavaElement[] returnThisNode(final ASTNode node, final GroovyCompilationUnit unit) {
         // GRECLIPSE-803: ensure inner classes are handled correctly
         String rawName = ((ClassNode) node).getNameWithoutPackage();
         String[] enclosingTypes = rawName.split("\\$");

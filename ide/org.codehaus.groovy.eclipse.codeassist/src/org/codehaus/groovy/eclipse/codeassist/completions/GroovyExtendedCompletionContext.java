@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,6 +107,7 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
                     !visibleElements.containsKey(varName)) {
 
                     ClassNode type = varInfo.type;
+                    if (type == null) type = VariableScope.NULL_TYPE;
                     if (GroovyUtils.isAssignable(type, targetType)) {
                         // NOTE: parent, source location, typeSignature, etc. are not important here
                         int start = 0, until = varName.length() - 1;
@@ -157,7 +158,8 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
         }
         for (IMethod method : type.getMethods()) {
             ClassNode methodReturnTypeClassNode = toClassNode(method.getReturnType());
-            if (GroovyUtils.isAssignable(methodReturnTypeClassNode, targetType)) {
+            if (!VariableScope.VOID_CLASS_NODE.equals(methodReturnTypeClassNode) &&
+                    GroovyUtils.isAssignable(methodReturnTypeClassNode, targetType)) {
                 if ((method.getParameterTypes() == null || method.getParameterTypes().length == 0) &&
                         (method.getElementName().startsWith("get") || method.getElementName().startsWith("is"))) {
                     visibleElements.putIfAbsent(method.getElementName(), method);

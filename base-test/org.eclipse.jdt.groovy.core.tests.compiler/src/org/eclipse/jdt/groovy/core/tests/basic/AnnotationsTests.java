@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,16 @@
 package org.eclipse.jdt.groovy.core.tests.basic;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
+import static org.junit.Assume.assumeTrue;
 
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
-    public void testGroovyAnnotation() {
+    public void testBasicAnnotation() {
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -36,6 +37,23 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testStaticFinalField() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "print A.CONST\n",
+
+            "A.groovy",
+            "@interface A {\n" +
+            "  String CONST = 'value'\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
     }
 
     @Test // GRECLIPSE-697
@@ -57,7 +75,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("A.groovy",
             "public @B class A {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
+            "  public @groovy.transform.Generated A() {\n" +
             "  }\n" +
             "  public static void main(String... argv) {\n" +
             "  }\n" +
@@ -187,7 +205,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "42");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9205
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9205
     public void testLongLiteralAttributeDefault2() {
         //@formatter:off
         String[] sources = {
@@ -199,10 +217,20 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "42");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "42");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Script.groovy (at line 2)\n" +
+                "\tlong value() default (long)42\n" +
+                "\t                           ^^\n" +
+                "Groovy:Attribute 'value' should have type 'java.lang.Long'; but found type 'int' in @A\n" +
+                "----------\n");
+        }
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9205
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9205
     public void testLongLiteralAttributeDefault2a() {
         //@formatter:off
         String[] sources = {
@@ -214,7 +242,17 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "42");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "42");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Script.groovy (at line 2)\n" +
+                "\tlong value() default (42 as long)\n" +
+                "\t                      ^^\n" +
+                "Groovy:Attribute 'value' should have type 'java.lang.Long'; but found type 'int' in @A\n" +
+                "----------\n");
+        }
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-6025
@@ -413,7 +451,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-6025
-    public void testCharLiteralAttributeDefaul4() {
+    public void testCharLiteralAttributeDefault4() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -472,7 +510,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "42.0");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9205
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9205
     public void testFloatLiteralAttributeDefault2() {
         //@formatter:off
         String[] sources = {
@@ -484,10 +522,20 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "42.0");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "42.0");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Script.groovy (at line 2)\n" +
+                "\tfloat value() default (float)42\n" +
+                "\t                             ^^\n" +
+                "Groovy:Attribute 'value' should have type 'java.lang.Float'; but found type 'int' in @A\n" +
+                "----------\n");
+        }
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9205
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9205
     public void testFloatLiteralAttributeDefault2a() {
         //@formatter:off
         String[] sources = {
@@ -499,7 +547,17 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "42.0");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "42.0");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Script.groovy (at line 2)\n" +
+                "\tfloat value() default (42 as float)\n" +
+                "\t                       ^^\n" +
+                "Groovy:Attribute 'value' should have type 'java.lang.Float'; but found type 'int' in @A\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -547,7 +605,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "42.0");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9205
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9205
     public void testDoubleLiteralAttributeDefault2() {
         //@formatter:off
         String[] sources = {
@@ -559,10 +617,20 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "42.0");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "42.0");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Script.groovy (at line 2)\n" +
+                "\tdouble value() default (double)42\n" +
+                "\t                               ^^\n" +
+                "Groovy:Attribute 'value' should have type 'java.lang.Double'; but found type 'int' in @A\n" +
+                "----------\n");
+        }
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9205
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9205
     public void testDoubleLiteralAttributeDefault2a() {
         //@formatter:off
         String[] sources = {
@@ -574,10 +642,52 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "42.0");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "42.0");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Script.groovy (at line 2)\n" +
+                "\tdouble value() default (42 as double)\n" +
+                "\t                        ^^\n" +
+                "Groovy:Attribute 'value' should have type 'java.lang.Double'; but found type 'int' in @A\n" +
+                "----------\n");
+        }
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9206
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9366
+    public void testByteLiteralAttributeValue() {
+        //@formatter:off
+        String[] sources = {
+            "EightBits.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.FIELD)\n" +
+            "@interface EightBits {\n" +
+            "  byte value();\n" +
+            "}\n",
+
+            "Main.groovy",
+            "class Main {\n" +
+            "  @EightBits(0x1)\n" +
+            "  Object whatever\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 2)\n" +
+                "\t@EightBits(0x1)\n" +
+                "\t           ^^^\n" +
+                "Groovy:Attribute 'value' should have type 'java.lang.Byte'; but found type 'int' in @EightBits\n" +
+                "----------\n");
+        }
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9206
     public void testCharLiteralAttributeValue() {
         //@formatter:off
         String[] sources = {
@@ -586,17 +696,32 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Target(ElementType.FIELD)\n" +
             "@interface Separator {\n" +
             "  char value();\n" +
-            "}",
+            "}\n",
 
             "Main.groovy",
             "class Main {\n" +
-            "  @Separator(';')\n" +
+            "  @Separator((char)';')\n" +
             "  String tokens\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources);
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 2)\n" +
+                "\t@Separator((char)';')\n" +
+                "\t           ^^^^^^^^^\n" +
+                "Groovy:Expected '(char) ;' to be an inline constant of type char in @Separator\n" +
+                "----------\n" +
+                "2. ERROR in Main.groovy (at line 2)\n" +
+                "\t@Separator((char)';')\n" +
+                "\t           ^^^^^^^^^\n" +
+                "Groovy:Attribute 'value' should have type 'java.lang.Character'; but found type 'java.lang.Object' in @Separator\n" +
+                "----------\n");
+        }
     }
 
     @Test // ArrayIndexOutOfBoundsException in LongLiteral.computeConstant
@@ -608,13 +733,13 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Target(ElementType.FIELD)\n" +
             "@interface Min {\n" +
             "  long value();\n" +
-            "}",
+            "}\n",
 
             "Main.groovy",
             "class Main {\n" +
             "  @Min(0L)\n" +
             "  Integer index\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
@@ -630,13 +755,13 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Target(ElementType.FIELD)\n" +
             "@interface Min {\n" +
             "  long value();\n" +
-            "}",
+            "}\n",
 
             "Main.groovy",
             "class Main {\n" +
             "  @Min(+1L)\n" +
             "  Integer index\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
@@ -652,17 +777,48 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Target(ElementType.FIELD)\n" +
             "@interface Min {\n" +
             "  long value();\n" +
-            "}",
+            "}\n",
 
             "Main.groovy",
             "class Main {\n" +
             "  @Min(-1L)\n" +
             "  Integer index\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7252
+    public void testShortLiteralAttributeValue() {
+        //@formatter:off
+        String[] sources = {
+            "Min.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.FIELD)\n" +
+            "@interface Min {\n" +
+            "  short value();\n" +
+            "}\n",
+
+            "Main.groovy",
+            "class Main {\n" +
+            "  @Min(-1) short index\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 2)\n" +
+                "\t@Min(-1) short index\n" +
+                "\t     ^^\n" +
+                "Groovy:Attribute 'value' should have type 'java.lang.Short'; but found type 'int' in @Min\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -674,20 +830,24 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Target(ElementType.FIELD)\n" +
             "@interface Min {\n" +
             "  long value();\n" +
-            "}",
+            "}\n",
 
             "Main.groovy",
             "class Main {\n" +
             "  @Min(0G)\n" +
             "  Integer index\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
-        // there should not be an error from the Java model -- GroovyCompilationUnitDeclaration.UnitPopulator#createExpression(ConstantExpression)
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Main.groovy (at line 2)\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\tclass Main {\n" +
+            "\t^\n" +
+            "Type mismatch: cannot convert from BigInteger to long\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 2)\n" +
             "\t@Min(0G)\n" +
             "\t     ^^\n" +
             "Groovy:Attribute 'value' should have type 'java.lang.Long'; but found type 'java.math.BigInteger' in @Min\n" +
@@ -703,24 +863,27 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Target(ElementType.FIELD)\n" +
             "@interface Min {\n" +
             "  double value();\n" +
-            "}",
+            "}\n",
 
             "Main.groovy",
             "class Main {\n" +
             "  @Min(1.1G)\n" +
             "  BigDecimal index\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
-        // there should not be an error from the Java model -- GroovyCompilationUnitDeclaration.UnitPopulator#createExpression(ConstantExpression)
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 2)\n" +
-            "\t@Min(1.1G)\n" +
-            "\t     ^^^^\n" +
-            "Groovy:Attribute 'value' should have type 'java.lang.Double'; but found type 'java.math.BigDecimal' in @Min\n" +
-            "----------\n");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 2)\n" +
+                "\t@Min(1.1G)\n" +
+                "\t     ^^^^\n" +
+                "Groovy:Attribute 'value' should have type 'java.lang.Double'; but found type 'java.math.BigDecimal' in @Min\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -730,7 +893,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@SuppressWarnings(value=\"nls\", unknown=false)\n" +
             "class Main {\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
@@ -739,7 +902,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 1)\n" +
             "\t@SuppressWarnings(value=\"nls\", unknown=false)\n" +
             "\t^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:'unknown'is not part of the annotation SuppressWarnings in @java.lang.SuppressWarnings\n" +
+            "Groovy:'unknown'" + (isAtLeastGroovy(40) ? " " : "") + "is not part of the annotation SuppressWarnings in @java.lang.SuppressWarnings\n" +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 1)\n" +
             "\t@SuppressWarnings(value=\"nls\", unknown=false)\n" +
@@ -763,12 +926,12 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Target(ElementType.TYPE)\n" +
             "@interface Anno {\n" +
             "  Class<?> value();\n" +
-            "}",
+            "}\n",
 
             "Main.groovy",
             "@Anno(URL.class)\n" +
             "class Main {\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
@@ -785,12 +948,12 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Target(ElementType.TYPE)\n" +
             "@interface Anno {\n" +
             "  Class<?> value();\n" +
-            "}",
+            "}\n",
 
             "Main.groovy",
             "@Anno(URL)\n" +
             "class Main {\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
@@ -807,18 +970,87 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Target(ElementType.TYPE)\n" +
             "@interface Anno {\n" +
             "  Class<?> value();\n" +
-            "}",
+            "}\n",
 
             "Main.groovy",
             "@Anno(\n" +
             "  java.net.URL\n" +
             ")\n" +
             "class Main {\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testClassLiteralAttributeValue4() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "@Category(String[])\n" +
+            "class C {\n" +
+            "  def m() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "public @Category(String[].class) class C {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+            "  public static java.lang.Object m(String... $this) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testClassLiteralAttributeValue5() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "@Category(String[].class)\n" +
+            "class C {\n" +
+            "  def m() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "public @Category(String[].class) class C {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+            "  public static java.lang.Object m(String... $this) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testClassLiteralAttributeValue6() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "@Category(java.lang.String[][].class)\n" +
+            "class C {\n" +
+            "  def m() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "public @Category(java.lang.String[][].class) class C {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+            "  public static java.lang.Object m(java.lang.String[]... $this) {\n" +
+            "  }\n" +
+            "}\n");
     }
 
     @Test
@@ -843,6 +1075,50 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1201
+    public void testClosureExpressionAttributeValue2() {
+        //@formatter:off
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<? extends Iterable<String>> value();\n" +
+            "}",
+
+            "Main.groovy",
+            "@Anno(value={ return ['hello'] })\n" +
+            "class Main {\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1201
+    public void testClosureExpressionAttributeValue3() {
+        //@formatter:off
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<? extends Iterable<String>>[] value();\n" +
+            "}",
+
+            "Main.groovy",
+            "@Anno(value=[{ return ['hello'] }])\n" +
+            "class Main {\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
     @Test // GRECLIPSE-629
     public void testInlinedStaticFinalAttributeValue() {
         //@formatter:off
@@ -853,7 +1129,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  public static void main(String[] argv) {\n" +
             "    System.out.print(XXX.class.getAnnotation(Anno.class));\n" +
             "  }\n" +
-            "}",
+            "}\n",
 
             "B.groovy",
             "import java.lang.annotation.*\n" +
@@ -862,11 +1138,12 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {\n" +
             "  String value()\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, CompilerOptions.versionToJdkLevel(System.getProperty("java.version")) < JDK9 ? "@Anno(value=abc)" : "@Anno(value=\"abc\")");
+        int version = Runtime.version().feature();
+        runConformTest(sources, version < 9 ? "@Anno(value=abc)" : (version < 13 ? "@Anno(value=\"abc\")" : "@Anno(\"abc\")"));
     }
 
     @Test
@@ -876,12 +1153,12 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "Const.java",
             "public class Const {\n" +
             "  public static final String ABC = \"abc\";\n" +
-            "}",
+            "}\n",
 
             "Script.groovy",
             "@SuppressWarnings(value = Const.ABC)\n" +
             "void meth() {\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
@@ -892,6 +1169,40 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "\t                          ^^^^^^^^^\n" +
             "Unsupported @SuppressWarnings(\"abc\")\n" +
             "----------\n");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10068
+    public void testInlinedStaticFinalAttributeValue3() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@Tag(Val.ONE)\n" +
+            "def m() {\n" +
+            "}\n",
+
+            "Tag.java",
+            "public @interface Tag {\n" +
+            "  short value();\n" +
+            "}\n",
+
+            "Val.groovy",
+            "class Val {\n" +
+            "  public static final short ONE = 1;\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Script.groovy (at line -1)\n" + // TODO: line number
+                "\t@Tag(Val.ONE)\n" +
+                "\t^\n" +
+                "Groovy:Attribute 'value' should have type 'java.lang.Short'; but found type 'java.lang.Integer' in @Tag\n" +
+                "----------\n");
+        }
     }
 
     @Test // GRECLIPSE-830
@@ -905,7 +1216,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@interface AnnotationDouble {\n" +
             "  String value()\n" +
             "  double width() default 5.0d\n" +
-            "}",
+            "}\n",
 
             "AnnotationDoubleTest.groovy",
             "final class AnnotationDoubleTest {\n" +
@@ -913,17 +1224,21 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "    @AnnotationDouble(value='test', width=1.0) double value\n" +
             "  }\n" +
             "  def test = new AnnotationDoubleTest()\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in AnnotationDoubleTest.groovy (at line 3)\n" +
-            "\t@AnnotationDouble(value='test', width=1.0) double value\n" +
-            "\t                                      ^^^\n" +
-            "Groovy:Attribute 'width' should have type 'java.lang.Double'; but found type 'java.math.BigDecimal' in @AnnotationDouble\n" +
-            "----------\n");
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in AnnotationDoubleTest.groovy (at line 3)\n" +
+                "\t@AnnotationDouble(value='test', width=1.0) double value\n" +
+                "\t                                      ^^^\n" +
+                "Groovy:Attribute 'width' should have type 'java.lang.Double'; but found type 'java.math.BigDecimal' in @AnnotationDouble\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -1021,7 +1336,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    @Test
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8063
     public void testLocalAnnotationClassLiteral2() {
         //@formatter:off
         String[] sources = {
@@ -1040,17 +1355,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in Main.groovy (at line 1)\n" +
-            "\t@Anno(Inner)\n" +
-            "\t      ^^^^^\n" +
-            "Inner cannot be resolved\n" +
-            "----------\n" +
-            "2. ERROR in Main.groovy (at line 1)\n" +
-            "\t@Anno(Inner)\n" +
-            "\t      ^^^^^\n" +
-            "Inner cannot be resolved or is not a field\n" +
-            "----------\n");
+        runNegativeTest(sources, "");
     }
 
     @Test
@@ -1425,9 +1730,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        String expectedOutput = isAtLeastGroovy(25)
-            ? "  @p.Anno\n"
-            : "Ljava/lang/String;\n" +
+        String expectedOutput = "  @p.Anno\n" +
             "  private java.lang.String s;\n";
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
@@ -1459,7 +1762,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("Other.groovy",
             "public class Other {\n" +
             "  public @Anno Date me;\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "Other() {\n" +
+            "  public @groovy.transform.Generated Other() {\n" +
             "  }\n" +
             "}\n");
     }
@@ -1578,9 +1881,9 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        checkGCUDeclaration("X.groovy", "public @Anno void foo() {");
-
         checkGCUDeclaration("X.groovy", "public @Anno void foo(String s) {");
+
+        checkGCUDeclaration("X.groovy", "public @Anno @groovy.transform.Generated void foo() {");
     }
 
     @Test
@@ -1712,12 +2015,12 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
+            "package p\n" +
+            "class X {\n" +
             "  @Anno(Target.class)\n" +
-            "  public int foo = 5\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
+            "  public int foo = 42\n" +
+            "  static main(args) {\n" +
+            "    print 'works'\n" +
             "  }\n" +
             "}\n",
 
@@ -1729,13 +2032,123 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Target.java",
             "package p;\n" +
-            "class Target {}",
+            "class Target {}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "success");
+        runConformTest(sources, "works");
 
         checkGCUDeclaration("X.groovy", "public @Anno(Target.class) int foo");
+    }
+
+    @Test
+    public void testFieldLevelAnnotations_SingleMember2() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p\n" +
+            "class X {\n" +
+            "  @Anno(p.Target.class)\n" +
+            "  public int foo = 42\n" +
+            "  static main(args) {\n" +
+            "    print 'works'\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { Class<?> value(); }\n",
+
+            "p/Target.java",
+            "package p;\n" +
+            "class Target {}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+
+        checkGCUDeclaration("X.groovy", "public @Anno(p.Target.class) int foo");
+    }
+
+    @Test
+    public void testFieldLevelAnnotations_SingleMember3() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p\n" +
+            "class X {\n" +
+            "  @Anno(IDontExist.class)\n" +
+            "  public int foo = 42\n" +
+            "  static main(args) {\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { Class<?> value(); }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@Anno(IDontExist.class)\n" +
+            "\t      ^^^^^^^^^^\n" +
+            "Groovy:unable to find class 'IDontExist.class' for annotation attribute constant\n" +
+            "----------\n" +
+            "2. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@Anno(IDontExist.class)\n" +
+            "\t      ^^^^^^^^^^^^^^^^\n" +
+            "Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testFieldLevelAnnotations_SingleMember4() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p\n" +
+            "class X {\n" +
+            "  @SuppressWarnings(DoesNot.EXIST)\n" +
+            "  static main(args) {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^\n" +
+            "DoesNot cannot be resolved\n" +
+            "----------\n" +
+            "2. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^\n" +
+            "Groovy:unable to find class 'DoesNot.EXIST' for annotation attribute constant\n" +
+            "----------\n" +
+            "3. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^\n" +
+            "Groovy:Apparent variable 'DoesNot' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
+            "----------\n" +
+            "4. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^^^^^^^\n" +
+            "Groovy:Expected 'DoesNot.EXIST' to be an inline constant of type java.lang.String not a property expression in @java.lang.SuppressWarnings\n" +
+            "----------\n" +
+            // this error was associated with line -1
+            "5. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^^^^^^^\n" +
+            "Groovy:Attribute 'value' should have type 'java.lang.String'; but found type 'java.lang.Object' in @java.lang.SuppressWarnings\n" +
+            "----------\n");
     }
 
     @Test
@@ -1760,7 +2173,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test
+    @Test @Ignore("edge case")
     public void testTypeLevelAnnotations_SelfReferential2() {
         //@formatter:off
         String[] sources = {
@@ -1804,115 +2217,144 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test
-    public void testAnnotations_singleMemberAnnotationField1() {
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11184
+    public void testExplicitThisTypeAnnotations1() {
+        assumeTrue(isParrotParser());
+
         //@formatter:off
         String[] sources = {
-            "p/X.groovy",
+            "C.groovy",
+            "class C {\n" +
+            "  def m(@p.Anno('') C this, that) {}\n" +
+            "}\n",
+
+            "p/Anno.java",
             "package p;\n" +
-            "public class X {\n" +
-            "  @Anno(p.Target.class)\n" +
-            "  public int foo = 5\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Target({ElementType.TYPE_USE})\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { String value(); }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "public class C {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+            "  public java.lang.Object m(@p.Anno(\"\") C this, java.lang.Object that) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11184
+    public void testExplicitThisTypeAnnotations2() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p\n" +
+            "class C {\n" +
+            "  def m(@Anno('') p.C this, that) {}\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Target({ElementType.TYPE_USE})\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { String value(); }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "package p;\n" +
+            "public class C {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+            "  public java.lang.Object m(p.@Anno(\"\") C this, java.lang.Object that) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11184
+    public void testExplicitThisTypeAnnotations3() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p\n" +
+            "class C {\n" +
+            "  def m(@Anno('') C this, that = null) {}\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Target({ElementType.TYPE_USE})\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { String value(); }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "package p;\n" +
+            "public class C {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+            "  public java.lang.Object m(@Anno(\"\") C this, java.lang.Object that) {\n" +
+            "  }\n" +
+            "  public @groovy.transform.Generated java.lang.Object m(@Anno(\"\") C this) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11184
+    public void testExplicitThisTypeAnnotations4() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p\n" +
+            "class C {\n" +
+            "  class D {\n" +
+            "    D(@Anno('') C this, that" + (isAtLeastGroovy(50) ? " = null" : "") + ") {}\n" +
             "  }\n" +
             "}\n",
 
             "p/Anno.java",
             "package p;\n" +
             "import java.lang.annotation.*;\n" +
+            "@Target({ElementType.TYPE_USE})\n" +
             "@Retention(RetentionPolicy.RUNTIME)\n" +
-            "@interface Anno { Class<?> value(); }\n",
-
-            "p/Target.java",
-            "package p;\n" +
-            "class Target {}",
+            "@interface Anno { String value(); }\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "success");
+        runNegativeTest(sources, "");
 
-        checkGCUDeclaration("X.groovy", "public @Anno(p.Target.class) int foo");
-    }
-
-    @Test
-    public void testAnnotations_singleMemberAnnotationFailure1() {
-        //@formatter:off
-        String[] sources = {
-            "p/X.groovy",
+        checkGCUDeclaration("C.groovy",
             "package p;\n" +
-            "public class X {\n" +
-            "  @Anno(IDontExist.class)\n" +
-            "  public int foo = 5\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
+            "public class C {\n" +
+            "  public class D {\n" +
+            "    public D(@Anno(\"\") C C.this, java.lang.Object that) {\n" +
+            "    }\n" + (isAtLeastGroovy(50)
+            ?
+            "    public @groovy.transform.Generated D(@Anno(\"\") C C.this) {\n" +
+            "    }\n"
+            : "") +
             "  }\n" +
-            "}\n",
-
-            "p/Anno.java",
-            "package p;\n" +
-            "import java.lang.annotation.*;\n" +
-            "@Retention(RetentionPolicy.RUNTIME)\n" +
-            "@interface Anno { Class<?> value(); }\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@Anno(IDontExist.class)\n" +
-            "\t      ^^^^^^^^^^\n" +
-            "Groovy:unable to find class 'IDontExist.class' for annotation attribute constant\n" +
-            "----------\n" +
-            "2. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@Anno(IDontExist.class)\n" +
-            "\t      ^^^^^^^^^^^^^^^^\n" +
-            "Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testAnnotations_singleMemberAnnotationFailure2() {
-        //@formatter:off
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  @SuppressWarnings(DoesNot.EXIST)\n" +
-            "  static void main(String... args) {\n" +
+            "  public @groovy.transform.Generated C() {\n" +
             "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
-            "\t                  ^^^^^^^\n" +
-            "DoesNot cannot be resolved\n" +
-            "----------\n" +
-            "2. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
-            "\t                  ^^^^^^^\n" +
-            "Groovy:unable to find class 'DoesNot.EXIST' for annotation attribute constant\n" +
-            "----------\n" +
-            "3. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
-            "\t                  ^^^^^^^\n" +
-            "Groovy:Apparent variable 'DoesNot' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
-            "----------\n" +
-            "4. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
-            "\t                  ^^^^^^^^^^^^^\n" +
-            "Groovy:Expected 'DoesNot.EXIST' to be an inline constant of type java.lang.String not a property expression in @java.lang.SuppressWarnings\n" +
-            "----------\n" +
-            // this error was associated with line -1
-            "5. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
-            "\t                  ^^^^^^^^^^^^^\n" +
-            "Groovy:Attribute 'value' should have type 'java.lang.String'; but found type 'java.lang.Object' in @java.lang.SuppressWarnings\n" +
-            "----------\n");
+            "}\n");
     }
 
     @Test // All types in groovy with TYPE specified for Target and obeyed
@@ -2327,5 +2769,40 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testAnnotationsTargetType13() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p;\n" +
+            "public class Main {\n" +
+            "  void m(@Anno('x') String s) {}\n" +
+            "  static main(args) {\n" +
+            "    print getMethod('m', String).annotatedParameterTypes[0].annotations[0].value()\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.groovy",
+            "package p\n" +
+            "import java.lang.annotation.*\n" +
+            "@Target(ElementType.TYPE_USE)\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { String value(); }\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(40)) {
+            runConformTest(sources, "x");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in p\\Main.groovy (at line 3)\n" +
+                "\tvoid m(@Anno('x') String s) {}\n" +
+                "\t       ^^^^^\n" +
+                "Groovy:Annotation @p.Anno is not allowed on element PARAMETER\n" +
+                "----------\n");
+        }
     }
 }

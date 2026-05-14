@@ -4,11 +4,11 @@
     <relativePath>../pom.xml</relativePath>
     <groupId>org.codehaus.groovy.eclipse</groupId>
     <artifactId>org.codehaus.groovy.eclipse.ide-test.parent</artifactId>
-    <version>3.7.0-SNAPSHOT</version>
+    <version>6.2.0-SNAPSHOT</version>
   </parent>
   <groupId>org.codehaus.groovy.eclipse</groupId>
   <artifactId>org.codehaus.groovy.alltests</artifactId>
-  <version>3.7.0-SNAPSHOT</version>
+  <version>6.2.0-SNAPSHOT</version>
   <packaging>eclipse-test-plugin</packaging>
 
   <build>
@@ -20,7 +20,7 @@
 
         <!-- Useful references:
           https://wiki.eclipse.org/Tycho/Packaging_Types#eclipse-test-plugin
-          https://www.eclipse.org/tycho/sitedocs/tycho-surefire/tycho-surefire-plugin/test-mojo.html
+          https://www.eclipse.org/tycho/sitedocs/tycho-surefire-plugin/test-mojo.html
         -->
         <configuration>
           <argLine>-Xmx1G -XX:-OmitStackTraceInFastThrow</argLine>
@@ -42,7 +42,11 @@
             </dependency>
             <dependency>
               <type>eclipse-plugin</type>
-              <artifactId>org.eclipse.jdt.compiler.apt</artifactId>
+              <artifactId>org.eclipse.jdt.apt.core</artifactId>
+            </dependency>
+            <dependency>
+              <type>eclipse-plugin</type>
+              <artifactId>org.eclipse.jdt.junit5.runtime</artifactId>
             </dependency>
           </dependencies>
 

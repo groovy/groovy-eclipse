@@ -1,39 +1,77 @@
-package p;
-class A{
+package p
+
+class A {
 	static void m(){
 	}
-	void f(){
-		m();
+	void p(){
+		this.&m
+		m()
 	}
-	static int fred(){
-		m();
-		return 1;
+	static foo(){
+		this.&m
+		m()
 	}
 	{
-		A.m();
-		m();
-		new A().m();
+		{ -> A.m(); A.&m; m() }
+		new A().m()
+		A.m()
+		A.&m
+		m()
 	}
 	static {
-		A.m();
-		m();
-		new A().m();
+		{ -> A.m(); A.&m; m() }
+		new A().m()
+		A.m()
+		A.&m
+		m()
 	}
 }
-class D{
+
+class B {
 	static void m(){
-		A.m();
-		new A().m();
-		m();
+		{ -> A.m(); A.&m; m() }
+		new A().m()
+		A.m()
+		A.&m
+		m()
 	}
 	static {
-		A.m();
-		new A().m();
-		m();
+		{ -> A.m(); A.&m; m() }
+		new A().m()
+		A.m()
+		A.&m
+		m()
 	}
 	{
-		A.m();
-		new A().m();
-		m();
+		{ -> A.m(); A.&m; m() }
+		new A().m()
+		A.m()
+		A.&m
+		m()
+	}
+}
+
+@groovy.transform.CompileStatic
+class C {
+	static void m(){
+		{ -> A.m(); A.&m; m() }
+		new A().m()
+		A.m()
+		A.&m
+		m()
+	}
+	static {
+		{ -> A.m(); A.&m; m() }
+		new A().m()
+		A.m()
+		A.&m
+		m()
+	}
+	{
+		{ -> A.m(); A.&m; m() }
+		new A().m()
+		A.m()
+		A.&m
+		m()
 	}
 }

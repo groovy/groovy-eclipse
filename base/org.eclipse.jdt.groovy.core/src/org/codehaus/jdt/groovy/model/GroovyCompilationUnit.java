@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.jdt.groovy.integration.internal.MultiplexingSourceElementRequestorParser;
@@ -36,7 +37,6 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.PerformanceStats;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.IBuffer;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.IJavaProject;
@@ -47,10 +47,10 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
+import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
@@ -68,34 +68,19 @@ import org.eclipse.jdt.internal.core.util.Util;
 
 public class GroovyCompilationUnit extends CompilationUnit {
 
-    private class GroovyErrorHandlingPolicy implements IErrorHandlingPolicy {
-
-        final boolean stopOnFirst;
-
-        GroovyErrorHandlingPolicy(boolean stopOnFirst) {
-            this.stopOnFirst = stopOnFirst;
-        }
-
-        @Override
-        public boolean proceedOnErrors() {
-            return !stopOnFirst;
-        }
-
-        @Override
-        public boolean stopOnFirstError() {
-            return stopOnFirst;
-        }
-
-        @Override
-        public boolean ignoreAllErrors() {
-            // TODO is this the right decision here? New method with java8 support
-            return false;
-        }
-
-    }
-
     public GroovyCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {
         super(parent, name, owner);
+    }
+
+    private String mainTypeName;
+
+    @Override
+    public char[] getMainTypeName() {
+        if (this.mainTypeName == null) {
+            String unitName = Util.getNameWithoutJavaLikeExtension(this.name);
+            this.mainTypeName = GeneratorContext.encodeAsValidClassName(unitName);
+        }
+        return this.mainTypeName.toCharArray();
     }
 
     /**
@@ -105,7 +90,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
      * consistent (if not a reconcile operation is performed).
      */
     public ModuleNode getModuleNode() {
-        ModuleNodeInfo moduleInfo = getModuleInfo(true);
+        ModuleNodeInfo moduleInfo = this.getModuleInfo(true);
         return moduleInfo != null ? moduleInfo.module : null;
     }
 
@@ -119,33 +104,33 @@ public class GroovyCompilationUnit extends CompilationUnit {
      */
     public ModuleNodeInfo getModuleInfo(boolean force) {
         try {
-            if (!isConsistent()) {
-                makeConsistent(null);
+            if (!this.isConsistent()) {
+                this.makeConsistent(null);
             }
             boolean becameWorkingCopy = false;
             ModuleNodeMapper.getInstance().lock();
             // discard the working copy after finishing
             // if there was no working copy to begin with
             try {
-                becameWorkingCopy = (force && !isWorkingCopy());
+                becameWorkingCopy = (force && !this.isWorkingCopy());
                 if (becameWorkingCopy) {
-                    becomeWorkingCopy(null);
+                    this.becomeWorkingCopy(null);
                 }
-                JavaModelManager.PerWorkingCopyInfo info = getPerWorkingCopyInfo();
+                JavaModelManager.PerWorkingCopyInfo info = this.getPerWorkingCopyInfo();
                 if (info != null) {
                     return ModuleNodeMapper.getInstance().get(info);
                 }
             } finally {
                 try {
                     if (becameWorkingCopy) {
-                        discardWorkingCopy();
+                        this.discardWorkingCopy();
                     }
                 } finally {
                     ModuleNodeMapper.getInstance().unlock();
                 }
             }
         } catch (JavaModelException e) {
-            Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.getElementName());
+            Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.name);
         }
         // return null if not found. Means that there was a problem with build structure
         return null;
@@ -157,11 +142,11 @@ public class GroovyCompilationUnit extends CompilationUnit {
      */
     public ModuleNodeInfo getNewModuleInfo() {
         try {
-            openWhenClosed(createElementInfo(), false/* or should it be true... ? */, new NullProgressMonitor());
+            this.openWhenClosed(this.createElementInfo(), false/* or should it be true... ? */, new NullProgressMonitor());
         } catch (JavaModelException e) {
-            Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.getElementName());
+            Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.name);
         }
-        return getModuleInfo(true);
+        return this.getModuleInfo(true);
     }
 
     @Override
@@ -169,8 +154,8 @@ public class GroovyCompilationUnit extends CompilationUnit {
         // GRECLIPSE-804 must synchronize
         ModuleNodeMapper.getInstance().lock();
         try {
-            JavaModelManager.PerWorkingCopyInfo info = getPerWorkingCopyInfo();
-            if (workingCopyInfoWillBeDiscarded(info)) {
+            JavaModelManager.PerWorkingCopyInfo info = this.getPerWorkingCopyInfo();
+            if (this.workingCopyInfoWillBeDiscarded(info)) {
                 ModuleNodeMapper.getInstance().remove(info);
             }
             super.discardWorkingCopy();
@@ -183,30 +168,16 @@ public class GroovyCompilationUnit extends CompilationUnit {
      * working copy info is about to be discared if useCount <= 1
      */
     private boolean workingCopyInfoWillBeDiscarded(JavaModelManager.PerWorkingCopyInfo info) {
-        return info != null && ((Integer) ReflectionUtils.getPrivateField(JavaModelManager.PerWorkingCopyInfo.class, "useCount", info)).intValue() <= 1;
+        return (info != null && ((Integer) ReflectionUtils.getPrivateField(JavaModelManager.PerWorkingCopyInfo.class, "useCount", info)).intValue() <= 1);
     }
 
     /**
      * Tracks how deep we are in recursive calls to {@link #buildStructure}.
      */
     private static final ThreadLocalAtomicInteger depth = new ThreadLocalAtomicInteger();
-    private static class ThreadLocalAtomicInteger extends ThreadLocal<AtomicInteger> {
-        @Override
-        protected AtomicInteger initialValue() {
-            return new AtomicInteger();
-        }
-        int intValue() {
-            return get().get();
-        }
-        void increment() {
-            get().incrementAndGet();
-        }
-        void decrement() {
-            get().decrementAndGet();
-        }
-    }
 
     @Override
+    @SuppressWarnings("rawtypes")
     protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, Map newElements, IResource underlyingResource)
             throws JavaModelException {
         depth.increment();
@@ -225,45 +196,44 @@ public class GroovyCompilationUnit extends CompilationUnit {
             // generate structure and compute syntax problems if needed
             GroovyCompilationUnitStructureRequestor requestor = new GroovyCompilationUnitStructureRequestor(this, (CompilationUnitElementInfo) info, newElements);
             JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo = getPerWorkingCopyInfo();
-            JavaProject project = (JavaProject) getJavaProject();
+            IJavaProject project = getJavaProject();
 
-            // determine what kind of buildStructure we are doing
             boolean createAST;
-            int reconcileFlags;
             boolean resolveBindings;
-            HashMap<String, CategorizedProblem[]> problems;
+            int reconcileFlags;
+            HashMap problems;
             if (info instanceof ASTHolderCUInfo) {
                 ASTHolderCUInfo astHolder = (ASTHolderCUInfo) info;
-                createAST = ((Integer) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "astLevel", astHolder)) != NO_AST;
-                resolveBindings = (Boolean) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "resolveBindings", astHolder);
-                reconcileFlags = (Integer) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "reconcileFlags", astHolder);
-                problems = ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "problems", astHolder);
+                createAST = astHolder.astLevel != NO_AST;
+                resolveBindings = astHolder.resolveBindings;
+                reconcileFlags = astHolder.reconcileFlags;
+                problems = (HashMap) astHolder.problems;
             } else {
                 createAST = false;
                 resolveBindings = false;
                 reconcileFlags = 0;
                 problems = null;
             }
+            boolean hasJavaNature = (project != null && JavaProject.hasJavaNature(project.getProject()));
+            boolean computeProblems = (hasJavaNature && perWorkingCopyInfo != null && perWorkingCopyInfo.isActive());
 
-            boolean computeProblems = (perWorkingCopyInfo != null && perWorkingCopyInfo.isActive() && project != null && JavaProject.hasJavaNature(project.getProject()));
-
-            // compiler options
-            Map<String, String> options = (project == null ? JavaCore.getOptions() : project.getOptions(true));
+            Map<String, String> options = (hasJavaNature ? project.getOptions(true) : JavaCore.getOptions());
             options.put(CompilerOptions.OPTIONG_GroovyProjectName, project.getElementName());
             options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
             if (!computeProblems) {
-                // disable compiler config script processing to streamline parsing
-                options.remove(CompilerOptions.OPTIONG_GroovyCompilerConfigScript);
-                // disable task tags processing to streamline parsing
+                // disable task tags checking for faster parsing
                 options.remove(CompilerOptions.OPTION_TaskTags);
             }
+            options.putAll(getCustomOptions());
+
             CompilerOptions compilerOptions = new CompilerOptions(options);
+            compilerOptions.ignoreMethodBodies = (reconcileFlags & IGNORE_METHOD_BODIES) != 0;
 
             ProblemReporter reporter = new ProblemReporter(new GroovyErrorHandlingPolicy(!computeProblems), compilerOptions, new DefaultProblemFactory());
 
             SourceElementParser parser = new MultiplexingSourceElementRequestorParser(
                 reporter,
-                requestor, // not needed if computing groovy only
+                requestor,
                 reporter.problemFactory,
                 compilerOptions,
                 true, // report local declarations
@@ -272,7 +242,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
             parser.reportOnlyOneSyntaxError = !computeProblems;
             // maybe not needed for groovy, but I don't want to find out.
             parser.setMethodsFullRecovery(true);
-            parser.setStatementsRecovery((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
+            parser.setStatementsRecovery((reconcileFlags & ENABLE_STATEMENTS_RECOVERY) != 0);
 
             if (!computeProblems && !resolveBindings && !createAST) // disable javadoc parsing if not computing problems, not resolving and not creating ast
                 parser.javadocParser.checkDocComment = false;
@@ -290,9 +260,8 @@ public class GroovyCompilationUnit extends CompilationUnit {
             GroovyCompilationUnitDeclaration compilationUnitDeclaration = null;
             CompilationUnit source = cloneCachingContents();
             try {
-                // GROOVY
-                // note that this is a slightly different approach than taken by super.buildStructure
-                // in super.buildStructure, there is a test here to see if computeProblems is true.
+                // note that this is a slightly different approach than taken by super.buildStructure,
+                // where there is a test here to see if computeProblems is true.
                 // if false, then parser.parserCompilationUnit is called.
                 // this will not work for Groovy because we need to ensure bindings are resolved
                 // for many operations (content assist and code select) to work.
@@ -320,10 +289,9 @@ public class GroovyCompilationUnit extends CompilationUnit {
                         if (computeProblems) {
                             try {
                                 perWorkingCopyInfo.beginReporting();
-                                for (Iterator<CategorizedProblem[]> iteraror = problems.values().iterator(); iteraror.hasNext();) {
-                                    CategorizedProblem[] categorizedProblems = iteraror.next();
-                                    if (categorizedProblems == null)
-                                        continue;
+                                for (Iterator<CategorizedProblem[]> iterator = problems.values().iterator(); iterator.hasNext();) {
+                                    CategorizedProblem[] categorizedProblems = iterator.next();
+                                    if (categorizedProblems == null) continue;
                                     for (int i = 0, n = categorizedProblems.length; i < n; i += 1) {
                                         perWorkingCopyInfo.acceptProblem(categorizedProblems[i]);
                                     }
@@ -333,6 +301,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
                             }
                         }
                     } else {
+                        // collect problems
                         compilationUnitDeclaration =
                             (GroovyCompilationUnitDeclaration) CompilationUnitProblemFinder.process(
                                 source,
@@ -347,48 +316,46 @@ public class GroovyCompilationUnit extends CompilationUnit {
                     compilationUnitDeclaration =
                         (GroovyCompilationUnitDeclaration) parser.parseCompilationUnit(
                             source,
-                            true /* full parse to find local elements */,
+                            true, // full parse to find local elements
                             pm);
                 }
 
-                // GROOVY
                 // if this is a working copy, then we have more work to do
                 maybeCacheModuleNode(perWorkingCopyInfo, compilationUnitDeclaration);
 
                 // create the DOM AST from the compiler AST
                 if (createAST) {
-                    org.eclipse.jdt.core.dom.CompilationUnit ast;
                     try {
-                        ast = AST.convertCompilationUnit(JavaConstants.AST_LEVEL, compilationUnitDeclaration, options, computeProblems, source, reconcileFlags, pm);
-                        ReflectionUtils.setPrivateField(ASTHolderCUInfo.class, "ast", info, ast);
+                        ASTHolderCUInfo astHolder = (ASTHolderCUInfo) info;
+                        astHolder.ast = AST.convertCompilationUnit(astHolder.astLevel, compilationUnitDeclaration, options, computeProblems, source, reconcileFlags, pm);
                     } catch (OperationCanceledException e) {
-                        // catch this exception so as to not enter the catch(RuntimeException e) below
+                        // don't enter the catch(Exception e) block below
                         // might need to do the same for AbortCompilation
                         throw e;
                     } catch (IllegalArgumentException e) {
-                        // if necessary, we can do some better reporting here.
-                        Util.log(e, "Problem with build structure: Offset for AST node is incorrect in " + this.getParent().getElementName() + "." + getElementName());
+                        // if necessary, we can do some better reporting here
+                        Util.log(e, "Problem with build structure: Offset for AST node is incorrect in " + getParent().getElementName() + "." + this.name);
                     } catch (Exception e) {
-                        Util.log(e, "Problem with build structure for " + this.getElementName());
+                        Util.log(e, "Problem with build structure for " + this.name);
                     }
                 }
             } catch (OperationCanceledException e) {
-                // catch this exception so as to not enter the catch(RuntimeException e) below
+                // don't enter the catch(Exception e) block below
                 // might need to do the same for AbortCompilation
                 throw e;
             } catch (JavaModelException e) {
-                // GRECLIPSE-1480 don't log element does not exist exceptions. since this could occur when element is in a non-java
-                // project
-                if (e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST || this.getJavaProject().exists()) {
-                    Util.log(e, "Problem with build structure for " + this.getElementName());
+                // GRECLIPSE-1480 don't log element does not exist exceptions for non-java project
+                if (e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST || getJavaProject().exists()) {
+                    Util.log(e, "Problem with build structure for " + this.name);
                 }
-            } catch (Exception e) {
-                // GROOVY: The groovy compiler does not handle broken code well in many situations
+            } catch (Exception | LinkageError | AssertionError e) {
+                // The groovy compiler doesn't handle broken code well in many situations
                 // use this general catch clause so that exceptions thrown by broken code
                 // do not bubble up the stack.
-                Util.log(e, "Problem with build structure for " + this.getElementName());
+                Util.log(e, "Problem with build structure for " + this.name);
             } finally {
                 if (compilationUnitDeclaration != null) {
+                    ((CompilationUnitElementInfo) info).hasFunctionalTypes = compilationUnitDeclaration.hasFunctionalTypes();
                     compilationUnitDeclaration.cleanUp();
                 }
             }
@@ -405,26 +372,25 @@ public class GroovyCompilationUnit extends CompilationUnit {
         ModuleNodeMapper.getInstance().maybeCacheModuleNode(perWorkingCopyInfo, compilationUnitDeclaration);
     }
 
-    /*
-     * Copied from super class, but changed so that a custom ReconcileWorkingCopyOperation can be run
-     */
     @Override
     public org.eclipse.jdt.core.dom.CompilationUnit reconcile(int astLevel, int reconcileFlags, WorkingCopyOwner workingCopyOwner, IProgressMonitor monitor)
             throws JavaModelException {
-        if (!isWorkingCopy())
+        if (!this.isWorkingCopy() || (monitor != null && monitor.isCanceled()))
             return null; // reconciling is not supported on non-working copies
-        if (workingCopyOwner == null)
-            workingCopyOwner = DefaultWorkingCopyOwner.PRIMARY;
+
         PerformanceStats stats = null;
         if (ReconcileWorkingCopyOperation.PERF) {
             stats = PerformanceStats.getStats(JavaModelManager.RECONCILE_PERF, this);
-            stats.startRun(String.valueOf(getFileName()));
+            stats.startRun(String.valueOf(this.getFileName()));
         }
-        ReconcileWorkingCopyOperation op = new GroovyReconcileWorkingCopyOperation(this, astLevel, reconcileFlags, workingCopyOwner);
+        ReconcileWorkingCopyOperation op = new GroovyReconcileWorkingCopyOperation(this, astLevel,
+            reconcileFlags, workingCopyOwner != null ? workingCopyOwner : DefaultWorkingCopyOwner.PRIMARY);
         JavaModelManager manager = JavaModelManager.getJavaModelManager();
         try {
             manager.cacheZipFiles(this); // cache zip files for performance (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=134172)
-            op.runOperation(monitor);
+            if (monitor == null || !monitor.isCanceled()) {
+                op.runOperation(monitor);
+            }
         } finally {
             manager.flushZipFiles(this);
         }
@@ -434,93 +400,20 @@ public class GroovyCompilationUnit extends CompilationUnit {
         return op.ast;
     }
 
-    @Override @SuppressWarnings("unchecked")
-    public <T> T getAdapter(Class<T> adapter) {
-        if (GroovyCompilationUnit.class.equals(adapter)) {
-            return (T) this;
-        }
-        if (ModuleNode.class.equals(adapter)) {
-            return (T) getModuleNode();
-        }
-        return super.getAdapter(adapter);
-    }
-
-    class CompilationUnitClone extends GroovyCompilationUnit {
-        private char[] cachedContents;
-
-        CompilationUnitClone(char[] cachedContents) {
-            this();
-            this.cachedContents = cachedContents;
-        }
-
-        CompilationUnitClone() {
-            super((PackageFragment) GroovyCompilationUnit.this.parent, GroovyCompilationUnit.this.name, GroovyCompilationUnit.this.owner);
-        }
-
-        @Override
-        public char[] getContents() {
-            if (this.cachedContents == null)
-                this.cachedContents = GroovyCompilationUnit.this.getContents();
-            return this.cachedContents;
-        }
-
-        @Override
-        public CompilationUnit originalFromClone() {
-            return GroovyCompilationUnit.this;
-        }
-
-        @Override
-        public char[] getFileName() {
-            return GroovyCompilationUnit.this.getFileName();
-        }
-    }
-
-    public GroovyCompilationUnit cloneCachingContents(char[] newContents) {
-        return new CompilationUnitClone(newContents);
-    }
-
-    /*
-     * Clone this handle so that it caches its contents in memory. DO NOT PASS TO CLIENTS
-     */
-    @Override
-    public GroovyCompilationUnit cloneCachingContents() {
-        return new CompilationUnitClone();
-    }
-
-    @Override
-    public IJavaElement[] codeSelect(int offset, int length)
-            throws JavaModelException {
-        return codeSelect(offset, length, DefaultWorkingCopyOwner.PRIMARY);
-    }
-
-    @Override
-    public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner workingCopyOwner)
-            throws JavaModelException {
-        return codeSelect(this, offset, length, workingCopyOwner);
-    }
-
-    @Override
-    protected IJavaElement[] codeSelect(org.eclipse.jdt.internal.compiler.env.ICompilationUnit cu, int offset, int length, WorkingCopyOwner o)
-            throws JavaModelException {
-        if (CodeSelectHelperFactory.selectHelper != null) {
-            return CodeSelectHelperFactory.selectHelper.select(this, offset, length);
-        }
-        return new IJavaElement[0];
-    }
-
     /**
-     * There is no such thing as a primary type in Groovy. First look for a type of the same name as the CU, Else get the first type
-     * in getAllTypes()
+     * There is no such thing as a primary type in Groovy. First look for a type
+     * of the same name as the CU, else get the first type in getAllTypes().
      */
     @Override
     public IType findPrimaryType() {
-        IType type = super.findPrimaryType();
-        if (type != null) {
+        if (this.mainTypeName == null) this.getMainTypeName();
+        IType type = this.getType(this.mainTypeName);
+        if (type.exists()) {
             return type;
         }
         try {
-            if (getResource().exists()) {
-                IType[] types = getTypes();
+            if (this.getResource().exists()) {
+                IType[] types = this.getTypes();
                 if (types != null && types.length > 0) {
                     return types[0];
                 }
@@ -528,7 +421,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
         } catch (JavaModelException e) {
             // can ignore situations when trying to find types that are not on the classpath
             if (e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH) {
-                Util.log(e, "Error finding all types of " + this.getElementName());
+                Util.log(e, "Error finding all types of " + this.name);
             }
         }
         return null;
@@ -549,14 +442,15 @@ public class GroovyCompilationUnit extends CompilationUnit {
     }
 
     @Override
-    public IResource getUnderlyingResource() throws JavaModelException {
-        if (isOnBuildPath()) {
+    public IResource getUnderlyingResource()
+            throws JavaModelException {
+        if (this.isOnBuildPath()) {
             return super.getUnderlyingResource();
         } else {
             // Super class method appears to only work correctly when we are on the build
             // path. Otherwise parent, which is a package, is seen as non-existent.
             // This causes a JavaModel exception.
-            IResource rsrc = getResource();
+            IResource rsrc = this.getResource();
             // I think that getResource *should* just return a path to the .groovy file
             // under these circumstances.
             try {
@@ -571,26 +465,136 @@ public class GroovyCompilationUnit extends CompilationUnit {
     }
 
     @Override
-    public void rename(String newName, boolean force, IProgressMonitor monitor) throws JavaModelException {
-        super.rename(newName, force, monitor);
-        // FIXADE we should not have to do this. Somewhere, a working copy is being created and not discarded
-        if (this.isWorkingCopy()) {
-            this.discardWorkingCopy();
+    @SuppressWarnings("unchecked")
+    public <T> T getAdapter(Class<T> adapter) {
+        if (GroovyCompilationUnit.class.equals(adapter)) {
+            return (T) this;
         }
+        if (ModuleNode.class.equals(adapter)) {
+            return (T) this.getModuleNode();
+        }
+        return super.getAdapter(adapter);
     }
 
-    @Override
-    protected void codeComplete(org.eclipse.jdt.internal.compiler.env.ICompilationUnit cu,
-            org.eclipse.jdt.internal.compiler.env.ICompilationUnit unitToSkip, int position, CompletionRequestor requestor,
-            WorkingCopyOwner owner, ITypeRoot typeRoot, IProgressMonitor monitor) throws JavaModelException {
+    //--------------------------------------------------------------------------
 
+    @Override
+    protected void codeComplete(ICompilationUnit unit, ICompilationUnit skip, int position, CompletionRequestor requestor, WorkingCopyOwner owner, ITypeRoot typeRoot, IProgressMonitor monitor)
+            throws JavaModelException {
         // allow a delegate to perform completion if required
         // this is used by the grails plugin when editing in gsp editor
         ICodeCompletionDelegate delegate = Adapters.adapt(this, ICodeCompletionDelegate.class);
         if (delegate != null && delegate.shouldCodeComplete(requestor, typeRoot)) {
-            delegate.codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor);
+            delegate.codeComplete(unit, skip, position, requestor, owner, typeRoot, monitor);
         } else {
-            super.codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor);
+            super.codeComplete(unit, skip, position, requestor, owner, typeRoot, monitor);
+        }
+    }
+
+    @Override
+    protected IJavaElement[] codeSelect(ICompilationUnit unit, int offset, int length, WorkingCopyOwner owner)
+            throws JavaModelException {
+        if (CodeSelectHelperFactory.selectHelper != null) {
+            return CodeSelectHelperFactory.selectHelper.select(this, offset, length);
+        }
+        return new IJavaElement[0];
+    }
+
+    @Override
+    public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner owner)
+            throws JavaModelException {
+        return codeSelect(this, offset, length, owner);
+    }
+
+    @Override
+    public IJavaElement[] codeSelect(int offset, int length)
+            throws JavaModelException {
+        return codeSelect(offset, length, DefaultWorkingCopyOwner.PRIMARY);
+    }
+
+    //--------------------------------------------------------------------------
+
+    @Override
+    public GroovyCompilationUnit cloneCachingContents() {
+        return new CompilationUnitClone();
+    }
+
+    public GroovyCompilationUnit cloneCachingContents(char[] source) {
+        return new CompilationUnitClone(source);
+    }
+
+    private class CompilationUnitClone extends GroovyCompilationUnit {
+
+        private char[] cachedContents;
+
+        CompilationUnitClone(char[] cachedContents) {
+            this();
+            this.cachedContents = cachedContents;
+        }
+
+        CompilationUnitClone() {
+            super((PackageFragment) GroovyCompilationUnit.this.getParent(), GroovyCompilationUnit.this.name, GroovyCompilationUnit.this.owner);
+        }
+
+        @Override
+        public char[] getContents() {
+            if (this.cachedContents == null)
+                this.cachedContents = GroovyCompilationUnit.this.getContents();
+            return this.cachedContents;
+        }
+
+        @Override
+        public CompilationUnit originalFromClone() {
+            return GroovyCompilationUnit.this;
+        }
+
+        @Override
+        public char[] getFileName() {
+            return GroovyCompilationUnit.this.getFileName();
+        }
+    }
+
+    private static class GroovyErrorHandlingPolicy implements IErrorHandlingPolicy {
+
+        private final boolean stopOnFirst;
+
+        GroovyErrorHandlingPolicy(final boolean stopOnFirst) {
+            this.stopOnFirst = stopOnFirst;
+        }
+
+        @Override
+        public boolean stopOnFirstError() {
+            return stopOnFirst;
+        }
+
+        @Override
+        public boolean proceedOnErrors() {
+            return !stopOnFirst;
+        }
+
+        @Override
+        public boolean ignoreAllErrors() {
+            return false;
+        }
+    }
+
+    private static class ThreadLocalAtomicInteger extends ThreadLocal<AtomicInteger> {
+
+        @Override
+        protected AtomicInteger initialValue() {
+            return new AtomicInteger();
+        }
+
+        int intValue() {
+            return get().get();
+        }
+
+        void increment() {
+            get().incrementAndGet();
+        }
+
+        void decrement() {
+            get().decrementAndGet();
         }
     }
 }

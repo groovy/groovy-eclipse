@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.refactoring.core.extract;
 
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -132,12 +133,11 @@ public class ASTVariableScanner {
         }
 
         @Override
-        public void visitForLoop(ForStatement forLoop) {
-            if (forLoop.getVariable() != null) {
-                declaredInblockVariables.add(forLoop.getVariable());
-            }
-            forLoop.getCollectionExpression().visit(new RepeatableBlockVisit(container));
-            forLoop.getLoopBlock().visit(new RepeatableBlockVisit(container));
+        public void visitForLoop(ForStatement loop) {
+            Optional.ofNullable(loop.getIndexVariable()).ifPresent(declaredInblockVariables::add);
+            Optional.ofNullable(loop.getValueVariable()).ifPresent(declaredInblockVariables::add);
+            loop.getCollectionExpression().visit(new RepeatableBlockVisit(container));
+            loop.getLoopBlock().visit(new RepeatableBlockVisit(container));
         }
 
         @Override

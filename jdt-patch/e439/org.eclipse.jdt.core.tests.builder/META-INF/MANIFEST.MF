@@ -1,0 +1,20 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %pluginName
+Bundle-SymbolicName: org.eclipse.jdt.core.tests.builder; singleton:=true
+Bundle-Version: 3.12.1100.qualifier
+Bundle-Vendor: %providerName
+Bundle-Localization: plugin
+Export-Package: org.eclipse.jdt.core.tests.builder
+Import-Package: org.eclipse.jdt.core.tests.builder.mockcompiler
+Require-Bundle: org.junit;bundle-version="3.8.1",
+ org.eclipse.jdt.core;bundle-version="[3.40.0,4.0.0)",
+ org.eclipse.jdt.core.tests.compiler;bundle-version="[3.4.0,4.0.0)",
+ org.eclipse.core.resources;bundle-version="[3.21.0,4.0.0)",
+ org.eclipse.core.runtime;bundle-version="[3.29.0,4.0.0)",
+ org.eclipse.test;bundle-version="[3.6.0,4.0.0)",
+ org.eclipse.test.performance;bundle-version="[3.1.0,4.0.0)",
+ org.eclipse.jdt.annotation;bundle-version="[2.4.0,3.0.0)";resolution:=optional
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Eclipse-BundleShape: dir
+Automatic-Module-Name: org.eclipse.jdt.core.tests.builder

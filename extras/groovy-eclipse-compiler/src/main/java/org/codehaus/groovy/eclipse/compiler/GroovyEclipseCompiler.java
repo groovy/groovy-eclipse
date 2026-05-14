@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.compiler;
+
+import static org.codehaus.plexus.util.FileUtils.fileWrite;
+import static org.codehaus.plexus.util.StringUtils.isBlank;
+import static org.codehaus.plexus.util.StringUtils.isNotBlank;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -31,13 +35,16 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.toolchain.Toolchain;
+import org.apache.maven.toolchain.ToolchainManager;
 import org.codehaus.plexus.compiler.AbstractCompiler;
 import org.codehaus.plexus.compiler.Compiler;
 import org.codehaus.plexus.compiler.CompilerConfiguration;
@@ -51,10 +58,9 @@ import org.codehaus.plexus.compiler.util.scan.SourceInclusionScanner;
 import org.codehaus.plexus.compiler.util.scan.StaleSourceScanner;
 import org.codehaus.plexus.compiler.util.scan.mapping.SuffixMapping;
 import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.util.Os;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
-import org.codehaus.plexus.util.cli.Commandline;
 
 /**
  * Allows the use of the Groovy-Eclipse compiler through Maven.
@@ -74,6 +80,12 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         super(CompilerOutputStyle.ONE_OUTPUT_FILE_PER_INPUT_FILE, "", ".class", null);
     }
 
+    @Requirement
+    private MavenSession session;
+
+    @Requirement
+    private ToolchainManager toolchainManager;
+
     private final List<String> vmArgs = new ArrayList<>();
 
     private boolean verbose = false;
@@ -88,6 +100,8 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         this.javaAgentClass = javaAgentClass;
     }
 
+    //--------------------------------------------------------------------------
+
     @Override
     public CompilerResult performCompile(final CompilerConfiguration config) throws CompilerException {
         // groovy-eclipse-batch must be depended upon explicitly; if it is not there, then raise a nice, readable error
@@ -100,35 +114,23 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         String[] args = createCommandLine(config);
         if (args.length == 0) {
             getLogger().info("Nothing to compile - all classes are up to date");
-
             return new CompilerResult(true, Collections.EMPTY_LIST);
         }
+
         if (config.isFork()) {
-            String executable = config.getExecutable();
-            if (isBlank(executable)) {
-                try {
-                    executable = getJavaExecutable();
-                } catch (IOException e) {
-                    getLogger().warn("Unable to autodetect 'java' path, using 'java' from the environment.");
-                    executable = "java";
-                }
-            }
-
-            String groovyEclipseLocation = getGroovyEclipseBatchLocation();
-            return compileOutOfProcess(config, executable, groovyEclipseLocation, args);
-
-        } else {
-            StringWriter out = new StringWriter();
-            if (verbose) getLogger().info("Compiler arguments: " + Arrays.toString(args));
-            InternalCompiler.Result result = InternalCompiler.doCompile(args, out, getLogger(), verbose);
-
-            List<CompilerMessage> messages = parseMessages(result.success ? 0 : 1, out.getBuffer().toString(), config.isShowWarnings() || config.isVerbose());
-            if (!result.success) {
-                messages.add(formatFailure(result.globalErrorsCount, result.globalWarningsCount));
-            }
-
-            return new CompilerResult(result.success, messages);
+            return compileOutOfProcess(config, getJavaExecutable(config), getGroovyEclipseBatchLocation(), args);
         }
+
+        StringWriter out = new StringWriter();
+        if (verbose) getLogger().info("Compiler arguments: " + Arrays.toString(args));
+        InternalCompiler.Result result = InternalCompiler.doCompile(args, out, getLogger(), verbose);
+
+        List<CompilerMessage> messages = parseMessages(result.success ? 0 : 1, out.getBuffer().toString(), config.isShowWarnings() || config.isVerbose());
+        if (!result.success) {
+            messages.add(formatFailure(result.globalErrorsCount, result.globalWarningsCount));
+        }
+
+        return new CompilerResult(result.success, messages);
     }
 
     private void recalculateStaleFiles(final CompilerConfiguration config) throws CompilerException {
@@ -233,7 +235,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.put("-verbose", null);
         }
 
-        String cp = getPathString(config.getClasspathEntries());
+        String cp = getPathString(filterEntries(config.getClasspathEntries()));
         if (verbose) {
             getLogger().info("Classpath: " + cp);
         }
@@ -241,7 +243,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.put("-cp", cp.trim());
         }
 
-        String mp = getPathString(config.getModulepathEntries());
+        String mp = getPathString(filterEntries(config.getModulepathEntries()));
         if (verbose) {
             getLogger().info("Modulepath: " + mp);
         }
@@ -263,6 +265,8 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             } else {
                 args.put("-g", null);
             }
+        } else if (config.isOptimize()) {
+            args.put("-O", null);
         }
 
         if (isNotBlank(config.getSourceEncoding())) {
@@ -270,8 +274,14 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
 
         String release = config.getReleaseVersion();
-        if (isNotBlank(release)) {
+        if (isNotBlank(release) && Float.parseFloat(getJavaVersion(config)) >= 9f) {
             args.put("--release", release.trim());
+            if (!config.isFork()) { // check tycho useJDK
+                String javaHome = config.getCustomCompilerArgumentsAsMap().get("use.java.home");
+                if (isNotBlank(javaHome)) {
+                    args.put("--system", javaHome.trim());
+                }
+            }
         } else {
             String source = config.getSourceVersion();
             if (isNotBlank(source)) {
@@ -286,6 +296,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
         if (config.isShowDeprecation()) {
             args.put("-deprecation", null);
+            config.setShowWarnings(true);
         }
         if (config.isFailOnWarning()) {
             args.put("-failOnWarning", null);
@@ -304,38 +315,34 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
 
         if (config.getAnnotationProcessors() != null) {
-            StringBuilder processor = new StringBuilder();
+            StringJoiner processor = new StringJoiner(",");
             for (String item : config.getAnnotationProcessors()) {
                 if (isNotBlank(item)) {
-                    processor.append(item.trim()).append(',');
+                    processor.add(item.trim());
                 }
             }
             if (processor.length() > 0) {
-                // remove the trailing comma
-                processor.setLength(processor.length() - 1);
                 args.put("-processor", processor.toString());
             }
         }
 
         if (config.getProcessorPathEntries() != null) {
-            StringBuilder processorpath = new StringBuilder();
+            StringJoiner processorpath = new StringJoiner(";");
             for (String item : config.getProcessorPathEntries()) {
                 if (isNotBlank(item)) {
-                    processorpath.append(item.trim()).append(';');
+                    processorpath.add(item.trim());
                 }
             }
             if (processorpath.length() > 0) {
-                // remove the trailing semicolon
-                processorpath.setLength(processorpath.length() - 1);
                 args.put("-processorpath", processorpath.toString());
             }
         }
 
         String prev = null;
-        for (Map.Entry<String, String> entry : config.getCustomCompilerArgumentsAsMap().entrySet()) {
+        for (Map.Entry<String, String> entry : config.getCustomCompilerArgumentsEntries()) {
             String key = entry.getKey();
             if (key.startsWith("-")) {
-                if ("-javaAgentClass".equals(key)) {
+                if (key.equals("-javaAgentClass")) {
                     setJavaAgentClass(entry.getValue());
                 } else if (!key.startsWith("-J")) {
                     args.put(key, entry.getValue());
@@ -346,7 +353,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             } else {
                 if (prev != null && entry.getValue() == null) {
                     args.put(prev, key);
-                } else if (!"org.osgi.framework.system.packages".equals(key)) { // GRECLIPSE-1418: ignore the system packages option
+                } else if (!key.startsWith("@") && !key.equals("use.java.home") && !key.equals("org.osgi.framework.system.packages")) { // GRECLIPSE-1418: ignore system packages
                     args.put("-" + key, entry.getValue());
                 }
                 prev = null;
@@ -364,13 +371,13 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     }
 
     private CompilerResult compileOutOfProcess(final CompilerConfiguration config, final String executable, final String groovyEclipseLocation, final String[] args) throws CompilerException {
-        Commandline cli = new Commandline();
+        org.codehaus.plexus.util.cli.Commandline cli = new org.codehaus.plexus.util.cli.Commandline();
         cli.setWorkingDirectory(config.getWorkingDirectory().getAbsolutePath());
         cli.setExecutable(executable);
 
         try {
             if (isNotBlank(javaAgentClass)) {
-                cli.addArguments(new String[] {"-javaagent:" + getAdditionnalJavaAgentLocation()});
+                cli.addArguments(new String[] {"-javaagent:" + getAdditionalJavaAgentLocation()});
             }
 
             if (isNotBlank(config.getMeminitial())) {
@@ -400,7 +407,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         if (getLogger().isDebugEnabled()) {
             File commandLineFile = new File(config.getOutputLocation(), "greclipse." + (Os.isFamily(Os.FAMILY_WINDOWS) ? "bat" : "sh"));
             try {
-                FileUtils.fileWrite(commandLineFile.getAbsolutePath(), cli.toString().replaceAll("'", ""));
+                fileWrite(commandLineFile.getAbsolutePath(), cli.toString().replaceAll("'", ""));
                 if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
                     Runtime.getRuntime().exec(new String[] {"chmod", "a+x", commandLineFile.getAbsolutePath()});
                 }
@@ -420,10 +427,10 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
         List<CompilerMessage> messages = parseMessages(returnCode, out.getOutput(), config.isShowWarnings() || config.isVerbose());
         if (returnCode != 0 && messages.isEmpty()) {
-            if (isBlank(err.getOutput())) {
-                throw new CompilerException("Unknown error trying to execute the external compiler: " + EOL + cli.toString());
-            } else {
+            if (isNotBlank(err.getOutput())) {
                 messages.add(new CompilerMessage("Failure executing groovy-eclipse compiler:" + EOL + err.getOutput(), Kind.ERROR));
+            } else {
+                throw new CompilerException("Unknown error trying to execute the external compiler: " + EOL + cli.toString());
             }
         } else if (isNotBlank(err.getOutput())) {
             getLogger().warn("Error output from groovy-eclipse compiler:" + EOL + err.getOutput());
@@ -454,7 +461,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                             parsedMessages.add(message);
                         }
                     } else if (!PROBLEM_SEPARATOR.equals(line)) {
-                        unrecognized.append(line).append("\n");
+                        unrecognized.append(line).append(EOL);
                     }
                 }
                 if (unrecognized.length() > 0) {
@@ -550,7 +557,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return tempFile;
     }
 
-    private String getAdditionnalJavaAgentLocation() throws CompilerException {
+    private String getAdditionalJavaAgentLocation() throws CompilerException {
         return getClassLocation(getJavaAgentClass());
     }
 
@@ -586,59 +593,82 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
     }
 
-    /**
-     * Get the path of the javac tool executable: try to find it depending the
-     * OS or the <code>java.home</code> system property or the
-     * <code>JAVA_HOME</code> environment variable.
-     *
-     * @return the path of the Javadoc tool
-     * @throws IOException if not found
-     */
-    private String getJavaExecutable() throws IOException {
+    private String getJavaVersion(final CompilerConfiguration config) throws CompilerException {
+        if (config.isFork()) {
+            org.codehaus.plexus.util.cli.Commandline cli = new org.codehaus.plexus.util.cli.Commandline();
+            cli.setExecutable(getJavaExecutable(config));
+            cli.addArguments(new String[] {"-version"});
+            try {
+                CommandLineUtils.StringStreamConsumer out = new CommandLineUtils.StringStreamConsumer();
+                int exitCode = CommandLineUtils.executeCommandLine(cli, out, out);
+                if (exitCode == 0) { getLogger().debug(out.getOutput());
+                    Pattern p = Pattern.compile("\\d+(\\.\\d+)?");
+                    Matcher m = p.matcher(out.getOutput());
+                    if (m.find()) {
+                        return m.group();
+                    }
+                }
+                getLogger().warn("Failed to auto-detect version of 'java' executable");
+            } catch (Exception e) {
+                getLogger().warn("Failed to auto-detect version of 'java' executable", e);
+            }
+        }
+
+        return System.getProperty("java.specification.version");
+    }
+
+    private String getJavaExecutable(final CompilerConfiguration config) {
+        String executable = config.getExecutable();
+        if (isNotBlank(executable)) {
+            return executable;
+        }
+
+        String javaHome = config.getCustomCompilerArgumentsAsMap().get("use.java.home");
+        if (isBlank(javaHome)) {
+            javaHome = System.getProperty("java.home"); // fallback to current java home
+
+            Toolchain jdkToolchain = toolchainManager.getToolchainFromBuildContext("jdk", session);
+            if (jdkToolchain != null) executable = jdkToolchain.findTool("java");
+            if (isNotBlank(executable)) {
+                return executable;
+            }
+        }
+
         String javaCommand = "java" + (Os.isFamily(Os.FAMILY_WINDOWS) ? ".exe" : "");
-
-        String javaHome = System.getProperty("java.home");
-        File javaExe;
+        File javaPath;
         if (Os.isName("AIX")) {
-            javaExe = new File(javaHome + File.separator + ".." + File.separator + "sh", javaCommand);
-        } else if (Os.isName("Mac OS X")) {
-            javaExe = new File(javaHome + File.separator + "bin", javaCommand);
+            javaPath = new File(javaHome + File.separator + ".." + File.separator + "sh", javaCommand);
         } else {
-            javaExe = new File(javaHome + File.separator + ".." + File.separator + "bin", javaCommand);
+            javaPath = new File(javaHome + File.separator + "bin", javaCommand);
+        }
+        if (javaPath.isFile()) {
+            return javaPath.getAbsolutePath();
         }
 
-        // ----------------------------------------------------------------------
-        // Try to find javacExe from JAVA_HOME environment variable
-        // ----------------------------------------------------------------------
-        if (!javaExe.isFile()) {
-            Properties env = CommandLineUtils.getSystemEnvVars();
-            javaHome = env.getProperty("JAVA_HOME");
-            if (isBlank(javaHome)) {
-                throw new IOException("The environment variable JAVA_HOME is not correctly set.");
+        try {
+            javaHome = CommandLineUtils.getSystemEnvVars().getProperty("JAVA_HOME");
+            if (isNotBlank(javaHome) && new File(javaHome).isDirectory()) {
+                javaPath = new File(javaHome + File.separator + "bin", javaCommand);
+                if (javaPath.isFile()) {
+                    return javaPath.getAbsolutePath();
+                }
             }
-            if (!new File(javaHome).isDirectory()) {
-                throw new IOException("The environment variable JAVA_HOME=" + javaHome + " doesn't exist or is not a valid directory.");
-            }
-
-            javaExe = new File(env.getProperty("JAVA_HOME") + File.separator + "bin", javaCommand);
+        } catch (IOException ignore) {
         }
 
-        if (!javaExe.isFile()) {
-            throw new IOException("The javadoc executable '" + javaExe + "' doesn't exist or is not a file. Verify the JAVA_HOME environment variable.");
-        }
-
-        return javaExe.getAbsolutePath();
+        getLogger().warn("Failed to auto-detect location of 'java' executable");
+        return "java";
     }
 
     /**
-     * Returns content of the Map as an array of Strings. Ignores {@code null} and empty Strings.
-     * Implementation note {@link LinkedHashMap} is preferred Map implementation as it preserves order
+     * Returns content of the map as an array of strings. Ignores {@code null}
+     * and empty values.
+     *
      * @param args Map to be converted
      * @return Array with {@code args} converted to an array
      */
     private static String[] flattenArgumentsMap(final Map<String, String> args) {
         List<String> argsList = new ArrayList<>(args.size() * 2);
-
         for (Map.Entry<String, String> entry : args.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
@@ -650,15 +680,14 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 }
             }
         }
-
         return argsList.toArray(new String[0]);
     }
 
-    private static boolean isBlank(final String str) {
-        return str == null || str.trim().length() == 0;
-    }
-
-    private static boolean isNotBlank(final String str) {
-        return !isBlank(str);
+    private static List<String> filterEntries(final List<String> entries) {
+        List<String> result = new ArrayList<>(entries.size());
+        for (String entry : entries) {
+            if (!entry.endsWith(".pom")) result.add(entry);
+        }
+        return result;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.dsl;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -46,12 +47,7 @@ public class DSLPreferences {
     }
 
     public static Set<String> getDisabledScriptsAsSet() {
-        String[] disabled = getDisabledScripts();
-        Set<String> set = new HashSet<>(disabled.length*2);
-        for (String dis : disabled) {
-            set.add(dis);
-        }
-        return set;
+        return new HashSet<>(Arrays.asList(getDisabledScripts()));
     }
 
     /**
@@ -71,7 +67,7 @@ public class DSLPreferences {
                 sb.append(s);
                 sb.append(',');
             }
-            sb.replace(sb.length()-1, sb.length(), "");
+            sb.replace(sb.length() - 1, sb.length(), "");
             return sb.toString();
         } else {
             return "";
@@ -79,16 +75,17 @@ public class DSLPreferences {
     }
 
     private static String[] filter(String[] disabled) {
-        // not working now
-//        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-//        List<String> filtered = new ArrayList<String>(disabled.length);
-//        for (String string : disabled) {
-//            IResource r = root.getFile(new Path(string));
-//            if (r.getType() == IResource.FILE && r.isAccessible()) {
-//                filtered.add(string);
-//            }
-//        }
-//        return filtered.toArray(new String[filtered.size()]);
+        /* not working now
+        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+        List<String> filtered = new ArrayList<String>(disabled.length);
+        for (String string : disabled) {
+            IResource r = root.getFile(new Path(string));
+            if (r.getType() == IResource.FILE && r.isAccessible()) {
+                filtered.add(string);
+            }
+        }
+        return filtered.toArray(new String[filtered.size()]);
+        */
         return disabled;
     }
 }

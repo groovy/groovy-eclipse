@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,29 +40,28 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
     private static final String BEG_MARK_END = "!*/";
     private static final String END_MARK = "/*!*/";
 
-    private static final Map<String, String> DEFAULT_ALIASES = new HashMap<>();
-    static {
-        DEFAULT_ALIASES.put("B", "java.lang.Byte");
-        DEFAULT_ALIASES.put("C", "java.lang.Character");
-        DEFAULT_ALIASES.put("D", "java.lang.Double");
-        DEFAULT_ALIASES.put("F", "java.lang.Float");
-        DEFAULT_ALIASES.put("I", "java.lang.Integer");
-        DEFAULT_ALIASES.put("L", "java.lang.Long");
-        DEFAULT_ALIASES.put("S", "java.lang.Short");
-        DEFAULT_ALIASES.put("V", "java.lang.Void");
-        DEFAULT_ALIASES.put("Z", "java.lang.Boolean");
-        DEFAULT_ALIASES.put("STR", "java.lang.String");
-        DEFAULT_ALIASES.put("LIST", "java.util.List");
-        DEFAULT_ALIASES.put("MAP", "java.util.Map");
-        DEFAULT_ALIASES.put("O", "java.lang.Object");
-    }
+    private static final Map<String, String> DEFAULT_ALIASES = Map.ofEntries(
+        Map.entry("B", "java.lang.Byte"),
+        Map.entry("C", "java.lang.Character"),
+        Map.entry("D", "java.lang.Double"),
+        Map.entry("F", "java.lang.Float"),
+        Map.entry("I", "java.lang.Integer"),
+        Map.entry("L", "java.lang.Long"),
+        Map.entry("S", "java.lang.Short"),
+        Map.entry("V", "java.lang.Void"),
+        Map.entry("Z", "java.lang.Boolean"),
+        Map.entry("STR", "java.lang.String"),
+        Map.entry("LIST", "java.util.List"),
+        Map.entry("MAP", "java.util.Map"),
+        Map.entry("O", "java.lang.Object")
+    );
 
     private String contents;
     private List<InferencerTask> tasks;
     private final Map<String, String> aliases;
     private boolean aliasesLocked; //Set to true when we start parsing the workloadDefinition
 
-    public InferencerWorkload(File workloadDefinitionFile, String ... extraAliases) throws Exception {
+    public InferencerWorkload(File workloadDefinitionFile, String... extraAliases) throws Exception {
         this(ResourceGroovyMethods.getText(workloadDefinitionFile), extraAliases);
     }
 
@@ -79,16 +78,16 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
      * using the extraAliases argument.  It takes pairs of strings (alias, long name).
      * So, the length of extraAliases must be even.
      */
-    public InferencerWorkload(String workloadDefinition, String ... extraAliases) {
+    public InferencerWorkload(String workloadDefinition, String... extraAliases) {
         aliases = new HashMap<>(DEFAULT_ALIASES);
         for (int i = 0, n = extraAliases.length; i < n; i += 2) {
             defAlias(extraAliases[i], extraAliases[i + 1]);
         }
 
-        aliasesLocked = true; // Should allow changing aliases anymore from here onward.
-        StringBuilder stripped = new StringBuilder(); // The contents of the file minus the tags.
+        aliasesLocked = true; // should not allow changing aliases from here onward
+        var stripped = new StringBuilder(); // the contents of the file without the tags
         tasks = new ArrayList<>();
-        int readPos = 0; //Boundary between processed and unprocessed input in workloadDefinition
+        int readPos = 0; // boundary between processed and unprocessed input in workloadDefinition
         while (readPos >= 0 && readPos < workloadDefinition.length()) {
             int headStart = workloadDefinition.indexOf(BEG_MARK_START, readPos);
             int separator = -1;

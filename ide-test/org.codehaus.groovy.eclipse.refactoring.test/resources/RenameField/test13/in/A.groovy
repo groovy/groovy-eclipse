@@ -1,5 +1,4 @@
 package p;
-import groovy.transform.CompileStatic
 
 class MyBean {
 	Class foo
@@ -8,7 +7,7 @@ class MyBean {
 	}
 }
 
-@CompileStatic
+@groovy.transform.CompileStatic
 class A {
 	def f = new MyBean()
 	void main() {

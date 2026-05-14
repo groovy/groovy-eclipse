@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,35 +19,33 @@ import java.util.List;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.internal.ui.viewsupport.JavaUILabelProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.window.Window;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.dialogs.ElementListSelectionDialog;
 
 /**
- * Helper methods for Launch Shortcuts to keep things dry.
+ * Methods for launch shortcuts to keep things dry.
  */
-public class LaunchShortcutHelper {
-    /**
-     * The dialog title when selecting a class to run
-     */
-    public static final String SELECT_CLASS_DIALOG_TITLE = "Select Groovy Class";
+public final class LaunchShortcutHelper extends NLS {
 
-    /**
-     * The dialog text when selecting a class to run
-     */
-    public static final String SELECT_CLASS_DIALOG_TEXT = "More than one Groovy class in this file can be run.  Please select the class to run.";
+    private LaunchShortcutHelper() {}
 
-    /**
-     * Prompts the user to select a class from the Lists.
-     *
-     * @param types A List of IType in a given file for the user to pick from.
-     * @return Returns the IType that the user selected.
-     * @throws OperationCanceledException If the user selects cancel.
-     */
-    public static IType chooseClassNode(List<IType> types) {
-        return chooseFromList(types, new JavaUILabelProvider(), SELECT_CLASS_DIALOG_TITLE, SELECT_CLASS_DIALOG_TEXT);
+    public static String GroovyLaunchShortcut_title;
+    public static String GroovyLaunchShortcut_message;
+    public static String GroovyLaunchShortcut_notFound;
+    public static String GroovyLaunchShortcut_notRunnable;
+    public static String GroovyLaunchShortcut_noSelection;
+    public static String GroovyLaunchShortcut_noSelection0;
+    public static String GroovyLaunchShortcut_noSelection1;
+    public static String GroovyLaunchShortcut_classpathError;
+    public static String GroovyLaunchShortcut_failureToLaunch;
+
+    public static String SelectMainTypeDialog_title;
+    public static String SelectMainTypeDialog_message;
+
+    static {
+        initializeMessages("org.codehaus.groovy.eclipse.launchers.LaunchMessages", LaunchShortcutHelper.class);
     }
 
     /**
@@ -60,19 +58,23 @@ public class LaunchShortcutHelper {
      * @return Returns the object the user selected.
      * @throws OperationCanceledException If the user selects cancel
      */
-    @SuppressWarnings("unchecked")
-    public static <T> T chooseFromList(List<T> options, ILabelProvider labelProvider, String title, String message) {
+    public static <T> T chooseFromList(final List<T> options, final ILabelProvider labelProvider, final String title, final String message) {
         ElementListSelectionDialog dialog = new ElementListSelectionDialog(GroovyPlugin.getActiveWorkbenchShell(), labelProvider);
         dialog.setElements(options.toArray());
-        dialog.setTitle(title);
         dialog.setMessage(message);
         dialog.setMultipleSelection(false);
-        int result = dialog.open();
+        dialog.setTitle(title);
+
+        int code = dialog.open();
         labelProvider.dispose();
-        if (result == Window.OK) {
-            return (T) dialog.getFirstResult();
+        if (code == Window.OK) {
+            @SuppressWarnings("unchecked")
+            T result = (T) dialog.getFirstResult();
+
+            return result;
         }
-        /*If the user hits cancel this will stop the whole thing silently*/
+
+        // if the user hits cancel, stop the whole thing silently
         throw new OperationCanceledException();
     }
 }

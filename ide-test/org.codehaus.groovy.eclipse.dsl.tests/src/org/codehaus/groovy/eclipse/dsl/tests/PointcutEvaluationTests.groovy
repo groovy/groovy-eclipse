@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,8 +65,8 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
         @Override
         VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
             if (result?.scope != null) {
-                context.currentScope = result.scope
-                context.targetType = result.type
+                context.setCurrentScope(result.scope)
+                context.setTargetType(result.type)
                 context.resetBinding()
                 Collection<?> matchResult = toMatch.matches(context, result.type)
                 BindingSet bindingSet = context.currentBinding
@@ -90,21 +90,13 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
         final String bindingToString
     }
 
-    private void doTestOfLastBindingSet(String cuContents, String pointcutText, BindingResult... results) {
-        doTestOfLastBindingSet('p', cuContents, pointcutText, results)
-    }
-
-    private void doTestOfLastBindingSet(String pkg, String cuContents, String pointcutText, BindingResult... results) {
+    private void doTestOfLastBindingSet(String pkg = 'p', String cuContents, String pointcutText, BindingResult... results) {
         GroovyCompilationUnit unit = addGroovySource(cuContents, nextUnitName(), pkg)
         BindingSet bindings = evaluateForBindings(unit, pointcutText)
         assertAllBindings(bindings, results)
     }
 
-    private void doTestOfLastMatch(String cuContents, String pointcutText, String name) {
-        doTestOfLastMatch('p', cuContents, pointcutText, name)
-    }
-
-    private void doTestOfLastMatch(String pkg, String cuContents, String pointcutText, String name) {
+    private void doTestOfLastMatch(String pkg = 'p', String cuContents, String pointcutText, String name) {
         GroovyCompilationUnit unit = addGroovySource(cuContents, nextUnitName(), pkg)
         Collection<?> match = evaluateForMatch(unit, pointcutText)
         assertSingleBinding(match, name)
@@ -118,13 +110,13 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
         Assert.assertNotNull('Should have found some bindings.  Expected:\n' + Arrays.toString(results), bindings)
 
         for (result in results) {
-            Collection<?> o = bindings.getBinding(result.bindingName)
-            if (o == null) {
-                Assert.fail('Expected binding "' + result.bindingName + '", but not found.\n' + 'Actual bindings:\n' + bindings.bindings)
+            def binding = bindings.getBinding(result.bindingName)
+            if (binding == null) {
+                Assert.fail("Expected binding $result.bindingName, but not found.\nActual bindings:\n$bindings.bindings")
             }
-            assertSingleBinding(o, result.bindingToString)
+            assertSingleBinding(binding, result.bindingToString)
         }
-        Assert.assertEquals('Wrong number of bindings.  Expected Bindings: \n' + Arrays.toString(results) + '\nActualBindings:\n' + bindings.bindings, results.length, bindings.bindings.size())
+        assert bindings.bindings.size() == results.length
     }
 
     private void assertSingleBinding(Collection<?> binding, String expected) {
@@ -398,12 +390,12 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
 
     @Test
     void testPackageFolder1() {
-        doTestOfLastMatch('p', '2', 'packageFolder("p")', 'p')
+        doTestOfLastMatch('2', 'packageFolder("p")', 'p')
     }
 
     @Test
     void testPackageFolder2() {
-        doTestOfLastMatch('p', '2', 'packageFolder("invalid")', null)
+        doTestOfLastMatch('2', 'packageFolder("invalid")', null)
     }
 
     @Test
@@ -421,37 +413,32 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
 
     @Test
     void testNamedBinding3() {
-        doTestOfLastBindingSet('2', 'bind( b : nature("org.eclipse.jdt.groovy.core.groovyNature") ) | ' +
-            'bind( c : fileExtension("groovy") )',
+        doTestOfLastBindingSet('2', 'bind( b : nature("org.eclipse.jdt.groovy.core.groovyNature") ) | bind( c : fileExtension("groovy") )',
             new BindingResult('b', 'org.eclipse.jdt.groovy.core.groovyNature'),
             new BindingResult('c', 'src/p/TestUnit_[0-9a-f]{32}.groovy'))
     }
 
     @Test
     void testNamedBinding4() {
-        doTestOfLastBindingSet('2', 'bind( b : nature("org.eclipse.jdt.groovy.core.groovyNature") ) & ' +
-            'bind( c : fileExtension("groovy") )',
+        doTestOfLastBindingSet('2', 'bind( b : nature("org.eclipse.jdt.groovy.core.groovyNature") ) & bind( c : fileExtension("groovy") )',
             new BindingResult('b', 'org.eclipse.jdt.groovy.core.groovyNature'),
             new BindingResult('c', 'src/p/TestUnit_[0-9a-f]{32}.groovy'))
     }
 
     @Test
     void testNamedBinding5() {
-        doTestOfLastBindingSet('2', 'bind( b : nature("org.eclipse.jdt.groovy.core.groovyNature") ) | ' +
-            'bind( c : fileExtension("invalid") )',
+        doTestOfLastBindingSet('2', 'bind( b : nature("org.eclipse.jdt.groovy.core.groovyNature") ) | bind( c : fileExtension("invalid") )',
             new BindingResult('b', 'org.eclipse.jdt.groovy.core.groovyNature'))
     }
 
     @Test
     void testNamedBinding6() {
-        doTestOfLastBindingSet('2', 'bind( b : nature("invalid") ) & ' +
-            'bind( c : fileExtension("groovy") )')
+        doTestOfLastBindingSet('2', 'bind( b : nature("invalid") ) & bind( c : fileExtension("groovy") )')
     }
 
     @Test
-    void testNamedBinding6a() {
-        doTestOfLastBindingSet('2', 'bind( b : nature("invalid") ) | ' +
-            'bind( c : fileExtension("groovy") )',
+    void testNamedBinding7() {
+        doTestOfLastBindingSet('2', 'bind( b : nature("invalid") ) | bind( c : fileExtension("groovy") )',
             new BindingResult('c', 'src/p/TestUnit_[0-9a-f]{32}.groovy'))
     }
 
@@ -463,16 +450,13 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
 
     @Test
     void testTypesNamedBinding2() {
-        doTestOfLastBindingSet('2', 'bind( b : currentType("java.lang.Integer") ) | ' +
-            'bind( c : fileExtension("invalid") )',
+        doTestOfLastBindingSet('2', 'bind( b : currentType("java.lang.Integer") ) | bind( c : fileExtension("invalid") )',
             new BindingResult('b', 'java.lang.Integer'))
     }
 
     @Test
     void testTypesNamedBinding3() {
-        doTestOfLastBindingSet('2',
-            'bind( b : currentType("java.lang.Integer") ) | ' +
-            'bind( c : fileExtension("groovy") )',
+        doTestOfLastBindingSet('2', 'bind( b : currentType("java.lang.Integer") ) | bind( c : fileExtension("groovy") )',
             new BindingResult('b', 'java.lang.Integer'),
             new BindingResult('c', 'src/p/TestUnit_[0-9a-f]{32}.groovy'))
     }
@@ -653,7 +637,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testAnnotatedByBinding7Fail() {
+    void testAnnotatedByBinding7() {
         addGroovySource('@Deprecated\nclass Foo { \n def f }', 'Foo', 'p')
         doTestOfLastBindingSet('Foo', 'currentType( fields("g") & bind( b : annotatedBy("java.lang.Deprecated") ) )')
     }
@@ -661,89 +645,138 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     @Test
     void testAnnotatedByBinding8() {
         addGroovySource('class Foo { \n @Deprecated def f\n @Deprecated def g() { } }', 'Foo', 'p')
-        doTestOfLastBindingSet('Foo', 'currentType( bind( b : fields( annotatedBy("java.lang.Deprecated") ) & methods( annotatedBy("java.lang.Deprecated") ) ) )',
+
+        doTestOfLastBindingSet('Foo', '''\
+            |currentType(bind(b:
+            |  fields( annotatedBy("java.lang.Deprecated") ) &
+            |    methods( annotatedBy("java.lang.Deprecated") )
+            |))
+            |'''.stripMargin(),
             new BindingResult('b', 'p.Foo.f, p.Foo.g'))
     }
 
     @Test
     void testAnnotatedByBinding9() {
         addGroovySource('class Foo { \n @Deprecated def f\n @Deprecated def g() { } }', 'Foo', 'p')
-        doTestOfLastBindingSet('Foo', 'currentType( fields( bind ( b : annotatedBy("java.lang.Deprecated") ) ) & methods( bind ( b : annotatedBy("java.lang.Deprecated") ) ) )',
+
+        doTestOfLastBindingSet('Foo', '''\
+            |currentType(
+            |  fields( bind(b: annotatedBy("java.lang.Deprecated")) ) &
+            |    methods( bind(b: annotatedBy("java.lang.Deprecated")) )
+            |)
+            |'''.stripMargin(),
             new BindingResult('b', '@java.lang.Deprecated, @java.lang.Deprecated'))
     }
 
     @Test
+    void testEnclosingFieldBinding() {
+        addGroovySource('@interface Tag {\n Class<? extends Closure> value()\n}', 'Tag', 'p')
+
+        doTestOfLastBindingSet('''\
+            |class C {
+            |  @Tag({ x })
+            |  protected f
+            |}
+            |'''.stripMargin(),
+            'inClosure() & bind(f: enclosingField(annotatedBy("p.Tag")))',
+            new BindingResult('f', 'p.C.f'))
+    }
+
+    @Test
+    void testEnclosingMethodBinding() {
+        addGroovySource('@interface Tag {\n Class<? extends Closure> value()\n}', 'Tag', 'p')
+
+        doTestOfLastBindingSet('''\
+            |class C {
+            |  @Tag({ x })
+            |  void m() {}
+            |}
+            |'''.stripMargin(),
+            'inClosure() & bind(m: enclosingMethod(annotatedBy("p.Tag")))',
+            new BindingResult('m', 'p.C.m'))
+    }
+
+    @Test
     void testNestedCalls1() {
-        doTestOfLastBindingSet(
-            'bar {\n' +
-            '  foo {\n' +
-            '    XXX\n' +
-            '  }\n' +
-            '}', 'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
+        doTestOfLastBindingSet('''\
+            |bar {
+            |  foo {
+            |    XXX
+            |  }
+            |}
+            |'''.stripMargin(),
+            'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'foo(), bar()'),
             new BindingResult('y', 'Var: XXX'))
     }
 
     @Test
     void testNestedCalls2() {
-        doTestOfLastBindingSet(
-            'foo {\n' +
-            '  bar {\n' +
-            '    XXX\n' +
-            '  }\n' +
-            '}', 'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
+        doTestOfLastBindingSet('''\
+            |foo {
+            |  bar {
+            |    XXX
+            |  }
+            |}
+            |'''.stripMargin(),
+            'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'bar(), foo()'),
             new BindingResult('y', 'Var: XXX'))
     }
 
     @Test
     void testNestedCalls3() {
-        doTestOfLastBindingSet(
-            'foo {\n' +
-            '  foo {\n' +
-            '    XXX\n' +
-            '  }\n' +
-            '}', 'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
+        doTestOfLastBindingSet('''\
+            |foo {
+            |  foo {
+            |    XXX
+            |  }
+            |}
+            |'''.stripMargin(),
+            'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'foo(), foo()'),
             new BindingResult('y', 'Var: XXX'))
     }
 
     @Test
     void testNestedCallNames1() {
-        doTestOfLastBindingSet(
-            'bar {\n' +
-            '  foo {\n' +
-            '    XXX\n' +
-            '  }\n' +
-            '}', 'bind( x: enclosingCallName()) & bind(y: currentIdentifier("XXX"))',
+        doTestOfLastBindingSet('''\
+            |bar {
+            |  foo {
+            |    XXX
+            |  }
+            |}
+            |'''.stripMargin(),
+            'bind( x: enclosingCallName()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'foo, bar'),
             new BindingResult('y', 'Var: XXX'))
     }
 
     @Test
     void testNestedCallNames2() {
-        doTestOfLastBindingSet(
-            'foo {\n' +
-            '  bar {\n' +
-            '    XXX\n' +
-            '  }\n' +
-            '}', 'bind( x: enclosingCallName()) & bind(y: currentIdentifier("XXX"))',
+        doTestOfLastBindingSet('''\
+            |foo {
+            |  bar {
+            |    XXX
+            |  }
+            |}
+            |'''.stripMargin(),
+            'bind( x: enclosingCallName()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'bar, foo'),
             new BindingResult('y', 'Var: XXX'))
     }
 
     @Test
     void testNestedCallsName3() {
-        doTestOfLastBindingSet(
-            'foo {\n' +
-            '  foo {\n' +
-            '    XXX\n' +
-            '  }\n' +
-            '}',
+        doTestOfLastBindingSet('''\
+            |foo {
+            |  foo {
+            |    XXX
+            |  }
+            |}
+            |'''.stripMargin(),
             'bind( x: enclosingCallName()) & bind(y: currentIdentifier("XXX"))',
-
-            // since we are matching on names and there are 2 names that are the same, they get collapsed
-            new BindingResult('x', 'foo'),
+            new BindingResult('x', 'foo, foo'),
             new BindingResult('y', 'Var: XXX'))
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 package org.eclipse.jdt.groovy.core.tests.basic;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
+import static org.junit.Assume.assumeTrue;
 
 import org.junit.Test;
 
@@ -158,6 +160,42 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "VALUE");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1300
+    public void testInnerTypeReferencing7() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    Outer.Inner result = new Outer().getResult();\n" +
+            "  }\n" +
+            "}\n",
+
+            "Types.groovy",
+            "class Outer extends Type<Inner> {\n" + // unqualified reference to Inner
+            "  static class Inner { }\n" +
+            "}\n" +
+            "abstract class Type<T> {\n" +
+            "  T result\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test // resolved through default imports
+    public void testInnerTypeReferencing8() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "Map.Entry e\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
     @Test
     public void testInnerClass1() {
         //@formatter:off
@@ -179,10 +217,10 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "public class X {\n" +
             "  public class Inner {\n" +
-            "    public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "Inner() {\n" +
+            "    public @groovy.transform.Generated Inner() {\n" +
             "    }\n" +
             "  }\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
@@ -211,11 +249,21 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "<clinit>");
+        if (isAtLeastJava(JDK16)) {
+            runConformTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Outer.groovy (at line 3)\n" +
+                "\tstatic {\n" +
+                "\t       ^\n" +
+                "Cannot define static initializer in inner type Outer.Inner\n" + // https://docs.oracle.com/javase/specs/jls/se7/html/jls-8.html#jls-8.1.3
+                "----------\n");
+        }
     }
 
     @Test
-    public void testInnerClass2a() {
+    public void testInnerClass3() {
         //@formatter:off
         String[] sources = {
             "Outer.groovy",
@@ -236,7 +284,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass3() {
+    public void testInnerClass4() {
         //@formatter:off
         String[] sources = {
             "WithInnerClass.groovy",
@@ -255,8 +303,48 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/708
-    public void testInnerClass4() {
+    @Test // GROOVY-4287
+    public void testInnerClass5() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import static p.Outer.Inner\n" +
+            "new Inner()\n",
+
+            "p/Outer.groovy",
+            "package p\n" +
+            "class Outer {\n" +
+            "  static class Inner {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test // GROOVY-8715
+    public void testInnerClass6() {
+        //@formatter:off
+        String[] sources = {
+            "p/Script.groovy",
+            "package p\n" +
+            "Outer.Inner[] array\n",
+
+            "p/Outer.groovy",
+            "package p\n" +
+            "class Outer {\n" +
+            "  static class Inner {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/708, GROOVY-10455
+    public void testInnerClass7() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -283,6 +371,125 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testInnerClass8() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Outer {\n" +
+            "  @groovy.transform.TupleConstructor(defaults=false)\n" +
+            "  class Inner {\n" +
+            "    int p\n" +
+            "  }\n" +
+            "  static m(int n) {\n" +
+            "    new Inner(new Outer(), n)\n" +
+            "  }\n" +
+            "}\n" +
+            "print Outer.m(4).p\n" +
+            "print new Outer.Inner(new Outer(), 2).p\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test // GROOVY-8947
+    public void testInnerClass9() {
+        assumeTrue(isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Outer {\n" +
+            "  @groovy.transform.TupleConstructor(defaults=false)\n" +
+            "  class Inner {\n" +
+            "    int p\n" +
+            "  }\n" +
+            "  static m(int n) {\n" +
+            "    new Outer().new Inner(n)\n" +
+            "  }\n" +
+            "}\n" +
+            "print Outer.m(4).p\n" +
+            "print new Outer().new Inner(2).p\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testInnerClass10() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Outer {\n" +
+            "  static class Inner {\n" + // TODO: GROOVY-9781 (non-static inner)
+            "    String p\n" +
+            "  }\n" +
+            "  Inner m() {\n" +
+            "    [p:'x']\n" + // calls ScriptBytecodeAdapter.castToType([p:'x'], Outer$Inner.class)
+            "  }\n" +
+            "}\n" +
+            "inner = new Outer().m()\n" +
+            "print inner.p\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "x");
+    }
+
+    @Test // GROOVY-10289
+    public void testInnerClass11() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Outer {\n" +
+            "  static class StaticInner {\n" +
+            "    void test() {\n" +
+            "      throw new NonStaticInner()\n" +
+            "    }\n" +
+            "  }\n" +
+            "  class NonStaticInner extends RuntimeException {\n" +
+            "  }\n" +
+            "}\n" +
+            "Outer.StaticInner.test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 4)\n" +
+            "\tthrow new NonStaticInner()\n" +
+            "\t          ^^^^^^^^^^^^^^\n" +
+            "Groovy:No enclosing instance passed in constructor call of a non-static inner class\n" +
+            "----------\n");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1566
+    public void testInnerClass12() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Other {\n" +
+            "  Inner inner\n" + // requires import or qualifier
+            "}\n" +
+            "class Outer {\n" +
+            "  static class Inner {\n" +
+            "  }\n" +
+            "  Inner inner\n" + // resolved
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 2)\n" +
+            "\tInner inner\n" +
+            "\t^^^^^\n" +
+            "Groovy:unable to resolve class Inner\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testAnonymousInnerClass1() {
         //@formatter:off
         String[] sources = {
@@ -299,13 +506,6 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "hi!");
 
         checkGCUDeclaration("A.groovy",
-            "public class A extends groovy.lang.Script {\n" +
-            "  public A() {\n" +
-            "  }\n" +
-            "  public A(groovy.lang.Binding context) {\n" +
-            "  }\n" +
-            "  public static void main(java.lang.String... args) {\n" +
-            "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    java.lang.Object foo;\n" +
             "    new Runnable() {\n" +
@@ -316,7 +516,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "      }\n" +
             "    };\n" +
             "  }\n" +
-            "}");
+            "}\n");
     }
 
     @Test
@@ -324,7 +524,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "A.groovy",
-            "class A {" +
+            "class A {\n" +
             "  def foo = new Runnable() {\n" +
             "    void run() {\n" +
             "      println 'hi!'\n" +
@@ -348,7 +548,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "    public void run() {\n" +
             "    }\n" +
             "  };\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
+            "  public @groovy.transform.Generated A() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
@@ -360,7 +560,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "A.groovy",
-            "class A {" +
+            "class A {\n" +
             "  @Lazy def foo = new Runnable() {\n" +
             "    void run() {\n" +
             "      println 'hi!'\n" +
@@ -384,10 +584,42 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "    public void run() {\n" +
             "    }\n" +
             "  };\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
+            "  public @groovy.transform.Generated A() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
+            "}");
+    }
+
+    @Test
+    public void testAnonymousInnerClass2b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "A.foo.run()\n",
+
+            "A.groovy",
+            "interface A {\n" +
+            "  def foo = new Runnable() {\n" +
+            "    void run() {\n" +
+            "      println 'hi!'\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "hi!");
+
+        checkGCUDeclaration("A.groovy",
+            "public interface A {\n" +
+            "  public static final java.lang.Object foo = new Runnable() {\n" +
+            "    x() {\n" +
+            "      super();\n" +
+            "    }\n" +
+            "    public void run() {\n" +
+            "    }\n" +
+            "  };\n" +
             "}");
     }
 
@@ -415,7 +647,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("A.groovy",
             "public class A {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
+            "  public @groovy.transform.Generated A() {\n" +
             "  }\n" +
             "  public java.lang.Object foo(int bar) {\n" +
             "    new Runnable() {\n" +
@@ -455,7 +687,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("A.groovy",
             "public class A {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
+            "  public @groovy.transform.Generated A() {\n" +
             "  }\n" +
             "  public java.lang.Object foo(int bar, int baz) {\n" +
             "    new Runnable() {\n" +
@@ -466,7 +698,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "      }\n" +
             "    };\n" +
             "  }\n" +
-            "  public java.lang.Object foo(int bar) {\n" +
+            "  public @groovy.transform.Generated java.lang.Object foo(int bar) {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
@@ -581,7 +813,9 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("A.groovy",
             "public class A {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
+            "  static {\n" +
+            "  }\n" +
+            "  public @groovy.transform.Generated A() {\n" +
             "  }\n" +
             "  <clinit>() {\n" +
             "    java.lang.Object foo;\n" +
@@ -621,7 +855,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "public class A {\n" +
             "  {\n" +
             "  }\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
+            "  public @groovy.transform.Generated A() {\n" +
             "    new Runnable() {\n" +
             "      x() {\n" +
             "        super();\n" +
@@ -692,7 +926,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "    public String bar() {\n" +
             "    }\n" +
             "  };\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
+            "  public @groovy.transform.Generated A() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
@@ -736,7 +970,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "  public void run() {\n" +
             "  }\n" +
             "};\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
+            "  public @groovy.transform.Generated A() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
@@ -779,7 +1013,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "  public void run() {\n" +
             "  }\n" +
             "};\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
+            "  public @groovy.transform.Generated A() {\n" +
             "  }\n" +
             "  public static C newC(int one, String two, Runnable three) {\n" +
             "  }\n" +
@@ -833,7 +1067,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "  public void run() {\n" +
             "  }\n" +
             "};\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
+            "  public @groovy.transform.Generated A() {\n" +
             "  }\n" +
             "  public static C newC() {\n" +
             "  }\n" +
@@ -871,7 +1105,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("A.groovy",
             "public class A {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
+            "  public @groovy.transform.Generated A() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "    C cee;\n" +
@@ -1011,7 +1245,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-5961
+    @Test // GROOVY-5961
     public void testAnonymousInnerClass17() {
         //@formatter:off
         String[] sources = {
@@ -1033,8 +1267,8 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-5961
-    public void testAnonymousInnerClass18() {
+    @Test // GROOVY-5961
+    public void testAnonymousInnerClass17a() {
         //@formatter:off
         String[] sources = {
             "Abstract.groovy",
@@ -1057,6 +1291,28 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test // GROOVY-4035
+    public void testAnonymousInnerClass18() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  def m(p) {\n" +
+            "    p\n" +
+            "  }\n" +
+            "}\n" +
+            "def aic = new C() {\n" +
+            "  def m(Object p) {\n" +
+            "    super.m(p)\n" +
+            "  }\n" +
+            "}\n" +
+            "print aic.m('x')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "x");
     }
 
     @Test
@@ -1116,7 +1372,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "foo");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-6809
+    @Test // GROOVY-6809
     public void testAnonymousInnerClass21() {
         //@formatter:off
         String[] sources = {
@@ -1142,7 +1398,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9168
+    @Test // GROOVY-9168
     public void testAnonymousInnerClass22() {
         //@formatter:off
         String[] sources = {
@@ -1167,7 +1423,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-6809
+    @Test // GROOVY-6809
     public void testAnonymousInnerClass23() {
         //@formatter:off
         String[] sources = {
@@ -1196,7 +1452,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-6809
+    @Test // GROOVY-6809
     public void testAnonymousInnerClass23a() {
         //@formatter:off
         String[] sources = {
@@ -1245,7 +1501,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9168
+    @Test // GROOVY-9168
     public void testAnonymousInnerClass24a() {
         //@formatter:off
         String[] sources = {
@@ -1269,7 +1525,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9168
+    @Test // GROOVY-9168
     public void testAnonymousInnerClass24b() {
         //@formatter:off
         String[] sources = {
@@ -1375,7 +1631,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9120
+    @Test // GROOVY-9120
     public void testAnonymousInnerClass27() {
         //@formatter:off
         String[] sources = {
@@ -1410,6 +1666,267 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "4242");
+    }
+
+    @Test // GROOVY-9642
+    public void testAnonymousInnerClass28() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  interface I {}\n" +
+            "  static class T {}\n" +
+            "}\n" +
+            "class D extends C {\n" +
+            "  static I one() {\n" +
+            "    new I() {}\n" +
+            "  }\n" +
+            "  static T two() {\n" +
+            "    new T() {}\n" +
+            "  }\n" +
+            "}\n" +
+            "print D.one().getClass()\n" +
+            "print ';'\n" +
+            "print D.two().getClass()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "class D$1;class D$2");
+    }
+
+    @Test // GROOVY-5728
+    public void testAnonymousInnerClass29() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "abstract class A {\n" +
+            "  private A() { }\n" +
+            "  abstract answer()\n" +
+            "  static A create() {\n" +
+            "    return new A() {\n" + // IllegalAccessError when A$1 calls private constructor
+            "      def answer() { 42 }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "print A.create().answer()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test // GROOVY-7686
+    public void testAnonymousInnerClass30() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "abstract class A {\n" +
+            "  A() {\n" +
+            "    m()\n" +
+            "  }\n" +
+            "  abstract void m()\n" +
+            "}\n" +
+            "void test() {\n" +
+            "  def v = false\n" +
+            "  def a = new A() {\n" +
+            "    // run by super ctor\n" +
+            "    @Override void m() {\n" +
+            "      assert v != null\n" +
+            "    }\n" +
+            "  }\n" +
+            "  v = true\n" +
+            "  a.m()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test // GROOVY-8104
+    public void testAnonymousInnerClass31() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class A {\n" +
+            "  void foo() {\n" +
+            "    C c = new C()\n" +
+            "    ['1','2','3'].each {\n" +
+            "      c.baz(it, new I() {\n" +
+            "        void bar(Object o) {\n" +
+            "           B b = new B()\n" + // Could not find matching constructor for: A$B(A$_foo_closure1)
+            "           print \"$o:$b;\"\n" +
+            "        }\n" +
+            "      })\n" +
+            "    }\n" +
+            "  }\n" +
+            "  class B {\n" +
+            "    String toString() { getClass().getSimpleName() }\n" +
+            "  }\n" +
+            "}\n" +
+            "class C {\n" +
+            "  void baz(Object o, I i) {\n" +
+            "    i.bar(o)\n" +
+            "  }\n" +
+            "}\n" +
+            "interface I {\n" +
+            "  void bar(Object o)\n" +
+            "}\n" +
+            "A a = new A()\n" +
+            "a.foo()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1:B;2:B;3:B;");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1268
+    public void testAnonymousInnerClass32() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  class D {\n" +
+            "  }\n" +
+            "  def obj = new Object() {\n" +
+            "    @Override\n" +
+            "    String toString() {\n" +
+            "      return new Object() {\n" +
+            "        @Override\n" +
+            "        String toString() {\n" +
+            "          new D()\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().obj\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test // GROOVY-6977
+    public void testAnonymousInnerClass33() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  def <T> List<T> foo() {\n" +
+            "    new ArrayList<T>() {}\n" +
+            "  }\n" +
+            "}\n" +
+            "def longList = new C().<Long>foo()\n" +
+            "assert longList != null\n" +
+            "assert longList.empty\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test // GROOVY-7033
+    public void testAnonymousInnerClass34() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "new Object() {\n" +
+            "  @Tag(String) def field\n" +
+            "  @Tag(String) def method(@Tag(String) param) {\n" +
+            "    def type = String\n" +
+            "  }\n" +
+            "}\n",
+
+            "Tag.groovy",
+            "@interface Tag { Class<?> value() }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test // GROOVY-8488
+    public void testAnonymousInnerClass35() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "def x = 'local'\n" + // shared variable written as field in AIC
+            "new Runnable() {\n" +
+            "  def getX() { 'getter' }\n" +
+            "  @Override void run() {\n" +
+            "    print x + ' then ' + this.x\n" +
+            "  }\n" +
+            "}.run()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "local then getter");
+    }
+
+    @Test // GROOVY-7370
+    public void testAnonymousInnerClass36() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  public String[] strings\n" +
+            "  C(String... args) {\n" +
+            "    strings = args\n" +
+            "  }\n" +
+            "}\n" +
+            "def c = new C() { }\n" +
+            "print c.strings.length\n" +
+            "c = new C('xy') { }\n" +
+            "print c.strings.length\n" +
+            "c = new C('x','y') { }\n" +
+            "print c.strings.length\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, isAtLeastGroovy(40) ? "012" : "022");
+    }
+
+    @Test // GROOVY-10722
+    public void testAnonymousInnerClass37() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  public String[] strings\n" +
+            "  C(String... args) {\n" +
+            "    strings = args\n" +
+            "  }\n" +
+            "}\n" +
+            "def c = new C(null) { }\n" +
+            "print c.strings?.length\n" +
+            "c = new C(new String[0]) { }\n" +
+            "print c.strings.length\n" +
+            "String[] a = ['x','y']\n" +
+            "c = new C(a) { }\n" +
+            "print c.strings.length\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "null02");
+    }
+
+    @Test // GROOVY-10840
+    public void testAnonymousInnerClass38() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class BAIS extends ByteArrayInputStream {\n" +
+            "  BAIS(String input) {\n" +
+            "    super(input.bytes)\n" +
+            "  }\n" +
+            "}\n" +
+            "print new BAIS('input').available()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "5");
     }
 
     @Test
@@ -1514,7 +2031,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "success");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9168
+    @Test // GROOVY-9168
     public void testReferenceToUninitializedThis1() {
         //@formatter:off
         String[] sources = {
@@ -1806,7 +2323,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "ok");
     }
 
-    @Test
+    @Test // GROOVY-5259
     public void testAccessOuterClassMemberFromInnerClassConstructor3() {
         //@formatter:off
         String[] sources = {
@@ -1829,5 +2346,227 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "ok");
+    }
+
+    @Test // GROOVY-11352
+    public void testAccessOuterClassMemberFromInnerClassConstructor4() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Super {\n" +
+            "  protected final String s\n" +
+            "  Super(String s) { this.s = s }\n" +
+            "}\n" +
+            "class Outer {\n" +
+            "  static String initValue() { 'ok' }\n" +
+            "  static class Inner extends Super {\n" +
+            "    Inner() {\n" +
+            "      super(initValue())\n" + // here
+            "    }\n" +
+            "  }\n" +
+            "  String test() { new Inner().s }\n" +
+            "}\n" +
+            "print new Outer().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "ok");
+    }
+
+    @Test // GROOVY-9501
+    public void testAccessOuterClassMemberFromInnerClassMethod1() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main extends Outer {\n" +
+            "    static main(args) {\n" +
+            "        newInstance().newThread()\n" +
+            "        assert Outer.Inner.error == null\n" +
+            "    }\n" +
+            "}\n" +
+            "\n" +
+            "abstract class Outer {\n" +
+            "    private static volatile boolean flag\n" +
+            "\n" +
+            "    void newThread() {\n" +
+            "        Thread thread = new Inner()\n" +
+            "        thread.start()\n" +
+            "        thread.join()\n" +
+            "    }\n" +
+            "\n" +
+            "    private final class Inner extends Thread {\n" +
+            "        @Override\n" +
+            "        void run() {\n" +
+            "            try {\n" +
+            "                if (!flag) {\n" +
+            "                    print 'works'\n" +
+            "                }\n" +
+            "            } catch (e) {\n" +
+            "                error = e\n" +
+            "            }\n" +
+            "        }\n" +
+            "        public static error\n" +
+            "    }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test // inner class is static instead of final
+    public void testAccessOuterClassMemberFromInnerClassMethod2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main extends Outer {\n" +
+            "    static main(args) {\n" +
+            "        newInstance().newThread()\n" +
+            "        assert Outer.Inner.error == null\n" +
+            "    }\n" +
+            "}\n" +
+            "\n" +
+            "abstract class Outer {\n" +
+            "    private static volatile boolean flag\n" +
+            "\n" +
+            "    void newThread() {\n" +
+            "        Thread thread = new Inner()\n" +
+            "        thread.start()\n" +
+            "        thread.join()\n" +
+            "    }\n" +
+            "\n" +
+            "    private static class Inner extends Thread {\n" +
+            "        @Override\n" +
+            "        void run() {\n" +
+            "            try {\n" +
+            "                if (!flag) {\n" +
+            "                    print 'works'\n" +
+            "                }\n" +
+            "            } catch (e) {\n" +
+            "                error = e\n" +
+            "            }\n" +
+            "        }\n" +
+            "        public static error\n" +
+            "    }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test // GROOVY-9569
+    public void testAccessOuterClassMemberFromInnerClassMethod3() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main extends Outer {\n" +
+            "    static main(args) {\n" +
+            "        newInstance().newThread()\n" +
+            "        assert Outer.Inner.error == null\n" +
+            "    }\n" +
+            "}\n" +
+            "\n" +
+            "abstract class Outer {\n" +
+            "    private static volatile flag\n" +
+            "\n" +
+            "    void newThread() {\n" +
+            "        Thread thread = new Inner()\n" +
+            "        thread.start()\n" +
+            "        thread.join()\n" +
+            "    }\n" +
+            "\n" +
+            "    @groovy.transform.CompileStatic\n" +
+            "    private static class Inner extends Thread {\n" +
+            "        @Override\n" +
+            "        void run() {\n" +
+            "            try {\n" +
+            "                if (!flag) {\n" +
+            "                    System.out.print('works')\n" +
+            "                    System.out.flush()\n" +
+            "                }\n" +
+            "            } catch (Throwable t) {\n" +
+            "                error = t\n" +
+            "            }\n" +
+            "        }\n" +
+            "        public static volatile error\n" +
+            "    }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testAccessOuterClassMemberFromInnerClassMethod4() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "interface I {\n" +
+            "  String CONST = 'value'\n" +
+            "}\n" +
+            "class C implements I {\n" +
+            "  static class D {\n" +
+            "    void test() {\n" +
+            "      print CONST\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new C.D().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test // GROOVY-9905
+    public void testAccessOuterClassMemberFromInnerClassMethod5() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "abstract class A {\n" +
+            "  protected final f = 'x'\n" +
+            "  abstract static class B {}\n" +
+            "}\n" +
+            "class C extends A {\n" +
+            "  private class D extends A.B {\n" + // B is static inner
+            "    String toString() {\n" +
+            "      println(f)\n" + // No such property: f for class: A
+            "      return 'y'\n" +
+            "    }\n" +
+            "  }\n" +
+            "  def m() {\n" +
+            "    new D().toString()\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "x");
+    }
+
+    @Test // GROOVY-10558
+    public void testAccessOuterClassMemberFromInnerClassMethod6() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Outer {\n" +
+            "  static byte[] m(byte[] bytes) {\n" +
+            "    print(new String(bytes))\n" +
+            "    bytes\n" +
+            "  }\n" +
+            "  static class Inner {\n" +
+            "    void test(byte[] bytes) {\n" +
+            "      m(bytes)\n" + // MissingMethodException
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new Outer.Inner().test('works'.bytes)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
     }
 }

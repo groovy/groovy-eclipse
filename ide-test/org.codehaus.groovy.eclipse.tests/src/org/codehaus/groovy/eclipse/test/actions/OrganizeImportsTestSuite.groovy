@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,7 +22,6 @@ import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.ISourceRange
-import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils
 import org.eclipse.jdt.core.search.TypeNameMatch
 import org.eclipse.jdt.core.tests.util.Util
@@ -43,39 +42,34 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         setJavaPreference(PreferenceConstants.ORGIMPORTS_IMPORTORDER, '\\#;java;javax;groovy;groovyx;;')
 
         addJavaSource '''\
-            public class Outer {
-              public static class Inner { }
-            }
-            '''.stripIndent(),
-            'Outer', 'other'
+            |public class Outer {
+            |  public static class Inner { }
+            |}
+            |'''.stripMargin(), 'Outer', 'other'
 
         addGroovySource '''\
-            class FirstClass<T> { }
-            class SecondClass { }
-            class ThirdClass { }
-            '''.stripIndent(),
-            'Other', 'other'
+            |class FirstClass<T> { }
+            |class SecondClass { }
+            |class ThirdClass { }
+            |'''.stripMargin(), 'Other', 'other'
 
         addGroovySource '''\
-            class FourthClass {
-              static m() { }
-            }
-            '''.stripIndent(),
-            'Other', 'other2'
+            |class FourthClass {
+            |  static m() { }
+            |}
+            |'''.stripMargin(), 'Other', 'other2'
 
         addGroovySource '''\
-            class FourthClass {
-              static m() { }
-            }
-            '''.stripIndent(),
-            'Other', 'other3'
+            |class FourthClass {
+            |  static m() { }
+            |}
+            |'''.stripMargin(), 'Other', 'other3'
 
         addGroovySource '''\
-            class FourthClass {
-              static m() { }
-            }
-            '''.stripIndent(),
-            'Other', 'other4'
+            |class FourthClass {
+            |  static m() { }
+            |}
+            |'''.stripMargin(), 'Other', 'other4'
     }
 
     @After
@@ -83,24 +77,20 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         withProject { IProject project ->
             Util.delete(project.getFile('config.groovy'))
         }
-
-        JavaCore.options = JavaCore.options.with {
-            remove(OPTIONG_GroovyCompilerConfigScript)
-            return it
-        }
+        setJavaPreference(OPTIONG_GroovyCompilerConfigScript, null)
     }
 
     protected void addConfigScript(CharSequence contents) {
-        addPlainText(contents.stripIndent(), '../config.groovy')
+        addPlainText(contents.stripMargin(), '../config.groovy')
         setJavaPreference(OPTIONG_GroovyCompilerConfigScript, 'config.groovy')
     }
 
     protected ICompilationUnit createGroovyType(String pack, String name, CharSequence contents) {
-        addGroovySource(contents.stripIndent(), name, pack)
+        addGroovySource(contents.stripMargin(), name, pack)
     }
 
     protected void doAddImportTest(CharSequence contents, List<String> expectedImports = []) {
-        def unit = addGroovySource(contents, nextUnitName())
+        def unit = addGroovySource(contents.stripMargin(), nextUnitName())
         ReconcilerUtils.reconcile(unit)
 
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, { TypeNameMatch[][] matches, ISourceRange[] range ->
@@ -112,8 +102,8 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         }
 
         def actualContents = unit.contents
-        def children = edit?.children as List
-        def newChildren = []
+        def children = edit?.children as List<TextEdit>
+        List<TextEdit> newChildren = []
         children?.each {
             if (it instanceof DeleteEdit) {
                 // check to see if the edit is whitespace only
@@ -138,7 +128,7 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         }
 
         def notFound = ''
-        for (TextEdit child : newChildren) {
+        for (child in newChildren) {
             if (!child instanceof InsertEdit) {
                 notFound << "Found an invalid Edit: $child\n"
             } else if (!contents.contains(child.text)) {
@@ -152,21 +142,19 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected void doContentsCompareTest(CharSequence originalContents, CharSequence expectedContents = originalContents) {
-        def unit = addGroovySource(originalContents.stripIndent(), nextUnitName(), 'main')
+        def unit = addGroovySource(originalContents.stripMargin(), nextUnitName())
         ReconcilerUtils.reconcile(unit)
 
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, { TypeNameMatch[][] matches, ISourceRange[] range ->
             Assert.fail("Should not have a choice, but found $matches[0][0] and $matches[0][1]")
         })
         TextEdit edit = organize.calculateMissingImports()
-        // NOTE: Must match TestProject.createGroovyType()!
-        String prefix = "package main;\n\n"
 
-        Document doc = new Document(prefix + originalContents.stripIndent())
+        Document doc = new Document(originalContents.stripMargin())
         if (edit != null) edit.apply(doc)
 
         // deal with some variance in JDT Core handling of package only
-        String expect = prefix + expectedContents.stripIndent()
+        String expect = expectedContents.stripMargin()
         String actual = doc.get()
         if (expectedContents.toString().isEmpty()) {
             expect = expect.trim()
@@ -177,12 +165,12 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected void doChoiceTest(CharSequence contents, List expectedChoices) {
-        def unit = addGroovySource(contents.stripIndent(), nextUnitName())
+        def unit = addGroovySource(contents.stripMargin(), nextUnitName())
         ReconcilerUtils.reconcile(unit)
 
         List<String> choices
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, { TypeNameMatch[][] matches, ISourceRange[] range ->
-            choices = matches[0].collect { it.type.fullyQualifiedName }
+            choices = matches[0]*.type*.fullyQualifiedName
             return new TypeNameMatch[0]
         })
         organize.calculateMissingImports()

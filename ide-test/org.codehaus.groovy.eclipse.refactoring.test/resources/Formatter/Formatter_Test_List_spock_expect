@@ -1,0 +1,28 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+class SpockTests extends spock.lang.Specification {
+void "issue 1219"() {
+expect:
+[] == [] 
+toString()
+}
+void "issue 1258"() {
+	expect:
+	[] == []
+}
+}
+###exp
+class SpockTests extends spock.lang.Specification {
+	void "issue 1219"() {
+		expect:
+		[] == []
+		toString()
+	}
+	void "issue 1258"() {
+		expect:
+		[] == []
+	}
+}
+###end

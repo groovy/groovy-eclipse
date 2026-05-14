@@ -6,5 +6,6 @@
     </local-check-config>
     <fileset name="ours" check-config-name="Greclipse Checks" enabled="true" local="true">
         <file-match-pattern match-pattern=".(groovy|java)$" include-pattern="true" />
+        <file-match-pattern match-pattern="\bCleanUpPostSaveListener.java$" include-pattern="false" />
     </fileset>
 </fileset-config>

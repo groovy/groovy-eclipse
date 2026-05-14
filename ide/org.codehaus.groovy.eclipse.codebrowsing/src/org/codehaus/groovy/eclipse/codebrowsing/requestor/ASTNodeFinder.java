@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
+import static org.codehaus.groovy.ast.ClassCodeVisitorSupport.ORIGINAL_EXPRESSION;
+
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,7 +27,6 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
@@ -39,6 +41,7 @@ import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -49,7 +52,6 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -97,7 +99,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     public void visitClass(ClassNode node) {
         if (node.getNameEnd() > 0) {
             checkNameRange(node); // also checks generics
-            checkSupers(node); // extends and implements
+            checkHeader(node); // extends, implements and permits
         }
 
         super.visitClass(node);
@@ -130,21 +132,21 @@ public class ASTNodeFinder extends DepthFirstVisitor {
         if (node == runMethod) return;
 
         if (node.getEnd() > 0) {
-            if (!(node instanceof ConstructorNode) && isNotEmpty(node.getGenericsTypes())) {
-                checkGenerics(node.getGenericsTypes(), null);
+            if (isNotEmpty(node.getGenericsTypes())) {
+                checkGenerics(node.getGenericsTypes());
             }
 
             ClassNode returnType = node.getReturnType();
             if (returnType != null /*&& !returnType.isPrimitive()*/) { // allow primitives to be found to stop the visit
-                int n, offset = -1;
+                int offset = -1;
 
                 if (returnType.getEnd() < 1) {
                     // constrain the return type's start offset using generics or annotations
                     ASTNode last = ArrayUtils.lastElement(node.getGenericsTypes());
                     if (last != null) {
                         offset = last.getEnd() + 1;
-                    } else if ((n = node.getAnnotations().size()) > 0) {
-                        for (int i = (n - 1); i >= 0; i -= 1) {
+                    } else if (!node.getAnnotations().isEmpty()) {
+                        for (int i = (node.getAnnotations().size() - 1); i >= 0; i -= 1) {
                             // find the rightmost annotation with end source position info
                             int end = GroovyUtils.lastElement(node.getAnnotations().get(i)).getEnd() + 1;
                             if (end > 0) {
@@ -175,7 +177,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     @Override
     public void visitArrayExpression(ArrayExpression expression) {
         if (expression.getEnd() > 0) {
-            check(expression.getElementType(), expression.getNameStart(), expression.getNameEnd() + 1);
+            check(GroovyUtils.getBaseType(expression.getType()), expression.getNameStart(), expression.getNameEnd() + 1);
         }
         super.visitArrayExpression(expression);
     }
@@ -198,6 +200,17 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     }
 
     @Override
+    public void visitConstantExpression(ConstantExpression expression) {
+        if (expression instanceof AnnotationConstantExpression) {
+            // example: @interface X { Y default @Y(...) }; expression is "@Y(...)"
+            // example: @X(@Y(...)); expression is "@Y(...)"
+            check(expression.getType());
+            // values have been visited
+        }
+        super.visitConstantExpression(expression);
+    }
+
+    @Override
     public void visitVariableExpression(VariableExpression expression) {
         // check the annotations, generics, and type of variable declarations (including @Lazy fields)
         if (expression == expression.getAccessedVariable() || expression.getName().charAt(0) == '$') {
@@ -211,14 +224,13 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     }
 
     @Override
-    public void visitConstantExpression(ConstantExpression expression) {
-        if (expression instanceof AnnotationConstantExpression) {
-            // example: @interface X { Y default @Y(...) }; expression is "@Y(...)"
-            // example: @X(@Y(...)); expression is "@Y(...)"
-            check(expression.getType());
-            // values have been visited
+    public void visitDeclarationExpression(DeclarationExpression expression) {
+        if (expression.isMultipleAssignmentDeclaration() && // check before "(...)"
+                expression.getStart() < expression.getTupleExpression().getStart()) {
+            visitAnnotations(expression.getAnnotations()); // possibly interleaved with "def", "final", ...
+            check(expression.getType(), expression.getStart(), expression.getTupleExpression().getStart());
         }
-        super.visitConstantExpression(expression);
+        super.visitDeclarationExpression(expression);
     }
 
     @Override
@@ -256,7 +268,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     @Override
     public void visitMethodCallExpression(MethodCallExpression call) {
         if (call.isUsingGenerics()) {
-            checkGenerics(call.getGenericsTypes(), null);
+            checkGenerics(call.getGenericsTypes());
         }
         super.visitMethodCallExpression(call);
     }
@@ -304,8 +316,10 @@ public class ASTNodeFinder extends DepthFirstVisitor {
             for (Map.Entry<String, Expression> pair : annotation.getMembers().entrySet()) {
                 String name = pair.getKey();
                 Expression expr = pair.getValue();
+                Expression orig = expr.getNodeMetaData(ORIGINAL_EXPRESSION);
                 check(GroovyUtils.getAnnotationMethod(annotation, name),
-                    start/*expr.getStart() - name.length() - 1*/, expr.getStart() - 1);
+                    start/*expr.getStart() - name.length() - 1*/,
+                    (orig != null ? orig : expr).getStart() - 1);
                 /*expr.visit(this);*/
                 start = expr.getEnd() + 1;
             }
@@ -323,7 +337,16 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     @Override
     protected void visitParameter(Parameter parameter) {
         super.visitParameter(parameter);
-        checkParameter(parameter);
+        AnnotationNode ann = parameter.getNodeMetaData("met@");
+        if (ann != null) { // visit @NamedParam inline
+            visitAnnotation(ann);
+        }
+        if (parameter.getEnd() > 0) {
+            checkNameRange(parameter);
+            int start = parameter.getStart();
+            int until = parameter.getNameStart() - 1;
+            check(parameter.getOriginType(), start, until);
+        }
     }
 
     @Override
@@ -343,10 +366,14 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     protected void check(ASTNode node) {
         if (node instanceof ClassNode) {
             ClassNode type = (ClassNode) node;
+            visitAnnotations(type.getTypeAnnotations());
             if (type.isArray()) {
                 check(type.getComponentType(), node.getStart(), node.getEnd() - 2);
             } else {
-                checkGenerics(type);
+                if (!type.isGenericsPlaceHolder() && (type.isRedirectNode() ||
+                        (!type.isResolved() && !type.isPrimaryClassNode()))) {
+                    checkGenerics(type);
+                }
             }
         }
         if (node.getEnd() > 0 && sloc.regionIsCoveredByNode(node)) {
@@ -363,7 +390,12 @@ public class ASTNodeFinder extends DepthFirstVisitor {
             check(node);
         } else {
             if (node instanceof ClassNode) {
-                checkGenerics((ClassNode) node);
+                ClassNode type = (ClassNode) node;
+                visitAnnotations(type.getTypeAnnotations());
+                if (!type.isGenericsPlaceHolder() && (type.isRedirectNode() ||
+                        (!type.isResolved() && !type.isPrimaryClassNode()))) {
+                    checkGenerics(type);
+                }
             }
             if (sloc.getOffset() >= start && sloc.getEnd() <= until) {
                 completeVisitation(node, new Region(start, until - start));
@@ -385,9 +417,9 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     }
 
     /**
-     * Checks if the extends or implements clause covers the selection.
+     * Checks if the extends, implements or permits clause covers the selection.
      */
-    private void checkSupers(ClassNode node) {
+    private void checkHeader(ClassNode node) {
         // supers can only appear after the name
         if (!(sloc.getOffset() > node.getNameEnd())) {
             return;
@@ -405,8 +437,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
             source = src.substring(offset - node.getStart());
         } catch (Exception err) {
             GroovyCore.logException(String.format(
-                "Error checking super-types at offset %d in file / index %d of:%n%s%n%s",
-                offset, offset - node.getStart(), src, DefaultGroovyMethods.dump(node)), err);
+                "Error checking super-types at offset %d in file / index %d of:%n%s%n%s", offset, offset - node.getStart(), src, node), err);
             return;
         }
 
@@ -455,6 +486,38 @@ public class ASTNodeFinder extends DepthFirstVisitor {
                 }
             }
         }
+
+        List<ClassNode> subTypes = node.getPermittedSubclasses();
+        for (int i = 0, n = subTypes.size(); i < n; i += 1) {
+            // only check types that appear in the source code
+            String name = GroovyUtils.splitName(subTypes.get(i))[1];
+            if (source.indexOf(name) > 0) {
+                int a = endIndexOf(source, Pattern.compile("\\bpermits\\s+")),
+                    b = source.length(); // TODO: Set to source.indexOf(name) + name.length()?
+                char c;
+                // use prev and next to further constrain
+                for (int j = i - 1; j >= 0; j -= 1) {
+                    if (subTypes.get(j).getEnd() > 0) {
+                        a = (subTypes.get(j).getEnd()) - offset;
+                        while ((c = source.charAt(a)) == ',' || Character.isWhitespace(c)) {
+                            a += 1;
+                        }
+                        break;
+                    }
+                }
+                for (int j = i + 1; j < n; j += 1) {
+                    if (subTypes.get(j).getStart() > 0) {
+                        b = (subTypes.get(j).getStart() - 1) - offset;
+                        while ((c = source.charAt(b - 1)) == ',' || Character.isWhitespace(c)) {
+                            b -= 1;
+                        }
+                        break;
+                    }
+                }
+
+                check(subTypes.get(i), offset + a, offset + b);
+            }
+        }
     }
 
     private void checkTypes(ClassNode[] nodes) {
@@ -466,18 +529,20 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     }
 
     private void checkGenerics(ClassNode node) {
-        if (node.isUsingGenerics() && isNotEmpty(node.getGenericsTypes())) {
-            checkGenerics(node.getGenericsTypes(), node.getName());
+        if (isNotEmpty(node.getGenericsTypes()) && !node.isEnum()) {
+            checkGenerics(node.getGenericsTypes());
         }
     }
 
-    private void checkGenerics(GenericsType[] generics, String typeName) {
+    private void checkGenerics(GenericsType[] generics) {
         for (GenericsType generic : generics) {
             int start = generic.getStart(),
                 until = start + generic.getName().length();
 
-            if (generic.getType() != null && generic.getType().getName().charAt(0) != '?') {
+            if (!generic.isWildcard()) {
                 check(generic.getType(), start, until);
+            } else {
+                visitAnnotations(generic.getType().getTypeAnnotations());
             }
 
             start = until + 1;
@@ -490,21 +555,11 @@ public class ASTNodeFinder extends DepthFirstVisitor {
                 start += "extends ".length(); // assume 1 space
                 for (ClassNode upper : generic.getUpperBounds()) {
                     String name = upper.getName();
-                    // handle enums where the upper bound is the same as the type
-                    if (!name.equals(typeName)) {
-                        check(upper, start, Math.min(start + name.length(), until));
-                        if (upper.getEnd() > 0)
-                            start = upper.getEnd() + 1;
-                    }
+                    check(upper, start, Math.min(start + name.length(), until));
+                    if (upper.getEnd() > 0)
+                        start = upper.getEnd() + 1;
                 }
             }
-        }
-    }
-
-    private void checkParameter(Parameter param) {
-        if (param != null && param.getEnd() > 0) {
-            checkNameRange(param);
-            check(param.getOriginType(), param.getStart(), param.getNameStart() - 1);
         }
     }
 
@@ -521,12 +576,8 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     //--------------------------------------------------------------------------
 
     private String readClassDeclaration(ClassNode node) {
-        String code = node.getNodeMetaData("groovy.source");
-        if (code == null) {
-            code = String.valueOf(module.getContext().readSourceRange(node.getStart(), node.getLength()));
-            node.putNodeMetaData("groovy.source", code);
-        }
-        return code.substring(0, code.indexOf('{'));
+        String code = node.getNodeMetaData("groovy.source", x -> String.valueOf(module.getContext().readSourceRange(node.getStart(), node.getLength())));
+        return code.substring(0, code.indexOf('{', node.getNameEnd() - node.getStart()));
     }
 
     private static int endIndexOf(String s, Pattern p) {

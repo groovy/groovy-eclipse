@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -216,23 +216,12 @@ public class CompilerUtils {
         List<IPath> jarPaths = new ArrayList<>();
         Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
         for (URL jarUrl : Collections.list(groovyBundle.findEntries("lib", "*.jar", false))) {
-            if (!jarUrl.getFile().endsWith("-javadoc.jar") && !jarUrl.getFile().endsWith("-sources.jar") &&
-                    (!jarUrl.getFile().contains("/servlet-") || includeServlet())) {
+            if (!jarUrl.getFile().endsWith("-javadoc.jar") && !jarUrl.getFile().endsWith("-sources.jar")) {
                 jarPaths.add(toFilePath(jarUrl));
             }
         }
         jarPaths.remove(getExportedGroovyAllJar());
         return jarPaths;
-    }
-
-    private static boolean includeServlet() {
-        try {
-            String value = System.getProperty("greclipse.includeServletInClasspathContainer", "true");
-            return !value.equalsIgnoreCase("false");
-        } catch (Exception e) {
-            // likely security related?
-            return true;
-        }
     }
 
     /**

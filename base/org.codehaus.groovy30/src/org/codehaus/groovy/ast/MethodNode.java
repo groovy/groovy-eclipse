@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import groovyjarjarasm.asm.Opcodes;
 
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Optional;
 
@@ -240,12 +241,18 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
         /* GRECLIPSE edit
         return Boolean.TRUE.equals(getNodeMetaData("org.codehaus.groovy.ast.MethodNode.isScriptBody"));
         */
-        return getDeclaringClass() != null &&
-            getDeclaringClass().isScript() &&
-            getName().equals("run") &&
-            (parameters == null || parameters.length == 0) &&
-            (returnType != null && returnType.getName().equals("java.lang.Object"));
-        // GRECLIPSE: end
+        if ((modifiers & 0x144F) == ACC_PUBLIC) { // synthetic, abstract, bridge, static, protected, private, public
+            ClassNode declaringClass = getDeclaringClass();
+            if (declaringClass != null && !declaringClass.isAbstract() && declaringClass.isScript()
+                    && getAnnotations().stream().map(a -> a.getClassNode().getName()).anyMatch(t -> t.equals("java.lang.Override") || t.equals("groovy.transform.Generated"))) {
+                MethodNode sam = ClassHelper.findSAM(declaringClass.getSuperClass());
+                if (sam != null) {
+                    return sam.getName().equals(getName()) && org.codehaus.groovy.ast.tools.ParameterUtils.parametersEqual(sam.getParameters(), getParameters());
+                }
+            }
+        }
+        return false;
+        // GRECLIPSE end
     }
 
     /**
@@ -254,7 +261,9 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
      * @see ModuleNode#createStatementsClass()
      */
     public void setIsScriptBody() {
+        /* GRECLIPSE edit
         setNodeMetaData("org.codehaus.groovy.ast.MethodNode.isScriptBody", Boolean.TRUE);
+        */
     }
 
     public boolean isStaticConstructor() {
@@ -289,7 +298,8 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
         String retType = AstToTextHelper.getClassText(returnType);
         String exceptionTypes = AstToTextHelper.getThrowsClauseText(exceptions);
         String params = AstToTextHelper.getParametersText(parameters);
-        return AstToTextHelper.getModifiersText(modifiers) + " " + retType + " " + name + "(" + params + ") " + exceptionTypes + " { ... }";
+        int mask = this instanceof ConstructorNode ? Modifier.constructorModifiers() : Modifier.methodModifiers();
+        return AstToTextHelper.getModifiersText(modifiers & mask) + " " + retType + " " + name + "(" + params + ") " + exceptionTypes + " { ... }";
     }
 
     // GRECLIPSE add
@@ -315,10 +325,7 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
 
     @Override
     public String toString() {
-        /* GRECLIPSE edit
-        return super.toString() + "[" + getDeclaringClass().getName() + "#" + getTypeDescriptor() + "]";
-        */
-        return super.toString() + "[" + getTypeDescriptor() + " from " + ClassNodeUtils.formatTypeName(getDeclaringClass()) + "]";
-        // GRECLIPSE end
+        ClassNode declaringClass = getDeclaringClass();
+        return super.toString() + "[" + getTypeDescriptor() + (declaringClass == null ? "" : " from " + ClassNodeUtils.formatTypeName(declaringClass)) + "]";
     }
 }

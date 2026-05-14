@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.launchers;
 import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class GroovyShellLaunchShortcut extends AbstractGroovyLaunchShortcut {
@@ -39,16 +38,15 @@ public class GroovyShellLaunchShortcut extends AbstractGroovyLaunchShortcut {
     }
 
     @Override
-    protected String mainArgs(IType runType, IJavaProject javaProject) {
-        StringBuilder mainArgs = new StringBuilder("org.codehaus.groovy.tools.shell.Main");
-        mainArgs.append(" --define jline.terminal=jline.UnsupportedTerminal");
+    protected String mainArgs(final IType runType, final IJavaProject javaProject) {
+        var mainArgs = new StringBuilder("org.apache.groovy.groovysh.Main");
 
-        if (isAtLeastGroovy(2, 5, 0)) {
-            CompilerOptions compilerOptions = new CompilerOptions(javaProject.getOptions(true));
-            CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject);
+        if (!isAtLeastGroovy(5, 0, 0)) {
+            var compilerOptions = new CompilerOptions(javaProject.getOptions(true));
             if (compilerOptions.produceMethodParameters) {
                 mainArgs.append(" --parameters");
             }
+            mainArgs.append(" --terminal=none");
         }
 
         return mainArgs.toString();

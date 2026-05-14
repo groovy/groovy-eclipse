@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+
+import java.util.List;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
@@ -27,88 +28,76 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.groovy.tests.MockSearchRequestor;
-import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
-import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.internal.core.BinaryMember;
-import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public final class BinarySearchTests extends SearchTestSuite {
 
+    //@formatter:off
     private String groovyClassContents =
-            //@formatter:off
-            "package pack\n" +
-            "\n" +
-            "class OtherClass { }\n" +
-            "class AGroovyClass {\n" +
-            "        String name_1\n" +
-            "        int age_1\n" +
-            "        def referencedInInitializer() { }\n" +
-            "        def fieldInInitializer\n" +
-            "\n" +
-            "        def doit() {\n" +
-            "                println name_1 + age_1\n" +
-            "                AGroovyClass\n" +
-            "                OtherClass\n" +
-            "                doit()\n" +
-            "                def aClosure = {\n" +
-            "                        println name_1 + age_1\n" +
-            "                        AGroovyClass\n" +
-            "                        OtherClass\n" +
-            "                        doit()\n" +
-            "                }\n" +
-            "        }\n" +
-            "        { \n" +
-            "                referencedInInitializer() \n" +
-            "                fieldInInitializer\n" +
-            "        }\n" +
-            "}\n" +
-            "";
-            //@formatter:on
-
+        "package pack\n" +
+        "class OtherClass { }\n" +
+        "class AGroovyClass {\n" +
+        "        String name_1\n" +
+        "        int age_1\n" +
+        "        def referencedInInitializer() { }\n" +
+        "        def fieldInInitializer\n" +
+        "        \n" +
+        "        def doit() {\n" +
+        "                println name_1 + age_1\n" +
+        "                AGroovyClass\n" +
+        "                OtherClass\n" +
+        "                doit()\n" +
+        "                def aClosure = {\n" +
+        "                        println name_1 + age_1\n" +
+        "                        AGroovyClass\n" +
+        "                        OtherClass\n" +
+        "                        doit()\n" +
+        "                }\n" +
+        "        }\n" +
+        "        { \n" +
+        "                referencedInInitializer() \n" +
+        "                fieldInInitializer\n" +
+        "        }\n" +
+        "}\n";
     private String groovyClassContents2 =
-            //@formatter:off
-            "package pack\n" +
-            "\n" +
-            "class AnotherGroovyClass {\n" +
-            "        def doit() {\n" +
-            "                println new AGroovyClass().name_1 + new AGroovyClass().age_1\n" +
-            "                AGroovyClass\n" +
-            "                OtherClass\n" +
-            "                new AGroovyClass().doit()\n" +
-            "                def aClosure = {\n" +
-            "                        println new AGroovyClass().name_1 + new AGroovyClass().age_1\n" +
-            "                        AGroovyClass\n" +
-            "                        OtherClass\n" +
-            "                        new AGroovyClass().doit()\n" +
-            "                }\n" +
-            "        }\n" +
-            "        { \n" +
-            "                new AGroovyClass().referencedInInitializer() \n" +
-            "                new AGroovyClass().fieldInInitializer\n" +
-            "        }\n" +
-            "}\n";
-            //@formatter:on
+        "package pack\n" +
+        "class AnotherGroovyClass {\n" +
+        "        def doit() {\n" +
+        "                println new AGroovyClass().name_1 + new AGroovyClass().age_1\n" +
+        "                AGroovyClass\n" +
+        "                OtherClass\n" +
+        "                new AGroovyClass().doit()\n" +
+        "                def aClosure = {\n" +
+        "                        println new AGroovyClass().name_1 + new AGroovyClass().age_1\n" +
+        "                        AGroovyClass\n" +
+        "                        OtherClass\n" +
+        "                        new AGroovyClass().doit()\n" +
+        "                }\n" +
+        "        }\n" +
+        "        { \n" +
+        "                new AGroovyClass().referencedInInitializer() \n" +
+        "                new AGroovyClass().fieldInInitializer\n" +
+        "        }\n" +
+        "}\n";
+    //@formatter:on
 
     private IJavaProject javaProject;
 
     @Before
     public void setUp() throws Exception {
         Path libDir = new Path(FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("lib")).getFile());
-        env.addEntry(project.getFullPath(), JavaCore.newLibraryEntry(libDir.append("binGroovySearch.jar"), libDir.append("binGroovySearchSrc.zip"), null));
+        env.addLibrary(project.getFullPath(), libDir.append("binGroovySearch.jar"), libDir.append("binGroovySearchSrc.zip"), null);
 
-        JavaModelManager.getIndexManager().indexAll(project);
         javaProject = env.getJavaProject(project.getName());
-        waitForIndexer(javaProject);
+        waitUntilReady(javaProject);
 
         // overwrite the contents vars with the actual contents
         groovyClassContents = javaProject.findType("pack.AGroovyClass").getTypeRoot().getBuffer().getContents();
@@ -120,38 +109,31 @@ public final class BinarySearchTests extends SearchTestSuite {
         javaProject = null;
     }
 
-    private MockSearchRequestor performSearch(IJavaElement toSearchFor) throws Exception {
-        assertTrue("Expected binary member, but got: " + toSearchFor == null ? null : toSearchFor.getClass().getName(), toSearchFor instanceof BinaryMember);
-
-        SearchPattern pattern = SearchPattern.createPattern(toSearchFor, IJavaSearchConstants.REFERENCES);
-        SearchParticipant participant = SearchEngine.getDefaultSearchParticipant();
+    private List<SearchMatch> performSearch(final IJavaElement javaElement) throws Exception {
+        assertTrue("Expected binary member, but got: " + (javaElement == null ? null : javaElement.getClass().getName()), javaElement instanceof BinaryMember);
+        SearchPattern pattern = SearchPattern.createPattern(javaElement, IJavaSearchConstants.REFERENCES);
         IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] {javaProject});
-        MockSearchRequestor requestor = new MockSearchRequestor();
-        SimpleProgressMonitor monitor = new SimpleProgressMonitor("Search in project binaries");
-
-        new SearchEngine().search(pattern, new SearchParticipant[] {participant}, scope, requestor, monitor);
-        monitor.waitForCompletion(10);
-        return requestor;
+        return search(pattern, scope);
     }
 
-    private void assertMatches(String toFind, MockSearchRequestor requestor, int allMatches, int firstMatches) {
-        if (requestor.getMatches().size() != allMatches) {
-            fail("Expecting " + allMatches + " matches, but found " + requestor.getMatches().size() + "\n" + requestor.printMatches());
-        }
+    private void assertMatches(final String toFind, final List<SearchMatch> matches, final int allMatches, final int firstMatches) {
+        String matchesString = toString(matches);
+        assertEquals("Expecting " + allMatches + " matches, but found " + matches.size() + "\n" + matchesString, allMatches, matches.size());
+
         int currIndex = groovyClassContents.indexOf("def doit") + "def doit".length();
         for (int i = 0; i < firstMatches; i += 1) {
-            SearchMatch match = requestor.getMatches().get(i);
+            SearchMatch match = matches.get(i);
             currIndex = groovyClassContents.indexOf(toFind, currIndex);
-            assertEquals("Invalid start position in match " + i + "\n" + requestor.printMatches(), currIndex, match.getOffset());
-            assertEquals("Invalid length in match " + i + "\n" + requestor.printMatches(), toFind.length(), match.getLength());
+            assertEquals("Invalid start position in match " + i + "\n" + matchesString, currIndex, match.getOffset());
+            assertEquals("Invalid length in match " + i + "\n" + matchesString, toFind.length(), match.getLength());
             currIndex += toFind.length();
         }
         currIndex = groovyClassContents2.indexOf("def doit") + "def doit".length();
         for (int i = firstMatches; i < allMatches; i += 1) {
-            SearchMatch match = requestor.getMatches().get(i);
+            SearchMatch match = matches.get(i);
             currIndex = groovyClassContents2.indexOf(toFind, currIndex);
-            assertEquals("Invalid start position in match " + i + "\n" + requestor.printMatches(), currIndex, match.getOffset());
-            assertEquals("Invalid length in match " + i + "\n" + requestor.printMatches(), toFind.length(), match.getLength());
+            assertEquals("Invalid start position in match " + i + "\n" + matchesString, currIndex, match.getOffset());
+            assertEquals("Invalid length in match " + i + "\n" + matchesString, toFind.length(), match.getLength());
             currIndex += toFind.length();
         }
     }
@@ -161,15 +143,13 @@ public final class BinarySearchTests extends SearchTestSuite {
     @Test
     public void testClassDecl1() throws Exception {
         IType type = javaProject.findType("pack.AGroovyClass");
-        MockSearchRequestor requestor = performSearch(type);
-        assertMatches("AGroovyClass", requestor, 12, 2);
+        assertMatches("AGroovyClass", performSearch(type), 12, 2);
     }
 
     @Test
     public void testClassDecl2() throws Exception {
         IType type = javaProject.findType("pack.OtherClass");
-        MockSearchRequestor requestor = performSearch(type);
-        assertMatches("OtherClass", requestor, 4, 2);
+        assertMatches("OtherClass", performSearch(type), 4, 2);
     }
 
     @Test
@@ -177,8 +157,7 @@ public final class BinarySearchTests extends SearchTestSuite {
         IType type = javaProject.findType("pack.AGroovyClass");
         String toFind = "age_1";
         IField field = type.getField(toFind);
-        MockSearchRequestor requestor = performSearch(field);
-        assertMatches(toFind, requestor, 2, 2); // all was 4, but in binary synthetic accessor is indistinguishable from source method
+        assertMatches(toFind, performSearch(field), 2, 2); // all was 4, but in binary synthetic accessor is indistinguishable from source method
     }
 
     @Test
@@ -186,8 +165,7 @@ public final class BinarySearchTests extends SearchTestSuite {
         IType type = javaProject.findType("pack.AGroovyClass");
         String toFind = "name_1";
         IField field = type.getField(toFind);
-        MockSearchRequestor requestor = performSearch(field);
-        assertMatches(toFind, requestor, 2, 2); // all was 4, but in binary synthetic accessor is indistinguishable from source method
+        assertMatches(toFind, performSearch(field), 2, 2); // all was 4, but in binary synthetic accessor is indistinguishable from source method
     }
 
     @Test
@@ -195,8 +173,7 @@ public final class BinarySearchTests extends SearchTestSuite {
         IType type = javaProject.findType("pack.AGroovyClass");
         String toFind = "doit";
         IMethod method = type.getMethod(toFind, new String[0]);
-        MockSearchRequestor requestor = performSearch(method);
-        assertMatches(toFind, requestor, 4, 2);
+        assertMatches(toFind, performSearch(method), 4, 2);
     }
 
     @Test
@@ -204,8 +181,7 @@ public final class BinarySearchTests extends SearchTestSuite {
         IType type = javaProject.findType("pack.AGroovyClass");
         String toFind = "fieldInInitializer";
         IField method = type.getField(toFind);
-        MockSearchRequestor requestor = performSearch(method);
-        assertMatches(toFind, requestor, 1, 1); // all was 2, but in binary synthetic accessor is indistinguishable from source method
+        assertMatches(toFind, performSearch(method), 1, 1); // all was 2, but in binary synthetic accessor is indistinguishable from source method
     }
 
     @Test
@@ -213,7 +189,6 @@ public final class BinarySearchTests extends SearchTestSuite {
         IType type = javaProject.findType("pack.AGroovyClass");
         String toFind = "referencedInInitializer";
         IMethod method = type.getMethod(toFind, new String[0]);
-        MockSearchRequestor requestor = performSearch(method);
-        assertMatches(toFind, requestor, 2, 1);
+        assertMatches(toFind, performSearch(method), 2, 1);
     }
 }

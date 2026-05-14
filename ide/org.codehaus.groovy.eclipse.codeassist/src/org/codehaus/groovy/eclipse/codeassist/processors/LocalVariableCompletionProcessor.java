@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -203,10 +204,9 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
                     ((MethodNode) getContext().containingDeclaration).getVariableScope());
             }
         }
-        if (node instanceof ClassNode && ((ClassNode) node).isScript()) {
-            MethodNode script = ((ClassNode) node).getMethod("run", Parameter.EMPTY_ARRAY);
-            if (script != null && script.getCode() instanceof BlockStatement) {
-                return (BlockStatement) script.getCode();
+        if (node instanceof ClassNode && GroovyUtils.isScript((ClassNode) node)) {
+            for (MethodNode method : ((ClassNode) node).redirect().getMethods()) {
+                if (method.isScriptBody()) return (BlockStatement) method.getCode();
             }
         }
         return null;

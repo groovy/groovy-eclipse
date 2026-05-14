@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,7 +51,7 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
 
     private boolean isStatic;
 
-    private boolean isMethod = false;
+    private boolean isMethod;
 
     private String suggestionName;
 
@@ -95,7 +95,8 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
         this(parentShell, project, null, null, true);
     }
 
-    protected AddInferencingSuggestionDialogue(Shell parentShell, IProject project, IGroovySuggestion currentSuggestion, GroovySuggestionDeclaringType declaringType, boolean isActive) {
+    protected AddInferencingSuggestionDialogue(Shell parentShell, IProject project,
+            IGroovySuggestion currentSuggestion, GroovySuggestionDeclaringType declaringType, boolean isActive) {
         super(parentShell);
         this.project = project;
         this.currentSuggestion = currentSuggestion;
@@ -185,7 +186,8 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
             }
         });
 
-        JavaTypeBrowsingControl declaringTypeControl = new JavaTypeBrowsingControl(ControlTypes.DECLARING_TYPE, getOffsetLabelLocation(), declaringTypeName, getJavaProject()) {
+        JavaTypeBrowsingControl declaringTypeControl = new JavaTypeBrowsingControl(
+            ControlTypes.DECLARING_TYPE, getOffsetLabelLocation(), declaringTypeName, getJavaProject()) {
             // Don't check for parameterized types as it not necessary for declaring types
             @Override
             protected IValueCheckingRule getCachedValidationRule() {
@@ -205,7 +207,8 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
             }
         });
 
-        JavaTypeBrowsingControl suggestionTypeControl = new JavaTypeBrowsingControl(ControlTypes.TYPE, getOffsetLabelLocation(), suggestionType, getJavaProject()) {
+        JavaTypeBrowsingControl suggestionTypeControl = new JavaTypeBrowsingControl(
+                ControlTypes.TYPE, getOffsetLabelLocation(), suggestionType, getJavaProject()) {
             @Override
             protected ValueStatus isControlValueValid(String value) {
                 if (value == null || value.length() == 0) {
@@ -240,8 +243,8 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
         // Set Property as the default selected button
         ControlTypes defaultSuggestionTypeButton = isMethod ? ControlTypes.METHOD : ControlTypes.PROPERTY;
 
-        RadioSelectionDialogueControl radioSelection = new RadioSelectionDialogueControl(new IDialogueControlDescriptor[] {
-                ControlTypes.PROPERTY, ControlTypes.METHOD }, defaultSuggestionTypeButton);
+        RadioSelectionDialogueControl radioSelection = new RadioSelectionDialogueControl(
+            new IDialogueControlDescriptor[] {ControlTypes.PROPERTY, ControlTypes.METHOD}, defaultSuggestionTypeButton);
 
         radioSelection.createControlArea(parent);
 
@@ -277,15 +280,13 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
                 }
             }
         });
-
     }
 
     protected Point getOffsetLabelLocation() {
         if (labelControlOffset == null) {
-            IDialogueControlDescriptor[] descriptors = new IDialogueControlDescriptor[] { ControlTypes.DECLARING_TYPE,
-                    ControlTypes.IS_STATIC, ControlTypes.TYPE, ControlTypes.NAME };
+            IDialogueControlDescriptor[] descriptors = {ControlTypes.DECLARING_TYPE, ControlTypes.IS_STATIC, ControlTypes.TYPE, ControlTypes.NAME};
             String[] labelNames = new String[descriptors.length];
-            for (int i = 0; i < descriptors.length; ++i) {
+            for (int i = 0; i < descriptors.length; i += 1) {
                 labelNames[i] = descriptors[i].getLabel();
             }
             labelControlOffset = getOffsetLabelLocation(labelNames);
@@ -305,7 +306,5 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
                 }
             }
         });
-
     }
-
 }

@@ -18,6 +18,7 @@
  */
 package org.codehaus.groovy.control;
 
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.control.messages.ExceptionMessage;
 import org.codehaus.groovy.control.messages.LocatedMessage;
 import org.codehaus.groovy.control.messages.Message;
@@ -41,7 +42,7 @@ public class ErrorCollector implements Serializable {
     private static final long serialVersionUID = 2844774170905056755L;
 
     // GRECLIPSE add
-    public boolean transformActive;
+    public transient boolean transformActive;
     // GRECLIPSE end
 
     /**
@@ -83,7 +84,11 @@ public class ErrorCollector implements Serializable {
         }
     }
 
-    public void addErrorAndContinue(final SyntaxException error, final SourceUnit source) throws CompilationFailedException {
+    public void addErrorAndContinue(final String error, final ASTNode node, final SourceUnit source) {
+        addErrorAndContinue(Message.create(new SyntaxException(error, node), source));
+    }
+
+    public void addErrorAndContinue(final SyntaxException error, final SourceUnit source) {
         addErrorAndContinue(Message.create(error, source));
     }
 

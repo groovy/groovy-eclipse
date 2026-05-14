@@ -77,7 +77,7 @@
                         <reference definitionId="org.eclipse.jdt.groovy.core.isGroovyProject"/>
                         <and>
                            <reference definitionId="org.eclipse.jdt.groovy.core.isGroovySource"/>
-                           <test property="org.eclipse.jdt.groovy.core.hasMain"/>
+                           <test property="org.eclipse.jdt.launching.hasMain"/>
                         </and>
                      </or>
                   </iterate>
@@ -359,7 +359,7 @@
                menubarPath="groovy/configure">
          </action>
          <action
-               class="org.codehaus.groovy.eclipse.actions.AddGroovyClasspathContainerAction"
+               class="org.codehaus.groovy.eclipse.actions.GroovyClasspathContainerAction"
                enablesFor="1"
                id="org.codehaus.groovy.eclipse.importlibs.action"
                label="Groovy Libraries classpath container"
@@ -892,11 +892,11 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M2+M3+D G">
       </key>
-      <key
+      <!--key
             commandId="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.coverage"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M2+M3+E G"><!-- TestNG Suite also uses 'G' -->
-      </key>
+            sequence="M2+M3+E G"><!- TestNG Suite also uses 'G' ->
+      </key-->
       <key
             commandId="org.codehaus.groovy.eclipse.ui.convertToJava"
             contextId="org.eclipse.ui.contexts.window"

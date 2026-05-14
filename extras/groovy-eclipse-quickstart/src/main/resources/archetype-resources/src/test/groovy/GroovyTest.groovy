@@ -2,7 +2,7 @@ package ${package}
 
 import org.junit.Test
 
-import groovy.transform.NotYetImplemented
+import groovy.test.NotYetImplemented
 
 final class GroovyTest {
 	@Test @NotYetImplemented

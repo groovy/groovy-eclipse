@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 package org.codehaus.jdt.groovy.integration.internal;
 
 import java.util.Collections;
-import java.util.Optional;
 
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
@@ -32,7 +32,7 @@ import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
-import org.eclipse.jdt.internal.core.util.Util;
+import org.eclipse.jdt.internal.core.util.Messages;
 
 class MultiplexingIndexingParser extends IndexingParser {
 
@@ -40,7 +40,8 @@ class MultiplexingIndexingParser extends IndexingParser {
     private final boolean reportReferenceInfo;
     private ISourceElementRequestor requestor;
 
-    MultiplexingIndexingParser(final ISourceElementRequestor requestor, final IProblemFactory problemFactory, final CompilerOptions options, final boolean reportLocalDeclarations, final boolean optimizeStringLiterals, final boolean useSourceJavadocParser) {
+    MultiplexingIndexingParser(final ISourceElementRequestor requestor, final IProblemFactory problemFactory, final CompilerOptions options,
+            final boolean reportLocalDeclarations, final boolean optimizeStringLiterals, final boolean useSourceJavadocParser) {
         super(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
         this.notifier = ReflectionUtils.getPrivateField(SourceElementParser.class, "notifier", this);
         this.reportReferenceInfo = reportLocalDeclarations;
@@ -55,29 +56,21 @@ class MultiplexingIndexingParser extends IndexingParser {
 
     @Override
     public CompilationUnitDeclaration parseCompilationUnit(final ICompilationUnit compilationUnit, final boolean fullParse, final IProgressMonitor pm) {
-        if (!ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getFileName())) {
-            return super.parseCompilationUnit(compilationUnit, fullParse, pm);
-        } else {
-            // ASSUMPTIONS:
-            // 1) there is no difference between a diet and full parse in the groovy works, so can ignore the fullParse parameter
-            // 2) parsing is for the entire CU (ie- from character 0, to unit.getContents().length)
-            // 3) nodesToCategories map is not necessary. I think it has something to do with JavaDoc, but not sure
+        if (GroovyParser.isGroovyParserEligible(compilationUnit, readManager)) {
+            char[] contents = GroovyParser.getContents(compilationUnit, readManager);
+            String fileName = CharOperation.charToString(compilationUnit.getFileName());
+            CompilationResult compilationResult = new CompilationResult(compilationUnit, 0, 1, options.maxProblemsPerUnit);
+            GroovyCompilationUnitDeclaration gcud = new GroovyParser(options, problemReporter, false, true).dietParse(contents, fileName, compilationResult);
 
-            CompilationResult compilationResult = new CompilationResult(compilationUnit, 0, 0, options.maxProblemsPerUnit);
+            if (pm != null && pm.isCanceled())
+                throw new OperationCanceledException(Messages.operation_cancelled);
 
-            // FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
-            GroovyCompilationUnitDeclaration gcud = new GroovyParser(options, problemReporter, false, true).dietParse(compilationUnit, compilationResult);
+            new GroovyIndexingVisitor(requestor).visitModule(gcud.getModuleNode());
 
-            Optional.ofNullable(gcud.getModuleNode()).ifPresent(module -> {
-                try {
-                    new GroovyIndexingVisitor(requestor).visitModule(module);
-                } catch (RuntimeException e) {
-                    Util.log(e);
-                }
-            });
+            notifier.notifySourceElementRequestor(gcud, 0, contents.length, reportReferenceInfo, gcud.sourceEnds, Collections.emptyMap());
 
-            notifier.notifySourceElementRequestor(gcud, 0, compilationUnit.getContents().length, reportReferenceInfo, gcud.sourceEnds, Collections.EMPTY_MAP);
             return gcud;
         }
+        return super.parseCompilationUnit(compilationUnit, fullParse, pm);
     }
 }

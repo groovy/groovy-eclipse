@@ -20,11 +20,6 @@ package org.codehaus.groovy.control;
 
 import groovy.lang.GroovyClassLoader;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-
-import static java.util.Objects.requireNonNull;
-
 /**
  * A base class for data structures that can collect messages and errors
  * during processing.
@@ -64,16 +59,16 @@ public abstract class ProcessingUnit {
      * Initializes the ProcessingUnit to the empty state.
      */
     public ProcessingUnit(final CompilerConfiguration configuration, final GroovyClassLoader classLoader, final ErrorCollector errorCollector) {
-        setConfiguration(configuration != null ? configuration : CompilerConfiguration.DEFAULT); setClassLoader(classLoader);
-        this.errorCollector = errorCollector != null ? errorCollector : new ErrorCollector(getConfiguration());
-        configure(getConfiguration());
+        this.classLoader = classLoader;
+        this.configuration = configuration != null ? configuration : CompilerConfiguration.DEFAULT;
+        this.errorCollector = errorCollector != null ? errorCollector : new ErrorCollector(this.configuration);
+        configure(this.configuration);
     }
 
     /**
      * Reconfigures the ProcessingUnit.
      */
-    public void configure(CompilerConfiguration configuration) {
-        setConfiguration(configuration);
+    protected void configure(CompilerConfiguration configuration) {
     }
 
     /**
@@ -87,7 +82,7 @@ public abstract class ProcessingUnit {
      * Sets the CompilerConfiguration for this ProcessingUnit.
      */
     public final void setConfiguration(CompilerConfiguration configuration) {
-        this.configuration = requireNonNull(configuration);
+        this.configuration= java.util.Objects.requireNonNull(configuration);
     }
 
     /**
@@ -100,10 +95,11 @@ public abstract class ProcessingUnit {
     /**
      * Sets the class loader for use by this ProcessingUnit.
      */
+    @SuppressWarnings("removal")
     public void setClassLoader(final GroovyClassLoader loader) {
-        // ClassLoaders should only be created inside a doPrivileged block in case
-        // this method is invoked by code that does not have security permissions.
-        this.classLoader = loader != null ? loader : AccessController.doPrivileged((PrivilegedAction<GroovyClassLoader>) () -> {
+        // ClassLoaders should only be created inside doPrivileged block in case
+        // this method is invoked by code that does not have security permission
+        this.classLoader = loader != null ? loader : java.security.AccessController.doPrivileged((java.security.PrivilegedAction<GroovyClassLoader>) () -> {
             ClassLoader parent = Thread.currentThread().getContextClassLoader();
             if (parent == null) parent = ProcessingUnit.class.getClassLoader();
             return new GroovyClassLoader(parent, getConfiguration());
@@ -139,8 +135,9 @@ public abstract class ProcessingUnit {
      * Marks the current phase complete and processes any errors.
      */
     public void completePhase() throws CompilationFailedException {
-        // GRECLIPSE edit
-        //errorCollector.failIfErrors();
+        /* GRECLIPSE edit
+        errorCollector.failIfErrors();
+        */
         if (errorCollector.hasErrors()) {
             erroredAtPhase = phase;
         }

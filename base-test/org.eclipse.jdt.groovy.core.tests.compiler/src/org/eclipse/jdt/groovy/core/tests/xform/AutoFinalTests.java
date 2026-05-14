@@ -15,22 +15,13 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-import static org.junit.Assume.assumeTrue;
-
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
  * Test cases for {@link groovy.transform.AutoFinal}.
  */
 public final class AutoFinalTests extends GroovyCompilerTestSuite {
-
-    @Before
-    public void setUp() {
-        assumeTrue(isAtLeastGroovy(25));
-    }
 
     @Test
     public void testAutoFinal1() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,12 @@
 package org.eclipse.jdt.core.groovy.tests.locations;
 
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assume.assumeTrue;
 
 import java.util.List;
 
-import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -33,10 +30,12 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceRange;
+import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.Annotation;
+import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -46,7 +45,6 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
-import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -150,16 +148,20 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         while (source.substring(start).startsWith("/*")) {
             start = source.indexOf("*/", start) + 2;
         }
-
         String endTag = "/*" + astKind + memberNumber + "e*/";
-        int len = (isParrotParser() || (decl instanceof IField && source.charAt(source.indexOf(endTag) - 1) == ';') ||
-            (decl instanceof IMethod && decl.getNameRange().getLength() > 0 && !Flags.isAbstract(decl.getFlags())) ? 0 : endTag.length());
-        int end = source.indexOf(endTag) + len;
-        if (len == 0 && source.substring(0, end).endsWith("*/")) {
-            end = source.substring(0, end).lastIndexOf("/*");
-        } else if (len > 0) {
-            while (source.substring(end).startsWith("/*")) {
-                end = source.indexOf("*/", end) + 2;
+        int end = 0;
+        if (start < startTag.length()) {
+            start = 0;
+        } else {
+            int len = (isParrotParser() || (decl instanceof IField && source.charAt(source.indexOf(endTag) - 1) == ';') ||
+                (decl instanceof IMethod && decl.getNameRange().getLength() > 0 && !Flags.isAbstract(decl.getFlags())) ? 0 : endTag.length());
+            end = source.indexOf(endTag) + len;
+            if (len == 0 && source.substring(0, end).endsWith("*/")) {
+                end = source.substring(0, end).lastIndexOf("/*");
+            } else if (len > 0) {
+                while (source.substring(end).startsWith("/*")) {
+                    end = source.indexOf("*/", end) + 2;
+                }
             }
         }
 
@@ -184,21 +186,27 @@ public final class SourceLocationsTests extends BuilderTestSuite {
 
         List<ASTNode> mods = body.modifiers();
         if (mods != null && !mods.isEmpty()) {
+            for (ASTNode mod : mods) {
+                if (mod instanceof Annotation) {
+                    var name = ((Annotation) mod).getTypeName();
+                    assertEquals(mod.getStartPosition() + 1, name.getStartPosition());
+                    assertEquals(name.getFullyQualifiedName().length(), name.getLength());
+                }
+            }
             if (!isParrotParser() && last(mods) instanceof Annotation) {
                 modsEnd += modsEndTag.length(); // antlr2 includes comment
             }
-            int one = mods.get(0).getStartPosition(), two = last(mods).getStartPosition() + last(mods).getLength();
-            assertEquals(decl + "\nhas incorrect modifiers start value", modsStart, one);
-            assertEquals(decl + "\nhas incorrect modifiers end value", modsEnd, two);
+            assertEquals(decl + "\nhas incorrect modifiers start value", modsStart, mods.get(0).getStartPosition());
+            assertEquals(decl + "\nhas incorrect modifiers end value",   modsEnd,   last(mods).getStartPosition() + last(mods).getLength());
         } else {
             assertEquals(decl + "\nhas incorrect modifiers start value", modsStart, start);
-            assertEquals(decl + "\nhas incorrect modifiers end value", modsEnd, start);
+            assertEquals(decl + "\nhas incorrect modifiers end value",   modsEnd,   start);
         }
 
         String nameStartTag = "/*" + astKind + memberNumber + "sn*/";
         int nameStart = source.indexOf(nameStartTag);
         if (nameStart == -1) {
-            nameStart = start + 1;
+            nameStart = start;
         } else {
             nameStart += nameStartTag.length();
         }
@@ -214,60 +222,55 @@ public final class SourceLocationsTests extends BuilderTestSuite {
             nameEnd += nameEndTag.length();
         }
 
-        if (!(body instanceof Initializer)) {
+        if (astKind != 'i') {
             ISourceRange nameRange = decl.getNameRange();
             assertEquals(decl + "\nhas incorrect name start value", nameStart, nameRange.getOffset());
             assertEquals(decl + "\nhas incorrect name end value", nameEnd, nameRange.getOffset() + nameRange.getLength());
         }
-        if (body instanceof FieldDeclaration) {
+        if (astKind == 'f') {
             SimpleName name = ((VariableDeclarationFragment) ((FieldDeclaration) body).fragments().get(0)).getName();
             assertEquals(body + "\nhas incorrect source start value", nameStart, name.getStartPosition());
             assertEquals(body + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + name.getLength());
-        } else if (body instanceof MethodDeclaration) {
-            SimpleName name = ((MethodDeclaration) body).getName();
+        } else if (astKind == 'm') {
+            SimpleName name = body instanceof MethodDeclaration ? ((MethodDeclaration) body).getName() : ((AnnotationTypeMemberDeclaration) body).getName();
             assertEquals(body + "\nhas incorrect source start value", nameStart, name.getStartPosition());
             assertEquals(body + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + (nameEnd - nameStart));
         }
 
-        if (astKind == 'm' || astKind == 't') {
-            String bodyStartTag = "/*" + astKind + memberNumber + "sb*/";
-            int bodyStart = source.indexOf(bodyStartTag) + bodyStartTag.length();
-            if (body instanceof MethodDeclaration) {
-                MethodDeclaration md = (MethodDeclaration) body;
-                if (md.getBody() != null) { // may be null for interfaces, @interfaces, abstract methods
-                    assertEquals(body + "\nhas incorrect body start value", bodyStart, md.getBody().getStartPosition());
-                }
-            }/* else if (body instanceof AbstractTypeDeclaration) {
-                AbstractTypeDeclaration td = (AbstractTypeDeclaration) body;
-                assertEquals(body + "\nhas incorrect body start value", bodyStart, td.???.getStartPosition());
-            }*/
+        String bodyStartTag = "/*" + astKind + memberNumber + "sb*/";
+        int bodyStart = source.indexOf(bodyStartTag);
+        if (bodyStart != -1) {
+            bodyStart += bodyStartTag.length();
+        } else {
+            bodyStart += 1;
+        }
+        if (astKind == 't') {
+            //AbstractTypeDeclaration td = (AbstractTypeDeclaration) body;
+            //assertEquals(body + "\nhas incorrect body start value", bodyStart, td.???.getStartPosition());
+        } else if (astKind == 'i') {
+            assertEquals(body + "\nhas incorrect body start value", bodyStart, ((Initializer) body).getBody().getStartPosition());
+        } else if (astKind == 'm' && end > 0 && !Flags.isAbstract(decl.getFlags())) {
+            assertEquals(body + "\nhas incorrect body start value", bodyStart, ((MethodDeclaration) body).getBody().getStartPosition());
         }
 
         int bodyEnd = body.getStartPosition() + body.getLength();
-        if (decl instanceof IMethod && (decl.getNameRange().getLength() == 0 ||
-                (Flags.isAbstract(((IMethod) decl).getFlags()) && !Flags.isAnnotation(decl.getDeclaringType().getFlags())))) {
-            bodyEnd += 1; // construcotrs and methods with a body have been set back by 1 for JDT compatibility
+        if (bodyEnd > 0 && decl instanceof IMethod && (decl.getNameRange().getLength() == 0 ||
+                (Flags.isAbstract(decl.getFlags()) && !Flags.isAnnotation(decl.getDeclaringType().getFlags())))) {
+            bodyEnd += 1; // constructors and methods with a body have been set back by 1 for JDT compatibility
         } else if (body instanceof FieldDeclaration && source.charAt(source.indexOf(endTag) - 1) != ';') {
             end -= endTag.length();
         }
         assertEquals(body + "\nhas incorrect source end value", end, bodyEnd);
     }
 
-    private static void assertScript(String source, ICompilationUnit unit, String startText, String endText) throws Exception {
-        assertUnit(unit, source);
-        IType script = unit.getTypes()[0];
-        IMethod runMethod = script.getMethod("run", new String[0]);
-        int start = source.indexOf(startText);
-        int end = source.lastIndexOf(endText) + endText.length();
-        assertEquals("Wrong start for script class.  Text:\n" + source, start, script.getSourceRange().getOffset());
-        assertEquals("Wrong end for script class.  Text:\n" + source, end, script.getSourceRange().getOffset() + script.getSourceRange().getLength());
-        assertEquals("Wrong start for run method.  Text:\n" + source, start, runMethod.getSourceRange().getOffset());
-        assertEquals("Wrong end for run method.  Text:\n" + source, end, runMethod.getSourceRange().getOffset() + script.getSourceRange().getLength());
+    private static void assertRange(ISourceReference reference, int start, int until) throws Exception {
+        assertEquals("Wrong offset for source element;", start, reference.getSourceRange().getOffset());
+        assertEquals("Wrong end offset for source element;", until, reference.getSourceRange().getOffset() + reference.getSourceRange().getLength());
     }
 
     private static void assertUnit(ICompilationUnit unit, String source) throws Exception {
-        assertEquals(unit + "\nhas incorrect source start value", 0, unit.getSourceRange().getOffset());
-        assertEquals(unit + "\nhas incorrect source end value", source.length(), unit.getSourceRange().getLength());
+        assertEquals(unit + "\nhas incorrect source start value;", 0, unit.getSourceRange().getOffset());
+        assertEquals(unit + "\nhas incorrect source end value;", source.length(), unit.getSourceRange().getLength());
     }
 
     private ICompilationUnit createCompUnit(String pack, String name, String text) throws Exception {
@@ -282,11 +285,9 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     private IPath createGenericProject() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addGroovyJars(projectPath);
-        env.removePackageFragmentRoot(projectPath, "");
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
         fullBuild(projectPath);
-        return root;
+
+        return env.getPackageFragmentRootPath(projectPath, "src");
     }
 
     //--------------------------------------------------------------------------
@@ -526,11 +527,34 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     }
 
     @Test
+    public void testSourceLocationsForScript0() throws Exception {
+        String source =
+            "package p1\n";
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType script = unit.getTypes()[0];
+        assertRange(script, source.indexOf("\n"), source.indexOf("\n") + 1); // odd but required for new folding
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, source.indexOf("\n"), source.indexOf("\n"));
+    }
+
+    @Test
     public void testSourceLocationsForScript1() throws Exception {
         String source =
             "package p1\n" +
             "def x";
-        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "def x");
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType script = unit.getTypes()[0];
+        assertRange(script, source.indexOf("def"), source.length());
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, source.indexOf("def"), source.length());
     }
 
     @Test
@@ -538,7 +562,15 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "def x() {}";
-        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "{}");
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType script = unit.getTypes()[0];
+        assertRange(script, source.indexOf("def"), source.length());
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, 0, 0);
     }
 
     @Test
@@ -546,7 +578,15 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "x() \n def x() {}";
-        assertScript(source, createCompUnit("p1", "Hello", source), "x()", "{}");
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType script = unit.getTypes()[0];
+        assertRange(script, source.indexOf("x"), source.length());
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, source.indexOf("x"), source.indexOf("x") + (isParrotParser() ? 3 : 4));
     }
 
     @Test
@@ -554,7 +594,15 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "def x() {}\nx()";
-        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "x()");
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType script = unit.getTypes()[0];
+        assertRange(script, source.indexOf("def"), source.length());
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, source.lastIndexOf("x"), source.length());
     }
 
     @Test
@@ -562,7 +610,15 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "def x() {}\nx()\ndef y() {}";
-        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "def y() {}");
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType script = unit.getTypes()[0];
+        assertRange(script, source.indexOf("def"), source.length());
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, source.lastIndexOf("x"), source.lastIndexOf("x") + 3);
     }
 
     @Test
@@ -570,7 +626,37 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "x()\n def x() {}\n\ndef y() {}\ny()";
-        assertScript(source, createCompUnit("p1", "Hello", source), "x()", "\ny()");
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType script = unit.getTypes()[0];
+        assertRange(script, source.indexOf("x"), source.length());
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, source.indexOf("x"), source.length());
+    }
+
+    @Test
+    public void testSourceLocationsForScript7() throws Exception {
+        String source =
+            "package p1\n" +
+            "class C {}\n" +
+            "println()\n";
+
+        ICompilationUnit unit = createCompUnit("p1", "Hello", source);
+        assertUnit(unit, source);
+
+        IType other = unit.getTypes()[0];
+        assertEquals("C", other.getElementName());
+        assertRange(other, source.indexOf("class"), source.indexOf("}") + 1);
+
+        IType script = unit.getTypes()[1];
+        assertEquals("Hello", script.getElementName());
+        assertRange(script, source.indexOf("println"), source.lastIndexOf("\n"));
+
+        IMethod method = script.getMethod("run", new String[0]);
+        assertRange(method, source.indexOf("println"), source.lastIndexOf("\n"));
     }
 
     @Test
@@ -633,13 +719,29 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     }
 
     @Test
+    public void testSourceLocationsStaticInitializers() throws Exception {
+        String source =
+            "package p1\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ /*t0sb*/{\n" +
+            "  /*i0s*/static/*i0em*/ /*i0sb*/{\n" +
+            "    int i = 0\n" +
+            "  }/*i0e*/\n" +
+            "  /*i1s*/static/*i1em*/\n" +
+            "  /*i1sb*/{\n" +
+            "    print 'f'\n" +
+            "  }/*i1e*/\n" +
+            "}/*t0e*/\n";
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
+    }
+
+    @Test
     public void testSourceLocationsObjectInitializers1() throws Exception {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ /*t0sb*/{\n" +
-            "  /*i0s*//*m1s*//*m1sb*/{\n" +
+            "  /*i1s*//*i1sb*/{\n" +
             "    int i = 0\n" +
-            "  }/*i0e*//*m1e*/\n" +
+            "  }/*i1e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
@@ -649,13 +751,13 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ /*t0sb*/{\n" +
-            "  /*i0s*//*m1s*//*m1sb*/{\n" +
+            "  /*i1s*//*i1sb*/{\n" +
             "    int i = 0\n" +
-            "  }/*i0e*/\n" +
-            "  /*i2s*/{\n" +
+            "  }/*i1e*/\n" +
+            "  /*i2s*//*i2sb*/{\n" +
             "    int j = 1\n" +
             "  }/*i2e*/\n" +
-            "  /*i3s*/{\n" +
+            "  /*i3s*//*i3sb*/{\n" +
             "  }/*i3e*//*m1e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
@@ -700,20 +802,6 @@ public final class SourceLocationsTests extends BuilderTestSuite {
             "  }/*m0e*/    \t    \n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
-    }
-
-    @Test // STS-3878
-    public void testErrorPositionForUnsupportedOperation() throws Exception {
-        assumeTrue(!isAtLeastGroovy(30));
-        String source =
-            "def a = 'a'\n" +
-            "def b = 'b'\n" +
-            "println a === b\n";
-        IPath root = createGenericProject();
-        IPath path = env.addGroovyClass(root, "", "Hello", source);
-        incrementalBuild();
-        expectingSpecificProblemFor(root, new Problem("p/Hello",
-            "Groovy:Operator (\"===\" at 3:11:  \"===\" ) not supported", path, 34, 37, 60, IMarker.SEVERITY_ERROR));
     }
 
     @Test

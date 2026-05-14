@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,15 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.groovy.tests.MockPossibleMatch;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.groovy.search.ITypeRequestor;
-import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 import org.junit.Test;
 
 public final class FieldReferenceSearchTests extends SearchTestSuite {
@@ -178,42 +178,8 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
             "}\n");
     }
 
-    @Test
-    public void testFieldReferencesInClass5() throws Exception {
-        createUnit("other", "Other",
-            "class Third {\n" +
-            "  private String xxx\n" +
-            "  String getXxx() {\n" +
-            "    xxx\n" +
-            "  }\n" +
-            "  void setXxx(String xxx) {\n" +
-            "    this.xxx = xxx\n" +
-            "  }\n" +
-            "}\n" +
-            "\n" +
-            "@groovy.transform.CompileStatic\n" +
-            "class Other {" +
-            "  Other() {\n" +
-            "    def t = new Third(xxx: 'abc')\n" +
-            "    def m = t.&setXxx\n" +
-            "    m('xyz')\n" +
-            "  }\n" +
-            "}\n");
-
-        doTestForTwoFieldReferencesInClass(
-            "class Second extends First {\n" +
-            "  int getXxx() {\n" +
-            "    return this.xxx\n" +
-            "  }\n" +
-            "  def whatever\n" +
-            "  void setXxx(int value) {\n" +
-            "    this.xxx = value\n" +
-            "  }\n" +
-            "}\n");
-    }
-
     @Test // https://github.com/groovy/groovy-eclipse/issues/891
-    public void testFieldReferencesInClass6() {
+    public void testFieldReferencesInClass5() {
         String contents =
             "@groovy.transform.CompileStatic\n" +
             "class Pogo {\n" +
@@ -228,20 +194,16 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
 
         GroovyCompilationUnit unit = createUnit("Pogo", contents);
         IField field = findType("Pogo", unit).getField("flag");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), unit);
 
-        MockPossibleMatch possibleMatch = new MockPossibleMatch(unit);
-        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch,
-            SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), searchRequestor);
-        factory.createVisitor(possibleMatch).visitCompilationUnit(typeRequestor);
-
-        assertEquals("Should have found 3 matches, but found:\n" + searchRequestor.printMatches(), 3, searchRequestor.getMatches().size());
-        assertLocation(searchRequestor.getMatch(0), contents.indexOf("this.flag") + "this.".length(), "flag".length());
-        assertLocation(searchRequestor.getMatch(1), contents.indexOf("that.flag") + "that.".length(), "flag".length());
-        assertLocation(searchRequestor.getMatch(2), contents.lastIndexOf("flag"), "flag".length());
+        assertEquals("Should have found 3 matches, but found:\n" + toString(matches), 3, matches.size());
+        assertLocation(matches.get(0), contents.indexOf("this.flag") + "this.".length(), "flag".length());
+        assertLocation(matches.get(1), contents.indexOf("that.flag") + "that.".length(), "flag".length());
+        assertLocation(matches.get(2), contents.lastIndexOf("flag"), "flag".length());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/935
-    public void testFieldReferencesInClass7() {
+    public void testFieldReferencesInClass6() {
         GroovyCompilationUnit pogo = createUnit("Pogo",
             "class Pogo {\n" +
             "  boolean flag\n" +
@@ -255,15 +217,12 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
             "  }\n" +
             "}\n";
 
-        IField field = findType("Pogo", pogo).getField("flag");
         GroovyCompilationUnit unit = createUnit("C", contents);
-        MockPossibleMatch possibleMatch = new MockPossibleMatch(unit);
-        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch,
-            SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), searchRequestor);
-        factory.createVisitor(possibleMatch).visitCompilationUnit(typeRequestor);
+        IField field = findType("Pogo", pogo).getField("flag");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), unit);
 
-        assertEquals("Should have found 1 matches, but found:\n" + searchRequestor.printMatches(), 1, searchRequestor.getMatches().size());
-        assertLocation(searchRequestor.getMatch(0), contents.lastIndexOf("flag"), "flag".length());
+        assertEquals("Should have found 1 matches, but found:\n" + toString(matches), 1, matches.size());
+        assertLocation(matches.get(0), contents.lastIndexOf("flag"), "flag".length());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/939
@@ -283,17 +242,13 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
 
         GroovyCompilationUnit unit = createUnit("script", contents);
         IField field = findType("Pogo", unit).getField("flag");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), unit);
 
-        MockPossibleMatch possibleMatch = new MockPossibleMatch(unit);
-        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch,
-            SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), searchRequestor);
-        factory.createVisitor(possibleMatch).visitCompilationUnit(typeRequestor);
-
-        assertEquals("Should have found 4 matches, but found:\n" + searchRequestor.printMatches(), 4, searchRequestor.getMatches().size());
-        assertLocation(searchRequestor.getMatch(0), contents.indexOf("flag", contents.indexOf("with")), "flag".length());
-        assertLocation(searchRequestor.getMatch(1), contents.indexOf("flag", contents.indexOf("def ")), "flag".length());
-        assertLocation(searchRequestor.getMatch(2), contents.indexOf("flag = false"), "flag".length());
-        assertLocation(searchRequestor.getMatch(3), contents.lastIndexOf("flag"), "flag".length());
+        assertEquals("Should have found 4 matches, but found:\n" + toString(matches), 4, matches.size());
+        assertLocation(matches.get(0), contents.indexOf("flag", contents.indexOf("with")), "flag".length());
+        assertLocation(matches.get(1), contents.indexOf("flag", contents.indexOf("def ")), "flag".length());
+        assertLocation(matches.get(2), contents.indexOf("flag = false"), "flag".length());
+        assertLocation(matches.get(3), contents.lastIndexOf("flag"), "flag".length());
     }
 
     @Test
@@ -379,15 +334,11 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
         int offset = contents.indexOf("with {");
         GroovyCompilationUnit unit = createUnit("Outer", contents);
         IField field = findType("Outer", unit).getType("Inner1").getField("something");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), unit);
 
-        MockPossibleMatch possibleMatch = new MockPossibleMatch(unit);
-        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch,
-            SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), searchRequestor);
-        factory.createVisitor(possibleMatch).visitCompilationUnit(typeRequestor);
-
-        assertEquals("Should have found 2 matches, but found:\n" + searchRequestor.printMatches(), 2, searchRequestor.getMatches().size());
-        assertLocation(searchRequestor.getMatch(0), contents.indexOf("something", offset), "something".length());
-        assertLocation(searchRequestor.getMatch(1), contents.indexOf("$something", offset) + 1, "something".length());
+        assertEquals("Should have found 2 matches, but found:\n" + toString(matches), 2, matches.size());
+        assertLocation(matches.get(0), contents.indexOf("something", offset), "something".length());
+        assertLocation(matches.get(1), contents.indexOf("$something", offset) + 1, "something".length());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/788
@@ -412,15 +363,147 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
         int offset = contents.indexOf("with {");
         GroovyCompilationUnit unit = createUnit("Outer", contents);
         IField field = findType("Outer", unit).getType("Inner2").getField("something");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), unit);
 
-        MockPossibleMatch possibleMatch = new MockPossibleMatch(unit);
-        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch,
-            SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), searchRequestor);
-        factory.createVisitor(possibleMatch).visitCompilationUnit(typeRequestor);
+        assertEquals("Should have found 2 matches, but found:\n" + toString(matches), 2, matches.size());
+        assertLocation(matches.get(0), contents.indexOf("owner.something", offset) + 6, "something".length());
+        assertLocation(matches.get(1), contents.indexOf("$owner.something", offset) + 7, "something".length());
+    }
 
-        assertEquals("Should have found 2 matches, but found:\n" + searchRequestor.printMatches(), 2, searchRequestor.getMatches().size());
-        assertLocation(searchRequestor.getMatch(0), contents.indexOf("owner.something", offset) + 6, "something".length());
-        assertLocation(searchRequestor.getMatch(1), contents.indexOf("$owner.something", offset) + 7, "something".length());
+    @Test
+    public void testFindReadAccesses1() {
+        String contents =
+            "class Pogo {\n" +
+            "  String string\n" +
+            "}\n" +
+            "def obj = new Pogo(string: null)\n" +
+            "def str = obj.string\n" + // yes
+            "obj.string = str\n" +
+            "str = obj.@string\n" + // yes
+            "obj.@string = str\n" +
+            "str += obj.string\n" + // yes
+            "obj.string += str\n" + // ???
+            "str = obj.getString()\n" +
+            "obj.setString( null )\n" +
+            "str = obj.'getString'()\n" +
+            "obj.'setString'( null )\n" +
+            "def fun = obj.&getString\n" +
+            "fun = obj.&setString\n";
+
+        GroovyCompilationUnit unit = createUnit("foo", contents);
+        IField field = findType("Pogo", unit).getField("string");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.READ_ACCESSES), unit);
+
+        assertEquals(3, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.indexOf(".string") + 1, 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertLocation(matches.get(1), contents.indexOf("@string") + 1, 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
+        assertLocation(matches.get(2), contents.indexOf("+= obj.string") + 7, 6);
+    }
+
+    @Test
+    public void testFindReadAccesses2() {
+        String contents =
+            "class Pogo {\n" +
+            "  String string\n" +
+            "}\n" +
+            "new Pogo().with {\n" +
+            "  def str = string\n" + // yes
+            "  string = str\n" +
+            "  str = delegate.@string\n" + // yes
+            "  delegate.@string = str\n" +
+            "  str += string\n" + // yes
+            "  string += str\n" + // ???
+            "  str = getString()\n" +
+            "  setString( null )\n" +
+            "  str = 'getString'()\n" +
+            "  'setString'( null )\n" +
+            "  def fun = delegate.&getString\n" +
+            "  fun = delegate.&setString\n" +
+            "}\n";
+
+        GroovyCompilationUnit unit = createUnit("foo", contents);
+        IField field = findType("Pogo", unit).getField("string");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.READ_ACCESSES), unit);
+
+        assertEquals(3, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.indexOf("= string") + 2, 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertLocation(matches.get(1), contents.indexOf("@string") + 1, 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
+        assertLocation(matches.get(2), contents.indexOf("+= string") + 3, 6);
+    }
+
+    @Test
+    public void testFindWriteAccesses1() {
+        String contents =
+            "class Pogo {\n" +
+            "  String string\n" +
+            "}\n" +
+            "def obj = new Pogo(string: null)\n" +
+            "def str = obj.string\n" +
+            "obj.string = str\n" + // yes
+            "str = obj.@string\n" +
+            "obj.@string = str\n" + // yes
+            "str += obj.string\n" +
+            "obj.string += str\n" + // yes
+            "str = obj.getString()\n" +
+            "obj.setString( null )\n" +
+            "str = obj.'getString'()\n" +
+            "obj.'setString'( null )\n" +
+            "def fun = obj.&getString\n" +
+            "fun = obj.&setString\n";
+
+        GroovyCompilationUnit unit = createUnit("foo", contents);
+        IField field = findType("Pogo", unit).getField("string");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.WRITE_ACCESSES), unit);
+
+        assertEquals(4, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.indexOf("string: "), 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertLocation(matches.get(1), contents.indexOf(".string =") + 1, 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
+        assertLocation(matches.get(2), contents.indexOf("@string =") + 1, 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(3).getAccuracy());
+        assertLocation(matches.get(3), contents.indexOf(".string +") + 1, 6);
+    }
+
+    @Test
+    public void testFindWriteAccesses2() {
+        String contents =
+            "class Pogo {\n" +
+            "  String string\n" +
+            "}\n" +
+            "new Pogo().with {\n" +
+            "  def str = string\n" +
+            "  string = str\n" + // yes
+            "  str = delegate.@string\n" +
+            "  delegate.@string = str\n" + // yes
+            "  str += string\n" +
+            "  string += str\n" + // yes
+            "  str = getString()\n" +
+            "  setString( null )\n" +
+            "  str = 'getString'()\n" +
+            "  'setString'( null )\n" +
+            "  def fun = delegate.&getString\n" +
+            "  fun = delegate.&setString\n" +
+            "}\n";
+
+        GroovyCompilationUnit unit = createUnit("foo", contents);
+        IField field = findType("Pogo", unit).getField("string");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.WRITE_ACCESSES), unit);
+
+        assertEquals(3, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.indexOf("string ="), 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertLocation(matches.get(1), contents.indexOf("@string =") + 1, 6);
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
+        assertLocation(matches.get(2), contents.indexOf("string +="), 6);
     }
 
     //--------------------------------------------------------------------------

@@ -1,9 +1,8 @@
-// Generated from GroovyParser.g4 by ANTLR 4.7.4
+// Generated from GroovyParser.g4 by ANTLR 4.9.0
 package org.apache.groovy.parser.antlr4;
 
     import java.util.Map;
     import org.codehaus.groovy.ast.NodeMetaDataHandler;
-    import org.apache.groovy.parser.antlr4.SemanticPredicates;
 
 import groovyjarjarantlr4.v4.runtime.Token;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
@@ -19,7 +18,7 @@ import groovyjarjarantlr4.v4.runtime.tree.ParseTreeVisitor;
 public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	/**
 	 * Visit a parse tree produced by the {@code identifierPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#primary}.
+	 * labeled alternative in {@link GroovyParser#commandPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -27,7 +26,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code literalPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#primary}.
+	 * labeled alternative in {@link GroovyParser#commandPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -35,7 +34,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code gstringPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#primary}.
+	 * labeled alternative in {@link GroovyParser#commandPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -67,7 +66,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code parenPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#primary}.
+	 * labeled alternative in {@link GroovyParser#namedPropertyArgPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -83,7 +82,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code listPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#primary}.
+	 * labeled alternative in {@link GroovyParser#namedPropertyArgPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -91,7 +90,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code mapPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#primary}.
+	 * labeled alternative in {@link GroovyParser#namedPropertyArgPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -392,14 +391,6 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	Result visitLocalVariableDeclarationStmtAlt(@NotNull GroovyParser.LocalVariableDeclarationStmtAltContext ctx);
-
-	/**
-	 * Visit a parse tree produced by the {@code methodDeclarationStmtAlt}
-	 * labeled alternative in {@link GroovyParser#statement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	Result visitMethodDeclarationStmtAlt(@NotNull GroovyParser.MethodDeclarationStmtAltContext ctx);
 
 	/**
 	 * Visit a parse tree produced by the {@code expressionStmtAlt}
@@ -982,13 +973,6 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	Result visitLocalVariableDeclaration(@NotNull GroovyParser.LocalVariableDeclarationContext ctx);
 
 	/**
-	 * Visit a parse tree produced by {@link GroovyParser#classifiedModifiers}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	Result visitClassifiedModifiers(@NotNull GroovyParser.ClassifiedModifiersContext ctx);
-
-	/**
 	 * Visit a parse tree produced by {@link GroovyParser#variableDeclaration}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -1388,11 +1372,11 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	Result visitArguments(@NotNull GroovyParser.ArgumentsContext ctx);
 
 	/**
-	 * Visit a parse tree produced by {@link GroovyParser#enhancedArgumentList}.
+	 * Visit a parse tree produced by {@link GroovyParser#enhancedArgumentListInPar}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	Result visitEnhancedArgumentList(@NotNull GroovyParser.EnhancedArgumentListContext ctx);
+	Result visitEnhancedArgumentListInPar(@NotNull GroovyParser.EnhancedArgumentListInParContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link GroovyParser#enhancedArgumentListElement}.

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@
 package org.eclipse.jdt.groovy.core.tests.basic;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.Assume.assumeFalse;
 
 import java.util.List;
 
@@ -218,7 +219,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[Landscape, Portrait]");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9301
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7773, 8507, 9301 and 9306
     public void testEnum3b() {
         //@formatter:off
         String[] sources = {
@@ -228,7 +229,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "Orientation.groovy",
             "enum Orientation {\n" +
             "  LANDSCAPE, PORTRAIT,\n" + // trailing comma
-            "  \n" +
+            "  ;\n" +
             "  @Override\n" +
             "  String toString() {\n" +
             "    name().toLowerCase().capitalize()\n" +
@@ -304,7 +305,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "Orientation.groovy",
             "enum Orientation {\n" +
             "  LANDSCAPE('Landscape'), PORTRAIT('Portrait'),\n" + // trailing comma
-            "  \n" +
+            "  ;\n" +
             "  Orientation(String string) {\n" +
             "    this.string = string\n" +
             "  }\n" +
@@ -387,7 +388,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "Orientation.groovy",
             "enum Orientation {\n" +
             "  LANDSCAPE('Landscape'), PORTRAIT('Portrait'),\n" + // trailing comma
-            "  \n" +
+            "  ;\n" +
             "  private String string\n" +
             "  \n" +
             "  Orientation(String string) {\n" +
@@ -456,7 +457,8 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
 
             "NonFinal.groovy",
             "enum NonFinal {\n" +
-            "  One(1), Two(2),\n" +
+            "  One(1), Two(2),\n" + // trailing comma
+            "  ;\n" +
             "  Object value\n" +
             "  NonFinal(value) {\n" +
             "    this.value = value\n" +
@@ -481,7 +483,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "  CLUBS(Color.BLACK),\n" +
             "  DIAMONDS(Color.RED),\n" +
             "  HEARTS(Color.RED),\n" +
-            "  SPADES(Color.BLACK),\n" +
+            "  SPADES(Color.BLACK);\n" +
             "  \n" +
             "  final Color color\n" +
             "  Suit(Color color) {\n" +
@@ -585,7 +587,9 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             // Should have one method
             List<MethodNode> methods = classnode.getMethods();
             assertEquals(1, methods.size());
-            assertEquals("int compareTo(java.lang.Object)", methods.get(0).getTypeDescriptor());
+            assertEquals("compareTo", methods.get(0).getName());
+            assertEquals(1, methods.get(0).getParameters().length);
+            assertEquals("int", methods.get(0).getReturnType().toString(false));
 
             classnode.lazyClassInit();
         } finally {
@@ -639,7 +643,9 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             // Should have one method
             List<MethodNode> methods = classnode.getMethods();
             assertEquals(1, methods.size());
-            assertEquals("int compareTo(java.lang.Object)", methods.get(0).getTypeDescriptor());
+            assertEquals("compareTo", methods.get(0).getName());
+            assertEquals(1, methods.get(0).getParameters().length);
+            assertEquals("int", methods.get(0).getReturnType().toString(false));
         } finally {
             JDTResolver.instances.clear();
             JDTResolver.recordInstances = false;
@@ -658,7 +664,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "}\n" +
             "\n" +
             "class A {\n" +
-            "  public enum C2{\n" +
+            "  enum C2{\n" +
             "    TEST_C2\n" +
             "  }\n" +
             "}\n",
@@ -699,9 +705,60 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+
+        checkGCUDeclaration("A.groovy",
+            "package be.flow;\n" +
+            "public enum C1 {\n" +
+            "  TEST_C1,\n" +
+            "  public static final be.flow.C1 MIN_VALUE;\n" +
+            "  public static final be.flow.C1 MAX_VALUE;\n" +
+            "  private @groovy.transform.Generated C1() {\n" +
+            "  }\n" +
+            "  private @groovy.transform.Generated C1(java.util.LinkedHashMap __namedArgs) {\n" +
+            "  }\n" +
+            "}\n" +
+            "public class A {\n" +
+            "  public static enum C2 {\n" +
+            "    TEST_C2,\n" +
+            "    public static final be.flow.A.C2 MIN_VALUE;\n" +
+            "    public static final be.flow.A.C2 MAX_VALUE;\n" +
+            "    private @groovy.transform.Generated C2() {\n" +
+            "    }\n" +
+            "    private @groovy.transform.Generated C2(java.util.LinkedHashMap __namedArgs) {\n" +
+            "    }\n" +
+            "  }\n" +
+            "  public @groovy.transform.Generated A() {\n" +
+            "  }\n" +
+            "}");
+
+        checkDisassemblyFor("be/flow/A$C2.class",
+            "public static final enum be.flow.A$C2 implements ");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-4219
+    @Test
+    public void testEnum14() {
+        //@formatter:off
+        String[] sources = {
+            "E.groovy",
+            "enum E {\n" +
+            "  FOO(0,'');\n" +
+            "  E(int i, String s) {\n" +
+            "    super();\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in E.groovy (at line 4)\n" +
+            "\tsuper();\n" +
+            "\t^^^^^^^^\n" +
+            "Groovy:Cannot invoke super constructor from enum constructor E(int,String)\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testEnum4219() {
         //@formatter:off
         String[] sources = {
@@ -746,7 +803,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    @Test(timeout = 1500) // https://issues.apache.org/jira/browse/GROOVY-4438
+    @Test(timeout = 1500)
     public void testEnum4438() {
         //@formatter:off
         String[] sources = {
@@ -765,15 +822,42 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test(timeout = 1500) // https://issues.apache.org/jira/browse/GROOVY-8507
+    @Test
+    public void testEnum6747() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "enum Codes {\n" +
+            "  YES('Y') {\n" +
+            "    @Override String getCode() { /*string*/ }\n" +
+            "  },\n" +
+            "  NO('N') {\n" +
+            "    @Override String getCode() { /*string*/ }\n" +
+            "  }\n" +
+            "  abstract String getCode()\n" +
+            "  private final String string\n" +
+            "  private Codes(String string) {\n" +
+            "    this.string = string\n" +
+            "  }\n" +
+            "}\n" +
+            "print Codes.YES.code\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "null"); // TODO: 'Y'
+    }
+
+    @Test(timeout = 1500)
     public void testEnum8507() {
+        assumeFalse(isParrotParser());
+
         //@formatter:off
         String[] sources = {
             "Outer.groovy",
             "enum Outer {\n" +
-            "  A,\n" +
+            "  X,\n" +
             "  enum Inner {\n" +
-            "    X,\n" +
+            "    Y,\n" +
             "  }\n" +
             "}\n",
         };
@@ -783,20 +867,80 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testEnum10823() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "enum E {\n" +
+            "  X(number:42, string:'x')\n" + // generated constructor
+            "  final Number number\n" +
+            "  public String string\n" +
+            "}\n" +
+            "print E.X.number\n" +
+            "print E.X.string\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42null");
+    }
+
+    @Test
+    public void testEnum10845() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.TupleConstructor(defaults=false)\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "enum E {\n" +
+            "  X\n" +
+            "  final Number number\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 4)\n" +
+            "\tX\n" +
+            "\t^\n" +
+            "Groovy:[Static type checking] - Cannot find matching constructor E()\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testEnumSetOf11107() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import static Numeral.*\n" +
+            "enum Numeral {\n" +
+            "  I, II, III, IV, V, VI, VII, VIII, IX, X;\n" +
+            "}\n" +
+            "EnumSet<Numeral> set = EnumSet.of(I, II, III, IV, V, VI)\n" +
+            "assert set.size() == 6\n" +
+            "assert set.contains(I)\n" +
+            "assert set.contains(V)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testEnumValues_GRE1071() {
         //@formatter:off
         String[] sources = {
-            "H.groovy",
-            "enum H {\n" +
+            "E.groovy",
+            "enum E {\n" +
             "  RED,\n" +
             "  BLUE\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
         runConformTest(sources);
 
-        assertEquals("[LH;", getReturnTypeOfMethod("H.groovy", "values"));
+        assertEquals("[LE;", getReturnTypeOfMethod("E.groovy", "values"));
     }
 
     @Test
@@ -885,10 +1029,17 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "    public @Override int foo() {\n" +
             "    }\n" +
             "  },\n" +
-            "  private " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "Good() {\n" +
+            "  public static final Good MIN_VALUE;\n" +
+            "  public static final Good MAX_VALUE;\n" +
+            "  private @groovy.transform.Generated Good() {\n" +
+            "  }\n" +
+            "  private @groovy.transform.Generated Good(java.util.LinkedHashMap __namedArgs) {\n" +
             "  }\n" +
             "  public abstract int foo();\n" +
             "}");
+
+        checkDisassemblyFor("Good.class", "public abstract enum Good ");
+        checkDisassemblyFor("Good$1.class", "\nfinal enum Good$1 {\n ");
     }
 
     @Test
@@ -913,6 +1064,30 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7025
+    public void testStaticFieldReference() {
+        //@formatter:off
+        String[] sources = {
+            "Bad.groovy",
+            "enum Bad {\n" +
+            "  FOO('bar');\n" +
+            "  static names = []\n" +
+            "  Bad(String name) {\n" +
+            "    names.add(name)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Bad.groovy (at line 5)\n" +
+            "\tnames.add(name)\n" +
+            "\t^^^^^\n" +
+            "Groovy:Cannot refer to the static enum field 'names' within an initializer\n" +
+            "----------\n");
+    }
+
     @Test
     public void testStaticVariableInScript() {
         //@formatter:off
@@ -923,7 +1098,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "static final BEATS = [\n" +
             "   [Move.ROCK,     Move.SCISSORS],\n" +
             "   [Move.PAPER,    Move.ROCK    ],\n" +
-            "   [Move.SCISSORS, Move.PAPER   ]\n" +
+            "   [Move.SCISSORS, Move.PAPER   ] \n" +
             "].asImmutable()\n",
         };
         //@formatter:on
@@ -933,14 +1108,12 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Script.groovy (at line 3)\n" +
             "\tstatic final BEATS = [\n" +
             "\t             ^^^^^\n" +
-            "Groovy:Modifier 'static' not allowed here.\n" +
+            "Groovy:" + (isAtLeastGroovy(50) ? "The variable 'BEATS' has invalid modifier static" : "Modifier 'static' not allowed here") + ".\n" +
             "----------\n");
     }
 
-    @Test // GROOVY-8444
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8444
     public void testSwitchCasesWithoutQualifier() {
-        assumeTrue(isAtLeastGroovy(30));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",

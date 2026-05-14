@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.junit.Test;
@@ -30,189 +29,174 @@ import org.junit.Test;
 public final class Groovy21InferencingTests extends InferencingTestSuite {
 
     @Test
-    public void testDelegatesToValue() {
+    public void testDelegatesToValue1() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Other { }\n" +
             "def meth(@DelegatesTo(Other) Closure c) { }\n" +
             "meth { delegate }";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "delegate", "Other");
     }
 
     @Test
     public void testDelegatesToValue2() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Other { }\n" +
             "def meth(@DelegatesTo(Other) c) { }\n" +
             "meth { delegate }";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "delegate", "Other");
     }
 
     @Test
     public void testDelegatesToValue3() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Other { int xxx }\n" +
             "def meth(@DelegatesTo(Other) Closure c) { }\n" +
             "meth { xxx }";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "xxx", "java.lang.Integer");
     }
 
     @Test
     public void testDelegatesToValue4() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "def meth(@DelegatesTo(List) Closure c) { }\n" +
             "meth { delegate }";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "delegate", "java.util.List");
     }
 
     @Test
     public void testDelegatesToValue5() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "def meth(int x, int y, @DelegatesTo(List) Closure c) { }\n" +
             "meth 1, 2, { delegate }";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "delegate", "java.util.List");
     }
 
     @Test // expected to be broken (due to missing closing angle bracket on type)
     public void testDelegatesToValue6() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "def meth(int x, int y, @DelegatesTo(List<String) Closure c) { }\n" +
             "meth { delegate }";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "delegate", DEFAULT_UNIT_NAME);
     }
 
     @Test
     public void testDelegatesToTarget1() {
-        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target Object self, @DelegatesTo(strategy=Closure.DELEGATE_FIRST) Closure code) {}\n}");
-
+        createUnit("C", "class C { static def cat(\n" +
+            "@DelegatesTo.Target Object self, @DelegatesTo(strategy=Closure.DELEGATE_FIRST) Closure code) {}\n}");
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A { def x }\n" +
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
-            "      a.cat {" + // delegate is A, owner is B
+            "      a.cat {\n" + // delegate is A, owner is B
             "        x\n" +
             "        y\n" +
             "      }\n" +
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclaringType(contents, "x", "A");
         assertDeclaringType(contents, "y", "B");
     }
 
     @Test
     public void testDelegatesToTarget2() {
-        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_FIRST) Closure code) {}\n}");
-
+        createUnit("C", "class C { static def cat(\n" +
+            "@DelegatesTo.Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_FIRST) Closure code) {}\n}");
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A { def x }\n" +
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
-            "      a.cat {" + // delegate is A, owner is B
+            "      a.cat {\n" + // delegate is A, owner is B
             "        x\n" +
             "        y\n" +
             "      }\n" +
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclaringType(contents, "x", "A");
         assertDeclaringType(contents, "y", "B");
     }
 
     @Test // uses constant instead of literal for target
-    public void testDelegatesToTarget2a() {
-        createUnit("C", "import groovy.lang.DelegatesTo.Target\n" +
+    public void testDelegatesToTarget3() {
+        createUnit("C",
             "class C {\n" +
             "  private static final String SELF = 'self'\n" +
             "  static def cat(\n" +
-            "    @Target(C.SELF) Object self,\n" + // getText() will not work with qualifier
+            "    @DelegatesTo.Target(C.SELF) Object self,\n" + // getText() will not work with qualifier
             "    @DelegatesTo(target=SELF, strategy=Closure.DELEGATE_FIRST) Closure code\n" +
             "   ) {}\n" +
             "}");
-
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A { def x }\n" +
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
-            "      a.cat {" + // delegate is A, owner is B
+            "      a.cat {\n" + // delegate is A, owner is B
             "        x\n" +
             "        y\n" +
             "      }\n" +
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclaringType(contents, "x", "A");
         assertDeclaringType(contents, "y", "B");
     }
 
     @Test
-    public void testDelegatesToTarget3() {
-        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_ONLY) Closure code) {}\n}");
-
+    public void testDelegatesToTarget4() {
+        createUnit("C", "class C { static def cat(\n" +
+            "@DelegatesTo.Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_ONLY) Closure code) {}\n}");
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A { def x }\n" +
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
-            "      a.cat {" + // delegate is A, owner is B
+            "      a.cat {\n" + // delegate is A, owner is B
             "        x\n" +
             "        y\n" +
             "      }\n" +
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclaringType(contents, "x", "A");
         int offset = contents.lastIndexOf('y');
         assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
-    public void testDelegatesToTarget4() {
-        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_FIRST) Closure code) {}\n}");
-
+    public void testDelegatesToTarget5() {
+        createUnit("C", "class C { static def cat(\n" +
+            "@DelegatesTo.Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_FIRST) Closure code) {}\n}");
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A { def x, z }\n" +
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
-            "      a.cat {" + // delegate is A, owner is B
+            "      a.cat {\n" + // delegate is A, owner is B
             "        x\n" +
             "        y\n" +
             "        z\n" +
@@ -220,140 +204,157 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclaringType(contents, "x", "B");
         assertDeclaringType(contents, "y", "B");
         assertDeclaringType(contents, "z", "A");
     }
 
     @Test
-    public void testDelegatesToTarget5() {
-        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_ONLY) Closure code) {}\n}");
-
+    public void testDelegatesToTarget6() {
+        createUnit("C", "class C { static def cat(\n" +
+            "@DelegatesTo.Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_ONLY) Closure code) {}\n}");
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A { def x }\n" +
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
-            "      a.cat {" + // delegate is A, owner is B
+            "      a.cat {\n" + // delegate is A, owner is B
             "        x\n" +
             "        y\n" +
             "      }\n" +
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclaringType(contents, "x", "B");
         assertDeclaringType(contents, "y", "B");
     }
 
     @Test // seemingly invalid combination
-    public void testDelegatesToTarget6() {
-        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.TO_SELF) Closure code) {}\n}");
-
+    public void testDelegatesToTarget7() {
+        createUnit("C", "class C { static def cat(\n" +
+            "@DelegatesTo.Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.TO_SELF) Closure code) {}\n}");
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A { def x }\n" +
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
-            "      a.cat {" + // delegate is A, owner is B
+            "      a.cat {\n" + // delegate is A, owner is B
             "        x\n" +
             "        y\n" +
             "      }\n" +
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.lastIndexOf('x');
         assertUnknownConfidence(contents, offset, offset + 1);
         offset = contents.lastIndexOf('y');
         assertUnknownConfidence(contents, offset, offset + 1);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1147
+    public void testDelegatesToTarget8() {
+        //@formatter:off
+        String contents =
+            "abstract class A {\n" +
+            "  def x\n" +
+            "  public <T> void with(\n" +
+            "    @DelegatesTo.Target T self,\n" +
+            "    @DelegatesTo(strategy=Closure.DELEGATE_FIRST) Closure code) {\n" +
+            "  }\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def x, y\n" +
+            "  def m() {\n" +
+            "    def a = new A() {}\n" +
+            "    with(a) { ->\n" + // delegate is A, owner is B
+            "      x\n" +
+            "      y\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        //@formatter:on
+        assertDeclaringType(contents, "x", "A");
+        assertDeclaringType(contents, "y", "B");
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/415
     public void testDelegatesToTypeName1() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "def meth(int x, int y, @DelegatesTo(type='java.util.List') Closure block) { }\n" +
             "meth 1, 2, { delegate }";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "delegate", "java.util.List");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/415
     public void testDelegatesToTypeName2() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class C {\n" +
             "  private static final String LIST = 'java.util.List'\n" +
             "  static void meth(int x, int y, @DelegatesTo(type=LIST) Closure block) { }\n" +
             "}\n" +
             "C.meth 1, 2, { delegate }";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "delegate", "java.util.List");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/966
-    public void testDelegatesToTypeName3() throws Exception {
+    public void testDelegatesToTypeName3() {
+        //@formatter:off
         createUnit("p", "A",
-            //@formatter:off
             "package p\n" +
             "class A {\n" +
             "  static class B {\n" +
             "    Number getNumber() {}\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
-        fullBuild();
+        //@formatter:on
+        incrementalBuild();
 
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class C {\n" +
             "  static void meth(@DelegatesTo(type='p.A.B') Closure block) { }\n" +
             "}\n" +
             "C.meth { number }";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "number", "java.lang.Number");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/966
-    public void testDelegatesToTypeName3a() throws Exception {
+    public void testDelegatesToTypeName4() {
+        //@formatter:off
         createUnit("p", "A",
-            //@formatter:off
             "package p\n" +
             "class A {\n" +
             "  static class B {\n" +
             "    Number getNumber() {}\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
-        fullBuild();
+        //@formatter:on
+        incrementalBuild();
 
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class C {\n" +
             "  static void meth(@DelegatesTo(type='p.A$B') Closure block) { }\n" + // uses '$' instead of '.'
             "}\n" +
             "C.meth { number }";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "number", "java.lang.Number");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/966
-    public void testDelegatesToTypeName3b() throws Exception {
+    public void testDelegatesToTypeName5() {
+        //@formatter:off
         createUnit("p", "A",
-            //@formatter:off
             "package p\n" +
             "class A {\n" +
             "  private static class B {\n" +
@@ -364,24 +365,33 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    c.call((Object)null)\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
-        fullBuild();
+        //@formatter:on
+        incrementalBuild();
 
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class C {\n" +
             "  static void meth(@DelegatesTo(type='p.A.B') Closure block) { new A().impl(block) }\n" +
             "}\n" +
             "C.meth { number }";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "number", "java.lang.Number");
     }
 
-    @Test
-    public void testDelegatesToResolveStrategy2() {
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11168
+    public void testDelegatesToTypeName6() {
+        //@formatter:off
         String contents =
-            //@formatter:off
+            "def <T> T m(int i, @DelegatesTo(type='T') Closure block) { }\n" +
+            "this.<String>m(2) { delegate }";
+        //@formatter:on
+        assertType(contents, "delegate", "java.lang.String");
+    }
+
+    @Test
+    public void testDelegatesToResolveStrategy1() {
+        //@formatter:off
+        String contents =
             "class A {}\n" +
             "class B { \n" +
             "  def m(@DelegatesTo(value=A, strategy=Closure.OWNER_ONLY) Closure code) {\n" +
@@ -393,16 +403,15 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "delegate", "A");
         assertType(contents, "owner", "B");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/657
-    public void testDelegatesToResolveStrategy3() {
+    public void testDelegatesToResolveStrategy2() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A {}\n" +
             "class B { \n" +
             "  def m(@DelegatesTo(value=A, strategy=Closure.DELEGATE_ONLY) Closure code) {\n" +
@@ -414,16 +423,15 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "delegate", "A");
         assertType(contents, "owner", "B");
     }
 
     @Test
-    public void testDelegatesToResolveStrategy4() {
+    public void testDelegatesToResolveStrategy3() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A {}\n" +
             "class B { \n" +
             "  def m(@DelegatesTo(value=A, strategy=Closure.TO_SELF) Closure code) {\n" +
@@ -435,16 +443,15 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "delegate", "A");
         assertType(contents, "owner", "B");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/389
-    public void testEnumOverrides() {
+    public void testEnumOverrides1() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "enum E {\n" +
             "  ONE() {\n" +
             "    void meth(Number param) { println param }\n" +
@@ -454,16 +461,15 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "  abstract void meth(Number param);\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("println param") + "println ".length();
         assertType(contents, offset, offset + "param".length(), "java.lang.Number");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/390
     public void testEnumOverrides2() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "@groovy.transform.CompileStatic\n" +
             "enum E {\n" +
             "  ONE() {\n" +
@@ -474,10 +480,91 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "  abstract void meth(Number param);\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("println param") + "println ".length();
         assertType(contents, offset, offset + "param".length(), "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1099
+    public void testEnumOverrides3() {
+        //@formatter:off
+        String contents =
+            "class C {\n" +
+            "  enum E {\n" +
+            "    ONE() {\n" +
+            "      void meth(Number param) { helper() }\n" +
+            "    },\n" +
+            "    TWO() {\n" +
+            "      void meth(Number param) { helper() }\n" +
+            "    }\n" +
+            "    abstract void meth(Number param)\n" +
+            "    private static Number helper() {\n" +
+            "      def xxx = 42" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        //@formatter:on
+        int offset = contents.indexOf("helper");
+        assertType(contents, offset, offset + "helper".length(), "java.lang.Number");
+
+        assertType(contents, "xxx", "java.lang.Integer");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1100
+    public void testEnumOverrides4() {
+        //@formatter:off
+        String contents =
+            "class C {\n" +
+            "  enum E {\n" +
+            "    X {\n" +
+            "      void meth() { helper() }\n" +
+            "      private char helper() {}\n" +
+            "    }\n" +
+            "    abstract void meth()\n" +
+            "  }\n" +
+            "}";
+        //@formatter:on
+        int offset = contents.indexOf("helper");
+        assertType(contents, offset, offset + "helper".length(), "java.lang.Character");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1100
+    public void testEnumOverrides5() {
+        //@formatter:off
+        String contents =
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  @groovy.transform.CompileDynamic\n" +
+            "  enum E {\n" +
+            "    X {\n" +
+            "      void meth() { helper() }\n" +
+            "      private char helper() {}\n" +
+            "    }\n" +
+            "    abstract void meth()\n" +
+            "  }\n" +
+            "}";
+        //@formatter:on
+        int offset = contents.indexOf("helper");
+        assertType(contents, offset, offset + "helper".length(), "java.lang.Character");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1100
+    public void testEnumOverrides6() {
+        //@formatter:off
+        String contents =
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  enum E {\n" +
+            "    X {\n" +
+            "      void meth() { helper() }\n" +
+            "      private char helper() {}\n" +
+            "    }\n" +
+            "    abstract void meth()\n" +
+            "  }\n" +
+            "}";
+        //@formatter:on
+        int offset = contents.indexOf("helper");
+        assertType(contents, offset, offset + "helper".length(), "java.lang.Character");
     }
 
     @Test
@@ -485,10 +572,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
         Activator.getInstancePreferences().getBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Activator.DEFAULT_SCRIPT_FILTERS_ENABLED);
         Activator.getInstancePreferences().get(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         try {
-            // the type checking script
-            IPath robotPath = env.addPackage(project.getFolder("src").getFullPath(), "robot");
-            env.addGroovyClass(robotPath, "RobotMove",
-                //@formatter:off
+            //@formatter:off
+            createUnit("robot", "RobotMove",
                 "package robot\n" +
                 "import org.codehaus.groovy.ast.expr.MethodCall\n" +
                 "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
@@ -511,16 +596,16 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
                 "        }\n" +
                 "    }\n" +
                 "}");
-                //@formatter:on
+            //@formatter:on
 
             // set the script folders
             Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
             Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src/robot/*Move.groovy,y");
 
-            env.fullBuild();
+            incrementalBuild();
 
+            //@formatter:off
             String contents =
-                //@formatter:off
                 "import groovy.transform.TypeChecked\n" +
                 "class Robot {\n" +
                 "    void move(String dist) { println \"Moved $dist\" }\n" +
@@ -529,13 +614,13 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
                 "void operate() {\n" +
                 "    robot.move \"left\"\n" +
                 "}";
-                //@formatter:on
+            //@formatter:on
 
             assertType(contents, "robot", "Robot");
             assertType(contents, "move", "java.lang.Void");
 
-            // also, just make sure no problems
-            env.fullBuild(project.getFullPath());
+            // ensure there aren't build problems
+            incrementalBuild(project.getFullPath());
             Problem[] problems = env.getProblemsFor(project.getFullPath());
             assertEquals("Should have found no problems in:\n" + Arrays.toString(problems), 0, problems.length);
         } finally {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.junit.Assert.assertTrue;
+
+import org.codehaus.groovy.ast.FieldNode;
 import org.junit.Test;
 
 public final class ArrayInferencingTests extends InferencingTestSuite {
@@ -64,12 +67,41 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testArrayClone1() {
+        String contents = "def x = new int[0].clone()";
+        assertType(contents, "x", "int[]");
+        assertDeclaringType(contents, "clone", "int[]");
+    }
+
+    @Test
+    public void testArrayClone2() {
+        String contents = "def x = new Number[0].clone()";
+        assertType(contents, "x", "java.lang.Number[]");
+        assertDeclaringType(contents, "clone", "java.lang.Number[]");
+    }
+
+    @Test
+    public void testArrayClone3() {
+        String contents = "def x = ([] as Number[][]).clone()";
+        assertType(contents, "x", "java.lang.Number[][]");
+        assertDeclaringType(contents, "clone", "java.lang.Number[][]");
+    }
+
+    @Test
+    public void testArrayClone4() {
+        String contents = "def m(String... a) { def x = a.clone()}";
+        assertType(contents, "x", "java.lang.String[]");
+        assertDeclaringType(contents, "clone", "java.lang.String[]");
+    }
+
+    @Test
     public void testArrayLength1() {
         String contents = "int[] x = [1, 2]; x.length";
         assertType(contents, "length", "java.lang.Integer");
 
         int offset = contents.indexOf("length");
-        assertDeclaringType(contents, offset, offset + "length".length(), "int[]");
+        var length = (FieldNode) assertDeclaration(contents, offset, offset + "length".length(), "int[]", "length", DeclarationKind.FIELD);
+        assertTrue(length.isFinal() && length.isPublic() && length.isSynthetic());
     }
 
     @Test
@@ -91,6 +123,31 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testArrayArgument1() {
+        //@formatter:off
+        String contents =
+            "Number m(Number[] arr) { null }\n" +
+            "int[] nums = [1, 2, 3]\n" +
+            "def result = m(nums)\n";
+        //@formatter:on
+
+        int offset = contents.lastIndexOf("m(");
+        assertUnknownConfidence(contents, offset, offset + 1);
+    }
+
+    @Test
+    public void testArrayArgument2() {
+        //@formatter:off
+        String contents =
+            "Number m(Number[] arr) { null }\n" +
+            "Integer[] nums = [1, 2, 3]\n" +
+            "def result = m(nums)\n";
+        //@formatter:on
+
+        assertType(contents, "result", "java.lang.Number");
+    }
+
+    @Test
     public void testArrayGenerics1() {
         String contents = "Class<? extends CharSequence>[] array";
         assertType(contents, "CharSequence", "java.lang.CharSequence");
@@ -107,12 +164,20 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/763
     public void testArrayGenerics3() {
-        String contents = "Collection<List<String>>[] array = []; array*.trim()";
-        assertType(contents, "trim", "java.lang.String");
+        String contents = "class C {\n int x\n}\n" + "Collection<List<C> >[] array = []; array*.x";
+        assertType("@groovy.transform.TypeChecked " + contents, "x", "java.lang.Integer");
+        assertType(contents, "x", "java.lang.Integer");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1594
+    public void testArrayGenerics4() {
+        String contents = "class C {\n int x\n}\n" + "Collection<List<C> >[] array = []; array*.getX()";
+        assertType("@groovy.transform.TypeChecked " + contents, "getX", "java.lang.Integer");
+        assertType(contents, "getX", "java.lang.Integer");
     }
 
     @Test
-    public void testArrayGenerics4() {
+    public void testArrayGenerics5() {
         String contents = "Map<String, ?>[] array = [[val:1]]; array*.val";
         assertType(contents, "val", "java.lang.Object");
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,19 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.groovy.tests.MockPossibleMatch;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
-import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -101,7 +98,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    this.xxx()\n" + // yes
             "    this.xxx\n" + // no
             "  }\n" +
-            "  def xxx() {}\n" + // no; an overload is a declaration, not a reference
+            "  def xxx() {}\n" + // no; overload is a declaration, not a reference
             "  def method2() {\n" +
             "    super.xxx\n" + // no
             "    super.xxx()\n" + // yes
@@ -118,7 +115,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    def closure = this.&xxx\n" + // yes
             "    this.xxx = 'nothing'\n" + // no
             "  }\n" +
-            "  def xxx() {}\n" +  // no; an overload is a declaration, not a reference
+            "  def xxx() {}\n" +  // no; overload is a declaration, not a reference
             "  def method2() {\n" +
             "    def nothing = this.xxx()\n" +  // yes
             "  }\n" +
@@ -150,103 +147,105 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testOverloadedMethodReferences1() throws Exception {
-        // search for "First.xxx()" should match on the method reference with precise # of args as well as method reference with unmatched number of args
+        // search for "First.xxx()" should match on the method reference with precise # of args as well as the method pointer reference
         doTestForTwoMethodReferences(
             "interface First {\n" +
-            "    void xxx()\n" +
-            "    void xxx(a)\n" +
+            "  void xxx()\n" +
+            "  void xxx(a)\n" +
             "}\n",
-            "public class Second implements First {\n" +
-            "    public void other() {\n" +
-            "        xxx()\n" + //yes
-            "    }\n" +
-            "    public void xxx() {\n" +
-            "        xxx(a)\n" + //no!
-            "    }\n" +
-            "    void xxx(a) {\n" +
-            "        xxx(a,b)\n" + //yes
-            "    }\n" +
+            "class Second implements First {\n" +
+            "  void other() {\n" +
+            "    xxx()\n" + // yes
+            "  }\n" +
+            "  void xxx() {\n" +
+            "    xxx(a)\n" + // no!
+            "    xxx(a,b)\n" + // no!
+            "  }\n" +
+            "  void xxx(a) {\n" +
+            "    def ptr = this.&xxx\n" + // yes
+            "  }\n" +
             "}\n",
             false, 0, "xxx");
     }
 
     @Test
     public void testOverloadedMethodReferences2() throws Exception {
-        // search for "First.xxx(a)" should match on the method reference with precise # of args as well as method reference with unmatched number of args
+        // search for "First.xxx(a)" should match on the method reference with precise # of args as well as the method pointer reference
         doTestForTwoMethodReferences(
             "interface First {\n" +
-            "    void xxx(a)\n" +
-            "    void xxx()\n" +
+            "  void xxx(a)\n" +
+            "  void xxx()\n" +
             "}\n",
-            "public class Second implements First {\n" +
-            "    public void other() {\n" +
-            "        xxx(a)\n" + //yes
-            "    }\n" +
-            "    public void xxx() {\n" +
-            "        xxx()\n" + //no!
-            "    }\n" +
-            "    void xxx(a) {\n" +
-            "        xxx(a,b)\n" + //yes
-            "    }\n" +
+            "class Second implements First {\n" +
+            "  void other() {\n" +
+            "    xxx(a)\n" + // yes
+            "  }\n" +
+            "  void xxx() {\n" +
+            "    xxx()\n" + // no!
+            "    xxx(a,b)\n" + // no!
+            "  }\n" +
+            "  void xxx(a) {\n" +
+            "    def ptr = this.&xxx\n" + // yes
+            "  }\n" +
             "}\n",
             false, 0, "xxx");
     }
 
     @Test
     public void testOverloadedMethodReferences3() throws Exception {
-        // search for "First.xxx(a)" should match on the method reference with precise # of args as well as method reference with unmatched number of args
+        // search for "First.xxx(a)" should match on the method reference with precise # of args as well as the method pointer reference
         createUnit("Sub",
             "interface Sub extends First {\n" +
-            "    void xxx(a)\n" +
+            "  void xxx(a)\n" +
             "}\n");
         doTestForTwoMethodReferences(
             "interface First {\n" +
-            "    void xxx(a)\n" +
-            "    void xxx()\n" +
+            "  void xxx(a)\n" +
+            "  void xxx()\n" +
             "}\n",
-            "public class Second implements Sub {\n" +
-            "    public void other() {\n" +
-            "        xxx(a)\n" + //yes
-            "    }\n" +
-            "    public void xxx() {\n" +
-            "        xxx()\n" + //no!
-            "    }\n" +
-            "    void xxx(a) {\n" +
-            "        xxx(a,b)\n" + //yes
-            "    }\n" +
+            "class Second implements Sub {\n" +
+            "  void other() {\n" +
+            "    xxx(a)\n" + // yes
+            "  }\n" +
+            "  void xxx() {\n" +
+            "    xxx()\n" + // no!
+            "    xxx(a,b)\n" + // no!
+            "  }\n" +
+            "  void xxx(a) {\n" +
+            "    def ptr = this.&xxx\n" + // yes
+            "  }\n" +
             "}\n",
             false, 0, "xxx");
     }
 
     @Test
     public void testOverloadedMethodReferences4() throws Exception {
-        // search for "First.xxx(a,b)" should match on the method reference with precise # of args as well as method reference with unmatched number of args
+        // search for "First.xxx(a,b)" should match on the method reference with precise # of args as well as the method pointer reference
         createUnit("Sub",
             "interface Sub extends First {\n" +
-            "    void xxx(a)\n" +
-            "    void xxx(a,b,c)\n" +
+            "  void xxx(a)\n" +
+            "  void xxx(a,b,c)\n" +
             "}\n");
         doTestForTwoMethodReferences(
             "interface First {\n" +
-            "    void xxx(a,b)\n" +
-            "    void xxx(a)\n" +
+            "  void xxx(a,b)\n" +
+            "  void xxx(a)\n" +
             "}\n",
             "public class Second implements Sub {\n" +
-            "    public void other() {\n" +
-            "        First f\n" +
-            "        f.xxx(a,b,c)\n" + //yes
-            "    }\n" +
-            "    public void xxx() {\n" +
-            "        xxx(a)\n" + //no!
-            "        xxx(a,b,c)\n" + //no!
-            "        Sub s\n" +
-            "        s.xxx(a)\n" + //no!
-            "        s.xxx(a,b,c)\n" + //no!
-            "    }\n" +
-            "    void xxx(a) {\n" +
-            "        Sub s\n" +
-            "        s.xxx(a,b)\n" + //yes
-            "    }\n" +
+            "  public void other(Sub s) {\n" +
+            "    def ptr = s.&xxx\n" + // yes
+            "  }\n" +
+            "  public void xxx() {\n" +
+            "    xxx(a)\n" + // no!
+            "    xxx(a,b,c)\n" + // no!
+            "    Sub s\n" +
+            "    s.xxx(a)\n" + // no!
+            "    s.xxx(a,b,c)\n" + // no!
+            "  }\n" +
+            "  void xxx(a) {\n" +
+            "    Sub s\n" +
+            "    s.xxx(a,b)\n" + // yes
+            "  }\n" +
             "}\n",
             false, 0, "xxx");
     }
@@ -313,50 +312,80 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testMethodWithDefaultParameters1() throws Exception {
-        doTestForTwoMethodReferences(
-            "class First {\n" +
-            "    void xxx(a, b = 9) {}\n" +
-            "    void xxx(a, b, c) {}\n" +
-            "}\n",
-            "class Second {\n" +
-            "    void other0() {\n" +
-            "        First f\n" +
-            "        f.xxx(a)\n" +
-            "    }\n" +
-            "    void other1() {\n" +
-            "        First f\n" +
-            "        f.xxx(a,b,c)\n" +
-            "    }\n" +
-            "    void other2() {\n" +
-            "        First f\n" +
-            "        f.xxx(a,b)\n" +
-            "    }\n" +
-            "}\n",
-            false, 0, "xxx");
+        GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
+            "package foo\n" +
+            "class Bar {\n" +
+            "  def xxx(a, b='') {}\n" +
+            "  def xxx(a, b, c) {}\n" +
+            "}\n");
+        createUnit("foo", "Baz",
+            "package foo\n" +
+            "class Baz {\n" +
+            "  void m1(Bar bar) {\n" +
+            "    bar.xxx(a)\n" + //no!
+            "  }\n" +
+            "  void m2(Bar bar) {\n" +
+            "    bar.xxx(a,b)\n" + //yes
+            "  }\n" +
+            "  void m3(Bar bar) {\n" +
+            "    bar.xxx(a,b,c)\n" + //no!
+            "  }\n" +
+            "  void m4(Bar bar) {\n" +
+            "    def x = bar.&xxx\n" + //yes-ish
+            "  }\n" +
+            "}\n");
+
+        IMethod method = groovyUnit.getType("Bar").getMethods()[0];
+        List<SearchMatch> matches = search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}));
+
+        assertEquals(2, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals("m2", ((IJavaElement) matches.get(0).getElement()).getElementName());
+        assertEquals("Baz.groovy", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(1).getAccuracy());
+        assertEquals("m4", ((IJavaElement) matches.get(1).getElement()).getElementName());
+        assertEquals("Baz.groovy", ((IJavaElement) matches.get(1).getElement()).getResource().getName());
     }
 
     @Test
     public void testMethodWithDefaultParameters2() throws Exception {
-        doTestForTwoMethodReferences(
-            "class First {\n" +
-            "    void xxx(a, b = 9) {}\n" +
-            "    void xxx(a, b, c) {}\n" +
-            "}\n",
-            "class Second {\n" +
-            "    void other0() {\n" +
-            "        First f\n" +
-            "        f.xxx(a)\n" +
-            "    }\n" +
-            "    void other1() {\n" +
-            "        First f\n" +
-            "        f.xxx(a,b,c)\n" +
-            "    }\n" +
-            "    void other2() {\n" +
-            "        First f\n" +
-            "        f.&xxx\n" +
-            "    }\n" +
-            "}\n",
-            false, 0, "xxx");
+        GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
+            "package foo\n" +
+            "class Bar {\n" +
+            "  def xxx(a, b='') {}\n" +
+            "  def xxx(a, b, c) {}\n" +
+            "}\n");
+        createUnit("foo", "Baz",
+            "package foo\n" +
+            "class Baz {\n" +
+            "  void m1(Bar bar) {\n" +
+            "    bar.xxx(a)\n" + //yes
+            "  }\n" +
+            "  void m2(Bar bar) {\n" +
+            "    bar.xxx(a,b)\n" + //no!
+            "  }\n" +
+            "  void m3(Bar bar) {\n" +
+            "    bar.xxx(a,b,c)\n" + //no!
+            "  }\n" +
+            "  void m4(Bar bar) {\n" +
+            "    def x = bar.&xxx\n" + //yes-ish
+            "  }\n" +
+            "}\n");
+
+        IMethod method = groovyUnit.getType("Bar").getMethods()[1];
+        List<SearchMatch> matches = search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}));
+
+        assertEquals(2, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals("m1", ((IJavaElement) matches.get(0).getElement()).getElementName());
+        assertEquals("Baz.groovy", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(1).getAccuracy());
+        assertEquals("m4", ((IJavaElement) matches.get(1).getElement()).getElementName());
+        assertEquals("Baz.groovy", ((IJavaElement) matches.get(1).getElement()).getResource().getName());
     }
 
     @Test
@@ -364,66 +393,76 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
             "package foo\n" +
             "class Bar {\n" +
-            "  void doSomething() {}\n" +
-            "  void doSomething(String one, String two = 'x') {}\n" +
+            "  def xxx(a, b='') {}\n" +
+            "  def xxx(a, b, c) {}\n" +
             "}\n");
-        createUnit("foo", "Baz",
+        createJavaUnit("foo", "Baz",
             "package foo;\n" +
-            "public class Baz {\n" +
-            "  void test(Bar bar) {\n" +
-            "    bar.doSomething();\n" + //no!
-            "    bar.doSomething(\"one\");\n" + //yes
-            "    bar.doSomething(\"one\", \"two\");\n" + //yes
+            "class Baz {\n" +
+            "  void m1(Bar bar) {\n" +
+            "    bar.xxx(null);\n" + //no!
+            "  }\n" +
+            "  void m2(Bar bar) {\n" +
+            "    bar.xxx(null,null);\n" + //yes
+            "  }\n" +
+            "  void m3(Bar bar) {\n" +
+            "    bar.xxx(null,null,null);\n" + //no!
+            "  }\n" +
+            "  void m4(Bar bar) {\n" +
+            "    java.util.function.BiFunction x = bar::xxx;\n" + //yes
             "  }\n" +
             "}\n");
 
-        IMethod method = groovyUnit.getType("Bar").getMethods()[1];
-        new SearchEngine().search(
+        IMethod method = groovyUnit.getType("Bar").getMethods()[0];
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}));
 
         assertEquals(2, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
-        assertEquals("Baz.groovy", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
+        assertEquals("m2", ((IJavaElement) matches.get(0).getElement()).getElementName());
+        assertEquals("Baz.java", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
-        assertEquals("Baz.groovy", ((IJavaElement) matches.get(1).getElement()).getResource().getName());
+        assertEquals("m4", ((IJavaElement) matches.get(1).getElement()).getElementName());
+        assertEquals("Baz.java", ((IJavaElement) matches.get(1).getElement()).getResource().getName());
     }
 
-    @Test @Ignore("Only one method signature is searched and Java lacks link to original method")
+    @Test
     public void testMethodWithDefaultParameters4() throws Exception {
         GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
             "package foo\n" +
             "class Bar {\n" +
-            "  void doSomething() {}\n" +
-            "  void doSomething(String one, String two = 'x') {}\n" +
+            "  def xxx(a, b='') {}\n" +
+            "  def xxx(a, b, c) {}\n" +
             "}\n");
         createJavaUnit("foo", "Baz",
             "package foo;\n" +
-            "public class Baz {\n" +
-            "  void test(Bar bar) {\n" +
-            "    bar.doSomething();\n" + //no!
-            "    bar.doSomething(\"one\");\n" + //no! (want to be yes)
-            "    bar.doSomething(\"one\", \"two\");\n" + //yes
+            "class Baz {\n" +
+            "  void m1(Bar bar) {\n" +
+            "    bar.xxx(null);\n" + //yes
+            "  }\n" +
+            "  void m2(Bar bar) {\n" +
+            "    bar.xxx(null,null);\n" + //no!
+            "  }\n" +
+            "  void m3(Bar bar) {\n" +
+            "    bar.xxx(null,null,null);\n" + //no!
+            "  }\n" +
+            "  void m4(Bar bar) {\n" +
+            "    java.util.function.Function x = bar::xxx;\n" + //yes
             "  }\n" +
             "}\n");
 
         IMethod method = groovyUnit.getType("Bar").getMethods()[1];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}));
 
         assertEquals(2, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals("m1", ((IJavaElement) matches.get(0).getElement()).getElementName());
         assertEquals("Baz.java", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertEquals("m4", ((IJavaElement) matches.get(1).getElement()).getElementName());
         assertEquals("Baz.java", ((IJavaElement) matches.get(1).getElement()).getResource().getName());
     }
 
@@ -439,13 +478,11 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         GroovyCompilationUnit foo = createUnit("Foo", contents);
 
         IMethod method = foo.getType("Foo").getMethods()[0];
-        MockPossibleMatch match = new MockPossibleMatch(foo);
-        SearchPattern pattern = SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES);
-        factory.createVisitor(match).visitCompilationUnit(new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor));
+        List<SearchMatch> matches = search(SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES), foo);
 
-        assertEquals(1, searchRequestor.getMatches().size());
-        assertEquals(SearchMatch.A_ACCURATE, searchRequestor.getMatch(0).getAccuracy());
-        assertLocation(searchRequestor.getMatch(0), contents.lastIndexOf("bar"), "bar".length());
+        assertEquals(1, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.lastIndexOf("bar"), "bar".length());
     }
 
     @Test
@@ -458,13 +495,11 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         GroovyCompilationUnit foo = createUnit("Foo", contents);
 
         IMethod method = foo.getType("Foo").getMethods()[0];
-        MockPossibleMatch match = new MockPossibleMatch(foo);
-        SearchPattern pattern = SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES);
-        factory.createVisitor(match).visitCompilationUnit(new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor));
+        List<SearchMatch> matches = search(SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES), foo);
 
-        assertEquals(1, searchRequestor.getMatches().size());
-        assertEquals(SearchMatch.A_ACCURATE, searchRequestor.getMatch(0).getAccuracy());
-        assertLocation(searchRequestor.getMatch(0), contents.indexOf("bar"), "bar".length());
+        assertEquals(1, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.indexOf("bar"), "bar".length());
     }
 
     @Test
@@ -478,13 +513,11 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         GroovyCompilationUnit foo = createUnit("Foo", contents);
 
         IMethod method = foo.getType("Foo").getMethods()[0];
-        MockPossibleMatch match = new MockPossibleMatch(foo);
-        SearchPattern pattern = SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES);
-        factory.createVisitor(match).visitCompilationUnit(new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor));
+        List<SearchMatch> matches = search(SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES), foo);
 
-        assertEquals(1, searchRequestor.getMatches().size());
-        assertEquals(SearchMatch.A_INACCURATE, searchRequestor.getMatch(0).getAccuracy());
-        assertLocation(searchRequestor.getMatch(0), contents.indexOf("bar"), "bar".length());
+        assertEquals(1, matches.size());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.indexOf("bar"), "bar".length());
     }
 
     @Test
@@ -500,13 +533,11 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         GroovyCompilationUnit foo = createUnit("Foo", contents);
 
         IMethod method = foo.getType("Foo").getMethods()[0];
-        MockPossibleMatch match = new MockPossibleMatch(foo);
-        SearchPattern pattern = SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES);
-        factory.createVisitor(match).visitCompilationUnit(new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor));
+        List<SearchMatch> matches = search(SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES), foo);
 
-        assertEquals(1, searchRequestor.getMatches().size());
-        assertEquals(SearchMatch.A_INACCURATE, searchRequestor.getMatch(0).getAccuracy());
-        assertLocation(searchRequestor.getMatch(0), contents.indexOf("bar"), "bar".length());
+        assertEquals(1, matches.size());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.indexOf("bar"), "bar".length());
     }
 
     @Test
@@ -515,7 +546,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "package foo\n" +
             "class Bar {\n" +
             "  static String string\n" +
-            "  static String getString() {}\n" +
+            "  static String getString() {string}\n" +
             "}\n");
         GroovyCompilationUnit baz = createUnit("foo", "Baz",
             "package foo\n" +
@@ -530,13 +561,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "str = s\n"); // exact
 
         IMethod method = bar.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
 
         assertEquals(8, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
@@ -564,7 +591,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "package foo\n" +
             "class Bar {\n" +
             "  String string\n" +
-            "  String getString() {}\n" +
+            "  String getString() {string}\n" +
             "}\n");
         GroovyCompilationUnit baz = createUnit("foo", "Baz",
             "package foo\n" +
@@ -576,13 +603,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}\n");
 
         IMethod method = bar.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
 
         assertEquals(4, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
@@ -595,8 +618,56 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(String.valueOf(baz.getContents()).lastIndexOf("getString"), matches.get(3).getOffset());
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/988
+    @Test
     public void testExplicitPropertyGetterSearch3() throws Exception {
+        GroovyCompilationUnit bar = createUnit("foo", "Bar",
+            "package foo\n" +
+            "class Bar<T> {\n" +
+            "  T value\n" +
+            "  T getValue() {value}\n" +
+            "}\n");
+        GroovyCompilationUnit baz = createUnit("foo", "Baz",
+            "package foo\n" +
+            "def bar = new Bar<Object>(value: null)\n" +
+            "def val = bar.@value\n" +
+            "val = bar.value\n" + // exact
+            "val = bar.getValue()\n" + // exact
+            "val = bar.'getValue'()\n" + // exact
+            "def fun = bar.&getValue\n" + // potential
+            "bar.with {\n" +
+            "  val = value\n" + // exact
+            "  val = getValue()\n" + // exact
+            "  val = 'getValue'()\n" + // exact
+            "  fun = delegate.&getValue\n" + // potential
+            "}\n");
+
+        IMethod method = bar.getType("Bar").getMethods()[0];
+        List<SearchMatch> matches = search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
+
+        assertEquals(8, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("bar.value") + 4, matches.get(0).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("getValue"), matches.get(1).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("'getValue'"), matches.get(2).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(3).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf(".&getValue") + 2, matches.get(3).getOffset());
+
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(4).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("value"), matches.get(4).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(5).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("getValue()"), matches.get(5).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(6).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("'getValue'"), matches.get(6).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(7).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("getValue"), matches.get(7).getOffset());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/988
+    public void testExplicitPropertyGetterSearch4() throws Exception {
         GroovyCompilationUnit bar = createUnit("foo", "Bar",
             "package foo\n" +
             "@groovy.transform.CompileStatic\n" +
@@ -623,13 +694,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}\n");
 
         IMethod method = bar.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
         SearchMatch match;
         int offset;
 
@@ -651,12 +718,12 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(offset, match.getOffset());
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1027
-    public void testExplicitPropertyGetterSearch4() throws Exception {
+    @Test
+    public void testExplicitPropertyGetterSearch5() throws Exception {
         GroovyCompilationUnit bar = createUnit("foo", "Bar",
             "package foo\n" +
             "class Bar {\n" +
-            "//static Boolean bool\n" + //TODO
+            "//static Boolean bool\n" +
             "  static Boolean isBool() {}\n" +
             "}\n");
         GroovyCompilationUnit baz = createUnit("foo", "Baz",
@@ -665,22 +732,18 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "import static foo.Bar.isBool as isXy\n" + // exact
             "flag = Bar.isBool()\n" + // exact
             "flag = Bar.'isBool'()\n" + // exact
-            "flag = Bar.bool\n" + // exact
+            "flag = Bar.bool\n" +
             "flag = Bar.@bool\n" +
-            "func = Bar.&isBool\n" + // potential (may evaluate as category method)
+            "func = Bar.&isBool\n" + // potential (may evaluate category method)
             "flag = blah()\n" + // exact
-            "flag = xy\n"); // exact
+            "flag = xy\n");
 
         IMethod method = bar.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
 
-        List<SearchMatch> matches = searchRequestor.getMatches();
-
-        assertEquals(8, matches.size());
+        assertEquals(isAtLeastGroovy(40) ? 6 : 7, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
         assertEquals(String.valueOf(baz.getContents()).indexOf("isBool as blah"), matches.get(0).getOffset());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
@@ -690,14 +753,10 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(SearchMatch.A_ACCURATE, matches.get(3).getAccuracy());
         assertEquals(String.valueOf(baz.getContents()).indexOf("'isBool'"), matches.get(3).getOffset());
 
-        assertEquals(SearchMatch.A_ACCURATE, matches.get(4).getAccuracy());
-        assertEquals(String.valueOf(baz.getContents()).indexOf("Bar.bool") + 4, matches.get(4).getOffset());
-        assertEquals(SearchMatch.A_INACCURATE, matches.get(5).getAccuracy());
-        assertEquals(String.valueOf(baz.getContents()).indexOf("Bar.&isBool") + 5, matches.get(5).getOffset());
-        assertEquals(SearchMatch.A_ACCURATE, matches.get(6).getAccuracy());
-        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("blah"), matches.get(6).getOffset());
-        assertEquals(SearchMatch.A_ACCURATE, matches.get(7).getAccuracy());
-        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("xy"), matches.get(7).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(4).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("Bar.&isBool") + 5, matches.get(4).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(5).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("blah"), matches.get(5).getOffset());
     }
 
     @Test
@@ -709,7 +768,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  void setString(String string) {\n" +
             "    this.string = (string ?: '')\n" +
             "  }\n" +
-            "}");
+            "}\n");
         GroovyCompilationUnit baz = createUnit("foo", "Baz",
             "package foo\n" +
             "def bar = new Bar(string: null)\n" + // exact
@@ -718,17 +777,12 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "bar.string = null\n" + // exact
             "def str = bar.string\n" +
             "bar.@string = null\n" +
-            "bar.&setString\n" + // potential
-            "");
+            "bar.&setString\n"); // potential
 
         IMethod method = bar.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
 
         assertEquals(5, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
@@ -752,7 +806,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  void setString(String string) {\n" +
             "    this.string = (string ?: '')\n" +
             "  }\n" +
-            "}");
+            "}\n");
         GroovyCompilationUnit baz = createUnit("foo", "Baz",
             "package foo\n" +
             "new Bar().with {\n" +
@@ -763,17 +817,12 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  def str = string\n" +
             "  delegate.@string = null\n" +
             "  delegate.&setString\n" + // potential
-            "}\n" +
-            "");
+            "}\n");
 
         IMethod method = bar.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
 
         assertEquals(5, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
@@ -805,17 +854,12 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    string += 'y'\n" + // potential
             "    string = 'z'\n" + // exact
             "  }\n" +
-            "}\n" +
-            "");
+            "}\n");
 
         IMethod method = bar.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
 
         assertEquals(3, matches.size());
         assertEquals(SearchMatch.A_INACCURATE, matches.get(0).getAccuracy());
@@ -827,6 +871,65 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
+    public void testExplicitPropertySetterSearch4() throws Exception {
+        GroovyCompilationUnit bar = createUnit("foo", "Bar",
+            "package foo\n" +
+            "class Bar<T> {\n" +
+            "  T value\n" +
+            "  void setValue(T value) {}\n" +
+            "}\n");
+        GroovyCompilationUnit baz = createUnit("foo", "Baz",
+            "package foo\n" +
+            "def bar = new Bar<Object>(value: null)\n" + // exact
+            "bar.value = null\n" + // exact
+            "bar.value += null\n" + // potential
+            "bar.setValue(null)\n" + // exact
+            "bar.'setValue'(null)\n" + // exact
+            "def val = bar.value\n" +
+            "bar.@value = null\n" +
+            "bar.&setValue\n" + // potential
+            "bar.with {\n" +
+            "  value = null\n" + // exact
+            "  value += null\n" + // potential
+            "  setValue(null)\n" + // exact
+            "  'setValue'(null)\n" + // exact
+            "  val = value\n" +
+            "  delegate.@value = null\n" +
+            "  delegate.&setValue\n" + // potential
+            "}\n");
+
+        IMethod method = bar.getType("Bar").getMethods()[0];
+        List<SearchMatch> matches = search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
+
+        assertEquals(11, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("value:"), matches.get(0).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("bar.value =") + 4, matches.get(1).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(2).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("bar.value +=") + 4, matches.get(2).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(3).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("setValue"), matches.get(3).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(4).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("'setValue'"), matches.get(4).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(5).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf(".&setValue") + 2, matches.get(5).getOffset());
+
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(6).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf(" value =") + 1, matches.get(6).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(7).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf(" value +=") + 1, matches.get(7).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(8).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf(" setValue(") + 1, matches.get(8).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(9).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf(" 'setValue'") + 1, matches.get(9).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(10).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf(".&setValue") + 2, matches.get(10).getOffset());
+    }
+
+    @Test
     public void testGenericsMethodReferenceSearch() throws Exception {
         GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
             "package foo\n" +
@@ -834,7 +937,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  String xxx(Number number, Date date) {\n" +
             "    'Hello'\n" +
             "  }\n" +
-            "}");
+            "}\n");
         @SuppressWarnings("unused")
         ICompilationUnit javaUnit = createJavaUnit("foo", "Baz",
             "package foo;\n" +
@@ -844,33 +947,91 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  void testCase() {\n" +
             "    test.xxx(1, new Date());\n" +
             "  }\n" +
-            "}");
+            "}\n");
 
         IMethod method = groovyUnit.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}));
 
         assertEquals(1, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
         assertEquals("Baz.java", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
     }
 
+    @Test
+    public void testObjectMethodReferenceSearch1() throws Exception {
+        GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
+            "package foo\n" +
+            "class Bar {\n" +
+            "  def baz(obj) {\n" +
+            "    obj.notifyAll()\n" +
+            "  }\n" +
+            "}\n");
+
+        IMethod method = groovyUnit.getJavaProject().findType("java.lang.Object").getMethod("notifyAll", new String[0]);
+        List<SearchMatch> matches = search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}));
+
+        assertEquals(1, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals("Bar.groovy", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
+    }
+
+    @Test
+    public void testObjectMethodReferenceSearch2() throws Exception {
+        GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
+            "package foo\n" +
+            "class Bar {\n" +
+            "  def baz(String[] strings) {\n" +
+            "    println strings.toString()\n" +
+            "  }\n" +
+            "}\n");
+
+        IMethod method = groovyUnit.getJavaProject().findType("java.lang.Object").getMethod("toString", new String[0]);
+        List<SearchMatch> matches = search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}));
+
+        assertEquals(1, matches.size());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(0).getAccuracy());
+        assertEquals("Bar.groovy", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
+    }
+
     //--------------------------------------------------------------------------
 
+    private void doTestForTwoMethodReferencesInClass(String secondContents) throws Exception {
+        doTestForTwoMethodReferences("class First {\n def xxx() {}\n}", secondContents, false, 0, "xxx");
+    }
+
     private void doTestForTwoMethodReferencesInScript(String secondContents) throws Exception {
-        doTestForTwoMethodReferences(FIRST_CONTENTS_CLASS_FOR_METHODS, secondContents, true, 3, "xxx");
+        doTestForTwoMethodReferences("class First {\n def xxx() {}\n}", secondContents, true, 3, "xxx");
     }
 
     private void doTestForTwoMethodReferencesInScriptWithQuotes(String secondContents) throws Exception {
-        doTestForTwoMethodReferences(FIRST_CONTENTS_CLASS_FOR_METHODS, secondContents, true, 3, "'xxx'");
+        doTestForTwoMethodReferences("class First {\n def xxx() {}\n}", secondContents, true, 3, "'xxx'");
     }
 
-    private void doTestForTwoMethodReferencesInClass(String secondContents) throws Exception {
-        doTestForTwoMethodReferences(FIRST_CONTENTS_CLASS_FOR_METHODS, secondContents, false, 0, "xxx");
+    private void doTestForTwoMethodReferences(String firstContents, String secondContents, boolean secondIsScript, int index, String match) throws Exception {
+        String firstClassName = "First";
+        String secondClassName = "Second";
+        GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
+        GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
+
+        IJavaElement firstMatchEnclosingElement;
+        IJavaElement secondMatchEnclosingElement;
+        if (secondIsScript) {
+            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[index];
+            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[index];
+        } else {
+            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[index];
+            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[index + 2];
+        }
+        // match is enclosed in run method (for script), or x method for class
+
+        IMethod firstMethod = (IMethod) findType(firstClassName, first).getChildren()[0];
+        SearchPattern pattern = SearchPattern.createPattern(firstMethod, IJavaSearchConstants.REFERENCES);
+        checkMatches(secondContents, match, pattern, second, firstMatchEnclosingElement, secondMatchEnclosingElement);
     }
 }

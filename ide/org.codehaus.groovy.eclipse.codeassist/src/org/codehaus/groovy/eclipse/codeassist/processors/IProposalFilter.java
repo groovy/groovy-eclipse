@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,24 +23,24 @@ import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 
 /**
  * Filters completion proposals displayed by the groovy editor content assistant.
- * Contributions to the <tt>org.codehaus.groovy.eclipse.codeassist.completionProposalFilter</tt> extension point
- * must implement this interface.
-*/
-@FunctionalInterface
+ * Contributions to the <tt>org.codehaus.groovy.eclipse.codeassist.completionProposalFilter</tt>
+ * extension point must implement this interface.
+ */
 public interface IProposalFilter {
 
     /**
-     * Filter a list of IGroovyProposal <br>
-     * - Remove undesired (duplicate) entries <br>
-     * - Augment the relevance of certain proposals <br>
-     * - Supplement existing entries with additional information<br>
-     *
+     * Filters a list of IGroovyProposal to:
+     * <ul>
+     * <li> Remove undesired (duplicate) entries
+     * <li> Augment the relevance of certain proposals
+     * <li> Supplement existing entries with additional information
+     * </ul>
      * Note that if you want to augment the relevance of a given proposal, you
-     * must cast the proposal to {@link AbstractGroovyProposal} and call the
-     * method {@link AbstractGroovyProposal#setRelevanceMultiplier(float)}. Look
-     * at the {@link Relevance} enumeration for how relevance is calculated.
+     * must cast the proposal to {@link org.codehaus.groovy.eclipse.codeassist.proposals.AbstractGroovyProposal AbstractGroovyProposal}
+     * and call the method {@link org.codehaus.groovy.eclipse.codeassist.proposals.AbstractGroovyProposal#setRelevanceMultiplier(float) setRelevanceMultiplier}.
+     * Look at the {@link org.codehaus.groovy.eclipse.codeassist.relevance.Relevance Relevance} enumeration for how relevance is calculated.
      *
-     * @return The filtered list of proposals as List
+     * @return List of filtered proposals or {@code null} if no change
      */
     List<IGroovyProposal> filterProposals(List<IGroovyProposal> proposals, ContentAssistContext context, JavaContentAssistInvocationContext javaContext);
 }

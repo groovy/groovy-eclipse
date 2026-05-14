@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
-import org.codehaus.groovy.vmplugin.v5.Java5;
 import org.codehaus.jdt.groovy.ast.MethodNodeWithNamedParams;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -38,6 +37,7 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
@@ -57,8 +57,8 @@ public class ProposalUtils {
     private ProposalUtils() {}
 
     public static final char[] ARG_ = {'%'};
-    public static final char[] ARG0 = Java5.ARGS[0].toCharArray();
-    public static final char[] ARG1 = Java5.ARGS[1].toCharArray();
+    public static final char[] ARG0 = "arg0".toCharArray();
+    public static final char[] ARG1 = "arg1".toCharArray();
 
     // See org.eclipse.jdt.ui.text.java.CompletionProposalCollector
 
@@ -250,13 +250,18 @@ public class ProposalUtils {
         return matches(prefix, target, true, false);
     }
 
-    public static boolean matches(String pattern, String candidate, boolean camelCaseMatch, boolean substringMatch) {
+    public static boolean matches(String pattern, String candidate, boolean cmlCaseMatch, boolean subWordMatch) {
         if (pattern.isEmpty()) {
             return true;
         }
-        if (camelCaseMatch && SearchPattern.camelCaseMatch(pattern, candidate)) {
+        if (cmlCaseMatch && SearchPattern.camelCaseMatch(pattern, candidate)) {
+            return true;
+        }
+        if (subWordMatch && CharOperation.getSubWordMatchingRegions(pattern, candidate) != null) {
             return true;
         }
         return substringMatch ? CharOperation.substringMatch(pattern, candidate) : candidate.startsWith(pattern);
     }
+
+    static boolean substringMatch = !("false".equals(System.getProperty(AssistOptions.PROPERTY_SubstringMatch)));
 }

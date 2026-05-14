@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.codeassist.processors;
 
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -24,9 +25,14 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 /**
  * Filters completion proposals displayed by the groovy editor content assistant.
  * Contributions to the <tt>org.codehaus.groovy.eclipse.codeassist.completionProposalFilter</tt>
- * extension point can optionally implement this interface.
+ * extension point may optionally implement this interface.
  */
 public interface IProposalFilterExtension extends IProposalFilter {
+
+    @Override
+    default List<IGroovyProposal> filterProposals(List<IGroovyProposal> proposals, ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
+        return null;
+    }
 
     /**
      * Filter a list of ICompletionProposal <br>

@@ -44,9 +44,10 @@ options {
 }
 
 @members {
-    private long tokenIndex     = 0;
-    private int  lastTokenType  = 0;
-    private int  invalidDigitCount = 0;
+    private boolean errorIgnored;
+    private long tokenIndex;
+    private int  lastTokenType;
+    private int  invalidDigitCount;
 
     /**
      * Record the index and token type of the current token while emitting tokens.
@@ -67,29 +68,27 @@ options {
         super.emit(token);
     }
 
-    private static final int[] REGEX_CHECK_ARRAY =
-                                    /* GRECLIPSE edit
-                                    IntStream.of(
-                                    */
-                                    {
-                                    // GRECLIPSE end
-                                        Identifier, CapitalizedIdentifier, NullLiteral, BooleanLiteral, THIS, RPAREN, RBRACK, RBRACE,
-                                        IntegerLiteral, FloatingPointLiteral, StringLiteral, GStringEnd, INC, DEC
-                                    /* GRECLIPSE edit
-                                    ).sorted().toArray();
-                                    */
-                                    };
-        static {
-            Arrays.sort(REGEX_CHECK_ARRAY);
-        }
-        // GRECLIPSE end
+    private static final int[] REGEX_CHECK_ARRAY = {
+        DEC,
+        INC,
+        THIS,
+        RBRACE,
+        RBRACK,
+        RPAREN,
+        GStringEnd,
+        NullLiteral,
+        StringLiteral,
+        BooleanLiteral,
+        IntegerLiteral,
+        FloatingPointLiteral,
+        Identifier, CapitalizedIdentifier
+    };
+    static {
+        Arrays.sort(REGEX_CHECK_ARRAY);
+    }
 
     private boolean isRegexAllowed() {
-        if (Arrays.binarySearch(REGEX_CHECK_ARRAY, this.lastTokenType) >= 0) {
-            return false;
-        }
-
-        return true;
+        return (Arrays.binarySearch(REGEX_CHECK_ARRAY, this.lastTokenType) < 0);
     }
 
     /**
@@ -217,6 +216,7 @@ options {
 
         return Integer.MIN_VALUE;
     }
+
     // GRECLIPSE add
     private void addComment(int type) {
         String text = _input.getText(Interval.of(_tokenStartCharIndex, getCharIndex() - 1));
@@ -231,23 +231,36 @@ options {
     public List<Comment> getComments() { return comments; }
     private final List<Comment> comments = new ArrayList<>();
     // GRECLIPSE end
+
+    private static boolean isJavaIdentifierStartAndNotIdentifierIgnorable(int codePoint) {
+        return Character.isJavaIdentifierStart(codePoint) && !Character.isIdentifierIgnorable(codePoint);
+    }
+
+    private static boolean isJavaIdentifierPartAndNotIdentifierIgnorable(int codePoint) {
+        return Character.isJavaIdentifierPart(codePoint) && !Character.isIdentifierIgnorable(codePoint);
+    }
+
+    public boolean isErrorIgnored() {
+        return errorIgnored;
+    }
+
+    public void setErrorIgnored(boolean errorIgnored) {
+        this.errorIgnored = errorIgnored;
+    }
 }
 
 
 // §3.10.5 String Literals
 StringLiteral
-    :   GStringQuotationMark    DqStringCharacter* GStringQuotationMark
-    |   SqStringQuotationMark   SqStringCharacter* SqStringQuotationMark
+    :   GStringQuotationMark  DqStringCharacter*  GStringQuotationMark
+    |   SqStringQuotationMark  SqStringCharacter*  SqStringQuotationMark
+    |   Slash { this.isRegexAllowed() && _input.LA(1) != '*' }?  SlashyStringCharacter+  Slash
 
-    |   Slash      { this.isRegexAllowed() && _input.LA(1) != '*' }?
-                 SlashyStringCharacter+       Slash
-
-    |   TdqStringQuotationMark  TdqStringCharacter*    TdqStringQuotationMark
-    |   TsqStringQuotationMark  TsqStringCharacter*    TsqStringQuotationMark
-    |   DollarSlashyGStringQuotationMarkBegin   DollarSlashyStringCharacter+   DollarSlashyGStringQuotationMarkEnd
+    |   TdqStringQuotationMark  TdqStringCharacter*  TdqStringQuotationMark
+    |   TsqStringQuotationMark  TsqStringCharacter*  TsqStringQuotationMark
+    |   DollarSlashyGStringQuotationMarkBegin  DollarSlashyStringCharacter+  DollarSlashyGStringQuotationMarkEnd
     ;
 
-// Groovy gstring
 GStringBegin
     :   GStringQuotationMark DqStringCharacter* Dollar -> pushMode(DQ_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE)
     ;
@@ -367,9 +380,9 @@ fragment SlashyStringCharacter
     |   ~[/$\u0000]
     ;
 
-// character in the collar slashy string. e.g. $/a/$
+// character in the dollar slashy string. e.g. $/a/$
 fragment DollarSlashyStringCharacter
-    :   SlashEscape | DollarSlashEscape | DollarDollarEscape
+    :   DollarSlashEscape | DollarDollarEscape
     |   Slash { _input.LA(1) != '$' }?
     |   Dollar { !isFollowedByJavaLetterInGString(_input) }?
     |   ~[/$\u0000]
@@ -482,10 +495,10 @@ IntegerLiteral
         |   HexIntegerLiteral
         |   OctalIntegerLiteral
         |   BinaryIntegerLiteral
-        ) (Underscore { require(false, "Number ending with underscores is invalid", -1, true); })?
+        ) (Underscore { require(errorIgnored, "Number ending with underscores is invalid", -1, true); })?
 
     // !!! Error Alternative !!!
-    |   Zero ([0-9] { invalidDigitCount++; })+ { require(false, "Invalid octal number", -(invalidDigitCount + 1), true); } IntegerTypeSuffix?
+    |   Zero ([0-9] { invalidDigitCount++; })+ { require(errorIgnored, "Invalid octal number", -(invalidDigitCount + 1), true); } IntegerTypeSuffix?
     ;
 
 fragment
@@ -624,12 +637,12 @@ BinaryDigitOrUnderscore
 FloatingPointLiteral
     :   (   DecimalFloatingPointLiteral
         |   HexadecimalFloatingPointLiteral
-        ) (Underscore { require(false, "Number ending with underscores is invalid", -1, true); })?
+        ) (Underscore { require(errorIgnored, "Number ending with underscores is invalid", -1, true); })?
     ;
 
 fragment
 DecimalFloatingPointLiteral
-    :   Digits Dot Digits ExponentPart? FloatTypeSuffix?
+    :   Digits? Dot Digits ExponentPart? FloatTypeSuffix?
     |   Digits ExponentPart FloatTypeSuffix?
     |   Digits FloatTypeSuffix
     ;
@@ -696,7 +709,7 @@ BooleanLiteral
 
 fragment
 EscapeSequence
-    :   Backslash [btnfr"'\\]
+    :   Backslash [btnfrs"'\\]
     |   OctalEscape
     |   UnicodeEscape
     |   DollarEscape
@@ -731,7 +744,12 @@ DollarEscape
 
 fragment
 LineEscape
-    :   Backslash '\r'? '\n'
+    :   Backslash LineTerminator
+    ;
+
+fragment
+LineTerminator
+    :   '\r'? '\n' | '\r'
     ;
 
 fragment
@@ -786,7 +804,7 @@ DollarSlashyGStringQuotationMarkEnd
 
 fragment
 DollarSlashEscape
-    :   '$/$'
+    :   '$/'
     ;
 
 fragment
@@ -881,7 +899,7 @@ ELVIS_ASSIGN    : '?=';
 
 // §3.8 Identifiers (must appear after all keywords in the grammar)
 CapitalizedIdentifier
-    :   [A-Z] JavaLetterOrDigit*
+    :   JavaLetter {Character.isUpperCase(_input.LA(-1))}? JavaLetterOrDigit*
     ;
 
 Identifier
@@ -894,37 +912,19 @@ IdentifierInGString
     ;
 
 fragment
-JavaLetterInGString
-    :   [a-zA-Z_] // these are the "java letters" below 0x7F, except for $
-    |   // covers all characters above 0x7F which are not a surrogate
-        ~[\u0000-\u007F\uD800-\uDBFF]
-        {Character.isJavaIdentifierStart(_input.LA(-1))}?
-    |   // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
-        [\uD800-\uDBFF] [\uDC00-\uDFFF]
-        {Character.isJavaIdentifierStart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
-    ;
-
-fragment
-JavaLetterOrDigitInGString
-    :   [a-zA-Z0-9_] // these are the "java letters or digits" below 0x7F, except for $
-    |   // covers all characters above 0x7F which are not a surrogate
-        ~[\u0000-\u007F\uD800-\uDBFF]
-        {Character.isJavaIdentifierPart(_input.LA(-1))}?
-    |   // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
-        [\uD800-\uDBFF] [\uDC00-\uDFFF]
-        {Character.isJavaIdentifierPart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
-    ;
-
-
-fragment
 JavaLetter
     :   [a-zA-Z$_] // these are the "java letters" below 0x7F
     |   // covers all characters above 0x7F which are not a surrogate
         ~[\u0000-\u007F\uD800-\uDBFF]
-        {Character.isJavaIdentifierStart(_input.LA(-1))}?
+        { isJavaIdentifierStartAndNotIdentifierIgnorable(_input.LA(-1)) }?
     |   // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
         [\uD800-\uDBFF] [\uDC00-\uDFFF]
-        {Character.isJavaIdentifierStart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
+        { Character.isJavaIdentifierStart(Character.toCodePoint((char) _input.LA(-2), (char) _input.LA(-1))) }?
+    ;
+
+fragment
+JavaLetterInGString
+    :   JavaLetter { _input.LA(-1) != '$' }?
     ;
 
 fragment
@@ -932,10 +932,20 @@ JavaLetterOrDigit
     :   [a-zA-Z0-9$_] // these are the "java letters or digits" below 0x7F
     |   // covers all characters above 0x7F which are not a surrogate
         ~[\u0000-\u007F\uD800-\uDBFF]
-        {Character.isJavaIdentifierPart(_input.LA(-1))}?
+        { isJavaIdentifierPartAndNotIdentifierIgnorable(_input.LA(-1)) }?
     |   // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
         [\uD800-\uDBFF] [\uDC00-\uDFFF]
-        {Character.isJavaIdentifierPart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
+        { Character.isJavaIdentifierPart(Character.toCodePoint((char) _input.LA(-2), (char) _input.LA(-1))) }?
+    ;
+
+fragment
+JavaLetterOrDigitInGString
+    :   JavaLetterOrDigit  { _input.LA(-1) != '$' }?
+    ;
+
+fragment
+ShCommand
+    :   ~[\r\n\uFFFF]*
     ;
 
 //
@@ -948,15 +958,14 @@ ELLIPSIS : '...';
 //
 // Whitespace, line escape and comments
 //
-WS  :  ([ \t\u000C]+ | LineEscape+)     -> skip
+WS  : ([ \t]+ | LineEscape+) -> skip
     ;
-
 
 // Inside (...) and [...] but not {...}, ignore newlines.
-NL  : '\r'? '\n'            { this.ignoreTokenInsideParens(); }
+NL  : LineTerminator   { this.ignoreTokenInsideParens(); }
     ;
 
-// Multiple-line comments(including groovydoc comments)
+// Multiple-line comments (including groovydoc comments)
 ML_COMMENT
 // GRECLIPSE edit
 //  :   '/*' .*? '*/'       { this.ignoreMultiLineCommentConditionally(); } -> type(NL)
@@ -975,10 +984,10 @@ SL_COMMENT
 // Script-header comments.
 // The very first characters of the file may be "#!".  If so, ignore the first line.
 SH_COMMENT
-    :   '#!' { require(0 == this.tokenIndex, "Shebang comment should appear at the first line", -2, true); } ~[\r\n\uFFFF]* -> skip
+    :   '#!' { require(errorIgnored || 0 == this.tokenIndex, "Shebang comment should appear at the first line", -2, true); } ShCommand (LineTerminator '#!' ShCommand)* -> skip
     ;
 
 // Unexpected characters will be handled by groovy parser later.
 UNEXPECTED_CHAR
-    :   .
+    :   . { require(errorIgnored, "Unexpected character: '" + getText().replace("'", "\\'") + "'", -1, false); }
     ;

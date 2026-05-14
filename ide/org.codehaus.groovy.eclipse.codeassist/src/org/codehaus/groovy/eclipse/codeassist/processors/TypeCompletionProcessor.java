@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -41,6 +39,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.groovy.search.ITypeResolver;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
@@ -81,7 +80,11 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
         // check for free variable or fully-qualified (by packages) expression
         if (lastDotIndex < 0 || environment.nameLookup.isPackage(expression.substring(0, lastDotIndex).split("\\."))) {
             boolean findMembers = true; // not sure about findMembers; javadoc says method does not find member types
-            environment.findTypes(expression.toCharArray(), findMembers, requestor.options.camelCaseMatch, getSearchFor(), requestor, monitor);
+            int matchRule = SearchPattern.R_PREFIX_MATCH;
+            if (requestor.options.camelCaseMatch) matchRule |= SearchPattern.R_CAMELCASE_MATCH;
+          //if (requestor.options.substringMatch) matchRule |= SearchPattern.R_SUBSTRING_MATCH;
+            if (requestor.options.subwordMatch)   matchRule |= SearchPattern.R_SUBWORD_MATCH;
+            environment.findTypes(expression.toCharArray(), findMembers, matchRule, getSearchFor(), requestor, monitor);
         } else if (Character.isJavaIdentifierStart(expression.charAt(0)) && expression.chars().allMatch(c -> c == '.' || Character.isJavaIdentifierPart(c))) {
             // qualified expression; requires manual inner types checking
 
@@ -92,7 +95,7 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
                 if (outerType != null && outerType.exists() && qualifier.endsWith(outerType.getElementName()))
                 try {
                     for (IType innerType : outerType.getTypes()) {
-                        if (isAcceptable(innerType, getSearchFor()) && ProposalUtils.matches(pattern, innerType.getElementName(), requestor.options.camelCaseMatch, requestor.options.substringMatch)) {
+                        if (isAcceptable(innerType, getSearchFor()) && ProposalUtils.matches(pattern, innerType.getElementName(), requestor.options.camelCaseMatch, requestor.options.subwordMatch)) {
                             requestor.acceptType(innerType.getPackageFragment().getElementName().toCharArray(), innerType.getElementName().toCharArray(),
                                 CharOperation.splitOn('$', outerType.getTypeQualifiedName().toCharArray()), innerType.getFlags(), ProposalUtils.getTypeAccessibility(innerType));
                         }
@@ -105,9 +108,8 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
             ClassNode outerTypeNode = resolver.resolve(qualifier);
             if (!ClassHelper.DYNAMIC_TYPE.equals(outerTypeNode)) {
                 checker.accept(environment.nameLookup.findType(outerTypeNode.getName(), false, 0));
-            } else if (qualifier.indexOf('.') < 0) {
-                // unknown qualifier; search for types with exact matching
-                environment.findTypes(qualifier.toCharArray(), true, false, 0, requestor, monitor);
+            } else if (qualifier.indexOf('.') < 0) { // unknown qualifier; search for types with exact matching
+                environment.findTypes(qualifier.toCharArray(), true, SearchPattern.R_PREFIX_MATCH, getSearchFor(), requestor, monitor);
                 List<ICompletionProposal> proposals = requestor.processAcceptedTypes(resolver);
                 for (ICompletionProposal proposal : proposals) {
                     if (proposal instanceof AbstractJavaCompletionProposal) {
@@ -193,6 +195,5 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
         return !FIELD_MODIFIERS.contains(nameAndLocation.name.trim());
     }
 
-    protected static final Set<String> FIELD_MODIFIERS = Collections.unmodifiableSet(
-        new HashSet<>(Arrays.asList("private", "protected", "public", "static", "final")));
+    protected static final Set<String> FIELD_MODIFIERS = Set.of("private", "protected", "public", "static", "final");
 }

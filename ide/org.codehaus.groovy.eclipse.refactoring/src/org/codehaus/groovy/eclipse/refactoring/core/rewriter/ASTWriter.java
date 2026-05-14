@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -105,6 +105,7 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.FilePartReader;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ImportResolver;
 import org.codehaus.groovy.syntax.Types;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 
@@ -228,7 +229,7 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
         //write the classes
         List<ClassNode> classes = root.getClasses();
         for (ClassNode classNode : classes) {
-            if (!classNode.isScript()) {
+            if (!GroovyUtils.isScript(classNode)) {
                 visitClass(classNode);
             } else {
                 List<MethodNode> methods = root.getMethods();
@@ -601,8 +602,7 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
 
             if (!methCallExpr.isImplicitThis()) {
                 methCallExpr.getObjectExpression().visit(this);
-                ArgumentListExpression ale = ((ArgumentListExpression) methCallExpr.getArguments());
-                printArgumentsOfaMethodCall(methCallExpr, ale);
+                printArgumentsOfaMethodCall(methCallExpr, (TupleExpression) methCallExpr.getArguments());
             } else {
                 super.visitExpressionStatement(statement);
             }
@@ -612,8 +612,8 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
         postVisitStatement(statement);
     }
 
-    private void printArgumentsOfaMethodCall(MethodCallExpression methCallExpr, ArgumentListExpression ale) {
-        if (ale != null) {
+    private void printArgumentsOfaMethodCall(MethodCallExpression methCallExpr, TupleExpression args) {
+        if (args != null) {
             groovyCode.append('.');
             groovyCode.append(methCallExpr.getMethod().getText());
 
@@ -621,8 +621,8 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
              * Methodcall has a certain number of
              * arguments
              */
-            if (!ale.getExpressions().isEmpty()) {
-                List<Expression> listOfAllExpressions = ale.getExpressions();
+            if (!args.getExpressions().isEmpty()) {
+                List<Expression> listOfAllExpressions = args.getExpressions();
                 ArgumentListExpression listOfMethodArguments = new ArgumentListExpression();
                 ClosureExpression closure = null;
 
@@ -665,9 +665,13 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
         preVisitStatement(forLoop);
         groovyCode.append("for ");
         //if its groovy for-loop
-        if (!forLoop.getVariable().getName().equals("forLoopDummyParameter")) {
+        if (forLoop.getValueVariable() != null) {
             groovyCode.append("(");
-            groovyCode.append(forLoop.getVariable().getName());
+            if (forLoop.getIndexVariable() != null) {
+                groovyCode.append(forLoop.getIndexVariable().getName());
+                groovyCode.append(", ");
+            }
+            groovyCode.append(forLoop.getValueVariable().getName());
             groovyCode.append(" in ");
             forLoop.getCollectionExpression().visit(this);
             groovyCode.append(")");
@@ -677,9 +681,9 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
             if (forLoop.getLoopBlock() instanceof BlockStatement) {
                 forLoop.getLoopBlock().visit(this);
             } else {
-                columnOffset++;
+                columnOffset += 1;
                 forLoop.getLoopBlock().visit(this);
-                columnOffset--;
+                columnOffset -= 1;
             }
         }
         postVisitStatement(forLoop);
@@ -738,7 +742,7 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
     private boolean shouldIgnoreReturn() {
         if (root.getClasses().size() == 1) {
             ClassNode clazz = root.getClasses().get(0);
-            if (clazz.isScript()) {
+            if (GroovyUtils.isScript(clazz)) {
                 MethodNode runMethod = clazz.getMethod("run", Parameter.EMPTY_ARRAY);
                 if (runMethod != null) {
                     Statement s = runMethod.getCode();

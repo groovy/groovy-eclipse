@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,8 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Iterator;
 
 import groovyjarjarantlr.Token;
 import org.codehaus.groovy.antlr.GroovyTokenTypeBridge;
@@ -25,23 +24,22 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.text.edits.DeleteEdit;
-import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
 
 /**
- * Removes trailing semicolons as they are optional in Groovy.
+ * Removes trailing semicolons as they are mostly optional in Groovy.
  */
 public class SemicolonRemover extends GroovyFormatter {
 
-    private final GroovyDocumentScanner scanner;
     private final MultiTextEdit edits;
+    private final GroovyDocumentScanner scanner;
 
-    public SemicolonRemover(ITextSelection sel, IDocument doc) {
+    public SemicolonRemover(final ITextSelection sel, final IDocument doc) {
         this(sel, doc, new MultiTextEdit());
     }
 
-    public SemicolonRemover(ITextSelection sel, IDocument doc, MultiTextEdit edits) {
+    public SemicolonRemover(final ITextSelection sel, final IDocument doc, final MultiTextEdit edits) {
         super(sel, doc);
         this.edits = edits;
         this.scanner = new GroovyDocumentScanner(doc);
@@ -50,12 +48,33 @@ public class SemicolonRemover extends GroovyFormatter {
     @Override
     public TextEdit format() {
         try {
-            List<Token> tokens = scanner.getTokens(selection);
-            for (Token token : tokens) {
-                Token nextToken = scanner.getNextToken(token);
-
-                if (isSemicolon(token) && (nextToken == null || isDelimiter(nextToken)))
-                    addSemicolonRemoval(token);
+            for (Iterator<Token> it = scanner.getTokens(selection).iterator(); it.hasNext();) {
+                Token token = it.next();
+                if (token.getType() == GroovyTokenTypeBridge.LITERAL_enum) {
+                    int block = 0;
+                    while (it.hasNext()) {
+                        token = it.next();
+                        if (token.getType() == GroovyTokenTypeBridge.SEMI) {
+                            // first semicolon in body terminates enum constants
+                            if (block != 1) {
+                                checkOptionalSemicolon(token);
+                            } else {
+                                Token t = token;
+                                while ((t = scanner.getNextToken(t)) != null &&
+                                    (t.getType() == GroovyTokenTypeBridge.NLS ||
+                                     t.getType() == GroovyTokenTypeBridge.SL_COMMENT ||
+                                     t.getType() == GroovyTokenTypeBridge.ML_COMMENT)){
+                                }
+                                if (t.getType() != GroovyTokenTypeBridge.IDENT) break;
+                            }
+                        } else if (token.getType() == GroovyTokenTypeBridge.LCURLY) {
+                            ++block;
+                        } else if (token.getType() == GroovyTokenTypeBridge.RCURLY) {
+                            if (--block < 1) break;
+                        }
+                    }
+                }
+                checkOptionalSemicolon(token);
             }
         } catch (BadLocationException e) {
             GroovyCore.logException("Cannot perform semicolon removal.", e);
@@ -66,22 +85,29 @@ public class SemicolonRemover extends GroovyFormatter {
         return edits;
     }
 
-    private boolean isSemicolon(Token token) {
-        return token != null && token.getType() == GroovyTokenTypeBridge.SEMI;
-    }
-
-    private boolean isDelimiter(Token token) {
-        List<Integer> delimiterTypes = Arrays.asList(GroovyTokenTypeBridge.RCURLY, GroovyTokenTypeBridge.NLS, GroovyTokenTypeBridge.EOF);
-        return token != null && delimiterTypes.contains(token.getType());
-    }
-
-    private void addSemicolonRemoval(Token semicolonToken) throws BadLocationException {
-        int semicolonOffset = scanner.getOffset(semicolonToken);
-        TextEdit deleteSemicolon = new DeleteEdit(semicolonOffset, 1);
-        try {
-            edits.addChild(deleteSemicolon);
-        } catch (MalformedTreeException e) {
-            GroovyCore.logWarning("Ignoring conflicting edit: " + deleteSemicolon, e);
+    private void checkOptionalSemicolon(Token token) throws BadLocationException {
+        if (isOptionalSemicolon(token)) {
+            edits.addChild(new DeleteEdit(scanner.getOffset(token), 1));
         }
+    }
+
+    private boolean isOptionalSemicolon(Token token) throws BadLocationException {
+        if (token.getType() == GroovyTokenTypeBridge.SEMI) {
+            token = scanner.getNextToken(token);
+            if (token != null) {
+                int type = token.getType();
+                if (type == GroovyTokenTypeBridge.NLS) {
+                    while ((token = scanner.getNextToken(token)) != null &&
+                        (type = token.getType()) == GroovyTokenTypeBridge.NLS) {
+                    }
+                    // semicolon may prevent treating next expression as method call argument
+                    if (type != GroovyTokenTypeBridge.LPAREN && type != GroovyTokenTypeBridge.LCURLY && type != GroovyTokenTypeBridge.LBRACK) {
+                        type = GroovyTokenTypeBridge.NLS;
+                    }
+                }
+                return type == GroovyTokenTypeBridge.RCURLY || type == GroovyTokenTypeBridge.SEMI || type == GroovyTokenTypeBridge.NLS || type == GroovyTokenTypeBridge.EOF;
+            }
+        }
+        return false;
     }
 }

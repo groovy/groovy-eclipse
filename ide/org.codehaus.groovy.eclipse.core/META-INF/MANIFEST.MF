@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.core;singleton:=true
 Bundle-Name: Groovy Core
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 3.7.0.qualifier
+Bundle-Version: 6.2.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.core,
  org.codehaus.groovy.eclipse.core.builder,
  org.codehaus.groovy.eclipse.core.compiler,
@@ -13,13 +13,12 @@ Export-Package: org.codehaus.groovy.eclipse.core,
  org.codehaus.groovy.eclipse.core.model,
  org.codehaus.groovy.eclipse.core.preferences,
  org.codehaus.groovy.eclipse.core.search,
- org.codehaus.groovy.eclipse.core.templates,
  org.codehaus.groovy.eclipse.core.util
 Import-Package: org.eclipse.debug.core;resolution:=optional,
  org.eclipse.eclemma.core.launching;resolution:=optional,
  org.eclipse.jdt.launching;resolution:=optional
-Require-Bundle: org.codehaus.groovy.eclipse.compilerResolver;bundle-version="3.7.0",
- org.eclipse.jdt.groovy.core;bundle-version="3.7.0";visibility:=reexport
+Require-Bundle: org.codehaus.groovy.eclipse.compilerResolver;bundle-version="6.2.0",
+ org.eclipse.jdt.groovy.core;bundle-version="6.2.0";visibility:=reexport
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.core.GroovyCoreActivator
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-17

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assume.assumeTrue
 
-import groovy.transform.NotYetImplemented
+import groovy.test.NotYetImplemented
 
 import org.eclipse.jdt.core.SourceRange
 import org.junit.Test
@@ -32,7 +33,7 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSelectSuperClass() {
+    void testSelectSuperClass1() {
         String another = 'class Super { }'
         String contents = 'class Type extends Super { }'
         assertCodeSelect([another, contents], 'Super')
@@ -45,35 +46,35 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSelectSuperClass2a() {
+    void testSelectSuperClass3() {
         String contents = 'class Type extends java.util.Date { }'
         assertCodeSelect([contents], 'util', 'java.util')
         assertCodeSelect([contents], 'java', 'java')
     }
 
     @Test
-    void testSelectSuperClass3() {
+    void testSelectSuperClass4() {
         String contents = 'abstract class Type extends java.lang.Number { }'
         assertCodeSelect([contents], 'Number')
     }
 
     @Test
-    void testSelectSuperClass3a() {
+    void testSelectSuperClass5() {
         String contents = 'abstract class Type extends java.lang.Number { }'
         assertCodeSelect([contents], 'lang', 'java.lang')
         assertCodeSelect([contents], 'java', 'java')
     }
 
     @Test
-    void testSelectSuperClass4() {
+    void testSelectSuperClass6() {
         String another = 'class Super { }'
         // "<T extends Type<T>>" allows methods to return this as sub-type (aka T)
-        String contents = 'abstract class Type<T extends Type<T>> extends Super {}'
+        String contents = 'abstract class Type<T extends Type<T>> extends Super { }'
         assertCodeSelect([another, contents], 'Super')
     }
 
     @Test
-    void testSelectSuperInterface() {
+    void testSelectSuperInterface1() {
         String another = 'interface Super { }'
         String contents = 'class Type implements Super { }'
         assertCodeSelect([another, contents], 'Super')
@@ -86,23 +87,30 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSelectSuperInterface2a() {
+    void testSelectSuperInterface3() {
         String contents = 'abstract class Type implements java.util.List { }'
         assertCodeSelect([contents], 'util', 'java.util')
         assertCodeSelect([contents], 'java', 'java')
     }
 
     @Test
-    void testSelectSuperInterface3() {
+    void testSelectSuperInterface4() {
         String contents = 'abstract class Type implements groovy.lang.MetaClass { }'
         assertCodeSelect([contents], 'MetaClass')
     }
 
     @Test
-    void testSelectSuperInterface3a() {
+    void testSelectSuperInterface5() {
         String contents = 'abstract class Type implements groovy.lang.MetaClass { }'
         assertCodeSelect([contents], 'lang', 'groovy.lang')
         assertCodeSelect([contents], 'groovy', 'groovy')
+    }
+
+    @Test
+    void testSelectSuperInterface6() {
+        String contents = '@groovy.transform.AutoImplement(code={ 0 }) class Type implements Iterator<String> { }'
+        assertCodeSelect([contents], 'Iterator')
+        assertCodeSelect([contents], 'String')
     }
 
     @Test
@@ -119,7 +127,7 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSelectAnnotationClass2a() {
+    void testSelectAnnotationClass3() {
         String contents = '@java.lang.Deprecated class Type { }'
         assertCodeSelect([contents], 'Deprecated')
         assertCodeSelect([contents], 'java', 'java')
@@ -127,34 +135,44 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSelectAnnotationClass3() {
+    void testSelectAnnotationClass4() {
         String contents = 'import groovy.transform.*; @Field String field'
         assertCodeSelect([contents], 'Field')
     }
 
     @Test
-    void testSelectAnnotationClass4() {
+    void testSelectAnnotationClass5() {
         // CompileDynamic is an AnnotationCollector, so it is not in the AST after transformation
         String contents = 'import groovy.transform.CompileDynamic; @CompileDynamic class Type { }'
         assertCodeSelect([contents], 'CompileDynamic')
     }
 
     @Test
-    void testSelectAnnotationClass5() {
-        String contents = 'import groovy.transform.*; @AnnotationCollector([EqualsAndHashCode]) public @interface Custom { }'
-        assertCodeSelect([contents], 'EqualsAndHashCode')
-    }
-
-    @Test
-    void testSelectAnnotationClass5a() {
-        String contents = 'import groovy.transform.*; @EqualsAndHashCode @AnnotationCollector public @interface Custom { }'
-        assertCodeSelect([contents], 'EqualsAndHashCode')
-    }
-
-    @Test
     void testSelectAnnotationClass6() {
+        String contents = 'import groovy.transform.*; @AnnotationCollector(EqualsAndHashCode) @interface Custom { }'
+        assertCodeSelect([contents], 'EqualsAndHashCode')
+    }
+
+    @Test
+    void testSelectAnnotationClass7() {
+        String contents = 'import groovy.transform.*; @EqualsAndHashCode @AnnotationCollector @interface Custom { }'
+        assertCodeSelect([contents], 'EqualsAndHashCode')
+    }
+
+    @Test
+    void testSelectAnnotationClass8() {
         String another = 'import java.lang.annotation.*; @Target(ElementType.FIELD) @interface Tag { String value() }'
         String contents = 'enum Foo { @Tag("Bar") Baz }'
+        assertCodeSelect([another, contents], 'Tag')
+        assertCodeSelect([another, contents], 'Baz')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1512
+    void testSelectAnnotationClass9() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String another = 'import java.lang.annotation.*; @Target(ElementType.TYPE_USE) @interface Tag { String value() }'
+        String contents = 'class Foo<@Tag("Bar") Baz> { }'
         assertCodeSelect([another, contents], 'Tag')
         assertCodeSelect([another, contents], 'Baz')
     }
@@ -169,49 +187,49 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSelectFieldType1a() {
+    void testSelectFieldType2() {
         String contents = 'class Type { java.util.Date x }'
         assertCodeSelect([contents], 'util', 'java.util')
         assertCodeSelect([contents], 'java', 'java')
     }
 
     @Test
-    void testSelectFieldType2() {
+    void testSelectFieldType3() {
         String contents = 'class Type { java.lang.Number x }'
         assertCodeSelect([contents], 'Number')
         assertCodeSelect([contents], 'x')
     }
 
     @Test
-    void testSelectFieldType2a() {
+    void testSelectFieldType4() {
         String contents = 'class Type { java.lang.Number x }'
         assertCodeSelect([contents], 'lang', 'java.lang')
         assertCodeSelect([contents], 'java', 'java')
     }
 
     @Test
-    void testSelectFieldType3() {
+    void testSelectFieldType5() {
         String contents = 'class Type { List<java.util.Date> x }'
         assertCodeSelect([contents], 'Date')
         assertCodeSelect([contents], 'x')
     }
 
     @Test
-    void testSelectFieldType3a() {
+    void testSelectFieldType6() {
         String contents = 'class Type { List<java.util.Date> x }'
         assertCodeSelect([contents], 'util', 'java.util')
         assertCodeSelect([contents], 'java', 'java')
     }
 
     @Test
-    void testSelectFieldType4() {
+    void testSelectFieldType7() {
         String contents = 'class Type { List<java.lang.Number> x }'
         assertCodeSelect([contents], 'Number')
         assertCodeSelect([contents], 'x')
     }
 
     @Test
-    void testSelectFieldType4a() {
+    void testSelectFieldType8() {
         String contents = 'class Type { List<java.lang.Number> x }'
         assertCodeSelect([contents], 'lang', 'java.lang')
         assertCodeSelect([contents], 'java', 'java')
@@ -226,45 +244,45 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSelectMethodReturnType1a() {
+    void testSelectMethodReturnType2() {
         String contents = 'class Type { java.util.List x() { return [] } }'
         assertCodeSelect([contents], 'util', 'java.util')
     }
 
     @Test
-    void testSelectMethodReturnType2() {
+    void testSelectMethodReturnType3() {
         String contents = 'class Type { groovy.lang.MetaClass x() { return [] } }'
         assertCodeSelect([contents], 'MetaClass')
     }
 
     @Test
-    void testSelectMethodReturnType2a() {
+    void testSelectMethodReturnType4() {
         String contents = 'class Type { groovy.lang.MetaClass x() { return [] } }'
         assertCodeSelect([contents], 'lang', 'groovy.lang')
     }
 
     @Test
-    void testSelectMethodReturnType3() {
+    void testSelectMethodReturnType5() {
         String contents = 'class Type { List<java.util.Date> x() { return [] } }'
         assertCodeSelect([contents], 'Date')
     }
 
     @Test
-    void testSelectMethodReturnType3a() {
+    void testSelectMethodReturnType6() {
         String contents = 'class Type { List<java.util.Date> x() { return [] } }'
         assertCodeSelect([contents], 'util', 'java.util')
         assertCodeSelect([contents], 'java', 'java')
     }
 
     @Test
-    void testSelectMethodReturnType4() {
+    void testSelectMethodReturnType7() {
         String contents = 'class Type { List<java.lang.Number> x() { return [] } }'
         assertCodeSelect([contents], 'Number')
         assertCodeSelect([contents], 'x')
     }
 
     @Test
-    void testSelectMethodReturnType4a() {
+    void testSelectMethodReturnType8() {
         String contents = 'class Type { List<java.lang.Number> x() { return [] } }'
         assertCodeSelect([contents], 'lang', 'java.lang')
         assertCodeSelect([contents], 'java', 'java')
@@ -277,43 +295,43 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSelectMethodParamType1a() {
+    void testSelectMethodParamType2() {
         String contents = 'class Type { def x(java.util.List y) {} }'
         assertCodeSelect([contents], 'util', 'java.util')
     }
 
     @Test
-    void testSelectMethodParamType2() {
+    void testSelectMethodParamType3() {
         String contents = 'class Type { def x(groovy.lang.MetaClass y) {} }'
         assertCodeSelect([contents], 'MetaClass')
     }
 
     @Test
-    void testSelectMethodParamType2a() {
+    void testSelectMethodParamType4() {
         String contents = 'class Type { def x(groovy.lang.MetaClass y) {} }'
         assertCodeSelect([contents], 'lang', 'groovy.lang')
     }
 
     @Test
-    void testSelectMethodParamType3() {
+    void testSelectMethodParamType5() {
         String contents = 'class Type { def x(List<java.util.Date> y) {} }'
         assertCodeSelect([contents], 'Date')
     }
 
     @Test
-    void testSelectMethodParamType3a() {
+    void testSelectMethodParamType6() {
         String contents = 'class Type { def x(List<java.util.Date> y) {} }'
         assertCodeSelect([contents], 'util', 'java.util')
     }
 
     @Test
-    void testSelectMethodParamType4() {
+    void testSelectMethodParamType7() {
         String contents = 'class Type { def x(List<java.lang.Number> y) {} }'
         assertCodeSelect([contents], 'Number')
     }
 
     @Test
-    void testSelectMethodParamType4a() {
+    void testSelectMethodParamType8() {
         String contents = 'class Type { def x(List<java.lang.Number> y) {} }'
         assertCodeSelect([contents], 'lang', 'java.lang')
     }
@@ -325,20 +343,20 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSelectMethodVarargType1a() {
+    void testSelectMethodVarargType2() {
         String contents = 'class Type { def x(java.util.Date... y) {} }'
         assertCodeSelect([contents], 'util', 'java.util')
         assertCodeSelect([contents], 'Date')
     }
 
     @Test
-    void testSelectMethodVarargType2() {
+    void testSelectMethodVarargType3() {
         String contents = 'class Type { def x(Number... y) {} }'
         assertCodeSelect([contents], 'Number')
     }
 
     @Test
-    void testSelectMethodVarargType2a() {
+    void testSelectMethodVarargType4() {
         String contents = 'class Type { def x(java.lang.Number... y) {} }'
         assertCodeSelect([contents], 'lang', 'java.lang')
         assertCodeSelect([contents], 'Number')
@@ -366,8 +384,16 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
 
     @Test
     void testSelectCatchParamType() {
-        String contents = 'try { throw new Exception() } catch (Exception ex) { ex.printStackTrace() }'
+        String contents = 'try {\n} catch (Exception ex) { ex.printStackTrace() }'
         assertCodeSelect([contents], 'Exception')
+    }
+
+    @Test
+    void testSelectCatchParamType2() {
+        String contents = 'try {\n} catch (Exception | java.lang.Error e) { e.cause }'
+        assertCodeSelect([contents], 'lang', 'java.lang')
+        assertCodeSelect([contents], 'Exception')
+        assertCodeSelect([contents], 'Error')
     }
 
     @Test

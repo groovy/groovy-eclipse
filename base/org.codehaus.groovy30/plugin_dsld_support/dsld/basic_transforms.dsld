@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,8 +18,10 @@ package dsld
 import groovy.transform.*
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.*
-import org.codehaus.groovy.runtime.MetaClassHelper
 
+import static org.apache.groovy.util.BeanUtils.capitalize
+import static org.codehaus.groovy.ast.tools.GeneralUtils.getSetterName
+import static org.codehaus.groovy.transform.AbstractASTTransformation.getMemberStringList
 import static org.codehaus.groovy.transform.NamedVariantASTTransformation.NAMED_PARAM_TYPE
 
 @Field static final ClassNode NAMED_PARAMS_TYPE = ClassHelper.makeWithoutCaching(NamedParams)
@@ -44,8 +46,21 @@ contribute(currentType(annos: annotatedBy(Category))) {
 //@groovy.lang.Delegate
 contribute(currentType(fields: fields(annotatedBy(Delegate)))) {
     provider = '{@link groovy.lang.Delegate Delegate} AST transform'
-    for (FieldNode field : fields) {
-        delegatesTo type: field.type
+    for (FieldNode field : fields) { AnnotationNode node = field.getAnnotations(new ClassNode(Delegate))[0]
+        List<String> excludes = getMemberStringList(node, 'excludes')
+        List<String> includes = getMemberStringList(node, 'includes')
+        if (!excludes && includes) {
+            excludes = field.type.methods*.name - includes // inverse
+        }
+
+        Boolean deprecated = node.getMember('deprecated')?.value
+        Boolean interfaces = node.getMember('interfaces')?.value
+        if (!deprecated && (!field.type.isInterface() || Boolean.FALSE.equals(interfaces))) {
+            def names = field.type.methods.findAll(org.eclipse.jdt.groovy.core.util.GroovyUtils.&isDeprecated)*.name
+            if (names) excludes = (excludes ? excludes + names : names) // TODO: What if name is deprecated and not?
+        }
+
+        delegatesTo type: field.type, except: excludes
     }
 }
 
@@ -105,7 +120,7 @@ contribute(enclosingClass(annos: annotatedBy(Newify)) | enclosingField(annos: an
             def resolveNewifyType = { String name ->
                 if (name.split('\\.')[-1].matches(expr.text)) {
                     ClassNode type = currentType.module.context.resolver.resolve(name)
-                    if (type != ClassHelper.DYNAMIC_TYPE) {
+                    if (!ClassHelper.isDynamicTyped(type)) {
                         addNewifyMethods(type)
                     }
                 }
@@ -135,10 +150,9 @@ contribute(currentType(annos: annotatedBy(Singleton))) {
     provider = '{@link groovy.lang.Singleton Singleton} AST transform'
     AnnotationNode node = annos[0]
     String propertyName = node.getMember('property')?.text ?: 'instance'
-    String accessorName = 'get' + MetaClassHelper.capitalize(propertyName)
 
-    method name: accessorName, type: currentType, isStatic: true
-    property name: propertyName, type: currentType, isStatic: true
+    property name: propertyName, type: currentType, isStatic: true, readOnly: true
+    method name: 'get' + capitalize(propertyName), type: currentType, isStatic: true
 }
 
 //------------------------------------------------------------------------------
@@ -168,12 +182,22 @@ contribute(enclosingClass(annotatedBy(AutoExternalize))) {
 //@groovy.transform.Canonical, et al.
 
 //@groovy.transform.Field
+contribute(isScript() & currentType(subType(Script) & bind(fields: fields(not(isFinal()))))) {
+    provider = '{@link groovy.transform.Field Field} AST transform'
+    for (FieldNode field : fields) {
+        if (field.end > 0) {
+            method name: getSetterName(field.name), type: void, params: [(field.name): field.type], isStatic: field.isStatic()
+        }
+    }
+}
+
+//@groovy.transform.Immutable, et al.
 
 //@groovy.transform.IndexedProperty
 contribute(currentType(fields: fields(annotatedBy(IndexedProperty)))) {
     provider = '{@link groovy.transform.IndexedProperty IndexedProperty} AST transform'
     for (FieldNode field : fields) {
-        String propertyName = MetaClassHelper.capitalize(field.name)
+        String propertyName = capitalize(field.name)
 
         // field must be an array or collection; get its component type
         ClassNode type
@@ -193,8 +217,6 @@ contribute(currentType(fields: fields(annotatedBy(IndexedProperty)))) {
     }
 }
 
-//@groovy.transform.Immutable
-
 //@groovy.transform.InheritConstructors
 
 //@groovy.transform.MapConstructor
@@ -206,11 +228,11 @@ contribute(currentType(meths: methods(hasArgument(annotatedBy(NamedParam))) | ha
     provider = '{@link groovy.transform.NamedVariant NamedVariant} AST transform'
     for (MethodNode meth : meths) {
         Parameter parm = meth.parameters[0]
-        if (!ClassHelper.MAP_TYPE.equals(parm.type)) {
+        if (parm.type != ClassHelper.MAP_TYPE) {
             continue
         }
 
-        Map<String, ?> namedParams = [:], optionalParams = [:]
+        Map<String, ?> requiredParams = [:], optionalParams = [:]
         for (AnnotationNode anno : parm.getAnnotations(NAMED_PARAM_TYPE) ?:
                 parm.getAnnotations(NAMED_PARAMS_TYPE).collectMany { it.getMember('value').expressions*.value }) {
             String name = anno.getMember('value').value
@@ -219,12 +241,12 @@ contribute(currentType(meths: methods(hasArgument(annotatedBy(NamedParam))) | ha
             Boolean r = anno.getMember('required')?.value
             if (r == null) r = NamedParam.getMethod('required').defaultValue
 
-            (r ? namedParams : optionalParams).put(name, type)
+            (r ? requiredParams : optionalParams).put(name, type)
         }
 
         method  name: meth.name,
                 params: params(meth),
-                namedParams: namedParams,
+                namedParams: requiredParams,
                 optionalParams: optionalParams,
                 declaringType: meth.declaringClass,
                 type: meth.returnType, isStatic: meth.isStatic(),
@@ -234,6 +256,8 @@ contribute(currentType(meths: methods(hasArgument(annotatedBy(NamedParam))) | ha
 }
 
 //@groovy.transform.NotYetImplemented
+
+//@groovy.transform.NullCheck
 
 //@groovy.transform.PackageScope
 

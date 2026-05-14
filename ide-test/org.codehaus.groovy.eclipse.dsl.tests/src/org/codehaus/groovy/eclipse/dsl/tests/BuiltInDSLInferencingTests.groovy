@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,22 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeFalse
-
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.eclipse.core.resources.IResource
+import org.eclipse.jdt.core.Flags
 import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.JavaCore
+import org.junit.FixMethodOrder
 import org.junit.Test
 
 /**
  * Tests type inferencing for DSL scripts included with Groovy plugin.
  */
+@FixMethodOrder(org.junit.runners.MethodSorters.NAME_ASCENDING)
 final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
 
     BuiltInDSLInferencingTests() {
@@ -39,7 +39,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testBasics() {
-        assert GroovyRuntime.hasClasspathContainer(javaProject, GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID) : 'Should have DSL support classpath container'
+        assert GroovyRuntime.findClasspathEntry(javaProject) { it.path == GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID } : 'Should have DSL support classpath container'
 
         IClasspathContainer container = JavaCore.getClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, javaProject)
         assert container.classpathEntries.length == 2 : "Wrong number of classpath entries found: ${ -> Arrays.toString(container.classpathEntries)}"
@@ -61,8 +61,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
         }
 
         assert pluginEntry != null : "Did not find the Plugin DSLD classpath entry.  Exsting resolved roots: [\n${ -> elements.join(', ')}\n]\nOther DSLD fragments: [\n${ -> possibleFrags.join('\n')}\n]"
-        assert root != null : "Plugin DSLD classpath entry should exist.  Exsting resolved roots: [\n${ -> elements.join(', ')}\n]\nOther DSLD fragments: [\n${ -> possibleFrags.join('\n')}\n]"
-        assert root.exists() : 'Plugin DSLD classpath entry should exist'
+        assert root != null && root.exists() : "Plugin DSLD classpath entry should exist.  Exsting resolved roots: [\n${ -> elements.join(', ')}\n]\nOther DSLD fragments: [\n${ -> possibleFrags.join('\n')}\n]"
 
         root.resource().refreshLocal(IResource.DEPTH_INFINITE, null)
         root.close(); root.open(null)
@@ -81,7 +80,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'get').with {
-            assert result.extraDoc.replace('}', '') =~ 'Delegate AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Delegate AST transform'
             assert declaringTypeName == 'java.util.List<java.lang.Integer>'
             assert typeName == 'java.lang.Integer'
         }
@@ -90,16 +89,276 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     @Test
     void testDelegate2() {
         String contents = '''\
-            |class Bar {
+            |class Foo {
+            |  @Delegate List<Integer> list
+            |}
+            |new Foo().spliterator() // default method of List
+            |'''.stripMargin()
+
+        inferType(contents, 'spliterator').with {
+            assert result.extraDoc?.replace('}', '') =~ 'Delegate AST transform'
+            assert declaringTypeName == 'java.util.List<java.lang.Integer>'
+            assert typeName == 'java.util.Spliterator<java.lang.Integer>'
+        }
+    }
+
+    @Test
+    void testDelegate3() {
+        String contents = '''\
+            |class Foo {
+            |  @Delegate List<Integer> list
+            |}
+            |new Foo().stream() // default method of Collection
+            |'''.stripMargin()
+
+        inferType(contents, 'stream').with {
+            assert result.extraDoc?.replace('}', '') =~ 'Delegate AST transform'
+            assert declaringTypeName == 'java.util.List<java.lang.Integer>'
+            assert typeName == 'java.util.stream.Stream<java.lang.Integer>'
+        }
+    }
+
+    @Test
+    void testDelegate4() {
+        String contents = '''\
+            |class Foo {
+            |  @Delegate List<Integer> list
+            |}
+            |new Foo()./**/equals(null) // method of List and Object
+            |'''.stripMargin()
+
+        inferType(contents, 'equals').with {
+            assert declaringTypeName == 'java.lang.Object'
+            assert result.extraDoc == null
+        }
+    }
+
+    @Test
+    void testDelegate5() {
+        String contents = '''\
+            |class Foo {
             |  @Delegate URL url
             |}
-            |new Bar().file
+            |new Foo().file // getFile() as property
             |'''.stripMargin()
 
         inferType(contents, 'file').with {
-            assert result.extraDoc.replace('}', '') =~ 'Delegate AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Delegate AST transform'
             assert declaringTypeName == 'java.net.URL'
             assert typeName == 'java.lang.String'
+        }
+    }
+
+    @Test
+    void testDelegate6() {
+        String contents = '''\
+            |class Foo {
+            |  @Delegate Map<String,Object> map
+            |}
+            |new Foo().empty // *not* isEmpty() as property
+            |'''.stripMargin()
+
+        inferType(contents, 'empty').with {
+            assert result.extraDoc == null
+            assert declaringTypeName == 'Foo'
+            assert typeName == 'java.lang.Object'
+        }
+    }
+
+    @Test // GROOVY-5204
+    void testDelegate7() {
+        String contents = '''\
+            |class Bar {
+            |  def baz() {}
+            |}
+            |class Foo {
+            |  @Delegate Bar bar = new Bar()
+            |  def baz() {}
+            |}
+            |new Foo().baz()
+            |'''.stripMargin()
+
+        inferType(contents, 'baz').with {
+            assert declaringTypeName == 'Foo'
+            assert result.extraDoc == null
+        }
+    }
+
+    @Test // GROOVY-5204
+    void testDelegate8() {
+        String contents = '''\
+            |class Bar {
+            |  def baz() {}
+            |  def baz(int i) {}
+            |}
+            |class Foo {
+            |  @Delegate Bar bar = new Bar()
+            |  def baz() {}
+            |}
+            |new Foo().baz()
+            |'''.stripMargin()
+
+        inferType(contents, 'baz').with {
+            assert declaringTypeName == 'Foo'
+            assert result.extraDoc == null
+        }
+    }
+
+    @Test // GROOVY-3917
+    void testDelegate9() {
+        String contents = '''\
+            |class Bar {
+            |}
+            |class Foo {
+            |  @Delegate Bar bar = new Bar()
+            |}
+            |new Foo().getProperty('baz') // method of GroovyObject
+            |'''.stripMargin()
+
+        inferType(contents, 'getProperty').with {
+            assert declaringTypeName != 'Bar'
+            assert result.extraDoc == null
+        }
+    }
+
+    @Test // GROOVY-8164
+    void testDelegate10() {
+        String contents = '''\
+            |class Bar {
+            |  def baz
+            |}
+            |class Foo {
+            |  @Delegate Comparator<Bar> cmp
+            |}
+            |new Foo().comparing(Bar.&getBaz) // static method of Comparator
+            |'''.stripMargin()
+
+        inferType(contents, 'comparing').with {
+            assert result.confidence.name() == 'UNKNOWN'
+        }
+    }
+
+    @Test
+    void testDelegate11() {
+        String contents = '''\
+            |class Bar {
+            |  def baz
+            |}
+            |class Foo {
+            |  @Delegate(excludes=['compare','equals']) Comparator<Bar> cmp
+            |}
+            |new Foo().compare(null, null)
+            |'''.stripMargin()
+
+        inferType(contents, 'compare').with {
+            assert result.confidence.name() == 'UNKNOWN'
+        }
+    }
+
+    @Test
+    void testDelegate12() {
+        String contents = '''\
+            |class Bar {
+            |  def baz
+            |}
+            |class Foo {
+            |  @Delegate(includes='compare') Comparator<Bar> cmp
+            |}
+            |new Foo().compare(null, null)
+            |'''.stripMargin()
+
+        inferType(contents, 'compare').with {
+            assert result.extraDoc?.replace('}', '') =~ 'Delegate AST transform'
+            assert declaringTypeName == 'java.util.Comparator<Bar>'
+            assert typeName == 'java.lang.Integer'
+        }
+    }
+
+    @Test
+    void testDelegate13() {
+        addGroovySource '''\
+            |class Bar {
+            |  @Deprecated
+            |  int baz(){}
+            |}
+            |'''.stripMargin(), 'Bar'
+
+        String contents = '''\
+            |class Foo {
+            |  @Delegate Bar bar
+            |}
+            |new Foo().baz()
+            |'''.stripMargin()
+
+        inferType(contents, 'baz').with {
+            assert result.confidence.name() == 'UNKNOWN'
+        }
+
+        contents = contents.replace('@Delegate', '@Delegate(deprecated=true)')
+
+        inferType(contents, 'baz').with {
+            assert result.extraDoc?.replace('}', '') =~ 'Delegate AST transform'
+            assert declaringTypeName == 'Bar'
+            assert typeName == 'java.lang.Integer'
+        }
+    }
+
+    @Test
+    void testDelegate14() {
+        addGroovySource '''\
+            |interface Bar {
+            |  @Deprecated
+            |  int baz()
+            |}
+            |'''.stripMargin(), 'Bar'
+
+        String contents = '''\
+            |class Foo {
+            |  @Delegate(interfaces=false) Bar bar
+            |}
+            |new Foo().baz()
+            |'''.stripMargin()
+
+        inferType(contents, 'baz').with {
+            assert result.confidence.name() == 'UNKNOWN'
+        }
+    }
+
+    @Test
+    void testField1() {
+        String contents = '''\
+            |@groovy.transform.Field def foo
+            |setFoo(null)
+            |'''.stripMargin()
+
+        inferType(contents, 'setFoo').with {
+            assert result.extraDoc?.replace('}', '') =~ 'Field AST transform'
+            assert declaringTypeName =~ '^TestUnit_'
+            assert typeName == 'java.lang.Void'
+        }
+    }
+
+    @Test
+    void testField2() {
+        String contents = '''\
+            |def foo
+            |setFoo(null)
+            |'''.stripMargin()
+
+        inferType(contents, 'setFoo').with {
+            assert result.confidence.name() == 'UNKNOWN'
+        }
+    }
+
+    @Test
+    void testField3() {
+        String contents = '''\
+            |class Bar { public foo }
+            |new Bar().setFoo(null)
+            |'''.stripMargin()
+
+        inferType(contents, 'setFoo').with {
+            assert result.confidence.name() == 'UNKNOWN'
         }
     }
 
@@ -126,7 +385,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'fly').with {
-            assert result.extraDoc.replace('}', '') =~ 'Mixin AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Mixin AST transform'
             assert declaringTypeName == 'FlyingAbility'
             assert typeName == 'java.lang.String'
         }
@@ -155,7 +414,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'dive').with {
-            assert result.extraDoc.replace('}', '') =~ 'Mixin AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Mixin AST transform'
             assert declaringTypeName == 'DivingAbility'
             assert typeName == 'java.lang.String'
         }
@@ -184,7 +443,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'fly').with {
-            assert result.extraDoc.replace('}', '') =~ 'Mixin AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Mixin AST transform'
             assert declaringTypeName == 'FlyingAbility'
             assert typeName == 'java.lang.String'
         }
@@ -213,7 +472,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'dive').with {
-            assert result.extraDoc.replace('}', '') =~ 'Mixin AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Mixin AST transform'
             assert declaringTypeName == 'DivingAbility'
             assert typeName == 'java.lang.String'
         }
@@ -228,7 +487,8 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'instance').with {
-            assert result.extraDoc.replace('}', '') =~ 'Singleton AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Singleton AST transform'
+            assert Flags.isFinal(result.declaration.modifiers)
             assert declaringTypeName == 'A'
             assert typeName == 'A'
         }
@@ -243,7 +503,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'getInstance').with {
-            assert result.extraDoc.replace('}', '') =~ 'Singleton AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Singleton AST transform'
             assert declaringTypeName == 'B'
             assert typeName == 'B'
         }
@@ -258,7 +518,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'thereCanBeOnlyOne').with {
-            assert result.extraDoc.replace('}', '') =~ 'Singleton AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Singleton AST transform'
             assert declaringTypeName == 'C'
             assert typeName == 'C'
         }
@@ -273,7 +533,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'getThereCanBeOnlyOne').with {
-            assert result.extraDoc.replace('}', '') =~ 'Singleton AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Singleton AST transform'
             assert declaringTypeName == 'D'
             assert typeName == 'D'
         }
@@ -287,11 +547,11 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |class E {
             |  String value
             |}
-            |new E().compareTo(null)
+            |new E()./**/compareTo(null)
             |'''.stripMargin()
 
         inferType(contents, 'compareTo').with {
-            assert result.extraDoc.replace('}', '') =~ 'Sortable AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Sortable AST transform'
             assert typeName == 'java.lang.Integer'
         }
     }
@@ -308,7 +568,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'comparatorByValue').with {
-            assert result.extraDoc.replace('}', '') =~ 'Sortable AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Sortable AST transform'
             assert typeName == 'java.util.Comparator'
         }
     }
@@ -326,7 +586,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'comparatorByValue').with {
-            assert result.extraDoc.replace('}', '') =~ 'Sortable AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Sortable AST transform'
             assert typeName == 'java.util.Comparator'
         }
     }
@@ -378,34 +638,8 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'comparatorByValue').with {
-            assert result.extraDoc.replace('}', '') =~ 'Sortable AST transform'
+            assert result.extraDoc?.replace('}', '') =~ 'Sortable AST transform'
             assert typeName == 'java.util.Comparator'
-        }
-    }
-
-    @Test
-    void testSwingBuilder1() {
-        assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
-
-        String contents = 'new groovy.swing.SwingBuilder().edt { frame }'
-
-        inferType(contents, 'frame').with {
-            assert result.extraDoc.replace('}', '') =~ 'SwingBuilder'
-            assert declaringTypeName == 'groovy.swing.SwingBuilder'
-            assert typeName == 'javax.swing.JFrame'
-        }
-    }
-
-    @Test
-    void testSwingBuilder2() {
-        assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
-
-        String contents = 'groovy.swing.SwingBuilder.edtBuilder { frame }'
-
-        inferType(contents, 'frame').with {
-            assert result.extraDoc.replace('}', '') =~ 'SwingBuilder'
-            assert declaringTypeName == 'groovy.swing.SwingBuilder'
-            assert typeName == 'javax.swing.JFrame'
         }
     }
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,7 +32,7 @@ import org.junit.Assert;
 
 public final class TestRenameParticipantSingle extends RenameParticipant {
 
-    private static List<RenameParticipant> fgInstances= new ArrayList<>();
+    private static List<RenameParticipant> fgInstances = new ArrayList<>();
 
     private Object fElement;
     private String fHandle;
@@ -40,12 +40,12 @@ public final class TestRenameParticipantSingle extends RenameParticipant {
     @Override
     public boolean initialize(Object element) {
         fgInstances.add(this);
-        fElement= element;
+        fElement = element;
         ref(fElement);
         if (fElement instanceof IJavaElement) {
-            fHandle= ((IJavaElement)fElement).getHandleIdentifier();
+            fHandle = ((IJavaElement) fElement).getHandleIdentifier();
         } else {
-            fHandle= ((IResource)fElement).getFullPath().toString();
+            fHandle = ((IResource) fElement).getFullPath().toString();
         }
         return true;
     }
@@ -71,28 +71,28 @@ public final class TestRenameParticipantSingle extends RenameParticipant {
 
     public static void testElements(String[] handles) {
         testNumberOfInstances(handles.length);
-        List<String> l1= Arrays.asList(handles);
-        for (int i= 0; i < l1.size(); i++) {
+        List<String> l1 = Arrays.asList(handles);
+        for (int i = 0; i < l1.size(); i++) {
             Assert.assertTrue(l1.contains(getInstance(i).fHandle));
         }
     }
 
     public static void testArguments(RenameArguments[] args) {
         testNumberOfInstances(args.length);
-        for (int i= 0; i < args.length; i++) {
-            RenameArguments expected= args[i];
-            RenameArguments actual= getInstance(i).getArguments();
+        for (int i = 0; i < args.length; i++) {
+            RenameArguments expected = args[i];
+            RenameArguments actual = getInstance(i).getArguments();
             Assert.assertEquals(expected.getNewName(), actual.getNewName());
             Assert.assertEquals(expected.getUpdateReferences(), actual.getUpdateReferences());
         }
     }
 
     public static void reset() {
-        fgInstances= new ArrayList<>();
+        fgInstances = new ArrayList<>();
     }
 
     private static TestRenameParticipantSingle getInstance(int i) {
-        return ((TestRenameParticipantSingle)fgInstances.get(i));
+        return ((TestRenameParticipantSingle) fgInstances.get(i));
     }
 
     void ref(Object element) {

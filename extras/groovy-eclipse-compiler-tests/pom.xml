@@ -3,16 +3,18 @@
 
 	<artifactId>groovy-eclipse-compiler-tests</artifactId>
 	<groupId>org.codehaus.groovy</groupId>
-	<version>3.7.0-SNAPSHOT</version>
+	<version>6.2.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<properties>
+		<org>org.apache</org>
 		<!-- groovy version to use for tests: -->
-		<groovy.rt.version>3.0.1</groovy.rt.version>
+		<groovy.rt.version>5.0.6</groovy.rt.version>
 		<!-- groovy-batch version to use for tests: -->
-		<groovy.xx.version>3.0.1-01</groovy.xx.version>
-		<!-- maven-compiler version to use for tests: -->
-		<maven-compiler-plugin.version>3.6.2</maven-compiler-plugin.version>
+		<groovy.xx.version>5.0.6-01</groovy.xx.version>
+		<!-- maven-compiler versions to use for tests: -->
+		<maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
+		<maven-compiler-adapter.version>3.9.1</maven-compiler-adapter.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -36,20 +38,16 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-invoker-plugin</artifactId>
-				<version>1.10</version>
+				<version>3.2.2</version>
 				<configuration>
-					<projectsDirectory>src/it</projectsDirectory>
 					<cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
-					<pomIncludes>
-						<pomInclude>*/pom.xml</pomInclude>
-					</pomIncludes>
+					<!-- launch with same java used to run maven, not what is defined by JAVA_HOME env var -->
+					<javaHome>${java.home}</javaHome>
 					<pomExcludes>
 						<!-- src/main/groovy is not recognized when src/main/java contains only a dummy file -->
 						<pomExclude>basic-no-java0/pom.xml</pomExclude>
 					</pomExcludes>
 					<postBuildHookScript>verify</postBuildHookScript>
-					<settingsFile>src/it/settings.xml</settingsFile>
-					<localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
 				</configuration>
 				<executions>
 					<execution>

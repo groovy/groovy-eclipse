@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,11 +19,11 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.Variable;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.ResolvedSourceMethod;
+import org.eclipse.jdt.internal.core.SourceMethodElementInfo;
 
 /**
  * A resolved Java element suitable for hovers.  May include extra Javadoc
@@ -51,21 +51,9 @@ public class GroovyResolvedSourceMethod extends ResolvedSourceMethod implements 
     }
 
     @Override
-    public String getInferredElementName() {
-        if (inferredElement instanceof Variable) {
-            return ((Variable) inferredElement).getName();
-        } else if (inferredElement instanceof MethodNode) {
-            return ((MethodNode) inferredElement).getName();
-        } else if (inferredElement instanceof ClassNode) {
-            return ((ClassNode) inferredElement).getName();
-        }
-        return inferredElement.getText();
-    }
-
-    @Override
-    public Object getElementInfo() throws JavaModelException {
+    public SourceMethodElementInfo getElementInfo() throws JavaModelException {
         try {
-            return super.getElementInfo();
+            return (SourceMethodElementInfo) super.getElementInfo();
         } catch (JavaModelException jme) {
             if (!jme.getJavaModelStatus().isDoesNotExist() || !(inferredElement instanceof MethodNode)) {
                 throw jme;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,17 +59,18 @@ public class ProposalProviderRegistry {
      */
     private Map<String, List<IConfigurationElement>> filterLookupMap = new HashMap<>();
 
-    List<IProposalProvider> getProvidersFor(IProject project) throws CoreException {
-        String[] natures = project.getDescription().getNatureIds();
+    List<IProposalProvider> getProvidersFor(final IProject project) throws CoreException {
         List<IProposalProvider> lookups = new ArrayList<>();
-        for (String nature : natures) {
-            List<IConfigurationElement> configs = natureLookupMap.get(nature);
-            if (configs != null) {
-                for (IConfigurationElement config : configs) {
-                    try {
-                        lookups.add((IProposalProvider) config.createExecutableExtension(PROVIDER));
-                    } catch (CoreException e) {
-                        GroovyContentAssist.logError("Problem creating completion provider for type " + config.getAttribute(PROVIDER), e);
+        if (project != null && project.exists()) {
+            for (String nature : project.getDescription().getNatureIds()) {
+                List<IConfigurationElement> configs = natureLookupMap.get(nature);
+                if (configs != null) {
+                    for (IConfigurationElement config : configs) {
+                        try {
+                            lookups.add((IProposalProvider) config.createExecutableExtension(PROVIDER));
+                        } catch (CoreException e) {
+                            GroovyContentAssist.logError("Problem creating completion provider for type " + config.getAttribute(PROVIDER), e);
+                        }
                     }
                 }
             }
@@ -77,22 +78,22 @@ public class ProposalProviderRegistry {
         return lookups;
     }
 
-    List<IProposalProvider> getProvidersFor(GroovyCompilationUnit unit)
-            throws CoreException {
+    List<IProposalProvider> getProvidersFor(final GroovyCompilationUnit unit) throws CoreException {
         return getProvidersFor(unit.getResource().getProject());
     }
 
-    List<IProposalFilter> getFiltersFor(IProject project) throws CoreException {
-        String[] natures = project.getDescription().getNatureIds();
+    List<IProposalFilter> getFiltersFor(final IProject project) throws CoreException {
         List<IProposalFilter> filters = new ArrayList<>();
-        for (String nature : natures) {
-            List<IConfigurationElement> configs = filterLookupMap.get(nature);
-            if (configs != null) {
-                for (IConfigurationElement config : configs) {
-                    try {
-                        filters.add((IProposalFilter) config.createExecutableExtension(FILTER));
-                    } catch (CoreException e) {
-                        GroovyContentAssist.logError("Problem creating completion provider for type " + config.getAttribute(PROVIDER), e);
+        if (project != null && project.exists()) {
+            for (String nature : project.getDescription().getNatureIds()) {
+                List<IConfigurationElement> configs = filterLookupMap.get(nature);
+                if (configs != null) {
+                    for (IConfigurationElement config : configs) {
+                        try {
+                            filters.add((IProposalFilter) config.createExecutableExtension(FILTER));
+                        } catch (CoreException e) {
+                            GroovyContentAssist.logError("Problem creating completion provider for type " + config.getAttribute(PROVIDER), e);
+                        }
                     }
                 }
             }
@@ -100,8 +101,7 @@ public class ProposalProviderRegistry {
         return filters;
     }
 
-    public List<IProposalFilter> getFiltersFor(GroovyCompilationUnit unit)
-            throws CoreException {
+    public List<IProposalFilter> getFiltersFor(final GroovyCompilationUnit unit) throws CoreException {
         return getFiltersFor(unit.getResource().getProject());
     }
 
@@ -131,7 +131,7 @@ public class ProposalProviderRegistry {
         }
     }
 
-    private void createLookup(IConfigurationElement config) {
+    private void createLookup(final IConfigurationElement config) {
         try {
             if (config.getName().equals(PROVIDER)) {
                 if (config.getAttribute(PROVIDER) != null) {
@@ -156,7 +156,7 @@ public class ProposalProviderRegistry {
         }
     }
 
-    private void createFilter(IConfigurationElement config) {
+    private void createFilter(final IConfigurationElement config) {
         try {
             if (config.getName().equals(FILTER)) {
                 if (config.getAttribute(FILTER) != null) {

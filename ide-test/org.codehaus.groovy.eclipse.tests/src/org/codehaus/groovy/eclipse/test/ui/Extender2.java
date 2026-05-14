@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ public class Extender2 implements IHighlightingExtender2, IProjectNature {
     public static final String NATURE2 = "org.codehaus.groovy.eclipse.tests.testNature2";
 
     public static final IRule INITIAL_RULE = new WordRule(new WordDetectorMock("mainword"));
-
     public static final IRule RULE = new WordRule(new WordDetectorMock("secondaryword"));
 
     @Override

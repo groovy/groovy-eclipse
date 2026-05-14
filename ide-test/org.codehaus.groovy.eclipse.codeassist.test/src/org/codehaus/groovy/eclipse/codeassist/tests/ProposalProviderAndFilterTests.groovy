@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,25 +47,25 @@ final class ProposalProviderAndFilterTests extends CompletionTestSuite {
     void testProvidersAndFilters1() {
         addNature(Extender2.NATURE2)
 
-        String contents = "println th"
-        createProposalsAtOffset(contents, getIndexOf(contents, " th"))
+        String contents = 'println th'
+        createProposalsAtOffset(contents, getIndexOf(contents, ' th'))
 
-        assert !MockProposalProvider1.wasProviderCalled() : "MockProposalProvider1 should not have been called"
-        assert !MockProposalFilter1.wasFilterCalled()     : "MockProposalFilter1 should not have been called"
-        assert  MockProposalProvider2.wasProviderCalled() : "MockProposalProvider2 should have been called"
-        assert  MockProposalFilter2.wasFilterCalled()     : "MockProposalFilter2 should have been called"
+        assert !MockProposalProvider1.wasProviderCalled() : 'MockProposalProvider1 should not have been called'
+        assert !MockProposalFilter1.wasFilterCalled()     : 'MockProposalFilter1 should not have been called'
+        assert  MockProposalProvider2.wasProviderCalled() : 'MockProposalProvider2 should have been called'
+        assert  MockProposalFilter2.wasFilterCalled()     : 'MockProposalFilter2 should have been called'
     }
 
     @Test
     void testProvidersAndFilters2() {
         addNature(Extender1.NATURE1, Extender2.NATURE2)
 
-        String contents = "println th"
-        createProposalsAtOffset(contents, getIndexOf(contents, " th"))
+        String contents = 'println th'
+        createProposalsAtOffset(contents, getIndexOf(contents, ' th'))
 
-        assert MockProposalProvider1.wasProviderCalled() : "MockProposalProvider1 should have been called"
-        assert MockProposalFilter1.wasFilterCalled()     : "MockProposalFilter1 should have been called"
-        assert MockProposalProvider2.wasProviderCalled() : "MockProposalProvider2 should have been called"
-        assert MockProposalFilter2.wasFilterCalled()     : "MockProposalFilter2 should have been called"
+        assert MockProposalProvider1.wasProviderCalled() : 'MockProposalProvider1 should have been called'
+        assert MockProposalFilter1.wasFilterCalled()     : 'MockProposalFilter1 should have been called'
+        assert MockProposalProvider2.wasProviderCalled() : 'MockProposalProvider2 should have been called'
+        assert MockProposalFilter2.wasFilterCalled()     : 'MockProposalFilter2 should have been called'
     }
 }

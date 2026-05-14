@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,29 +25,29 @@ final class StaticImportsCompletionTests extends CompletionTestSuite {
 
     @Test
     void testStaticImportField() {
-        String contents = "import static javax.swing.text.html.HTML.NULL_ATTRIBUTE_VALUE\nNULL_ATTRIBUTE_VALUE"
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "NULL_ATTRIBUTE_VALUE"))
-        proposalExists(proposals, "NULL_ATTRIBUTE_VALUE", 1)
+        String contents = 'import static javax.swing.text.html.HTML.NULL_ATTRIBUTE_VALUE\nNULL_ATTRIBUTE_VALUE'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'NULL_ATTRIBUTE_VALUE'))
+        proposalExists(proposals, 'NULL_ATTRIBUTE_VALUE', 1)
     }
 
     @Test
     void testStaticImportMethod() {
-        String contents = "import static javax.swing.text.html.HTML.getAttributeKey\ngetAttributeKey"
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "getAttributeKey"))
-        proposalExists(proposals, "getAttributeKey", 1)
+        String contents = 'import static javax.swing.text.html.HTML.getAttributeKey\ngetAttributeKey'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'getAttributeKey'))
+        proposalExists(proposals, 'getAttributeKey', 1)
     }
 
     @Test
     void testStaticStarImportField() {
-        String contents = "import static javax.swing.text.html.HTML.*\nNULL_ATTRIBUTE_VALUE"
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "NULL_ATTRIBUTE_VALUE"))
-        proposalExists(proposals, "NULL_ATTRIBUTE_VALUE", 1)
+        String contents = 'import static javax.swing.text.html.HTML.*\nNULL_ATTRIBUTE_VALUE'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'NULL_ATTRIBUTE_VALUE'))
+        proposalExists(proposals, 'NULL_ATTRIBUTE_VALUE', 1)
     }
 
     @Test
     void testStaticStarImportMethod() {
-        String contents = "import static javax.swing.text.html.HTML.*\ngetAttributeKey"
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "getAttributeKey"))
-        proposalExists(proposals, "getAttributeKey", 1)
+        String contents = 'import static javax.swing.text.html.HTML.*\ngetAttributeKey'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'getAttributeKey'))
+        proposalExists(proposals, 'getAttributeKey', 1)
     }
 }

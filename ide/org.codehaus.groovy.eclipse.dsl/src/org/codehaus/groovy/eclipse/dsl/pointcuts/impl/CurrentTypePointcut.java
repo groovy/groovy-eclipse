@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,47 +39,41 @@ public class CurrentTypePointcut extends AbstractPointcut {
     }
 
     /**
-     * toMatch is always ignored and the current type is used instead
+     * {@code toMatch} is always ignored and the current type is used instead.
      */
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
-        // toMatch is ignored
-
-        Object firstArgument = getFirstArgument();
         ClassNode currentType = pattern.getCurrentType();
-        if (firstArgument instanceof String) {
-            if (currentType.getName().equals(firstArgument)) {
-                return Collections.singleton(currentType);
+        if (currentType != null) {
+            Object firstArgument = getFirstArgument();
+            if (firstArgument instanceof String) {
+                if (currentType.getName().equals(firstArgument)) {
+                    return Collections.singleton(currentType);
+                }
+            } else if (firstArgument instanceof Class) {
+                if (currentType.getName().equals(((Class<?>) firstArgument).getName())) {
+                    return Collections.singleton(currentType);
+                }
+            } else if (firstArgument != null) {
+                // we know this is a pointcut argument
+                return matchOnPointcutArgument((IPointcut) firstArgument, pattern, Collections.singleton(currentType));
             } else {
-                return null;
-            }
-        } else if (firstArgument instanceof Class) {
-            if (currentType.getName().equals(((Class<?>) firstArgument).getName())) {
+                // always match if there is no argument
                 return Collections.singleton(currentType);
-            } else {
-                return null;
             }
-        } else if (firstArgument != null) {
-            // we know this is a pointcut argument
-            return matchOnPointcutArgument((IPointcut) firstArgument, pattern, Collections.singleton(currentType));
-        } else {
-            // always match if there is no argument
-            return Collections.singleton(currentType);
         }
+        return null;
     }
 
-    /**
-     * expecting one arg that is either a string or a pointcut or a class, or no arguments
-     */
     @Override
     public void verify() throws PointcutVerificationException {
-        String oneStringOrOnePointcutArg = oneStringOrOnePointcutOrOneClassArg();
-        String argNumber = hasOneOrNoArgs();
+        String oneClassOrStringOrPointcutArg = oneStringOrOnePointcutOrOneClassArg();
+        String oneOrNone = hasOneOrNoArgs();
 
-        if (oneStringOrOnePointcutArg == null || argNumber == null) {
+        if (oneClassOrStringOrPointcutArg == null || oneOrNone == null) {
             super.verify();
             return;
         }
-        throw new PointcutVerificationException("This pointcut expects either no arguments or 1 String or 1 pointcut argument", this);
+        throw new PointcutVerificationException("This pointcut expects either 0 arguments or 1 argument of type Pointcut or String or Class", this);
     }
 }

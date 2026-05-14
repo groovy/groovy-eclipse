@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
+
+import groovy.test.NotYetImplemented
 
 import org.eclipse.jdt.core.IField
 import org.junit.Test
@@ -51,6 +53,19 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
         assertCodeSelect(['class Foo { static def x = 9\n }', 'class Bar { def y() { Foo.x++\n }\n }'], 'x')
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1422
+    void testCodeSelectFieldInParameterizedClass() {
+        def elem = assertCodeSelect(['''\
+            |class Foo<Item extends Number> {
+            |  private List<Item> items
+            |  void test() {
+            |    items
+            |  }
+            |}'''.stripMargin()
+        ], 'items')
+        assert elem.key == 'LFoo;.items)Ljava/util/List<LFoo;:TItem;>;'
+    }
+
     @Test
     void testCodeSelectLazyFieldInClass() {
         assertCodeSelect(['class Foo {\n  @Lazy def x = 9\n}'], 'x')
@@ -83,7 +98,6 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
             |  }
             |}'''.stripMargin()
         ], 'log')
-
         assert elem instanceof IField
     }
 
@@ -148,7 +162,7 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
 
     @Test // GRECLIPSE-516
     void testCodeSelectOfGeneratedSetter() {
-        assertCodeSelect(['class C { \n int num\ndef foo() {\n setNum() } }'], 'setNum', 'num')
+        assertCodeSelect(['class C { \n int num\ndef foo() {\n setNum(0) } }'], 'setNum', 'num')
     }
 
     @Test
@@ -188,11 +202,32 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
             |  }
             |}
             |'''.stripMargin()], 'T__f', 'f')
-        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'T'
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 27
+    }
+
+    @NotYetImplemented @Test // https://github.com/groovy/groovy-eclipse/issues/756
+    void testCodeSelectFieldFromTrait2() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  private String f
+            |}
+            |'''.stripMargin(), 'T', 'p'
+
+        def elem = assertCodeSelect(['''\
+            |class C implements p.T {
+            |  def m() {
+            |    p_T__f
+            |  }
+            |}
+            |'''.stripMargin()], 'p_T__f', 'f')
+        assert elem.declaringType.fullyQualifiedName == 'p.T'
+        assert elem.elementInfo.nameSourceStart == 37
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/756
-    void testCodeSelectFieldFromTrait2() {
+    void testCodeSelectFieldFromTrait3() {
         def elem = assertCodeSelect(['''\
             |trait T {
             |  private static String f
@@ -203,11 +238,32 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
             |  }
             |}
             |'''.stripMargin()], 'T__f', 'f')
-        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'T'
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 34
+    }
+
+    @NotYetImplemented @Test // https://github.com/groovy/groovy-eclipse/issues/756
+    void testCodeSelectFieldFromTrait4() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  private static String f
+            |}
+            |'''.stripMargin(), 'T', 'p'
+
+        def elem = assertCodeSelect(['''\
+            |class C implements p.T {
+            |  def m() {
+            |    p_T__f
+            |  }
+            |}
+            |'''.stripMargin()], 'p_T__f', 'f')
+        assert elem.declaringType.fullyQualifiedName == 'p.T'
+        assert elem.elementInfo.nameSourceStart == 44
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/756
-    void testCodeSelectFieldFromTrait3() {
+    void testCodeSelectFieldFromTrait5() {
         def elem = assertCodeSelect(['''\
             |trait T {
             |  private static final String f = ""
@@ -218,6 +274,27 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
             |  }
             |}
             |'''.stripMargin()], 'T__f', 'f')
-        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'T'
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 40
+    }
+
+    @NotYetImplemented @Test // https://github.com/groovy/groovy-eclipse/issues/756
+    void testCodeSelectFieldFromTrait6() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  private static final String f = ""
+            |}
+            |'''.stripMargin(), 'T', 'p'
+
+        def elem = assertCodeSelect(['''\
+            |class C implements p.T {
+            |  def m() {
+            |    p_T__f
+            |  }
+            |}
+            |'''.stripMargin()], 'p_T__f', 'f')
+        assert elem.declaringType.fullyQualifiedName == 'p.T'
+        assert elem.elementInfo.nameSourceStart == 50
     }
 }

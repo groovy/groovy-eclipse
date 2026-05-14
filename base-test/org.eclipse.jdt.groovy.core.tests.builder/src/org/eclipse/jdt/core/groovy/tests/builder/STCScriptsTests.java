@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.Arrays;
 
@@ -41,12 +43,8 @@ public final class STCScriptsTests extends BuilderTestSuite {
             return env.getProject("Project").getFullPath();
         }
         IPath projectPath = env.addProject("Project");
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
-        env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
         return projectPath;
     }
 
@@ -62,30 +60,26 @@ public final class STCScriptsTests extends BuilderTestSuite {
         Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src/*Move.groovy,y");
 
         IPath projPath = createGenericProject();
-        env.addGroovyClass(projPath.append("src"), "", "RobotMove",
-            //@formatter:off
-            "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
-            "unresolvedVariable { VariableExpression var ->\n" +
-            "  if ('robot' == var.name) {\n" +
-            "    def robotClass = context.source.AST.classes.find { it.name == 'Robot' }\n" +
-            "    storeType(var, robotClass)\n" +
+        //@formatter:off
+        env.addGroovyClass(projPath.append("src"), "RobotMove",
+            "unresolvedVariable { VariableExpression vexp ->\n" +
+            "  if ('robot' == vexp.name) {\n" +
+            "    def robotClass = lookupClassNodeFor('Robot')\n" +
+            "    storeType(vexp, robotClass)\n" +
             "    handled = true\n" +
             "  }\n" +
-            "}");
-            //@formatter:on
-        env.addGroovyClass(projPath.append("src"), "", "Robot",
-            //@formatter:off
-            "@groovy.transform.TypeChecked(extensions = 'RobotMove.groovy')\n" +
+            "}\n");
+        env.addGroovyClass(projPath.append("src"), "Robot",
+            "@groovy.transform.TypeChecked(extensions='RobotMove.groovy')\n" +
             "void operate() {\n" +
             "  robot.move \"left\"\n" +
-            "}");
-            //@formatter:on
+            "}\n");
+        //@formatter:on
 
         env.fullBuild(projPath);
         Problem[] problems = env.getProblemsFor(projPath);
         assertEquals("Should have found one problem in:\n" + Arrays.toString(problems), 1, problems.length);
-        assertEquals("Groovy:[Static type checking] - Cannot find matching method Robot#move(java.lang.String)." +
-            " Please check if the declared type is correct and if the method exists.", problems[0].getMessage());
+        assertEquals("Groovy:[Static type checking] - Cannot find matching method Robot#move(java.lang.String)", problems[0].getMessage());
     }
 
     @Test
@@ -94,32 +88,73 @@ public final class STCScriptsTests extends BuilderTestSuite {
         Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src/*Move.groovy,y");
 
         IPath projPath = createGenericProject();
-        env.addGroovyClass(projPath.append("src"), "", "RobotMove",
-            //@formatter:off
-            "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
-            "unresolvedVariable { VariableExpression var ->\n" +
-            "  if ('robot' == var.name) {\n" +
-            "    def robotClass = context.source.AST.classes.find { it.name == 'Robot' }\n" +
-            "    storeType(var, robotClass)\n" +
+        //@formatter:off
+        env.addGroovyClass(projPath.append("src"), "RobotMove",
+            "unresolvedVariable { VariableExpression vexp ->\n" +
+            "  if ('robot' == vexp.name) {\n" +
+            "    def robotClass = lookupClassNodeFor('Robot')\n" +
+            "    storeType(vexp, robotClass)\n" +
             "    handled = true\n" +
             "  }\n" +
-            "}");
-            //@formatter:on
-        env.addGroovyClass(projPath.append("src"), "", "RobotScript",
-            //@formatter:off
-            "import groovy.transform.TypeChecked\n" +
+            "}\n");
+        env.addGroovyClass(projPath.append("src"), "RobotScript",
             "class Robot {\n" +
             "  void move(String dist) { println \"Moved $dist\" }\n" +
             "}\n" +
             "robot = new Robot()\n" +
-            "@TypeChecked(extensions = 'RobotMove.groovy')\n" +
+            "@groovy.transform.TypeChecked(extensions='RobotMove.groovy')\n" +
             "void operate() {\n" +
             "  robot.move \"left\"\n" +
-            "}");
-            //@formatter:on
+            "}\n");
+        //@formatter:on
 
         env.fullBuild(projPath);
         Problem[] problems = env.getProblemsFor(projPath);
         assertEquals("Should have found no problems in:\n" + Arrays.toString(problems), 0, problems.length);
+    }
+
+    @Test // GROOVY-6328
+    public void testStaticTypeCheckingDSL3() throws Exception { assumeTrue(isAtLeastGroovy(40));
+        Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src/*Checker.groovy,y");
+
+        IPath projPath = createGenericProject();
+        //@formatter:off
+        env.addGroovyClass(projPath.append("src"), "TypeChecker",
+            "onMethodSelection { expr, node ->\n" +
+            "  if (node.name == 'setS') {\n" +
+            "    def closure = enclosingClosure.closureExpression\n" +
+            "    def setting = closure.code.statements[0].expression\n" +
+            "    setting.putNodeMetaData('notified', true)\n" +
+            "  }\n" +
+            "}\n");
+        //@formatter:on
+
+        for (String methods : new String[] {"", "void setS(String s) {this.s = s}"}) {
+            env.addGroovyClass(projPath.append("src"), "TestScript",
+                "import static org.codehaus.groovy.control.CompilePhase.INSTRUCTION_SELECTION\n" +
+                "class C {\n" +
+                "  String s\n" +
+                "  " + methods + "\n" +
+                "}\n" +
+                "C make(@DelegatesTo(value=C.class, strategy=Closure.DELEGATE_FIRST) Closure closure) {\n" +
+                "  new C().tap(closure)\n" +
+                "}\n" +
+                "@groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+                "  def assignment = lookup.call('here')[0].expression\n" +
+                "  assert assignment.getNodeMetaData('notified')\n" +
+                "})\n" +
+                "@groovy.transform.TypeChecked(extensions='TypeChecker.groovy')\n" +
+                "void test() {\n" +
+                "  def c = make {\n" +
+                "  here: s = 'foo'\n" + // expecting onMethodSelection for setter
+                "  }\n" +
+                "}\n");
+            //@formatter:on
+
+            env.fullBuild(projPath);
+            Problem[] problems = env.getProblemsFor(projPath);
+            assertEquals("Should have found no problems in:\n" + Arrays.toString(problems), 0, problems.length);
+        }
     }
 }

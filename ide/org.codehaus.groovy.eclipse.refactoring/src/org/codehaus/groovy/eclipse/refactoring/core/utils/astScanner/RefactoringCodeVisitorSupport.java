@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -121,7 +121,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
         }
         List<ClassNode> classes = rootNode.getClasses();
         for (ClassNode classNode : classes) {
-            if (!classNode.isScript()) {
+            if (!GroovyUtils.isScript(classNode)) {
                 visitClass(classNode);
             } else {
                 List<MethodNode> methods = rootNode.getMethods();
@@ -336,9 +336,10 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 
     @Override
     public void visitArrayExpression(ArrayExpression expression) {
+        ClassNode baseType = GroovyUtils.getBaseType(expression.getType());
         analyzeNode(expression);
-        analyzeType(expression.getElementType());
-        clear(expression.getElementType());
+        analyzeType(baseType);
+        clear(baseType);
         super.visitArrayExpression(expression);
         clear(expression);
     }

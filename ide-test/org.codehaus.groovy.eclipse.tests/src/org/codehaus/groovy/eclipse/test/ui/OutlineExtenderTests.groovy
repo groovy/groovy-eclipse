@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,9 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.test.ui
 
-import groovy.transform.NotYetImplemented
+import static org.codehaus.groovy.eclipse.GroovyPlugin.getDefault as getGroovyPlugin
 
-import org.codehaus.groovy.eclipse.GroovyPlugin
+import groovy.test.NotYetImplemented
+
 import org.codehaus.groovy.eclipse.editor.GroovyEditor
 import org.codehaus.groovy.eclipse.editor.outline.GroovyOutlinePage
 import org.codehaus.groovy.eclipse.editor.outline.OField
@@ -41,7 +42,7 @@ import org.junit.Test
 
 final class OutlineExtenderTests extends GroovyEclipseTestSuite {
 
-    private final OutlineExtenderRegistry registry = GroovyPlugin.default.outlineTools.outlineExtenderRegistry
+    private final OutlineExtenderRegistry registry = groovyPlugin.outlineTools.outlineExtenderRegistry
 
     @Before
     void setUp() {
@@ -91,7 +92,7 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
 
         // check outline view exists
         TCompilationUnit tu = (TCompilationUnit) outline.outlineCompilationUnit
-        assert tu.outlineExtender.getClass() == OutlineExtender1
+        assert tu.outlineExtender.class == OutlineExtender1
     }
 
     @Test
@@ -104,7 +105,7 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
 
         // check outline view exists
         TCompilationUnit tu = (TCompilationUnit) outline.outlineCompilationUnit
-        assert tu.outlineExtender.getClass() == OutlineExtender2
+        assert tu.outlineExtender.class == OutlineExtender2
     }
 
     @Test
@@ -112,12 +113,12 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
         addNature(OutlineExtender2.NATURE) // applies to *Y*.groovy files
 
         TGroovyOutlinePage outline = (TGroovyOutlinePage) openFile('YTest', '''\
-            Integer field1 = 0
-            String field2 = 'S'
-            Long method1() {}
-            Integer method2() {
-              return 0
-            }'''.stripIndent())
+            |Integer field1 = 0
+            |String field2 = 'S'
+            |Long method1() {}
+            |Integer method2() {
+            |  return 0
+            |}'''.stripMargin())
         TCompilationUnit2 tu = (TCompilationUnit2) outline.outlineCompilationUnit
         def children = (tu.children[0] as TType).children
 
@@ -133,11 +134,11 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
         addNature(OutlineExtender2.NATURE) // applies to *Y*.groovy files
 
         GroovyOutlinePage outline = openFile('YTest', '''\
-            inline1 {
-              inline2 {
-                Integer fieldA = 12
-              }
-            }'''.stripIndent())
+            |inline1 {
+            |  inline2 {
+            |    Integer fieldA = 12
+            |  }
+            |}'''.stripMargin())
         TCompilationUnit2 tu = (TCompilationUnit2) outline.outlineCompilationUnit
 
         // check consistency
@@ -157,9 +158,9 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
         addNature(OutlineExtender2.NATURE) // applies to *Y*.groovy files
 
         GroovyOutlinePage outline = openFile('YTest', '''\
-            Integer field1 = 0
-            String field2 = "S"
-            '''.stripIndent())
+            |Integer field1 = 0
+            |String field2 = "S"
+            |'''.stripMargin())
         TCompilationUnit2 tu = (TCompilationUnit2) outline.outlineCompilationUnit
 
         // check consistency
@@ -171,10 +172,9 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
         // update content
         GroovyEditor editor = (GroovyEditor) openInEditor(tu)
         JavaSourceViewer viewer = (JavaSourceViewer) editor.viewer
-        viewer.textWidget.selection = 0
+        viewer.textWidget.setSelection(0)
         viewer.textWidget.insert('Long field3 = 100 \n')
         buildProject()
-        waitForIndex()
         tu.refresh()
 
         // check consistency
@@ -188,13 +188,13 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
     @Test
     void testGroovyClassOutline1() {
         def unit = addGroovySource '''\
-            class Pogo {
-              String value
-            }
-            '''.stripIndent()
+            |class Pogo {
+            |  String value
+            |}
+            |'''.stripMargin()
         def editor = openInEditor(unit)
         def viewer = Adapters.adapt(editor, IContentOutlinePage).outlineViewer
-        IJavaElement[] children = viewer.getRawChildren(viewer.getRoot())
+        IJavaElement[] children = viewer.getRawChildren(viewer.root)
 
         assert children.size() == 1
         assert children[0].elementName == 'Pogo'
@@ -210,14 +210,14 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
     @Test @NotYetImplemented
     void testGroovyClassOutline2() {
         def unit = addGroovySource '''\
-            @groovy.transform.Sortable
-            class Pogo {
-              String value
-            }
-            '''.stripIndent()
+            |@groovy.transform.Sortable
+            |class Pogo {
+            |  String value
+            |}
+            |'''.stripMargin()
         def editor = openInEditor(unit)
         def viewer = Adapters.adapt(editor, IContentOutlinePage).outlineViewer
-        IJavaElement[] children = viewer.getRawChildren(viewer.getRoot())
+        IJavaElement[] children = viewer.getRawChildren(viewer.root)
 
         assert children.size() == 1
         assert children[0].elementName == 'Pogo'
@@ -244,13 +244,13 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
     @Test
     void testGroovyScriptOutline1() {
         String contents = '''\
-            import java.util.Map
-            int[] xxx
-            def ttt = 8
-            Object hhh = 8
-            class Y { }
-            String blah() {  }
-            '''.stripIndent()
+            |import java.util.Map
+            |int[] xxx
+            |def ttt = 8
+            |Object hhh = 8
+            |class Y { }
+            |String blah() {  }
+            |'''.stripMargin()
         GroovyOutlinePage outline = openFile('Script1', contents)
         IJavaElement[] children = outline.outlineCompilationUnit.children
 
@@ -285,8 +285,8 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
     @Test
     void testGroovyScriptOutline2() {
         String contents = '''\
-            Map<String, List<java.lang.String>> map
-            '''.stripIndent()
+            |Map<String, List<java.lang.String>> map
+            |'''.stripMargin()
         GroovyOutlinePage outline = openFile('Script1', contents)
         IJavaElement[] children = outline.outlineCompilationUnit.children
 
@@ -299,25 +299,25 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
     @Test
     void testGroovyScriptOutline3() {
         String contents = '''\
-            import groovy.transform.Field
-            @Field Map<String,Object> map = [:]
-            @Newify Object obj = Object.new()
-            '''.stripIndent()
+            |import groovy.transform.Field
+            |@Field Map<String,Object> map = [:]
+            |@Newify Object obj = Object.new()
+            |'''.stripMargin()
         GroovyOutlinePage outline = openFile('Script2', contents)
         IJavaElement[] children = outline.outlineCompilationUnit.children
 
         assert children.tail()*.elementName == ['map', 'obj']
-        assert children.tail()*.typeSignature == ['Qjava.util.Map<QString;QObject;>;', 'Qjava.lang.Object;']
+        assert children.tail()*.typeSignature == ['Qjava.util.Map<Qjava.lang.String;Qjava.lang.Object;>;', 'Qjava.lang.Object;']
         assert children*.elementType == [IJavaElement.IMPORT_CONTAINER, IJavaElement.FIELD, IJavaElement.FIELD]
     }
 
     @Test
     void testStructureUnknown() {
         GroovyOutlinePage outline = openFile('Problem', '''\
-            class X {  }
-             int o(
-            }
-            '''.stripIndent())
+            |class X {  }
+            | int o(
+            |}
+            |'''.stripMargin())
 
         assert outline == null : 'X is not a script, so no Groovy outline should be available'
         //IJavaElement[] children = outline.outlineCompilationUnit.children
@@ -331,7 +331,7 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
         GroovyCompilationUnit unit = addGroovySource(contents, className)
         GroovyEditor editor = (GroovyEditor) openInEditor(unit)
         assert unit.isWorkingCopy() : 'not working copy'
-        assert unit.getModuleNode() != null : 'Module node is null'
+        assert unit.moduleNode != null : 'Module node is null'
         GroovyOutlinePage outline = editor.outlinePage
         if (outline != null) {
             outline.refresh()

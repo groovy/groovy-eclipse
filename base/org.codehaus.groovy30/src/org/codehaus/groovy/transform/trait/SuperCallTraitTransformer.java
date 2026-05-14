@@ -22,26 +22,25 @@ import groovy.lang.MetaProperty;
 import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.tools.ClosureUtils;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.syntax.Types;
 
 import java.util.List;
+import java.util.function.Function;
 
-import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
-import static groovyjarjarasm.asm.Opcodes.ACC_PUBLIC;
-import static groovyjarjarasm.asm.Opcodes.ACC_STATIC;
-import static groovyjarjarasm.asm.Opcodes.ACC_SYNTHETIC;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.thisPropX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 
 /**
  * This transformer is used to transform calls to <code>SomeTrait.super.foo()</code> into the appropriate trait call.
@@ -49,7 +48,9 @@ import static groovyjarjarasm.asm.Opcodes.ACC_SYNTHETIC;
  * @since 2.3.0
  */
 class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
+
     static final String UNRESOLVED_HELPER_CLASS = "UNRESOLVED_HELPER_CLASS";
+
     private final SourceUnit unit;
 
     SuperCallTraitTransformer(final SourceUnit unit) {
@@ -63,148 +64,191 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
 
     @Override
     public Expression transform(final Expression exp) {
-        if (exp instanceof MethodCallExpression) {
-            return transformMethodCallExpression((MethodCallExpression)exp);
-        }
         if (exp instanceof BinaryExpression) {
             return transformBinaryExpression((BinaryExpression) exp);
+        }
+        if (exp instanceof ClosureExpression) {
+            return transformClosureExpression((ClosureExpression) exp);
+        }
+        if (exp instanceof PropertyExpression) {
+            return transformPropertyExpression((PropertyExpression) exp);
+        }
+        if (exp instanceof MethodCallExpression) {
+            return transformMethodCallExpression((MethodCallExpression) exp);
         }
         return super.transform(exp);
     }
 
     private Expression transformBinaryExpression(final BinaryExpression exp) {
+        if (Types.isAssignment(exp.getOperation().getType()))
+            // prevent transform of assignment target to accessor method call
+            exp.getLeftExpression().putNodeMetaData("assign.target", exp.getOperation());
+
         Expression trn = super.transform(exp);
         if (trn instanceof BinaryExpression) {
             BinaryExpression bin = (BinaryExpression) trn;
-            Expression leftExpression = bin.getLeftExpression();
-            if (bin.getOperation().getType() == Types.EQUAL && leftExpression instanceof PropertyExpression) {
-                ClassNode traitReceiver = null;
-                PropertyExpression leftPropertyExpression = (PropertyExpression) leftExpression;
-                if (isTraitSuperPropertyExpression(leftPropertyExpression.getObjectExpression())) {
-                    PropertyExpression pexp = (PropertyExpression) leftPropertyExpression.getObjectExpression();
-                    traitReceiver = pexp.getObjectExpression().getType();
-                }
-                if (traitReceiver!=null) {
-                    // A.super.foo = ...
-                    /* GRECLIPSE edit
-                    TraitHelpersTuple helpers = Traits.findHelpers(traitReceiver);
-                    ClassNode helper = helpers.getHelper();
-                    */
-                    ClassNode helper = Traits.findHelper(traitReceiver).getPlainNodeReference();
-                    // GRECLIPSE end
-                    String setterName = MetaProperty.getSetterName(leftPropertyExpression.getPropertyAsString());
-                    List<MethodNode> methods = helper.getMethods(setterName);
-                    for (MethodNode method : methods) {
+            if (bin.getOperation().getType() == Types.ASSIGN && bin.getLeftExpression() instanceof PropertyExpression) {
+                PropertyExpression leftExpression = (PropertyExpression) bin.getLeftExpression();
+                ClassNode traitType = getTraitSuperTarget(leftExpression.getObjectExpression());
+                if (traitType != null) {
+                    ClassNode helperType = getHelper(traitType);
+                    // TraitType.super.foo = ... -> TraitType$Trait$Helper.setFoo(this, ...)
+
+                    String setterName = MetaProperty.getSetterName(leftExpression.getPropertyAsString());
+                    for (MethodNode method : helperType.getMethods(setterName)) {
                         Parameter[] parameters = method.getParameters();
-                        if (parameters.length==2 && parameters[0].getType().equals(traitReceiver)) {
-                            ArgumentListExpression args = new ArgumentListExpression(
-                                    new VariableExpression("this"),
-                                    transform(exp.getRightExpression())
-                            );
+                        if (parameters.length == 2 && isSelfType(parameters[0], traitType)) {
                             MethodCallExpression setterCall = new MethodCallExpression(
-                                    new ClassExpression(helper),
+                                    new ClassExpression(helperType),
                                     setterName,
-                                    args
+                                    new ArgumentListExpression(
+                                            parameters[0].getType().equals(ClassHelper.CLASS_Type)
+                                                ? thisPropX(false, "class") : varX("this"),
+                                            bin.getRightExpression()
+                                    )
                             );
-                            // GRECLIPSE add
-                            setterCall.getMethod().setSourcePosition(leftPropertyExpression.getProperty());
-                            setterCall.getObjectExpression().setSourcePosition(traitReceiver);
-                            // GRECLIPSE end
-                            setterCall.setMethodTarget(method);
+                            setterCall.getMethod().setSourcePosition(leftExpression.getProperty());
+                            setterCall.getObjectExpression().setSourcePosition(traitType);
+                            setterCall.setSpreadSafe(leftExpression.isSpreadSafe());
                             setterCall.setImplicitThis(false);
                             return setterCall;
                         }
                     }
-                    return bin;
                 }
             }
         }
         return trn;
     }
 
-    private Expression transformMethodCallExpression(final MethodCallExpression exp) {
-        if (isTraitSuperPropertyExpression(exp.getObjectExpression())) {
-            Expression objectExpression = exp.getObjectExpression();
-            ClassNode traitReceiver = ((PropertyExpression) objectExpression).getObjectExpression().getType();
+    private Expression transformClosureExpression(final ClosureExpression exp) {
+        for (Parameter prm : ClosureUtils.getParametersSafe(exp)) {
+            Expression ini = transform(prm.getInitialExpression());
+            prm.setInitialExpression(ini);
+        }
+        visitClassCodeContainer(exp.getCode());
+        return super.transform(exp);
+    }
 
-            if (traitReceiver != null) {
-                // (SomeTrait.super).foo() --> SomeTrait$Helper.foo(this)
-                ClassExpression receiver = new ClassExpression(
-                        getHelper(traitReceiver)
-                );
-                // GRECLIPSE add
-                receiver.setSourcePosition(traitReceiver);
-                // GRECLIPSE end
-                ArgumentListExpression newArgs = new ArgumentListExpression();
-                Expression arguments = exp.getArguments();
-                newArgs.addExpression(new VariableExpression("this"));
-                if (arguments instanceof TupleExpression) {
-                    List<Expression> expressions = ((TupleExpression) arguments).getExpressions();
-                    for (Expression expression : expressions) {
-                        newArgs.addExpression(transform(expression));
+    private Expression transformPropertyExpression(final PropertyExpression exp) {
+        if (exp.getNodeMetaData("assign.target") == null) {
+            ClassNode traitType = getTraitSuperTarget(exp.getObjectExpression());
+            if (traitType != null) {
+                ClassNode helperType = getHelper(traitType);
+                // TraitType.super.foo -> TraitType$Trait$Helper.getFoo(this)
+
+                Function<MethodNode, MethodCallExpression> xform = (methodNode) -> {
+                    MethodCallExpression methodCall = new MethodCallExpression(
+                            new ClassExpression(helperType),
+                            methodNode.getName(),
+                            new ArgumentListExpression(
+                                    methodNode.getParameters()[0].getType().equals(ClassHelper.CLASS_Type)
+                                        ? thisPropX(false, "class") : varX("this")
+                            )
+                    );
+                    methodCall.getObjectExpression().setSourcePosition(traitType);
+                    methodCall.getMethod().setSourcePosition(exp.getProperty());
+                    methodCall.setSpreadSafe(exp.isSpreadSafe());
+                    methodCall.setMethodTarget(methodNode);
+                    methodCall.setImplicitThis(false);
+                    return methodCall;
+                };
+
+                String getterName = MetaProperty.getGetterName(exp.getPropertyAsString(), null);
+                for (MethodNode method : helperType.getMethods(getterName)) {
+                    if (method.isStatic() && method.getParameters().length == 1
+                            && isSelfType(method.getParameters()[0], traitType)
+                            && !method.getReturnType().equals(ClassHelper.VOID_TYPE)) {
+                        return xform.apply(method);
                     }
-                } else {
-                    newArgs.addExpression(transform(arguments));
                 }
-                MethodCallExpression result = new MethodCallExpression(
-                        receiver,
-                        transform(exp.getMethod()),
-                        newArgs
-                );
-                result.setImplicitThis(false);
-                result.setSpreadSafe(exp.isSpreadSafe());
-                result.setSafe(exp.isSafe());
-                /* GRECLIPSE edit
-                result.setSourcePosition(exp);
-                */
-                return result;
+
+                String isserName = "is" + getterName.substring(3);
+                for (MethodNode method : helperType.getMethods(isserName)) {
+                    if (method.isStatic() && method.getParameters().length == 1
+                            && isSelfType(method.getParameters()[0], traitType)
+                            && method.getReturnType().equals(ClassHelper.boolean_TYPE)) {
+                        return xform.apply(method);
+                    }
+                }
             }
+        }
+        exp.removeNodeMetaData("assign.target");
+        return super.transform(exp);
+    }
+
+    private Expression transformMethodCallExpression(final MethodCallExpression exp) {
+        ClassNode traitType = getTraitSuperTarget(exp.getObjectExpression());
+        if (traitType != null) {
+            ClassNode helperType = getHelper(traitType);
+            // TraitType.super.foo() -> TraitType$Trait$Helper.foo(this)
+
+            List<MethodNode> targets = helperType.getMethods(exp.getMethodAsString());
+            boolean isStatic = !targets.isEmpty() && targets.stream().map(MethodNode::getParameters)
+                .allMatch(params -> params.length > 0 && params[0].getType().equals(ClassHelper.CLASS_Type));
+
+            ArgumentListExpression newArgs = new ArgumentListExpression(
+                    isStatic ? thisPropX(false, "class") : varX("this"));
+            Expression arguments = exp.getArguments();
+            if (arguments instanceof TupleExpression) {
+                for (Expression expression : (TupleExpression) arguments) {
+                    newArgs.addExpression(transform(expression));
+                }
+            } else {
+                newArgs.addExpression(transform(arguments));
+            }
+
+            MethodCallExpression newCall = new MethodCallExpression(
+                    new ClassExpression(helperType),
+                    transform(exp.getMethod()),
+                    newArgs
+            );
+            newCall.getObjectExpression().setSourcePosition(traitType);
+            newCall.setSpreadSafe(exp.isSpreadSafe());
+            newCall.setImplicitThis(false);
+            return newCall;
         }
         return super.transform(exp);
     }
 
-    private ClassNode getHelper(final ClassNode traitReceiver) {
-        if (helperClassNotCreatedYet(traitReceiver)) {
-            // GROOVY-7909 A Helper class in same compilation unit may have not been created when referenced
-            // Here create a symbol as a "placeholder" and it will be resolved later.
-            ClassNode ret = new InnerClassNode(
-                    traitReceiver,
-                    Traits.helperClassName(traitReceiver),
+    private ClassNode getHelper(final ClassNode traitType) {
+        /* GRECLIPSE edit
+        if (!traitType.redirect().getInnerClasses().hasNext()
+                && getSourceUnit().getAST().getClasses().contains(traitType.redirect())) {
+            ClassNode helperType = new InnerClassNode(
+                    traitType,
+                    Traits.helperClassName(traitType),
                     ACC_PUBLIC | ACC_STATIC | ACC_ABSTRACT | ACC_SYNTHETIC,
                     ClassHelper.OBJECT_TYPE,
                     ClassNode.EMPTY_ARRAY,
                     null
             ).getPlainNodeReference();
-
-            ret.setRedirect(null);
-            traitReceiver.redirect().setNodeMetaData(UNRESOLVED_HELPER_CLASS, ret);
-            return ret;
-        } else {
-            /* GRECLIPSE edit
-            TraitHelpersTuple helpers = Traits.findHelpers(traitReceiver);
-            return helpers.getHelper();
-            */
-            return Traits.findHelper(traitReceiver).getPlainNodeReference();
-            // GRECLIPSE end
+            helperType.setRedirect(null);
+            traitType.redirect().setNodeMetaData(UNRESOLVED_HELPER_CLASS, helperType);
+            return helperType;
         }
+        */
+        return Traits.findHelper(traitType).getPlainNodeReference(); // GRECLIPSE edit
     }
 
-    private boolean helperClassNotCreatedYet(final ClassNode traitReceiver) {
-        return !traitReceiver.redirect().getInnerClasses().hasNext()
-                && this.unit.getAST().getClasses().contains(traitReceiver.redirect());
-    }
-
-    private boolean isTraitSuperPropertyExpression(final Expression exp) {
+    private ClassNode getTraitSuperTarget(final Expression exp) {
         if (exp instanceof PropertyExpression) {
             PropertyExpression pexp = (PropertyExpression) exp;
-            Expression objectExpression = pexp.getObjectExpression();
-            if (objectExpression instanceof ClassExpression) {
-                ClassNode type = objectExpression.getType();
+            Expression objExp = pexp.getObjectExpression();
+            if (objExp instanceof ClassExpression) {
+                ClassNode type = objExp.getType();
                 if (Traits.isTrait(type) && "super".equals(pexp.getPropertyAsString())) {
-                    return true;
+                    return type;
                 }
             }
         }
-        return false;
+        return null;
+    }
+
+    private static boolean isSelfType(final Parameter parameter, final ClassNode traitType) {
+        ClassNode paramType = parameter.getType();
+        if (paramType.equals(traitType)) return true;
+        return paramType.equals(ClassHelper.CLASS_Type)
+                && paramType.getGenericsTypes() != null
+                && paramType.getGenericsTypes()[0].getType().equals(traitType);
     }
 }

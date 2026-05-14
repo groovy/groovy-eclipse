@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.core.resources.IncrementalProjectBuilder.INCREMENTAL_BUILD;
+import static org.eclipse.jdt.groovy.core.util.GroovyUtils.isScript;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -30,19 +31,20 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
@@ -117,9 +119,8 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         if (!expectedDeclType.equals(requestor.getDeclaringTypeName())) {
             StringBuilder sb = new StringBuilder();
             sb.append("Expected declaring type not found.\n");
-            sb.append("\tExpected: ").append(expectedDeclType).append("\n");
-            sb.append("\tFound type: ").append(printTypeName(requestor.result.type)).append("\n");
-            sb.append("\tFound declaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
+            sb.append("\tExpect: ").append(expectedDeclType).append("\n");
+            sb.append("\tActual: ").append(printTypeName(requestor.result.declaringType)).append("\n");
             sb.append("\tASTNode: ").append(requestor.node);
             fail(sb.toString());
         }
@@ -127,8 +128,6 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             if (requestor.result.confidence != TypeConfidence.UNKNOWN) {
                 StringBuilder sb = new StringBuilder();
                 sb.append("Confidence: ").append(requestor.result.confidence).append(" (but expecting UNKNOWN)\n");
-                sb.append("\tExpected: ").append(expectedDeclType).append("\n");
-                sb.append("\tFound: ").append(printTypeName(requestor.result.type)).append("\n");
                 sb.append("\tDeclaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
                 sb.append("\tASTNode: ").append(requestor.node);
                 fail(sb.toString());
@@ -136,10 +135,9 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         } else {
             if (requestor.result.confidence == TypeConfidence.UNKNOWN) {
                 StringBuilder sb = new StringBuilder();
-                sb.append("Expected Confidence should not have been UNKNOWN, but it was.\n");
-                sb.append("\tExpected declaring type: ").append(expectedDeclType).append("\n");
-                sb.append("\tFound type: ").append(printTypeName(requestor.result.type)).append("\n");
-                sb.append("\tFound declaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
+                sb.append("Confidence should *not* have been UNKNOWN.\n");
+                sb.append("\tExpect: ").append(expectedDeclType).append("\n");
+                sb.append("\tActual: ").append(printTypeName(requestor.result.declaringType)).append("\n");
                 sb.append("\tASTNode: ").append(requestor.node);
                 fail(sb.toString());
             }
@@ -147,8 +145,8 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         return requestor;
     }
 
-    protected <N extends ASTNode> N assertDeclaration(String contents, int exprStart, int exprUntil, String expectedType, String name, DeclarationKind kind) {
-        SearchRequestor requestor = assertDeclaringType(createUnit(DEFAULT_UNIT_NAME, contents), exprStart, exprUntil, expectedType, false);
+    protected <N extends ASTNode> N assertDeclaration(String contents, int exprStart, int exprUntil, String expectedDeclType, String name, DeclarationKind kind) {
+        SearchRequestor requestor = assertDeclaringType(createUnit(DEFAULT_UNIT_NAME, contents), exprStart, exprUntil, expectedDeclType, false);
 
         switch (kind) {
         case CLASS:
@@ -215,7 +213,8 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
      *
      * @return null if all is OK, or else returns an error message specifying the problem
      */
-    public static String checkType(GroovyCompilationUnit unit, int exprStart, int exprUntil, String expectedType, String expectedDeclaringType, boolean assumeNoUnknowns) {
+    public static String checkType(final GroovyCompilationUnit unit, final int exprStart, final int exprUntil,
+                final String expectedType, final String expectedDeclaringType, final boolean assumeNoUnknowns) {
         SearchRequestor requestor = doVisit(exprStart, exprUntil, unit);
         if (requestor.node == null) {
             return "Did not find expected ASTNode.  (Start:" + exprStart + ", End:" + exprUntil + ")\n" +
@@ -261,17 +260,8 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         return null;
     }
 
-    public static SearchRequestor doVisit(int exprStart, int exprUntil, GroovyCompilationUnit unit) {
-        SimpleProgressMonitor monitor = new SimpleProgressMonitor("Incremental build");
-        try {
-            IProject project = unit.getJavaProject().getProject();
-            project.build(INCREMENTAL_BUILD, monitor);
-        } catch (CoreException e) {
-            throw new RuntimeException(e);
-        }
-        monitor.waitForCompletion(5);
-
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
+    public static SearchRequestor doVisit(final int exprStart, final int exprUntil, final GroovyCompilationUnit unit) { waitUntilReady(unit);
+        TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
         visitor.debug = true; // enable console output and post-visit assertions
         SearchRequestor requestor = new SearchRequestor(exprStart, exprUntil);
         visitor.visitCompilationUnit(requestor);
@@ -283,11 +273,25 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             return "null";
         }
         String arraySuffix = "";
-        while (type.getComponentType() != null) {
-            type = type.getComponentType();
+        while (type.isArray()) {
             arraySuffix += "[]";
+            type = type.getComponentType();
         }
-        return type.getName() + printGenerics(type) + arraySuffix;
+        if (type.isGenericsPlaceHolder()) {
+            return type.getUnresolvedName() + arraySuffix;
+        }
+        if (type.getUnresolvedName().startsWith("<UnionType:")) {
+            ClassNode[] types = ReflectionUtils.executePrivateMethod(type.getClass(), "getDelegates", type);
+            var spec = new StringJoiner(" | ", arraySuffix.isEmpty() ? "" : "(", arraySuffix.isEmpty() ? "" : ")" + arraySuffix);
+            for (ClassNode t : types) {
+                spec.add(printTypeName(t));
+            }
+            return spec.toString();
+        }
+        String name = type.getText();
+        if (name.charAt(0) == '(') // Groovy 4.0.0-rc-1+
+            name = name.substring(1, name.length() - 1);
+        return name + (name.contains(" & ") ? "" : printGenerics(type)) + arraySuffix;
     }
 
     public static String printGenerics(ClassNode type) {
@@ -350,13 +354,18 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         public VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult, IJavaElement enclosingElement) {
             // might have AST nodes with overlapping locations, so result may not be null
             if (this.result == null &&
-                    visitorNode.getStart() == start && (visitorNode.getEnd() == end || (visitorNode instanceof AnnotatedNode && ((AnnotatedNode) visitorNode).getNameEnd() + 1 == end)) &&
-                    !(visitorNode instanceof Statement /* ignore any statement */) &&
-                    !(visitorNode instanceof TupleExpression /* ignore wrapper */) &&
-                    !(visitorNode instanceof MethodNode /* ignore the run() method */) &&
-                    !(visitorNode instanceof ClassNode && ((ClassNode) visitorNode).isScript() /* ignore the script */)) {
-                if (ClassHelper.isPrimitiveType(visitorResult.type)) {
-                    this.result = new TypeLookupResult(ClassHelper.getWrapper(visitorResult.type), visitorResult.declaringType, visitorResult.declaration, visitorResult.confidence, visitorResult.scope, visitorResult.extraDoc);
+                    (
+                        (visitorNode.getStart() == start && visitorNode.getEnd() == end) ||
+                        (visitorNode instanceof AnnotatedNode && ((AnnotatedNode) visitorNode).getNameStart() == start &&
+                                                                    ((AnnotatedNode) visitorNode).getNameEnd() + 1 == end)
+                    ) &&
+                    !(visitorNode instanceof MethodNode /* ignore run() method */) &&
+                    !(visitorNode instanceof ClassNode && isScript((ClassNode) visitorNode) /* ignore the script */) &&
+                    !(visitorNode instanceof Statement || visitorNode instanceof ImportNode /* ignore any statement */) &&
+                    !(visitorNode instanceof ArrayExpression || visitorNode instanceof TupleExpression /* ignore wrapper */)) {
+                if (visitorResult.type != null && ClassHelper.isPrimitiveType(visitorResult.type)) {
+                    ClassNode boxedType = ClassHelper.getWrapper(visitorResult.type); // wrap primitive type
+                    this.result = new TypeLookupResult(boxedType, visitorResult.declaringType, visitorResult.declaration, visitorResult);
                 } else {
                     this.result = visitorResult;
                 }

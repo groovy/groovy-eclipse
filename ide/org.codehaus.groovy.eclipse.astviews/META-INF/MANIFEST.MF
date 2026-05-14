@@ -3,9 +3,9 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.astviews;singleton:=true
 Bundle-Name: Groovy AST Views
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 3.7.0.qualifier
-Require-Bundle: org.codehaus.groovy.eclipse.ui;bundle-version="3.7.0",
+Bundle-Version: 6.2.0.qualifier
+Require-Bundle: org.codehaus.groovy.eclipse.ui;bundle-version="6.2.0",
  org.eclipse.ui.editors
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.astviews.Activator
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-17

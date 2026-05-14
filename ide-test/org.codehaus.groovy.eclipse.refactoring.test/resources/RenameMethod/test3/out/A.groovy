@@ -22,9 +22,7 @@ class D {
             x.m
             x.k()
         }
-        m
-        m()
-        this.m
-        this.m()
+        A.&k
+        A.k()
     }
 }

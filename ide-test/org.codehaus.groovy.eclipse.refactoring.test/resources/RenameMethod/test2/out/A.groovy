@@ -1,29 +1,63 @@
-package p;
-class A{
-    void k(){
-    }
-    void f(){
-        k();
-    }
-    {
-        k();
-        new A().k();
-    }
-    static {
-        new A().k();
-    }
+package p
+
+class A {
+	void k(){
+	}
+	void p(){
+		k()
+		this.&k
+	}
+	{
+		k()
+		this.&k
+		new A().k()
+		new A().with { k(); it.&k }
+	}
+	static {
+		new A().k()
+		new A().with { k(); it.&k }
+	}
 }
-class D{
-    static void m(){
-        new A().k();
-        m();
-    }
-    static {
-        new A().k();
-        m();
-    }
-    {
-        new A().k();
-        m();
-    }
+
+class B {
+	static void m(){
+		m()
+		this.&m
+		new A().k()
+		new A().with { k(); it.&k }
+	}
+	static {
+		m()
+		this.&m
+		new A().k()
+		new A().with { k(); it.&k }
+	}
+	{
+		m()
+		this.&m
+		new A().k()
+		new A().with { k(); it.&k }
+	}
+}
+
+@groovy.transform.CompileStatic
+class C {
+	static void m(){
+		m()
+		this.&m
+		new A().k()
+		new A().with { k(); it.&k }
+	}
+	static {
+		m()
+		this.&m
+		new A().k()
+		new A().with { k(); it.&k }
+	}
+	{
+		m()
+		this.&m
+		new A().k()
+		new A().with { k(); it.&k }
+	}
 }

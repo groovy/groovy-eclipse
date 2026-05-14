@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,40 +15,38 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-import static org.junit.Assume.assumeTrue;
-
-import org.junit.Before;
 import org.junit.Test;
 
 public final class Java8Tests extends GroovyCompilerTestSuite {
-
-    @Before
-    public void setUp() {
-        assumeTrue(isAtLeastJava(JDK8));
-    }
 
     @Test
     public void testDefaultAndStaticMethodInInterface() {
         //@formatter:off
         String[] sources = {
-            "p/IExample.java",
-            "package p;\n" +
-            "public interface IExample {\n" +
-            "  void testExample();\n" +
-            "  static void callExample() {}\n" +
-            "  default void callDefault() {}\n" +
-            "}\n",
-
             "p/Example.groovy",
             "package p\n" +
             "class Example implements IExample {\n" +
-            "  public void testExample() {}\n" +
+            "  static main(args) {\n" +
+            "    print IExample.callExample()\n" +
+            "    IExample i = new Example()\n" +
+            "    print i.callDefault()\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/IExample.java",
+            "package p;\n" +
+            "public interface IExample {\n" +
+            "  static String callExample() {\n" +
+            "    return \"foo\";\n" +
+            "  }\n" +
+            "  default String callDefault() {\n" +
+            "    return \"bar\";\n" +
+            "  }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources, "");
+        runConformTest(sources, "foobar");
     }
 
     @Test
@@ -101,7 +99,7 @@ public final class Java8Tests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("Main.groovy",
             "public @Annos({@Anno(\"one\"), @Anno(\"two\")}) class Main {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "Main() {\n" +
+            "  public @groovy.transform.Generated Main() {\n" +
             "  }\n" +
             "}\n");
 
@@ -112,8 +110,6 @@ public final class Java8Tests extends GroovyCompilerTestSuite {
 
     @Test
     public void testRepeatableAnnotation2() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -141,7 +137,7 @@ public final class Java8Tests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("Main.groovy",
             "public @Anno(\"one\") @Anno(\"two\") class Main {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "Main() {\n" +
+            "  public @groovy.transform.Generated Main() {\n" +
             "  }\n" +
             "}\n");
 
@@ -196,12 +192,12 @@ public final class Java8Tests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Main.groovy (at line 1)\n" +
             "\t@Anno('one')\n" +
-            "\t^^^^^^^^^^^^\n" +
+            "\t^^^^^\n" +
             "Duplicate annotation of non-repeatable type @Anno. Only annotation types marked @Repeatable can be used multiple times at one target.\n" +
             "----------\n" +
             "2. ERROR in Main.groovy (at line 2)\n" +
             "\t@Anno('two')\n" +
-            "\t^^^^^^^^^^^^\n" +
+            "\t^^^^^\n" +
             "Duplicate annotation of non-repeatable type @Anno. Only annotation types marked @Repeatable can be used multiple times at one target.\n" +
             "----------\n");
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeRoot;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.ToolFactory;
@@ -62,6 +63,7 @@ import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.core.formatter.IndentManipulation;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.manipulation.util.Strings;
 import org.eclipse.jdt.internal.corext.codemanipulation.AddUnimplementedConstructorsOperation;
 import org.eclipse.jdt.internal.corext.codemanipulation.AddUnimplementedMethodsOperation;
@@ -362,10 +364,18 @@ public class GroovyTypeBuilder {
                 groovyModifiers = (modifiers & ~Flags.AccPublic); // public is default in Groovy
             }
             typeStub.append(Flags.toString(groovyModifiers));
-            if (groovyModifiers != 0) typeStub.append(' ');
+            if (groovyModifiers != 0) typeStub.append(" ");
 
             // type kind and name
-            typeStub.append(typeKind).append(' ').append(typeName);
+            if ("record".equals(typeKind)) {
+                if (CompilerOptions.versionToJdkLevel(cu.getJavaProject().getOption(JavaCore.COMPILER_COMPLIANCE, true)) < 0x3c0000) { // JDK16
+                    typeStub.append("@").append(addImport("groovy.transform.RecordType")).append(" class ").append(typeName);
+                } else {
+                    typeStub.append(typeKind).append(" ").append(typeName).append("()");
+                }
+            } else {
+                typeStub.append(typeKind).append(" ").append(typeName);
+            }
 
             // super class
             if ("class".equals(typeKind) && !"java.lang.Object".equals(superclass)) {
@@ -436,13 +446,17 @@ public class GroovyTypeBuilder {
             case "@interface":
                 templateID = CodeGeneration.ANNOTATION_BODY_TEMPLATE_ID;
                 break;
+            case "record":
+                templateID = "org.eclipse.jdt.ui.text.codetemplates.recordbody";
+                break;
             }
-            String typeBody = CodeGeneration.getTypeBody(templateID, cu, typeName, lineDelimiter);
-            if (typeBody != null) {
-                typeStub.append(typeBody);
-            }
-
-            typeStub.append('}').append(lineDelimiter);
+            try {
+                String typeBody = CodeGeneration.getTypeBody(templateID, cu, typeName, lineDelimiter);
+                if (typeBody != null) {
+                    typeStub.append(typeBody);
+                }
+            } catch (IllegalArgumentException ignore){}
+            typeStub.append("}").append(lineDelimiter);
         }
 
         return typeStub.toString();

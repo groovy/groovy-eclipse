@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -73,9 +74,13 @@ public class InferParameterAndReturnTypesRequestor implements ITypeRequestor {
     }
 
     private ClassNode extractType(TypeLookupResult result) {
-        ClassNode type = result.type.getPlainNodeReference();
-        if (type.getName().equals(VariableScope.VOID_WRAPPER_CLASS_NODE.getName())) {
+        ClassNode type = result.type;
+        if (VariableScope.VOID_WRAPPER_CLASS_NODE.equals(type)) {
             type = VariableScope.OBJECT_CLASS_NODE;
+        } else if (!ClassHelper.isDynamicTyped(type)) {
+            type = type.getPlainNodeReference();
+        } else {
+            type = null;
         }
         return type;
     }
@@ -99,13 +104,12 @@ public class InferParameterAndReturnTypesRequestor implements ITypeRequestor {
         if (enclosingElement instanceof ISourceReference) {
             try {
                 ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
-                return range.getOffset() <= selectedText.getOffset()
-                        && range.getOffset() + range.getLength() >= selectedText.getEnd();
+                return range.getOffset() <= selectedText.getOffset() &&
+                    range.getOffset() + range.getLength() >= selectedText.getEnd();
             } catch (JavaModelException e) {
                 Util.log(e);
             }
         }
         return false;
     }
-
 }

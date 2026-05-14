@@ -9,9 +9,6 @@
         <buildCommand>
             <name>org.eclipse.pde.ManifestBuilder</name>
         </buildCommand>
-        <buildCommand>
-            <name>org.eclipse.pde.SchemaBuilder</name>
-        </buildCommand>
 
         <buildCommand>
             <name>net.sf.eclipsecs.core.CheckstyleBuilder</name>

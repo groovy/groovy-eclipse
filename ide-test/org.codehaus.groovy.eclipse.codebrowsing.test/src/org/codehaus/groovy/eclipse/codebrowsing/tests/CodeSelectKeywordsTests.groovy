@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,34 +89,52 @@ final class CodeSelectKeywordsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectKeywordDef1() {
-        String contents = 'class C { def x() { } }'
+        String contents = 'class C { def x }'
         assertCodeSelect([contents], 'def', null)
     }
 
     @Test
     void testCodeSelectKeywordDef2() {
-        String contents = 'class C { Object x() { def y } }'
+        String contents = 'class C { def x() { } }'
         assertCodeSelect([contents], 'def', null)
     }
 
     @Test
     void testCodeSelectKeywordDef3() {
-        String contents = 'def (x, y) = [1, 2]'
+        String contents = 'class C { Object x() { def y } }'
         assertCodeSelect([contents], 'def', null)
     }
 
     @Test
     void testCodeSelectKeywordDef4() {
+        String contents = 'def (x, y) = [1, 2]'
+        assertCodeSelect([contents], 'def', null)
+    }
+
+    @Test
+    void testCodeSelectKeywordDef5() {
         assumeTrue(isParrotParser())
         String contents = 'var (x, y) = [1, 2]'
         assertCodeSelect([contents], 'var', null)
     }
 
     @Test
-    void testCodeSelectKeywordDef5() {
+    void testCodeSelectKeywordDef6() {
         assumeTrue(isParrotParser())
         String contents = 'final (x, y) = [1, 2]'
         assertCodeSelect([contents], 'final', null)
+    }
+
+    @Test
+    void testCodeSelectKeywordDef7() {
+        String contents = 'def (int x, int y) = [1, 2]'
+        assertCodeSelect([contents], 'def', null)
+    }
+
+    @Test
+    void testCodeSelectKeywordDef8() {
+        String contents = '@Deprecated def (int x, int y) = [1, 2]'
+        assertCodeSelect([contents], 'def', null)
     }
 
     @Test
@@ -163,6 +181,13 @@ final class CodeSelectKeywordsTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'this', null)
     }
 
+    @Test
+    void testCodeSelectKeywordThis3() {
+        // Java Editor doesn't code select on 'this' property expression
+        String contents = 'class C { class D { def x() { C.this } } }'
+        assertCodeSelect([contents], 'this', null)
+    }
+
     @Test // GRECLIPSE-548
     void testCodeSelectKeywordSuper1() {
         String contents = '''\
@@ -183,6 +208,30 @@ final class CodeSelectKeywordsTests extends BrowsingTestSuite {
             |}
             |'''.stripMargin()
         assertCodeSelect([contents], 'super', 'Super')
+    }
+
+    @Test
+    void testCodeSelectKeywordSuper3() {
+        addJavaSource '''\
+            |package p;
+            |public interface A {
+            |  default void m() {}
+            |}
+            |'''.stripMargin(), 'A', 'p'
+        addJavaSource '''\
+            |package p;
+            |public interface B {
+            |  default void m() {}
+            |}
+            |'''.stripMargin(), 'B', 'p'
+
+        String contents = '''\
+            |import p.*
+            |class C implements A,B {
+            |  void m() { A.super.m() }
+            |}
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'super', null)
     }
 
     @Test

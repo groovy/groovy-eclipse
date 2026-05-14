@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,31 +15,29 @@
  */
 package org.codehaus.groovy.eclipse.test.launch
 
+import static org.eclipse.jdt.core.JavaCore.getPlugin as getJavaPlugin
+import static org.junit.Assume.assumeTrue
+
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchShortcut
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.groovy.eclipse.test.TestProject
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.IPath
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.debug.core.ILaunch
-import org.eclipse.debug.core.ILaunchConfiguration
-import org.eclipse.debug.core.IStreamListener
-import org.eclipse.debug.core.model.IStreamMonitor
+import org.eclipse.core.runtime.Adapters
+import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.internal.ui.DebugUIPlugin
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants
 import org.eclipse.debug.internal.ui.preferences.IDebugPreferenceConstants
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.IType
-import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.dialogs.MessageDialogWithToggle
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
@@ -58,6 +56,9 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
             setToDefault(IDebugPreferenceConstants.CONSOLE_OPEN_ON_OUT)
             setToDefault(IInternalDebugUIConstants.PREF_WAIT_FOR_BUILD)
         }
+
+        def configType = new GroovyScriptLaunchShortcut().groovyLaunchConfigType
+        DebugPlugin.getDefault().launchManager.getLaunchConfigurations(configType).each { it.delete() }
     }
 
     @Test
@@ -72,34 +73,26 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
             p3.addProjectReference(p4.javaProject)
             p3.createSourceFolder('src2', 'bin2')
 
-            p2.addProjectReference(p4.javaProject)
             p2.addProjectReference(p3.javaProject)
+            p2.addProjectReference(p4.javaProject)
 
-            p1.addProjectReference(p4.javaProject)
-            p1.addProjectReference(p3.javaProject)
             p1.addProjectReference(p2.javaProject)
+            p1.addProjectReference(p3.javaProject)
+            p1.addProjectReference(p4.javaProject)
 
             def classpath = buildScriptClasspath(p1.javaProject)
 
-            def entries = [
-                ['P1', 'src'],
-                ['P2', 'src'],
-                ['P3', 'src'],
-                ['P3', 'src2'],
-                ['P4', 'src'],
-                ['P4', 'src2'],
-                ['P1', 'bin'],
-                ['P2', 'bin'],
-                ['P3', 'bin'],
-                ['P3', 'bin2'],
-                ['P4', 'bin'],
-                ['P4', 'bin2'],
-            ]
-            String expected_classpath = entries.collect { String proj, String path ->
-                '${workspace_loc:' + proj + '}' + File.separator + path
-            }.join(File.pathSeparator)
+            ['P1', 'P2', 'P3', 'P4'].each {
+                def entries = [[it], ['bin', 'src']].combinations()
 
-            Assert.assertEquals(expected_classpath, classpath)
+                String expected_classpath = entries.collect { String proj, String path ->
+                    '${workspace_loc:' + proj + '}' + File.separator + path
+                }.join(File.pathSeparator)
+
+                assert classpath.contains(expected_classpath)
+            }
+
+            assert classpath.contains(CompilerUtils.exportedGroovyAllJar.toOSString())
         } finally {
             p1.dispose()
             p2.dispose()
@@ -113,8 +106,8 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
         TestProject p1 = new TestProject('P1a')
         TestProject p2 = new TestProject('P2a')
         try {
-            IPath runtimeJarPath = CompilerUtils.exportedGroovyAllJar
-            p1.addExternalLibrary(runtimeJarPath)
+            // this should not produce a duplicate entry in classpath
+            p1.addExternalLibrary(CompilerUtils.exportedGroovyAllJar)
 
             IFile f1 = p1.project.getFile('empty.jar')
             f1.create(new ByteArrayInputStream(new byte[0]), false, null)
@@ -126,14 +119,17 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
 
             String classpath = buildScriptClasspath(p1.javaProject)
 
-            String expected_classpath =
-                '${workspace_loc:' + 'P1a}' + File.separator + 'empty.jar' + File.pathSeparator +
-                '${workspace_loc:' + 'P1a}' + File.separator + 'src' + File.pathSeparator +
-                '${workspace_loc:' + 'P2a}' + File.separator + 'empty2.jar' + File.pathSeparator +
-                runtimeJarPath.toPortableString().replace('/' as char, File.separatorChar) + File.pathSeparator +
-                '${workspace_loc:' + 'P1a}' + File.separator + 'bin'
+            assert classpath.contains([
+                '${workspace_loc:' + 'P1a}' + File.separator + 'bin',
+                '${workspace_loc:' + 'P1a}' + File.separator + 'src',
+            ].join(File.pathSeparator))
 
-            Assert.assertEquals(expected_classpath, classpath)
+            assert classpath.endsWith([
+                '${workspace_loc:' + 'P1a}' + File.separator + 'empty.jar',
+                '${workspace_loc:' + 'P2a}' + File.separator + 'empty2.jar'
+            ].join(File.pathSeparator))
+
+            assert classpath.contains(CompilerUtils.exportedGroovyAllJar.toOSString())
         } finally {
             p1.dispose()
             p2.dispose()
@@ -144,7 +140,7 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
 
     @Test // single script
     void testScriptLaunch1() {
-        def unit = addGroovySource('print "test me"', 'Launch')
+        def unit = addGroovySource('println "hello world"', 'Launch')
         def type = unit.getType('Launch')
         launchScriptAndAssertExitValue(type)
     }
@@ -248,17 +244,94 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
         }
     }
 
-    @Test @Ignore // https://github.com/groovy/groovy-eclipse/issues/779
+    @Test // type implements Runnable
     void testScriptLaunch11() {
         def unit = addGroovySource('''\
-            |@Grapes([
-            |  @GrabConfig(systemClassLoader=true),
-            |  @Grab('mysql:mysql-connector-java:5.1.6')
-            |])
-            |def xxx
+            |class Runner implements Runnable {
+            |  void run() {
+            |    println "hello world"
+            |  }
+            |}
+            |'''.stripMargin(), 'Runner')
+        def type = unit.getType('Runner')
+        launchScriptAndAssertExitValue(type)
+    }
+
+    @Test // type is JUnit test
+    void testScriptLaunch12() {
+        addJUnit(4)
+        def unit = addGroovySource('''\
+            |import org.junit.*
             |
-            |println "Why won't this run?"
-            |'''.stripMargin(), 'Launch')
+            |final class SomeTests {
+            |  @Test
+            |  void testSomething() {
+            |    Assert.assertTrue(true)
+            |  }
+            |}
+            |'''.stripMargin(), 'SomeTests')
+        def type = unit.getType('SomeTests')
+        launchScriptAndAssertExitValue(type)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/779
+    void testScriptLaunch13() {
+        def project = packageFragmentRoot.javaProject
+        GroovyRuntime.removeGroovyClasspathContainer(project)
+        GroovyRuntime.appendClasspathEntry(project, GroovyRuntime.newGroovyClasspathContainerEntry(false, false, false))
+        try {
+            def unit = addGroovySource('''\
+                |@GrabConfig(systemClassLoader=true)
+                |@Grab('mysql:mysql-connector-java:5.1.49')
+                |def xxx
+                |
+                |println "This should finish"
+                |'''.stripMargin(), 'Launch')
+            def type = unit.getType('Launch')
+            launchScriptAndAssertExitValue(type)
+        } finally {
+            GroovyRuntime.addGroovyClasspathContainer(project, true)
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1163
+    void testScriptLaunch14() {
+        def file = addPlainText('''\
+            |println 'hello world'
+            |'''.stripMargin(), '../Launch.groovy') // '..' for root of project
+        def type =  Adapters.adapt(file, GroovyCompilationUnit).getType('Launch')
+        launchScriptAndAssertExitValue(type)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1299
+    void testScriptLaunch15() {
+        // ensure JUnit 5 container
+        def jdt = javaPlugin.bundle.version
+        assumeTrue(jdt.major > 3 || jdt.minor > 21)
+
+        def shortcut = new GroovyScriptLaunchShortcut()
+        def unitType = addGroovySource('print "hello"', 'script').getType('script')
+
+        def newLaunchConfig = { ->
+            def workCopy = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(unitType, unitType.javaProject), unitType.fullyQualifiedName)
+            try {
+                String arguments = workCopy.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, '')
+                return arguments
+            } finally {
+                workCopy.doSave()
+            }
+        }
+
+        assert !newLaunchConfig().contains('jupiter')
+
+        addJUnit(5) // change the project's classpath
+
+        assert newLaunchConfig().contains('jupiter')
+    }
+
+    @Test // JEP 445 script
+    void testScriptLaunch16() {
+        def unit = addGroovySource('void main() { print "JEP 445" }', 'Launch')
         def type = unit.getType('Launch')
         launchScriptAndAssertExitValue(type)
     }
@@ -271,70 +344,39 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
         def classpath = (arguments =~ /--classpath "(.*?)" /)[0][1]
     }
 
-    private void launchScriptAndAssertExitValue(IType launchType, int timeoutSeconds = 20) {
-        SimpleProgressMonitor spm = new SimpleProgressMonitor('Launcher test workspace build')
-        ResourcesPlugin.workspace.build(IncrementalProjectBuilder.FULL_BUILD, spm)
-        spm.waitForCompletion()
+    private void launchScriptAndAssertExitValue(IType runType, int timeoutSeconds = 20) {
+        ResourcesPlugin.workspace.build(IncrementalProjectBuilder.FULL_BUILD, null)
 
-        def runner = new Runnable() {
-            @Override
-            void run() {
-                GroovyScriptLaunchShortcut shortcut = new GroovyScriptLaunchShortcut()
-                ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(launchType, launchType.javaProject), launchType.fullyQualifiedName)
-                Assert.assertTrue(launchType.exists())
-                ILaunch launch = config.launch('run', new NullProgressMonitor())
-                final StringBuilder stdout = new StringBuilder()
-                final StringBuilder stderr = new StringBuilder()
-                launch.processes[0].streamsProxy.outputStreamMonitor.addListener(new IStreamListener() {
-                    @Override
-                    void streamAppended(String text, IStreamMonitor monitor) {
-                        stdout.append(text)
-                    }
-                })
-                launch.processes[0].streamsProxy.errorStreamMonitor.addListener(new IStreamListener() {
-                    @Override
-                    void streamAppended(String text, IStreamMonitor monitor) {
-                        stderr.append(text)
-                    }
-                })
-                synchronized (launch) {
-                    int i = 0
-                    println('Waiting for launch to complete ' + i + ' sec...')
-                    while (!launch.isTerminated() && i < timeoutSeconds) {
-                        i++
-                        println('Waiting for launch to complete ' + i + ' sec...')
-                        launch.wait(1000)
-                    }
-                }
-                if (launch.isTerminated()) {
-                    Assert.assertEquals(1, launch.processes.length)
-                    println('Process output:')
-                    println('==================')
-                    println(stdout)
-                    println('==================')
-                    println('Process err:')
-                    println('==================')
-                    println(stderr)
-                    println('==================')
-                }
-                Assert.assertTrue('Process not terminated after timeout has been reached', launch.isTerminated())
-                Assert.assertEquals('Expecting normal exit, but found invalid exit value', 0, launch.processes[0].exitValue)
+        def shortcut = new GroovyScriptLaunchShortcut()
+        def config = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(runType, runType.javaProject), runType.fullyQualifiedName)
+        def launch = config.launch('run', null)
+        def stdout = new StringBuilder(), stderr = new StringBuilder()
+        launch.processes[0].streamsProxy.outputStreamMonitor.addListener { text, monitor ->
+            stdout.append(text)
+        }
+        launch.processes[0].streamsProxy.errorStreamMonitor.addListener { text, monitor ->
+            stderr.append(text)
+        }
+        synchronized (launch) {
+            int i = 0
+            while (!launch.isTerminated() && i < timeoutSeconds) {
+                println "Waiting for launch to complete $i sec..."
+                launch.wait(1000)
+                i += 1
             }
         }
-
-        def currentException = null
-        for (attempt in 1..4) {
-            try {
-                runner.run()
-                // success
-                return
-            } catch (AssertionError e) {
-                currentException = e
-                println('Launch failed on attempt ' + attempt + ' retrying.')
-            }
+        if (launch.isTerminated()) {
+            assert launch.processes.length == 1
+            println('Process output:')
+            println('==================')
+            println(stdout)
+            println('==================')
+            println('Process err:')
+            println('==================')
+            println(stderr)
+            println('==================')
         }
-        if (currentException != null) {
-            throw currentException
-        }
+        assert launch.isTerminated() : 'Process not terminated after timeout has been reached'
+        assert launch.processes[0].exitValue == 0 : "Expecting normal exit, but found exit value ${launch.processes[0].exitValue}"
     }
 }

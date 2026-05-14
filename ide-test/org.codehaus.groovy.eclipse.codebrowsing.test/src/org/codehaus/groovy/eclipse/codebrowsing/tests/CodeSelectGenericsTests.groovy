@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
+import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryMethod
+import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.SourceRange
 import org.junit.Test
 
@@ -30,12 +33,6 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
         |  def c = { /*10*/SomeInterface2</*11*/SomeClass> a -> }
         |}'''.stripMargin()
 
-    private static final String XX = '''\
-        |class XX {
-        |  XX[] getXx() { null }
-        |  XX   getYy() { null }
-        |}'''.stripMargin()
-
     private int find(int toFind) {
         String lookFor = '/*' + toFind + '*/'
         int index = GENERICS_CLASS.indexOf(lookFor)
@@ -44,55 +41,54 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
 
     //
 
-    // test an array of generic types
-    @Test
-    void testGRECLIPSE1050a() {
-        String groovyContents = 'org.codehaus.groovy.ast.ClassHelper.make(List.class)'
-        String toFind = 'make'
-        String elementName = 'make'
-        assertCodeSelect([XX, groovyContents], toFind, elementName)
-    }
-
-    // test an array of generic types
-    @Test
-    void testGRECLIPSE1050b() {
-        String groovyContents = 'org.codehaus.groovy.ast.ClassHelper.make(new Class[0])[0].nameWithoutPackage'
-        String toFind = 'nameWithoutPackage'
-        String elementName = 'getNameWithoutPackage'
-        assertCodeSelect([XX, groovyContents], toFind, elementName)
-    }
-
     @Test
     void testCodeSelectGenericField1() {
-        String structureContents = 'class Structure { java.util.List<String> field; }'
-        String javaContents = 'class Java { { new Structure().field = null;} }'
-        String groovyContents = 'new Structure().field'
-        String toFind = 'field'
-        assertCodeSelect([structureContents, javaContents, groovyContents], toFind)
+        String contents = '''\
+            |class Foo {
+            |  List<String> bar
+            |}
+            |new Foo().bar
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'bar')
     }
 
     @Test
     void testCodeSelectGenericField2() {
-        String structureContents = 'class Structure { java.util.Map<String, Integer> field; }'
-        String javaContents = 'class Java { { new Structure().field = null;} }'
-        String groovyContents = 'new Structure().field'
-        String toFind = 'field'
-        assertCodeSelect([structureContents, javaContents, groovyContents], toFind)
+        String contents = '''\
+            |class Foo {
+            |  Map<String, Integer> bar
+            |}
+            |new Foo().bar
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'bar')
     }
 
     @Test
     void testCodeSelectGenericField3() {
-        String structureContents = 'class Structure { java.util.Map<String[], java.util.List<Integer>> field; }'
-        String javaContents = 'class Java { { new Structure().field = null;} }'
-        String groovyContents = 'new Structure().field'
-        String toFind = 'field'
-        assertCodeSelect([structureContents, javaContents, groovyContents], toFind)
+        String contents = '''\
+            |class Foo {
+            |  Map<String[], List<Integer>> bar
+            |}
+            |new Foo().bar
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'bar')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/920
+    void testCodeSelectGenericField4() {
+        String contents = '''\
+            |class Foo {
+            |  List<? extends CharSequence> bar
+            |}
+            |new Foo().bar
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'bar')
     }
 
     @Test
     void testCodeSelectGenericMethod1() {
         String structureContents = 'class Structure { java.util.Map<String[], java.util.List<Integer>> field; }'
-        String javaContents = 'class Java { { new Structure().field.entrySet();} }'
+        String javaContents = 'class Java { { new Structure().field.entrySet(); } }'
         String groovyContents = 'new Structure().field.entrySet()'
         String toFind = 'entrySet'
         assertCodeSelect([structureContents, javaContents, groovyContents], toFind)
@@ -101,7 +97,7 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectGenericMethod2() {
         String structureContents = 'class Structure { java.util.List<Integer> method() { return null; } }'
-        String javaContents = 'class Java { { new Structure().method();} }'
+        String javaContents = 'class Java { { new Structure().method(); } }'
         String groovyContents = 'new Structure().method()'
         String toFind = 'method'
         assertCodeSelect([structureContents, javaContents, groovyContents], toFind)
@@ -110,7 +106,7 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectGenericMethod3() {
         String structureContents = 'class Structure { java.util.List<Integer> method(java.util.List<Integer> a) { return null; } }'
-        String javaContents = 'class Java { { new Structure().method(null);} }'
+        String javaContents = 'class Java { { new Structure().method(null); } }'
         String groovyContents = 'new Structure().method(null)'
         String toFind = 'method'
         assertCodeSelect([structureContents, javaContents, groovyContents], toFind)
@@ -119,7 +115,7 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectGenericMethod4() {
         String structureContents = 'class Structure { java.util.List<Integer> method(java.util.List<Integer> a, java.util.List<String> b) { return null; } }'
-        String javaContents = 'class Java { { new Structure().method(null, null);} }'
+        String javaContents = 'class Java { { new Structure().method(null, null); } }'
         String groovyContents = 'new Structure().method(null, null)'
         String toFind = 'method'
         assertCodeSelect([structureContents, javaContents, groovyContents], toFind)
@@ -128,10 +124,51 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectGenericMethod5() {
         String structureContents = 'class Structure { java.util.List<Integer> method(int a, int b, char x) { return null; } }'
-        String javaContents = 'class Java { { new Structure().method(1, 2, "c");} }'
-        String groovyContents = 'new Structure().method(1, 2, "c")'
+        String javaContents = 'class Java { { new Structure().method(1, 2, \'c\'); } }'
+        String groovyContents = 'new Structure().method(1, 2, \'c\')'
         String toFind = 'method'
         assertCodeSelect([structureContents, javaContents, groovyContents], toFind)
+    }
+
+    @Test
+    void testCodeSelectGenericMethod6() {
+        String contents = '[a: Number].keySet()'
+        IJavaElement elem = assertCodeSelect([contents], 'keySet')
+        MethodNode method = ((GroovyResolvedBinaryMethod) elem).inferredElement
+        assert method.returnType.toString(false) == 'java.util.Set<java.lang.String>'
+    }
+
+    @Test
+    void testCodeSelectGenericMethod7() {
+        String contents = '[a: Number].values()'
+        IJavaElement elem = assertCodeSelect([contents], 'values')
+        MethodNode method = ((GroovyResolvedBinaryMethod) elem).inferredElement
+        assert method.returnType.toString(false) == 'java.util.Collection<java.lang.Class<java.lang.Number>>'
+    }
+
+    @Test
+    void testCodeSelectGenericMethod8() {
+        String contents = '[a: Number].entrySet()'
+        IJavaElement elem = assertCodeSelect([contents], 'entrySet')
+        MethodNode method = ((GroovyResolvedBinaryMethod) elem).inferredElement
+        assert method.returnType.toString(false) ==~ 'java.util.Set<java.util.Map.Entry<java.lang.String, java.lang.Class<java.lang.Number>>>'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1213
+    void testCodeSelectGenericMethod9() {
+        String types = 'class Pogo { Date date }'
+        String usage = 'cmp = Comparator.<Pogo,Date>comparing{ it.date }'
+        IJavaElement elem = assertCodeSelect([types, usage], 'comparing')
+        MethodNode method = ((GroovyResolvedBinaryMethod) elem).inferredElement
+        assert method.returnType.toString(false) == 'java.util.Comparator<Pogo>'
+    }
+
+    @Test
+    void testCodeSelectGenericCategoryMethod() {
+        String contents = '[a: Number].collect { k,v -> "" }'
+        IJavaElement elem = assertCodeSelect([contents], 'collect')
+        MethodNode method = ((GroovyResolvedBinaryMethod) elem).inferredElement
+        assert method.returnType.toString(false) == 'java.util.List<java.lang.String>'
     }
 
     @Test
@@ -216,165 +253,101 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectArray1() {
-        String groovyContents = 'new XX().xx[0].xx'
-        String toFind = 'xx'
-        String elementName = 'getXx'
-        assertCodeSelect([XX, groovyContents], toFind, elementName)
+    void testCodeSelectGenericTypeAndMethod6() {
+        String contents = '''\
+            |class C<T> {
+            |  static <U> C<U> of(U item) {}
+            |}
+            |def c = C.of(123)
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'of')
     }
 
-    @Test
-    void testCodeSelectArray2() {
-        String groovyContents = 'new XX().xx[0].yy'
-        String toFind = 'yy'
-        String elementName = 'getYy'
-        assertCodeSelect([XX, groovyContents], toFind, elementName)
-    }
-
-    @Test
-    void testCodeSelectArray3() {
-        String contents = 'new XX().xx[0].' + 'getXx()'
-        String toFind = 'getXx'
-        assertCodeSelect([XX, contents], toFind)
-    }
-
-    @Test
-    void testCodeSelectArray4() {
-        String contents = 'new XX().xx[0].' + 'getYy()'
-        String toFind = 'getYy'
-        assertCodeSelect([XX, contents], toFind)
-    }
-
-    @Test
-    void testCodeSelectArray5() {
-        String groovyContents = 'class YY { YY[] xx \nYY yy }\n' + 'new YY().xx[0].setXx()'
-        String toFind = 'setXx'
-        String elementName = 'xx'
-        assertCodeSelect([XX, groovyContents], toFind, elementName)
-    }
-
-    @Test
-    void testCodeSelectArray6() {
-        String groovyContents = 'class YY { YY[] xx \nYY yy }\n' + 'new YY().xx[0].setYy()'
-        String toFind = 'setYy'
-        String elementName = 'yy'
-        assertCodeSelect([XX, groovyContents], toFind, elementName)
-    }
-
-    @Test
-    void testCodeSelectArray7() {
-        String groovyContents = 'class YY { YY[] xx \nYY yy }\n' + 'new YY().xx[0].' + 'getXx()'
-        String toFind = 'getXx'
-        String elementName = 'xx'
-        assertCodeSelect([XX, groovyContents], toFind, elementName)
-    }
-
-    @Test
-    void testCodeSelectArray8() {
-        String groovyContents = 'class YY { YY[] xx \nYY yy }\n' + 'new YY().xx[0].' + 'getYy()'
-        String toFind = 'getYy'
-        String elementName = 'yy'
-        assertCodeSelect([XX, groovyContents], toFind, elementName)
-    }
-
-    // See GRECLIPSE-1238
-    @Test
+    @Test // GRECLIPSE-1238
     void testCodeSelectTypeParam0() {
         String name = 'SomeInterface'
         int len = name.length()
         assertCodeSelect(GENERICS_CLASS, new SourceRange(find(0), len), name)
     }
 
-    // See GRECLIPSE-1238
-    @Test
+    @Test // GRECLIPSE-1238
     void testCodeSelectTypeParam1() {
         String name = 'SomeInterface2'
         int len = name.length()
         assertCodeSelect(GENERICS_CLASS, new SourceRange(find(1), len), name)
     }
 
-    // See GRECLIPSE-1238
-    @Test
+    @Test // GRECLIPSE-1238
     void testCodeSelectTypeParam2() {
         String name = 'SomeClass'
         int len = name.length()
         assertCodeSelect(GENERICS_CLASS, new SourceRange(find(2), len), name)
     }
 
-    // See GRECLIPSE-1238
-    @Test
+    @Test // GRECLIPSE-1238
     void testCodeSelectTypeParam3() {
         String name = 'SomeInterface'
         int len = name.length()
         assertCodeSelect(GENERICS_CLASS, new SourceRange(find(3), len), name)
     }
 
-    // See GRECLIPSE-1238
-    @Test
+    @Test // GRECLIPSE-1238
     void testCodeSelectTypeParam4() {
         String name = 'SomeClass'
         int len = name.length()
         assertCodeSelect(GENERICS_CLASS, new SourceRange(find(4), len), name)
     }
 
-    // See GRECLIPSE-1238
-    @Test
+    @Test // GRECLIPSE-1238
     void testCodeSelectTypeParam5() {
         String name = 'SomeClass'
         int len = name.length()
         assertCodeSelect(GENERICS_CLASS, new SourceRange(find(5), len), name)
     }
 
-    // See GRECLIPSE-1238
-    @Test
+    @Test // GRECLIPSE-1238
     void testCodeSelectTypeParam6() {
         String name = 'SomeInterface'
         int len = name.length()
         assertCodeSelect(GENERICS_CLASS, new SourceRange(find(6), len), name)
     }
 
-    // See GRECLIPSE-1238
-    @Test
+    @Test // GRECLIPSE-1238
     void testCodeSelectTypeParam7() {
         String name = 'SomeClass'
         int len = name.length()
         assertCodeSelect(GENERICS_CLASS, new SourceRange(find(7), len), name)
     }
 
-    // See GRECLIPSE-1238
-    @Test
+    @Test // GRECLIPSE-1238
     void testCodeSelectTypeParam8() {
         String name = 'SomeInterface'
         int len = name.length()
         assertCodeSelect(GENERICS_CLASS, new SourceRange(find(8), len), name)
     }
 
-    // See GRECLIPSE-1238
-    @Test
+    @Test // GRECLIPSE-1238
     void testCodeSelectTypeParam9() {
         String name = 'SomeClass'
         int len = name.length()
         assertCodeSelect(GENERICS_CLASS, new SourceRange(find(9), len), name)
     }
 
-    // See GRECLIPSE-1238
-    @Test
+    @Test // GRECLIPSE-1238
     void testCodeSelectTypeParam10() {
         String name = 'SomeInterface2'
         int len = name.length()
         assertCodeSelect(GENERICS_CLASS, new SourceRange(find(10), len), name)
     }
 
-    // See GRECLIPSE-1238
-    @Test
+    @Test // GRECLIPSE-1238
     void testCodeSelectTypeParam11() {
         String name = 'SomeClass'
         int len = name.length()
         assertCodeSelect(GENERICS_CLASS, new SourceRange(find(11), len), name)
     }
 
-    // See GRECLIPSE-1238
-    @Test
+    @Test // GRECLIPSE-1238
     void testCodeSelectTypeParam12() {
         String name = 'SomeInterface'
         int len = name.length()

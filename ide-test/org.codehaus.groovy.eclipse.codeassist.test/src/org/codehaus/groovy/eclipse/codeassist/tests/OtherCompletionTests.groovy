@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
+
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
@@ -25,6 +27,13 @@ final class OtherCompletionTests extends CompletionTestSuite {
     @Before
     void setUp() {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
+    }
+
+    @Test
+    void testNoNullPointerException() {
+        String contents = 'getClass().'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
+        proposalExists(proposals, 'toGenericString()', 1)
     }
 
     @Test // GRECLIPSE-414
@@ -70,11 +79,11 @@ final class OtherCompletionTests extends CompletionTestSuite {
         assert proposal.displayString == 'bar() : String - StringExtension (Groovy)'
 
         proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this.collect'))
-        Arrays.sort(proposals) { ICompletionProposal o1, ICompletionProposal o2 ->
-            o2.displayString <=> o1.displayString
+        Arrays.sort(proposals) { ICompletionProposal p1, ICompletionProposal p2 ->
+            p2.displayString.length() <=> p1.displayString.length()
         }
         proposalExists(proposals, 'collect', 3)
-        assert proposals[0].displayString == 'collect(Collection<T> collector, Closure<? extends T> transform) : Collection<T> - DefaultGroovyMethods (Groovy)'
+        assert proposals[0].displayString == 'collect(C collector, Closure<? extends T> transform) : C - DefaultGroovyMethods (Groovy)'
         assert proposals[1].displayString == 'collect(Closure<T> transform) : List<T> - DefaultGroovyMethods (Groovy)'
         assert proposals[2].displayString == 'collect() : Collection - DefaultGroovyMethods (Groovy)'
     }
@@ -100,8 +109,8 @@ final class OtherCompletionTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'foo.ba'))
+        proposalExists(proposals, 'bar', isAtLeastGroovy(40) ? 1 : 0)
         proposalExists(proposals, 'isBar()', 1)
-        proposalExists(proposals, 'bar', 0)
     }
 
     @Test
@@ -221,7 +230,13 @@ final class OtherCompletionTests extends CompletionTestSuite {
 
     @Test
     void testArrayCompletion4() {
-        String contents = 'class XX {\n XX[] xx\n XX yy\n}\nnew XX().getXx()[0].x'
+        String contents = '''\
+            |class XX {
+            |  XX[] xx
+            |  XX yy
+            |}
+            |new XX().getXx()[0].x
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'x'))
         checkReplacementString(proposals, 'xx', 1)
     }
@@ -246,7 +261,8 @@ final class OtherCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'v'))
         checkReplacementString(proposals, 'values()', 1)
         checkReplacementString(proposals, 'valueOf(name)', 1)
-        checkReplacementString(proposals, 'valueOf(enumType, name)', 1)
+        float version = Float.parseFloat(System.getProperty('java.specification.version'))
+        checkReplacementString(proposals, "valueOf(enum${version > 15 ? 'Class' : 'Type'}, name)", 1)
     }
 
     @Test

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,8 +20,9 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
+import static org.junit.Assume.assumeTrue
 
-import groovy.transform.NotYetImplemented
+import groovy.test.NotYetImplemented
 
 import org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssistContext
 import org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssistProposal
@@ -226,6 +227,20 @@ final class QuickAssistTests extends QuickFixTestSuite {
 
     @Test
     void testConvertToProperty1() {
+        assertProposalNotOffered(
+            '"".length()',
+            4, 0, new ConvertAccessorToPropertyProposal())
+    }
+
+    @Test
+    void testConvertToProperty2() {
+        assertProposalNotOffered(
+            '[].set(1, null)',
+            4, 0, new ConvertAccessorToPropertyProposal())
+    }
+
+    @Test
+    void testConvertToProperty3() {
         assertConversion(
             '"".isEmpty()',
             '"".empty',
@@ -233,7 +248,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testConvertToProperty2() {
+    void testConvertToProperty4() {
         assertConversion(
             '"".getBytes()',
             '"".bytes',
@@ -241,14 +256,14 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testConvertToProperty3() {
+    void testConvertToProperty5() {
         assertProposalNotOffered(
             '"".getBytes("UTF-8")',
             4, 0, new ConvertAccessorToPropertyProposal())
     }
 
     @Test
-    void testConvertToProperty4() {
+    void testConvertToProperty6() {
         assertConversion(
             'new Date().setTime(1L);',
             'new Date().time = 1L;',
@@ -256,7 +271,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testConvertToProperty4a() {
+    void testConvertToProperty6a() {
         setJavaPreference(FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR, JavaCore.DO_NOT_INSERT)
         try {
             assertConversion(
@@ -269,32 +284,58 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testConvertToProperty5() {
-        assertProposalNotOffered(
-            '[].set(1, null)',
-            4, 0, new ConvertAccessorToPropertyProposal())
+    void testConvertToProperty7() {
+        assertConversion('''\
+            |class Foo {
+            |  def bar
+            |  void test() {
+            |    getBar()
+            |  }
+            |}
+            |'''.stripMargin(), '''\
+            |class Foo {
+            |  def bar
+            |  void test() {
+            |    bar
+            |  }
+            |}
+            |'''.stripMargin(),
+            'getBar', new ConvertAccessorToPropertyProposal())
     }
 
     @Test
-    void testConvertToProperty6() {
-        assertProposalNotOffered(
-            '"".length()',
-            4, 0, new ConvertAccessorToPropertyProposal())
+    void testConvertToProperty8() {
+        assertConversion('''\
+            |class Foo {
+            |  static getBar() {}
+            |  static test() {
+            |    getBar()
+            |  }
+            |}
+            |'''.stripMargin(), '''\
+            |class Foo {
+            |  static getBar() {}
+            |  static test() {
+            |    bar
+            |  }
+            |}
+            |'''.stripMargin(),
+            'getBar', new ConvertAccessorToPropertyProposal())
     }
 
     @Test
     void testConvertToMultiLine1() {
         def assertConversion = { String pre, String post ->
-            assertConversion("'" + pre + "'", "'''" + post + "'''", 0, 0, new ConvertToMultiLineStringProposal())
+            assertConversion("'${pre}'", "'''${post}'''", 0, 0, new ConvertToMultiLineStringProposal())
         }
         assertConversion('a', 'a')
         assertConversion('.', '.')
         assertConversion('$', '$')
         assertConversion('\\"', '"')
-        assertConversion("\\'", "\\'") // leading and trailing single-quote is special case
-        assertConversion("\\' ", "\\' ")
-        assertConversion(" \\'", " \\'")
-        assertConversion(" \\' ", " \' ")
+        assertConversion('\\\'', '\\\'') // leading and trailing single-quote is special case
+        assertConversion('\\\' ', '\\\' ')
+        assertConversion(' \\\'', ' \\\'')
+        assertConversion(' \\\' ', ' \' ')
         assertConversion('\\t', '\t')
         assertConversion('\\n', '\n')
         assertConversion('\\r', '\\r')
@@ -340,7 +381,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testConvertToMultiLine6() {
         assertConversion(
-            '"\' \'\'\' \'"', // "' ''' '"
+            $/"' ''' '"/$,
             $/'''\' \'\'\' \''''/$,
             0, 9, new ConvertToMultiLineStringProposal())
     }
@@ -355,23 +396,17 @@ final class QuickAssistTests extends QuickFixTestSuite {
 
     @Test
     void testConvertToMultiLine8() {
-        String original = $/
-            'A\n' +
-            "B\n" +
-            """C\n""" +
-            D
-            /$.substring(1).stripIndent()
-
-        String expected = $/
-            """A
-            B
-            C
-            $${D}"""
-            /$.substring(1).stripIndent()
-
-        assertConversion(
-            original, expected,
-            0, 29, new ConvertToMultiLineStringProposal())
+        assertConversion('''\
+            |'A\\n' +
+            |"B\\n" +
+            |"""C\\n""" +
+            |D
+            |'''.stripMargin(), '''\
+            |"""A
+            |B
+            |C
+            |${D}"""
+            |'''.stripMargin(), 0, 29, new ConvertToMultiLineStringProposal())
     }
 
     @Test
@@ -416,11 +451,15 @@ final class QuickAssistTests extends QuickFixTestSuite {
 
     @Test
     void testReplaceDef2() {
+        assumeTrue(isParrotParser())
+
         assertConversion(
-            'int bar = 1; def foo = bar',
+            'int bar = 1; var foo = bar',
             'int bar = 1; int foo = bar',
-            16, 0, new ReplaceDefWithStaticTypeProposal())
+            13, 0, new ReplaceDefWithStaticTypeProposal())
     }
+
+    // TODO: retain comments, modifiers, and annotations
 
     @Test
     void testReplaceDef3() {
@@ -513,7 +552,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
         assertConversion(
             'v  && g && a',
             'g  && v && a',
-            '&&', new SwapLeftAndRightOperandsProposal())
+            '  &&', new SwapLeftAndRightOperandsProposal())
     }
 
     @Test
@@ -522,6 +561,56 @@ final class QuickAssistTests extends QuickFixTestSuite {
             'g  || a && v',
             'g  || v && a',
             '&&', new SwapLeftAndRightOperandsProposal())
+    }
+
+    @Test
+    void testSwapOperands9() {
+        assumeTrue(isParrotParser())
+
+        assertConversion(
+            'g  || a === v',
+            'g  || v === a',
+            '===', new SwapLeftAndRightOperandsProposal())
+
+        assertConversion(
+            'g  || a !== v',
+            'g  || v !== a',
+            '!==', new SwapLeftAndRightOperandsProposal())
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1518
+    void testSwapOperands10() {
+        for (mode in ['','@groovy.transform.TypeChecked ','@groovy.transform.CompileStatic ']) {
+            assertConversion(
+                mode + 'def m(p) { if (p == null) { } }',
+                mode + 'def m(p) { if (null == p) { } }',
+                '==', new SwapLeftAndRightOperandsProposal())
+
+            assertConversion(
+                mode + 'def m(p) { if (p != null) { } }',
+                mode + 'def m(p) { if (null != p) { } }',
+                '!=', new SwapLeftAndRightOperandsProposal())
+
+            assertConversion(
+                mode + 'def m(p) { if (null != p) { } }',
+                mode + 'def m(p) { if (p != null) { } }',
+                '!=', new SwapLeftAndRightOperandsProposal())
+
+            assertConversion(
+                mode + 'def m(p) { if (p == true) { } }',
+                mode + 'def m(p) { if (true == p) { } }',
+                '==', new SwapLeftAndRightOperandsProposal())
+
+            assertConversion(
+                mode + 'def m(p,q) { if (p === q) { } }',
+                mode + 'def m(p,q) { if (q === p) { } }',
+                '===', new SwapLeftAndRightOperandsProposal())
+
+            assertConversion(
+                mode + 'def m(int p) { if (p <=> 0) { } }',
+                mode + 'def m(int p) { if (0 <=> p) { } }',
+                '<=>', new SwapLeftAndRightOperandsProposal())
+        }
     }
 
     @Test
@@ -591,21 +680,21 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testSplitAssignment9() {
         String original = '''\
-            class Foo {
-            \tdef foo() {
-            \t\tdef bar = 1 + 4
-            \t}
-            }
-            '''.stripIndent()
+            |class Foo {
+            |\tdef foo() {
+            |\t\tdef bar = 1 + 4
+            |\t}
+            |}
+            |'''.stripMargin()
 
         String expected = '''\
-            class Foo {
-            \tdef foo() {
-            \t\tdef bar
-            \t\tbar = 1 + 4
-            \t}
-            }
-            '''.stripIndent()
+            |class Foo {
+            |\tdef foo() {
+            |\t\tdef bar
+            |\t\tbar = 1 + 4
+            |\t}
+            |}
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'def bar = 1 + 4', new SplitVariableDeclAndInitProposal())
     }
@@ -613,21 +702,21 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testSplitAssignment10() {
         String original = '''\
-            class X {
-              def foo() {
-                def x = 1
-              }
-            }
-            '''.stripIndent()
+            |class X {
+            |  def foo() {
+            |    def x = 1
+            |  }
+            |}
+            |'''.stripMargin()
 
         String expected = '''\
-            class X {
-              def foo() {
-                def x
-                x = 1
-              }
-            }
-            '''.stripIndent()
+            |class X {
+            |  def foo() {
+            |    def x
+            |    x = 1
+            |  }
+            |}
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new SplitVariableDeclAndInitProposal())
     }
@@ -635,13 +724,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable1() {
         String original = '''\
-            def x = 1
-            x.intValue()
-            '''.stripIndent()
+            |def x = 1
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            1.intValue()
-            '''.stripIndent()
+            |1.intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -649,13 +738,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable2() {
         String original = '''\
-            def x = 1;;
-            x.intValue()
-            '''.stripIndent()
+            |def x = 1;;
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            1.intValue()
-            '''.stripIndent()
+            |1.intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -663,13 +752,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable3() {
         String original = '''\
-            def x = 1\t\t
-            x.intValue()
-            '''.stripIndent()
+            |def x = 1\t\t
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            1.intValue()
-            '''.stripIndent()
+            |1.intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -677,19 +766,19 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable4() {
         String original = '''\
-            def x = 1 // comment
-            x.intValue()
-            '''.stripIndent()
+            |def x = 1 // comment
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            // comment
-            1.intValue()
-            '''.stripIndent()
+            |// comment
+            |1.intValue()
+            |'''.stripMargin()
 
         if (!isParrotParser()) {
             expected = '''\
-            1.intValue()
-            '''.stripIndent()
+                |1.intValue()
+                |'''.stripMargin()
         }
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
@@ -698,13 +787,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable5() {
         String original = '''\
-            def x = 1 + 1
-            x.intValue()
-            '''.stripIndent()
+            |def x = 1 + 1
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (1 + 1).intValue()
-            '''.stripIndent()
+            |(1 + 1).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -712,13 +801,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable6() {
         String original = '''\
-            def x = (1 + 1)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (1 + 1)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (1 + 1).intValue()
-            '''.stripIndent()
+            |(1 + 1).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -726,13 +815,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable7() {
         String original = '''\
-            def x = (1) + (1)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (1) + (1)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            ((1) + (1)).intValue()
-            '''.stripIndent()
+            |((1) + (1)).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -740,13 +829,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable8() {
         String original = '''\
-            def x = a.b.c()
-            x.intValue()
-            '''.stripIndent()
+            |def x = a.b.c()
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            a.b.c().intValue()
-            '''.stripIndent()
+            |a.b.c().intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -754,13 +843,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable9() {
         String original = '''\
-            def x = (a.b).c()
-            x.intValue()
-            '''.stripIndent()
+            |def x = (a.b).c()
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (a.b).c().intValue()
-            '''.stripIndent()
+            |(a.b).c().intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -768,13 +857,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable10() {
         String original = '''\
-            def x = (a.b) + c()
-            x.intValue()
-            '''.stripIndent()
+            |def x = (a.b) + c()
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            ((a.b) + c()).intValue()
-            '''.stripIndent()
+            |((a.b) + c()).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -782,13 +871,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable11() {
         String original = '''\
-            def x = { -> }
-            x.intValue()
-            '''.stripIndent()
+            |def x = { -> }
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            { -> }.intValue()
-            '''.stripIndent()
+            |{ -> }.intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -796,13 +885,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable12() {
         String original = '''\
-            def x = y[0]
-            x.intValue()
-            '''.stripIndent()
+            |def x = y[0]
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            y[0].intValue()
-            '''.stripIndent()
+            |y[0].intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -810,13 +899,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable13() {
         String original = '''\
-            def x = (Object) y
-            x.intValue()
-            '''.stripIndent()
+            |def x = (Object) y
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            ((Object) y).intValue()
-            '''.stripIndent()
+            |((Object) y).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -824,13 +913,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable14() {
         String original = '''\
-            def x = ((Object) y)
-            x.intValue()
-            '''.stripIndent()
+            |def x = ((Object) y)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            ((Object) y).intValue()
-            '''.stripIndent()
+            |((Object) y).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -838,13 +927,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable15() {
         String original = '''\
-            def x = y as Object
-            x.intValue()
-            '''.stripIndent()
+            |def x = y as Object
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (y as Object).intValue()
-            '''.stripIndent()
+            |(y as Object).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -852,13 +941,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable16() {
         String original = '''\
-            def x = (y as Object)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (y as Object)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (y as Object).intValue()
-            '''.stripIndent()
+            |(y as Object).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -866,13 +955,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable17() {
         String original = '''\
-            def x = y ?: 0
-            x.intValue()
-            '''.stripIndent()
+            |def x = y ?: 0
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (y ?: 0).intValue()
-            '''.stripIndent()
+            |(y ?: 0).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -880,13 +969,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable18() {
         String original = '''\
-            def x = (y ?: 0)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (y ?: 0)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (y ?: 0).intValue()
-            '''.stripIndent()
+            |(y ?: 0).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -894,13 +983,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable19() {
         String original = '''\
-            def x = y ? 1 : 0
-            x.intValue()
-            '''.stripIndent()
+            |def x = y ? 1 : 0
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (y ? 1 : 0).intValue()
-            '''.stripIndent()
+            |(y ? 1 : 0).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -908,13 +997,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable20() {
         String original = '''\
-            def x = (y ? 1 : 0)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (y ? 1 : 0)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (y ? 1 : 0).intValue()
-            '''.stripIndent()
+            |(y ? 1 : 0).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -922,13 +1011,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable21() {
         String original = '''\
-            def x = (y) ? 1 : 0
-            x.intValue()
-            '''.stripIndent()
+            |def x = (y) ? 1 : 0
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            ((y) ? 1 : 0).intValue()
-            '''.stripIndent()
+            |((y) ? 1 : 0).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -936,13 +1025,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable22() {
         String original = '''\
-            def x = y ? 1 : (0)
-            x.intValue()
-            '''.stripIndent()
+            |def x = y ? 1 : (0)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (y ? 1 : (0)).intValue()
-            '''.stripIndent()
+            |(y ? 1 : (0)).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -950,13 +1039,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable23() {
         String original = '''\
-            def x = (y) ? (1) : (0)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (y) ? (1) : (0)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            ((y) ? (1) : (0)).intValue()
-            '''.stripIndent()
+            |((y) ? (1) : (0)).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -964,13 +1053,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable24() {
         String original = '''\
-            def x = y++
-            x.intValue()
-            '''.stripIndent()
+            |def x = y++
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (y++).intValue()
-            '''.stripIndent()
+            |(y++).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -978,13 +1067,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable25() {
         String original = '''\
-            def x = (y++)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (y++)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (y++).intValue()
-            '''.stripIndent()
+            |(y++).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -992,13 +1081,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable26() {
         String original = '''\
-            def x = y--
-            x.intValue()
-            '''.stripIndent()
+            |def x = y--
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (y--).intValue()
-            '''.stripIndent()
+            |(y--).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1006,13 +1095,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable27() {
         String original = '''\
-            def x = (y--)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (y--)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (y--).intValue()
-            '''.stripIndent()
+            |(y--).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1020,13 +1109,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable28() {
         String original = '''\
-            def x = ++y
-            x.intValue()
-            '''.stripIndent()
+            |def x = ++y
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (++y).intValue()
-            '''.stripIndent()
+            |(++y).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1034,13 +1123,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable29() {
         String original = '''\
-            def x = (++y)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (++y)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (++y).intValue()
-            '''.stripIndent()
+            |(++y).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1048,13 +1137,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable30() {
         String original = '''\
-            def x = --y
-            x.intValue()
-            '''.stripIndent()
+            |def x = --y
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (--y).intValue()
-            '''.stripIndent()
+            |(--y).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1062,13 +1151,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable31() {
         String original = '''\
-            def x = (--y)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (--y)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (--y).intValue()
-            '''.stripIndent()
+            |(--y).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1076,13 +1165,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable32() {
         String original = '''\
-            def x = !y
-            x.intValue()
-            '''.stripIndent()
+            |def x = !y
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (!y).intValue()
-            '''.stripIndent()
+            |(!y).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1090,13 +1179,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable33() {
         String original = '''\
-            def x = (!y)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (!y)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (!y).intValue()
-            '''.stripIndent()
+            |(!y).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1104,13 +1193,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable34() {
         String original = '''\
-            def x = -y
-            x.intValue()
-            '''.stripIndent()
+            |def x = -y
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (-y).intValue()
-            '''.stripIndent()
+            |(-y).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1118,13 +1207,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable35() {
         String original = '''\
-            def x = (-y)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (-y)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (-y).intValue()
-            '''.stripIndent()
+            |(-y).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1132,13 +1221,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable36() {
         String original = '''\
-            def x = +y
-            x.intValue()
-            '''.stripIndent()
+            |def x = +y
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (+y).intValue()
-            '''.stripIndent()
+            |(+y).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1146,13 +1235,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable37() {
         String original = '''\
-            def x = (+y)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (+y)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (+y).intValue()
-            '''.stripIndent()
+            |(+y).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1160,13 +1249,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable38() {
         String original = '''\
-            def x = ~/y/
-            x.intValue()
-            '''.stripIndent()
+            |def x = ~/y/
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (~/y/).intValue()
-            '''.stripIndent()
+            |(~/y/).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1174,13 +1263,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable39() {
         String original = '''\
-            def x = (~/y/)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (~/y/)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (~/y/).intValue()
-            '''.stripIndent()
+            |(~/y/).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1188,13 +1277,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable40() {
         String original = '''\
-            def x = 0..1
-            x.intValue()
-            '''.stripIndent()
+            |def x = 0..1
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (0..1).intValue()
-            '''.stripIndent()
+            |(0..1).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1202,13 +1291,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable41() {
         String original = '''\
-            def x = (0)..1
-            x.intValue()
-            '''.stripIndent()
+            |def x = (0)..1
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            ((0)..1).intValue()
-            '''.stripIndent()
+            |((0)..1).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1216,13 +1305,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable42() {
         String original = '''\
-            def x = 0..(1)
-            x.intValue()
-            '''.stripIndent()
+            |def x = 0..(1)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (0..(1)).intValue()
-            '''.stripIndent()
+            |(0..(1)).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1230,13 +1319,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable43() {
         String original = '''\
-            def x = (0)..(1)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (0)..(1)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            ((0)..(1)).intValue()
-            '''.stripIndent()
+            |((0)..(1)).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1244,13 +1333,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable44() {
         String original = '''\
-            def x = (0..1)
-            x.intValue()
-            '''.stripIndent()
+            |def x = (0..1)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (0..1).intValue()
-            '''.stripIndent()
+            |(0..1).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1258,13 +1347,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable45() {
         String original = '''\
-            def x = ((0)..1)
-            x.intValue()
-            '''.stripIndent()
+            |def x = ((0)..1)
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            ((0)..1).intValue()
-            '''.stripIndent()
+            |((0)..1).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1272,13 +1361,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable46() {
         String original = '''\
-            def x = (0..(1))
-            x.intValue()
-            '''.stripIndent()
+            |def x = (0..(1))
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (0..(1)).intValue()
-            '''.stripIndent()
+            |(0..(1)).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1286,13 +1375,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable47() {
         String original = '''\
-            def x = ((0)..(1))
-            x.intValue()
-            '''.stripIndent()
+            |def x = ((0)..(1))
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            ((0)..(1)).intValue()
-            '''.stripIndent()
+            |((0)..(1)).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1300,13 +1389,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable48() {
         String original = '''\
-            def x = a[1]
-            x.intValue()
-            '''.stripIndent()
+            |def x = a[1]
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            a[1].intValue()
-            '''.stripIndent()
+            |a[1].intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1314,13 +1403,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable49() {
         String original = '''\
-            def x = (a[1])
-            x.intValue()
-            '''.stripIndent()
+            |def x = (a[1])
+            |x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            (a[1]).intValue()
-            '''.stripIndent()
+            |(a[1]).intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1328,15 +1417,15 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable50() {
         String original = '''\
-            def x = 1
-            x.intValue()
-            def y = x.intValue()
-            '''.stripIndent()
+            |def x = 1
+            |x.intValue()
+            |def y = x.intValue()
+            |'''.stripMargin()
 
         String expected = '''\
-            1.intValue()
-            def y = 1.intValue()
-            '''.stripIndent()
+            |1.intValue()
+            |def y = 1.intValue()
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1344,25 +1433,25 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable51() {
         String original = '''\
-            def x = 1
-            x.intValue()
-            if (x == 42) {
-              def y = x.intValue()
-              println y
-            } else {
-              x.multiply(x)
-            }
-            '''.stripIndent()
+            |def x = 1
+            |x.intValue()
+            |if (x == 42) {
+            |  def y = x.intValue()
+            |  println y
+            |} else {
+            |  x.multiply(x)
+            |}
+            |'''.stripMargin()
 
         String expected = '''\
-            1.intValue()
-            if (1 == 42) {
-              def y = 1.intValue()
-              println y
-            } else {
-              1.multiply(1)
-            }
-            '''.stripIndent()
+            |1.intValue()
+            |if (1 == 42) {
+            |  def y = 1.intValue()
+            |  println y
+            |} else {
+            |  1.multiply(1)
+            |}
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1370,15 +1459,15 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable52() {
         String original = '''\
-            def x = 1
-            def y = x = 2
-            def sum = x + y
-            '''.stripIndent()
+            |def x = 1
+            |def y = x = 2
+            |def sum = x + y
+            |'''.stripMargin()
 
         String expected = '''\
-            def x = 1
-            def sum = x + (x = 2)
-            '''.stripIndent()
+            |def x = 1
+            |def sum = x + (x = 2)
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'y', new InlineLocalVariableProposal())
     }
@@ -1386,14 +1475,14 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test @NotYetImplemented
     void testInlineLocalVariable53() {
         String original = '''\
-            def x = 1, y = 2
-            def sum = x + y
-            '''.stripIndent()
+            |def x = 1, y = 2
+            |def sum = x + y
+            |'''.stripMargin()
 
         String expected = '''\
-            def y = 2
-            def sum = 1 + y
-            '''.stripIndent()
+            |def y = 2
+            |def sum = 1 + y
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
     }
@@ -1401,14 +1490,14 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test @NotYetImplemented
     void testInlineLocalVariable54() {
         String original = '''\
-            def x = 1, y = 2
-            def sum = x + y
-            '''.stripIndent()
+            |def x = 1, y = 2
+            |def sum = x + y
+            |'''.stripMargin()
 
         String expected = '''\
-            def x = 1
-            def sum = x + 2
-            '''.stripIndent()
+            |def x = 1
+            |def sum = x + 2
+            |'''.stripMargin()
 
         assertConversion(original, expected, 'y', new InlineLocalVariableProposal())
     }
@@ -1416,131 +1505,131 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testNoInlineLocalVariable1() {
         String contents = '''\
-            def x
-            '''.stripIndent()
+            |def x
+            |'''.stripMargin()
         assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
     }
 
     @Test
     void testNoInlineLocalVariable2() {
         String contents = '''\
-            def x = 1
-            '''.stripIndent()
+            |def x = 1
+            |'''.stripMargin()
         assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
     }
 
     @Test
     void testNoInlineLocalVariable3() {
         String contents = '''\
-            def x = 1
-            x += 1
-            '''.stripIndent()
+            |def x = 1
+            |x += 1
+            |'''.stripMargin()
         assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
     }
 
     @Test
     void testNoInlineLocalVariable4() {
         String contents = '''\
-            def x = 1
-            def y = x++
-            '''.stripIndent()
+            |def x = 1
+            |def y = x++
+            |'''.stripMargin()
         assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
     }
 
     @Test
     void testNoInlineLocalVariable4a() {
         String contents = '''\
-            def x = 1
-            def y = x--
-            '''.stripIndent()
+            |def x = 1
+            |def y = x--
+            |'''.stripMargin()
         assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
     }
 
     @Test
     void testNoInlineLocalVariable5() {
         String contents = '''\
-            def x = 1
-            def y = ++x
-            '''.stripIndent()
+            |def x = 1
+            |def y = ++x
+            |'''.stripMargin()
         assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
     }
 
     @Test
     void testNoInlineLocalVariable5a() {
         String contents = '''\
-            def x = 1
-            def y = --x
-            '''.stripIndent()
+            |def x = 1
+            |def y = --x
+            |'''.stripMargin()
         assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
     }
 
     @Test
     void testNoInlineLocalVariable6() {
         String contents = '''\
-            def x = 1
-            print x
-            x = 2
-            '''.stripIndent()
+            |def x = 1
+            |print x
+            |x = 2
+            |'''.stripMargin()
         assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
     }
 
     @Test
     void testNoInlineLocalVariable7() {
         String contents = '''\
-            for (int x = 0; x < n; x += 1) {
-            }
-            '''.stripIndent()
+            |for (int x = 0; x < n; x += 1) {
+            |}
+            |'''.stripMargin()
         assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
     }
 
     @Test
     void testNoInlineLocalVariable8() {
         String contents = '''\
-            for (Iterator it = [].iterator(); it.hasNext();) {
-              def item = it.next()
-            }
-            '''.stripIndent()
+            |for (Iterator it = [].iterator(); it.hasNext();) {
+            |  def item = it.next()
+            |}
+            |'''.stripMargin()
         assertProposalNotOffered(contents, contents.indexOf('it'), 1, new InlineLocalVariableProposal())
     }
 
     @Test
     void testNoInlineLocalVariable9() {
         String contents = '''\
-            try (def x = getClass().getResourceAsStream('')) {
-            }
-            '''.stripIndent()
+            |try (def x = getClass().getResourceAsStream('')) {
+            |}
+            |'''.stripMargin()
         assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
     }
 
     @Test
     void testNoInlineLocalVariable10() {
         String contents = '''\
-            def meth(int x = 0) {
-              x + 1
-            }
-            '''.stripIndent()
+            |def meth(int x = 0) {
+            |  x + 1
+            |}
+            |'''.stripMargin()
         assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
     }
 
     @Test
     void testNoInlineLocalVariable11() {
         String contents = '''\
-            class X {
-            int x = 0
-              def meth() {
-                x + 1
-              }
-            }
-            '''.stripIndent()
+            |class X {
+            |  int x = 0
+            |  def meth() {
+            |    x + 1
+            |  }
+            |}
+            |'''.stripMargin()
         assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
     }
 
     @Test
     void testNoInlineLocalVariable12() {
         String contents = '''\
-            def (x, y) = [1, 2]
-            def sum = x + y
-            '''.stripIndent()
+            |def (x, y) = [1, 2]
+            |def sum = x + y
+            |'''.stripMargin()
         assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
     }
 
@@ -1626,9 +1715,34 @@ final class QuickAssistTests extends QuickFixTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/393
     void testAssignStatementToNewLocalVariable11() {
-        String contents = 'class Foo { def bar() { return System.out } }'
-        int offset = contents.indexOf('System.out')
-        assertProposalNotOffered(contents, offset, offset + 'System.out'.length(), new AssignStatementToNewLocalProposal())
+        def source = 'class Foo { def bar() { return System.out } }'
+        def target = 'System.out'
+        int offset = source.indexOf(target)
+        assertProposalNotOffered(source, offset, offset + target.length(), new AssignStatementToNewLocalProposal())
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1068
+    void testAssignStatementToNewLocalVariable12() {
+        def source = 'package p'
+        assertProposalNotOffered(source, 0, 0, new AssignStatementToNewLocalProposal())
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1068
+    void testAssignStatementToNewLocalVariable13() {
+        def source = 'import groovy.lang.GroovyObject'
+        assertProposalNotOffered(source, 0, 0, new AssignStatementToNewLocalProposal())
+    }
+
+    @Test
+    void testAssignStatementToNewLocalVariable14() {
+        def source = 'package p\n\nimport groovy.lang.GroovyObject\n'
+        assertProposalNotOffered(source, source.indexOf('import'), 0, new AssignStatementToNewLocalProposal())
+    }
+
+    @Test
+    void testAssignStatementToNewLocalVariable15() {
+        def source = 'package p\n\n@groovy.transform.Field Object o\n'
+        assertProposalNotOffered(source, source.indexOf('@'), 0, new AssignStatementToNewLocalProposal())
     }
 
     @Test
@@ -1848,117 +1962,117 @@ final class QuickAssistTests extends QuickFixTestSuite {
 
     @Test
     void testExtractToField_MethodToModule() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testMethodToModule')
-        assertConversion(testCase.getInput(), testCase.getExpected(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testMethodToModule')
+        assertConversion(testCase.input, testCase.expected, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_ClosureToModule() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testClosureToModule')
-        assertConversion(testCase.getInput(), testCase.getExpected(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testClosureToModule')
+        assertConversion(testCase.input, testCase.expected, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_DeclarationWithDef() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testDeclarationWithDef')
-        assertConversion(testCase.getInput(), testCase.getExpected(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testDeclarationWithDef')
+        assertConversion(testCase.input, testCase.expected, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_DeclarationWithType() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testDeclarationWithType')
-        assertConversion(testCase.getInput(), testCase.getExpected(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testDeclarationWithType')
+        assertConversion(testCase.input, testCase.expected, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_Reference() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testReference')
-        assertConversion(testCase.getInput(), testCase.getExpected(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testReference')
+        assertConversion(testCase.input, testCase.expected, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_TupleDeclaration() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testTupleDeclaration')
-        assertProposalNotOffered(testCase.getInput(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testTupleDeclaration')
+        assertProposalNotOffered(testCase.input, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_Initialization() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testInitialization')
-        assertConversion(testCase.getInput(), testCase.getExpected(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testInitialization')
+        assertConversion(testCase.input, testCase.expected, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_FieldReference() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testFieldReference')
-        assertProposalNotOffered(testCase.getInput(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testFieldReference')
+        assertProposalNotOffered(testCase.input, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_Exception() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testException')
-        assertProposalNotOffered(testCase.getInput(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testException')
+        assertProposalNotOffered(testCase.input, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_Prefix() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testPrefix')
-        assertConversion(testCase.getInput(), testCase.getExpected(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testPrefix')
+        assertConversion(testCase.input, testCase.expected, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_MethodInvocation() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testMethodInvocation')
-        assertConversion(testCase.getInput(), testCase.getExpected(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testMethodInvocation')
+        assertConversion(testCase.input, testCase.expected, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_ParameterList() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testParameterList')
-        assertProposalNotOffered(testCase.getInput(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testParameterList')
+        assertProposalNotOffered(testCase.input, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_ArgumentList() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testArgumentList')
-        assertConversion(testCase.getInput(), testCase.getExpected(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testArgumentList')
+        assertConversion(testCase.input, testCase.expected, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_InnerClass() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testInnerClass')
-        assertConversion(testCase.getInput(), testCase.getExpected(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testInnerClass')
+        assertConversion(testCase.input, testCase.expected, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_FakeField() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testFakeField')
-        assertConversion(testCase.getInput(), testCase.getExpected(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testFakeField')
+        assertConversion(testCase.input, testCase.expected, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_ClosureParameterList() {
-        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testClosureParameterList')
-        assertProposalNotOffered(testCase.getInput(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.testCases.get('testClosureParameterList')
+        assertProposalNotOffered(testCase.input, testCase.selectionOffset, testCase.selectionLength, new ConvertVariableToFieldProposal())
     }
 
     //
 
     private void assertConversion(String original, String expected, String target, GroovyQuickAssistProposal proposal) {
-        int offset = (target == null ? 0 : original.indexOf(target)),
+        int offset = (target == null ? 0 : original.lastIndexOf(target)),
             length = (target == null ? 0 : target.length())
         assertConversion(original, expected, offset, length, proposal)
     }
 
     private void assertConversion(String original, String expected, int offset, int length, GroovyQuickAssistProposal proposal) {
         GroovyQuickAssistContext context = new GroovyQuickAssistContext(new AssistContext(addGroovySource(original), offset, length))
-        assertTrue("Expected proposal \"${ -> proposal.displayString }\" to be relevant", proposal.withContext(context).getRelevance() > 0)
+        assertTrue("Expected proposal '${ -> proposal.displayString }' to be relevant", proposal.withContext(context).relevance > 0)
         IDocument document = context.newTempDocument(); proposal.apply(document)
         assertEquals('Invalid application of quick assist', expected, document.get())
     }
 
     private void assertProposalNotOffered(String original, int offset, int length, GroovyQuickAssistProposal proposal) {
         GroovyQuickAssistContext context = new GroovyQuickAssistContext(new AssistContext(addGroovySource(original), offset, length))
-        assertFalse("Expected proposal \"${ -> proposal.displayString }\" to be irrelevant", proposal.withContext(context).getRelevance() > 0)
+        assertFalse("Expected proposal '${ -> proposal.displayString }' to be irrelevant", proposal.withContext(context).relevance > 0)
     }
 }

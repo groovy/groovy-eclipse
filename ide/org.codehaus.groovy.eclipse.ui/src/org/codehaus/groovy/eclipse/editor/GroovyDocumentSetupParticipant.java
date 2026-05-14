@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,7 +25,7 @@ import org.eclipse.jface.text.rules.FastPartitioner;
 public class GroovyDocumentSetupParticipant  implements IDocumentSetupParticipant {
 
     @Override
-    public void setup(IDocument document) {
+    public void setup(final IDocument document) {
         setupJavaDocumentPartitioner(document, IJavaPartitions.JAVA_PARTITIONING);
     }
 
@@ -35,10 +35,10 @@ public class GroovyDocumentSetupParticipant  implements IDocumentSetupParticipan
      * @param document the document to be set up
      * @param partitioning the document partitioning
      */
-    private void setupJavaDocumentPartitioner(IDocument document, String partitioning) {
-        IDocumentPartitioner partitioner= createDocumentPartitioner();
+    private void setupJavaDocumentPartitioner(final IDocument document, final String partitioning) {
+        IDocumentPartitioner partitioner = createDocumentPartitioner();
         if (document instanceof IDocumentExtension3) {
-            IDocumentExtension3 extension3= (IDocumentExtension3) document;
+            IDocumentExtension3 extension3 = (IDocumentExtension3) document;
             extension3.setDocumentPartitioner(partitioning, partitioner);
         } else {
             document.setDocumentPartitioner(partitioner);

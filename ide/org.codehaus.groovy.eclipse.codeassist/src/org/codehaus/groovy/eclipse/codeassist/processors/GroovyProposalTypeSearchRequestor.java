@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.beans.Introspector;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -82,8 +83,8 @@ import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
+import org.eclipse.jdt.internal.compiler.util.SimpleSetOfCharArray;
 import org.eclipse.jdt.internal.core.NameLookup;
-import org.eclipse.jdt.internal.core.nd.util.CharArrayMap;
 import org.eclipse.jdt.internal.corext.util.TypeFilter;
 import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.JavaTypeCompletionProposal;
@@ -112,8 +113,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     private int foundConstructorsCount;
 
     private ObjectVector acceptedTypes;
-    private CharArrayMap<?> acceptedPackages;
     private ObjectVector acceptedConstructors;
+    private SimpleSetOfCharArray acceptedPackages;
 
     /** Array of simple name, fully-qualified name pairs. Default imports should be included (aka BigDecimal, etc.). */
     private char[][][] imports;
@@ -189,8 +190,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         }
 
         if (acceptedPackages == null)
-            acceptedPackages = new CharArrayMap<>();
-        acceptedPackages.put(packageName, null);
+            acceptedPackages = new SimpleSetOfCharArray();
+        acceptedPackages.add(packageName);
     }
 
     @Override
@@ -368,7 +369,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             return Collections.emptyList();
         }
 
-        return acceptedPackages.keys().stream()
+        return Stream.of(acceptedPackages.values).filter(Objects::nonNull)
             .map(packageName -> {
                 GroovyCompletionProposal proposal = createProposal(CompletionProposal.PACKAGE_REF, context.completionLocation);
                 proposal.setDeclarationSignature(packageName);
@@ -488,7 +489,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         proposal.setDeclarationSignature(type.packageName);
         proposal.setFlags(type.modifiers);
         proposal.setPackageName(type.packageName);
-        proposal.setRelevance(computeRelevanceForTypeProposal(type.fullyQualifiedName, type.accessibility, type.modifiers));
+        proposal.setRelevance(computeRelevanceForTypeProposal(type.fullyQualifiedName, type.simpleTypeName, type.accessibility, type.modifiers));
         proposal.setReplaceRange(completionOffset, context.completionLocation);
         proposal.setSignature(Signature.createCharArrayTypeSignature(type.fullyQualifiedName, true));
         proposal.setTokenRange(completionOffset, context.completionEnd);
@@ -580,14 +581,14 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                                     // instead of proposing no-arg constructor, propose type's properties as named arguments
                                     proposals.remove(constructorProposal);
                                     for (PropertyNode prop : GeneralUtils.getAllProperties(resolved)) { String name = prop.getName();
-                                        if (!"metaClass".equals(name) && !usedParams.contains(name) && ProposalUtils.matches(context.completionExpression, name, options.camelCaseMatch, options.substringMatch)) {
+                                        if (!"metaClass".equals(name) && !usedParams.contains(name) && ProposalUtils.matches(context.completionExpression, name, options.camelCaseMatch, options.subwordMatch)) {
                                             GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(name, prop.getType(), null, String.valueOf(ctor.simpleTypeName));
                                             proposals.add(namedArgument.createJavaProposal(context, javaContext));
                                         }
                                     }
                                     for (MethodNode meth : resolved.getMethods()) {
                                         if (!meth.isStatic() && AccessorSupport.isSetter(meth)) { String name = Introspector.decapitalize(meth.getName().substring(3));
-                                            if (!"metaClass".equals(name) && !usedParams.contains(name) && GeneralUtils.getAllProperties(resolved).stream().noneMatch(p -> p.getName().equals(name)) && ProposalUtils.matches(context.completionExpression, name, options.camelCaseMatch, options.substringMatch)) {
+                                            if (!"metaClass".equals(name) && !usedParams.contains(name) && GeneralUtils.getAllProperties(resolved).stream().noneMatch(p -> p.getName().equals(name)) && ProposalUtils.matches(context.completionExpression, name, options.camelCaseMatch, options.subwordMatch)) {
                                                 GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(name, meth.getParameters()[0].getType(), null, String.valueOf(ctor.simpleTypeName));
                                                 proposals.add(namedArgument.createJavaProposal(context, javaContext));
                                             }
@@ -696,7 +697,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
         // TODO: Leverage IRelevanceRule for this?
         float relevanceMultiplier = (ctor.accessibility == IAccessRule.K_ACCESSIBLE ? 3 : 0);
-        relevanceMultiplier += computeRelevanceForCaseMatching(completionExpressionChars, ctor.simpleTypeName);
+        relevanceMultiplier += computeRelevanceForCaseMatching(CharOperation.lastSegment(completionExpressionChars, '.'), ctor.simpleTypeName);
         proposal.setRelevance(Relevance.MEDIUM_HIGH.getRelevance(relevanceMultiplier));
 
         GroovyJavaMethodCompletionProposal lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, getProposalOptions(), javaContext, null);
@@ -788,9 +789,20 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         return 0;
     }
 
-    private int computeRelevanceForTypeProposal(char[] fullyQualifiedName, int accessibility, int modifiers) {
+    private int computeRelevanceForTypeProposal(char[] fullyQualifiedName, char[] simpleTypeName, int accessibility, int modifiers) {
         IRelevanceRule rule = Optional.ofNullable(relevanceRule).orElse(IRelevanceRule.DEFAULT);
-        return rule.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers);
+        int r = rule.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers);
+
+        final char[] expression = context.completionExpression.toCharArray();
+        if (CharOperation.equals(expression, simpleTypeName, /*case*/true)) {
+            r += RelevanceConstants.R_CASE + RelevanceConstants.R_EXACT_NAME;
+        } else if (CharOperation.equals(expression, simpleTypeName, false)) {
+            r += RelevanceConstants.R_EXACT_NAME;
+        } else if (!CharOperation.prefixEquals(expression, simpleTypeName)) {
+            r -= 5;
+        }
+
+        return Math.max(1, r);
     }
 
     private void initializeRelevanceRule(JDTResolver resolver) {

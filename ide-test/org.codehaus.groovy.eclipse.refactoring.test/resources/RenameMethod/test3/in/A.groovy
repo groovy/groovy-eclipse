@@ -22,9 +22,7 @@ class D {
             x.m
             x.m()
         }
-        m
-        m()
-        this.m
-        this.m()
+        A.&m
+        A.m()
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 
 import static org.eclipse.jdt.core.IJavaElement.TYPE
 
-import org.codehaus.groovy.ast.MethodNode
-import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryMethod
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IMethod
@@ -28,71 +26,63 @@ import org.junit.Test
 
 final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
+    private IMethod assertConstructor(final CharSequence contents, final String toSearch) {
+        def unit = addGroovySource(contents, nextUnitName(), 'p')
+        prepareForCodeSelect(unit)
+
+        IJavaElement[] elements = unit.codeSelect(unit.source.lastIndexOf(toSearch), toSearch.length())
+        assert elements.length == 1 : 'Should have found a selection'
+
+        String elementName = toSearch.substring(toSearch.lastIndexOf((int) '.') + 1)
+        assert elements[0].elementName == elementName : "Should have found constructor '$elementName'"
+        assert elements[0].isConstructor() : 'Should be a constructor'
+        return elements[0]
+    }
+
     @Test
     void testCodeSelectDefaultParams1() {
-        String one = 'class Structure {\n  def meth(int a, int b = 9, int c=8) {}\n}'
-        String two = 'class Java { { new Structure().meth(0, 0, 0); } }'
-        assertCodeSelect([one, two, 'new Structure().meth()'], 'meth')
+        String one = 'class One {\n  def m(int a, int b = 1, int c = 2) {}\n}'
+        String two = 'class Two {\n  {\n\tnew One().m(0, 0, 0)\n  }\n}'
+        assertCodeSelect([one, two], 'm')
     }
 
     @Test
     void testCodeSelectDefaultParams2() {
-        String one = 'class Structure {\n  def meth(int a, int b = 9, int c=8) {}\n}'
-        String two = 'class Java { { new Structure().meth(0); } }'
-        assertCodeSelect([one, two, 'new Structure().meth(0)'], 'meth')
+        String one = 'class One {\n  def m(int a, int b = 1, int c = 2) {}\n}'
+        String two = 'class Two {\n  {\n\tnew One().m(0, 0)\n  }\n}'
+        assertCodeSelect([one, two], 'm')
     }
 
     @Test
     void testCodeSelectDefaultParams3() {
-        String one = 'class Structure {\n  def meth(int a, int b = 9, int c=8) {}\n}'
-        String two = 'class Java { { new Structure().meth(0, 0); } }'
-        assertCodeSelect([one, two, 'new Structure().meth(0, 0)'], 'meth')
+        String one = 'class One {\n  def m(int a, int b = 1, int c = 2) {}\n}'
+        String two = 'class Two {\n  {\n\tnew One().m(0)\n  }\n}'
+        assertCodeSelect([one, two], 'm')
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/794
     void testCodeSelectDefaultParams4() {
-        String one = 'class Structure {\n  def meth(int a, int b = 9, int c=8) {}\n}'
-        String two = 'class Java { { new Structure().meth(0, 0, 0); } }'
-        assertCodeSelect([one, two, 'new Structure().meth(0, 0, 0)'], 'meth')
+        def unit = addGroovySource('class C {\n  def m(a, b = 1, c = 2) {}\n}', nextUnitName(), 'p')
+        prepareForCodeSelect(unit)
+
+        IJavaElement[] elements = unit.codeSelect(unit.source.lastIndexOf((int) 'm'), 1)
+        assert elements.length == 3 : 'Should have found three choices'
     }
 
-    @Test
-    void testCodeSelectGenericMethod1() {
-        String contents = '[a: Number].keySet()'
-        IJavaElement elem = assertCodeSelect([contents], 'keySet')
-        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).inferredElement)
-        assert method.returnType.toString(false) == 'java.util.Set <java.lang.String>'
-    }
+    @Test // https://github.com/groovy/groovy-eclipse/issues/794
+    void testCodeSelectDefaultParams5() {
+        def unit = addGroovySource('class C {\n  C(a, b = 1, c = 2) {}\n}', nextUnitName(), 'p')
+        prepareForCodeSelect(unit)
 
-    @Test
-    void testCodeSelectGenericMethod2() {
-        String contents = '[a: Number].values()'
-        IJavaElement elem = assertCodeSelect([contents], 'values')
-        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).inferredElement)
-        assert method.returnType.toString(false) == 'java.util.Collection <java.lang.Class>'
-    }
-
-    @Test
-    void testCodeSelectGenericMethod3() {
-        String contents = '[a: Number].entrySet()'
-        IJavaElement elem = assertCodeSelect([contents], 'entrySet')
-        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).inferredElement)
-        assert method.returnType.toString(false) == 'java.util.Set <java.util.Map$Entry>'
-    }
-
-    @Test
-    void testCodeSelectGenericCategoryMethod3() {
-        String contents = '[a: Number].getAt("a")'
-        IJavaElement elem = assertCodeSelect([contents], 'getAt')
-        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).inferredElement)
-        assert method.returnType.toString(false) == 'java.lang.Class <java.lang.Number>'
+        IJavaElement[] elements = unit.codeSelect(unit.source.lastIndexOf((int) 'C'), 1)
+        assert elements.length == 3 : 'Should have found three choices'
     }
 
     @Test
     void testCodeSelectClosure() {
         String contents = 'def x = { t -> print t }\nx("hello")'
-        IJavaElement elem = assertCodeSelect([contents], 'x')
-        assert elem.typeSignature =~ 'groovy.lang.Closure'
+        IJavaElement element = assertCodeSelect([contents], 'x')
+        assert element.typeSignature =~ 'groovy.lang.Closure'
     }
 
     @Test
@@ -109,17 +99,36 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectMethodInClass() {
-        String contents = 'class PlantController {\ndef redirect(controller, action) { }\n' +
-            'def checkUser() {\nredirect(controller:"user",action:"login")\n}}\n'
+        String contents = '''\
+            |class PlantController {
+            |  def redirect(Map args) {
+            |  }
+            |  def checkUser() {
+            |    redirect(controller:'user', action:'login')
+            |  }
+            |}
+            |'''.stripMargin()
         assertCodeSelect([contents], 'redirect')
     }
 
     @Test
     void testCodeSelectMethodInOtherClass() {
-        String contents = 'class PlantController {\ndef redirect(controller, action) { }\n' +
-            'def checkUser() {\nredirect(controller:\"user\",action:\"login\")\n}}\n'
-        String contents2 =
-            'class Other {\ndef doNothing() {\nnew PlantController().redirect(controller:\"user\",action:\"login\")\n}}'
+        String contents = '''\
+            |class PlantController {
+            |  def redirect(Map args) {
+            |  }
+            |  def checkUser() {
+            |    redirect(controller:'user', action:'login')
+            |  }
+            |}
+            |'''.stripMargin()
+        String contents2 = '''\
+            |class Other {
+            |  def whatever() {
+            |    new PlantController().redirect(controller:'user', action:'login')
+            |  }
+            |}
+            |'''.stripMargin()
 
         assertCodeSelect([contents, contents2], 'redirect')
     }
@@ -128,19 +137,20 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     void testCodeSelectMethodInSuperClass() {
         String contents1 = '''\
             |class PlantController {
-            |  def redirect(controller, action) { }
+            |  def redirect(Map args) {
+            |  }
             |}
             |'''.stripMargin()
         String contents2 = '''\
             |class Other extends PlantController {
             |  def checkUser() {
-            |    redirect(controller: 'user', action: 'login')
+            |    redirect(controller:'user', action:'login')
             |  }
             |}
             |'''.stripMargin()
 
-        IJavaElement elem = assertCodeSelect([contents1, contents2], 'redirect')
-        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'PlantController'
+        IJavaElement element = assertCodeSelect([contents1, contents2], 'redirect')
+        assert element.declaringType.fullyQualifiedName == 'PlantController'
     }
 
     @Test // GRECLIPSE-1755
@@ -170,8 +180,41 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |}
             |'''.stripMargin()
 
-        IJavaElement elem = assertCodeSelect([contents1, contents2, contents3, contents4], 'foo')
-        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'SuperInterface'
+        IJavaElement element = assertCodeSelect([contents1, contents2, contents3, contents4], 'foo')
+        assert element.declaringType.fullyQualifiedName == 'SuperInterface'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1457
+    void testCodeSelectMethodInParameterizedClass() {
+        String contents = '''\
+            |class Foo<Bar> {
+            |  Set<Bar> meth(Set<Bar> bars) {
+            |  }
+            |  void test() {
+            |    def returnValue = meth(null)
+            |  }
+            |}
+            |'''.stripMargin()
+        IJavaElement element = assertCodeSelect([contents], 'meth')
+        assert element.key == 'LFoo;.meth(Ljava/util/Set<TBar;>;)Ljava/util/Set<TBar;>;'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1588
+    void testCodeSelectMethodOfParameterizedField() {
+        String contents = '''\
+            |class Foo<Bar> {
+            |  Set<Bar> bars
+            |  void test() {
+            |    bars.add(null)
+            |    bars.findAll()
+            |  }
+            |}
+            |'''.stripMargin()
+        IJavaElement element = assertCodeSelect([contents], 'add')
+        assert element.key == 'Ljava/util/Set;.add(TBar;)Z'
+
+        element = assertCodeSelect([contents], 'findAll')
+        assert element.key == 'Lorg/codehaus/groovy/runtime/DefaultGroovyMethods;.findAll(Ljava/util/Set<TBar;>;)Ljava/util/Set<TBar;>;'
     }
 
     @Test
@@ -251,7 +294,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'x')
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1152
     void testCodeSelectStaticMethodFromTrait1() {
         String contents = '''\
             |trait Trait {
@@ -261,7 +304,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |  }
             |}
             |'''.stripMargin()
-        assertCodeSelect([contents], 'x')
+        assertCodeSelect([contents], 'x', null)
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/755
@@ -289,29 +332,118 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |  }
             |}
             |'''.stripMargin()
-        IJavaElement elem = assertCodeSelect([contents], 'x')
-        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'T'
+        IJavaElement element = assertCodeSelect([contents], 'x')
+        assert element.declaringType.fullyQualifiedName == 'T'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/960
+    void testCodeSelectStaticMethodFromTrait4() {
+        String contents = '''\
+            |trait T {
+            |  Number number
+            |}
+            |class C implements T {
+            |  def m() {
+            |    getNumber()
+            |  }
+            |}
+            |'''.stripMargin()
+        IJavaElement element = assertCodeSelect([contents], 'getNumber')
+        assert element.declaringType.fullyQualifiedName == 'T'
+        assert element.elementInfo.nameSourceStart == contents.indexOf('number')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/960
+    void testCodeSelectStaticMethodFromTrait5() {
+        String contents = '''\
+            |trait T {
+            |  Number number
+            |}
+            |class C implements T {
+            |  def m() {
+            |    setNumber(42)
+            |  }
+            |}
+            |'''.stripMargin()
+        IJavaElement element = assertCodeSelect([contents], 'setNumber')
+        assert element.declaringType.fullyQualifiedName == 'T'
+        assert element.elementInfo.nameSourceStart == contents.indexOf('number')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/960
+    void testCodeSelectStaticMethodFromTrait6() {
+        String contents = '''\
+            |trait T {
+            |  boolean condition
+            |}
+            |class C implements T {
+            |  def m() {
+            |    isCondition()
+            |  }
+            |}
+            |'''.stripMargin()
+        IJavaElement element = assertCodeSelect([contents], 'isCondition')
+        assert element.declaringType.fullyQualifiedName == 'T'
+        assert element.elementInfo.nameSourceStart == contents.indexOf('condition')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1113
+    void testCodeSelectStaticMethodFromTrait7() {
+        String contents1 = '''\
+            |trait T {
+            |  def p
+            |}
+            |'''.stripMargin()
+        String contents2 = '''\
+            |class C implements T {
+            |  def m() {
+            |    getP()
+            |  }
+            |}
+            |'''.stripMargin()
+        IJavaElement element = assertCodeSelect([contents1, contents2], 'getP')
+        assert element.declaringType.fullyQualifiedName == 'T'
+        assert element.elementInfo.nameSourceStart == 16
+    }
+
+    @Test
+    void testCodeSelectStaticMethodFromTrait8() {
+        String contents1 = '''\
+            |trait T {
+            |  int p
+            |}
+            |'''.stripMargin()
+        String contents2 = '''\
+            |class C implements T {
+            |  def m() {
+            |    getP()
+            |  }
+            |}
+            |'''.stripMargin()
+        IJavaElement element = assertCodeSelect([contents1, contents2], 'getP')
+        assert element.declaringType.fullyQualifiedName == 'T'
+        assert element.elementInfo.nameSourceStart == 16
     }
 
     @Test
     void testCodeSelectStaticMethodInOtherClass() {
-        String contents = '''\
+        String contents1 = '''\
             |class PlantController {
-            |  static def redirect(controller, action) {
+            |  static def redirect(Map args) {
             |  }
             |  def checkUser() {
-            |    redirect(controller:"user", action:"login")
+            |    redirect(controller:'user', action:'login')
             |  }
             |}
             |'''.stripMargin()
         String contents2 = '''\
             |class Other {
-            |  def doNothing() {
-            |    PlantController.redirect(controller:"user", action:"login")
+            |  def whatever() {
+            |    PlantController.redirect(controller:'user', action:'login')
             |  }
             |}
             |'''.stripMargin()
-        assertCodeSelect([contents, contents2], 'redirect')
+        assertCodeSelect([contents1, contents2], 'redirect')
     }
 
     @Test
@@ -330,7 +462,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectStaticMethodInSuperClass() {
-        String contents = '''\
+        String contents1 = '''\
             |class PlantController {
             |  static def redirect(controller, action) {
             |  }
@@ -346,7 +478,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |  }
             |}
             |'''.stripMargin()
-        assertCodeSelect([contents, contents2], 'redirect')
+        assertCodeSelect([contents1, contents2], 'redirect')
     }
 
     @Test
@@ -364,33 +496,48 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectStaticMethod1() {
         String contents = 'class Parent {\n  static p() {}\n}\nclass Child extends Parent {\n  def c() {\n    p()\n  }\n}'
-        IJavaElement elem = assertCodeSelect([contents], 'p')
-        assert elem.parent.elementName == 'Parent'
+        IJavaElement element = assertCodeSelect([contents], 'p')
+        assert element.parent.elementName == 'Parent'
     }
 
     @Test
     void testCodeSelectStaticMethod2() {
         String another = 'class Parent {\n    static p() {}\n}'
         String contents = 'class Child extends Parent {\n  def c() {\n    p()\n  }\n}'
-        IJavaElement elem = assertCodeSelect([another, contents], 'p')
-        assert elem.parent.elementName == 'Parent'
+        IJavaElement element = assertCodeSelect([another, contents], 'p')
+        assert element.parent.elementName == 'Parent'
     }
 
     @Test
     void testCodeSelectStaticMethod3() {
-        String contents = 'class Foo { def m() { java.util.Collections.<Object>emptyList() } }'
+        String contents = 'def list = java.util.Collections.<Object>emptyList()'
         assertCodeSelect([contents], 'Collections')
+        IJavaElement element = assertCodeSelect([contents], 'emptyList')
+        assert element.inferredElement.returnType.toString(false) == 'java.util.List<java.lang.Object>'
+        assert element.key == 'Ljava/util/Collections;.emptyList()Ljava/util/List<Ljava/lang/Object;>;'
     }
 
     @Test
     void testCodeSelectStaticMethod4() {
-        String contents = 'List<String> empty = Collections.&emptyList'
-        IJavaElement elem = assertCodeSelect([contents], 'emptyList')
-        assert elem.inferredElement.returnType.toString(false) == 'java.util.List <T>' // want T to be java.lang.String
+        String contents = 'java.util.function.Supplier<String> getter = Collections.&emptyList'
+        IJavaElement element = assertCodeSelect([contents], 'emptyList')
+        assert element.inferredElement.returnType.toString(false) == 'java.util.List<java.lang.String>'
+        assert element.key == 'Ljava/util/Collections;.emptyList()Ljava/util/List<Ljava/lang/String;>;'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1595
+    void testCodeSelectStaticMethod5() {
+        String contents = '''\
+            |@groovy.transform.TypeChecked test() {
+            |  def list = Collections.emptyList()
+            |}'''.stripMargin()
+        IJavaElement element = assertCodeSelect([contents], 'emptyList')
+        assert element.inferredElement.returnType.toString(false) == 'java.util.List<#T>'
+        assert element.key == 'Ljava/util/Collections;.emptyList()Ljava/util/List<T!T;>;'
     }
 
     @Test
-    void testCodeSelectStaticMethod5() {
+    void testCodeSelectStaticMethod6() {
         String contents = '''\
             |import static java.util.Collections.singletonList
             |@groovy.transform.TypeChecked
@@ -399,12 +546,13 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |    singletonList("")
             |  }
             |}'''.stripMargin()
-        IJavaElement elem = assertCodeSelect([contents], 'singletonList')
-        assert elem.inferredElement.returnType.toString(false) == 'java.util.List <java.lang.String>'
+        IJavaElement element = assertCodeSelect([contents], 'singletonList')
+        assert element.inferredElement.returnType.toString(false) == 'java.util.List<java.lang.String>'
+        assert element.key == 'Ljava/util/Collections;.singletonList(Ljava/lang/String;)Ljava/util/List<Ljava/lang/String;>;'
     }
 
     @Test
-    void testCodeSelectStaticMethod6() {
+    void testCodeSelectStaticMethod7() {
         String contents = '''\
             |@groovy.transform.Sortable
             |class Foo {
@@ -412,34 +560,34 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |}
             |Foo.comparatorByNumber()
             |'''.stripMargin()
-        IJavaElement elem = assertCodeSelect([contents], 'comparatorByNumber')
-        assert elem.inferredElement.returnType.toString(false) == 'java.util.Comparator'
+        IJavaElement element = assertCodeSelect([contents], 'comparatorByNumber')
+        assert element.inferredElement.returnType.toString(false) == 'java.util.Comparator'
     }
 
     @Test
-    void testCodeSelectStaticMethod7() {
+    void testCodeSelectStaticMethod8() {
         String contents = '''\
             |@Singleton(property='foo')
             |class Foo {
             |}
             |Foo.getFoo()
             |'''.stripMargin()
-        IJavaElement elem = assertCodeSelect([contents], 'getFoo')
-        assert elem.inferredElement.returnType.toString(false) == 'Foo'
+        IJavaElement element = assertCodeSelect([contents], 'getFoo')
+        assert element.inferredElement.returnType.toString(false) == 'Foo'
     }
 
     @Test // GRECLIPSE-831
     void testCodeSelectOverloadedMethod1() {
         String contents = '\"\".substring(0)'
-        IJavaElement elem = assertCodeSelect([contents], 'substring')
-        assert elem.parameterTypes.length == 1 : 'Wrong number of parameters to method'
+        IJavaElement element = assertCodeSelect([contents], 'substring')
+        assert element.parameterTypes.length == 1 : 'Wrong number of parameters to method'
     }
 
     @Test // GRECLIPSE-831
     void testCodeSelectOverloadedMethod2() {
         String contents = '"".substring(0,1)'
-        IJavaElement elem = assertCodeSelect([contents], 'substring')
-        assert elem.parameterTypes.length == 2 : 'Wrong number of parameters to method'
+        IJavaElement element = assertCodeSelect([contents], 'substring')
+        assert element.parameterTypes.length == 2 : 'Wrong number of parameters to method'
     }
 
     @Test
@@ -477,6 +625,21 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         // Is cancel member handled properly?
         assertCodeSelect([contents], 'verb')
         assertCodeSelect([contents], 'noun')
+
+        contents = '''\
+            |class C {
+            |  enum E {
+            |    X {
+            |      def m(p) {
+            |        support()
+            |      }
+            |    }
+            |    abstract def m(p)
+            |    static def support() {}
+            |  }
+            |}
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'support')
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/420
@@ -492,9 +655,8 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |  }
             |}
             |'''.stripMargin()
-
-        IJavaElement elem = assertCodeSelect([contents], 'compute')
-        assert elem.sourceRange.offset > 0
+        IJavaElement element = assertCodeSelect([contents], 'compute')
+        assert element.sourceRange.offset > 0
     }
 
     @Test
@@ -507,72 +669,72 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectNamedArguments1() {
         String contents = '''\
-            void meth(Map agrs) {}
-            meth(one: null, two: Date)
-            '''.stripIndent()
+            |void meth(Map agrs) {}
+            |meth(one: null, two: Date)
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Date')
     }
 
     @Test
     void testCodeSelectNamedArguments2() {
         String contents = '''\
-            void meth(Map agrs, int three) {}
-            meth(one: null, two: Date, 3)
-            '''.stripIndent()
+            |void meth(Map agrs, int three) {}
+            |meth(one: null, two: Date, 3)
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Date')
     }
 
     @Test
     void testCodeSelectNamedArguments2a() {
         String contents = '''\
-            void meth(Map agrs, int three) {}
-            meth(one: null, 3, two: Date)
-            '''.stripIndent()
+            |void meth(Map agrs, int three) {}
+            |meth(one: null, 3, two: Date)
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Date')
     }
 
     @Test
     void testCodeSelectNamedArguments2b() {
         String contents = '''\
-            void meth(Map agrs, int three) {}
-            meth(3, two: Date, one: null)
-            '''.stripIndent()
+            |void meth(Map agrs, int three) {}
+            |meth(3, two: Date, one: null)
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Date')
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/827
     void testCodeSelectNamedArguments3() {
         String contents = '''\
-            void meth(Map agrs, Class type) {}
-            meth(one: null, two: null, Date)
-            '''.stripIndent()
+            |void meth(Map agrs, Class type) {}
+            |meth(one: null, two: null, Date)
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Date')
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/827
     void testCodeSelectNamedArguments3a() {
         String contents = '''\
-            void meth(Map agrs, Class type) {}
-            meth(one: null, Date, two: null)
-            '''.stripIndent()
+            |void meth(Map agrs, Class type) {}
+            |meth(one: null, Date, two: null)
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Date')
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/827
     void testCodeSelectNamedArguments3b() {
         String contents = '''\
-            void meth(Map agrs, Class type) {}
-            meth(Date, one: null, two: null)
-            '''.stripIndent()
+            |void meth(Map agrs, Class type) {}
+            |meth(Date, one: null, two: null)
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Date')
     }
 
     @Test
     void testCodeSelectConstructor() {
         String contents = 'def x = new java.util.Date()'
-        IJavaElement elem = assertCodeSelect([contents], 'Date')
-        assert elem instanceof IMethod : 'Expected method not type'
-        assert elem.isConstructor() : 'Expected ctor not method'
+        IJavaElement element = assertCodeSelect([contents], 'Date')
+        assert element instanceof IMethod : 'Expected method not type'
+        assert element.isConstructor() : 'Expected ctor not method'
 
         // check the preceding elements for selection bleedthrough
         assertCodeSelect([contents], 'util', 'java.util')
@@ -584,24 +746,24 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectNewifyConstructor1() {
         String contents = 'class Foo { @Newify(Date) def x = Date(123L) }'
-        IJavaElement elem = assertCodeSelect([contents], 'Date')
-        assert elem instanceof IMethod : 'Expected method not type'
-        assert elem.isConstructor() : 'Expected ctor not method'
+        IJavaElement element = assertCodeSelect([contents], 'Date')
+        assert element instanceof IMethod : 'Expected method not type'
+        assert element.isConstructor() : 'Expected ctor not method'
     }
 
     @Test
     void testCodeSelectNewifyConstructor2() {
         String contents = 'class Foo { @Newify(Date) def x = Date.new(123L) }'
-        IJavaElement elem = assertCodeSelect([contents], 'new', 'Date')
-        assert elem instanceof IMethod : 'Expected method not type'
-        assert elem.isConstructor() : 'Expected ctor not method'
+        IJavaElement element = assertCodeSelect([contents], 'new', 'Date')
+        assert element instanceof IMethod : 'Expected method not type'
+        assert element.isConstructor() : 'Expected ctor not method'
     }
 
     @Test
     void testCodeSelectNewifyConstructor2a() {
         String contents = 'class Foo { @Newify(Date) def x = Date.new(123L) }'
-        IJavaElement elem = assertCodeSelect([contents], 'Date')
-        assert elem instanceof IType : 'Expected type not ctor'
+        IJavaElement element = assertCodeSelect([contents], 'Date')
+        assert element instanceof IType : 'Expected type not ctor'
     }
 
     @Test
@@ -638,6 +800,19 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         assertConstructor('new Foo()', 'Foo')
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1103
+    void testCodeSelectConstuctorJavaFile2() {
+        addJavaSource('''\
+            |class Foo {
+            |  Foo(String s, Map<String, ? extends Iterable<String>> m) {}
+            |  Foo(String s, String... strings) {}
+            |}
+            |'''.stripMargin(), nextUnitName(), 'p')
+
+        IMethod ctor = assertConstructor('new Foo("", [:])', 'Foo')
+        assert ctor.parameterNames[1] == 'm'
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/452
     void testCodeSelectConstuctorMapStyle() {
         addGroovySource('class Bean { Number number; String string }', 'Bean', 'p')
@@ -645,9 +820,9 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         ICompilationUnit unit = addGroovySource('def bean = new Bean(number: 0, string: "")', nextUnitName(), 'p')
         prepareForCodeSelect(unit)
 
-        IJavaElement[] elems = unit.codeSelect(unit.source.lastIndexOf('Bean'), 4)
-        assert elems[0].elementName == 'Bean'
-        assert elems[0].elementType == TYPE
+        IJavaElement[] elements = unit.codeSelect(unit.source.lastIndexOf('Bean'), 4)
+        assert elements[0].elementName == 'Bean'
+        assert elements[0].elementType == TYPE
     }
 
     @Test
@@ -700,17 +875,5 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
         IMethod method = assertConstructor('new Foo(Bar.CONST)', 'Foo')
         assert method.parameters.length == 1 : 'Should have found constructor with 1 arg'
-    }
-
-    private IMethod assertConstructor(String contents, String toSearch) {
-        ICompilationUnit unit = addGroovySource(contents, nextUnitName(), 'p')
-        prepareForCodeSelect(unit)
-
-        IJavaElement[] elems = unit.codeSelect(unit.source.lastIndexOf(toSearch), toSearch.length())
-        assert elems.length == 1 : 'Should have found a selection'
-        String elementName = toSearch.substring(toSearch.lastIndexOf('.') + 1)
-        assert elems[0].elementName == elementName : "Should have found constructor '$elementName'"
-        assert elems[0].isConstructor() : 'Should be a constructor'
-        return elems[0]
     }
 }

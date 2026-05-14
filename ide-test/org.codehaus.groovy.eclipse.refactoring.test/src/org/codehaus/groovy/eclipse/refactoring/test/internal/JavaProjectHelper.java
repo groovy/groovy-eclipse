@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,12 @@ package org.codehaus.groovy.eclipse.refactoring.test.internal;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Map;
 
-import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
-import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -44,23 +40,15 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.core.search.TypeNameRequestor;
-import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.internal.ui.util.CoreUtility;
 import org.eclipse.jdt.launching.JavaRuntime;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Synchronizer;
 import org.osgi.framework.Bundle;
 
 /**
  * Helper methods to set up a IJavaProject.
  */
 public class JavaProjectHelper {
-
-    private static final int MAX_RETRY = 5;
 
     /**
      * @param projectName name of the project
@@ -98,7 +86,6 @@ public class JavaProjectHelper {
         jproject.setOutputLocation(outputLocation, null);
         removeFromClasspath(jproject, jproject.getPath());
         addToClasspath(jproject, JavaRuntime.getDefaultJREContainerEntry());
-        //jproject.setOptions(putCompilerOptions(new HashMap<>(), JavaCore.VERSION_1_6));
         return jproject;
     }
 
@@ -108,12 +95,7 @@ public class JavaProjectHelper {
      */
     public static IJavaProject createGroovyProject(String projectName, String binFolderName) throws Exception {
         IJavaProject jproject = createJavaProject(projectName, binFolderName);
-
-        if (!jproject.getProject().hasNature(GroovyNature.GROOVY_NATURE)) {
-            addNatureToProject(jproject.getProject(), GroovyNature.GROOVY_NATURE, null);
-        }
-        addToClasspath(jproject, JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID));
-
+        GroovyRuntime.addGroovyRuntime(jproject.getProject());
         return jproject;
     }
 
@@ -129,76 +111,19 @@ public class JavaProjectHelper {
         return options;
     }
 
-    /**
-     * Removes a IJavaElement
-     *
-     * @param elem The element to remove
-     * @throws CoreException Removing failed
-     * @see #ASSERT_NO_MIXED_LINE_DELIMIERS
-     */
-    public static void delete(final IJavaElement elem) throws Exception {
-        ResourcesPlugin.getWorkspace().run(monitor -> {
-            performDummySearch();
-            if (elem instanceof IJavaProject) {
-                IJavaProject jproject = (IJavaProject) elem;
-                jproject.setRawClasspath(new IClasspathEntry[0], jproject.getProject().getFullPath(), null);
+    public static void delete(final IJavaElement element) throws CoreException {
+        JavaCore.run(monitor -> {
+            org.eclipse.jdt.core.groovy.tests.search.SearchTestSuite.waitUntilReady(element);
+            if (element instanceof IJavaProject) {
+                IJavaProject project = (IJavaProject) element;
+                project.setRawClasspath(ClasspathEntry.NO_ENTRIES, project.getProject().getFullPath(), null);
             }
-            delete(elem.getResource());
+            delete(element.getResource());
         }, null);
-        emptyDisplayLoop();
     }
 
-    public static void delete(IResource resource) throws CoreException {
-        for (int i = 0; i < MAX_RETRY; i += 1) {
-            try {
-                resource.delete(true, null);
-                i = MAX_RETRY;
-            } catch (CoreException e) {
-                if (i == MAX_RETRY - 1) {
-                    JavaPlugin.log(e);
-                    throw e;
-                }
-                try {
-                    Thread.sleep(1000); // sleep a second
-                } catch (InterruptedException ignore) {
-                }
-            }
-        }
-    }
-
-    /**
-     * Removes all files in the project and sets the given classpath
-     * @param jproject The project to clear
-     * @param entries The default class path to set
-     * @throws Exception Clearing the project failed
-     */
-    public static void clear(final IJavaProject jproject, final IClasspathEntry[] entries) throws Exception {
-        performDummySearch();
-        ResourcesPlugin.getWorkspace().run(monitor -> {
-            jproject.setRawClasspath(entries, null);
-
-            IResource[] resources = jproject.getProject().members();
-            for (int i = 0; i < resources.length; i += 1) {
-                if (!resources[i].getName().startsWith(".")) {
-                    delete(resources[i]);
-                }
-            }
-        }, null);
-
-        JavaProjectHelper.emptyDisplayLoop();
-    }
-
-    public static void performDummySearch() throws CoreException {
-        new SearchEngine().searchAllTypeNames(
-            null,
-            SearchPattern.R_EXACT_MATCH,
-            "XXXXXXXXX".toCharArray(), // make sure we search a concrete name. This is faster according to Kent
-            SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE,
-            IJavaSearchConstants.CLASS,
-            SearchEngine.createJavaSearchScope(new IJavaElement[0]),
-            new TypeNameRequestor() {},
-            IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-            null);
+    public static void delete(final IResource resource) throws CoreException {
+        org.eclipse.jdt.core.tests.util.Util.delete(resource);
     }
 
     /**
@@ -393,31 +318,11 @@ public class JavaProjectHelper {
     }
 
     public static void removeFromClasspath(IJavaProject jproject, IPath path) throws Exception {
-        IClasspathEntry[] oldEntries = jproject.getRawClasspath();
-        int nEntries = oldEntries.length;
-        List<IClasspathEntry> list = new ArrayList<>(nEntries);
-        for (int i = 0; i < nEntries; i++) {
-            IClasspathEntry curr = oldEntries[i];
-            if (!path.equals(curr.getPath())) {
-                list.add(curr);
-            }
-        }
-        IClasspathEntry[] newEntries = list.toArray(new IClasspathEntry[list.size()]);
-        jproject.setRawClasspath(newEntries, null);
+        GroovyRuntime.findClasspathEntry(jproject, cpe -> cpe.getPath().equals(path)).ifPresent(cpe -> GroovyRuntime.removeClasspathEntry(jproject, cpe));
     }
 
     public static void addToClasspath(IJavaProject jproject, IClasspathEntry cpe) throws Exception {
-        IClasspathEntry[] oldEntries = jproject.getRawClasspath();
-        for (int i = 0; i < oldEntries.length; i++) {
-            if (oldEntries[i].equals(cpe)) {
-                return;
-            }
-        }
-        int nEntries = oldEntries.length;
-        IClasspathEntry[] newEntries = new IClasspathEntry[nEntries + 1];
-        System.arraycopy(oldEntries, 0, newEntries, 0, nEntries);
-        newEntries[nEntries] = cpe;
-        jproject.setRawClasspath(newEntries, null);
+        GroovyRuntime.appendClasspathEntry(jproject, cpe);
     }
 
     private static void addNatureToProject(IProject proj, String natureId, IProgressMonitor monitor) throws Exception {
@@ -454,27 +359,6 @@ public class JavaProjectHelper {
                 URLConnection con = url.openConnection();
                 con.setUseCaches(false);
                 importTarget.getFile(name).create(con.getInputStream(), true, null);
-            }
-        }
-    }
-
-    public static void emptyDisplayLoop() {
-        boolean showDebugInfo = false;
-        Display display = Display.getCurrent();
-        if (display != null) {
-            if (showDebugInfo) {
-                try {
-                    Synchronizer synchronizer = display.getSynchronizer();
-                    Field field = Synchronizer.class.getDeclaredField("messageCount");
-                    field.setAccessible(true);
-                    System.out.println("Processing " + field.getInt(synchronizer) + " messages in queue");
-                } catch (Exception e) {
-                    // ignore
-                    System.out.println(e);
-                }
-            }
-            while (display.readAndDispatch()) {
-                /*loop*/
             }
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.junit.runners.Suite
 
     // Basic tests
     org.eclipse.jdt.groovy.core.tests.basic.AnnotationsTests,
+    org.eclipse.jdt.groovy.core.tests.basic.ConfigurationTests,
     org.eclipse.jdt.groovy.core.tests.basic.EnumerationTests,
     org.eclipse.jdt.groovy.core.tests.basic.ErrorRecoveryTests,
     org.eclipse.jdt.groovy.core.tests.basic.GenericsTests,
@@ -32,24 +33,37 @@ import org.junit.runners.Suite
     org.eclipse.jdt.groovy.core.tests.basic.ImportsTests,
     org.eclipse.jdt.groovy.core.tests.basic.InnerClassTests,
     org.eclipse.jdt.groovy.core.tests.basic.Java8Tests,
+    org.eclipse.jdt.groovy.core.tests.basic.Java9Tests,
     org.eclipse.jdt.groovy.core.tests.basic.TraitsTests,
 
     // Xform tests
     org.eclipse.jdt.groovy.core.tests.xform.AnnotationCollectorTests,
+    org.eclipse.jdt.groovy.core.tests.xform.AstBuilderTests,
+    org.eclipse.jdt.groovy.core.tests.xform.ASTTestTests,
     org.eclipse.jdt.groovy.core.tests.xform.AutoCloneTests,
     org.eclipse.jdt.groovy.core.tests.xform.AutoFinalTests,
+    org.eclipse.jdt.groovy.core.tests.xform.AutoImplementTests,
+    org.eclipse.jdt.groovy.core.tests.xform.BaseScriptTests,
+    org.eclipse.jdt.groovy.core.tests.xform.BindableTests,
     org.eclipse.jdt.groovy.core.tests.xform.CanonicalTests,
     org.eclipse.jdt.groovy.core.tests.xform.CategoryTests,
     org.eclipse.jdt.groovy.core.tests.xform.DelegateTests,
+    org.eclipse.jdt.groovy.core.tests.xform.FinalTests,
     org.eclipse.jdt.groovy.core.tests.xform.GrabTests,
     org.eclipse.jdt.groovy.core.tests.xform.ImmutableTests,
     org.eclipse.jdt.groovy.core.tests.xform.InheritConstructorsTests,
     org.eclipse.jdt.groovy.core.tests.xform.LoggingTests,
+    org.eclipse.jdt.groovy.core.tests.xform.MapConstructorTests,
+    org.eclipse.jdt.groovy.core.tests.xform.MixinTests,
     org.eclipse.jdt.groovy.core.tests.xform.NamedVariantTests,
+    org.eclipse.jdt.groovy.core.tests.xform.NullCheckTests,
     org.eclipse.jdt.groovy.core.tests.xform.PackageScopeTests,
+    org.eclipse.jdt.groovy.core.tests.xform.RecordTypeTests,
+    org.eclipse.jdt.groovy.core.tests.xform.SealedTests,
     org.eclipse.jdt.groovy.core.tests.xform.SingletonTests,
     org.eclipse.jdt.groovy.core.tests.xform.SortableTests,
     org.eclipse.jdt.groovy.core.tests.xform.StaticCompilationTests,
+    org.eclipse.jdt.groovy.core.tests.xform.TupleConstructorTests,
     org.eclipse.jdt.groovy.core.tests.xform.TypeCheckedTests,
     org.eclipse.jdt.groovy.core.tests.xform.UserDefinedTests,
 
@@ -61,7 +75,6 @@ import org.junit.runners.Suite
     org.eclipse.jdt.core.groovy.tests.builder.ScriptFolderTests,
 
     // Location tests
-    org.eclipse.jdt.core.groovy.tests.locations.ASTConverterTests,
     org.eclipse.jdt.core.groovy.tests.locations.ASTNodeSourceLocationsTests,
     org.eclipse.jdt.core.groovy.tests.locations.LocationSupportTests,
     org.eclipse.jdt.core.groovy.tests.locations.SourceLocationsTests,
@@ -87,6 +100,7 @@ import org.junit.runners.Suite
     org.eclipse.jdt.core.groovy.tests.search.GenericsMappingTests,
     org.eclipse.jdt.core.groovy.tests.search.Groovy20InferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.Groovy21InferencingTests,
+    org.eclipse.jdt.core.groovy.tests.search.Groovy22InferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.Groovy25InferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.InferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.JDTPropertyNodeInferencingTests,

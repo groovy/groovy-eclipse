@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import static org.eclipse.jdt.groovy.search.GenericsMapper.isVargs;
-
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -25,14 +23,12 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.runtime.MetaClassHelper;
-import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 /**
  * Kind of accessor a method name may be and then does further processing on a method node if the name matches.
  */
 public enum AccessorSupport {
-    GETTER("get"), SETTER("set"), ISSER("is"), NONE("");
+    ISSER("is"), GETTER("get"), SETTER("set"), NONE("");
 
     AccessorSupport(String prefix) {
         this.prefix = prefix;
@@ -52,9 +48,9 @@ public enum AccessorSupport {
         case GETTER:
             return (parameters == null || parameters.length == (!isCategory ? 0 : 1)) && !node.isVoidMethod();
         case SETTER:
-            return parameters != null && parameters.length == (!isCategory ? 1 : 2) && (!isCategory || !isVargs(parameters));
+            return (parameters != null && parameters.length == (!isCategory ? 1 : 2)) && (!isCategory || !GenericsMapper.isVargs(parameters));
         case ISSER:
-            return (parameters == null || parameters.length == (!isCategory ? 0 : 1)) && ClassHelper.boolean_TYPE == ClassHelper.getUnwrapper(node.getReturnType());
+            return (parameters == null || parameters.length == (!isCategory ? 0 : 1)) && node.getReturnType().equals(ClassHelper.boolean_TYPE);
         default:
             return false;
         }
@@ -89,7 +85,7 @@ public enum AccessorSupport {
     }
 
     public static MethodNode findAccessorMethodForPropertyName(String name, ClassNode declaringType, boolean isCategory) {
-        return findAccessorMethodForPropertyName(name, declaringType, isCategory, GETTER, ISSER, SETTER);
+        return findAccessorMethodForPropertyName(name, declaringType, isCategory, ISSER, GETTER, SETTER);
     }
 
     public static MethodNode findAccessorMethodForPropertyName(String name, ClassNode declaringType, boolean isCategory, AccessorSupport... kinds) {
@@ -100,16 +96,16 @@ public enum AccessorSupport {
         Stream<MethodNode> methods = Stream.empty();
 
         if (name != null && name.length() > 0 && kinds != null && kinds.length > 0) {
-            String suffix = MetaClassHelper.capitalize(name);
+            String suffix = org.apache.groovy.util.BeanUtils.capitalize(name);
             for (AccessorSupport kind : kinds) {
                 if (kind == NONE) continue;
                 String methodName = kind.prefix + suffix;
                 methods = Stream.concat(methods, findAccessorMethodsForMethodName(methodName, declaringType, isCategory, kind));
 
-                // abstract types do not track undeclared abstract methods
-                if (declaringType.isAbstract() || declaringType.isInterface() || GroovyUtils.implementsTrait(declaringType)) {
+                // abstract types do not track undeclared abstract methods; concrete types do not track interface default methods
+                if (declaringType.isAbstract() || declaringType.getInterfaces().length > 0 || declaringType.isDerivedFromGroovyObject()) {
                     Set<ClassNode> faces = new LinkedHashSet<>();
-                    VariableScope.findAllInterfaces(declaringType, faces, true);
+                    VariableScope.findAllInterfaces(declaringType, faces, false);
                     faces.remove(declaringType); // checked already
                     for (ClassNode face : faces) {
                         methods = Stream.concat(methods, findAccessorMethodsForMethodName(methodName, face, isCategory, kind));

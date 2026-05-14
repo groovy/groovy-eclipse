@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,6 +65,7 @@ import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 /**
  * Finds the completion node for an offset and calculates the content assist context.
@@ -173,11 +174,17 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             }
         }
 
+        for (ClassNode permit : node.getPermittedSubclasses()) {
+            if (check(permit)) {
+                createContext(null, node, ContentAssistLocation.PERMITS); // JEP 409
+            }
+        }
+
         blockStack.add(node);
         super.visitClass(node);
         blockStack.removeLast();
 
-        if (!node.isScript()) { // script body handled by visitMethod
+        if (!GroovyUtils.isScript(node)) { // script body handled by visitMethod
             createContext(null, node, ContentAssistLocation.CLASS_BODY);
         }
 
@@ -311,9 +318,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         }
 
         // check parameter name
-        if (node.getNameStart() <= completionOffset && completionOffset <= node.getNameEnd()) {
-            boolean isCatchParam = (blockStack.getLast() instanceof CatchStatement &&
-                (node.getStart() == node.getNameStart() || node.getName().equals("?")));
+        if (node.getNameStart() <= completionOffset && completionOffset <= node.getNameEnd() + 1) {
+            boolean isCatchParam = (blockStack.getLast() instanceof CatchStatement && (node.getName().equals("?") || node.getType().getEnd() < 1));
             createContext(node, blockStack.getLast(), isCatchParam ? ContentAssistLocation.EXCEPTIONS : ContentAssistLocation.PARAMETER);
         }
 
@@ -385,11 +391,13 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         if (isNotEmpty(gts) && gts[0].getStart() <= completionOffset && completionOffset <= gts[gts.length - 1].getEnd()) {
             for (GenericsType gt : gts) {
                 if (gt.getStart() <= completionOffset && completionOffset <= gt.getEnd()) {
-                    if (!gt.isPlaceholder()) {
+                    if (!gt.isPlaceholder() && !gt.isWildcard()) {
                         ClassNode type = gt.getType();
                         if (check(type)) {
                             createContext(type, node, ContentAssistLocation.GENERICS);
                         }
+                    } else {
+                        visitAnnotations(gt.getType().getTypeAnnotations());
                     }
                     if (gt.getLowerBound() != null) {
                         ClassNode type = gt.getLowerBound();
@@ -771,13 +779,16 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
     //--------------------------------------------------------------------------
 
     private boolean check(ASTNode node) {
+        boolean nodeIsType = (node instanceof ClassNode);
+        if (nodeIsType) visitAnnotations(((ClassNode) node).getTypeAnnotations());
         if (node.getEnd() > 0) {
             boolean containsCompletionOffset = (completionOffset > node.getStart() && completionOffset <= node.getEnd());
             boolean containsSupportingOffset = (supportingNodeEnd > node.getStart() && supportingNodeEnd <= node.getEnd());
 
-            if (!containsCompletionOffset && !containsSupportingOffset && node instanceof ClassNode) {
+            if (!containsCompletionOffset && !containsSupportingOffset && nodeIsType) {
                 ClassNode type = (ClassNode) node;
-                if (type.isUsingGenerics()) {
+                if (!type.isGenericsPlaceHolder() && (type.isRedirectNode() ||
+                        (!type.isResolved() && !type.isPrimaryClassNode()))) {
                     visitGenerics(type.getGenericsTypes(), type);
                 }
             }
@@ -845,11 +856,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
     }
 
     private boolean isArgument(Expression expr) {
-        if (argumentListStack.isEmpty()) {
-            return false;
-        }
-        TupleExpression tuple = argumentListStack.getLast();
-        return isArgument(expr, tuple.getExpressions());
+        if (argumentListStack.isEmpty()) return false;
+        return isArgument(expr, argumentListStack.getLast().getExpressions());
     }
 
     private boolean isArgument(Expression expr, List<? extends Expression> args) {

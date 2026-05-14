@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,9 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
 import org.eclipse.core.runtime.CoreException;
@@ -78,8 +81,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
         boolean doCheck = false;
         boolean isAssignment = false;
         boolean isDeclaration = (node instanceof FieldNode);
-        int start = 0;
-        int end = 0;
+        int start = 0, end = 0;
 
         if (isDeclaration) {
             FieldNode fieldNode = (FieldNode) node;
@@ -101,15 +103,24 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
             }
         } else if (node instanceof ConstantExpression) {
             if (fieldName.equals(((ConstantExpression) node).getText())) {
-                if (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode || result.confidence == TypeConfidence.UNKNOWN) {
+                ASTNode outer = result.scope.getCurrentNode() != node ? result.scope.getCurrentNode() : result.scope.getEnclosingNode();
+                if (outer != null && outer.getNodeMetaData("static.import.alias") != null && (
+                        (outer instanceof PropertyExpression && ((PropertyExpression) outer).getProperty() == node) ||
+                        (outer instanceof MethodCallExpression && ((MethodCallExpression) outer).getMethod() == node))) {
+                    // found "Type.bar" where "bar" is declared by "import static pack.Type.foo as bar"; StaticImportVisitor transforms to the property expression
+                } else if (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode || result.confidence == TypeConfidence.UNKNOWN) {
                     doCheck = true;
-                    isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
+                    if (outer instanceof MapExpression) {
+                        isAssignment = ((MapExpression) outer).getMapEntryExpressions().stream().anyMatch(entry -> entry.getKeyExpression() == node);
+                    } else {
+                        isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
+                    }
                 } else if (result.declaration instanceof MethodNode) {
                     MethodNode methodNode = (MethodNode) result.declaration;
-                    // check for "foo.bar" where "bar" refers to generated/synthetic "getBar()", "isBar()" or "setBar(...)"
+                    // check for "foo.bar" where "bar" refers to generated/synthetic "isBar()", "getBar()" or "setBar(...)"
                     if (methodNode.isSynthetic()) {
                         doCheck = true;
-                        isAssignment = methodNode.getName().startsWith("set");
+                        isAssignment = methodNode.getName().startsWith("set"); // TODO: check param count?
                     }
                 }
                 if (doCheck) {
@@ -124,10 +135,10 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
                     isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
                 } else if (result.declaration instanceof MethodNode) {
                     MethodNode methodNode = (MethodNode) result.declaration;
-                    // check for "bar" where "bar" refers to generated/synthetic "getBar()", "isBar()" or "setBar(...)"
+                    // check for "bar" where "bar" refers to generated/synthetic "isBar()", "getBar()" or "setBar(...)"
                     if (methodNode.isSynthetic()) {
                         doCheck = true;
-                        isAssignment = methodNode.getName().startsWith("set");
+                        isAssignment = methodNode.getName().startsWith("set"); // TODO: check param count?
                     }
                 }
                 if (doCheck) {
@@ -142,8 +153,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
             Position position = new Position(start, end - start);
             if (!acceptedPositions.contains(position)) {
                 boolean isCompleteMatch = qualifiedNameMatches(GroovyUtils.getBaseType(result.declaringType));
-                // GRECLIPSE-540: Still unresolved is that all field and variable references are considered reads. We don't know about writes.
-                if (isCompleteMatch && ((isAssignment && writeAccess) || (!isAssignment && readAccess) || (isDeclaration && findDeclarations))) {
+                if (isCompleteMatch && ((isAssignment ? writeAccess : readAccess) || (isDeclaration && findDeclarations))) {
                     SearchMatch match = null;
                     // must translate from synthetic source to binary if necessary
                     if (enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy)

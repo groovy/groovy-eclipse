@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.test.ui
 
+import static org.codehaus.groovy.eclipse.GroovyPlugin.getDefault as getGroovyPlugin
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.*
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.GROOVY_CALL as GSTRING
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
@@ -22,7 +23,9 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assert.assertEquals
 import static org.junit.Assume.assumeTrue
 
-import org.codehaus.groovy.eclipse.GroovyPlugin
+import groovy.transform.AutoFinal
+import groovy.transform.CompileStatic
+
 import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition
 import org.codehaus.groovy.eclipse.preferences.PreferenceConstants
@@ -39,7 +42,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Before
     void setUp() {
-        GroovyPlugin.default.preferenceStore.setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true)
+        groovyPlugin.preferenceStore.setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true)
     }
 
     @Test
@@ -79,9 +82,25 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testArrays4() {
+        String contents = '''\
+            |def test(String[] strings) {
+            |  return strings.toString()
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('strings'), 7, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('strings'), 7, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('toString'), 8, GROOVY_CALL))
+    }
+
+    @Test
     void testFields1() {
         String contents = '''\
-            |class X {
+            |class C {
             |  String one
             |  public Object two
             |  private Integer three
@@ -90,7 +109,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('one'), 3, FIELD),
             new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
@@ -111,7 +130,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         String contents = '''\
-            |class X extends Pogo {{
+            |class C extends Pogo {{
             |    string
             |    getString()
             |    setString('value')
@@ -119,11 +138,79 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('Pogo'), 4, CLASS),
             new HighlightedTypedPosition(contents.indexOf('string'), 6, FIELD),
             new HighlightedTypedPosition(contents.indexOf('getString'), 9, UNKNOWN),
             new HighlightedTypedPosition(contents.indexOf('setString'), 9, UNKNOWN))
+    }
+
+    @Test
+    void testFields3() {
+        addGroovySource '''\
+            |abstract class A {
+            |  private getF() { 'A' }
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            |class C extends A {
+            |  public f = 'C'
+            |}
+            |'C' == new C().f
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('f'), 1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('f'), 1, FIELD))
+    }
+
+    @Test
+    void testFields4() {
+        String contents = '''\
+            |class C {
+            |  final x
+            |  static final X;
+            |  {
+            |    x = null
+            |  }
+            |  static {
+            |    X = null
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'),     1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('x'),     1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('X'),     1, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, STATIC_VALUE))
+    }
+
+    @Test
+    void testFields5() {
+        String contents = '''\
+            |@groovy.transform.Immutable
+            |class C {
+            |  String name = 'nil'
+            |  boolean flag = true
+            |  BigDecimal number = 3.14159
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('name'), 4, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('flag'), 4, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('BigDecimal'), 10, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('number'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('3.14159'), 7, NUMBER))
     }
 
     @Test
@@ -145,6 +232,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     void testScriptFields2() {
         String contents = '''\
             |import groovy.transform.Field
+            |
             |@Field String one
             |@Field Integer two = 1234
             |@Field private Object three // four
@@ -158,6 +246,38 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('1234'), 4, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('three'), 5, FIELD))
+    }
+
+    @Test
+    void testScriptFields3() {
+        String contents = '''\
+            |import groovy.transform.Field
+            |
+            |@Field Number one
+            |@Field static Double TWO
+            |
+            |one * TWO ;
+            |{ -> one + TWO };
+            |{ -> one = 1; TWO = 2.0 }
+            |'''.stripMargin()
+
+        def prefs = org.eclipse.core.runtime.preferences.InstanceScope.INSTANCE.getNode('org.codehaus.groovy.eclipse.dsl')
+        def xdsld = prefs.getBoolean('org.codehaus.groovy.eclipse.dsl.disabled', false) ||
+                    !prefs.getBoolean('org.codehaus.groovy.eclipse.dsl.auto.add.support', true)
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Number' ), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('one'    ), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Double' ), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('TWO'    ), 3, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.indexOf('one *'  ), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('TWO ;'  ), 3, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.indexOf('one +'  ), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('TWO }'  ), 3, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, xdsld ? FIELD : METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('1'  ), 1, NUMBER),
+            new HighlightedTypedPosition(contents.lastIndexOf('TWO'), 3, xdsld ? STATIC_FIELD : STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('2.0'), 3, NUMBER))
     }
 
     @Test
@@ -238,6 +358,49 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('VALUE', contents.indexOf('baz')), 5, STATIC_VALUE))
     }
 
+    @Test
+    void testStaticFinals4() {
+        addGroovySource '''\
+            |public @interface A {
+            |  String CONST = 'value'
+            |}
+            |'''.stripMargin(), 'A', 'p'
+
+        String contents = '''\
+            |import static p.A.CONST
+            |p.A.CONST
+            |CONST
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('CONST'), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('A'), 1, ANNOTATION),
+            new HighlightedTypedPosition(contents.lastIndexOf('A') + 2, 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('CONST'), 5, STATIC_VALUE))
+    }
+
+    @Test
+    void testStaticFinals5() {
+        addGroovySource '''\
+            |class C {
+            |  public static final CALLABLE = { -> }
+            |}
+            |'''.stripMargin(), 'C', 'p'
+
+        String contents = '''\
+            |import static p.C.CALLABLE
+            |CALLABLE.call()
+            |CALLABLE()
+            |'''.stripMargin()
+
+        int offset
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(offset = contents.indexOf('CALLABLE'), 8, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('CALLABLE', offset + 1), 8, STATIC_VALUE),
+            new HighlightedTypedPosition(offset = contents.indexOf('call'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('CALLABLE', offset + 1), 8, STATIC_VALUE))
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/905
     void testCtors() {
         String contents = '''\
@@ -287,6 +450,19 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('c('), 1, METHOD),
             new HighlightedTypedPosition(contents.indexOf('d('), 1, METHOD),
             new HighlightedTypedPosition(contents.indexOf('e('), 1, METHOD))
+    }
+
+    @Test // JEP 445
+    void testMainMethod() {
+        String contents = '''\
+            |void main() {
+            |  this.toString()
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('main'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('toString'), 8, GROOVY_CALL))
     }
 
     @Test
@@ -429,6 +605,94 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('something'), 'something'.length(), STATIC_CALL))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1478
+    void testStaticMethods6() {
+        String contents = '''\
+            |import static java.net.URLEncoder.encode;
+            |encode('string','utf-8')
+            |encode('string')
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('encode;'), 'encode'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('encode('), 'encode'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), DEPRECATED))
+    }
+
+    @Test
+    void testStaticMethods7() {
+        addGroovySource '''\
+            |abstract class A {
+            |  static foo() {}
+            |}
+            |'''.stripMargin(), 'A', 'p'
+
+        String contents = '''\
+            |class C extends p.A {
+            |  static bar() {}
+            |  static baz() {
+            |    super.foo()
+            |    this.bar()
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('baz'), 3, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, STATIC_CALL))
+    }
+
+    @Test // GROOVY-11060
+    void testStaticMethods8() {
+        String contents = '''\
+            |class C {
+            |  static List<String> STRINGS=[]
+            |  static bar(String[] strings) {
+            |  }
+            |  static baz() {
+            |    bar(*STRINGS)
+            |    bar("")
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('List'), 4, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('STRINGS'), 7, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('String[]'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('strings'), 7, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('baz'), 3, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('bar(*'), 3, STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('STRINGS'), 7, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, STATIC_CALL))
+    }
+
+    @Test
+    void testStaticMethods9() {
+        String contents = '''\
+            static void sm(Number number) {}
+            List<Number> numbers
+            sm(numbers)
+        '''
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('sm'     ), 2, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Number' ), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('number' ), 6, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('List'   ), 4, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('Number>'), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('numbers'), 7, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('sm('), 2, UNKNOWN),
+            new HighlightedTypedPosition(contents.lastIndexOf('num'), 7, VARIABLE))
+    }
+
     @Test // GRECLIPSE-1138
     void testMultipleStaticMethods() {
         String contents = '''\
@@ -452,6 +716,61 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('f(int'), 1, STATIC_METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('a,'), 1, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('b)'), 1, PARAMETER))
+    }
+
+    @Test // GROOVY-7363
+    void testSyntheticBridgeMethod() {
+        addJavaSource '''\
+            |public interface Face<T> {
+            |  T getItem();
+            |}
+            |'''.stripMargin(), 'Face'
+        addGroovySource '''\
+            |class Impl implements Face<Pogo> {
+            |  Pogo item = new Pogo()
+            |}
+            |class Pogo {
+            |  def prop
+            |}
+            |'''.stripMargin(), 'Impl'
+
+        String contents = '''\
+            |@groovy.transform.TypeChecked
+            |void test(Impl impl) {
+            |  assert impl.item.prop != null
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Impl'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('impl'), 4, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('impl'), 4, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('item'), 4, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('prop'), 4, FIELD))
+    }
+
+    @Test // GROOVY-8448
+    void testSyntheticVarReference() {
+        String contents = '''\
+            |def x = "local"
+            |new Runnable() {
+            |  def getX() { }
+            |  void run() {
+            |    x
+            |    this.x
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('Runnable'), 8, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Runnable'), 8, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('getX'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('run'),  3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('x', contents.indexOf('run')), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, METHOD_CALL)) // once was FIELD
     }
 
     @Test
@@ -637,6 +956,69 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testMetaClassProperty1() {
+        String contents = '''\
+            |void test(foo) {
+            |  foo.metaClass ;
+            |  foo.metaClass = null
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('foo)'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('foo.'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('metaClass'), 9, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo.'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('metaClass'), 9, GROOVY_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1579
+    void testMetaClassProperty2() {
+        addGroovySource 'class Foo {}'
+
+        String contents = '''\
+            |@groovy.transform.TypeChecked
+            |void test(Foo foo) {
+            |  foo.metaClass ;
+            |  foo.metaClass = null
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Foo '), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('foo)'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('foo.'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('metaClass'), 9, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo.'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('metaClass'), 9, METHOD_CALL))
+    }
+
+    @Test
+    void testMetaClassProperty3() {
+        String contents = 'String.metaClass.constructor << { p1, p2 -> "foo" }'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('metaClass'), 9, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('constructor'), 11, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('p1'), 2, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('p2'), 2, PARAMETER))
+    }
+
+    @Test
+    void testMetaClassProperty4() {
+        String contents = 'String.metaClass.static.hello = { -> "world" }'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('metaClass'), 9, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('static'), 6, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('hello'), 5, MAP_KEY))
+    }
+
+    @Test
     void testNotCategoryMethod1() {
         String contents = 'def x = "equals"' // equals is a DGM and had been improperly identified by CategoryTypeLookup
 
@@ -715,14 +1097,92 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('k;'), 1, VARIABLE))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1580
+    void testDynamicSelector() {
+        String contents = '''\
+            |void test(foo, bar, baz) {
+            |  foo."$bar"(baz)
+            |  foo. (bar)(baz)
+            |  foo.@(bar)(baz)
+            |
+            |  foo.(bar) = baz
+            |  foo.@(bar) = 42
+            |  baz = foo.(bar)
+            |
+            |  def ptr = foo.&(bar)
+            |}
+            |'''.stripMargin()
+
+        int a = contents.indexOf('foo."$bar"(baz)')
+        int b = contents.indexOf('foo. (bar)(baz)')
+        int c = contents.indexOf('foo.@(bar)(baz)')
+
+        int d = contents.indexOf('foo.(bar) = baz')
+        int e = contents.indexOf('foo.@(bar) = 42')
+        int f = contents.indexOf('baz = foo.(bar)')
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('baz'), 3, PARAMETER),
+            new HighlightedTypedPosition(a,      3, PARAMETER),
+            new HighlightedTypedPosition(a +  4, 6, GSTRING),
+            new HighlightedTypedPosition(a +  6, 3, PARAMETER),
+            new HighlightedTypedPosition(a + 11, 3, PARAMETER),
+            new HighlightedTypedPosition(b,      3, PARAMETER),
+            new HighlightedTypedPosition(b +  6, 3, PARAMETER),
+            new HighlightedTypedPosition(b + 11, 3, PARAMETER),
+            new HighlightedTypedPosition(c,      3, PARAMETER),
+            new HighlightedTypedPosition(c +  6, 3, PARAMETER),
+            new HighlightedTypedPosition(c + 11, 3, PARAMETER),
+            new HighlightedTypedPosition(d,      3, PARAMETER),
+            new HighlightedTypedPosition(d +  5, 3, PARAMETER),
+            new HighlightedTypedPosition(d + 12, 3, PARAMETER),
+            new HighlightedTypedPosition(e,      3, PARAMETER),
+            new HighlightedTypedPosition(e +  6, 3, PARAMETER),
+            new HighlightedTypedPosition(e + 13, 2, NUMBER),
+            new HighlightedTypedPosition(f,      3, PARAMETER),
+            new HighlightedTypedPosition(f +  6, 3, PARAMETER),
+            new HighlightedTypedPosition(f + 11, 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('ptr'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, PARAMETER))
+    }
+
+    @Test
+    void testScriptVariable1() {
+        String contents = '''\
+            |abc = null
+            |def xyz = abc
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('abc'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('xyz'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('abc'), 3, VARIABLE))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1117
+    void testScriptVariable2() {
+        String contents = '''\
+            |block = { -> }
+            |block()
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('block'), 5, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('block'), 5, VARIABLE))
+    }
+
     @Test
     void testParamsAndLocals() {
         String contents = '''\
             |class X {
-            |  def loop(int n) {
+            |  def loop(int n ) {
             |    def f = { int x -> x * n }
             |    for (int i = 0; i < n; i += 1) {
-            |      f(i) // ignore result
+            |      f(i)
             |    }
             |  }
             |}
@@ -731,7 +1191,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('loop'), 4, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('n)'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('n )'), 1, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('f ='), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('x ->'), 1, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('x *'), 1, PARAMETER),
@@ -811,12 +1271,42 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testNamedParams3() {
+        addGroovySource '''\
+            |class C {
+            |  private void setX(x) {
+            |  }
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            |class D extends C {
+            |  private void setY(y) {
+            |  }
+            |}
+            |new D(x: 'x', y: 'y')
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('D'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('setY'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('y'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('D'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('D'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('x:'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('x:'), 1, UNKNOWN),
+            new HighlightedTypedPosition(contents.lastIndexOf('y:'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('y:'), 1, METHOD_CALL))
+    }
+
+    @Test
+    void testNamedParams4() {
         String contents = 'def map = Collections.singletonMap(key: "k", value: "v")'
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('map'), 'map'.length(), VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('Collections'), 'Collections'.length(), CLASS),
-            new HighlightedTypedPosition(contents.indexOf('singletonMap'), 'singletonMap'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('singletonMap'), 'singletonMap'.length(), UNKNOWN),
             new HighlightedTypedPosition(contents.indexOf('key'), 'key'.length(), MAP_KEY),
             new HighlightedTypedPosition(contents.indexOf('value'), 'value'.length(), MAP_KEY))
     }
@@ -997,7 +1487,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testCatchParam() {
+    void testCatchParams1() {
         // don't want PARAMETER
         String contents = '''\
             |class X {
@@ -1022,6 +1512,20 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('unspecified'), 'unspecified'.length(), VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('printStackTrace'), 'printStackTrace'.length(), METHOD_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('printStackTrace'), 'printStackTrace'.length(), METHOD_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1042
+    void testCatchParams2() {
+        String contents = '''\
+            |try {
+            |} catch (java.lang.Error | java.lang.Exception e) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Error'), 5, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Exception'), 9, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('e'), 1, VARIABLE))
     }
 
     @Test
@@ -1275,6 +1779,257 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testRecordType1() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String contents = '''\
+            |record Person(String name, Date dob = new Date()) {
+            |  boolean isBirthday(Date day) {
+            |    // ...
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('record'), 6, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('Person'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('name'), 4, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('dob'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Date()'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Date()'), 4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('isBirthday'), 10, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('Date'), 4, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('day'), 3, PARAMETER))
+    }
+
+    @Test
+    void testRecordType2() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String contents = '''\
+            |record Person(String name, Date dob) {
+            |  Person {
+            |    assert name?.size() > 1
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('record'), 6, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('Person'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('name'), 4, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('dob'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('Person'), 6, CTOR),
+            new HighlightedTypedPosition(contents.lastIndexOf('name'), 4, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('size'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('1'), 1, NUMBER))
+    }
+
+    @Test
+    void testRecordType3() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String contents = '''\
+            |public record Person<T>(String s, T t) implements Serializable {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('record'), 6, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('Person'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('s,'), 1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('T'), 1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('t)'), 1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Serializable'), 12, INTERFACE))
+    }
+
+    @Test
+    void testSealedClass() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String contents = '''\
+            |sealed class Foo permits Bar,Baz {
+            |}
+            |non-sealed class Bar extends Foo {
+            |}
+            |final class Baz {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Foo'), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Bar'), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Baz'), 3, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Foo'), 3, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Bar'), 3, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Baz'), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('sealed'), 6, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('permits'), 7, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('non-sealed'), 10, KEYWORD))
+    }
+
+    @Test // GROOVY-10433
+    void testSpecialName() {
+        String contents = '''\
+            |int _;
+            |int non;
+            |int var;
+            |int yield;
+            |int record;
+            |int sealed;
+            |int permits;
+            |//f(non-sealed)
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('_'),          1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('non'),        3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('var'),        3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('yield'),      5, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('record'),     6, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('sealed'),     6, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('permits'),    7, VARIABLE)/*,
+            new HighlightedTypedPosition(contents.indexOf('f'),          1, UNKNOWN ),
+            new HighlightedTypedPosition(contents.lastIndexOf('non'),    3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('sealed'), 6, VARIABLE)*/)
+    }
+
+    @Test // GROOVY-9630
+    void testValKeyword0() {
+        String contents = '''\
+            |def val
+            |val = null
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('val'),     3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, VARIABLE))
+    }
+
+    @Test
+    void testValKeyword1() {
+        String contents = '''\
+            |def abc = null
+            |int ijk = null
+            |val xyz = null
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('abc'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('ijk'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('xyz'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, isParrotParser() && isAtLeastGroovy(60) ? RESERVED : UNKNOWN))
+    }
+
+    @Test
+    void testValKeyword2() {
+        String contents = 'val val = null'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, isParrotParser() && isAtLeastGroovy(60) ? RESERVED : UNKNOWN),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, VARIABLE))
+    }
+
+    @Test
+    void testValKeyword3() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String contents = 'val (x, y, z) = [1, 2, 3]'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('y'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('z'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('3'), 1, NUMBER))
+    }
+
+    @Test
+    void testValKeyword4() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String contents = '''\
+            |for (val item : list) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('item'), 4, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('list'), 4, UNKNOWN))
+    }
+
+    @Test
+    void testValKeyword5() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String contents = '''\
+            |for (val item in list) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('item'), 4, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('list'), 4, UNKNOWN))
+    }
+
+    @Test
+    void testValKeyword6() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String contents = '''\
+            |for (val i = 0; i < n; i += 1) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('i ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('i <'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('n'), 1, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('i +'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER))
+    }
+
+    @Test
+    void testValKeyword7() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String contents = '''\
+            |try (val str = getClass().getResourceAsStream('rsrc')) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('str'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('getClass'), 'getClass'.length(), METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('getResourceAsStream'), 'getResourceAsStream'.length(), METHOD_CALL))
+    }
+
+    @Test // GROOVY-9630
+    void testVarKeyword0() {
+        String contents = '''\
+            |def var
+            |var = null
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('var'),     3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('var'), 3, VARIABLE))
+    }
+
+    @Test
     void testVarKeyword1() {
         String contents = '''\
             |def abc = null
@@ -1399,11 +2154,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = '"this: $this, super: $super"'
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
             new HighlightedTypedPosition(contents.indexOf('this:'), 6, STRING),
             new HighlightedTypedPosition(contents.indexOf('$this') + 1, 4, KEYWORD),
             new HighlightedTypedPosition(contents.indexOf(', super: '), 9, STRING),
-            new HighlightedTypedPosition(contents.indexOf('$super') + 1, 5, KEYWORD),
-            new HighlightedTypedPosition(contents.indexOf('"'), '"this: $this, super: $super"'.length(), GSTRING))
+            new HighlightedTypedPosition(contents.indexOf('$super') + 1, 5, KEYWORD))
     }
 
     @Test
@@ -1411,11 +2166,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = '"this: ${this}, super: ${super}"'
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
             new HighlightedTypedPosition(contents.indexOf('this:'), 6, STRING),
             new HighlightedTypedPosition(contents.indexOf('${this}') + 2, 4, KEYWORD),
             new HighlightedTypedPosition(contents.indexOf(', super: '), 9, STRING),
-            new HighlightedTypedPosition(contents.indexOf('${super}') + 2, 5, KEYWORD),
-            new HighlightedTypedPosition(contents.indexOf('"'), '"this: ${this}, super: ${super}"'.length(), GSTRING))
+            new HighlightedTypedPosition(contents.indexOf('${super}') + 2, 5, KEYWORD))
     }
 
     @Test
@@ -1423,12 +2178,220 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = '"${this.hashCode()}, ${super.hashCode()}"'
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
             new HighlightedTypedPosition(contents.indexOf('this'), 4, KEYWORD),
             new HighlightedTypedPosition(contents.indexOf('hashCode'), 'hashCode'.length(), METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf(', '), 2, STRING),
             new HighlightedTypedPosition(contents.indexOf('super'), 5, KEYWORD),
-            new HighlightedTypedPosition(contents.lastIndexOf('hashCode'), 'hashCode'.length(), METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('"'), '"${this.hashCode()}, ${super.hashCode()}"'.length(), GSTRING))
+            new HighlightedTypedPosition(contents.lastIndexOf('hashCode'), 'hashCode'.length(), METHOD_CALL))
+    }
+
+    @Test
+    void testGStringThisAndSuper4() {
+        String contents = '''\
+            |@Category(Object)
+            |class D {
+            |  def x() {
+            |    "$this ${this.name} ${super.name}"
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('D'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"$this ${this.name} ${super.name}"'.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('this'), 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf(' ${t'), 1, STRING),
+            new HighlightedTypedPosition(contents.indexOf('this.'), 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('name}'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf(' ${s'), 1, STRING),
+            new HighlightedTypedPosition(contents.indexOf('super'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.lastIndexOf('name'), 4, UNKNOWN))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1404
+    void testGStringTrueAndFalse() {
+        // the keywords false and true are identified by GroovyTagScanner within non-comment, non-GString content
+        String contents = '"prefix ${true; false} suffix"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
+            new HighlightedTypedPosition(contents.indexOf('true'), 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('false'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf(' suffix'), 7, STRING))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1439
+    void testGStringDefAndFinal() {
+        // the keywords def and final are identified by GroovyTagScanner within non-comment, non-GString content
+        String contents = '"prefix def ${ def x; final y;} final suffix"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('prefix def '), 11, STRING),
+            new HighlightedTypedPosition(contents.lastIndexOf('def'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('x;'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('final'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('y;'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf(' final suffix'), 13, STRING))
+
+        contents = '"prefix ${ def (int x, Number y) = list; var z;} suffix"'
+
+        if (!isParrotParser()) {
+            assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+                new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
+                new HighlightedTypedPosition(contents.indexOf('def'), 3, KEYWORD),
+                new HighlightedTypedPosition(contents.indexOf('x,'), 1, VARIABLE),
+                new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
+                new HighlightedTypedPosition(contents.indexOf('y)'), 1, VARIABLE),
+                new HighlightedTypedPosition(contents.indexOf('list'), 4, UNKNOWN),
+                new HighlightedTypedPosition(contents.indexOf('var'), 3, UNKNOWN),
+                new HighlightedTypedPosition(contents.indexOf('z;'), 1, UNKNOWN),
+                new HighlightedTypedPosition(contents.indexOf(' suffix'), 7, STRING))
+        } else {
+            def htp = [
+                new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+                new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
+                new HighlightedTypedPosition(contents.indexOf('def'), 3, KEYWORD),
+                new HighlightedTypedPosition(contents.indexOf('x,'), 1, VARIABLE),
+                new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
+                new HighlightedTypedPosition(contents.indexOf('y)'), 1, VARIABLE),
+                new HighlightedTypedPosition(contents.indexOf('list'), 4, UNKNOWN),
+                new HighlightedTypedPosition(contents.indexOf('var'), 3, RESERVED),
+                new HighlightedTypedPosition(contents.indexOf('z;'), 1, VARIABLE),
+                new HighlightedTypedPosition(contents.indexOf(' suffix'), 7, STRING)
+            ]
+            if (isAtLeastGroovy(40))
+                htp.add(3, new HighlightedTypedPosition(contents.indexOf('int'), 3, KEYWORD))
+
+            assertHighlighting(contents, htp as HighlightedTypedPosition[])
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1433
+    void testGStringNull() {
+        // the keyword null is identified by GroovyTagScanner within non-comment, non-GString content
+        String contents = '"prefix ${m(null);x=null;null} null suffix"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
+            new HighlightedTypedPosition(contents.indexOf('m'), 1, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('null'), 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('x='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('null;'), 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('null}'), 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf(' null suffix'), 12, STRING))
+
+        contents = 'def s = "prefix ${} suffix"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('s'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('"'), 19, GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
+            new HighlightedTypedPosition(contents.indexOf(' suffix'), 7, STRING))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1433
+    void testGStringNew1() {
+        // the keyword new is identified by GroovyTagScanner within non-comment, non-GString content
+        String contents = '"prefix ${new Object();new Object[0];\'new\'} new suffix"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
+            new HighlightedTypedPosition(contents.indexOf('new'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf(';new')+1, 3, KEYWORD),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf(' new suffix'), 11, STRING))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1433
+    void testGStringNew2() {
+        String contents = '"${( new java.lang.Object() );( new  java.lang.Object[0] )}"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('new'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('new'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER))
+    }
+
+    @Test
+    void testGStringNew3() {
+        String contents = '"${ new int[4][2] }"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('new'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('int'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('4'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER))
+    }
+
+    @Test
+    void testGStringNew4() {
+        assumeTrue(isParrotParser())
+
+        String contents = '"${ new int[]{1,2,3} }"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('new'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('int'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('3'), 1, NUMBER))
+    }
+
+    @Test
+    void testGStringNew5() {
+        String contents = '"${ new Object() {} }"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('new'), 3, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS))
+    }
+
+    @Test
+    void testGStringNew6() {
+        String contents = '''\
+            |@Newify(Object)
+            |void test() {
+            |  "${Object()}"
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"${Object()}"'.length(), GSTRING),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CTOR_CALL))
+    }
+
+    @Test
+    void testGStringType() {
+        // the keyword class is identified by GroovyTagScanner within non-comment, non-GString content
+        String contents = '"prefix ${java.lang.Object.class;\'class\'} class suffix"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('"'), contents.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('prefix '), 7, STRING),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('class'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf(' class suffix'), 13, STRING))
     }
 
     @Test // see testDeprecated10 for case where this and super calls are highlighted
@@ -1443,7 +2406,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |    this();
             |  }
             |}
-            |def x = new X();
+            |def x = new X()
             |'''.stripMargin()
 
         assertHighlighting(contents,
@@ -1489,6 +2452,41 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, MAP_KEY),
             new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('2'), 1, NUMBER))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1307
+    void testInnerClassCtorCalls2() {
+        String contents = '''\
+            |@groovy.transform.CompileStatic
+            |class X {
+            |  @groovy.transform.MapConstructor(noArg=true)
+            |  static class Y {
+            |    String foo
+            |    Integer bar
+            |  }
+            |  def baz() {
+            |    Y y = []
+            |    Y why = [foo: '1', bar: 2]
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('noArg'), 5, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('Y'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Integer'), 7, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('baz'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Y y'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('y ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('Y w'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('why'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, MAP_KEY),
             new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, MAP_KEY),
             new HighlightedTypedPosition(contents.lastIndexOf('2'), 1, NUMBER))
     }
@@ -1596,11 +2594,42 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('Y'), 1, STATIC_VALUE))
     }
 
-    @Test
-    void testEnumInner() {
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1417
+    void testEnumInit() {
         String contents = '''\
-            |import groovy.transform.*
-            |@CompileStatic
+            |enum X {
+            |  Y;
+            |  public static Set<String> NAMES;
+            |  static {
+            |    NAMES = Collections.singleton('why')
+            |  }
+            |  Object object;
+            |  {
+            |    object = new Object()
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, ENUMERATION),
+            new HighlightedTypedPosition(contents.indexOf('Y'), 1, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('Set'), 3, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('NAMES'), 5, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('NAMES'), 5, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Collections'), 11, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('singleton'), 9, STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('object'), 6, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('object'), 6, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CTOR_CALL))
+    }
+
+    @Test
+    void testEnumInner1() {
+        String contents = '''\
+            |@groovy.transform.CompileStatic
             |enum X {
             |  ONE(1) {
             |    @Override
@@ -1617,9 +2646,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('X'), 1, ENUMERATION),
-            // ensure static $INIT call from line 4 does not result in any highlighting
+            // ensure static $INIT call from line 3 does not produce highlighting
             new HighlightedTypedPosition(contents.indexOf('ONE'), 3, STATIC_VALUE),
-            new HighlightedTypedPosition(contents.indexOf('ONE'), 3, ENUMERATION), // okay?
             new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
             new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
@@ -1628,6 +2656,45 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('Number'), 6, ABSTRACT_CLASS),
             new HighlightedTypedPosition(contents.indexOf('val'), 3, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('meth'), 4, METHOD))
+    }
+
+    @Test
+    void testEnumInner2() {
+        String contents = '''\
+            |enum X {
+            |  WHY {
+            |    final int value = 1
+            |  }
+            |  def getValue() { -1 }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, ENUMERATION),
+            new HighlightedTypedPosition(contents.indexOf('WHY'), 3, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('value'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('getValue'), 8, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('-1'), 2, NUMBER))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1606
+    void testEnumInner3() {
+        String contents = '''\
+            |enum X {
+            |  Y {
+            |    {
+            |      throw new Exception()
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, ENUMERATION),
+            new HighlightedTypedPosition(contents.indexOf('Y'), 1, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('Exception'), 9, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Exception'), 9, CTOR_CALL))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1004
@@ -1682,7 +2749,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS))
     }
 
-    @Test @Ignore('failing on CI server')
+    @Test
     void testAnnoElems2() {
         String contents = '''\
             |import groovy.util.logging.Log
@@ -1695,9 +2762,10 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('value'), 'value'.length(), TAG_KEY),
-            new HighlightedTypedPosition(contents.lastIndexOf('logger'), 'logger'.length(), STATIC_FIELD),
-            new HighlightedTypedPosition(contents.lastIndexOf('log'), 'log'.length(), METHOD_CALL))
+            new HighlightedTypedPosition(contents.indexOf('value'), 5, TAG_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('logger'), 6, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('log'), 3, METHOD_CALL))
     }
 
     @Test
@@ -1802,8 +2870,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/959
     void testAnnoElems7() {
         String contents = '''\
-            |@groovy.transform.EqualsAndHashCode
             |@groovy.transform.AnnotationCollector
+            |@groovy.transform.EqualsAndHashCode
+            |@groovy.transform.TupleConstructor
             |@interface A {
             |}
             |@A(excludes = 'temporary')
@@ -1813,7 +2882,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('A '), 1, isAtLeastGroovy(25) ? ANNOTATION : CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A '), 1, ANNOTATION),
             new HighlightedTypedPosition(contents.indexOf('excludes'), 8, TAG_KEY),
             new HighlightedTypedPosition(contents.indexOf('C '), 1, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('temporary'), 9, FIELD))
@@ -1822,13 +2891,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/959
     void testAnnoElems8() {
         addGroovySource '''\
-            |@groovy.transform.EqualsAndHashCode
             |@groovy.transform.AnnotationCollector
+            |@groovy.transform.EqualsAndHashCode
             |@interface A {
             |}
             |'''.stripMargin(), 'A'
-
-        buildProject()
 
         String contents = '''\
             |@A(excludes = 'temporary')
@@ -1845,6 +2912,30 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/959
     void testAnnoElems9() {
+        addGroovySource '''\
+            |@groovy.transform.AnnotationCollector([
+            | groovy.transform.EqualsAndHashCode,
+            | groovy.transform.TupleConstructor
+            |])
+            |@interface A {
+            |}
+            |'''.stripMargin(), 'A'
+
+        String contents = '''\
+            |@A(excludes = 'temporary')
+            |class C {
+            |  def temporary
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('excludes'), 8, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('temporary'), 9, FIELD))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/959
+    void testAnnoElems10() {
         String contents = '''\
             |@groovy.transform.AutoExternalize(excludes = 'temporary')
             |class C {
@@ -1856,6 +2947,151 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('excludes'), 8, TAG_KEY),
             new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('temporary'), 9, FIELD))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1556
+    void testAnnoElems11() {
+        String contents = '''\
+            |import groovy.transform.*
+            |@NamedVariant(coerce=false)
+            |def foo(@NamedParam(type=String) bar) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('coerce'), 6, TAG_KEY  ),
+            new HighlightedTypedPosition(contents.indexOf('foo'   ), 3, METHOD   ),
+            new HighlightedTypedPosition(contents.indexOf('type'  ), 4, TAG_KEY  ),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS    ),
+            new HighlightedTypedPosition(contents.indexOf('bar'   ), 3, PARAMETER))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1155
+    void testAnnoElems12() {
+        String contents = '''\
+            |import org.codehaus.groovy.control.*
+            |class C {
+            |  void m() {
+            |    @groovy.transform.ASTTest(phase=CANONICALIZATION, value={
+            |      assert node.text
+            |    })
+            |    def var = null
+            |
+            |    @groovy.transform.ASTTest(phase=CompilePhase.CANONICALIZATION, value={
+            |      sourceUnit.comments
+            |    })
+            |    final val = null
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C {'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('m()'), 1, METHOD),
+            //
+            new HighlightedTypedPosition(contents.indexOf('phase'), 5, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('CANONICALIZATION'), 16, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('value'), 5, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('node'), 4, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('text'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, VARIABLE),
+            //
+            new HighlightedTypedPosition(contents.lastIndexOf('phase'), 5, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('CompilePhase'), 12, ENUMERATION),
+            new HighlightedTypedPosition(contents.lastIndexOf('CANONICALIZATION'), 16, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('value'), 5, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('sourceUnit'), 10, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('comments'), 8, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, VARIABLE))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1197
+    void testAnnoElems13() {
+        String contents = '''\
+            |@groovy.transform.AutoImplement(code={
+            |  throw new UnsupportedOperationException()
+            |})
+            |class C implements Iterator {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('code'), 4, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('UnsupportedOperationException'), 29, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('UnsupportedOperationException'), 29, CTOR_CALL),
+            //
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Iterator'), 8, INTERFACE))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/421
+    void testAnnoElems14() {
+        String contents = '''\
+            |@groovy.transform.TupleConstructor(pre={
+            |  assert number.intValue() >= 42
+            |},post={
+            |  assert string?.size() > 1
+            |})
+            |class Pogo {
+            |  double floats
+            |  Number number
+            |  String string
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('pre'), 3, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('number'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('intValue'), 8, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('42'), 2, NUMBER),
+            //
+            new HighlightedTypedPosition(contents.indexOf('post'), 4, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('string'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('size'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            //
+            new HighlightedTypedPosition(contents.indexOf('Pogo'), 4, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('floats'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('number'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('string'), 6, FIELD))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/421
+    void testAnnoElems15() {
+        for (annotation in ['Canonical','Immutable']) {
+            String contents = """\
+                |@groovy.transform.$annotation(pre={
+                |  assert number.intValue() >= 42
+                |},post={
+                |  assert string?.size() > 1
+                |})
+                |class Pogo {
+                |  Number number
+                |  String string
+                |}
+                |""".stripMargin()
+
+            assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf('pre'), 3, TAG_KEY),
+                new HighlightedTypedPosition(contents.indexOf('number'), 6, FIELD),
+                new HighlightedTypedPosition(contents.indexOf('number'), 6, PARAMETER),
+                new HighlightedTypedPosition(contents.indexOf('intValue'), 8, METHOD_CALL),
+                new HighlightedTypedPosition(contents.indexOf('42'), 2, NUMBER),
+                //
+                new HighlightedTypedPosition(contents.indexOf('post'), 4, TAG_KEY),
+                new HighlightedTypedPosition(contents.indexOf('string'), 6, FIELD),
+                new HighlightedTypedPosition(contents.indexOf('string'), 6, PARAMETER),
+                new HighlightedTypedPosition(contents.indexOf('size'), 4, GROOVY_CALL),
+                new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+                //
+                new HighlightedTypedPosition(contents.indexOf('Pogo'), 4, CLASS),
+                new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
+                new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+                new HighlightedTypedPosition(contents.lastIndexOf('number'), 6, FIELD),
+                new HighlightedTypedPosition(contents.lastIndexOf('string'), 6, FIELD))
+        }
     }
 
     @Test
@@ -1912,7 +3148,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testGString3() {
-        String contents = 'def a, b = "/$a/b/c"' // no regex at offset 15
+        String contents = 'def a = null, b = "/$a/b/c"' // no regex at offset 15
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),
@@ -1926,12 +3162,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/511
     void testGString4() {
         String contents = '''\
-            |import static java.net.URLEncoder.encode
+            |import static java.net.URLEncoder.*
             |def url = "/${encode('head','UTF-8')}/tail"
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('encode'), 'encode'.length(), DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('url'), 3, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('/'), '/'.length(), STRING),
             new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), STATIC_CALL),
@@ -1942,7 +3177,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/511
     void testGString5() {
         String contents = '''\
-            |import static java.net.URLEncoder.encode
+            |import static java.net.URLEncoder.*
             |@groovy.transform.CompileStatic
             |class X {
             |  def url = "/${encode('head','UTF-8')}/tail"
@@ -1951,7 +3186,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('encode'), 'encode'.length(), DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('url'), 3, FIELD),
             new HighlightedTypedPosition(contents.indexOf('/'), '/'.length(), STRING),
             new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), STATIC_CALL),
@@ -2132,37 +3366,123 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testDeprecated1() {
+        String contents = '''\
+            |@Deprecated
+            |class C {
+            |  C x
+            |  def m() { null }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C {'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('C x'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('m'), 1, METHOD))
+    }
+
+    @Test
+    void testDeprecated2() {
+        String contents = '''\
+            |class C {
+            |  @Deprecated
+            |  C() { }
+            |  C(x) { new C() }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('C()'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('C(x)'), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, DEPRECATED))
+    }
+
+    @Test
+    void testDeprecated3() {
         String contents = '''
             |class C {
             |  @Deprecated def x
-            |  def y() { x }
+            |  def m() { x }
             |}
             |'''.stripMargin()
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('x'), 1, DEPRECATED),
-            new HighlightedTypedPosition(contents.lastIndexOf('y'), 1, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('m'), 1, METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, DEPRECATED))
     }
 
     @Test
-    void testDeprecated2() {
-        String contents = '''\
-            |@Deprecated
+    void testDeprecated4() {
+        String contents = '''
             |class C {
-            |  C x
+            |  @Deprecated def m() { m() }
             |}
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('C'), 1, DEPRECATED),
-            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, DEPRECATED),
-            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, FIELD))
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('m'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('m'), 1, DEPRECATED))
     }
 
     @Test
-    void testDeprecated3() {
+    void testDeprecated5() {
+        String contents = '''
+            |class C {
+            |  def m(@Deprecated Object param) { ""+param.toString() }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('m'), 1, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('param'), 5, DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('param'), 5, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('toString'), 8, GROOVY_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1438
+    void testDeprecated6() {
+        String contents = '''
+            |@Deprecated def object = null
+            |@Deprecated def (int x, Number y) = [1,2]
+            |object+x+y;
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('object'), 6, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('y'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.lastIndexOf('object'), 6, DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('y'), 1, DEPRECATED))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1438
+    void testDeprecated6a() {
+        String contents = '''
+            |@Deprecated def one, two = null
+            |""+one+two;
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('two'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, DEPRECATED))
+    }
+
+    @Test
+    void testDeprecated7() {
         addGroovySource '''\
             |class Bar {
             |  @Deprecated public static final String CONST = ""
@@ -2176,11 +3496,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.lastIndexOf('Bar'), 3, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('CONST'), 'CONST'.length(), DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('CONST'), 5, DEPRECATED))
     }
 
     @Test
-    void testDeprecated4() {
+    void testDeprecated8() {
         addGroovySource '''\
             |@Deprecated
             |class Bar {
@@ -2194,13 +3514,13 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Bar'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('Bar.'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('CONST'), 'CONST'.length(), DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('Bar'),   3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.'),  3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('CONST'), 5, isDeprecatedTransitive() ? DEPRECATED : STATIC_VALUE))
     }
 
     @Test
-    void testDeprecated5() {
+    void testDeprecated9() {
         addJavaSource '''\
             |@Deprecated
             |public class Bar {
@@ -2211,12 +3531,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = 'foo.Bar.CONST'
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Bar'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('CONST'), 'CONST'.length(), DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('Bar'),   3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('CONST'), 5, isDeprecatedTransitive() ? DEPRECATED : STATIC_VALUE))
     }
 
     @Test
-    void testDeprecated6() {
+    void testDeprecated10() {
         addJavaSource '''\
             |@Deprecated
             |public class Bar {
@@ -2232,7 +3552,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testDeprecated7() {
+    void testDeprecated11() {
         addJavaSource '''\
             |@Deprecated
             |public class Bar {
@@ -2249,16 +3569,16 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Bar;'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('Bar.*'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('Bar.F'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('FIELD'), 5, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('Bar.m'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('method'), 6, DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('Bar;'),   3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.*'),  3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.F'),  3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('FIELD'),  5, isDeprecatedTransitive() ? DEPRECATED : STATIC_FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Bar.m'),  3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, isDeprecatedTransitive() ? DEPRECATED : STATIC_CALL))
     }
 
     @Test
-    void testDeprecated8() {
+    void testDeprecated12() {
         addJavaSource '''\
             |@Deprecated
             |public class Bar {
@@ -2276,7 +3596,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testDeprecated9() {
+    void testDeprecated13() {
         addJavaSource '''\
             |@Deprecated
             |public class Bar {
@@ -2295,16 +3615,16 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Bar.Baz;'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.Baz;'),  3, DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('Bar.Baz.*'), 3, DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('Bar.Baz.F'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('FIELD'), 5, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('FIELD'),     5, isDeprecatedTransitive() ? DEPRECATED : STATIC_FIELD),
             new HighlightedTypedPosition(contents.indexOf('Bar.Baz.m'), 3, DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('method'), 6, DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('method'),    6, isDeprecatedTransitive() ? DEPRECATED : STATIC_CALL))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/907
-    void testDeprecated10() {
+    void testDeprecated14() {
         addGroovySource '''\
             |class Foo {
             |  @Deprecated Foo() {}
@@ -2329,7 +3649,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/962
-    void testDeprecated11() {
+    void testDeprecated15() {
         addGroovySource '''\
             |class Foo {
             |  @Deprecated static def getSomeThing(one, two) {}
@@ -2355,6 +3675,25 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('something'), 9, DEPRECATED),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('y'), 1, PARAMETER))
+    }
+
+    @Test
+    void testDeprecated16() {
+        addGroovySource '''\
+            |class Baz {
+            |}
+            |'''.stripMargin(), 'Baz', 'foo.bar'
+
+        String contents = '''
+            |@Deprecated
+            |package foo.bar;
+            |foo.bar.Baz;
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('foo.bar'), 7, DEPRECATED),
+            //new HighlightedTypedPosition(contents.lastIndexOf('foo.bar'), 7, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Baz'), 3, CLASS))
     }
 
     @Test
@@ -2495,8 +3834,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = 'def map = [key: "value"]'
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('map'), 'map'.length(), VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('key'), 'key'.length(), MAP_KEY))
+            new HighlightedTypedPosition(contents.indexOf('map'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('key'), 3, MAP_KEY))
     }
 
     @Test
@@ -2507,10 +3846,474 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('key'), 'key'.length(), VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('map'), 'map'.length(), VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('key)'), 'key'.length(), VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('key2'), 'key2'.length(), MAP_KEY))
+            new HighlightedTypedPosition(contents.indexOf('key '), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('map '), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('key)'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('key2'), 4, MAP_KEY))
+    }
+
+    @Test
+    void testMapKey3() {
+        String contents = '''\
+            |def map = [:]
+            |map.key = null
+            |map['key'] = null
+            |map.with { key = null }
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('map'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('map.'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('key '), 3, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('map['), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('map'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('key'), 3, MAP_KEY))
+    }
+
+    @Test
+    void testMapKey4() {
+        String contents = '''\
+            |def map = [:]
+            |map.empty
+            |map.class
+            |map.metaClass
+            |map.properties
+            |map.empty = null
+            |map.class = null
+            |map.metaClass = null
+            |map.properties = null
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('map'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('map.empty'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('empty'), 5, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('map.class'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('class'), 5, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('map.metaClass'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('metaClass'), 9, isAtLeastGroovy(50) ? GROOVY_CALL : MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('map.properties'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('properties'), 10, isAtLeastGroovy(50) ? GROOVY_CALL : MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('map.empty'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('empty'), 5, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('map.class'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('class'), 5, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('map.metaClass'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('metaClass'), 9, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('map.properties'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('properties'), 10, /*isAtLeastGroovy(50) ? UNKNOWN :*/ MAP_KEY))
+
+        contents = '''\
+            |[:].with {
+            |  empty
+            |  metaClass
+            |  properties
+            |  empty = null
+            |  metaClass = null
+            |  properties = null
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('empty'), 5, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('metaClass'), 9, METHOD_CALL), // property of Closure
+            new HighlightedTypedPosition(contents.indexOf('properties'), 10, isAtLeastGroovy(50) ? GROOVY_CALL : MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('empty'), 5, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('metaClass'), 9, METHOD_CALL), // property of Closure
+            new HighlightedTypedPosition(contents.lastIndexOf('properties'), 10, /*isAtLeastGroovy(50) ? UNKNOWN :*/ MAP_KEY))
+    }
+
+    @Test
+    void testMapKey5() {
+        String contents = '''\
+            |class M extends HashMap {
+            |  void test() {
+            |    key = null
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('M'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('HashMap'), 7, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('test() '), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('key'), 3, MAP_KEY))
+    }
+
+    @Test
+    void testMapKey6() {
+        // TODO:final,static
+        addGroovySource '''\
+            |import groovy.transform.*
+            |class M extends HashMap {
+            |  def           a
+            |  public        b
+            |  protected     c
+            |  @PackageScope d
+            |  private       e
+            |  public        getF() {}
+            |  protected     getG() {}
+            |  @PackageScope getH() {}
+            |  private       getI() {}
+            |}
+            |'''.stripMargin(), 'M'
+
+        String contents = '''\
+            |def m = new M()
+            |m.a
+            |m.b
+            |m.c
+            |m.d
+            |m.e
+            |m.f
+            |m.g
+            |m.h
+            |m.i
+            |m.j
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('m'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('M'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('M'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('m.a'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('a'), 1, isAtLeastGroovy(50) ? FIELD : MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('m.b'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('b'), 1, isAtLeastGroovy(50) ? FIELD : MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('m.c'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('c'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('m.d'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('d'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('m.e'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('e'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('m.f'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('f'), 1, isAtLeastGroovy(50) ? METHOD_CALL : MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('m.g'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('g'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('m.h'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('h'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('m.i'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('i'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('m.j'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('j'), 1, MAP_KEY))
+
+        contents = '''\
+            |new M().with {
+            |  a
+            |  b
+            |  c
+            |  d
+            |  e
+            |  f
+            |  g
+            |  h
+            |  i
+            |  j
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('M'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('M'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('a'), 1, isAtLeastGroovy(50) ? FIELD : MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('b'), 1, isAtLeastGroovy(50) ? FIELD : MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('c'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('d'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('e'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('f'), 1, isAtLeastGroovy(50) ? METHOD_CALL : MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('g'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('h'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('i'), 1, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('j'), 1, MAP_KEY))
+    }
+
+    @Test // GROOVY-5001
+    void testMapKey7() {
+        addGroovySource '''\
+            |abstract class A extends HashMap {
+            |  def one, two = { -> }
+            |  def getSomething() {}
+            |}
+            |'''.stripMargin(), 'A'
+
+        String contents = '''\
+            |class C extends A {
+            |  def three
+            |  void test() {
+            |    one
+            |    two()
+            |    three
+            |    empty
+            |    isEmpty()
+            |    something
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('three'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, isAtLeastGroovy(50) ? FIELD : MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('three'), 5, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('empty'), 5, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('isEmpty'), 7, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('something'), 9, isAtLeastGroovy(50) ? METHOD_CALL : MAP_KEY))
+
+        contents = '''\
+            |class C extends A {
+            |  def three
+            |  void test() {
+            |    this.one
+            |    this.two()
+            |    this.three
+            |    this.empty
+            |    this.isEmpty()
+            |    this.something
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('three'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, isAtLeastGroovy(50) ? FIELD : MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('three'), 5, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('empty'), 5, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('isEmpty'), 7, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('something'), 9, isAtLeastGroovy(50) ? METHOD_CALL : MAP_KEY))
+    }
+
+    @Test // GROOVY-5001
+    void testMapKey8() {
+        addGroovySource '''\
+            |abstract class A extends HashMap {
+            |  def one, two = { -> }
+            |  def getSomething() {}
+            |}
+            |'''.stripMargin(), 'A'
+
+        String contents = '''\
+            |class C extends A {
+            |  def three
+            |  void test() {{ ->
+            |    one
+            |    two()
+            |    three
+            |    empty
+            |    isEmpty()
+            |    something
+            |  }}
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('three'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, isAtLeastGroovy(50) ? FIELD : MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('three'), 5, isAtLeastGroovy(50) ? FIELD : MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('empty'), 5, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('isEmpty'), 7, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('something'), 9, isAtLeastGroovy(50) ? METHOD_CALL : MAP_KEY))
+    }
+
+    @Test // GROOVY-5491
+    void testMapKey9() {
+        addGroovySource '''\
+            |abstract class A extends HashMap {
+            |  def one
+            |  protected two
+            |  private   xxx
+            |}
+            |'''.stripMargin(), 'A'
+
+        String contents = '''\
+            |class C extends A {
+            |  final three
+            |  void test() {
+            |    one = null // set
+            |    two = null // write; public or protected
+            |    xxx = null // put; package-private or private
+            |    three = null // write; declared private field
+            |    ({ -> three = null }) // put; read-only field or property
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('three'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, isAtLeastGroovy(50) ? MAP_KEY : FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('xxx'), 3, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('three ='), 5, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('three'), 5, MAP_KEY))
+    }
+
+    @Test // GROOVY-5491
+    void testMapKey10() {
+        addGroovySource '''\
+            |import groovy.transform.PackageScope
+            |abstract class A {
+            |  public        void setFour(x) {}
+            |  protected     void setFive(x) {}
+            |  @PackageScope void setSixx(x) {}
+            |  private       void setSeven(x) {}
+            |}
+            |'''.stripMargin(), 'A'
+
+        String contents = '''\
+            |class C extends A implements Map {
+            |  private void setEight(x) {}
+            |  void test() {
+            |    four = null // set
+            |    five = null // set
+            |    sixx = null // set
+            |    seven = null // put
+            |    eight = null // set
+            |  }
+            |}
+            |new C().seven = null // put
+            |new C().eight = null // set
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Map'), 3, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('setEight'), 8, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('x)'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('four'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('five'), 4, isAtLeastGroovy(50) ? MAP_KEY : METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('sixx'), 4, isAtLeastGroovy(50) ? MAP_KEY : METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('seven'), 5, isAtLeastGroovy(50) ? MAP_KEY : MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('eight'), 5, isAtLeastGroovy(50) ? MAP_KEY : METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('C().s'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('C().s'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('seven'), 5, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('C().e'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('C().e'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('eight'), 5, isAtLeastGroovy(50) ? MAP_KEY : METHOD_CALL))
+    }
+
+    @Test // GROOVY-5001
+    void testMapKey11() {
+        for (shade in ['protected', '@groovy.transform.PackageScope', 'private']) {
+        addGroovySource """\
+            |class C extends HashMap {
+            |  void setFoo(value) {}
+            |  def getFoo() {}
+            |  public bar
+            |  $shade baz
+            |}
+            |""".stripMargin(), 'C', 'p'
+
+        String contents = '''\
+            |void test(p.C c) {
+            |  c.foo
+            |  c.bar
+            |  c.baz
+            |  c.foo = null
+            |  c.bar = null
+            |  c.baz = null
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'),      4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('C '),        1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('c)'),        1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('c.foo'),     1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('foo'),       3, isAtLeastGroovy(50) ? METHOD_CALL : MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('c.bar'),     1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('bar'),       3, isAtLeastGroovy(50) ? FIELD : MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('c.baz'),     1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('baz'),       3, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('c.foo'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo'),   3, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('c.bar'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('bar'),   3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('c.baz'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('baz'),   3, (shade == 'protected' && !isAtLeastGroovy(50)) ? FIELD : MAP_KEY))
+        }
+    }
+
+    @Test // GROOVY-8065
+    void testMapKey12() {
+        addGroovySource '''\
+            |class C extends HashMap {
+            |  def getSomething() {}
+            |}
+            |'''.stripMargin(), 'C'
+
+        String contents = '''\
+            |@groovy.transform.CompileStatic
+            |void test(C c) {
+            |  c.something
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('C '), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('c)'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('c'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('something'), 9, isAtLeastGroovy(50) ? METHOD_CALL : MAP_KEY))
+    }
+
+    @Test
+    void testMapKey13() {
+        addGroovySource '''\
+            |import groovy.transform.*
+            |class C extends HashMap {
+            |  public        getW() {}
+            |  protected     getX() {}
+            |  @PackageScope getY() {}
+            |  private       getZ() {}
+            |}
+            |'''.stripMargin(), 'C'
+
+        String contents = '''\
+            |class D extends C {
+            |  void test() {
+            |    super.class
+            |    super.empty
+            |    super.w
+            |    super.x
+            |    super.y
+            |    super.z
+            |  }
+            |}
+            |'''.stripMargin()
+
+        def notPublicProperty = isAtLeastGroovy(40) ? MAP_KEY : METHOD_CALL
+        def xxxPublicProperty = isAtLeastGroovy(40) ? MAP_KEY : MAP_KEY // TODO: UNKNOWN
+        def yesPublicProperty = isAtLeastGroovy(40) && !isAtLeastGroovy(50) ? MAP_KEY : METHOD_CALL
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('D'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('class'), 5, notPublicProperty),
+            new HighlightedTypedPosition(contents.lastIndexOf('empty'), 5, xxxPublicProperty),
+            new HighlightedTypedPosition(contents.lastIndexOf('w'    ), 1, yesPublicProperty),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'    ), 1, notPublicProperty),
+            new HighlightedTypedPosition(contents.lastIndexOf('y'    ), 1, notPublicProperty),
+            new HighlightedTypedPosition(contents.lastIndexOf('z'    ), 1, notPublicProperty))
     }
 
     @Test
@@ -2586,35 +4389,36 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testWithBlock2() {
+        addGroovySource '''\
+            |class Foo {
+            |  String val
+            |}
+            |'''.stripMargin()
+
         String contents = '''\
-            |class X { static {
-            |  new Date().with {
-            |    setTime(1234L)
-            |    time = 5678L
-            |    not1
-            |    not2 = hours
+            |@groovy.transform.CompileStatic
+            |def bar(Foo foo) {
+            |  foo.with {
+            |    val = ''
+            |    val.length()
             |  }
-            |}}
+            |}
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Foo'), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('1234L'), 5, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('time'), 4, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('5678L'), 5, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('not1'), 4, UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('not2'), 4, UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('hours'), 5, DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('length'), 6, METHOD_CALL))
     }
 
     @Test
     void testWithBlock3() {
         String contents = '''\
-            |@groovy.transform.TypeChecked
             |class X { static {
             |  new Date().with {
             |    setTime(1234L)
@@ -2642,7 +4446,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test
     void testWithBlock4() {
         String contents = '''\
-            |@groovy.transform.CompileStatic
+            |@groovy.transform.TypeChecked
             |class X { static {
             |  new Date().with {
             |    setTime(1234L)
@@ -2671,6 +4475,34 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     void testWithBlock5() {
         String contents = '''\
             |@groovy.transform.CompileStatic
+            |class X { static {
+            |  new Date().with {
+            |    setTime(1234L)
+            |    time = 5678L
+            |    not1
+            |    not2 = hours
+            |  }
+            |}}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('1234L'), 5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('time'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('5678L'), 5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('not1'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('not2'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('hours'), 5, DEPRECATED))
+    }
+
+    @Test
+    void testWithBlock6() {
+        String contents = '''\
+            |@groovy.transform.CompileStatic
             |class X {
             |  def getReadOnly() {}
             |  static {
@@ -2694,7 +4526,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testWithBlock6() {
+    void testWithBlock7() {
         String contents = '''\
             |@groovy.transform.CompileStatic
             |class X {
@@ -2721,7 +4553,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1015
-    void testWithBlock7() {
+    void testWithBlock8() {
         addGroovySource '''\
             |class Pogo {
             |  String prop
@@ -2749,6 +4581,33 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('pogo.'), 4, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('prop'), 4, METHOD_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1583
+    void testWithBlock9() {
+        addGroovySource '''\
+            |class Pogo {
+            |  Object getBlah() {}
+            |  static getName() {}
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            |Pogo.with {
+            |  blah
+            |  name
+            |  getName()
+            |  getPackage()
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Pogo'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('blah'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('name'), 4, STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('getName'), 7, STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('getPackage'), 10, METHOD_CALL))
     }
 
     @Test
@@ -2798,6 +4657,28 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('Directory'), 9, CLASS),
             new HighlightedTypedPosition(contents.indexOf('lookup'), 6, STATIC_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('id'), 2, FIELD))
+    }
+
+    @Test
+    void testLazyInitExpr3() {
+        String contents = '''\
+            |package p
+            |class X {
+            |  @Lazy static Map values = new HashMap().tap {
+            |    it.put('foo','bar')
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Map'), 3, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('values'), 6, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.indexOf('HashMap'), 7, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('HashMap'), 7, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('tap'), 3, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('it'),  2, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('put'), 3, METHOD_CALL))
     }
 
     @Test
@@ -2862,29 +4743,77 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('toLowerCase'), 'toLowerCase'.length(), METHOD_CALL))
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/878
     void testMethodPointer3() {
-        String contents = 'String.&toLowerCase'
+        String contents = 'String.&length'
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('toLowerCase'), 'toLowerCase'.length(), isAtLeastGroovy(30) ? METHOD_CALL : UNKNOWN))
+            new HighlightedTypedPosition(contents.indexOf('length'), 6, METHOD_CALL))
     }
 
-    @Test
-    void testMethodReference() {
-        assumeTrue(isParrotParser())
-
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1192
+    void testMethodPointer4() {
         String contents = '''\
-            |String::toLowerCase
-            |Integer::toHexString
+            |String.&size
+            |Object.&sleep
             |'''.stripMargin()
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('toLowerCase'), 'toLowerCase'.length(), METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('Integer'), 7, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('toHexString'), 'toHexString'.length(), STATIC_CALL))
+            new HighlightedTypedPosition(contents.indexOf('size'  ), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('sleep' ), 5, GROOVY_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1048
+    void testMethodPointer5() {
+        String contents = 'String[].&new'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1048
+    void testMethodReference1() {
+        assumeTrue(isParrotParser())
+
+        String contents = 'String[]::new'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/878
+    void testMethodReference2() {
+        assumeTrue(isParrotParser())
+
+        String contents = '''\
+            |String::length
+            |Thread::yield
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('length'), 6, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Thread'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('yield' ), 5, STATIC_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1192
+    void testMethodReference3() {
+        assumeTrue(isParrotParser())
+
+        String contents = '''\
+            |String::size
+            |Object::sleep
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('size'  ), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('sleep' ), 5, GROOVY_CALL))
     }
 
     @Test
@@ -2960,17 +4889,16 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testCategoryMethodOverloads() {
-        // implicit 'self' parameter added by transformation caused confusion in TypeInferencingVisitor
         String contents = '''\
             |import java.util.regex.Pattern
             |@Category(Number)
             |class X {
-            |    void method(String string) {
-            |      println this
-            |    }
-            |    void method(Pattern regex) {
-            |      println this
-            |    }
+            |  void method(String string) {
+            |    println this
+            |  }
+            |  void method(Pattern regex) {
+            |    println this
+            |  }
             |}
             |'''.stripMargin()
 
@@ -3159,6 +5087,26 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testCastAndCoerce() {
+        String contents = '''\
+            |void test(obj) {
+            |  def one = (String) obj
+            |  def two = obj as String
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('obj'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('obj', contents.indexOf('String')), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('two'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('obj'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('String'), 6, CLASS))
+    }
+
+    @Test
     void testAliasType1() {
         String contents = '''\
             |import java.util.Map as Table
@@ -3313,19 +5261,60 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     void testGenericType1() {
         String contents = '''\
             |interface I<T> {
-            |  T bar()
+            |  T m()
             |}
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('I'), 1, INTERFACE),
-            new HighlightedTypedPosition(contents.indexOf('T'), 1, PLACEHOLDER),
-            new HighlightedTypedPosition(contents.lastIndexOf('T'), 1, PLACEHOLDER),
-            new HighlightedTypedPosition(contents.indexOf('bar'), 3, METHOD))
+            new HighlightedTypedPosition(contents.indexOf('I'),  1, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('T>'), 1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('T '), 1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('m('), 1, METHOD))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1486
+    void testGenericType2() {
+        String contents = '''\
+            |interface I<Self extends I<Self,T>, T> {
+            |  T m()
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('I'),     1, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('Self '), 4, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.lastIndexOf('I'), 1, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('Self,'), 4, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('T>,'),   1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('T> '),   1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('T '),    1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('m('),    1, METHOD))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1486
+    void testGenericType3() {
+        String contents = '''\
+            |class C<T> {
+            |  static <X> C<X> m(C<? extends C<? extends X>> c) {
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'),     1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('T'),     1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('X'),     1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('C<X>'),  1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('X> m'),  1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('m('),    1, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('C<? '),  1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.lastIndexOf('c'), 1, PARAMETER))
     }
 
     @Test
-    void testGenericType2() {
+    void testGenericType4() {
         String contents = 'Class<? extends List<? extends CharSequence>> clazz'
 
         assertHighlighting(contents,
@@ -3411,6 +5400,120 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('pat'), 3, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('Pattern'), 'Pattern'.length(), CLASS),
             new HighlightedTypedPosition(contents.indexOf('compile'), 'compile'.length(), STATIC_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1042
+    void testQualifiedType7() {
+        String contents = '''\
+            |if (obj instanceof java.lang.String) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('obj'), 3, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1042
+    void testQualifiedType8() {
+        String contents = '''\
+            |if (obj instanceof java.lang.String [] ) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('obj'), 3, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1603
+    void testQualifiedType9() {
+        String contents = '''\
+            |def foo() throws java.lang.Exception , java.lang.Throwable {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Exception'), 9, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Throwable'), 9, CLASS))
+    }
+
+    @Test
+    void testSwitch1() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String contents = '''\
+            |int yield = switch (x) {
+            |  case 'Foo':
+            |    yield 1
+            |  case 'Bar':
+            |    print 2
+            |  case 'Baz':
+            |    yield 3
+            |  default: {
+            |    yield 0
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('yield'), 5, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('yield', 40), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('print'), 5, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('yield', 80), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('3'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.lastIndexOf('yield'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER))
+    }
+
+    @Test
+    void testSwitch2() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String contents = '''\
+            |import java.time.DayOfWeek
+            |import static java.time.DayOfWeek.*
+            |
+            |void test(DayOfWeek day) {
+            |  int letterCount = switch (day) {
+            |    case MONDAY, FRIDAY, SUNDAY -> 6
+            |    case TUESDAY                -> { 7 }
+            |    case THURSDAY, SATURDAY     -> { yield 8 }
+            |    case WEDNESDAY              -> { if (true) yield 9; else 0 }
+            |    default                     -> throw new IllegalStateException("Invalid day: $day")
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('DayOfWeek'), 9, ENUMERATION),
+            new HighlightedTypedPosition(contents.indexOf('day'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('letterCount'), 11, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('(day') + 1, 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('MONDAY'), 6, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('FRIDAY'), 6, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('SUNDAY'), 6, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('6'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('TUESDAY'), 7, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('7'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('THURSDAY'), 8, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('SATURDAY'), 8, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('yield'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('8'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('WEDNESDAY'), 9, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('yield'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('9'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.lastIndexOf('IllegalStateException'), 'IllegalStateException'.length(), CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('IllegalStateException'), 'IllegalStateException'.length(), CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"Invalid day: $day"'.length(), GSTRING),
+            new HighlightedTypedPosition(contents.indexOf('"') + 1, 'Invalid day: '.length(), STRING),
+            new HighlightedTypedPosition(contents.lastIndexOf('day'), 3, PARAMETER))
     }
 
     @Test
@@ -3565,8 +5668,33 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('setString'), 9, METHOD_CALL))
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1539
     void testTraits8() {
+        String contents = '''\
+            |trait T {
+            |  public static final
+            |  String string = 'x'
+            |  static method() {
+            |    this.string
+            |  }
+            |  def nonStatic() {
+            |    string
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('string'), 6, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('.string')+1, 6, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('nonStatic'), 9, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('string'), 6, STATIC_VALUE))
+    }
+
+    @Test
+    void testTraits9() {
         addGroovySource '''\
             |trait T {
             |  String getFoo() { 'foo' }
@@ -3594,7 +5722,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testTraits9() {
+    void testTraits10() {
         String contents = '''\
             |trait T {
             |  def whatever() {}
@@ -3618,7 +5746,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testTraits10() {
+    void testTraits11() {
         String contents = '''\
             |trait T {
             |  def foo
@@ -3648,7 +5776,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/961
-    void testTraits11() {
+    void testTraits12() {
         // http://docs.groovy-lang.org/latest/html/documentation/#_semantics_of_super_inside_a_trait
         String contents = '''\
             |trait Filtering {
@@ -3678,17 +5806,125 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('toString'), 8, UNKNOWN))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1159
+    void testTraits13() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  Number getFoo() { 'foo' }
+            |}
+            |'''.stripMargin(), 'T', 'p'
+
+        String contents = '''\
+            |class C implements p.T {
+            |  void test() {
+            |    p.T.super.getFoo()
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.lastIndexOf('getFoo'), 6, METHOD_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1540
+    void testTraits14() {
+        String contents = '''\
+            |trait T {
+            |  def m() {
+            |    def that = this
+            |  }
+            |  static sm() {
+            |    def that = this
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('m'), 1, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('that'), 4, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('sm'), 2, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('that'), 4, VARIABLE))
+    }
+
+    @Test
+    void testTraits15() {
+        String contents = '''\
+            |package p
+            |trait T {
+            |  public static final int X = 0
+            |}
+            |trait U extends T {
+            |  static sm() {
+            |    p_T__X
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('U'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.lastIndexOf('T '), 1, TRAIT),
+            new HighlightedTypedPosition(contents.lastIndexOf('sm'), 2, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('p_T__X'), 6, STATIC_VALUE))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1526
+    void testInterface() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String contents = '''\
+            |interface I {
+            |  static  bar() {}
+            |  private baz() {}
+            |  default foo() {
+            |    I.bar()
+            |    I.this.baz() // required qualifier w/o static compilation
+            |  }
+            |}
+            |class C implements I{
+            |  @Override
+            |  def foo() {
+            |    I.super.foo()
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('I'),         1, isAtLeastGroovy(50) ? INTERFACE : TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('bar'),       3, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('baz'),       3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('foo'),       3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('I.bar()'),   1, isAtLeastGroovy(50) ? INTERFACE : TRAIT),
+            new HighlightedTypedPosition(contents.lastIndexOf('bar'),   3, isAtLeastGroovy(50) ? STATIC_CALL : UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('I.this.'),   1, isAtLeastGroovy(50) ? INTERFACE : TRAIT),
+            new HighlightedTypedPosition(contents.lastIndexOf('baz'),   3, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('C'),         1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('I{'),        1, isAtLeastGroovy(50) ? INTERFACE : TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('def foo')+4, 3, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('I.'),    1, isAtLeastGroovy(50) ? INTERFACE : TRAIT),
+          //new HighlightedTypedPosition(contents.lastIndexOf('super'), 5, UNKNOWN),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo'),   3, METHOD_CALL))
+    }
+
     //
     private int counter
 
+    @AutoFinal @CompileStatic
     private void assertHighlighting(String contents, HighlightedTypedPosition... expectedPositions) {
-        def references = new GatherSemanticReferences(
-            addGroovySource(contents, "Highlighting${++counter}"))
-        references.factory = new TypeInferencingVisitorFactory() {
+        def references = new GatherSemanticReferences(addGroovySource(contents, "Highlighting${++counter}"))
+        references.@factory = new TypeInferencingVisitorFactory() {
             @Override
             TypeInferencingVisitorWithRequestor createVisitor(GroovyCompilationUnit gcu) {
                 def visitor = super.createVisitor(gcu)
-                visitor.debug = true // enable checks
+                visitor.@debug = true // enable checks
                 return visitor
             }
         }
@@ -3702,5 +5938,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         }.join('\n')
 
         assertEquals(expect, actual)
+    }
+
+    private boolean isDeprecatedTransitive() {
+        org.eclipse.jdt.core.JavaCore.plugin.bundle.version < org.osgi.framework.Version.parseVersion('3.44')
     }
 }

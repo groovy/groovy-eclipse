@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,8 +18,10 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
@@ -44,42 +46,27 @@ public class EnclosingCallPointcut extends AbstractPointcut {
             return null;
         }
 
+        Function<CallAndType, MethodCall> toResult = (cat) -> cat.call;
+
         Object firstArgument = getFirstArgument();
-        if (firstArgument instanceof String) {
-            return matchesInCalls(enclosing, (String) firstArgument, pattern);
-        } else if (firstArgument == null) {
-            return asCallList(enclosing);
-        } else {
-            return matchOnPointcutArgument((IPointcut) firstArgument, pattern, asCallList(enclosing));
-        }
-    }
-
-    private List<MethodCallExpression> asCallList(List<CallAndType> enclosing) {
-        List<MethodCallExpression> types = new ArrayList<>(enclosing.size());
-        for (CallAndType callAndType : enclosing) {
-            types.add(callAndType.call);
-        }
-        return types;
-    }
-
-    private List<MethodCallExpression> matchesInCalls(List<CallAndType> enclosing,
-            String callName, GroovyDSLDContext pattern) {
-        List<MethodCallExpression> calls = null;
-        for (CallAndType callAndType : enclosing) {
-            if (callName == null || callName.equals(callAndType.call.getMethodAsString())) {
-                if (calls == null) {
-                    calls = new ArrayList<>(1);
+        if (firstArgument == null) {
+            return enclosing.stream().map(toResult).collect(Collectors.toList());
+        } else if (firstArgument instanceof String) {
+            List<Object> results = null;
+            for (CallAndType callAndType : enclosing) {
+                if (firstArgument.equals(callAndType.call.getMethodAsString())) {
+                    if (results == null) {
+                        results = new ArrayList<>(4);
+                    }
+                    results.add(toResult.apply(callAndType));
                 }
-                calls.add(callAndType.call);
             }
+            return results;
+        } else {
+            return matchOnPointcutArgument((IPointcut) firstArgument, pattern, enclosing.stream().map(toResult).collect(Collectors.toList()));
         }
-        return calls;
     }
 
-
-    /**
-     * expecting one arg that is either a string or a pointcut
-     */
     @Override
     public void verify() throws PointcutVerificationException {
         String hasOneOrNoArgs = hasOneOrNoArgs();

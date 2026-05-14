@@ -708,7 +708,7 @@
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Superfluous modifier ''public'' should be removed" /><!-- NOTE: Excludes fields to allow choice of field or property -->
-        <property name="format" value="\bpublic\s+(?:(?:abstract|final|static)\s+)*(?:enum|class|@?interface|(?:\w+(?:\.\w+)*(&lt;.*&gt;)?\s+)?\w+\()" />
+        <property name="format" value="(?&lt;!\|\s{0,80})\bpublic\s+(?:(?:abstract|final|static)\s+)*(?:enum|class|@?interface|(?:\w+(?:\.\w+)*(&lt;.*&gt;)?\s+)?\w+\()" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyDefaultPublic" />
     </module>
@@ -720,31 +720,31 @@
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Superfluous ''()'' should be removed" />
-        <property name="format" value="(?&lt;!\.)@(?:\w+\.)*\w+\(\s*\)" />
+        <property name="format" value="(?&lt;!\|\s{0,99}|\.)@(?:\w+\.)*\w+\(\s*\)" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyAnnotationStyle:EmptyParens" />
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Superfluous ''[]'' should be removed" />
-        <property name="format" value="(?&lt;!\.)@(?:\w+\.)*\w+\(\s*(?:\w+\s*=\s*)?\[\s*(?:[^,\]]*|([&apos;&quot;])[^&apos;&quot;]*\1)\]\s*\)" />
+        <property name="format" value="(?&lt;!\|\s{0,99}|\.)@(?:\w+\.)*\w+\(\s*(?:\w+\s*=\s*)?\[\s*(?:[^,\]]*|([&apos;&quot;])[^&apos;&quot;]*\1)\]\s*\)" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyAnnotationStyle:SingleValue" />
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Superfluous ''value='' should be removed" />
-        <property name="format" value="(?&lt;!\.)@(?:\w+\.)*\w+\(\s*value\s*=\s*(?:(?:\w+\.)*\w+|\[[^\]]*\]|([&apos;&quot;])[^&apos;&quot;]*\1)\)" />
+        <property name="format" value="(?&lt;!\|\s{0,99}|\.)@(?:\w+\.)*\w+\(\s*value\s*=\s*(?:(?:\w+\.)*\w+|\[[^\]]*\]|([&apos;&quot;])[^&apos;&quot;]*\1)\)" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyAnnotationStyle:ValueLiteral" />
     </module>
-    <module name="RegexpMultiline">
+    <module name="RegexpSingleline">
         <property name="message" value="Groovy property notation should be used instead of accessors" />
-        <property name="format" value="(?&lt;!\b\p{Upper}\w{0,99}\s{0,99})\.(get\p{Upper}\p{Alnum}*\(\s*\)|set\p{Upper}\p{Alnum}*\([^,]+\))" />
+        <property name="format" value="^(?!\s*\|(?!\|)).*(?&lt;!\b\p{Upper}\w{0,99}\s{0,99})\.(get(?!Class|Super|This)\p{Upper}\p{Alnum}*\(\s*\)|set(?!Class|Super|This)\p{Upper}\p{Alnum}*\([^,]+\))(?!;?[&apos;&quot;](?:,|$))" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyPropertyAccess" />
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Single quotation marks should be used for simple string literals" /><!-- ^(?:\s{4})*+(?!//|[/\s]\*|\|) tries to exclude comments or multi-line string continuation -->
-        <property name="format" value="^(?:\s{4})*+(?!//|[/\s]\*|\|)(?:&apos;[^&apos;]*&apos;|&quot;[^&quot;]*\$[^&quot;]*&quot;|[^&quot;])*+(&quot;{2}(?!&quot;)|&quot;(?:\\&quot;|[^\$&quot;])+&quot;(?!\s*:)|(?&lt;=\bcase\s{1,9})&quot;(?:\\&quot;|[^\$&quot;])+&quot;)" />
+        <property name="format" value="^(?:\s{4})*+(?!//|[/\s]\*|\|)(?:&apos;(?:\\&apos;|[^&apos;])*&apos;|&quot;(?:\\&quot;|[^&quot;])*\$(?:\\&quot;|[^&quot;])*&quot;|[^&quot;])*+((?&lt;!\\)&quot;{2}(?!&quot;)|&quot;(?:\\&quot;|[^\$&quot;])+&quot;(?!\s*:)|(?&lt;=\bcase\s{1,9})&quot;(?:\\&quot;|[^\$&quot;])+&quot;)" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyStringLiterals" />
     </module>
@@ -787,13 +787,13 @@
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Statement ''for (x in y)'' should be used instead of ''for (T x : y)''" />
-        <property name="format" value="\bfor\s*\(.+?\s+\w+\s*:" />
+        <property name="format" value="(?&lt;!\|\s{0,99})\bfor\s*\(.+?\s+\w+\s*:" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyForInStatement" />
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Statement ''for (x in y)'' should be used instead of ''for (x in y.entrySet())''" />
-        <property name="format" value="\bfor\s*\(.+?\s+in\s+.+?\.entrySet\(\)\)" />
+        <property name="format" value="(?&lt;!\|\s{0,99})\bfor\s*\(.+?\s+in\s+.+?\.entrySet\(\)\)" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyForInStatement:MapEntrySet" />
     </module>
@@ -861,20 +861,6 @@
         <property name="fileExtensions" value="groovy,java" />
         <property name="id" value="disabledTestCase" />
     </module>
-    <!--module name="RegexpMultiline">
-        <property name="message" value="Assertions.assertThat should be used instead of plain JUnit or Hamcrest asserts" />
-        <property name="format" value="\b(?:org\.junit\.\s*)?Assert\s*\.\s*assert" />
-        <property name="fileExtensions" value="java" />
-        <property name="id" value="festAssertions" />
-        <property name="severity" value="warning" />
-    </module>
-    <module name="RegexpMultiline">
-        <property name="message" value="Keyword ''assert'' should be used instead of plain JUnit or Hamcrest asserts" />
-        <property name="format" value="\b(?:org\.junit\.\s*)?Assert\s*\.\s*assert" />
-        <property name="fileExtensions" value="groovy" />
-        <property name="id" value="groovyAssertions" />
-        <property name="severity" value="warning" />
-    </module-->
 
 
     <!-- Copyright statement check -->

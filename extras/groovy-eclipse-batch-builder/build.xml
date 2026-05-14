@@ -8,7 +8,7 @@
         - org.eclipse.jdt.groovy.core
         - org.codehaus.groovy.eclipse.ant
     2) Update build.properties to point to the appropriate locations and versions
-    3) Comment/uncomment do-24-build, do-25-build or ... (exactly one of these must be uncommented at once)
+    3) Comment/uncomment do-30-build, do-40-build or ... (exactly one of these must be uncommented at once)
     4a) Run `package` to build the groovy-eclipse-batch jars and pom
      OR
     4b) Run `install` to build groovy-eclipse-batch artifacts and install them locally
@@ -31,8 +31,14 @@
         <copy file="${maven.dir}/pom.xml" tofile="${build.dir}/${maven.pom}"/>
         <replace file="${build.dir}/${maven.pom}" token="REPLACE_WITH_VERSION" value="${version}"/>
 
+        <taskdef name="jarjar" classname="com.eed3si9n.jarjar.JarJarTask">
+            <classpath>
+                <fileset dir="jarjar" includes="*.jar"/>
+            </classpath>
+        </taskdef>
+
         <!-- create main artifact from stage directory -->
-        <jar destfile="${build.dir}/${main.jar}">
+        <jarjar destfile="${build.dir}/${main.jar}">
             <fileset dir="${stage.dir}">
                 <exclude name="**/*.g"/>
                 <exclude name="**/*.g4"/>
@@ -46,24 +52,33 @@
                 <exclude name=".options"/>
                 <exclude name="about_files/**"/>
                 <exclude name="ant_tasks/**"/>
-                <exclude name="package-list"/>
+                <exclude name="module-info.class"/>
                 <exclude name="plugin.*"/>
-                <exclude name="script.js"/>
-                <exclude name="stylesheet.css"/>
                 <exclude name="systembundle.properties"/>
-                <exclude name="META-INF/*.properties"/>
                 <exclude name="META-INF/eclipse.inf"/>
                 <exclude name="META-INF/INDEX.LIST"/>
                 <exclude name="META-INF/maven/**"/>
+                <exclude name="META-INF/native-image/**"/>
+                <exclude name="META-INF/services/org.osgi.*"/>
                 <exclude name="META-INF/*.RSA"/>
                 <exclude name="META-INF/*.SF"/>
+                <exclude name="OSGI-INF/**"/>
+                <exclude name="OSGI-OPT/**"/>
             </fileset>
             <manifest>
-                <attribute name="Implementation-Version" value="${version}" />
-                <attribute name="Implementation-Vendor" value="Pivotal Software, Inc." />
-                <attribute name="Main-Class" value="org.eclipse.jdt.internal.compiler.batch.Main" />
+                <attribute name="Created-By" value="Eclipse JDT toolchain"/>
+                <attribute name="Implementation-Vendor" value="Pivotal Software, Inc."/>
+                <attribute name="Implementation-Version" value="${version} (${jdt.patch.target})"/>
+                <attribute name="Main-Class" value="org.eclipse.jdt.internal.compiler.batch.Main"/>
+                <attribute name="Require-Capability" value="osgi.ee;filter:=&quot;(&amp;(osgi.ee=JavaSE)(version=17))&quot;"/>
             </manifest>
-        </jar>
+            <rule pattern="org.eclipse.core.**" result="groovyjarjareclipse.core.@1"/>
+            <rule pattern="org.eclipse.equinox.**" result="groovyjarjareclipse.equinox.@1"/>
+            <rule pattern="org.eclipse.jface.**" result="groovyjarjareclipse.jface.@1"/>
+            <rule pattern="org.eclipse.osgi.**" result="groovyjarjareclipse.osgi.@1"/>
+            <rule pattern="org.eclipse.text.**" result="groovyjarjareclipse.text.@1"/>
+            <rule pattern="org.osgi.**" result="groovyjarjarosgi.@1"/>
+        </jarjar>
 
         <!-- create javadoc artifact -->
         <jar destfile="${build.dir}/${javadoc.jar}">
@@ -71,14 +86,29 @@
         </jar>
 
         <!-- create sources artifact -->
-        <jar destfile="${build.dir}/${sources.jar}">
-            <fileset dir="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core/batch">
-                <include name="**/BatchCompiler.java" />
-                <include name="**/Main.java" />
+        <jar destfile="${build.dir}/${sources.jar}" duplicate="preserve">
+            <fileset dir="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core.compiler.batch/src" erroronmissingdir="false">
+                <include name="**/BatchCompiler.java"/>
+                <include name="**/Main.java"/>
+            </fileset>
+            <fileset dir="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core/batch" erroronmissingdir="false">
+                <include name="**/BatchCompiler.java"/>
+                <include name="**/Main.java"/>
+            </fileset>
+            <fileset dir="${git.repo.loc}/ide/org.codehaus.groovy.eclipse.ant/src-ant">
+                <include name="**/*.java"/>
+            </fileset>
+            <fileset dir="${git.repo.loc}/base/${groovy.folder}/src-trace">
+                <include name="**/*.java"/>
+            </fileset>
+            <fileset dir="${git.repo.loc}/base/${groovy.folder}/src">
+                <include name="**/*.groovy"/>
+                <include name="**/*.java"/>
             </fileset>
             <fileset dir="${stage.dir}">
-                <include name="**/*.groovy" />
-                <include name="**/*.java" />
+                <exclude name="OSGI-OPT/**"/>
+                <include name="**/*.groovy"/>
+                <include name="**/*.java"/>
             </fileset>
         </jar>
     </target>
@@ -112,21 +142,22 @@
             <fileset refid="orig.groovy.jars"/>
         </unzip>
 
-        <!-- Overwrite existing with classes from workspace bin folders-->
-        <copy todir="${stage.dir}">
-            <fileset refid="jdt.groovy.core.class.files"/>
+        <!-- overwrite existing with classes from workspace output folders -->
+        <copy overwrite="true" preservelastmodified="true" todir="${stage.dir}">
+            <fileset refid="gdt.core.class.files"/>
             <fileset refid="jdt.core.class.files"/>
-            <fileset refid="groovy.core.class.files"/>
+            <fileset refid="jdt.batch.class.files"/>
+            <fileset refid="groovy.ant.class.files"/>
+            <fileset refid="groovy.patch.class.files"/>
             <fileset refid="groovy.trace.class.files"/>
-            <fileset refid="ant.groovy.class.files"/>
         </copy>
 
-        <!-- now unzip the jdt compiler adapter jar. It's a jar within a jar. -->
+        <!-- now unzip the jdt compiler adapter jar; it's a jar within a jar -->
         <unzip dest="${stage.dir}" src="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core/jdtCompilerAdapter.jar"/>
     </target>
 
 
-    <target name="-init" depends="-fail-if-no-version-specified,-init24,-init25,-init30">
+    <target name="-init" depends="-fail-if-no-version-specified,-init30,-init40,-init50,-init60">
         <fileset dir="${eclipse.install.plugins}" id="orig.plugin.jars">
             <include name="org.eclipse.core.contenttype_*.jar"/>
             <include name="org.eclipse.core.filesystem_*.jar"/>
@@ -138,28 +169,35 @@
             <include name="org.eclipse.jdt.compiler.apt_*.jar"/>
             <include name="org.eclipse.osgi_*.jar"/>
             <include name="org.eclipse.text_*.jar"/>
+            <include name="org.osgi.service.prefs_*.jar"/>
         </fileset>
 
         <fileset dir="${git.repo.loc}/base" id="orig.groovy.jars">
+            <include name="${groovy.folder}/*-parser2.jar"/>
             <include name="${groovy.folder}/lib/groovy*.jar"/>
+            <exclude name="${groovy.folder}/lib/*-javadoc.jar"/>
             <exclude name="${groovy.folder}/lib/groovy-test*.jar"/>
             <!-- include the non-locking classloader w/ sources -->
             <include name="org.eclipse.jdt.groovy.core/nlcl*.jar"/>
         </fileset>
-        <fileset dir="${git.repo.loc}/base/org.eclipse.jdt.groovy.core/bin" id="jdt.groovy.core.class.files">
+
+        <fileset dir="${git.repo.loc}/base/org.eclipse.jdt.groovy.core/bin" id="gdt.core.class.files">
             <include name="**/*.*"/>
         </fileset>
         <fileset dir="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
             <include name="**/*.*"/>
         </fileset>
+        <fileset dir="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core.compiler.batch/bin" erroronmissingdir="false" id="jdt.batch.class.files">
+            <include name="**/*.*"/>
+        </fileset>
         <!-- ensure that this comes after the core groovy compiler files because the groovy-eclipse.jar must overwrite the groovy.jar -->
-        <fileset dir="${git.repo.loc}/base/${groovy.folder}/bin" id="groovy.core.class.files">
+        <fileset dir="${git.repo.loc}/base/${groovy.folder}/bin" id="groovy.patch.class.files">
             <include name="**/*.*"/>
         </fileset>
         <fileset dir="${git.repo.loc}/base/${groovy.folder}/bin-trace" id="groovy.trace.class.files">
             <include name="**/*.*"/>
         </fileset>
-        <fileset dir="${git.repo.loc}/ide/org.codehaus.groovy.eclipse.ant/bin-ant" id="ant.groovy.class.files">
+        <fileset dir="${git.repo.loc}/ide/org.codehaus.groovy.eclipse.ant/bin-ant" id="groovy.ant.class.files">
             <include name="**/*.*"/>
         </fileset>
 
@@ -170,24 +208,31 @@
     </target>
 
 
-    <target name="-init24" if="do-24-build">
-        <echo message="Building Groovy 2.4.x"/>
-        <property name="version" value="${version2.4}"/>
-        <property name="groovy.folder" value="org.codehaus.groovy24"/>
-    </target>
-
-
-    <target name="-init25" if="do-25-build">
-        <echo message="Building Groovy 2.5.x"/>
-        <property name="version" value="${version2.5}"/>
-        <property name="groovy.folder" value="org.codehaus.groovy25"/>
-    </target>
-
-
     <target name="-init30" if="do-30-build">
         <echo message="Building Groovy 3.0.x"/>
         <property name="version" value="${version3.0}"/>
         <property name="groovy.folder" value="org.codehaus.groovy30"/>
+    </target>
+
+
+    <target name="-init40" if="do-40-build">
+        <echo message="Building Groovy 4.0.x"/>
+        <property name="version" value="${version4.0}"/>
+        <property name="groovy.folder" value="org.codehaus.groovy40"/>
+    </target>
+
+
+    <target name="-init50" if="do-50-build">
+        <echo message="Building Groovy 5.0.x"/>
+        <property name="version" value="${version5.0}"/>
+        <property name="groovy.folder" value="org.codehaus.groovy50"/>
+    </target>
+
+
+    <target name="-init60" if="do-60-build">
+        <echo message="Building Groovy 6.0.x"/>
+        <property name="version" value="${version6.0}"/>
+        <property name="groovy.folder" value="org.codehaus.groovy60"/>
     </target>
 
 
@@ -196,9 +241,10 @@
         <condition property="no-version-specified">
             <not>
             <or>
-                <isset property="do-24-build"/>
-                <isset property="do-25-build"/>
                 <isset property="do-30-build"/>
+                <isset property="do-40-build"/>
+                <isset property="do-50-build"/>
+                <isset property="do-60-build"/>
             </or>
             </not>
         </condition>

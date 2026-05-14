@@ -1,0 +1,290 @@
+/*
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
+package org.codehaus.groovy.ast.expr;
+
+import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.GroovyCodeVisitor;
+
+import java.util.Map;
+
+/**
+ * Represents a constant value expression such as literals (null, true, false, numbers, strings),
+ * class literals, and other compile-time constant values. Each user-defined constant expression
+ * maintains its own instance to preserve line and column information for accurate error reporting.
+ * Predefined instances (e.g., {@link #NULL}, {@link #TRUE}, {@link #FALSE}) are provided as
+ * internal constants and should not be compared directly; use the {@code isXXXExpression()} methods instead.
+ *
+ * @see Expression
+ * @see VariableExpression
+ * @see BinaryExpression
+ */
+public class ConstantExpression extends Expression {
+    // The following fields are only used internally; every occurrence of a user-defined expression of the same kind
+    // has its own instance so as to preserve line information. Consequently, to test for such an expression, don't
+    // compare against the field but call isXXXExpression() instead.
+    public static final ConstantExpression NULL = new StaticConstantExpression(null);
+    public static final ConstantExpression TRUE = new StaticConstantExpression(Boolean.TRUE);
+    public static final ConstantExpression FALSE = new StaticConstantExpression(Boolean.FALSE);
+    public static final ConstantExpression EMPTY_STRING = new StaticConstantExpression("");
+    public static final ConstantExpression PRIM_TRUE = new StaticConstantExpression(Boolean.TRUE, true);
+    public static final ConstantExpression PRIM_FALSE = new StaticConstantExpression(Boolean.FALSE, true);
+
+    // the following fields are only used internally; there are no user-defined expressions of the same kind
+    public static final ConstantExpression VOID = new StaticConstantExpression(Void.class);
+    public static final ConstantExpression EMPTY_EXPRESSION = new StaticConstantExpression(null);
+
+    private final Object value;
+    private String constantName;
+
+    /**
+     * Creates a constant expression with the specified value. The type of this constant
+     * expression will be inferred from the value's class.
+     *
+     * @param value the constant value; may be null to represent a null literal
+     */
+    public ConstantExpression(Object value) {
+        this(value, false);
+    }
+
+    /**
+     * Creates a constant expression with optional primitive type preservation.
+     * If {@code keepPrimitive} is true, primitive wrapper types (Integer, Long, Boolean, etc.)
+     * are kept as their primitive equivalents rather than boxed types.
+     *
+     * @param value the constant value; may be null
+     * @param keepPrimitive if true, preserve primitive types for wrapper classes (e.g., Integer
+     *                      becomes int); if false, use the boxed type
+     */
+    public ConstantExpression(Object value, boolean keepPrimitive) {
+        this.value = value;
+        if (value != null) {
+            if (keepPrimitive) {
+                if (value instanceof Integer) {
+                    setType(ClassHelper.int_TYPE);
+                } else if (value instanceof Long) {
+                    setType(ClassHelper.long_TYPE);
+                } else if (value instanceof Boolean) {
+                    setType(ClassHelper.boolean_TYPE);
+                } else if (value instanceof Double) {
+                    setType(ClassHelper.double_TYPE);
+                } else if (value instanceof Float) {
+                    setType(ClassHelper.float_TYPE);
+                } else if (value instanceof Character) {
+                    setType(ClassHelper.char_TYPE);
+                } else {
+                    setType(ClassHelper.make(value.getClass()));
+                }
+                //TODO: more cases here
+            } else {
+                setType(ClassHelper.make(value.getClass()));
+            }
+        }
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + "[" + value + "]";
+    }
+
+    @Override
+    public void visit(GroovyCodeVisitor visitor) {
+        visitor.visitConstantExpression(this);
+    }
+
+    @Override
+    public Expression transformExpression(ExpressionTransformer transformer) {
+        return this;
+    }
+
+    /**
+     * Returns the constant value represented by this expression.
+     *
+     * @return the constant value; may be null to represent a null literal
+     */
+    public Object getValue() {
+        return value;
+    }
+
+    @Override
+    public String getText() {
+        return (value == null ? "null" : value.toString());
+    }
+
+    /**
+     * Returns the constant name associated with this expression. This is typically used for
+     * named constants defined in source code.
+     *
+     * @return the constant name; may be null if not set
+     */
+    public String getConstantName() {
+        return constantName;
+    }
+
+    /**
+     * Sets the constant name for this expression.
+     *
+     * @param constantName the name to associate with this constant; may be null
+     */
+    public void setConstantName(String constantName) {
+        this.constantName = constantName;
+    }
+
+    /**
+     * Indicates whether this constant expression represents a null value.
+     *
+     * @return true if this expression represents null; false otherwise
+     */
+    public boolean isNullExpression() {
+        return value == null;
+    }
+
+    /**
+     * Indicates whether this constant expression represents the boolean true value.
+     *
+     * @return true if this expression represents Boolean.TRUE; false otherwise
+     */
+    public boolean isTrueExpression() {
+        return Boolean.TRUE.equals(value);
+    }
+
+    /**
+     * Indicates whether this constant expression represents the boolean false value.
+     *
+     * @return true if this expression represents Boolean.FALSE; false otherwise
+     */
+    public boolean isFalseExpression() {
+        return Boolean.FALSE.equals(value);
+    }
+
+    /**
+     * Indicates whether this constant expression represents an empty string value.
+     *
+     * @return true if this expression represents an empty string; false otherwise
+     */
+    public boolean isEmptyStringExpression() {
+        return "".equals(value);
+    }
+}
+
+// GRECLIPSE add
+class StaticConstantExpression extends ConstantExpression {
+
+    public StaticConstantExpression(Object value) {
+        super(value);
+    }
+
+    public StaticConstantExpression(Object value, boolean keepPrimitive) {
+        super(value, keepPrimitive);
+    }
+
+    // ASTNode overrides:
+
+    @Override
+    public void setColumnNumber(int n) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setLastColumnNumber(int n) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setLastLineNumber(int n) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setLineNumber(int n) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setMetaDataMap(Map meta) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setSourcePosition(ASTNode node) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setStart(int i) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setEnd(int i) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    // AnnotatedNode overrides:
+
+    @Override
+    public void addAnnotation(AnnotationNode node) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setDeclaringClass(ClassNode node) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setHasNoRealSourcePosition(boolean b) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setNameStart(int i) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setNameEnd(int i) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setSynthetic(boolean b) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    // ConstantExpression overrides:
+
+    @Override
+    public void setConstantName(String name) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setType(ClassNode type) {
+        if (!isNullExpression() && ClassHelper.isDynamicTyped(getType())) {
+            super.setType(type); // allow one-time initialization
+        } else {
+            throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+        }
+    }
+}
+// GRECLIPSE end

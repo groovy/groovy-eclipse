@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,10 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -34,28 +34,23 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
  */
 public class BindingSet {
 
-    // the table of named bindings built up through contained pointcuts
+    /** the table of named bindings built up through contained pointcuts */
     private final Map<String, Collection<Object>> namedBindings = new HashMap<>();
-
 
     public BindingSet() {
     }
 
     /**
-     * Augments the existing named binding with the collection value.
-     *
-     * Creates the binding if it doesn't exist yet
-     * @param name
-     * @param value should not be null
-     * @return
+     * Augments the existing named binding with the collection value. Creates
+     * the binding if it doesn't exist yet.
      */
-    public BindingSet addToBinding(String name, Collection<?> value) {
+    public BindingSet addToBinding(String name, Collection<?> values) {
         Collection<Object> binding = namedBindings.get(name);
         if (binding == null) {
-            binding = new HashSet<>();
+            binding = new ArrayList<>();
             namedBindings.put(name, binding);
         }
-        binding.addAll(value);
+        binding.addAll(values);
         return this;
     }
 
@@ -64,7 +59,8 @@ public class BindingSet {
     }
 
     public Collection<Object> getBinding(String name) {
-        return namedBindings.get(name);
+        Collection<Object> values = namedBindings.get(name);
+        return values == null ? null : Collections.unmodifiableCollection(values);
     }
 
     public int size() {

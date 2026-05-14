@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,13 +57,13 @@ final class ContextInformationTests extends CompletionTestSuite {
     @Test
     void testMethodContext1() {
         addGroovySource('''\
-            class Other {
-              /*def meth() { }*/ // methods with 0 args do not have context info
-              def meth(a) { }
-              def meth(int a, int b) { }
-              def method(int a, int b) { }
-            }
-            '''.stripIndent(), 'Other', 'a')
+            |class Other {
+            |  /*def meth() { }*/ // methods with 0 args do not have context info
+            |  def meth(a) { }
+            |  def meth(int a, int b) { }
+            |  def method(int a, int b) { }
+            |}
+            |'''.stripMargin(), 'Other', 'a')
 
         runTest('new a.Other().meth()', 'meth(', 'meth', 2)
     }
@@ -71,16 +71,16 @@ final class ContextInformationTests extends CompletionTestSuite {
     @Test
     void testMethodContext2() {
         addGroovySource('''\
-            class Other extends Super {
-              /*def meth() { }*/ // methods with 0 args do not have context info
-              def meth(a) { }
-              def meth(int a, int b) { }
-            }
-            class Super {
-              def meth(String d) { }
-              def method(String d) { }
-            }
-            '''.stripIndent(), 'Other', 'b')
+            |class Other extends Super {
+            |  /*def meth() { }*/ // methods with 0 args do not have context info
+            |  def meth(a) { }
+            |  def meth(int a, int b) { }
+            |}
+            |class Super {
+            |  def meth(String d) { }
+            |  def method(String d) { }
+            |}
+            |'''.stripMargin(), 'Other', 'b')
 
         runTest('new b.Other().meth()', 'meth(', 'meth', 3)
     }
@@ -88,16 +88,16 @@ final class ContextInformationTests extends CompletionTestSuite {
     @Test
     void testMethodContext3() {
         addGroovySource('''\
-            class Other extends Super {
-              /*def meth() { }*/ // methods with 0 args do not have context info
-              def meth(a) { }
-              def meth(int a, int b) { }
-            }
-            class Super {
-              def meth(String d) { }
-              def method(String d) { }
-            }
-            '''.stripIndent(), 'Other', 'c')
+            |class Other extends Super {
+            |  /*def meth() { }*/ // methods with 0 args do not have context info
+            |  def meth(a) { }
+            |  def meth(int a, int b) { }
+            |}
+            |class Super {
+            |  def meth(String d) { }
+            |  def method(String d) { }
+            |}
+            |'''.stripMargin(), 'Other', 'c')
 
         runTest('new c.Other().meth(a)', 'meth(', 'meth', 3)
     }
@@ -105,16 +105,16 @@ final class ContextInformationTests extends CompletionTestSuite {
     @Test
     void testMethodContext4() {
         addGroovySource('''\
-            class Other extends Super {
-              /*def meth() { }*/ // methods with 0 args do not have context info
-              def meth(a) { }
-              def meth(int a, int b) { }
-            }
-            class Super {
-              def meth(String d) { }
-              def method(String d) { }
-            }
-            '''.stripIndent(), 'Other', 'd')
+            |class Other extends Super {
+            |  /*def meth() { }*/ // methods with 0 args do not have context info
+            |  def meth(a) { }
+            |  def meth(int a, int b) { }
+            |}
+            |class Super {
+            |  def meth(String d) { }
+            |  def method(String d) { }
+            |}
+            |'''.stripMargin(), 'Other', 'd')
 
         runTest('new d.Other().meth(a,b)', 'meth(a,', 'meth', 3)
     }
@@ -122,11 +122,11 @@ final class ContextInformationTests extends CompletionTestSuite {
     @Test
     void testConstructorContext1() {
         addGroovySource('''\
-            class Other {
-              Other(a) { }
-              Other(int a, int b) { }
-            }
-            '''.stripIndent(), 'Other', 'e')
+            |class Other {
+            |  Other(a) { }
+            |  Other(int a, int b) { }
+            |}
+            |'''.stripMargin(), 'Other', 'e')
 
         runTest('new e.Other()', 'Other(', 'Other', 2)
     }
@@ -134,11 +134,11 @@ final class ContextInformationTests extends CompletionTestSuite {
     @Test
     void testConstructorContext2() {
         addGroovySource('''\
-            class Other {
-              Other(a) { }
-              Other(int a, int b) { }
-            }
-            '''.stripIndent(), 'Other', 'f')
+            |class Other {
+            |  Other(a) { }
+            |  Other(int a, int b) { }
+            |}
+            |'''.stripMargin(), 'Other', 'f')
 
         runTest('new f.Other()', 'Other(', 'Other', 2)
     }
@@ -146,11 +146,11 @@ final class ContextInformationTests extends CompletionTestSuite {
     @Test
     void testConstructorContext3() {
         addGroovySource('''\
-            class Other {
-              Other(a) { }
-              Other(int a, int b) { }
-            }
-            '''.stripIndent(), 'Other', 'g')
+            |class Other {
+            |  Other(a) { }
+            |  Other(int a, int b) { }
+            |}
+            |'''.stripMargin(), 'Other', 'g')
 
         runTest('import g.Other; new Other()', 'Other(', 'Other', 2)
     }
@@ -158,11 +158,11 @@ final class ContextInformationTests extends CompletionTestSuite {
     @Test
     void testConstructorContext4() {
         addGroovySource('''\
-            class Other {
-              Other(a) { }
-              Other(int a, int b) { }
-            }
-            '''.stripIndent(), 'Other', 'h')
+            |class Other {
+            |  Other(a) { }
+            |  Other(int a, int b) { }
+            |}
+            |'''.stripMargin(), 'Other', 'h')
 
         runTest('new h.Other(a)', 'Other(', 'Other', 2)
     }
@@ -170,11 +170,11 @@ final class ContextInformationTests extends CompletionTestSuite {
     @Test
     void testConstructorContext5() {
         addGroovySource('''\
-            class Other {
-              Other(a) { }
-              Other(int a, int b) { }
-            }
-            '''.stripIndent(), 'Other', 'i')
+            |class Other {
+            |  Other(a) { }
+            |  Other(int a, int b) { }
+            |}
+            |'''.stripMargin(), 'Other', 'i')
 
         runTest('new i.Other(a,b)', 'Other(a,', 'Other', 2)
     }
@@ -182,15 +182,15 @@ final class ContextInformationTests extends CompletionTestSuite {
     @Test
     void testConstructorContext6() {
         addGroovySource('''\
-            class Other {
-              Other(a) { }
-              Other(int a, int b) { }
-            }
-            class Super {
-              Super(String d) { }
-              Super(String d, String e) { }
-            }
-            '''.stripIndent(), 'Super')
+            |class Other {
+            |  Other(a) { }
+            |  Other(int a, int b) { }
+            |}
+            |class Super {
+            |  Super(String d) { }
+            |  Super(String d, String e) { }
+            |}
+            |'''.stripMargin(), 'Super')
 
         runTest('new Super()', 'Super(', 'Super', 2)
     }

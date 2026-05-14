@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,14 +61,14 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
     }
 
     /**
-     * @return the expression AST node that is currently being inferred.
+     * @return the expression AST node that is currently being inferred
      */
     protected Expression getCurrentExpression() {
         return currentExpression;
     }
 
     /**
-     * @return the variable AST node if declared within current or enclosing scope
+     * @return the variable if declared within current or enclosing scope
      */
     protected Variable getDeclaredVariable(String name, VariableScope scope) {
         Variable var = null;
@@ -105,7 +105,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
      * @return true iff the current lookup is in a static scope
      */
     protected boolean isStatic() {
-        return isStatic.booleanValue();
+        return Boolean.TRUE.equals(isStatic);
     }
 
     @Override
@@ -114,6 +114,12 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
         if (isCtorCall || (expression instanceof VariableExpression) || (expression instanceof ConstantExpression &&
                                                                         (expression.getEnd() < 1 || expression.getLength() == expression.getText().length()))) {
             String name = (isCtorCall ? "<init>" : expression.getText());
+            switch (name) {
+            case "null":
+            case "this":
+            case "super":
+                return null;
+            }
 
             Variable variable = getDeclaredVariable(name, scope);
             if (variable != null && !variable.isDynamicTyped()) {
@@ -136,7 +142,8 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
                 for (TypeAndScope pair : declaringTypes) {
                     ClassNode declaringType = pair.declaringType;
                     if (declaringType.isUsingGenerics() && declaringType.equals(VariableScope.CLASS_CLASS_NODE)) {
-                        declaringType = declaringType.getGenericsTypes()[0].getType(); isStatic = Boolean.TRUE;
+                        declaringType = declaringType.getGenericsTypes()[0].getType();
+                        isStatic = Boolean.TRUE;
                     } else {
                         isStatic = Boolean.valueOf(isStaticObjectExpression);
                     }
@@ -148,7 +155,8 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
                     }
                 }
             } finally {
-                currentExpression = null; isStatic = null;
+                currentExpression = null;
+                isStatic = null;
             }
         }
         return null;
@@ -157,8 +165,8 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
     /**
      * Clients should return a {@link TypeAndDeclaration} corresponding to an additional
      *
-     * @return the type and declaration corresponding to the name in the given declaring type. The declaration may be null, but this
-     *         should be avoided in that it prevents the use of navigation and of javadoc hovers
+     * @return the type and declaration corresponding to the name in the given declaring type; the declaration may be null,
+     *         but this should be avoided in that it prevents the use of navigation and of javadoc hovers
      */
     protected abstract TypeAndDeclaration lookupTypeAndDeclaration(ClassNode declaringType, String name, VariableScope scope);
 

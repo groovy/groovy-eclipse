@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -90,12 +90,9 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
             ASTNode node = entry.getKey();
             int flags = entry.getValue();
             OccurrenceLocation occurrenceLocation;
-            if ((node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) || node instanceof FieldNode || node instanceof MethodNode || node instanceof StaticMethodCallExpression) {
+            if ((node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) || node instanceof Parameter || node instanceof FieldNode || node instanceof MethodNode || node instanceof StaticMethodCallExpression) {
                 AnnotatedNode n = (AnnotatedNode) node;
                 occurrenceLocation = new OccurrenceLocation(n.getNameStart(), n.getNameEnd() - n.getNameStart() + 1, flags, "Occurrence of ''" + getElementName() + "''");
-            } else if (node instanceof Parameter) {
-                Parameter p = (Parameter) node;
-                occurrenceLocation = new OccurrenceLocation(p.getNameStart(), p.getNameEnd() - p.getNameStart(), flags, "Occurrence of ''" + getElementName() + "''");
             } else {
                 SourceRange r = getSourceRange(node);
                 occurrenceLocation = new OccurrenceLocation(r.getOffset(), r.getLength(), flags, "Occurrence of ''" + getElementName() + "''");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,10 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
 import java.util.Map;
 
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.AliasImportReference;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -247,22 +242,48 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
     public void testStarImports3() {
         //@formatter:off
         String[] sources = {
-            "Wibble.groovy",
+            "Main.groovy",
             "import a.b.c.*\n" +
-            "class Wibble {\n" +
-            "  Process process = new Process()\n" +
-            "  static void main(String[] argv) {\n" +
-            "    print new Wibble().process.class\n" +
+            "class Main {\n" +
+            "  def prop = new D()\n" +
+            "  static main(args) {\n" +
+            "    print new Main().prop.class\n" +
             "  }\n" +
             "}\n",
 
-            "a/b/c/Process.java",
+            "a/b/c/D.java",
             "package a.b.c;\n" +
-            "public class Process {}\n",
+            "public class D {}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "class a.b.c.Process");
+        runConformTest(sources, "class a.b.c.D");
+    }
+
+    @Test
+    public void testStarImports4() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.lang.DelegatesTo.*\n" +
+            "Target target\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testStarImports5() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static groovy.lang.DelegatesTo.*\n" +
+            "Target target\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
     }
 
     @Test // 'import static a.B.FOO'
@@ -343,7 +364,7 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "package a\n" +
             "interface B {\n" +
             "  String C = 'nls'\n" +
-            "}",
+            "}\n",
 
             "x/Y.groovy",
             "package x\n" +
@@ -351,11 +372,73 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "class Y {\n" +
             "  @SuppressWarnings(C) def one() {}\n" +
             "  @SuppressWarnings(C) def two() {}\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testStaticImport5() {
+        for (String kind : new String[] {"get", "is"}) {
+            //@formatter:off
+            String[] sources = {
+                "script.groovy",
+                "import static a.B." + kind + "C\n" +
+                "print c\n", // converted to accessor
+
+                "a/B.groovy",
+                "package a\n" +
+                "class B {\n" +
+                "  static boolean c = true\n" +
+                "}\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "true");
+        }
+
+        //@formatter:off
+        String[] sources = {
+            "script.groovy",
+            "import static a.B.setC\n" +
+            "c = true\n" +
+            "print a.B.c\n",
+
+            "a/B.groovy",
+            "package a\n" +
+            "class B {\n" +
+            "  static boolean c\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "true");
+    }
+
+    @Test // GROOVY-10329, GROOVY-11056
+    public void testStaticImport6() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import static p.C.callable\n" +
+            "callable('foo')\n" +
+            "def functor = {\n" +
+            "  callable('bar')\n" +
+            "}\n" +
+            "functor.call()\n",
+
+            "p/C.groovy",
+            "package p\n" +
+            "class C {\n" +
+            "  public static callable = new C()\n" +
+            "  void call(... args) { print args[0] }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foobar");
     }
 
     @Test
@@ -532,7 +615,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in p\\C.groovy (at line 8)\n" +
             "\tpublic static void callitOne(A a) {}\n" +
             "\t                             ^\n" +
@@ -544,10 +628,10 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
     public void testAliasing_GRE473() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "import java.util.regex.Pattern as JavaPattern\n" +
-            "class Pattern {JavaPattern javaPattern}\n" +
-            "def p = new Pattern(javaPattern:~/\\d+/)\n" +
+            "class Pattern { JavaPattern javaPattern }\n" +
+            "def p = new Pattern(javaPattern: ~/\\d+/)\n" +
             "assert \"123\" ==~ p.javaPattern\n" +
             "print 'success '\n" +
             "print '['+p.class.name+']['+JavaPattern.class.name+']'\n",
@@ -558,20 +642,18 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testAliasing_GRE473_2() {
+    public void testImportConflict1() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "import java.util.regex.Pattern\n" +
-            "class Pattern {Pattern javaPattern}\n" +
-            "def p = new Pattern(javaPattern:~/\\d+/)\n" +
-            "assert \"123\" ==~ p.javaPattern\n" +
-            "print 'success'\n",
+            "class Pattern { }\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
             "\timport java.util.regex.Pattern\n" +
             "\t       ^^^^^^^^^^^^^^^^^^^^^^^\n" +
             "The import java.util.regex.Pattern conflicts with a type defined in the same file\n" +
@@ -579,144 +661,214 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testImportInnerInner01() {
+    public void testImportConflict2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.regex.Pattern as Regexp\n" +
+            "class Regexp { }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\timport java.util.regex.Pattern as Regexp\n" +
+            "\t       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "The import java.util.regex.Pattern as Regexp conflicts with a type defined in the same file\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testImportConflict3() {
+        //@formatter:off
+        String[] sources = {
+            "Pattern.groovy",
+            "import java.util.regex.Pattern\n" +
+            "null\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Pattern.groovy (at line 1)\n" +
+            "\timport java.util.regex.Pattern\n" +
+            "\t       ^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "The import java.util.regex.Pattern conflicts with a type defined in the same file\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testImportConflict4() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.lang.Script as Main\n" +
+            "null\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\timport groovy.lang.Script as Main\n" +
+            "\t       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "The import groovy.lang.Script as Main conflicts with a type defined in the same file\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testImportConflict5() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.regex.Pattern\n" +
+            "import java.lang.Object as Pattern\n" +
+            "Pattern pattern = null\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 2)\n" +
+            "\timport java.lang.Object as Pattern\n" +
+            "\t       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "The import java.lang.Object as Pattern collides with another import statement\n" +
+            "----------\n");
+    }
+
+    @Test // GROOVY-8254
+    public void testImportConflict6() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import Foo as Bar\n" +
+            "class Foo { }\n" +
+            "class Bar { }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\timport Foo as Bar\n" +
+            "\t       ^^^^^^^^^^\n" +
+            "The import Foo as Bar conflicts with a type defined in the same file\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testImportInnerClass1() {
         //@formatter:off
         String[] sources = {
             "p/C.groovy",
-            "package p;\n" +
-            "public class C {\n" +
-            "  private static Wibble.Inner.Inner2 wibbleInner = new G();\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    wibbleInner.run();\n" +
+            "package p\n" +
+            "import x.y.z.Outer.Inner\n" +
+            "class C {\n" +
+            "  private static Inner inner = new Inner()\n" +
+            "  static main(args) {\n" +
+            "    inner.run()\n" +
+            "  }\n" +
+            "}\n",
+
+            "x/y/z/Outer.java",
+            "package x.y.z;\n" +
+            "public class Outer {\n" +
+            "  public static class Inner {\n" +
+            "    public void run() {System.out.print(\"works\");}\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testImportInnerClass2() {
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p\n" +
+            "import x.y.z.Outer.Inner as Alias\n" +
+            "class C {\n" +
+            "  private static Alias alias = new Alias()\n" +
+            "  static main(args) {\n" +
+            "    alias.run()\n" +
+            "  }\n" +
+            "}\n",
+
+            "x/y/z/Outer.java",
+            "package x.y.z;\n" +
+            "public class Outer {\n" +
+            "  public static class Inner {\n" +
+            "    public void run() {System.out.print(\"works\");}\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testImportInnerInner1() {
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p\n" +
+            "import p.X.Y.Z\n" +
+            "class C {\n" +
+            "  private static X.Y.Z xyz = new D()\n" +
+            "  static main(args) {\n" +
+            "    xyz.run()\n" +
             "  }\n" +
             "}\n" +
-            "class G extends Wibble.Inner.Inner2  {}",
+            "class D extends Z {}\n",
 
-            "p/Wibble.java",
+            "p/X.java",
             "package p;\n" +
-            "public class Wibble {\n" +
-            "  public static class Inner {\n" +
-            "    public static class Inner2 {\n" +
-            "      public static void run() { System.out.print(\"p.Wibble.Inner.Inner2.run \");}\n" +
+            "public class X {\n" +
+            "  public static class Y {\n" +
+            "    public static class Z {\n" +
+            "      public void run() {System.out.print(\"works\");}\n" +
             "    }\n" +
             "  }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "p.Wibble.Inner.Inner2.run");
+        runConformTest(sources, "works");
     }
 
     @Test
-    public void testImportInnerClass01_JavaCase() {
-        //@formatter:off
-        String[] sources = {
-            "p/C.java",
-            "package p;\n" +
-            "import x.y.z.Wibble.Inner;\n" +
-            "\n" +
-            "public class C {\n" +
-            "  private static Inner wibbleInner = new Inner();\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    wibbleInner.run();\n" +
-            "  }\n" +
-            "}\n",
-
-            "x/y/z/Wibble.java",
-            "package x.y.z;\n" +
-            "public class Wibble {\n" +
-            "  public static class Inner {\n" +
-            "    public static void run() { System.out.print(\"q.A.run \");}\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "q.A.run");
-    }
-
-    // FIXASC need to look at all other kinds of import - statics/double nested static classes/etc
-    @Test
-    public void testImportInnerClass01_GroovyCase() {
+    public void testImportInnerInner2() {
         //@formatter:off
         String[] sources = {
             "p/C.groovy",
-            "package p;\n" +
-            "import x.y.z.Wibble.Inner\n" +
-            "\n" +
-            "public class C {\n" +
-            "  private static Inner wibbleInner = new Inner();\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    wibbleInner.run();\n" +
+            "package p\n" +
+            "import p.X.Y\n" +
+            "import p.X.Y.*\n" +
+            "class C {\n" +
+            "  private static Y.Z xyz = new Z()\n" +
+            "  static main(args) {\n" +
+            "    xyz.run()\n" +
             "  }\n" +
             "}\n",
 
-            "x/y/z/Wibble.java",
-            "package x.y.z;\n" +
-            "public class Wibble {\n" +
-            "  public static class Inner {\n" +
-            "    public static void run() { System.out.print(\"q.A.run \");}\n" +
+            "p/X.java",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public static class Y {\n" +
+            "    public static class Z {\n" +
+            "      public void run() {System.out.print(\"works\");}\n" +
+            "    }\n" +
             "  }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "q.A.run");
-    }
-
-    @Test
-    public void testImportInnerClass() {
-        //@formatter:off
-        String[] sources = {
-            "p/C.groovy",
-            "package p;\n" +
-            "import x.y.z.Wibble.Inner /*as WibbleInner*/;\n" +
-            "public class C {\n" +
-            "  private static Inner wibbleInner = new Inner();\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    wibbleInner.run();\n" +
-            "  }\n" +
-            //"  public static void callitOne(WibbleInner a) { a.run();}\n" +
-            "}\n",
-
-            "x/y/z/Wibble.java",
-            "package x.y.z;\n" +
-            "public class Wibble {\n" +
-            "  public static class Inner {\n" +
-            "    public void run() { System.out.print(\"run\");}\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "run");
-    }
-
-    @Test
-    public void testImportAliasingInnerClass() {
-        //@formatter:off
-        String[] sources = {
-            "p/C.groovy",
-            "package p;\n" +
-            "import x.y.z.Wibble.Inner as WibbleInner;\n" +
-            "public class C {\n" +
-            "  private static WibbleInner wibbleInner = new WibbleInner();\n" +
-            "  public static void main(String[] argv) {\n" +
-            "   wibbleInner.run();\n" +
-            "  }\n" +
-            "}\n",
-
-            "x/y/z/Wibble.java",
-            "package x.y.z;\n" +
-            "public class Wibble {\n" +
-            "  public static class Inner {\n" +
-            "    public void run() { System.out.print(\"run \");}\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "run");
+        runConformTest(sources, "works");
     }
 
     @Test
@@ -743,6 +895,7 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
             "com/foo/Type.groovy",
             "package com.foo\n" +
+            "import java.lang.Object\n" +
             "class Type {\n" +
             "  public static void m() {}\n" +
             "}\n",
@@ -750,6 +903,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "done", options);
+
+        // implicit import placed at end of package statement
+        ImportReference ref = getCUDeclFor("Runner.groovy").imports[0];
+        assertEquals(15, ref.sourceStart);
+        assertEquals(14, ref.sourceEnd);
+
+        // implicit import placed at end of explicit import
+        ref = getCUDeclFor("Type.groovy").imports[1];
+        assertEquals(39, ref.sourceStart);
+        assertEquals(38, ref.sourceEnd);
     }
 
     @Test
@@ -1000,7 +1163,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
             "\tType.m()\n" +
             "\t^^^^\n" +
@@ -1039,7 +1203,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in com\\bar\\Runner.groovy (at line 1)\n" +
             "\tpackage com.bar\n" +
             "\t^\n" +
@@ -1089,7 +1254,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
             "\tType.m()\n" +
             "\t^^^^\n" +
@@ -1151,7 +1317,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\timport a.b.c.D;\n" +
             "\t       ^^^^^^^\n" +
@@ -1372,347 +1539,174 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "abc");
     }
 
-    @Test
-    public void testParsingBlankPackage() {
+    @Test // GROOVY-5239
+    public void testStaticImportVersusOuterClassMethod1() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
-            "package \n" +
-            "class Name { }\n",
-        };
-        //@formatter:on
+            "Main.groovy",
+            "import static p.Q.who\n" +
+            "class C {\n" +
+            "  def who() {\n" +
+            "    'C'\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    print who()\n" +
+            "    new D().test()\n" +
+            "  }\n" +
+            "  class D {\n" +
+            "    void test() {\n" +
+            "      print who()\n" + // resolves to static import
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
 
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tpackage \n" +
-            "\t^\n" +
-            "Groovy:Invalid package specification\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testParsingBlankPackage2() {
-        //@formatter:off
-        String[] sources = {
-            "Foo.groovy",
-            "package ;\n" +
-            "class Name { }\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tpackage ;\n" +
-            "\t^\n" +
-            "Groovy:Invalid package specification\n" +
-            "----------\n");
-    }
-
-    @Test // does the second error now get reported after the package problem
-    public void testParsingBlankPackage3() {
-        //@formatter:off
-        String[] sources = {
-            "Foo.groovy",
-            "package ;\n" +
-            "class Name { \n" +
-            "  asdf\n" +
+            "p/Q.java",
+            "package p;\n" +
+            "public class Q {\n" +
+            "  public static String who() {\n" +
+            "    return \"Q\";\n" +
+            "  }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tpackage ;\n" +
-            "\t^\n" +
-            "Groovy:Invalid package specification\n" +
-            "----------\n" +
-            "2. ERROR in Foo.groovy (at line 3)\n" +
-            "\tasdf\n" +
-            "\t^\n" +
-            "Groovy:unexpected token: asdf\n" +
-            "----------\n");
+        runConformTest(sources, "CC");
     }
 
-    @Test
-    public void testParsingBlankImport_538() {
+    @Test // GROOVY-5239
+    public void testStaticImportVersusOuterClassMethod2() {
         //@formatter:off
         String[] sources = {
-            "A.groovy",
-            "import ",
+            "Main.groovy",
+            "import static p.Q.who\n" +
+            "class C {\n" +
+            "  def who() {\n" +
+            "    'C'\n" +
+            "  }\n" +
+            "}\n" +
+            "class D extends C {\n" +
+            "  void test() {\n" +
+            "    print who()\n" +
+            "    new E().test()\n" +
+            "  }\n" +
+            "  class E {\n" +
+            "    void test() {\n" +
+            "      print who()\n" + // resolves to static import
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new D().test()\n",
+
+            "p/Q.java",
+            "package p;\n" +
+            "public class Q {\n" +
+            "  public static String who() {\n" +
+            "    return \"Q\";\n" +
+            "  }\n" +
+            "}\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport \n" +
-            "\t^^^^^^^\n" +
-            "Groovy:unable to resolve class ?\n" +
-            "----------\n");
-
-        ModuleNode mn = getModuleNode("A.groovy");
-        assertNotNull(mn);
-        assertFalse(mn.encounteredUnrecoverableError());
-
-        List<ImportNode> imports = mn.getImports();
-        ImportNode recoveredImport = imports.get(0);
-        assertEquals(0, recoveredImport.getStart());
-        assertEquals(7, recoveredImport.getEnd());
-        assertEquals("?", recoveredImport.getType().getName());
-
-        ClassNode cn = mn.getClasses().get(0);
-        assertNotNull(cn);
-        assertTrue(cn.getName().equals("A"));
+        runConformTest(sources, "CC");
     }
 
-    @Test
-    public void testParsingBlankImport2_538() {
+    @Test // GROOVY-10396
+    public void testStaticImportVersusThisOrSuperMethod1() {
         //@formatter:off
         String[] sources = {
-            "A.groovy",
-            "import ;",
+            "Main.groovy",
+            "import static p.Q.println\n" +
+            "println 'x'\n", // from Script
+
+            "p/Q.java",
+            "package p;\n" +
+            "public class Q {\n" +
+            "  public static void println(String s) {\n" +
+            "    System.out.println(\"Q:\" + s);\n" +
+            "  }\n" +
+            "}\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport ;\n" +
-            "\t^^^^^^^\n" +
-            "Groovy:unable to resolve class ?\n" +
-            "----------\n");
-
-        ModuleNode mn = getModuleNode("A.groovy");
-        assertNotNull(mn);
-        assertFalse(mn.encounteredUnrecoverableError());
-
-        List<ImportNode> imports = mn.getImports();
-        ImportNode recoveredImport = imports.get(0);
-        assertEquals(0, recoveredImport.getStart());
-        assertEquals(7, recoveredImport.getEnd());
-        assertEquals("?", recoveredImport.getType().getName());
-
-        ClassNode cn = mn.getClasses().get(0);
-        assertNotNull(cn);
-        assertTrue(cn.getName().equals("A"));
+        runConformTest(sources, "x");
     }
 
-    @Test
-    public void testParsingDotTerminatedImport_538() {
+    @Test // GROOVY-10396
+    public void testStaticImportVersusThisOrSuperMethod2() {
         //@formatter:off
         String[] sources = {
-            "A.groovy",
-            "import foo.",
+            "Main.groovy",
+            "import static p.Q.println\n" +
+            "static void test() {\n" +
+            "  println 'x'\n" +
+            "}\n" +
+            "test()\n",
+
+            "p/Q.java",
+            "package p;\n" +
+            "public class Q {\n" +
+            "  public static void println(String s) {\n" +
+            "    System.out.println(\"Q:\" + s);\n" +
+            "  }\n" +
+            "}\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport foo.\n" +
-            "\t       ^\n" +
-            "Groovy:Invalid import\n" +
-            "----------\n");
-
-        ModuleNode mn = getModuleNode("A.groovy");
-        assertNotNull(mn);
-        assertFalse(mn.encounteredUnrecoverableError());
-
-        List<ImportNode> imports = mn.getStarImports();
-        ImportNode recoveredImport = imports.get(0);
-        assertEquals("foo.", recoveredImport.getPackageName());
-
-        ClassNode cn = mn.getClasses().get(0);
-        assertNotNull(cn);
-        assertTrue(cn.getName().equals("A"));
+        runConformTest(sources, "Q:x");
     }
 
-    @Test
-    public void testParsingBlankImportStatic_538() {
+    @Test // GROOVY-10396
+    public void testStaticImportVersusThisOrSuperMethod3() {
         //@formatter:off
         String[] sources = {
-            "A.groovy",
-            "import static \n",
+            "Main.groovy",
+            "import static p.Q.println\n" +
+            "def obj = new Object() {\n" + // outer class extends Script
+            "  String toString() {\n" +
+            "    println 'AIC::x'\n" +
+            "    super.toString()\n" +
+            "  }\n" +
+            "}\n" +
+            "obj.toString()\n",
+
+            "p/Q.java",
+            "package p;\n" +
+            "public class Q {\n" +
+            "  public static void println(String s) {\n" +
+            "    System.out.println(\"Q:\" + s);\n" +
+            "  }\n" +
+            "}\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport static \n" +
-            "\t^^^^^^^^^^^^^^\n" +
-            "Groovy:unable to resolve class ?\n" +
-            "----------\n");
-
-        ModuleNode mn = getModuleNode("A.groovy");
-        assertNotNull(mn);
-        assertFalse(mn.encounteredUnrecoverableError());
-
-        List<ImportNode> imports = mn.getImports();
-        ImportNode recoveredImport = imports.get(0);
-        assertEquals(0, recoveredImport.getStart());
-        assertEquals(14, recoveredImport.getEnd());
-        assertEquals("?", recoveredImport.getType().getName());
-        assertTrue(mn.getStaticImports().isEmpty());
-
-        ClassNode cn = mn.getClasses().get(0);
-        assertNotNull(cn);
-        assertTrue(cn.getName().equals("A"));
+        runConformTest(sources, "AIC::x");
     }
 
-    @Test
-    public void testParsingBlankImportStatic2_538() {
+    @Test // GROOVY-10396
+    public void testStaticImportVersusThisOrSuperMethod4() {
         //@formatter:off
         String[] sources = {
-            "A.groovy",
-            "import static ;\n",
+            "Main.groovy",
+            "import static p.Q.println\n" +
+            "static void println(String s) {\n" + // static overload
+            "  System.out.println(s)\n" +
+            "}\n" +
+            "static void test() {\n" +
+            "  println 'x'\n" +
+            "}\n" +
+            "test()\n",
+
+            "p/Q.java",
+            "package p;\n" +
+            "public class Q {\n" +
+            "  public static void println(String s) {\n" +
+            "    System.out.println(\"Q:\" + s);\n" +
+            "  }\n" +
+            "}\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport static ;\n" +
-            "\t^^^^^^^^^^^^^^\n" +
-            "Groovy:unable to resolve class ?\n" +
-            "----------\n");
-
-        ModuleNode mn = getModuleNode("A.groovy");
-        assertNotNull(mn);
-        assertFalse(mn.encounteredUnrecoverableError());
-
-        List<ImportNode> imports = mn.getImports();
-        ImportNode recoveredImport = imports.get(0);
-        assertEquals(0, recoveredImport.getStart());
-        assertEquals(14, recoveredImport.getEnd());
-        assertEquals("?", recoveredImport.getType().getName());
-        assertTrue(mn.getStaticImports().isEmpty());
-
-        ClassNode cn = mn.getClasses().get(0);
-        assertNotNull(cn);
-        assertTrue(cn.getName().equals("A"));
-    }
-
-    @Test
-    public void testParsingDotTerminatedImportStatic_538() {
-        //@formatter:off
-        String[] sources = {
-            "A.groovy",
-            "import static foo.Bar.",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport static foo.Bar.\n" +
-            "\t              ^\n" +
-            "Groovy:Invalid import\n" +
-            "----------\n" +
-            "2. ERROR in A.groovy (at line 1)\n" +
-            "\timport static foo.Bar.\n" +
-            "\t              ^^^^^^^\n" +
-            "Groovy:unable to resolve class foo.Bar\n" +
-            "----------\n");
-
-        ModuleNode mn = getModuleNode("A.groovy");
-        assertNotNull(mn);
-        assertFalse(mn.encounteredUnrecoverableError());
-
-        Map<String, ImportNode> imports = mn.getStaticStarImports();
-        ImportNode recoveredImport = imports.get("foo.Bar");
-        assertEquals("foo.Bar", recoveredImport.getType().getName());
-
-        ClassNode cn = mn.getClasses().get(0);
-        assertNotNull(cn);
-        assertEquals("A", cn.getName());
-    }
-
-    @Test
-    public void testParsingDotTerminatedImportFollowedByClassDeclaration_538() {
-        //@formatter:off
-        String[] sources = {
-            "A.groovy",
-            "import foo.\n" +
-            "\n" +
-            "class Wibble {}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport foo.\n" +
-            "\t       ^\n" +
-            "Groovy:Invalid import\n" +
-            "----------\n");
-
-        ModuleNode mn = getModuleNode("A.groovy");
-        assertNotNull(mn);
-        assertFalse(mn.encounteredUnrecoverableError());
-
-        List<ImportNode> imports = mn.getStarImports();
-        ImportNode recoveredImport = imports.get(0);
-        assertEquals("foo.", recoveredImport.getPackageName());
-
-        ClassNode cn = mn.getClasses().get(0);
-        assertNotNull(cn);
-        assertEquals("Wibble", cn.getName());
-    }
-
-    @Test
-    public void testParsingDotTerminatedImportFollowedByModifierAndClassDeclaration_538() {
-        //@formatter:off
-        String[] sources = {
-            "A.groovy",
-            "import foo.\n" +
-            "\n" +
-            "public class Wibble {}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport foo.\n" +
-            "\t       ^\n" +
-            "Groovy:Invalid import\n" +
-            "----------\n");
-
-        ModuleNode mn = getModuleNode("A.groovy");
-        assertNotNull(mn);
-        assertFalse(mn.encounteredUnrecoverableError());
-
-        List<ImportNode> imports = mn.getStarImports();
-        ImportNode recoveredImport = imports.get(0);
-        assertEquals("foo.", recoveredImport.getPackageName());
-
-        ClassNode cn = mn.getClasses().get(0);
-        assertNotNull(cn);
-        assertEquals("Wibble", cn.getName());
-    }
-
-    @Test
-    public void testParsingBlankImportFollowedByClassDeclaration_538() {
-        //@formatter:off
-        String[] sources = {
-            "A.groovy",
-            "import\n" +
-            "\n" +
-            "public class Wibble {}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport\n" +
-            "\t^^^^^^\n" +
-            "Groovy:unable to resolve class ?\n" +
-            "----------\n");
-
-        ModuleNode mn = getModuleNode("A.groovy");
-        assertNotNull(mn);
-        assertFalse(mn.encounteredUnrecoverableError());
-
-        List<ImportNode> imports = mn.getImports();
-        ImportNode recoveredImport = imports.get(0);
-        assertEquals("?", recoveredImport.getType().getName());
-
-        ClassNode cn = mn.getClasses().get(0);
-        assertNotNull(cn);
-        assertEquals("Wibble", cn.getName());
+        runConformTest(sources, "x");
     }
 }

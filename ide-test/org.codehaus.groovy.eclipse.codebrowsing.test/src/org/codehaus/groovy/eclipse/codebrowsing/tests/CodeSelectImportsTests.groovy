@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,8 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
             |Pattern p = ~/123/
             |'''.stripMargin()
 
-        assertCodeSelect([source], 'State')
+        def elem = assertCodeSelect([source], 'State')
+        assert elem.key == 'Ljava/lang/Thread$State;'
     }
 
     @Test
@@ -61,7 +62,8 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
             |def p = ~/123/
             |'''.stripMargin()
 
-        assertCodeSelect([source], 'Thread')
+        def elem = assertCodeSelect([source], 'Thread')
+        assert elem.key == 'Ljava/lang/Thread;'
     }
 
     @Test
@@ -70,7 +72,8 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
             |import java.lang.Thread.*
             |'''.stripMargin()
 
-        assertCodeSelect([source], 'Thread')
+        def elem = assertCodeSelect([source], 'Thread')
+        assert elem.key == 'Ljava/lang/Thread;'
     }
 
     @Test

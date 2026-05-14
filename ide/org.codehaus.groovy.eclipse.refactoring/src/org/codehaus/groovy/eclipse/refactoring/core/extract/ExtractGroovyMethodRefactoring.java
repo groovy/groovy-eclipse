@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.callThisX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.declS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -64,6 +63,7 @@ import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -71,7 +71,6 @@ import org.eclipse.jdt.internal.corext.refactoring.JavaRefactoringArguments;
 import org.eclipse.jdt.internal.corext.refactoring.JavaRefactoringDescriptorUtil;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringCoreMessages;
 import org.eclipse.jdt.internal.corext.util.CodeFormatterUtil;
-import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -225,7 +224,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     private RefactoringStatus initialize(final JavaRefactoringArguments arguments) {
         String selection = arguments.getAttribute(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION);
         if (selection == null) {
-            return RefactoringStatus.createFatalErrorStatus(Messages.format(
+            return RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.bind(
                 RefactoringCoreMessages.InitializableRefactoring_argument_not_exist, JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION));
         }
 
@@ -237,15 +236,14 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         if (tokenizer.hasMoreTokens())
             length = Integer.valueOf(tokenizer.nextToken()).intValue();
         if (offset < 0 || length < 0) {
-            return RefactoringStatus.createFatalErrorStatus(Messages.format(
-                RefactoringCoreMessages.InitializableRefactoring_illegal_argument,
-                new Object[] {selection, JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION}));
+            return RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.bind(
+                RefactoringCoreMessages.InitializableRefactoring_illegal_argument, selection, JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION));
         }
         selectedText = new Region(offset, length);
 
         String handle = arguments.getAttribute(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT);
         if (handle == null) {
-            return RefactoringStatus.createFatalErrorStatus(Messages.format(
+            return RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.bind(
                 RefactoringCoreMessages.InitializableRefactoring_argument_not_exist, JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT));
         }
 
@@ -257,7 +255,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
         String name = arguments.getAttribute(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME);
         if (name == null || name.length() == 0) {
-            return RefactoringStatus.createFatalErrorStatus(Messages.format(
+            return RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.bind(
                 RefactoringCoreMessages.InitializableRefactoring_argument_not_exist, JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME));
         }
         newMethodName = name;
@@ -325,7 +323,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
      */
     public String getMethodCall() {
         List<Expression> arguments = originalParametersBeforeRename.stream().map(p ->
-            varX(p.getName(), Optional.ofNullable(p.getOriginType()).orElse(VariableScope.OBJECT_CLASS_NODE))
+            varX(p.getName(), Optional.ofNullable(p.getOriginType()).orElseGet(ClassHelper::dynamicType))
         ).collect(Collectors.toList());
         Expression newMethodCall = callThisX(newMethodName, args(arguments));
 
@@ -364,7 +362,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
             if (!returnParameters.isEmpty()) {
                 returnType = inferredReturnTypes.get(0);
             } else {
-                returnType = VariableScope.OBJECT_CLASS_NODE;
+                returnType = ClassHelper.dynamicType();
             }
             newMethod = new MethodNode(newMethodName, 0, returnType, params, null, block);
 
@@ -444,27 +442,30 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         for (Variable variable : actualParameters) {
             ClassNode type = Optional.ofNullable(inferredTypes.get(variable)).filter(t -> !VariableScope.isVoidOrObject(t))
                 .map(ExtractGroovyMethodRefactoring::normalizeInferredType)
-                .orElse(VariableScope.OBJECT_CLASS_NODE);
+                .orElseGet(ClassHelper::dynamicType);
             inferredTypeOfActualParameters.add(type);
         }
 
         for (Variable variable : returnParameters) {
             ClassNode type = Optional.ofNullable(inferredTypes.get(variable))
                 .map(ExtractGroovyMethodRefactoring::normalizeInferredType)
-                .orElse(VariableScope.OBJECT_CLASS_NODE);
+                .orElseGet(ClassHelper::dynamicType);
             inferredReturnTypes.add(type);
         }
     }
 
     private static ClassNode normalizeInferredType(final ClassNode t) {
-        if (t.equals(VariableScope.GSTRING_CLASS_NODE)) {
-            return VariableScope.STRING_CLASS_NODE;
-        }
-        if (VariableScope.isVoidOrObject(t)) {
-            return t.redirect();
+        if (ClassHelper.isDynamicTyped(t)) {
+            return null;
         }
         if (ClassHelper.isPrimitiveType(t)) {
-            return t;
+            return t.redirect();
+        }
+        if (t.equals(VariableScope.OBJECT_CLASS_NODE)) {
+            return VariableScope.OBJECT_CLASS_NODE;
+        }
+        if (t.equals(VariableScope.GSTRING_CLASS_NODE)) {
+            return VariableScope.STRING_CLASS_NODE;
         }
         return ClassHelper.getUnwrapper(t).getPlainNodeReference();
     }
@@ -473,9 +474,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         SubMonitor.convert(monitor, "Checking for duplicate methods", 25);
         RefactoringStatus stat = new RefactoringStatus();
         if (getMethodNames().contains(newMethodName)) {
-            Object[] message = {newMethodName, getClassName()};
-            String messageString = MessageFormat.format(GroovyRefactoringMessages.ExtractMethodWizard_MethodNameAlreadyExists, message);
-            stat.addError(messageString);
+            stat.addError(GroovyRefactoringMessages.bind(GroovyRefactoringMessages.ExtractMethodWizard_MethodNameAlreadyExists, newMethodName, getClassName()));
         }
         return stat;
     }
@@ -485,8 +484,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         RefactoringStatus stat = new RefactoringStatus();
         if (methodCodeFinder.isInConstructor()) {
             if (new ExtractConstructorTest().containsConstructorCall(newMethod)) {
-                stat.addFatalError(GroovyRefactoringMessages.ExtractMethodInfo_NoExtractionOfConstructorCallinConstructor,
-                        createErrorContext());
+                stat.addFatalError(GroovyRefactoringMessages.ExtractMethodInfo_NoExtractionOfConstructorCallinConstructor, createErrorContext());
             }
         }
         return stat;
@@ -590,7 +588,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
      */
     private int calculateIndentation() {
         int defaultIndentation;
-        if (methodCodeFinder.getClassNode().isScript()) {
+        if (GroovyUtils.isScript(methodCodeFinder.getClassNode())) {
             defaultIndentation = 0;
         } else {
             // must handle inner classes

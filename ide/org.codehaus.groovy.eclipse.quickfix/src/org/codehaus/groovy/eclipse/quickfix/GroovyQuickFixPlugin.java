@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,11 +15,20 @@
  */
 package org.codehaus.groovy.eclipse.quickfix;
 
-import java.io.IOException;
+import static org.eclipse.jdt.core.IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Optional;
+
+import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.ui.text.java.IInvocationContext;
+import org.eclipse.jdt.ui.text.java.IProblemLocation;
 import org.eclipse.jface.text.templates.ContextTypeRegistry;
 import org.eclipse.jface.text.templates.persistence.TemplateStore;
 import org.eclipse.ui.editors.text.templates.ContributionContextTypeRegistry;
@@ -39,32 +48,31 @@ public class GroovyQuickFixPlugin extends AbstractUIPlugin {
         return plugin;
     }
 
-    public static void logWarning(String message, Throwable exception) {
+    public static void logWarning(final String message, final Throwable exception) {
         log(createWarningStatus(message, exception));
     }
 
-    public static void log(String message, Throwable exception) {
+    public static void log(final String message, final Throwable exception) {
         IStatus status = createErrorStatus(message, exception);
         log(status);
     }
 
-    public static void log(Throwable exception) {
+    public static void log(final Throwable exception) {
         log(createErrorStatus("Internal Error", exception));
     }
 
-    public static void log(IStatus status) {
+    public static void log(final IStatus status) {
         getDefault().getLog().log(status);
     }
 
-    public static IStatus createErrorStatus(String message, Throwable exception) {
+    public static IStatus createErrorStatus(String message, final Throwable exception) {
         if (message == null) {
             message = "";
         }
         return new Status(IStatus.ERROR, PLUGIN_ID, 0, message, exception);
     }
 
-    public static IStatus createWarningStatus(String message,
-        Throwable exception) {
+    public static IStatus createWarningStatus(String message, final Throwable exception) {
         if (message == null) {
             message = "";
         }
@@ -79,6 +87,14 @@ public class GroovyQuickFixPlugin extends AbstractUIPlugin {
 
     public GroovyQuickFixPlugin() {
         plugin = this;
+    }
+
+    public void savePreferences() {
+        try {
+            InstanceScope.INSTANCE.getNode(PLUGIN_ID).flush();
+        } catch (BackingStoreException e) {
+            log(e);
+        }
     }
 
     /**
@@ -112,11 +128,19 @@ public class GroovyQuickFixPlugin extends AbstractUIPlugin {
         return contextTypeRegistry;
     }
 
-    public void savePreferences() {
-        try {
-            InstanceScope.INSTANCE.getNode(PLUGIN_ID).flush();
-        } catch (BackingStoreException e) {
-            log(e);
+    public static boolean isGroovyProject(final ICompilationUnit unit) {
+        return Optional.ofNullable(unit).map(ICompilationUnit::getResource).map(IResource::getProject)
+            .filter(project -> project.isAccessible() && GroovyNature.hasGroovyNature(project)).isPresent();
+    }
+
+    public static boolean isGroovyProject(final IInvocationContext context) {
+        return Optional.ofNullable(context).map(IInvocationContext::getCompilationUnit).filter(GroovyQuickFixPlugin::isGroovyProject).isPresent();
+    }
+
+    public static IProblemLocation[] getJavaProblems(final IProblemLocation[] locations) {
+        if (locations == null || locations.length == 0) {
+            return locations;
         }
+        return Arrays.stream(locations).filter(location -> location.getMarkerType() == JAVA_MODEL_PROBLEM_MARKER).toArray(IProblemLocation[]::new);
     }
 }

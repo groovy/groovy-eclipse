@@ -29,9 +29,6 @@ def blub() {
     
     def b = 1
     def c = 1
-    
-    
-    
 }
 
 ###end

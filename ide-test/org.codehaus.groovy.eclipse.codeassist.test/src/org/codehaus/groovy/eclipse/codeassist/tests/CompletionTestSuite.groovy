@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.core.groovy.tests.search.SearchTestSuite.waitUntilReady
 import static org.junit.Assert.*
 
 import java.util.regex.Pattern
@@ -25,10 +26,10 @@ import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompleti
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
-import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor
 import org.eclipse.jdt.groovy.search.ITypeRequestor
@@ -55,20 +56,22 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
     @Before
     final void setUpCompletionTestCase() {
-        SynchronizationUtils.waitForDSLDProcessingToComplete()
+        setJavaPreference(JavaCore.CODEASSIST_SUBWORD_MATCH, 'disabled')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, true)
+        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, true)
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, false)
     }
 
     @After
     final void tearDownCompletionTestCase() {
         setJavaPreference(PreferenceConstants.TYPEFILTER_ENABLED, '')
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'true')
         setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, '')
     }
 
     @AfterClass
     static final void tearDownCompletionTestSuite() {
         GroovyContentAssist.getDefault().preferenceStore.with {
-            storePreferences.@properties.keys().each { k ->
+            storePreferences.keys().each { k ->
                 if (!isDefault(k)) {
                     println "Resetting '$k' to its default"
                     setToDefault(k)
@@ -89,8 +92,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
     /** Use {@link #createProposalsAtOffset} if testing {@link GroovyCompletionProposalComputer}. */
     protected ICompletionProposal[] performContentAssist(ICompilationUnit unit, int offset, Class<? extends IJavaCompletionProposalComputer> computerClass) {
-        JavaEditor editor = openInEditor(unit)
-        SynchronizationUtils.waitForIndexingToComplete(unit)
+        JavaEditor editor = openInEditor(unit); waitUntilReady(unit.javaProject)
         JavaSourceViewer viewer = editor.viewer
         viewer.setSelectedRange(offset, 0)
 
@@ -102,11 +104,13 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected int getIndexOf(CharSequence contents, String lookFor) {
-        return contents.toString().indexOf(lookFor) + lookFor.length()
+        int index = contents.toString().indexOf(lookFor); assert index != -1
+        return index + lookFor.length()
     }
 
     protected int getLastIndexOf(CharSequence contents, String lookFor) {
-        return contents.toString().lastIndexOf(lookFor) + lookFor.length()
+        int index = contents.toString().lastIndexOf(lookFor); assert index != -1
+        return index + lookFor.length()
     }
 
     protected void proposalExists(ICompletionProposal[] proposals, String name, int expectedCount, boolean isType = name.contains(' - ')) {
@@ -208,14 +212,14 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected void checkReplacementRegexp(ICompletionProposal[] proposals, String expectedReplacement, int expectedCount) {
         int foundCount = 0
         for (proposal in proposals) {
-            String replacement = proposal.replacementString
+            def replacement = proposal.replacementString
             if (Pattern.matches(expectedReplacement, replacement)) {
                 foundCount += 1
             }
         }
 
         if (foundCount != expectedCount) {
-            StringBuilder sb = new StringBuilder("Expected to find proposal '$expectedReplacement' $expectedCount times, but found it $foundCount times.  All Proposals:")
+            def sb = new StringBuilder("Expected to find proposal '$expectedReplacement' $expectedCount times, but found it $foundCount times.  All Proposals:")
             for (proposal in proposals) {
                 sb.append('\n').append(proposal.replacementString)
             }
@@ -226,14 +230,14 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected void checkReplacementString(ICompletionProposal[] proposals, String expectedReplacement, int expectedCount) {
         int foundCount = 0
         for (proposal in proposals) {
-            String replacement = proposal.replacementString
+            def replacement = proposal.replacementString
             if (replacement == expectedReplacement) {
                 foundCount += 1
             }
         }
 
         if (foundCount != expectedCount) {
-            StringBuilder sb = new StringBuilder("Expected to find proposal '$expectedReplacement' $expectedCount times, but found it $foundCount times.  All Proposals:")
+            def sb = new StringBuilder("Expected to find proposal '$expectedReplacement' $expectedCount times, but found it $foundCount times.  All Proposals:")
             for (proposal in proposals) {
                 sb.append('\n').append(proposal.replacementString)
             }
@@ -249,14 +253,14 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected void checkReplacementString(ICompletionProposal[] proposals, String[] expectedReplacementOptions, int expectedCount) {
         int foundCount = 0
         for (proposal in proposals) {
-            String replacement = proposal.replacementString
+            def replacement = proposal.replacementString
             if (replacement == expectedReplacementOptions[0] || replacement == expectedReplacementOptions[1]) {
                 foundCount += 1
             }
         }
 
         if (foundCount != expectedCount) {
-            StringBuilder sb = new StringBuilder("Expected to find proposal '${expectedReplacementOptions[0]}' or '${expectedReplacementOptions[1]}' $expectedCount times, but found them $foundCount times.  All Proposals:")
+            def sb = new StringBuilder("Expected to find proposal '${expectedReplacementOptions[0]}' or '${expectedReplacementOptions[1]}' $expectedCount times, but found them $foundCount times.  All Proposals:")
             for (proposal in proposals) {
                 sb.append('\n').append(proposal.replacementString)
             }
@@ -271,7 +275,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected String printProposals(ICompletionProposal[] proposals) {
-        StringBuilder sb = new StringBuilder()
+        def sb = new StringBuilder()
         for (proposal in proposals) {
             sb.append('\n').append(proposal.displayString)
             if (proposal instanceof IJavaCompletionProposal) {

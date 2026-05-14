@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,15 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import static org.eclipse.jdt.internal.compiler.env.IDependent.JAR_FILE_ENTRY_SEPARATOR;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 import groovy.lang.GroovyClassLoader;
 
@@ -34,17 +37,21 @@ import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.codehaus.jdt.groovy.integration.internal.GroovyLanguageSupport;
 import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.util.CharArraySequence;
+import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.Compiler;
+import org.eclipse.jdt.internal.compiler.ReadManager;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.batch.BatchCompilerRequestor;
@@ -57,9 +64,11 @@ import org.eclipse.jdt.internal.compiler.problem.AbortMethod;
 import org.eclipse.jdt.internal.compiler.problem.AbortType;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
+import org.eclipse.jdt.internal.core.BasicCompilationUnit;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 import org.eclipse.jdt.internal.core.builder.BuildNotifier;
 import org.eclipse.jdt.internal.core.builder.SourceFile;
+import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 
 /**
  * The mapping layer between the groovy parser and the JDT. This class communicates
@@ -87,6 +96,39 @@ public class GroovyParser {
         GroovyClassLoaderFactory.clearCache(projectName);
     }
 
+    public static char[] getContents(ICompilationUnit compilationUnit, /*@Nullable*/ ReadManager readManager) {
+        return Optional.ofNullable(readManager != null ? readManager.getContents(compilationUnit) : compilationUnit.getContents()).orElse(CharOperation.NO_CHAR);
+    }
+
+    public static boolean isGroovyParserEligible(ICompilationUnit compilationUnit, /*@Nullable*/ ReadManager readManager) {
+        if (compilationUnit instanceof BasicCompilationUnit) {
+            if (ContentTypeUtils.isGroovyLikeFileName(
+                    ((BasicCompilationUnit) compilationUnit).sourceName)) {
+                return true;
+            }
+        } else if (compilationUnit instanceof PossibleMatch) {
+            return ((PossibleMatch) compilationUnit).isInterestingSourceFile();
+        }
+
+        String fileName = CharOperation.charToString(compilationUnit.getFileName());
+        if (ContentTypeUtils.isGroovyLikeFileName(fileName)) {
+            return true;
+        }
+
+        if (!ContentTypeUtils.isJavaLikeButNotGroovyLikeFileName(fileName)) {
+            final char[] contents = getContents(compilationUnit, readManager);
+            if (GROOVY_SOURCE_DISCRIMINATOR.matcher(new CharArraySequence(contents)).find()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static final Pattern GROOVY_SOURCE_DISCRIMINATOR = Pattern.compile("\\A(/\\*.*?\\*/\\s*)?package\\s+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*(?:\\s*\\.\\s*\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)*\\s++(?!;)", Pattern.DOTALL);
+
+    private static final Pattern STC_EXTENSION_DISCRIMINATOR = Pattern.compile("^(?:unresolvedVariable|unresolvedProperty|unresolvedAttribute|methodNotFound|ambiguousMethods|onMethodSelection|incompatibleAssignment|incompatibleReturnType|(?:before|after)(?:MethodCall|VisitMethod|VisitClass))\\b", Pattern.MULTILINE);
+
     //--------------------------------------------------------------------------
 
     public GroovyParser(CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean allowTransforms, boolean isReconcile) {
@@ -98,29 +140,17 @@ public class GroovyParser {
         this.compilerOptions = compilerOptions;
         this.problemReporter = problemReporter;
 
-        // 2011-10-18: Status of transforms and reconciling
-        // Prior to 2.6.0 all transforms were turned OFF for reconciling, and by turned off that meant no phase
-        // processing for them was done at all. With 2.6.0 this phase processing is now active during reconciling
-        // but it is currently limited to only allowing the Grab (global) transform to run. (Not sure why Grab
-        // is a global transform... isn't it always annotation driven). Non-global transforms are all off.
-        // This means the transformLoader is setup for the compilation unit but the cu is also told the
-        // allowTransforms setting so it can decide what should be allowed through.
-        // ---
-        // Basic grab support: the design here is that a special classloader is created that will be augmented
-        // with URLs when grab processing is running. This classloader is used as a last resort when resolving
-        // types and is *only* called if a grab has occurred somewhere during compilation.
-        // Currently it is not cached but created each time - we'll have to decide if there is a need to cache
-
-        GroovyClassLoaderFactory loaderFactory = new GroovyClassLoaderFactory(compilerOptions, requestor);
+        GroovyClassLoaderFactory loaderFactory = new GroovyClassLoaderFactory(compilerOptions, requestor instanceof Compiler ? ((Compiler) requestor).lookupEnvironment : null);
 
         this.unitFactory = () -> {
             CompilerConfiguration compilerConfiguration = GroovyLanguageSupport.newCompilerConfiguration(compilerOptions, problemReporter);
             GroovyClassLoader[] classLoaders = loaderFactory.getGroovyClassLoaders(compilerConfiguration);
             // https://github.com/groovy/groovy-eclipse/issues/814
             if (allowTransforms && isReconcile) {
-                // disable Spock transform until inferencing supports it
                 Set<String> xforms = new HashSet<>();
+                // disable Spock transform until inferencing supports it
                 xforms.add("org.spockframework.compiler.SpockTransform");
+                xforms.add("org.apache.groovy.contracts.ast.ClosureExpressionEvaluationASTTransformation");
                 Optional.ofNullable(
                     compilerConfiguration.getDisabledGlobalASTTransformations()
                 ).ifPresent(xforms::addAll);
@@ -142,28 +172,38 @@ public class GroovyParser {
     }
 
     public void reset() {
-        compilationUnit = null;
-        resolver = null;
+        try {
+            if (compilationUnit != null && compilerOptions.groovyProjectName == null) {
+                compilationUnit.getTransformLoader().close();
+                compilationUnit.getClassLoader().close();
+            }
+        } catch (Exception ignore) {
+        } finally {
+            compilationUnit = null;
+            resolver = null;
+        }
     }
 
-    public GroovyCompilationUnitDeclaration dietParse(final ICompilationUnit iCompilationUnit, final CompilationResult compilationResult) {
-        String fileName = String.valueOf(iCompilationUnit.getFileName());
-        final IPath filePath = new Path(fileName);
-        final IFile eclipseFile;
-        final boolean isScript;
-        // try to turn this into a 'real' absolute file system reference (this is because Grails 1.5 expects it)
-        // GRECLIPSE-1269 ensure get plugin is not null to ensure the workspace is open (ie- not in batch mode)
-        // needs 2 segments: a project and file name or eclipse throws assertion failed here
-        if (filePath.segmentCount() > 1 && ResourcesPlugin.getPlugin() != null) {
-            eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(filePath);
-            IPath location = eclipseFile.getLocation();
-            if (location != null) {
-                fileName = location.toFile().getAbsolutePath();
+    //--------------------------------------------------------------------------
+
+    public GroovyCompilationUnitDeclaration dietParse(final char[] contents, String fileName, final CompilationResult compilationResult) {
+        boolean isInJar = fileName.indexOf(JAR_FILE_ENTRY_SEPARATOR) > 0;
+        boolean isScript = false;
+        IFile eclipseFile = null;
+        if (!isInJar) {
+            // try to convert fileName into an absolute filesystem reference
+            IPath filePath = new Path(fileName);
+            // needs 2 segments (project and file names) or eclipse throws assertion failed
+            // GRECLIPSE-1269: ensure the workspace is available (i.e. not in batch mode)
+            if (filePath.segmentCount() >= 2 && ResourcesPlugin.getPlugin() != null) {
+                eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(filePath);
+                IPath location = eclipseFile.getLocation();
+                if (location != null) {
+                    fileName = location.toFile().getAbsolutePath();
+                    org.eclipse.core.resources.IProject project = eclipseFile.getProject();
+                    isScript = scriptFolderSelectorCache.computeIfAbsent(project.getName(), key -> new ScriptFolderSelector(project)).isScript(eclipseFile);
+                }
             }
-            isScript = isScript(eclipseFile, compilerOptions.groovyProjectName);
-        } else {
-            eclipseFile = null;
-            isScript = false;
         }
 
         if (problemReporter.referenceContext == null) {
@@ -171,18 +211,17 @@ public class GroovyParser {
         }
 
         if (compilationUnit == null) {
-            if (isScript || (eclipseFile != null && eclipseFile.getProject().isAccessible() &&
-                    !JavaCore.create(eclipseFile.getProject()).isOnClasspath(eclipseFile))) {
+            if (isInJar || isScript || (eclipseFile != null && eclipseFile.getProject().isAccessible() &&
+                                    !JavaCore.create(eclipseFile.getProject()).isOnClasspath(eclipseFile))){
+                if (isScript && STC_EXTENSION_DISCRIMINATOR.matcher(new CharArraySequence(contents)).find())
+                    compilerOptions.buildGroovyFiles |= 4; // need type-checking script config
                 compilerOptions.groovyCompilerConfigScript = null;
             }
             compilationUnit = unitFactory.get();
         }
 
-        char[] sourceCode = Optional.ofNullable(iCompilationUnit.getContents()).orElse(CharOperation.NO_CHAR);
-        SourceUnit sourceUnit = new EclipseSourceUnit(eclipseFile, fileName, sourceCode,
-            compilationUnit.getConfiguration(), compilationUnit.getClassLoader(), new GroovyErrorCollectorForJDT(compilationUnit.getConfiguration()), resolver);
-
-        compilationUnit.addSource(sourceUnit);
+        SourceUnit sourceUnit = compilationUnit.addSource(new EclipseSourceUnit(eclipseFile, fileName, contents,
+            compilationUnit.getConfiguration(), null, new GroovyErrorCollectorForJDT(compilationUnit.getConfiguration()), resolver));
 
         if (requestor instanceof Compiler) {
             Compiler compiler = (Compiler) requestor;
@@ -205,14 +244,14 @@ public class GroovyParser {
             }
         }
 
-        compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(sourceCode); // TODO: Get from Antlr
+        compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(contents); // TODO: Get from Antlr
 
         GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(
-            problemReporter, compilationResult, sourceCode.length, compilationUnit, sourceUnit, compilerOptions);
+            problemReporter, compilationResult, contents.length, compilationUnit, sourceUnit, compilerOptions);
 
         gcuDeclaration.processToPhase(Phases.CONVERSION);
 
-        // ModuleNode is null when there is a fatal error
+        // if fatal error, then ModuleNode is null
         if (gcuDeclaration.getModuleNode() != null) {
             gcuDeclaration.populateCompilationUnitDeclaration();
             for (TypeDeclaration decl : gcuDeclaration.types) {
@@ -229,23 +268,6 @@ public class GroovyParser {
         return gcuDeclaration;
     }
 
-    private static IFile getWorkspaceFile(final String filePath) {
-        return ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(new Path(filePath));
-    }
-
-    /**
-     * Determines if file matches any groovy script filter in the project.
-     */
-    private static boolean isScript(final IFile sourceFile, final String projectName) {
-        if (projectName != null) {
-            assert projectName == sourceFile.getProject().getName();
-            ScriptFolderSelector scriptFolderSelector = scriptFolderSelectorCache
-                .computeIfAbsent(projectName, key -> new ScriptFolderSelector(sourceFile.getProject()));
-            return scriptFolderSelector.isScript(sourceFile);
-        }
-        return false;
-    }
-
     /**
      * ProgressListener is called when parsing of a source unit or generation of
      * a class file completes.  By calling back to the build notifier we prevent
@@ -254,30 +276,31 @@ public class GroovyParser {
      * Note: this does not move the progress bar, it merely updates the text
      */
     private static ProgressListener newProgressListener(final BuildNotifier notifier) {
+        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         return new ProgressListener() {
             @Override
             public void parseComplete(final int phase, final String sourceUnitName) {
                 try {
-                    IFile sourceUnitFile = getWorkspaceFile(sourceUnitName);
+                    IFile sourceUnitFile = root.getFileForLocation(new Path(sourceUnitName));
                     notifier.subTask("Parsing groovy sources in " + sourceUnitFile.getParent().getFullPath());
-                } catch (Exception ignore) {
+                } catch (RuntimeException ignore) {
                 }
-                notifier.checkCancel();
+                notifier.checkCancelWithinCompiler();
             }
 
             @Override
             public void generateComplete(final int phase, final ClassNode classNode) {
                 try {
-                    IFile sourceUnitFile = getWorkspaceFile(classNode.getModule().getContext().getName());
+                    IFile sourceUnitFile = root.getFileForLocation(new Path(classNode.getModule().getContext().getName()));
                     notifier.subTask("Writing groovy classes for " + sourceUnitFile.getParent().getFullPath());
-                } catch (Exception ignore) {
+                } catch (RuntimeException ignore) {
                 }
-                notifier.checkCancel();
+                notifier.checkCancelWithinCompiler();
             }
         };
     }
 
-    //
+    //--------------------------------------------------------------------------
 
     private static class ReferenceContextImpl implements ReferenceContext {
 
@@ -298,7 +321,6 @@ public class GroovyParser {
             hasErrors = true;
         }
 
-        @Override
         public void tagAsHavingIgnoredMandatoryErrors(final int problemId) {
             // no-op
         }

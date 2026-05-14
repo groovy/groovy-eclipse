@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,7 @@
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-import static org.junit.Assume.assumeFalse;
 
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.junit.Before;
@@ -29,19 +27,25 @@ public final class SpockInferencingTests extends InferencingTestSuite {
 
     @Before
     public void setUp() throws Exception {
-        assumeFalse(isAtLeastGroovy(30)); // TODO: Remove when spock-core supports Groovy 3
-
-        IPath projectPath = project.getFullPath();
-        env.addJar(projectPath, "lib/spock-core-1.3-groovy-2.4.jar");
-        env.addEntry(projectPath, JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
+        String spockCorePath;
+        if (!isAtLeastGroovy(40)) {
+            spockCorePath = "lib/spock-core-2.4-groovy-3.0.jar";
+        } else if (!isAtLeastGroovy(50)) {
+            spockCorePath = "lib/spock-core-2.4-groovy-4.0.jar";
+        } else {
+            spockCorePath = "lib/spock-core-2.4-groovy-5.0.jar";
+        }
+        env.addJar(project.getFullPath(), spockCorePath);
+        if (isAtLeastGroovy(60)) System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
+        env.addEntry(project.getFullPath(), JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/5")));
     }
 
     @Test
-    public void testBasics() throws Exception {
+    public void testBasics() {
         createUnit("foo", "Bar", "package foo; class Bar {\n Integer baz\n}");
 
+        //@formatter:off
         String source =
-            //@formatter:off
             "final class SpockTests extends spock.lang.Specification {\n" +
             "  void 'test the basics'() {\n" +
             "   given:\n" +
@@ -54,7 +58,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
             "    bar != new foo.Bar(baz:42)\n" +
             "  }\n" +
             "}\n";
-            //@formatter:on
+        //@formatter:on
 
         int offset = source.indexOf("bar");
         assertType(source, offset, offset + 3, "foo.Bar");
@@ -64,11 +68,11 @@ public final class SpockInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testEqualsCheck() throws Exception {
+    public void testEqualsCheck() {
         createUnit("foo", "Bar", "package foo; class Bar {\n Integer baz\n}");
 
+        //@formatter:off
         String source =
-            //@formatter:off
             "final class SpockTests extends spock.lang.Specification {\n" +
             "  void 'test the property'() {\n" +
             "   given:\n" +
@@ -78,7 +82,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
             "    !bar.equals(null)\n" +
             "  }\n" +
             "}\n";
-            //@formatter:on
+        //@formatter:on
 
         int offset = source.lastIndexOf("equals");
         assertType(source, offset, offset + 6, "java.lang.Boolean");
@@ -86,11 +90,11 @@ public final class SpockInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterCheck() throws Exception {
+    public void testGetterCheck() {
         createUnit("foo", "Bar", "package foo; class Bar {\n Integer baz\n}");
 
+        //@formatter:off
         String source =
-            //@formatter:off
             "final class SpockTests extends spock.lang.Specification {\n" +
             "  void 'test the property'() {\n" +
             "   given:\n" +
@@ -100,7 +104,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
             "    bar.getBaz() == 42\n" +
             "  }\n" +
             "}\n";
-            //@formatter:on
+        //@formatter:on
 
         int offset = source.lastIndexOf("getBaz");
         assertType(source, offset, offset + 6, "java.lang.Integer");
@@ -108,11 +112,11 @@ public final class SpockInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testPropertyCheck() throws Exception {
+    public void testPropertyCheck() {
         createUnit("foo", "Bar", "package foo; class Bar {\n Integer baz\n}");
 
+        //@formatter:off
         String source =
-            //@formatter:off
             "final class SpockTests extends spock.lang.Specification {\n" +
             "  void 'test the property'() {\n" +
             "   given:\n" +
@@ -122,16 +126,16 @@ public final class SpockInferencingTests extends InferencingTestSuite {
             "    bar.baz == 42\n" +
             "  }\n" +
             "}\n";
-            //@formatter:on
+        //@formatter:on
 
         int offset = source.lastIndexOf("baz");
         assertType(source, offset, offset + 3, "java.lang.Integer");
     }
 
-    @Test @Ignore("see #814") // https://github.com/groovy/groovy-eclipse/issues/812
+    @Test @Ignore("see #814") // https://github.com/groovy/groovy-eclipse/issues/814
     public void testDataTableChecks() {
+        //@formatter:off
         String source =
-            //@formatter:off
             "final class SpockTests extends spock.lang.Specification {\n" +
             "  @spock.lang.Unroll\n" +
             "  void 'test #a == #b'() {\n" +
@@ -143,10 +147,26 @@ public final class SpockInferencingTests extends InferencingTestSuite {
             "    2 | a\n" +
             "  }\n" +
             "}\n";
-            //@formatter:on
+        //@formatter:on
 
         int offset = source.indexOf("a == b");
         assertType(source, offset, offset + 1, "java.lang.Object");
         assertDeclaringType(source, offset, offset + 1, "SpockTests");
+    }
+
+    @Test
+    public void testRequiresCondition() {
+        //@formatter:off
+        String source =
+            "final class SpockTests extends spock.lang.Specification {\n" +
+            "  @spock.lang.Requires({ owner })\n" + // owner is static
+            "  void testSomething() {\n" +
+            "   expect:\n" +
+            "    true\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertType(source, "owner", "java.lang.Class<SpockTests>");
     }
 }

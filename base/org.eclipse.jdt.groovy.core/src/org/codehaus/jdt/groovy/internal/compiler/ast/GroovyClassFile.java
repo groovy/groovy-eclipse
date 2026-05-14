@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.codegen.StackMapFrame;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
@@ -44,14 +46,14 @@ class GroovyClassFile extends ClassFile {
     private char[][] name;
     private char[] filename;
 
-    GroovyClassFile(String name, byte[] bs, SourceTypeBinding sourceTypeBinding, String filename) {
+    GroovyClassFile(final String name, final byte[] bytes, final SourceTypeBinding sourceTypeBinding, final String filename) {
         this.name = CharOperation.splitOn('.', name.toCharArray());
-        this.bytes = bs;
+        this.bytes = bytes;
         this.referenceBinding = sourceTypeBinding;
         this.header = new byte[0];
         this.headerOffset = 0;
-        this.contents = bs;
-        this.contentsOffset = bs.length;
+        this.contents = bytes;
+        this.contentsOffset = bytes.length;
         this.filename = filename.toCharArray();
     }
 
@@ -101,7 +103,7 @@ class GroovyClassFile extends ClassFile {
     }
 
     @Override
-    public void addSpecialMethods() {
+    public void addSpecialMethods(TypeDeclaration typeDecl) {
         throw new ImmutableException();
     }
 
@@ -140,23 +142,17 @@ class GroovyClassFile extends ClassFile {
         throw new ImmutableException();
     }
 
-    public void completeCodeAttribute(int codeAttributeOffset) {
-        throw new ImmutableException();
-    }
+    @Override
     public void completeCodeAttribute(int codeAttributeOffset, MethodScope scope) {
         throw new ImmutableException();
     }
 
-    public void completeCodeAttributeForClinit(int codeAttributeOffset) {
-        throw new ImmutableException();
-    }
+    @Override
     public void completeCodeAttributeForClinit(int codeAttributeOffset, Scope scope) {
         throw new ImmutableException();
     }
 
-    public void completeCodeAttributeForClinit(int codeAttributeOffset, int problemLine) {
-        throw new ImmutableException();
-    }
+    @Override
     public void completeCodeAttributeForClinit(int codeAttributeOffset, int problemLine, MethodScope scope) {
         throw new ImmutableException();
     }
@@ -171,9 +167,7 @@ class GroovyClassFile extends ClassFile {
         throw new ImmutableException();
     }
 
-    public void completeCodeAttributeForSyntheticMethod(boolean hasExceptionHandlers, SyntheticMethodBinding binding, int codeAttributeOffset, int[] startLineIndexes) {
-        throw new ImmutableException();
-    }
+    @Override
     public void completeCodeAttributeForSyntheticMethod(boolean hasExceptionHandlers, SyntheticMethodBinding binding, int codeAttributeOffset, int[] startLineIndexes, Scope scope) {
         throw new ImmutableException();
     }
@@ -268,10 +262,8 @@ class GroovyClassFile extends ClassFile {
         throw new UnsupportedOperationException();
     }
 
-    public List traverse(MethodBinding methodBinding, int maxLocals, byte[] bytecodes, int codeOffset, int codeLength, Map frames, boolean isClinit) {
-        throw new UnsupportedOperationException();
-    }
-    public List traverse(MethodBinding methodBinding, int maxLocals, byte[] bytecodes, int codeOffset, int codeLength, Map frames, boolean isClinit, Scope scope) {
+    @Override
+    public List<StackMapFrame> traverse(MethodBinding methodBinding, int maxLocals, byte[] bytecodes, int codeOffset, int codeLength, Map<Integer, StackMapFrame> frames, boolean isClinit, Scope scope) {
         throw new UnsupportedOperationException();
     }
 

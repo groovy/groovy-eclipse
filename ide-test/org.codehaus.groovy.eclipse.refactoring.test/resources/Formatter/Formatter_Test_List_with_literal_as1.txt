@@ -14,7 +14,6 @@ def test() {
 ###exp
 // GRECLIPSE-1427
 def test() {
-	[1, 2, 3
-	] as Object[]
+	[1, 2, 3] as Object[]
 }
 ###end

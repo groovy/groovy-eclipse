@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 import groovyjarjarantlr.Token;
 import org.codehaus.groovy.antlr.GroovyTokenTypeBridge;
@@ -29,13 +29,9 @@ import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTScanner;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.ClosuresInCodePredicate;
-import org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap.CorrectLineWrap;
-import org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap.NextLine;
-import org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap.SameLine;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -96,10 +92,12 @@ public class GroovyBeautifier {
                 }
                 posCLEnd = positionLastTokenOfClosure;
             }
-            // ignore closure on one line
+            // ignore closure on one line, unless that line exceeds the configured max length
             if (clExp.getLineNumber() == clExp.getLastLineNumber()) {
-                ignoreToken.add(formatter.getTokens().get(posCLEnd));
-                continue;
+                if (!exceedsMaxLineLength(clExp.getLineNumber()) || !hasStatements(clExp)) {
+                    ignoreToken.add(formatter.getTokens().get(posCLEnd));
+                    continue;
+                }
             }
 
             if (clExp.getCode() instanceof BlockStatement) {
@@ -126,115 +124,62 @@ public class GroovyBeautifier {
         ASTScanner scanner = new ASTScanner(formatter.getProgressRootNode(), new ListInCodePredicate(), formatter.getProgressDocument());
         scanner.startASTscan();
         for (ASTNode node : scanner.getMatchedNodes().keySet()) {
-            ListExpression listExpr = ((ListExpression) node);
+            ListExpression listExpr = (ListExpression) node;
             GroovyDocumentScanner tokens = formatter.getTokens();
-            Token lastToken = null;
             try {
-                lastToken = tokens.getLastNonWhitespaceTokenBefore(listExpr.getEnd() - 1);
-                if (lastToken == null || lastToken.getType() == GroovyTokenTypeBridge.STRING_CTOR_START) {
-                    // this means we are inside a GString and we won't apply edits here so skip this
+                int lbrackOffset = listExpr.getStart();
+                int rbrackOffset = listExpr.getEnd() - 1;
+                while (Character.isWhitespace(formatter.getProgressDocument().getChar(rbrackOffset))) {
+                    rbrackOffset -= 1;
+                }
+                assert formatter.getProgressDocument().getChar(lbrackOffset) == '[';
+                assert formatter.getProgressDocument().getChar(rbrackOffset) == ']';
+
+                Token penultimate = tokens.getLastNonWhitespaceTokenBefore(rbrackOffset);
+                if (penultimate.getType() == GroovyTokenTypeBridge.STRING_CTOR_START) {
+                    // this means we are inside a GString and we won't apply edits here
                     continue;
                 }
-            } catch (BadLocationException e) {
+
+                boolean wrap = (rbrackOffset - lbrackOffset > preferences.getLongListLength() ||
+                    (listExpr.getExpressions().size() > 1 && hasClosureElement(listExpr)));
+
+                for (Expression exp : listExpr.getExpressions()) {
+                    Token previous = tokens.getLastTokenBefore(exp.getStart());
+                    while (previous.getType() != GroovyTokenTypeBridge.LBRACK && previous.getType() != GroovyTokenTypeBridge.COMMA) {
+                        previous = tokens.getLastTokenBefore(previous);
+                    }
+                    String prefix = (wrap ? formatter.getNewLine() : previous.getType() == GroovyTokenTypeBridge.LBRACK ? "" : " ");
+                    replaceWhiteSpaceAfter(edits, previous, prefix, true, true);
+                }
+                String suffix = (wrap || penultimate.getType() == GroovyTokenTypeBridge.SL_COMMENT ? formatter.getNewLine() : "");
+                replaceWhiteSpaceAfter(edits, penultimate, suffix, true, true);
+            } catch (Exception e) {
                 Util.log(e);
-                continue;
-            }
-
-            int nodeStart = listExpr.getStart();
-            int nodeEnd = listExpr.getEnd();
-            int nodeLen = nodeEnd - nodeStart;
-            nodeLen = correctNodeLen(nodeLen, tokens.tokens, formatter.getNewLine());
-            boolean isLong = nodeLen > preferences.getLongListLength();
-            List<Expression> exps = listExpr.getExpressions();
-
-            // GRECLIPSE-1427 if the next token is 'as', then don't add a newline or remove whitespace
-            Token maybeAs;
-            try {
-                maybeAs = tokens.getNextToken(lastToken);
-            } catch (BadLocationException e) {
-                GroovyCore.logException("Trouble getting next token", e);
-                maybeAs = null;
-            }
-            boolean nextTokenAs = maybeAs != null && maybeAs.getType() == GroovyTokenTypeBridge.LITERAL_as;
-
-            if (isLong || (hasClosureElement(listExpr) && listExpr.getExpressions().size() > 1)) {
-                // split the list
-                for (int i = 0; i < exps.size(); i += 1) {
-                    Expression exp = exps.get(i);
-                    Token before = tokens.getLastTokenBefore(exp.getStart());
-                    try {
-                        while (before.getType() != GroovyTokenTypeBridge.LBRACK && before.getType() != GroovyTokenTypeBridge.COMMA) {
-                            before = tokens.getLastTokenBefore(before);
-                        }
-                        replaceWhiteSpaceAfter(edits, before, formatter.getNewLine(), true, true);
-                    } catch (BadLocationException e) {
-                        GroovyCore.logException("Trouble formatting list", e);
-                    }
-                }
-                if (!nextTokenAs) {
-                    replaceWhiteSpaceAfter(edits, lastToken, formatter.getNewLine(), true, true);
-                }
-            } else {
-                // compact the list
-                for (int i = 0; i < exps.size(); i += 1) {
-                    Expression exp = exps.get(i);
-                    Token before = tokens.getLastTokenBefore(exp.getStart());
-                    try {
-                        while (before.getType() != GroovyTokenTypeBridge.LBRACK && before.getType() != GroovyTokenTypeBridge.COMMA) {
-                            before = tokens.getLastTokenBefore(before);
-                        }
-                        replaceWhiteSpaceAfter(edits, before,
-                                before.getType() == GroovyTokenTypeBridge.LBRACK ? "" : " ", true, true);
-                    } catch (BadLocationException e) {
-                        Util.log(e);
-                    }
-                }
-                if (!nextTokenAs) {
-                    replaceWhiteSpaceAfter(edits, lastToken, lastToken.getType() == GroovyTokenTypeBridge.SL_COMMENT ? formatter.getNewLine() : "", true, true);
-                }
             }
         }
     }
 
     /**
-     * Corrects node length in case new line token consists of more than one character.
-     *
-     * @param nodeLen original node length
-     * @param tokens a list of node tokens
-     * @return corrected node length
+     * Creates edit that replaces whitespace tokens immediately following given
+     * token with specified string.
      */
-    private int correctNodeLen(int nodeLen, List<Token> tokens, String newLine) {
-        if (newLine.length() > 1) {
-            for (Token token : tokens) {
-                if (token.getType() == GroovyTokenTypeBridge.NLS) {
-                    nodeLen -= (newLine.length() - 1);
-                }
-            }
-        }
-        return nodeLen;
-    }
-
-    /**
-     * Create an edit that replaces whitespace tokens immediately after given
-     * token with a String.
-     */
-    private void replaceWhiteSpaceAfter(MultiTextEdit edits, Token token, String replaceWith, boolean allWhitespaces,
-            boolean atLeastOneWhitespaceFound) {
-
+    private void replaceWhiteSpaceAfter(MultiTextEdit edits, Token token, String replacement,
+            boolean allWhitespaces, boolean atLeastOneWhitespaceFound) {
         GroovyDocumentScanner tokens = formatter.getTokens();
         try {
-            int editStart = tokens.getEnd(token);
             Token first = tokens.getNextToken(token); // first whitespace token (if any)
             Token last = first; // first non-whitespace token
             // if no white space tokens where found then first and last will be the same
             // token (i.e. token just after the given token)
-            while ((allWhitespaces & isWhiteSpace(last.getType()))
-                    || (!allWhitespaces & last.getType() == GroovyTokenTypeBridge.WS)) {
+            while ((allWhitespaces & isWhiteSpace(last.getType())) ||
+                    (!allWhitespaces & last.getType() == GroovyTokenTypeBridge.WS)) {
                 last = tokens.getNextToken(last);
             }
-
-            if (atLeastOneWhitespaceFound || (editStart < tokens.getOffset(last))) {
-                replaceFromTo(editStart, tokens.getOffset(last), replaceWith, edits);
+            int offset = tokens.getEnd(token);
+            if (atLeastOneWhitespaceFound || (offset < tokens.getOffset(last))) {
+                int length = tokens.getOffset(last) - offset;
+                addEdit(new ReplaceEdit(offset, length, replacement), edits);
             }
         } catch (BadLocationException e) {
             Util.log(e);
@@ -255,6 +200,24 @@ public class GroovyBeautifier {
         return false;
     }
 
+    private boolean hasStatements(ClosureExpression node) {
+        return (node.getCode() instanceof BlockStatement) &&
+            !((BlockStatement) node.getCode()).getStatements().isEmpty();
+    }
+
+    private boolean exceedsMaxLineLength(int lineNumber) {
+        try {
+            IDocument doc = formatter.getProgressDocument();
+            int lineIndex = lineNumber - 1; // line numbers are 1-based
+            if (lineIndex < 0 || lineIndex >= doc.getNumberOfLines()) {
+                return false;
+            }
+            return doc.getLineInformation(lineIndex).getLength() > preferences.getMaxLineLength();
+        } catch (BadLocationException e) {
+            return false;
+        }
+    }
+
     private void replaceNLSWithSpace(MultiTextEdit container, int startPos, int endPos) throws BadLocationException {
         Token fromToken = null; // remember first NLS token in a string of NLS tokens
         int p = startPos + 1;
@@ -271,7 +234,7 @@ public class GroovyBeautifier {
                 }
                 if (fromToken != null) {
                     // replace NLS tokens from fromToken up to current token
-                    replaceFromTo(fromToken, token, " ", container);
+                    addEdit(newReplaceEdit(fromToken, token, " "), container);
                     fromToken = null;
                 }
             }
@@ -280,71 +243,45 @@ public class GroovyBeautifier {
         // don't forget to replace nls tokens at the end.
         if (fromToken != null) {
             Token token = formatter.getTokens().get(p);
-            replaceFromTo(fromToken, token, " ", container);
+            addEdit(newReplaceEdit(fromToken, token, " "), container);
         }
     }
 
     /**
-     * Create an edit that replaces text from the start of fromToken to the
-     * start of toToken.
-     * The edit is added to container.
+     * Creates an edit that replaces text from the start of fromToken to the start of toToken.
      *
      * @param fromToken Where to start replacing text.
      * @param toToken Where to end replacing text.
-     * @param with The text to replace the original text with.
-     * @param container The container to which the textedit is to be added.
-     * @throws BadLocationException
+     * @param replacement The text to replace the original text with.
      */
-    private void replaceFromTo(Token fromToken, Token toToken, String with, MultiTextEdit container) throws BadLocationException {
-        int startEdit = formatter.getOffsetOfToken(fromToken);
-        int endEdit = formatter.getOffsetOfToken(toToken);
-        addEdit(new ReplaceEdit(startEdit, endEdit - startEdit, with), container);
-    }
-
-    private void replaceFromTo(int startEdit, int endEdit, String with, MultiTextEdit container) {
-        addEdit(new ReplaceEdit(startEdit, endEdit - startEdit, with), container);
+    private TextEdit newReplaceEdit(Token fromToken, Token toToken, String replacement) throws BadLocationException {
+        int offset = formatter.getOffsetOfToken(fromToken);
+        int length = formatter.getOffsetOfToken(toToken) - offset;
+        return new ReplaceEdit(offset, length, replacement);
     }
 
     private void correctBraces(MultiTextEdit edits) throws BadLocationException {
-        CorrectLineWrap lCurlyCorrector = null;
-        CorrectLineWrap rCurlyCorrector = null;
-        if (preferences.getBracesStart() == PreferenceConstants.SAME_LINE) {
-            lCurlyCorrector = new SameLine(this);
-        } else if (preferences.getBracesStart() == PreferenceConstants.NEXT_LINE) {
-            lCurlyCorrector = new NextLine(this);
-        }
-        if (preferences.getBracesEnd() == PreferenceConstants.SAME_LINE) {
-            rCurlyCorrector = new SameLine(this);
-        } else if (preferences.getBracesEnd() == PreferenceConstants.NEXT_LINE) {
-            rCurlyCorrector = new NextLine(this);
-        }
-
-        assert lCurlyCorrector != null;
-        assert rCurlyCorrector != null;
-
+        BiFunction<Integer, Token, TextEdit> lCurlyEditor = getBracesEditor(preferences.getBracesStart());
+        BiFunction<Integer, Token, TextEdit> rCurlyEditor = getBracesEditor(preferences.getBracesEnd());
         KlenkDocumentScanner tokens = formatter.getTokens();
-        assert tokens != null;
 
-        Token token;
-        boolean skipNextNLS = false;
-        for (int i = 0; i < tokens.size(); i += 1) {
-            token = tokens.get(i);
+        for (int i = 0, slc_nls = 0; i < tokens.size(); i += 1) {
+            Token token = tokens.get(i);
 
             if (ignoreToken.contains(token)) {
                 continue;
             }
 
             int tokenType = token.getType();
-            if (tokenType == GroovyTokenTypeBridge.LCURLY) {
-                if (skipNextNLS) {
-                    skipNextNLS = false;
-                    break;
-                }
-
-                // single line closures should not be reformatted like this
+            if (tokenType == GroovyTokenTypeBridge.SL_COMMENT) {
+                slc_nls = 1;
+            } else if (tokenType == GroovyTokenTypeBridge.NLS) {
+                slc_nls = (slc_nls == 1 ? 2 : 0); // first NLS is required
+            } else if (tokenType == GroovyTokenTypeBridge.LCURLY && slc_nls == 0) {
+                // single-line closures should not be reformatted
                 ClosureExpression maybeClosure = formatter.findCorrespondingClosure(token);
                 if (maybeClosure == null || maybeClosure.getLineNumber() != maybeClosure.getLastLineNumber()) {
-                    addEdit(lCurlyCorrector.correctLineWrap(i, token), edits);
+                    addEdit(lCurlyEditor.apply(i, token), edits);
 
                     // ensure a newline exists after the "{" token...
                     ASTNode node = formatter.findCorrespondingNode(token);
@@ -355,34 +292,60 @@ public class GroovyBeautifier {
                         Token nextToken = tokens.getNextToken(token);
                         if (nextToken != null) {
                             int type = nextToken.getType();
-                            if (type != GroovyTokenTypeBridge.NLS && type != GroovyTokenTypeBridge.RCURLY) {
-                                int start = tokens.getEnd(token);
-                                int end = tokens.getOffset(nextToken);
-                                addEdit(new ReplaceEdit(start, end - start, formatter.getNewLine()), edits);
+                            if (type != GroovyTokenTypeBridge.EOF && type != GroovyTokenTypeBridge.NLS && type != GroovyTokenTypeBridge.RCURLY) {
+                                int offset = tokens.getEnd(token), length = tokens.getOffset(nextToken) - offset;
+                                addEdit(new ReplaceEdit(offset, length, formatter.getNewLine()), edits);
                             }
                         }
                     }
                 }
-            } else if (tokenType == GroovyTokenTypeBridge.RCURLY) {
-                if (skipNextNLS) {
-                    skipNextNLS = false;
-                } else {
-                    Token previousToken = tokens.getLastTokenBefore(token);
-                    // for cases like method() {} we want the braces to stay where they are
-                    if (previousToken.getType() != GroovyTokenTypeBridge.LCURLY) {
-                        addEdit(rCurlyCorrector.correctLineWrap(i, token), edits);
-                    }
+            } else if (tokenType == GroovyTokenTypeBridge.RCURLY && slc_nls == 0) {
+                Token previousToken = tokens.getLastTokenBefore(token);
+                // for cases like method() {} we want the braces to stay where they are
+                if (previousToken.getType() != GroovyTokenTypeBridge.LCURLY) {
+                    addEdit(rCurlyEditor.apply(i, token), edits);
                 }
-            } else if (tokenType == GroovyTokenTypeBridge.SL_COMMENT) {
-                skipNextNLS = true;
+            } else {
+                slc_nls = 0;
             }
         }
     }
 
-    private void removeUnnecessarySemicolons(MultiTextEdit edits) throws BadLocationException {
+    private BiFunction<Integer, Token, TextEdit> getBracesEditor(int style) {
+        if (style == PreferenceConstants.NEXT_LINE) {
+            return (index, token) -> {
+                try {
+                    Token lastNonNLS = formatter.getPreviousToken(index);
+                    int offset = formatter.getOffsetOfTokenEnd(lastNonNLS);
+                    int length = formatter.getOffsetOfToken(token) - offset;
+                    return new ReplaceEdit(offset, length, formatter.getNewLine());
+                } catch (BadLocationException e) {
+                    Util.log(e);
+                    return null;
+                }
+            };
+        }
+        if (style == PreferenceConstants.SAME_LINE) {
+            return (index, token) -> {
+                if (formatter.getPreviousTokenIncludingNLS(index).getType() == GroovyTokenTypeBridge.NLS) {
+                    try {
+                        Token lastNonNLS = formatter.getPreviousToken(index);
+                        int offset = formatter.getOffsetOfTokenEnd(lastNonNLS);
+                        int length = formatter.getOffsetOfToken(token) - offset;
+                        return new ReplaceEdit(offset, length, " "); // check space preference
+                    } catch (BadLocationException e) {
+                        Util.log(e);
+                    }
+                }
+                return null;
+            };
+        }
+        return null;
+    }
+
+    private void removeUnnecessarySemicolons(MultiTextEdit edits) {
         if (preferences.isRemoveUnnecessarySemicolons()) {
-            GroovyFormatter semicolonRemover = new SemicolonRemover(formatter.selection, formatter.document, edits);
-            semicolonRemover.format();
+            new SemicolonRemover(formatter.selection, formatter.document, edits).format();
         }
     }
 
@@ -397,25 +360,36 @@ public class GroovyBeautifier {
 
                 // TODO how to differentiate between Generics and 1 < 2?
 
-                if ((isValueToken(token) || tokenType == GroovyTokenTypeBridge.IDENT
-                        || nextTokenType == GroovyTokenTypeBridge.STRING_LITERAL) && (
-                // nextTokenType == GroovyTokenTypeBridge.GT || nextTokenType ==
-                // GroovyTokenTypeBridge.LT ||
-                nextTokenType == GroovyTokenTypeBridge.GE || nextTokenType == GroovyTokenTypeBridge.LE
-                        || nextTokenType == GroovyTokenTypeBridge.NOT_EQUAL
-                        || nextTokenType == GroovyTokenTypeBridge.EQUAL
-                        || nextTokenType == GroovyTokenTypeBridge.ASSIGN)) {
-
+                if ((
+                        isValueToken(token) ||
+                        tokenType == GroovyTokenTypeBridge.IDENT ||
+                        nextTokenType == GroovyTokenTypeBridge.STRING_LITERAL
+                    ) && (
+                        //nextTokenType == GroovyTokenTypeBridge.GT ||
+                        //nextTokenType == GroovyTokenTypeBridge.LT ||
+                        nextTokenType == GroovyTokenTypeBridge.GE ||
+                        nextTokenType == GroovyTokenTypeBridge.LE ||
+                        nextTokenType == GroovyTokenTypeBridge.NOT_EQUAL ||
+                        nextTokenType == GroovyTokenTypeBridge.EQUAL ||
+                        nextTokenType == GroovyTokenTypeBridge.ASSIGN
+                    )
+                ) {
                     addSpaceAfter = true;
                 }
 
                 if ((
-//                        tokenType == GroovyTokenTypeBridge.GT || tokenType == GroovyTokenTypeBridge.LT ||
-                tokenType == GroovyTokenTypeBridge.GE || tokenType == GroovyTokenTypeBridge.LE
-                        || tokenType == GroovyTokenTypeBridge.NOT_EQUAL || tokenType == GroovyTokenTypeBridge.EQUAL
-                        || tokenType == GroovyTokenTypeBridge.ASSIGN)
-                        && ((isValueToken(nextToken) || nextTokenType == GroovyTokenTypeBridge.IDENT)
-                                || nextTokenType == GroovyTokenTypeBridge.STRING_LITERAL)) {
+                        //tokenType == GroovyTokenTypeBridge.GT ||
+                        //tokenType == GroovyTokenTypeBridge.LT ||
+                        tokenType == GroovyTokenTypeBridge.GE ||
+                        tokenType == GroovyTokenTypeBridge.LE ||
+                        tokenType == GroovyTokenTypeBridge.NOT_EQUAL ||
+                        tokenType == GroovyTokenTypeBridge.EQUAL ||
+                        tokenType == GroovyTokenTypeBridge.ASSIGN
+                    ) && (
+                        (isValueToken(nextToken) || nextTokenType == GroovyTokenTypeBridge.IDENT) ||
+                        nextTokenType == GroovyTokenTypeBridge.STRING_LITERAL
+                    )
+                ) {
                     addSpaceAfter = true;
                 }
 
@@ -434,12 +408,12 @@ public class GroovyBeautifier {
                     if (tokenEndOffset == nextTokenStartOffset) {
                         addEdit(new InsertEdit(tokenEndOffset, " "), edits);
                     } else {
-//                        replaceWhiteSpaceAfter(edits, token, " ", false, false);
+                        //replaceWhiteSpaceAfter(edits, token, " ", false, false);
                     }
                 }
             }
         } catch (Exception e) {
-            GroovyCore.logException("Exception.", e);
+            Util.log(e);
         }
     }
 
@@ -457,15 +431,13 @@ public class GroovyBeautifier {
                     removeAllWhitespaces = true;
                 }
 
-                // TODO: both Map<String, String> and 1 < 2 match here, how to differentiate
-                // them?
+                // TODO: both Map<String, String> and 1 < 2 match here, how to differentiate them?
                 if (tokenType == GroovyTokenTypeBridge.IDENT && nextTokenType == GroovyTokenTypeBridge.LT) {
-//                    removeAllWhitespaces = true;
+                    //removeAllWhitespaces = true;
                 }
 
-                if ((tokenType == GroovyTokenTypeBridge.LT && nextTokenType == GroovyTokenTypeBridge.IDENT)
-                        || (tokenType == GroovyTokenTypeBridge.IDENT && nextTokenType == GroovyTokenTypeBridge.GT)) {
-
+                if ((tokenType == GroovyTokenTypeBridge.LT && nextTokenType == GroovyTokenTypeBridge.IDENT) ||
+                    (tokenType == GroovyTokenTypeBridge.IDENT && nextTokenType == GroovyTokenTypeBridge.GT)) {
                     removeAllWhitespaces = true;
                 }
 
@@ -485,14 +457,14 @@ public class GroovyBeautifier {
                     removeAllWhitespaces = true;
                 }
 
-                if ((tokenType == GroovyTokenTypeBridge.GT && nextTokenType == GroovyTokenTypeBridge.GT)
-                        || (tokenType == GroovyTokenTypeBridge.LT && nextTokenType == GroovyTokenTypeBridge.LT)) {
+                if ((tokenType == GroovyTokenTypeBridge.GT && nextTokenType == GroovyTokenTypeBridge.GT) ||
+                    (tokenType == GroovyTokenTypeBridge.LT && nextTokenType == GroovyTokenTypeBridge.LT)) {
                     removeAllWhitespaces = true;
                 }
 
-                if (tokenType == GroovyTokenTypeBridge.STRING_CTOR_START
-                        && (nextTokenType == GroovyTokenTypeBridge.STRING_CTOR_END
-                                || nextTokenType == GroovyTokenTypeBridge.EOF)) {
+                if (tokenType == GroovyTokenTypeBridge.STRING_CTOR_START && (
+                        nextTokenType == GroovyTokenTypeBridge.STRING_CTOR_END ||
+                        nextTokenType == GroovyTokenTypeBridge.EOF)) {
                     collapseAllWhitespaces = false;
                 }
 
@@ -503,43 +475,53 @@ public class GroovyBeautifier {
                 }
             }
         } catch (Exception e) {
-            GroovyCore.logException("Exception.", e);
+            Util.log(e);
         }
     }
 
     private boolean isValueToken(Token token) {
-        return Arrays.asList(GroovyTokenTypeBridge.NUM_INT, GroovyTokenTypeBridge.NUM_LONG,
-                GroovyTokenTypeBridge.NUM_DOUBLE, GroovyTokenTypeBridge.NUM_FLOAT, GroovyTokenTypeBridge.NUM_BIG_INT,
-                GroovyTokenTypeBridge.NUM_BIG_DECIMAL).contains(token.getType());
+        return List.of(
+            GroovyTokenTypeBridge.NUM_INT,
+            GroovyTokenTypeBridge.NUM_LONG,
+            GroovyTokenTypeBridge.NUM_DOUBLE,
+            GroovyTokenTypeBridge.NUM_FLOAT,
+            GroovyTokenTypeBridge.NUM_BIG_INT,
+            GroovyTokenTypeBridge.NUM_BIG_DECIMAL
+        ).contains(token.getType());
     }
 
     private boolean isValueLiteralToken(Token token) {
-        return Arrays.asList(GroovyTokenTypeBridge.LITERAL_boolean, GroovyTokenTypeBridge.LITERAL_byte,
-                GroovyTokenTypeBridge.LITERAL_char, GroovyTokenTypeBridge.LITERAL_short,
-                GroovyTokenTypeBridge.LITERAL_int, GroovyTokenTypeBridge.LITERAL_long,
-                GroovyTokenTypeBridge.LITERAL_double, GroovyTokenTypeBridge.LITERAL_float, GroovyTokenTypeBridge.IDENT)
-                .contains(token.getType());
+        return List.of(
+            GroovyTokenTypeBridge.LITERAL_boolean,
+            GroovyTokenTypeBridge.LITERAL_byte,
+            GroovyTokenTypeBridge.LITERAL_char,
+            GroovyTokenTypeBridge.LITERAL_short,
+            GroovyTokenTypeBridge.LITERAL_int,
+            GroovyTokenTypeBridge.LITERAL_long,
+            GroovyTokenTypeBridge.LITERAL_double,
+            GroovyTokenTypeBridge.LITERAL_float,
+            GroovyTokenTypeBridge.IDENT
+        ).contains(token.getType());
     }
 
     private boolean isWhitespaceBeforeTokenNeeded(Token nextToken) {
-        return !(nextToken.getType() == GroovyTokenTypeBridge.COMMA
-                || nextToken.getType() == GroovyTokenTypeBridge.RBRACK
-                || nextToken.getType() == GroovyTokenTypeBridge.RPAREN
-                || nextToken.getType() == GroovyTokenTypeBridge.LBRACK
-                || nextToken.getType() == GroovyTokenTypeBridge.LPAREN)
-                || (nextToken.getType() == GroovyTokenTypeBridge.EQUAL
-                        || nextToken.getType() == GroovyTokenTypeBridge.NOT_EQUAL
-                        || nextToken.getType() == GroovyTokenTypeBridge.ASSIGN
-                        || nextToken.getType() == GroovyTokenTypeBridge.NUM_BIG_DECIMAL
-                        || nextToken.getType() == GroovyTokenTypeBridge.NUM_BIG_INT
-                        || nextToken.getType() == GroovyTokenTypeBridge.NUM_DOUBLE
-                        || nextToken.getType() == GroovyTokenTypeBridge.NUM_FLOAT
-                        || nextToken.getType() == GroovyTokenTypeBridge.NUM_INT
-                        || nextToken.getType() == GroovyTokenTypeBridge.NUM_LONG);
-    }
-
-    private boolean isClassLiteral(Token token) {
-        return GroovyTokenTypeBridge.LITERAL_class == token.getType();
+        return !(
+            nextToken.getType() == GroovyTokenTypeBridge.COMMA ||
+            nextToken.getType() == GroovyTokenTypeBridge.RBRACK ||
+            nextToken.getType() == GroovyTokenTypeBridge.RPAREN ||
+            nextToken.getType() == GroovyTokenTypeBridge.LBRACK ||
+            nextToken.getType() == GroovyTokenTypeBridge.LPAREN
+        ) || (
+            nextToken.getType() == GroovyTokenTypeBridge.EQUAL ||
+            nextToken.getType() == GroovyTokenTypeBridge.NOT_EQUAL ||
+            nextToken.getType() == GroovyTokenTypeBridge.ASSIGN ||
+            nextToken.getType() == GroovyTokenTypeBridge.NUM_BIG_DECIMAL ||
+            nextToken.getType() == GroovyTokenTypeBridge.NUM_BIG_INT ||
+            nextToken.getType() == GroovyTokenTypeBridge.NUM_DOUBLE ||
+            nextToken.getType() == GroovyTokenTypeBridge.NUM_FLOAT ||
+            nextToken.getType() == GroovyTokenTypeBridge.NUM_INT ||
+            nextToken.getType() == GroovyTokenTypeBridge.NUM_LONG
+        );
     }
 
     private void addEdit(TextEdit edit, TextEdit container) {

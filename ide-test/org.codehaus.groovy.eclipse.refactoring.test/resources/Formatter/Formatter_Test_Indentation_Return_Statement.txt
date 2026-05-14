@@ -1,25 +1,23 @@
 ###prop
-setPreferences=true
-bracesEnd=next
-indentation=space
 tabsize=4
-indentEmptyLines=true
+indentation=space
+setPreferences=true
 ###src
-MyBean soSomething() {
-		return new MyBean('foo',
+T f() {
+		return new T('foo',
 		'bar', 'baz')
 	}
-	MyBean soSomething() {
-		return method('foo',
+	T g() {
+		return m('foo',
 		'bar', 'baz')
 	}
 ###exp
-MyBean soSomething() {
-    return new MyBean('foo',
+T f() {
+    return new T('foo',
             'bar', 'baz')
 }
-MyBean soSomething() {
-    return method('foo',
+T g() {
+    return m('foo',
             'bar', 'baz')
 }
 ###end

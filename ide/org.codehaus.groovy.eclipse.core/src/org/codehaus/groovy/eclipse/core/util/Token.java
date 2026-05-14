@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -72,11 +72,10 @@ public class Token implements Serializable {
     }
 
     private final int type;
-    public final int startOffset;
-    public final int endOffset;
-    public final String text;
+    public  final String text;
+    public  final int startOffset, endOffset;
 
-    public Token(Type type, int startOffset, int endOffset, String text) {
+    public Token(final Type type, final int startOffset, final int endOffset, final String text) {
         this.type = type.ordinal();
         this.startOffset = startOffset;
         this.endOffset = endOffset;
@@ -87,8 +86,8 @@ public class Token implements Serializable {
         return Type.values()[type];
     }
 
-    public boolean isType(Type t) {
-        return getType() == t;
+    public boolean isType(final Type t) {
+        return (t == getType());
     }
 
     public boolean isDotAccess() {
@@ -118,15 +117,13 @@ public class Token implements Serializable {
     }
 
     @Override
-    public boolean equals(Object that) {
-        if (that == this) return true;
-        if (!(that instanceof Token)) return false;
-        return ((Token) that).type == this.type;
+    public boolean equals(final Object that) {
+        return (that == null || !(that instanceof Token)) ? false : ((Token) that).type == this.type;
     }
 
     @Override
     public int hashCode() {
-        return getType().hashCode() + type;
+        return Integer.hashCode(type);
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
     @Override
     public boolean appliesTo(GroovyCompilationUnit unit) {
         ModuleNode moduleNode = unit.getModuleNode();
-        return moduleNode != null && !moduleNode.getClasses().isEmpty() && moduleNode.getClasses().get(0).isScript();
+        return moduleNode != null && !moduleNode.getClasses().isEmpty() && GroovyUtils.isScript(moduleNode.getClasses().get(0));
     }
 
     //--------------------------------------------------------------------------
@@ -126,6 +126,7 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
                         public void visitClosureExpression(ClosureExpression expression) {
                             // prevent finding variables within closures
                         }
+
                         @Override
                         public void visitDeclarationExpression(DeclarationExpression expression) {
                             outlineElements.add(new GroovyScriptVariable((JavaElement) scriptType, expression));
@@ -137,7 +138,6 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
 
                 // finally, sort all the elements by source location
                 return sort(outlineElements.toArray(new IJavaElement[outlineElements.size()]));
-
             } catch (JavaModelException e) {
                 GroovyCore.logException("Encountered exception when calculating children", e);
                 return new IJavaElement[] {new OType(getUnit(), module, scriptName + " -- Encountered exception.  See log.")};
@@ -201,7 +201,7 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
             super(parent, node, extractName(node));
 
             ClassNode fieldType = node.getLeftExpression().getType();
-            if (ClassHelper.DYNAMIC_TYPE == fieldType) {
+            if (ClassHelper.isDynamicTyped(fieldType)) {
                 typeSignature = "Qdef;";
             } else {
                 typeSignature = GroovyUtils.getTypeSignature(fieldType, true, false);

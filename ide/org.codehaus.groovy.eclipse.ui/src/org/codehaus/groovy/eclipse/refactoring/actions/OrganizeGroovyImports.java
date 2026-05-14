@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -27,6 +28,7 @@ import java.util.regex.Pattern;
 
 import groovy.transform.Field;
 
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -38,12 +40,12 @@ import org.codehaus.groovy.ast.GroovyClassVisitor;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
@@ -132,10 +134,10 @@ public class OrganizeGroovyImports {
             importsSlatedForRemoval = new HashMap<>();
 
             try {
+                Iterable<ImportNode> allImports = GroovyUtils.getAllImportNodes(info.module);
                 // Configure the import rewriter to keep all existing imports. This is different from how
                 // JDT does organize imports, but this prevents annotations on imports from being removed.
                 // However, this leads to GRECLIPSE-1390 where imports are no longer reordered and sorted.
-                Iterable<ImportNode> allImports = GroovyUtils.getAllImportNodes(info.module);
                 ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, !isSafeToReorganize(allImports));
 
                 for (ImportNode imp : allImports) {
@@ -255,8 +257,8 @@ public class OrganizeGroovyImports {
                 TextEdit rewrite = rewriter.rewriteImports(monitor.split(1));
                 trace("%s", rewrite);
                 return rewrite;
-            } catch (Exception e) {
-                GroovyPlugin.getDefault().logError("Exception thrown when organizing imports for " + unit.getElementName(), e);
+            } catch (Exception | LinkageError | AssertionError e) {
+                GroovyPlugin.getDefault().logError("Organize imports failed for " + unit.getElementName(), e);
             } finally {
                 importsSlatedForRemoval = null;
                 missingTypes = null;
@@ -317,7 +319,7 @@ public class OrganizeGroovyImports {
 
     private IType[] resolveMissingTypes(IProgressMonitor monitor) throws JavaModelException {
         // fill in all the potential matches
-        new TypeSearch().searchForTypes(unit, missingTypes, monitor);
+        new TypeSearch().searchForTypes(unit, Collections.unmodifiableMap(missingTypes), monitor);
 
         List<TypeNameMatch> missingTypesNoChoiceRequired = new ArrayList<>();
         List<TypeNameMatch[]> missingTypesChoiceRequired = new ArrayList<>();
@@ -361,41 +363,6 @@ public class OrganizeGroovyImports {
     }
 
     /**
-     * GRECLIPSE-1390
-     * Reorganizing imports (ie- sorting and grouping them) will remove annotations on import statements
-     * In general, we want to reorganize, but it is not safe to do so if the are any annotations on imports
-     * @param allImports all the imports in the compilation unit
-     * @return true iff it is safe to reorganize imports
-     */
-    private static boolean isSafeToReorganize(Iterable<ImportNode> allImports) {
-        for (ImportNode imp : allImports) {
-            if (!imp.getAnnotations().isEmpty()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static boolean isAliased(ImportNode imp) {
-        String alias = imp.getAlias();
-        if (alias == null) {
-            return false;
-        }
-        String fieldName = imp.getFieldName();
-        if (fieldName != null) {
-            return !fieldName.equals(alias);
-        }
-        String className = imp.getClassName();
-        if (className != null) {
-            // it is possible to import from the default package
-            boolean aliasIsSameAsClassName = className.endsWith(alias) &&
-                (className.length() == alias.length() || className.endsWith("." + alias) || className.endsWith("$" + alias));
-            return !aliasIsSameAsClassName;
-        }
-        return false;
-    }
-
-    /**
      * Determines if organize imports is unsafe due to syntax errors or other conditions.
      */
     private static boolean isUnclean(ModuleNodeInfo info, GroovyCompilationUnit unit) {
@@ -419,6 +386,51 @@ public class OrganizeGroovyImports {
             return true;
         }
         return false;
+    }
+
+    /**
+     * GRECLIPSE-1390
+     * Reorganizing imports (ie- sorting and grouping them) will remove annotations on import statements
+     * In general, we want to reorganize, but it is not safe to do so if the are any annotations on imports
+     * @param allImports all the imports in the compilation unit
+     * @return true iff it is safe to reorganize imports
+     */
+    private static boolean isSafeToReorganize(Iterable<ImportNode> allImports) {
+        for (ImportNode imp : allImports) {
+            if (!imp.getAnnotations().isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isAliased(ImportNode node) {
+        String alias = node.getAlias();
+        if (alias == null) {
+            return false;
+        }
+        String fieldName = node.getFieldName();
+        if (fieldName != null) {
+            return !fieldName.equals(alias);
+        }
+        String className = node.getClassName();
+        if (className != null) {
+            // it is possible to import from the default package
+            boolean aliasIsSameAsClassName = className.endsWith(alias) &&
+                (className.length() == alias.length() || className.endsWith("." + alias) || className.endsWith("$" + alias));
+            return !aliasIsSameAsClassName;
+        }
+        return false;
+    }
+
+    private static String getTypeName(ClassNode node) {
+        ClassNode type = GroovyUtils.getBaseType(node);
+        // unresolved name may have dots and/or dollars (e.g. 'a.b.C$D' or 'C$D' or even 'C.D')
+        if (!type.getName().matches(".*\\b" + type.getUnresolvedName().replace('$', '.'))) {
+            // synch up name and unresolved name (e.g. 'java.util.Map$Entry as Foo$Entry')
+            return type.getName() + " as " + type.getUnresolvedName().replace('.', '$');
+        }
+        return type.getName();
     }
 
     private static void trace(String message, Object... arguments) {
@@ -454,8 +466,11 @@ public class OrganizeGroovyImports {
                         visitTypeParameters(node.getGenericsTypes(), node.getName());
                     }
                     handleTypeReference(node.getUnresolvedSuperClass(), false);
-                    for (ClassNode impls : node.getUnresolvedInterfaces()) {
-                        handleTypeReference(impls, false);
+                    for (ClassNode ui : node.getUnresolvedInterfaces()) {
+                        handleTypeReference(ui, false);
+                    }
+                    for (ClassNode ps : node.getPermittedSubclasses()) {
+                        handleTypeReference(ps, false);
                     }
                 }
                 super.visitClass(node);
@@ -469,7 +484,7 @@ public class OrganizeGroovyImports {
             if (node.getEnd() > 0) {
                 handleTypeReference(node.getType(), false);
                 // fields in a script have a Field annotation
-                if (node.getOwner().isScript()) {
+                if (GroovyUtils.isScript(node.getOwner())) {
                     handleTypeReference(SCRIPT_FIELD_CLASS_NODE, true);
                 }
             }
@@ -518,14 +533,6 @@ public class OrganizeGroovyImports {
         }
 
         @Override
-        public void visitConstantExpression(ConstantExpression expression) {
-            if (expression.getEnd() > 0 && expression instanceof AnnotationConstantExpression) {
-                handleTypeReference(expression.getType(), true);
-            }
-            super.visitConstantExpression(expression);
-        }
-
-        @Override
         public void visitConstructorCallExpression(ConstructorCallExpression expression) {
             if (expression.getEnd() > 0 && !expression.isSpecialCall() && !expression.isUsingAnonymousInnerClass()) {
                 handleTypeReference(expression.getType(), false);
@@ -538,13 +545,10 @@ public class OrganizeGroovyImports {
             if (expression.getEnd() > 0) {
                 if (expression.isImplicitThis()) {
                     MethodNode methodTarget = expression.getMethodTarget();
-                    if (methodTarget != null && methodTarget.isStatic()) {
-                        String staticImport = methodTarget.getDeclaringClass().getName().replace('$', '.') + "." + expression.getMethodAsString();
-                        Object alias = expression.getNodeMetaData("static.import.alias");
-                        if (alias != null) {
-                            staticImport += " as " + alias;
-                        }
-                        doNotRemoveImport(staticImport);
+                    if (methodTarget == null) { // unresolved type or ???
+                        checkRetainImport(expression.getMethodAsString());
+                    } else if (methodTarget.isStatic()) {
+                        handleStaticCall(methodTarget.getDeclaringClass(), expression);
                     }
                 } else if (isNotEmpty(expression.getGenericsTypes())) {
                     visitTypeParameters(expression.getGenericsTypes(), null);
@@ -555,15 +559,14 @@ public class OrganizeGroovyImports {
 
         @Override
         public void visitPropertyExpression(PropertyExpression expression) {
-            if (expression.getEnd() > 0 && !expression.isStatic()) {
+            if (expression.getEnd() > 0 &&
+                    expression.getObjectExpression().getEnd() < 1 &&
+                    expression.getProperty() instanceof ConstantExpression &&
+                    expression.getObjectExpression() instanceof ClassExpression){
+                String staticImportText = expression.getText().replace('$', '.');
                 Object alias = expression.getNodeMetaData("static.import.alias");
-                if (alias != null) {
-                    String staticImport = expression.getText().replace('$', '.');
-                    if (!alias.equals(expression.getPropertyAsString())) {
-                        staticImport += " as " + alias;
-                    }
-                    doNotRemoveImport(staticImport);
-                }
+                if (alias != null) staticImportText += " as " + alias;
+                doNotRemoveImport(staticImportText);
             }
             super.visitPropertyExpression(expression);
         }
@@ -571,12 +574,7 @@ public class OrganizeGroovyImports {
         @Override
         public void visitStaticMethodCallExpression(StaticMethodCallExpression expression) {
             if (expression.getEnd() > 0) {
-                String staticImport = expression.getOwnerType().getName().replace('$', '.') + "." + expression.getMethod();
-                Object alias = expression.getNodeMetaData("static.import.alias");
-                if (alias != null) {
-                    staticImport += " as " + alias;
-                }
-                doNotRemoveImport(staticImport);
+                handleStaticCall(expression.getOwnerType(), expression);
             }
             super.visitStaticMethodCallExpression(expression);
         }
@@ -590,8 +588,8 @@ public class OrganizeGroovyImports {
                 // Assume dynamic variables are a candidate for organize imports,
                 // but only if name begins with a capital letter and does not match
                 // the idiomatic static constant naming. This will hopefully filter
-                // out false positives, but misses types that start with lower case.
-                if (expression.getAccessedVariable() instanceof DynamicVariable || expression.isDynamicTyped()) {
+                // out false positives but misses types that start with lower case.
+                if (expression.getAccessedVariable() instanceof DynamicVariable) {
                     if (!checkRetainImport(expression.getName())) { // could it be static?
                         String name = expression.getName();
                         if (!missingTypes.containsKey(name) &&
@@ -632,6 +630,8 @@ public class OrganizeGroovyImports {
                 }
                 if (!generic.isPlaceholder() && !generic.isWildcard()) {
                     handleTypeReference(generic.getType(), false);
+                } else {
+                    visitAnnotations(generic.getType().getTypeAnnotations());
                 }
                 if (generic.getLowerBound() != null) {
                     handleTypeReference(generic.getLowerBound(), false);
@@ -646,18 +646,36 @@ public class OrganizeGroovyImports {
             }
         }
 
+        private void handleStaticCall(ClassNode declaringClass, MethodCall call) {
+            String methodName = call.getMethodAsString();
+            String clazz = declaringClass.getName().replace('$', '.') + '.';
+            Object alias = ((ASTNode) call).getNodeMetaData("static.import.alias");
+
+            if (alias == null || alias.equals(methodName)) {
+                doNotRemoveImport(clazz + methodName);
+            } else {
+                doNotRemoveImport(clazz + alias); // property reference
+                doNotRemoveImport(clazz + methodName + " as " + alias);
+            }
+        }
+
         /**
          * Adds the type name to missingTypes if it is not resolved or ensures
          * that the import will be retained if the type is resolved.
          */
         private void handleTypeReference(ClassNode node, boolean isAnnotation) {
+            if (!isAnnotation) visitAnnotations(node.getTypeAnnotations());
             ClassNode type = GroovyUtils.getBaseType(node);
             if (ClassHelper.isPrimitiveType(type)) {
                 return;
             }
             String name = getTypeName(type);
-
             GenericsType[] generics = type.getGenericsTypes();
+
+            if (isNotEmpty(generics) && !type.isGenericsPlaceHolder()) {
+                visitTypeParameters(generics, name);
+            }
+
             int start = node.getNameStart(),
                 until = node.getNameEnd()+1;
             if (until <= 1) {
@@ -678,11 +696,6 @@ public class OrganizeGroovyImports {
             }
             int length = until - start;
 
-            // check node's generics types
-            if (isNotEmpty(generics)) {
-                visitTypeParameters(generics, name);
-            }
-
             Matcher m = ALIASED_IMPORT.matcher(name);
             if (m.find()) {
                 int i = name.indexOf('$', m.end());
@@ -691,10 +704,10 @@ public class OrganizeGroovyImports {
                     name = name.replaceAll(Pattern.quote(name.substring(i)) + "(?= |$)", "");
                 }
                 doNotRemoveImport(name.replace('$', '.'));
-                return;
-            }
-
-            if (!node.isResolved() && !current.getModule().getClasses().contains(node.redirect())) {
+            } else if (length < 1 || current.getModule().getClasses().contains(node) &&
+                    (node.getOuterClass() == null || node.getOuterClasses().contains(current))) {
+                // keep in importsSlatedForRemoval and leave out of missingTypes
+            } else if (!node.isResolved() && !node.isPrimaryClassNode()) {
                 String[] parts = name.split("\\.");
                 if (Character.isUpperCase(name.charAt(0))) {
                     name = parts[0]; // 'Map.Entry' -> 'Map'
@@ -707,22 +720,24 @@ public class OrganizeGroovyImports {
                     SourceRange range = new SourceRange(node.getStart(), node.getEnd() - node.getStart());
                     missingTypes.put(name, new UnresolvedTypeData(name, isAnnotation, range));
                 }
-            } else if (length > 0 && length < name.length()) {
+            } else if (length < name.length()) {
                 char[] chars = current.getModule().getContext().readSourceRange(start, length);
                 if (chars != null) {
                     int i = 0;
                     while (i < chars.length && Character.isJavaIdentifierPart(chars[i])) {
                         i += 1;
                     }
+                    // for a 'Map.Entry' reference find '.Map' in 'java.util.Map' or '.Map$' in 'java.util.Map$Entry'
                     m = Pattern.compile("(?:\\A|\\$|\\.)" + String.valueOf(chars, 0, i) + "(?=\\$|$)").matcher(name);
                     if (m.find()) {
                         // 'java.util.Map$Entry' -> 'java.util.Map'
-                        String partialName = name.substring(0, m.end()).replace('$', '.');
-                        doNotRemoveImport(partialName);
+                        String partialName = name.substring(0, m.end());
+                        if (!isInnerOfSuper(partialName))
+                            doNotRemoveImport(partialName.replace('$', '.'));
                     }
                 } else {
-                    // We don't know exactly what the text is. We just know how
-                    // it resolves. This can be a problem if an inner class. We
+                    // We do not know exactly what the text is. We just know how
+                    // it resolves. This can be a problem for an inner class. We
                     // don't really know what is in the text nor what the import
                     // is, so just ensure that none are slated for removal.
                     String partialName = name.replace('$', '.');
@@ -740,22 +755,39 @@ public class OrganizeGroovyImports {
             }
         }
 
-        private String getTypeName(ClassNode node) {
-            ClassNode type = GroovyUtils.getBaseType(node);
-            // unresolved name may have dots and/or dollars (e.g. 'a.b.C$D' or 'C$D' or even 'C.D')
-            if (!type.getName().matches(".*\\b" + type.getUnresolvedName().replace('$', '.'))) {
-                // synch up name and unresolved name (e.g. 'java.util.Map$Entry as Foo$Entry')
-                return type.getName() + " as " + type.getUnresolvedName().replace('.', '$');
+        private boolean isInnerOfSuper(String name) {
+            if (name.lastIndexOf('$') > 0) {
+                for (ClassNode node = current.getSuperClass(); node != null && !node.equals(ClassHelper.OBJECT_TYPE); node = node.getSuperClass()) {
+                    for (Iterator<? extends ClassNode> it = node.redirect().getInnerClasses(); it.hasNext();) {
+                        if (it.next().getName().equals(name)) {
+                            return true;
+                        }
+                    }
+                }
+
+                java.util.Queue<ClassNode> todo = new java.util.ArrayDeque<>();
+                java.util.Collections.addAll(todo, current.getInterfaces());
+                Set<ClassNode> done = new LinkedHashSet<>();
+                ClassNode node;
+
+                while ((node = todo.poll()) != null) { if (!done.add(node)) continue;
+                    for (Iterator<? extends ClassNode> it = node.redirect().getInnerClasses(); it.hasNext();) {
+                        if (it.next().getName().equals(name)) {
+                            return true;
+                        }
+                    }
+                    java.util.Collections.addAll(todo, node.getInterfaces());
+                }
             }
-            return type.getName();
+            return false;
         }
 
         private boolean checkRetainImport(String name) {
             if (!importsSlatedForRemoval.isEmpty() && !"this".equals(name) && !"super".equals(name)) {
-                String suffix = '.' + name;
                 for (Map.Entry<String, ImportNode> entry : importsSlatedForRemoval.entrySet()) {
+                    String suffix = (isAliased(entry.getValue()) ? ' ' : '.') + name;
                     if (entry.getValue().isStatic() && entry.getKey().endsWith(suffix)) {
-                        doNotRemoveImport(entry.getKey());
+                        importsSlatedForRemoval.remove(entry.getKey());
                         return true;
                     }
                 }

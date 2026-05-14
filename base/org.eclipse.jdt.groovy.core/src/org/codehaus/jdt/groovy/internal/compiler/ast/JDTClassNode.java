@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,15 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
-import static java.beans.Introspector.decapitalize;
+import static org.eclipse.jdt.groovy.search.AccessorSupport.isGetter;
 
+import java.beans.Introspector;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.Objects;
 
 import groovy.lang.MissingClassException;
 
@@ -38,15 +39,13 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.transform.trait.Traits;
-import org.codehaus.groovy.vmplugin.v5.Java5;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.FieldDeclarationWithInitializer;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.impl.BooleanConstant;
@@ -66,10 +65,9 @@ import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.DelegateMethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
-import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
-import org.eclipse.jdt.internal.compiler.lookup.MemberTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.RawTypeBinding;
@@ -78,6 +76,7 @@ import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SyntheticMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 
@@ -85,12 +84,12 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
  * Groovy can use these to ask questions of JDT bindings. They are only built as
  * required (as Groovy references to Java files are resolved). They remain unset
  * until Groovy starts digging into them. At that time the details are filled in
- * (eg. members).
+ * (e.g. members).
  */
 public class JDTClassNode extends ClassNode implements JDTNode {
 
     private volatile int bits;
-    private boolean beingInitialized;
+    private boolean lazyInitStarted;
     private boolean anyGenericsInitialized;
 
     private GroovyTypeDeclaration groovyTypeDecl;
@@ -109,7 +108,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
      * but are intended to represent parameterized types will have their generics info available (from the parameterized
      * jdt binding).
      */
-    public void setJdtBinding(ReferenceBinding jdtBinding) {
+    public void setJdtBinding(final ReferenceBinding jdtBinding) {
         this.jdtBinding = jdtBinding;
     }
 
@@ -125,7 +124,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     //--------------------------------------------------------------------------
 
-    public JDTClassNode(ReferenceBinding jdtReferenceBinding, JDTResolver resolver) {
+    public JDTClassNode(final ReferenceBinding jdtReferenceBinding, final JDTResolver resolver) {
         super(getName(jdtReferenceBinding), getMods(jdtReferenceBinding), null);
         this.jdtBinding = jdtReferenceBinding;
         this.resolver = resolver;
@@ -137,12 +136,9 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         this.isPrimaryNode = false;
     }
 
-    private static String getName(TypeBinding tb) {
+    private static String getName(final TypeBinding tb) {
         if (tb instanceof ArrayBinding) {
-            return String.valueOf(((ArrayBinding) tb).signature());
-        } else if (tb instanceof MemberTypeBinding) {
-            MemberTypeBinding mtb = (MemberTypeBinding) tb;
-            return CharOperation.toString(mtb.compoundName);
+            return String.valueOf(tb.signature());
         } else if (tb instanceof ReferenceBinding) {
             return CharOperation.toString(((ReferenceBinding) tb).compoundName);
         } else {
@@ -150,86 +146,64 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
-    private static int getMods(TypeBinding tb) {
-        if (tb instanceof ReferenceBinding) {
-            return ((ReferenceBinding) tb).modifiers;
-        } else {
-            // FIXASC need to be smarter here? Who is affected?
-            return Flags.AccPublic;
+    private static int getMods(final TypeBinding tb) {
+        if (tb instanceof ReferenceBinding rb) {
+            return rb.modifiers;
         }
+        return Flags.AccPublic; // FIXASC: Be smarter here? Who is affected?
     }
 
     @Override
     public void lazyClassInit() {
-        synchronized (lazyInitLock) {
-            if (lazyInitDone) {
-                return;
-            }
-            initialize();
-            lazyInitDone = true;
-        }
-    }
+        if (!lazyInitDone) {
+            synchronized (lazyInitLock) {
+                if (lazyInitDone || lazyInitStarted) return; lazyInitStarted = true;
 
-    /**
-     * Basic initialization of the node - try and do most resolution lazily but some elements are worth getting correct up front: superclass, superinterfaces
-     */
-    // FIXASC confusing (and problematic?) that the superclass is setup after the generics information
-    private void initialize() {
-        if (beingInitialized) {
-            return;
-        }
-        try {
-            beingInitialized = true;
-
-            if (!jdtBinding.isInterface()) {
-                ReferenceBinding superClass = jdtBinding.superclass();
-                if (superClass != null) {
-                    setUnresolvedSuperClass(resolver.convertToClassNode(superClass));
+                if (jdtBinding instanceof SourceTypeBinding sourceTypeBinding && sourceTypeBinding.scope != null) {
+                    if (sourceTypeBinding.scope.referenceContext instanceof GroovyTypeDeclaration typeDecl) {
+                        groovyTypeDecl = typeDecl;
+                    }
                 }
-            }
 
-            ReferenceBinding[] superInterfaceBindings = jdtBinding.superInterfaces();
-            if (superInterfaceBindings == null)
-                superInterfaceBindings = Binding.NO_SUPERINTERFACES;
-            int n = superInterfaceBindings.length;
-            ClassNode[] interfaces = new ClassNode[n];
-            for (int i = 0; i < n; i += 1) {
-                interfaces[i] = resolver.convertToClassNode(superInterfaceBindings[i]);
-            }
-            setInterfaces(interfaces);
+                // defer most type resolution, but some items are worth getting correct up front: super class, super interfaces
 
-            initializeMembers();
-        } finally {
-            beingInitialized = false;
+                if (!jdtBinding.isInterface()) {
+                    ReferenceBinding superClass = jdtBinding.superclass();
+                    if (superClass != null) {
+                        setUnresolvedSuperClass(resolver.convertToClassNode(superClass));
+                    }
+                }
+
+                ReferenceBinding[] superInterfaceBindings = jdtBinding.superInterfaces();
+                if (superInterfaceBindings == null)
+                    superInterfaceBindings = Binding.NO_SUPERINTERFACES;
+                final int n = superInterfaceBindings.length;
+                ClassNode[] interfaces = new ClassNode[n];
+                for (int i = 0; i < n; i += 1) {
+                    interfaces[i] = resolver.convertToClassNode(superInterfaceBindings[i]);
+                }
+                setInterfaces(interfaces);
+
+                initializeMembers();
+                lazyInitDone = true;
+            }
         }
     }
 
     private void initializeMembers() {
-        if (jdtBinding instanceof SourceTypeBinding) {
-            SourceTypeBinding sourceTypeBinding = (SourceTypeBinding) jdtBinding;
-            if (sourceTypeBinding.scope != null) {
-                TypeDeclaration typeDecl = sourceTypeBinding.scope.referenceContext;
-                if (typeDecl instanceof GroovyTypeDeclaration) {
-                    groovyTypeDecl = (GroovyTypeDeclaration) typeDecl;
-                }
-            }
-        }
-
-        // We do this here rather than at the start of the method because
-        // the preceding code sets 'groovyDecl', later used to 'initializeProperties'.
-
-        // From this point onward... the code is only about initializing fields, constructors and methods.
         if (isRedirectNode()) {
-            // The code in ClassNode seems set up to get field information *always* from the end of the 'redirect' chain.
-            // So, the redirect target should be responsible for its own members initialisation.
+            // ClassNode is set up to get member information from the end of the "redirect" chain.
+            // So the redirect target should be responsible for initialization of its own members.
 
-            // If we initialize members here again, when redirect target is already
-            // initialised then we will be adding duplicated methods to the redirect target.
+            // If we initialize members here again, when redirect target is already initialized,
+            // then we will be adding duplicated methods to the redirect target.
 
             return;
         }
 
         try {
+            List<Object[]> pairs = new ArrayList<>(); //MethodBinding,MethodNode
+
             MethodBinding[] methodBindings;
             if (jdtBinding instanceof ParameterizedTypeBinding) {
                 ReferenceBinding genericType = ((ParameterizedTypeBinding) jdtBinding).genericType();
@@ -241,9 +215,11 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 for (MethodBinding methodBinding : methodBindings) {
                     if (methodBinding.isConstructor()) {
                         ConstructorNode cNode = constructorBindingToConstructorNode(methodBinding);
+                        pairs.add(new Object[] {methodBinding, cNode});
                         addConstructor(cNode);
                     } else {
                         MethodNode mNode = methodBindingToMethodNode(methodBinding);
+                        pairs.add(new Object[] {methodBinding, mNode});
                         addMethod(mNode);
                     }
                 }
@@ -254,34 +230,48 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 for (MethodBinding methodBinding : infraBindings) {
                     if (methodBinding.isConstructor()) {
                         ConstructorNode cNode = constructorBindingToConstructorNode(methodBinding);
+                        pairs.add(new Object[] {methodBinding, cNode});
                         addConstructor(cNode);
                     } else {
                         MethodNode mNode = methodBindingToMethodNode(methodBinding);
+                        pairs.add(new Object[] {methodBinding, mNode});
                         addMethod(mNode);
                     }
                 }
-            } else if (jdtBinding instanceof SourceTypeBinding && (jdtBinding.tagBits & TagBits.HasMissingType) == 0) {
-                SourceTypeBinding jdtSourceTypeBinding = (SourceTypeBinding) jdtBinding;
-                if (jdtSourceTypeBinding.isPrototype()) {
-                    ClassScope classScope = jdtSourceTypeBinding.scope;
-                    // a null scope indicates it has already been 'cleaned up' so nothing to do (CUDeclaration.cleanUp())
-                    if (classScope != null) {
-                        CompilationUnitScope cuScope = classScope.compilationUnitScope();
-                        LookupEnvironment environment = classScope.environment();
-                        cuScope.verifyMethods(environment.methodVerifier());
+            } else if ((jdtBinding.tagBits & TagBits.HasMissingType) == 0 &&
+                    jdtBinding instanceof SourceTypeBinding sourceTypeBinding && sourceTypeBinding.isPrototype()) {
+                ClassScope classScope = sourceTypeBinding.scope;
+                // a null scope indicates it has already been "cleaned up" (CompilationUnitDeclaration#cleanUp())
+                if (classScope != null) {
+                    CompilationUnitScope cuScope = classScope.compilationUnitScope();
+                    LookupEnvironment environment = classScope.environment();
+                    cuScope.verifyMethods(environment.methodVerifier());
+                }
+                // Synthetic bindings are created for features like covariance, where the method implementing an interface method uses a
+                // different return type "interface I { A foo(); } class C implements I { AA foo(); }" requires a method "A foo()" in C.
+                SyntheticMethodBinding[] syntheticMethodBindings = sourceTypeBinding.syntheticMethods();
+                if (syntheticMethodBindings != null) {
+                    for (SyntheticMethodBinding syntheticBinding : syntheticMethodBindings) {
+                        if (syntheticBinding.isConstructor()) {
+                            ConstructorNode cNode = constructorBindingToConstructorNode(syntheticBinding);
+                            pairs.add(new Object[] {syntheticBinding, cNode});
+                            addConstructor(cNode);
+                        } else {
+                            MethodNode mNode = methodBindingToMethodNode(syntheticBinding);
+                            pairs.add(new Object[] {syntheticBinding, mNode});
+                            addMethod(mNode);
+                        }
                     }
-                    // Synthetic bindings are created for features like covariance, where the method implementing an interface method uses a
-                    // different return type (interface I { A foo(); } class C implements I { AA foo(); } - this needs a method 'A foo()' in C.
-                    SyntheticMethodBinding[] syntheticMethodBindings = jdtSourceTypeBinding.syntheticMethods();
-                    if (syntheticMethodBindings != null) {
-                        for (SyntheticMethodBinding syntheticBinding : syntheticMethodBindings) {
-                            if (syntheticBinding.isConstructor()) {
-                                ConstructorNode cNode = constructorBindingToConstructorNode(syntheticBinding);
-                                addConstructor(cNode);
-                            } else {
-                                MethodNode mNode = methodBindingToMethodNode(syntheticBinding);
-                                addMethod(mNode);
-                            }
+                }
+            }
+
+            for (Object[] pair : pairs) {
+                if (pair[0] instanceof DelegateMethodBinding) {
+                    MethodBinding target = ((DelegateMethodBinding) pair[0]).delegateMethod.binding;
+                    for (MethodNode candidate : pair[1] instanceof ConstructorNode ? constructors : methods.getNotNull(((MethodNode) pair[1]).getName())) {
+                        Binding binding = pair[1] instanceof JDTNode ? ((JDTNode) candidate).getJdtBinding() : candidate.getNodeMetaData("JdtBinding");
+                        if (binding == target) {
+                            ((MethodNode) pair[1]).setOriginal(candidate);
                         }
                     }
                 }
@@ -299,6 +289,10 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                     addField(fNode);
                 }
             }
+
+            if (groovyTypeDecl != null && isTrait()) {
+                putNodeMetaData("trait.fields", groovyTypeDecl.getClassNode().getFields());
+            }
         } catch (AbortCompilation e) {
             throw e;
         } catch (RuntimeException e) {
@@ -306,14 +300,37 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
-    private MethodNode methodBindingToMethodNode(MethodBinding methodBinding) {
+    private static boolean isNotReallyAbstract(final MethodBinding methodBinding) {
+        if (methodBinding.declaringClass instanceof SourceTypeBinding) {
+            return (methodBinding.modifiers & ExtraCompilerModifiers.AccSemicolonBody) == 0;
+        }
+        if (methodBinding.declaringClass instanceof BinaryTypeBinding) {
+            for (AnnotationBinding a : methodBinding.getAnnotations()) {
+                String annoTypeName = a.getAnnotationType().debugName();
+                if ("org.codehaus.groovy.transform.trait.Traits.Implemented".equals(annoTypeName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private MethodNode methodBindingToMethodNode(final MethodBinding methodBinding) {
         try {
             int modifiers = methodBinding.modifiers;
-            if (jdtBinding.isInterface() && !Flags.isStatic(modifiers) && !Flags.isSynthetic(modifiers) && !Flags.isDefaultMethod(modifiers) && !Traits.isTrait(this)) {
-                modifiers |= Flags.AccAbstract;
+            if (isInterface()) {
+                if ((modifiers & (Flags.AccStatic | Flags.AccPrivate | Flags.AccSynthetic | Flags.AccDefaultMethod)) == 0 && !isTrait()) {
+                    modifiers |=  Flags.AccAbstract;
+                } else if (methodBinding.isAbstract() && isNotReallyAbstract(methodBinding)) {
+                    modifiers &= ~Flags.AccAbstract;
+                }
+                if ((modifiers & Flags.AccStatic) != 0 && isTrait()) {
+                    modifiers &= ~Flags.AccPrivate;
+                    modifiers |=  Flags.AccPublic;
+                }
             }
 
-            ClassNode returnType = (methodBinding.returnType != null ? resolver.convertToClassNode(methodBinding.returnType) : ClassHelper.DYNAMIC_TYPE);
+            ClassNode returnType = (methodBinding.returnType != null ? resolver.convertToClassNode(methodBinding.returnType) : ClassHelper.dynamicType());
 
             Parameter[] parameters = makeParameters(methodBinding.parameters, methodBinding.parameterNames, methodBinding.getParameterAnnotations());
 
@@ -326,10 +343,32 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             }
 
             MethodNode methodNode = new JDTMethodNode(methodBinding, resolver, String.valueOf(methodBinding.selector), modifiers, returnType, parameters, exceptions, null);
-            methodNode.setAnnotationDefault(jdtBinding.isAnnotationType() && methodBinding.getDefaultValue() != null); // TODO: Capture default value?
+            methodNode.setAnnotationDefault(jdtBinding.isAnnotationType() && methodBinding.getDefaultValue() != null);
+            if (methodNode.hasAnnotationDefault()) {
+                methodNode.setCode(new ExpressionStatement(new ConstantExpression(methodBinding.getDefaultValue(), true)));
+            }
             methodNode.setGenericsTypes(new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
-            methodNode.setSynthetic(methodBinding instanceof LazilyResolvedMethodBinding); // see GroovyClassScope
-            populateOriginal(methodBinding, methodNode);
+            methodNode.setSynthetic((modifiers & 0x400000) != 0); // see GroovyClassScope
+            if (methodNode.isSynthetic()) { // linkage for non-property synthetic methods
+                switch (methodNode.getName()) {
+                case "getMetaClass":
+                case "setMetaClass":
+                case "getProperty" :
+                case "setProperty" :
+                case "invokeMethod":
+                    methodNode.setOriginal(ClassHelper.GROOVY_OBJECT_TYPE.getMethod(methodNode.getName(), parameters));
+                    break;
+                default:
+                    if (groovyTypeDecl != null) {
+                        var propertyName = Introspector.decapitalize(methodNode.getName().substring(methodNode.getName().startsWith("is") ? 2 : 3));
+                        var propertyNode = groovyTypeDecl.getClassNode().getProperty(propertyName);
+                        if (propertyNode != null) {
+                            methodNode.setNameStart(propertyNode.getField().getNameStart());
+                            methodNode.setNameEnd(propertyNode.getField().getNameEnd());
+                        }
+                    }
+                }
+            }
             return methodNode;
         } catch (AbortCompilation e) {
             throw e;
@@ -339,7 +378,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
-    private ConstructorNode constructorBindingToConstructorNode(MethodBinding methodBinding) {
+    private ConstructorNode constructorBindingToConstructorNode(final MethodBinding methodBinding) {
         Parameter[] parameters = makeParameters(methodBinding.parameters, methodBinding.parameterNames, methodBinding.getParameterAnnotations());
 
         ClassNode[] exceptions = ClassNode.EMPTY_ARRAY;
@@ -352,46 +391,44 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
         ConstructorNode ctorNode = new ConstructorNode(methodBinding.modifiers, parameters, exceptions, null);
         for (AnnotationBinding annotationBinding : methodBinding.getAnnotations()) {
-            ctorNode.addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
+            ctorNode.addAnnotation(resolver.convertToAnnotationNode(annotationBinding));
         }
         ctorNode.setGenericsTypes(new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
         ctorNode.putNodeMetaData("JdtBinding", methodBinding);
-        populateOriginal(methodBinding, ctorNode);
         return ctorNode;
     }
 
-    private FieldNode fieldBindingToFieldNode(FieldBinding fieldBinding, TypeDeclaration typeDeclaration) {
+    private FieldNode fieldBindingToFieldNode(final FieldBinding fieldBinding, final TypeDeclaration typeDeclaration) {
         String name = String.valueOf(fieldBinding.name);
         int modifiers = fieldBinding.modifiers;
         ClassNode fieldType = resolver.convertToClassNode(fieldBinding.type);
         Constant c = fieldBinding.constant();
 
         Expression initializerExpression = null;
-        // FIXASC for performance reasons could fetch the initializer lazily if a JDTFieldNode were created
         if (c == Constant.NotAConstant) {
             // if the field binding is for a real source field, we should be able to see any initializer in it
             if (typeDeclaration != null) {
                 FieldDeclaration fieldDecl = typeDeclaration.declarationOf(fieldBinding);
-                if (fieldDecl instanceof FieldDeclarationWithInitializer) {
-                    initializerExpression = ((FieldDeclarationWithInitializer) fieldDecl).getGroovyInitializer();
+                if (fieldDecl instanceof FieldDeclarationWithInitializer withInit) {
+                    initializerExpression = withInit.getGroovyInitializer();
                 }
             }
         } else if (c instanceof BooleanConstant) {
-            initializerExpression = new ConstantExpression(((BooleanConstant) c).booleanValue());
+            initializerExpression = new ConstantExpression(((BooleanConstant) c).booleanValue(), true);
         } else if (c instanceof ByteConstant) {
-            initializerExpression = new ConstantExpression(((ByteConstant) c).byteValue());
+            initializerExpression = new ConstantExpression(((ByteConstant) c).byteValue(), true);
         } else if (c instanceof CharConstant) {
-            initializerExpression = new ConstantExpression(((CharConstant) c).charValue());
+            initializerExpression = new ConstantExpression(((CharConstant) c).charValue(), true);
         } else if (c instanceof DoubleConstant) {
-            initializerExpression = new ConstantExpression(((DoubleConstant) c).doubleValue());
+            initializerExpression = new ConstantExpression(((DoubleConstant) c).doubleValue(), true);
         } else if (c instanceof FloatConstant) {
-            initializerExpression = new ConstantExpression(((FloatConstant) c).floatValue());
+            initializerExpression = new ConstantExpression(((FloatConstant) c).floatValue(), true);
         } else if (c instanceof IntConstant) {
-            initializerExpression = new ConstantExpression(((IntConstant) c).intValue());
+            initializerExpression = new ConstantExpression(((IntConstant) c).intValue(), true);
         } else if (c instanceof LongConstant) {
-            initializerExpression = new ConstantExpression(((LongConstant) c).longValue());
+            initializerExpression = new ConstantExpression(((LongConstant) c).longValue(), true);
         } else if (c instanceof ShortConstant) {
-            initializerExpression = new ConstantExpression(((ShortConstant) c).shortValue());
+            initializerExpression = new ConstantExpression(((ShortConstant) c).shortValue(), true);
         } else if (c instanceof StringConstant) {
             initializerExpression = new ConstantExpression(((StringConstant) c).stringValue());
         }
@@ -403,7 +440,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
      * @param t type
      * @param e erasure of type
      */
-    private ClassNode makeClassNode(TypeBinding t, TypeBinding e) {
+    private ClassNode makeClassNode(final TypeBinding t, final TypeBinding e) {
         ClassNode back = resolver.convertToClassNode(e);
         if (!(t instanceof BinaryTypeBinding || t instanceof SourceTypeBinding)) {
             ClassNode front = new JDTClassNodeBuilder(resolver).configureType(t);
@@ -413,7 +450,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return back;
     }
 
-    private Parameter makeParameter(TypeBinding parameterType, String parameterName) {
+    private Parameter makeParameter(final TypeBinding parameterType, final String parameterName) {
         TypeBinding erasureType;
         if (parameterType instanceof ParameterizedTypeBinding) {
             erasureType = ((ParameterizedTypeBinding) parameterType).genericType();
@@ -427,7 +464,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return new Parameter(makeClassNode(parameterType, erasureType), parameterName);
     }
 
-    private Parameter[] makeParameters(TypeBinding[] parameterTypes, char[][] parameterNames, AnnotationBinding[][] parameterAnnotations) {
+    private Parameter[] makeParameters(final TypeBinding[] parameterTypes, final char[][] parameterNames, final AnnotationBinding[][] parameterAnnotations) {
         Parameter[] parameters = Parameter.EMPTY_ARRAY;
         if (parameterTypes != null && parameterTypes.length > 0) {
             parameters = new Parameter[parameterTypes.length];
@@ -435,32 +472,18 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 String parameterName;
                 if (i < parameterNames.length) {
                     parameterName = String.valueOf(parameterNames[i]);
-                } else if (i < Java5.ARGS.length) {
-                    parameterName = Java5.ARGS[i];
                 } else {
-                    parameterName = "arg" + i;
+                    parameterName = ("arg" + i).intern();
                 }
                 parameters[i] = makeParameter(parameterTypes[i], parameterName);
                 if (parameterAnnotations != null && parameterAnnotations.length > i) {
                     for (AnnotationBinding annotationBinding : parameterAnnotations[i]) {
-                        parameters[i].addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
+                        parameters[i].addAnnotation(resolver.convertToAnnotationNode(annotationBinding));
                     }
                 }
             }
         }
         return parameters;
-    }
-
-    private void populateOriginal(MethodBinding methodBinding, MethodNode methodNode) {
-        if (methodBinding instanceof DelegateMethodBinding) {
-            MethodBinding target = ((DelegateMethodBinding) methodBinding).delegateMethod.binding;
-            for (MethodNode candidate : methodNode instanceof ConstructorNode ? constructors : methods.getNotNull(methodNode.getName())) {
-                Binding binding = methodNode instanceof JDTNode ? ((JDTNode) candidate).getJdtBinding() : candidate.getNodeMetaData("JdtBinding");
-                if (binding == target) {
-                    methodNode.setOriginal(candidate);
-                }
-            }
-        }
     }
 
     //--------------------------------------------------------------------------
@@ -475,7 +498,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                         long tagBits = ((SourceTypeBinding) jdtBinding).getAnnotationTagBits();
                     }
                     for (AnnotationBinding annotationBinding : jdtBinding.getAnnotations()) {
-                        addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
+                        addAnnotation(resolver.convertToAnnotationNode(annotationBinding));
                     }
                     bits |= ANNOTATIONS_INITIALIZED;
                 }
@@ -485,7 +508,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     @Override
-    public List<AnnotationNode> getAnnotations(ClassNode type) {
+    public List<AnnotationNode> getAnnotations(final ClassNode type) {
         if ((bits & ANNOTATIONS_INITIALIZED) == 0) {
             @SuppressWarnings("unused") // ensure initialized
             List<AnnotationNode> annotations = getAnnotations();
@@ -510,17 +533,17 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     @Override
-    public void setUsingGenerics(boolean b) {
+    public void setUsingGenerics(final boolean b) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void setGenericsPlaceHolder(boolean b) {
+    public void setGenericsPlaceHolder(final boolean b) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void setGenericsTypes(GenericsType[] genericsTypes) {
+    public void setGenericsTypes(final GenericsType[] genericsTypes) {
         anyGenericsInitialized = true;
         super.setGenericsTypes(genericsTypes);
     }
@@ -533,20 +556,23 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             } else if (jdtBinding instanceof ParameterizedTypeBinding) {
                 generics = new JDTClassNodeBuilder(resolver).configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
             } else { // BinaryTypeBinding, SourceTypeBinding, TypeVariableBinding, WildcardBinding
-                generics = new JDTClassNodeBuilder(resolver).configureTypeVariables(jdtBinding.typeVariables());
+                TypeVariableBinding[] typeVariables = jdtBinding.typeVariables();
+                assert Arrays.stream( typeVariables ).allMatch(Objects::nonNull);
+                generics = new JDTClassNodeBuilder(resolver).configureTypeVariables(typeVariables);
             }
             setGenericsTypes(generics);
         }
     }
 
     @Override
-    public void addProperty(PropertyNode node) {
-        throw new UnsupportedOperationException("JDTClassNode is immutable, should not be called to add property: " + node.getName());
+    public void addProperty(final PropertyNode node) {
+        throw new UnsupportedOperationException("JDTClassNode cannot accept property: " + node.getName());
     }
 
     @Override
-    public PropertyNode addProperty(String name, int modifiers, ClassNode type, Expression initialValueExpression, Statement getterBlock, Statement setterBlock) {
-        throw new UnsupportedOperationException("JDTClassNode is immutable, should not be called to add property: " + name);
+    public PropertyNode addProperty(final String name, final int modifiers, final ClassNode type,
+            final Expression initialValueExpression, final Statement getterBlock, final Statement setterBlock) {
+        throw new UnsupportedOperationException("JDTClassNode cannot accept property: " + name);
     }
 
     @Override
@@ -556,28 +582,42 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 if ((bits & PROPERTIES_INITIALIZED) == 0) {
                     lazyClassInit();
                     if (groovyTypeDecl != null) {
-                        Set<String> names = new HashSet<>();
                         List<PropertyNode> nodes = super.getProperties();
-                        getMethods().stream().filter(AccessorSupport::isGetter).forEach(methodNode -> {
-                            String methodName = methodNode.getName();
-                            String propertyName = decapitalize(methodName.substring(methodName.startsWith("is") ? 2 : 3));
 
-                            // STS-2628: don't double-add properties if there is a getter and an isser variant
-                            if (names.add(propertyName)) {
-                                FieldNode field = getField(propertyName);
-                                boolean synth = (field == null);
-                                if (synth) {
-                                    field = new FieldNode(propertyName, methodNode.getModifiers(), methodNode.getReturnType(), this, null);
-                                    field.setDeclaringClass(this);
-                                    field.setSynthetic(true);
-                                }
-                                PropertyNode property = new PropertyNode(field, methodNode.getModifiers(), null, null);
-                                property.setDeclaringClass(this);
-                                property.setSynthetic(synth);
-
-                                nodes.add(property);
+                        for (PropertyNode node : groovyTypeDecl.getClassNode().getProperties()) {
+                            FieldNode field = getDeclaredField(node.getName());
+                            if (field == null) {
+                                field = new FieldNode(node.getName(), Flags.AccPrivate | (node.getModifiers() & Flags.AccStatic + Flags.AccFinal), resolveType(node.getType()), this, null);
+                                field.setDeclaringClass(this);
+                                field.setSourcePosition(node.getField());
+                                field.setSynthetic(true);
+                            } else if (Flags.isPackageDefault(field.getModifiers())) {
+                                continue; // @PackageScope field, not property
                             }
-                        });
+
+                            PropertyNode clone = new PropertyNode(field, node.getModifiers(), null, null);
+                            clone.setDeclaringClass(this);
+                            clone.setSourcePosition(node);
+                            // TODO: propagate annotations
+
+                            nodes.add(clone);
+                        }
+                    } else {
+                        // hydrate properties from getters
+                        for (MethodNode mn : getMethods()) {
+                            if (mn.isPublic() && isGetter(mn) && isGenerated(mn) && !"getMetaClass".equals(mn.getName())) {
+                                String propertyName = Introspector.decapitalize(mn.getName().substring(mn.getName().startsWith("is") ? 2 : 3));
+                                // check for field with same name/type
+                                FieldNode fn = getField(propertyName);
+                                if (fn != null && fn.isPrivate() && fn.getType().equals(mn.getReturnType())) {
+                                    PropertyNode pn = new PropertyNode(fn, fn.getModifiers() & Flags.AccStatic + Flags.AccFinal, null, null);
+                                    pn.addAnnotations(fn.getAnnotations());
+                                    pn.setDeclaringClass(this);
+
+                                    super.getProperties().add(pn);
+                                }
+                            }
+                        }
                     }
                     bits |= PROPERTIES_INITIALIZED;
                 }
@@ -585,6 +625,62 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
 
         return Collections.unmodifiableList(super.getProperties());
+    }
+
+    private ClassNode resolveType(ClassNode cn) {
+        int dims = 0;
+        while (cn.isArray()) { dims += 1;
+            cn = cn.getComponentType();
+        }
+        String name = cn.getName();
+        if (groovyTypeDecl != null) {
+            String[] tokens = name.split("\\.");
+            ClassNode known = groovyTypeDecl.getClassNode().getModule().getImportType(tokens[0]);
+            if (known != null) {
+                tokens[0] = known.getName();
+                name = String.join(".", tokens);
+            }
+        }
+        ClassNode type = resolver.resolve(name);
+
+        type = type.getPlainNodeReference(); // "Map<K,V>" to "Map --> Map<K,V>"
+
+        GenericsType[] gt = cn.getGenericsTypes();
+        if (gt != null) {
+            GenericsType[] types = new GenericsType[gt.length];
+            for (int i = 0; i < gt.length; i += 1) {
+                if (!gt[i].isWildcard()) {
+                    types[i] = new GenericsType(resolveType(gt[i].getType()));
+                } else {
+                    ClassNode lowerBound = gt[i].getLowerBound();
+                    if (lowerBound != null) lowerBound = resolveType(lowerBound);
+                    ClassNode[] upperBounds = gt[i].getUpperBounds();
+                    if (upperBounds != null) {
+                        upperBounds = upperBounds.clone();
+                        Arrays.asList(upperBounds).replaceAll(this::resolveType);
+                    }
+                    types[i] = new GenericsType(ClassHelper.makeWithoutCaching("?"), upperBounds, lowerBound);
+                    types[i].setWildcard(true);
+                }
+                types[i].setResolved(true);
+            }
+            type.setGenericsTypes(types);
+        }
+
+        while (dims-- > 0) {
+            type = type.makeArray();
+        }
+
+        return type;
+    }
+
+    private static boolean isGenerated(MethodNode mn) {
+        for (AnnotationNode an : mn.getAnnotations()) {
+            if (an.getClassNode().getName().equals("groovy.transform.Generated")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -595,7 +691,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                     bits |= INNER_TYPES_INITIALIZED;
                     if (jdtBinding.hasMemberTypes()) {
                         // workaround for https://github.com/groovy/groovy-eclipse/issues/714
-                        if (jdtBinding instanceof BinaryTypeBinding && jdtBinding == jdtBinding.prototype() && Traits.isTrait(this)) {
+                        if (jdtBinding instanceof BinaryTypeBinding && jdtBinding == jdtBinding.prototype() && isTrait()) {
                             ReferenceBinding[] memberTypes = ReflectionUtils.getPrivateField(BinaryTypeBinding.class, "memberTypes", jdtBinding);
                             for (int i = 0; i < memberTypes.length; i += 1) {
                                 if (String.valueOf(memberTypes[i].sourceName).endsWith("$Trait$FieldHelper$1")) {
@@ -616,7 +712,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 }
             }
         }
-        return (innerClasses == null ? Collections.EMPTY_LIST : Collections.unmodifiableList(innerClasses)).iterator();
+        return super.getInnerClasses();
     }
 
     @Override
@@ -628,7 +724,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     @Override
-    public FieldNode getOuterField(String name) {
+    public FieldNode getOuterField(final String name) {
         return getOuterClass().getDeclaredField(name);
     }
 
@@ -640,7 +736,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     @Override
     public boolean hasClass() {
-        if (clazz == null && !unfindable) {
+        if (clazz == null && !unfindable && jdtBinding.actualType() instanceof BinaryTypeBinding) {
             // Some AST transforms are written such that they refer to typeClass on a ClassNode.
             // This is not available within Eclipse. However, we can support it in a rudimentary
             // fashion by attempting a class load using the transform loader (if it's available).
@@ -669,4 +765,20 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     public boolean isResolved() {
         return true; // JDTClassNode created because of a JDT ReferenceBinding, so it is always "resolved" (although not initialized upon creation)
     }
+
+    public boolean isTrait() {
+        if (isTrait == null) {
+            if (isInterface() && !isAnnotationDefinition() && !Arrays.equals(jdtBinding.compoundName[0], TypeConstants.JAVA)) {
+                if (groovyTypeDecl != null) {
+                    isTrait = org.codehaus.groovy.transform.trait.Traits.isTrait(groovyTypeDecl.getClassNode());
+                } else {
+                    isTrait = org.codehaus.groovy.transform.trait.Traits.isTrait(this); // populates annotations
+                }
+            } else {
+                isTrait = Boolean.FALSE;
+            }
+        }
+        return isTrait.booleanValue();
+    }
+    private Boolean isTrait;
 }

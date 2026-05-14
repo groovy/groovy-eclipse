@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,12 +17,15 @@ package org.codehaus.groovy.eclipse.test.core.util
 
 import static org.junit.Assert.assertEquals
 
+import groovy.transform.CompileStatic
+
 import org.codehaus.groovy.eclipse.core.ISourceBuffer
 import org.codehaus.groovy.eclipse.core.impl.StringSourceBuffer
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder
 import org.junit.Ignore
 import org.junit.Test
 
+@CompileStatic
 final class ExpressionFinderTests {
 
     /**
@@ -341,140 +344,140 @@ final class ExpressionFinderTests {
     @Test
     void testIdentifierExpression() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { bbbb. } }"
-        String completionLocation = "class Test { public testFunction() { bbbb."
+        String source = 'class Test { def testFunction() { bbbb. } }'
+        String completionLocation = 'class Test { def testFunction() { bbbb.'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("bbbb.", expression)
+        assertEquals('bbbb.', expression)
     }
 
     @Test
     void testParenExpression() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { (bbbb). } }"
-        String completionLocation = "class Test { public testFunction() { (bbbb)."
+        String source = 'class Test { def testFunction() { (bbbb). } }'
+        String completionLocation = 'class Test { def testFunction() { (bbbb).'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("(bbbb).", expression)
+        assertEquals('(bbbb).', expression)
     }
 
     @Test
     void testArrayElementExpressionInParen() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { (bbbb[10]). } }"
-        String completionLocation = "class Test { public testFunction() { (bbbb[10])."
+        String source = 'class Test { def testFunction() { (bbbb[10]). } }'
+        String completionLocation = 'class Test { def testFunction() { (bbbb[10]).'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("(bbbb[10]).", expression)
+        assertEquals('(bbbb[10]).', expression)
     }
 
     @Test
     void testArrayElementExpression() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { bbbb[10]. } }"
-        String completionLocation = "class Test { public testFunction() { bbbb[10]."
+        String source = 'class Test { def testFunction() { bbbb[10]. } }'
+        String completionLocation = 'class Test { def testFunction() { bbbb[10].'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("bbbb[10].", expression)
+        assertEquals('bbbb[10].', expression)
     }
 
     @Test
     void testParenInParenExpression() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { (([10])). } }"
-        String completionLocation = "class Test { public testFunction() { (([10]))."
+        String source = 'class Test { def testFunction() { (([10])). } }'
+        String completionLocation = 'class Test { def testFunction() { (([10])).'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("(([10])).", expression)
+        assertEquals('(([10])).', expression)
     }
 
     @Test
     void testParenInParenExpression2() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { (([10\n\n  ])). } }"
-        String completionLocation = "class Test { public testFunction() { (([10\n\n  ]))."
+        String source = 'class Test { def testFunction() { (([10\n\n  ])). } }'
+        String completionLocation = 'class Test { def testFunction() { (([10\n\n  ])).'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("(([10\n\n  ])).", expression)
+        assertEquals('(([10\n\n  ])).', expression)
     }
 
     @Test
     void testStringExpression() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { \"13\". } }"
-        String completionLocation = "class Test { public testFunction() { \"13\"."
+        String source = 'class Test { def testFunction() { "13". } }'
+        String completionLocation = 'class Test { def testFunction() { "13".'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("\"13\".", expression)
+        assertEquals('"13".', expression)
     }
 
     @Test
     void testStringExpressionAfterOtherExpressionAndNewLine() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { int a = 10\n   \"13\". } }"
-        String completionLocation = "class Test { public testFunction() { int a = 10\n   \"13\"."
+        String source = 'class Test { def testFunction() { int a = 10\n   "13". } }'
+        String completionLocation = 'class Test { def testFunction() { int a = 10\n   "13".'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("\"13\".", expression)
+        assertEquals('"13".', expression)
     }
 
     @Test
     void testStringExpressionAfterOtherExpressionAndSemi() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { int a = 10;   \"13\". } }"
-        String completionLocation = "class Test { public testFunction() { int a = 10;   \"13\"."
+        String source = 'class Test { def testFunction() { int a = 10;   "13". } }'
+        String completionLocation = 'class Test { def testFunction() { int a = 10;   "13".'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("\"13\".", expression)
+        assertEquals('"13".', expression)
     }
 
     @Test
     void testExpressionInGString() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = 'class Test { public testFunction() { "anyString${a.}" } }'
-        String completionLocation = 'class Test { public testFunction() { "anyString${a.'
+        String source = 'class Test { def testFunction() { "anyString${a.}" } }'
+        String completionLocation = 'class Test { def testFunction() { "anyString${a.'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("a.", expression)
+        assertEquals('a.', expression)
     }
 
     @Test
     void testExpressionInParenAfterNewLine() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { int a = 100\n    (new ArrayList()). } }"
-        String completionLocation = "class Test { public testFunction() { int a = 100\n    (new ArrayList())."
+        String source = 'class Test { def testFunction() { int a = 100\n    (new ArrayList()). } }'
+        String completionLocation = 'class Test { def testFunction() { int a = 100\n    (new ArrayList()).'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("(new ArrayList()).", expression)
+        assertEquals('(new ArrayList()).', expression)
     }
 
     @Test
     void testExpressionAfterNewLine() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { int a = 100\n    new ArrayList(). } }"
-        String completionLocation = "class Test { public testFunction() { int a = 100\n    new ArrayList()."
+        String source = 'class Test { def testFunction() { int a = 100\n    new ArrayList(). } }'
+        String completionLocation = 'class Test { def testFunction() { int a = 100\n    new ArrayList().'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("new ArrayList().", expression)
+        assertEquals('new ArrayList().', expression)
     }
 
     @Test @Ignore
     void testNoExpression1() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() {    } }"
-        String completionLocation = "class Test { public testFunction() { "
+        String source = 'class Test { def testFunction() {    } }'
+        String completionLocation = 'class Test { def testFunction() { '
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
@@ -484,41 +487,41 @@ final class ExpressionFinderTests {
     @Test
     void testNoExpression2() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { int a = 100    } }"
-        String completionLocation = "class Test { public testFunction() { int a = 100  "
+        String source = 'class Test { def testFunction() { int a = 100    } }'
+        String completionLocation = 'class Test { def testFunction() { int a = 100  '
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("", expression)
+        assertEquals('', expression)
     }
 
     @Test
     void testNoExpression3() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { int a = 100\n    } }"
-        String completionLocation = "class Test { public testFunction() { int a = 100\n  "
+        String source = 'class Test { def testFunction() { int a = 100\n    } }'
+        String completionLocation = 'class Test { def testFunction() { int a = 100\n  '
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("", expression)
+        assertEquals('', expression)
     }
 
     @Test
     void testExpressionAfterNumber() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { int a = 100\n    } }"
-        String completionLocation = "class Test { public testFunction() { int a = 100"
+        String source = 'class Test { def testFunction() { int a = 100\n    } }'
+        String completionLocation = 'class Test { def testFunction() { int a = 100'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("100", expression)
+        assertEquals('100', expression)
     }
 
     @Test
     void testExpressionAfterStringLiteral() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { def a = \"fff\"\n    } }"
-        String completionLocation = "class Test { public testFunction() { int a = \"fff\""
+        String source = 'class Test { def testFunction() { def a = "fff"\n    } }'
+        String completionLocation = 'class Test { def testFunction() { int a = "fff"'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
@@ -528,22 +531,22 @@ final class ExpressionFinderTests {
     @Test
     void testExpressionInParenAfterSemi() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { int a = 100;    (new ArrayList()). } }"
-        String completionLocation = "class Test { public testFunction() { int a = 100;    (new ArrayList())."
+        String source = 'class Test { def testFunction() { int a = 100;    (new ArrayList()). } }'
+        String completionLocation = 'class Test { def testFunction() { int a = 100;    (new ArrayList()).'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("(new ArrayList()).", expression)
+        assertEquals('(new ArrayList()).', expression)
     }
 
     @Test
     void testExpressionForNewGenericType() {
         ExpressionFinder finder = new ExpressionFinder()
-        String source = "class Test { public testFunction() { int a = 100;    (new ArrayList<String>()). } }"
-        String completionLocation = "class Test { public testFunction() { int a = 100;    (new ArrayList<String>())."
+        String source = 'class Test { def testFunction() { int a = 100;    (new ArrayList<String>()). } }'
+        String completionLocation = 'class Test { def testFunction() { int a = 100;    (new ArrayList<String>()).'
         ISourceBuffer sourceBuffer = new StringSourceBuffer(source)
 
         String expression = finder.findForCompletions(sourceBuffer, completionLocation.length() - 1)
-        assertEquals("(new ArrayList<String>()).", expression)
+        assertEquals('(new ArrayList<String>()).', expression)
     }
 }

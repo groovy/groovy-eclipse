@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
-import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.Test
 
@@ -33,33 +32,33 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
     @Before
     void setUp() {
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE)
-        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '2')
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, 2)
     }
 
     /**
      * @param contents editor begin state
-     * @param expected editor end state -- use '|' at the end of a line to preserve thw whitespace
+     * @param expected editor end state -- use '#' at the end of a line to preserve the whitespace
      * @param target substring to find for code completion proposals
      * @param which name of completion proposal to select and apply
      */
     protected void runTest(CharSequence contents, CharSequence expected, String target, String which = target) {
-        def editor = openInEditor(addGroovySource(contents.stripIndent(), nextUnitName()))
-        int offset = contents.stripIndent().toString().indexOf(target) + target.length()
+        def editor = openInEditor(addGroovySource(contents, nextUnitName()))
+        int offset = contents.toString().indexOf(target) + target.length()
         def context = new JavaContentAssistInvocationContext(editor.viewer, offset, editor)
 
         // find proposal
-        List<ICompletionProposal> proposals = new TemplateProposalComputer().computeCompletionProposals(context, null)
+        def proposals = new TemplateProposalComputer().computeCompletionProposals(context, null)
         assert proposals != null && !proposals.empty : 'Expected some proposals, but got none'
-        def matches = proposals.findAll { it.displayString.startsWith(which + ' - ') }
+        def matches = proposals.findAll { it.displayString.startsWith(which) }
         assert matches.size() == 1 : 'Expected a match, but got ' + matches.size()
 
         // apply template
         matches[0].apply(editor.viewer, 'x' as char, 0, offset)
         SynchronizationUtils.runEventQueue() // allow the change to show in the editor
 
-        String expect = expected.stripIndent().toString().replace('|', '').normalize()
+        String expect = expected.toString().replace('#','').normalize()
         String actual = editor.viewer.document.get().normalize()
-        assert actual == expect
+        org.junit.Assert.assertEquals(expect,actual)
     }
 
     //--------------------------------------------------------------------------
@@ -69,27 +68,40 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
         String target = 'try'
         for (input in ['var. try', 'var.@ try', 'var.& try']) {
             def editor = openInEditor(addGroovySource(input, nextUnitName()))
-            int offset = input.stripIndent().toString().indexOf(target) + target.length()
+            int offset = input.indexOf(target) + target.length()
             def context = new JavaContentAssistInvocationContext(editor.viewer, offset, editor)
-            List<ICompletionProposal> proposals = new TemplateProposalComputer().computeCompletionProposals(context, null)
+            def proposals = new TemplateProposalComputer().computeCompletionProposals(context, null)
 
             assert proposals.isEmpty()
         }
     }
 
     @Test
-    void testBasicTemplate() {
+    void testNewVariable() {
         //@formatter:off
         String input = '''\
-            try
-            '''
+            |d
+            |'''.stripMargin()
         String output = '''\
-            try {
-              |
-            } catch (Exception e) {
-              e.printStackTrace()
-            }
-            '''
+            |def name = value
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'd', 'def')
+    }
+
+    @Test
+    void testTryAndCatch() {
+        //@formatter:off
+        String input = '''\
+            |try
+            |'''.stripMargin()
+        String output = '''\
+            |try {
+            |  #
+            |} catch (e) {
+            |  e.printStackTrace()
+            |}
+            |'''.stripMargin()
         //@formatter:on
         runTest(input, output, 'try')
     }
@@ -98,89 +110,274 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
     void testJUnitBefore() {
         //@formatter:off
         String input = '''\
-            final class SomeTest {
-              Bef
-            }
-            '''
+            |final class Spec {
+            |  Bef
+            |}
+            |'''.stripMargin()
         String output = '''\
-            import org.junit.Before
-
-            final class SomeTest {
-              @Before
-              void before() {
-                |
-              }
-            }
-            '''
+            |import org.junit.Before
+            |
+            |final class Spec {
+            |  @Before
+            |  void setUp() {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
-        runTest(input, output, 'Bef', 'Before')
+        runTest(input, output, 'Bef', 'Before ')
+    }
+
+    @Test
+    void testJUnitBeforeEach() {
+        //@formatter:off
+        String input = '''\
+            |final class Spec {
+            |  Bef
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |import org.junit.jupiter.api.BeforeEach
+            |
+            |final class Spec {
+            |  @BeforeEach
+            |  void setUp() {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'Bef', 'BeforeEach')
     }
 
     @Test
     void testJUnitAfter() {
         //@formatter:off
         String input = '''\
-            final class SomeTest {
-              Aft
-            }
-            '''
+            |final class Spec {
+            |  Aft
+            |}
+            |'''.stripMargin()
         String output = '''\
-            import org.junit.After
-
-            final class SomeTest {
-              @After
-              void after() {
-                |
-              }
-            }
-            '''
+            |import org.junit.After
+            |
+            |final class Spec {
+            |  @After
+            |  void tearDown() {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
-        runTest(input, output, 'Aft', 'After')
+        runTest(input, output, 'Aft', 'After ')
     }
 
     @Test
-    void testGContractsEnsures() {
+    void testJUnitAfterEach() {
         //@formatter:off
         String input = '''\
-            final class SomeTest {
-              Ens
-              def meth() {
-              }
-            }
-            '''
+            |final class Spec {
+            |  Aft
+            |}
+            |'''.stripMargin()
         String output = '''\
-            import org.gcontracts.annotations.Ensures
-
-            final class SomeTest {
-              @Ensures({ predicate })
-              def meth() {
-              }
-            }
-            '''
+            |import org.junit.jupiter.api.AfterEach
+            |
+            |final class Spec {
+            |  @AfterEach
+            |  void tearDown() {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
-        runTest(input, output, 'Ens', 'Ensures')
+        runTest(input, output, 'Aft', 'AfterEach')
+    }
+
+    @Test
+    void testJUnit3TestCase() {
+        //@formatter:off
+        String input = '''\
+            |final class Spec {
+            |  tes
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |final class Spec {
+            |  void testName() {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'tes', 'test')
+    }
+
+    @Test
+    void testJUnit4TestCase() {
+        //@formatter:off
+        String input = '''\
+            |final class Spec {
+            |  Tes
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |import static org.junit.Assert.*
+            |import static org.junit.Assume.*
+            |
+            |import org.junit.Test
+            |
+            |final class Spec {
+            |  @Test
+            |  void testName() {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'Tes', 'Test - test method (JUnit 4)')
+    }
+
+    @Test
+    void testJUnit5TestCase() {
+        //@formatter:off
+        String input = '''\
+            |final class Spec {
+            |  Tes
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |import static org.junit.jupiter.api.Assertions.*
+            |import static org.junit.jupiter.api.Assumptions.*
+            |
+            |import org.junit.jupiter.api.DisplayName
+            |import org.junit.jupiter.api.Test
+            |
+            |final class Spec {
+            |  @Test @DisplayName('scenario_description')
+            |  void testName() {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'Tes', 'Test - test method (JUnit 5)')
+    }
+
+    @Test
+    void testJUnit5TestCases() {
+        //@formatter:off
+        String input = '''\
+            |final class Spec {
+            |  Tes
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |import org.junit.jupiter.params.ParameterizedTest
+            |import org.junit.jupiter.params.provider.*
+            |
+            |final class Spec {
+            |  @ParameterizedTest @MethodSource()
+            |  void testName(input) {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'Tes', 'Test - tests method (JUnit 5)')
+    }
+
+    @Test
+    void testJUnit5TestFactory() {
+        //@formatter:off
+        String input = '''\
+            |final class Spec {
+            |  Tes
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |import static org.junit.jupiter.api.Assertions.*
+            |import static org.junit.jupiter.api.Assumptions.*
+            |import static org.junit.jupiter.api.DynamicContainer.*
+            |import static org.junit.jupiter.api.DynamicTest.*
+            |
+            |import org.junit.jupiter.api.DynamicNode
+            |import org.junit.jupiter.api.TestFactory
+            |
+            |final class Spec {
+            |  @TestFactory
+            |  DynamicNode testFactoryName() {
+            |    // TODO: generate dynamic tests
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'Tes', 'Test - test factory method (JUnit 5)')
+    }
+
+    @Test
+    void testGContractsInvariant() {
+        //@formatter:off
+        String input = '''\
+            |Inv
+            |class Pogo {
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |import groovy.contracts.Invariant
+            |
+            |@Invariant({ predicate })
+            |class Pogo {
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'Inv', 'Invariant')
     }
 
     @Test
     void testGContractsRequires() {
         //@formatter:off
         String input = '''\
-            final class SomeTest {
-              Req
-              def meth() {
-              }
-            }
-            '''
+            |class Pogo {
+            |  Req
+            |  def meth() {
+            |  }
+            |}
+            |'''.stripMargin()
         String output = '''\
-            import org.gcontracts.annotations.Requires
-
-            final class SomeTest {
-              @Requires({ predicate })
-              def meth() {
-              }
-            }
-            '''
+            |import groovy.contracts.Requires
+            |
+            |class Pogo {
+            |  @Requires({ predicate })
+            |  def meth() {
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
         runTest(input, output, 'Req', 'Requires')
+    }
+
+    @Test
+    void testGContractsEnsures() {
+        //@formatter:off
+        String input = '''\
+            |class Pogo {
+            |  Ens
+            |  def meth() {
+            |  }
+            |}
+            |'''.stripMargin()
+        String output = '''\
+            |import groovy.contracts.Ensures
+            |
+            |class Pogo {
+            |  @Ensures({ predicate })
+            |  def meth() {
+            |  }
+            |}
+            |'''.stripMargin()
+        //@formatter:on
+        runTest(input, output, 'Ens', 'Ensures')
     }
 }

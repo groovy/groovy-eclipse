@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.codeassist.tests;
-
-import groovy.transform.NotYetImplemented
+package org.codehaus.groovy.eclipse.codeassist.tests
 
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.ui.PreferenceConstants
@@ -29,9 +27,9 @@ final class TypeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testCompletionTypesInScript() {
-        String contents = 'HTML'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'HTML'))
-        proposalExists(proposals, 'HTML - javax.swing.text.html', 1)
+        String contents = 'List'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'List'))
+        assertProposalOrdering(orderByRelevance(proposals), 'List - java.util', 'ListenerList - groovy.beans', 'ListIterator - java.util')
     }
 
     @Test
@@ -214,7 +212,8 @@ final class TypeCompletionTests extends CompletionTestSuite {
     void testCompleteClass2() {
         String contents = 'class Foo { }\nFoo.com'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
-        proposalExists(proposals, 'componentType', 1, true)
+        def version = Float.parseFloat(System.getProperty('java.specification.version'))
+        proposalExists(proposals, 'componentType', version < 12 ? 1 : 2, true)
     }
 
     @Test
@@ -228,7 +227,8 @@ final class TypeCompletionTests extends CompletionTestSuite {
     void testCompleteClass4() {
         String contents = 'class Foo { }\nFoo.class.com'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
-        proposalExists(proposals, 'componentType', 1)
+        def version = Float.parseFloat(System.getProperty('java.specification.version'))
+        proposalExists(proposals, 'componentType', version < 12 ? 1 : 2)
     }
 
     @Test
@@ -260,49 +260,49 @@ final class TypeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testField1() {
-        String contents = 'class Foo {\n	JFr\n}'
+        String contents = 'class Foo {\n' + '\tJFr\n' + '}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
     }
 
     @Test
     void testField2() {
-        String contents = 'class Foo {\n	private JFr\n}'
+        String contents = 'class Foo {\n' + '\tprivate JFr\n' + '}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
     }
 
     @Test
     void testField3() {
-        String contents = 'class Foo {\n	public JFr\n}'
+        String contents = 'class Foo {\n' + '\tpublic JFr\n' + '}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
     }
 
     @Test
     void testField4() {
-        String contents = 'class Foo {\n	protected JFr\n}'
+        String contents = 'class Foo {\n' + '\tprotected JFr\n' + '}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
     }
 
     @Test
     void testField5() {
-        String contents = 'class Foo {\n	public static JFr\n}'
+        String contents = 'class Foo {\n' + '\tpublic static JFr\n' + '}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
     }
 
     @Test
     void testField6() {
-        String contents = 'class Foo {\n	public final JFr\n}'
+        String contents = 'class Foo {\n' + '\tpublic final JFr\n' + '}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
     }
 
     @Test
     void testField7() {
-        String contents = 'class Foo {\n	public static final JFr\n}'
+        String contents = 'class Foo {\n' + '\tpublic static final JFr\n' + '}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
     }
@@ -310,38 +310,38 @@ final class TypeCompletionTests extends CompletionTestSuite {
     @Test
     void testField8() {
         String contents = '''\
-            class Foo {
-                String bar
-                Lis
-            }
-            '''.stripIndent()
+            |class Foo {
+            |  String bar
+            |  Lis
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'Lis'))
         proposalExists(proposals, 'List - java.util', 1)
         proposalExists(proposals, 'List - java.awt', 1)
 
         applyProposalAndCheck(findFirstProposal(proposals, 'List - java.util'), '''\
-            class Foo {
-                String bar
-                List
-            }
-            '''.stripIndent())
+            |class Foo {
+            |  String bar
+            |  List
+            |}
+            |'''.stripMargin())
     }
 
     @Test
     void testField9() {
         String contents = '''\
-            class Foo {
-                String bar
-                Lis
-            }
-            '''.stripIndent()
+            |class Foo {
+            |  String bar
+            |  Lis
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'Lis'))
         applyProposalAndCheck(findFirstProposal(proposals, 'List - java.awt'), '''\
             |import java.awt.List
             |
             |class Foo {
-            |    String bar
-            |    List
+            |  String bar
+            |  List
             |}
             |'''.stripMargin())
     }
@@ -349,18 +349,18 @@ final class TypeCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/866
     void testField9a() {
         String contents = '''\
-            class Foo {
-                String bar
-                List
-            }
-            '''.stripIndent()
+            |class Foo {
+            |  String bar
+            |  List
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'List'))
         applyProposalAndCheck(findFirstProposal(proposals, 'List - java.awt'), '''\
             |import java.awt.List
             |
             |class Foo {
-            |    String bar
-            |    List
+            |  String bar
+            |  List
             |}
             |'''.stripMargin())
     }
@@ -371,8 +371,8 @@ final class TypeCompletionTests extends CompletionTestSuite {
             |import java.awt.*
             |
             |class Foo {
-            |    String bar
-            |    Lis
+            |  String bar
+            |  Lis
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'Lis'))
@@ -381,20 +381,20 @@ final class TypeCompletionTests extends CompletionTestSuite {
             |import java.awt.List
             |
             |class Foo {
-            |    String bar
-            |    List
+            |  String bar
+            |  List
             |}
             |'''.stripMargin())
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testField11() {
         String contents = '''\
             |import java.awt.*
             |
             |class Foo {
-            |    String bar
-            |    Lis
+            |  String bar
+            |  Lis
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'Lis'))
@@ -403,8 +403,8 @@ final class TypeCompletionTests extends CompletionTestSuite {
             |import java.util.List
             |
             |class Foo {
-            |    String bar
-            |    List
+            |  String bar
+            |  List
             |}
             |'''.stripMargin())
     }

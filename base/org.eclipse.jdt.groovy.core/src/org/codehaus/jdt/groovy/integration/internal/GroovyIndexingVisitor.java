@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
@@ -40,10 +41,12 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.syntax.Types;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
+import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 
 /**
  * Visits a {@link ModuleNode} and passes it to an indexing element requestor,
@@ -62,13 +65,21 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
     // NOTE: Expected entry point is visitModule(ModuleNode).
 
     @Override
+    public void visitPackage(final PackageNode node) {
+        char[][] tokens = CharOperation.splitOn('.', node.getName().toCharArray(), 0, node.getName().length() - 1);
+        requestor.acceptPackage(new ImportReference(tokens, new long[tokens.length], false, 0));
+        super.visitPackage(node);
+    }
+
+    @Override
     public void visitImport(final ImportNode node) {
-        if (node.getType() != null) {
-            visitTypeReference(node.getType(), false, true);
-        }
-        String fieldName = node.getFieldName();
-        if (fieldName != null) {
-            requestor.acceptUnknownReference(fieldName.toCharArray(), node.getFieldNameExpr().getStart());
+        if (node.getEnd() > 0) {
+            if (node.getType() == null) { String name = node.getPackageName(); // includes trailing '.'
+                char[][] tokens = CharOperation.splitOn('.', name.toCharArray(), 0, name.length() - 1);
+                requestor.acceptUnknownReference(tokens, node.getNameStart(), node.getNameEnd());
+            } else {
+                visitTypeReference(node.getType(), false, true);
+            }
         }
         super.visitImport(node);
     }
@@ -145,14 +156,16 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     @Override
     public void visitBinaryExpression(final BinaryExpression expression) {
-        if (expression.getOperation().isA(Types.ASSIGNMENT_OPERATOR) &&
-                expression.getLeftExpression() instanceof VariableExpression) {
+        if (expression.getLeftExpression() instanceof VariableExpression &&
+                expression.getOperation().isA(Types.ASSIGNMENT_OPERATOR)) {
             String name = expression.getLeftExpression().getText();
             int offset = expression.getLeftExpression().getStart();
-            // index "setName(x)" for Call Hierarchy/Find References
-            visitNameReference(AccessorSupport.SETTER, name, offset);
+            // index "name"
+            requestor.acceptFieldReference(name.toCharArray(), offset);
             // index "name(x)" for SyntheticAccessorsRenameParticipant
             requestor.acceptMethodReference(name.toCharArray(), 1, offset);
+            // index "setName(x)"
+            visitNameReference(AccessorSupport.SETTER, name, offset);
 
             expression.getRightExpression().visit(this);
         } else {
@@ -183,11 +196,13 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
                 // ex: @interface X { Y default @Y(...) } -- expression is "@Y(...)"
                 visitTypeReference(expression.getType(), true, true);
             }
-            if (expression.getEnd() > 0 && ClassHelper.STRING_TYPE.equals(expression.getType())) {
+            if (expression.getEnd() > 0 && ClassHelper.STRING_TYPE.equals(expression.getType()) && !"class".equals(expression.getText())) {
                 char[] name = expression.getText().toCharArray();
-                if (Character.isJavaIdentifierStart(name[0])) {
+                if (Character.isJavaIdentifierStart(name[0]) && expression.getLength() == name.length) {
                     int offset = expression.getStart();
                     requestor.acceptFieldReference(name, offset);
+                    if (Character.isUpperCase(name[0]))
+                        requestor.acceptTypeReference(name, offset);
                     // we don't know how many arguments the method has, so go up to 7
                     for (int i = 0; i <= 7; i += 1) {
                         requestor.acceptMethodReference(name, i, offset);
@@ -213,9 +228,9 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
             }
         }
 
+        visitTypeReference(type, false, true);
         char[] typeName = type.getName().toCharArray();
-        // we don't know how many arguments the constructor has, so go up to 9
-        for (int i = 0; i <= 9; i += 1) {
+        for (int i = 0; i <= 9; i += 1) { // argument count can be dynamic, so go up to 9
             requestor.acceptConstructorReference(typeName, i, expression.getNameStart());
         }
 
@@ -283,14 +298,15 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     @Override
     public void visitPropertyExpression(final PropertyExpression expression) {
-        if (!(expression instanceof AttributeExpression) &&
-                expression.getProperty() instanceof ConstantExpression) {
-            String name = expression.getProperty().getText();
-            int offset = expression.getProperty().getStart();
-            // index "isName()", "getName()" and "setName(x)"
-            visitNameReference(AccessorSupport.ISSER,  name, offset);
-            visitNameReference(AccessorSupport.GETTER, name, offset);
-            visitNameReference(AccessorSupport.SETTER, name, offset);
+        if (!(expression instanceof AttributeExpression)) {
+            String name = expression.getPropertyAsString();
+            if (name != null) {
+                int offset = expression.getProperty().getStart();
+                // index "isName()", "getName()" and "setName(x)"
+                visitNameReference(AccessorSupport.ISSER,  name, offset);
+                visitNameReference(AccessorSupport.GETTER, name, offset);
+                visitNameReference(AccessorSupport.SETTER, name, offset);
+            }
         }
         super.visitPropertyExpression(expression);
     }
@@ -306,18 +322,20 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     @Override
     public void visitVariableExpression(final VariableExpression expression) {
-        if (expression.getEnd() > 0) {
+        if (expression.getEnd() > 0 && !expression.isThisExpression() && !expression.isSuperExpression()) {
             String name = expression.getName();
+            char[] carray = name.toCharArray();
             int offset = expression.getStart();
+            // index "name"
+            requestor.acceptFieldReference(carray, offset);
+            if (Character.isUpperCase(carray[0]))
+                requestor.acceptTypeReference(carray, offset);
+            // index "name()" for SyntheticAccessorsRenameParticipant
+            requestor.acceptMethodReference(carray, 0, offset);
             // index "getName()" and "isName()"
             visitNameReference(AccessorSupport.GETTER, name, offset);
             visitNameReference(AccessorSupport.ISSER,  name, offset);
-            // index "name()" for SyntheticAccessorsRenameParticipant
-            requestor.acceptMethodReference(name.toCharArray(), 0, offset);
-            // index "name" for package references and anything else?
-            requestor.acceptUnknownReference(name.toCharArray(), offset);
         }
-        //super.visitVariableExpression(expression);
     }
 
     //--------------------------------------------------------------------------
@@ -326,17 +344,31 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
         String methodName = kind.createAccessorName(name);
         if (methodName != null) {
             int params = (kind == AccessorSupport.SETTER ? 1 : 0);
+            // index "isName()", "getName()" or "setName(x)"
             requestor.acceptMethodReference(methodName.toCharArray(), params, offset);
+            // index "isName(x)", "getName(x)" or "setName(x,x)" for groovy method search
+            requestor.acceptMethodReference(methodName.toCharArray(), params + 1, offset);
         }
     }
 
     private void visitTypeReference(final ClassNode type, final boolean isAnnotation, final boolean useQualifiedName) {
+        char[][] tokens;
         if (isAnnotation) {
-            requestor.acceptAnnotationTypeReference(splitName(type, useQualifiedName), type.getStart(), type.getEnd());
+            tokens = splitName(type, useQualifiedName);
+            requestor.acceptAnnotationTypeReference(tokens, type.getStart(), type.getEnd());
         } else {
-            requestor.acceptTypeReference(splitName(GroovyUtils.getBaseType(type), useQualifiedName), type.getStart(), type.getEnd());
+            if (useQualifiedName) visitAnnotations(type.getTypeAnnotations());
+            tokens = splitName(GroovyUtils.getBaseType(type), useQualifiedName);
+            requestor.acceptTypeReference(tokens, type.getStart(), type.getEnd());
+            visitTypeParameters(type);
         }
-        visitTypeParameters(type);
+        for (int i = tokens.length - 1; i > 0;) {
+            if (Character.isUpperCase(tokens[--i][0])) {
+                requestor.acceptTypeReference(tokens[i], 0);
+            } else {
+                break;
+            }
+        }
     }
 
     private void visitTypeParameters(final ClassNode type) {
@@ -347,8 +379,10 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     private void visitTypeParameters(final GenericsType[] generics, final String typeName) {
         for (GenericsType generic : generics) {
-            if (generic.getType() != null && generic.getType().getName().charAt(0) != '?') {
+            if (!generic.isPlaceholder() && !generic.isWildcard()) {
                 visitTypeReference(generic.getType(), generic.getType().isAnnotationDefinition(), true);
+            } else {
+                visitAnnotations(generic.getType().getTypeAnnotations());
             }
             if (generic.getLowerBound() != null) {
                 visitTypeReference(generic.getLowerBound(), generic.getLowerBound().isAnnotationDefinition(), true);
@@ -366,11 +400,6 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     private static char[][] splitName(final ClassNode type, final boolean useQualifiedName) {
         String name = useQualifiedName ? type.getName() : type.getNameWithoutPackage();
-        String[] nameArr = name.split("\\.");
-        char[][] nameCharArr = new char[nameArr.length][];
-        for (int i = 0; i < nameArr.length; i += 1) {
-            nameCharArr[i] = nameArr[i].toCharArray();
-        }
-        return nameCharArr;
+        return CharOperation.splitOn('.', name.toCharArray());
     }
 }

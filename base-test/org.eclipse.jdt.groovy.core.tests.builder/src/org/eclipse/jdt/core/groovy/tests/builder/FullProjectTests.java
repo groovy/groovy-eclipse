@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,9 +58,7 @@ public final class FullProjectTests extends BuilderTestSuite {
     private IPath[] createGroovyProject() throws Exception {
         IPath prj = env.addProject("Project");
         env.addGroovyJars(prj);
-        env.setOutputFolder(prj, "bin");
-        env.removePackageFragmentRoot(prj, "");
-        return new IPath[] {prj, env.addPackageFragmentRoot(prj, "src")};
+        return new IPath[] {prj, env.getPackageFragmentRootPath(prj, "src")};
     }
 
     //--------------------------------------------------------------------------
@@ -69,17 +67,16 @@ public final class FullProjectTests extends BuilderTestSuite {
     public void testReconcilingWithTransforms_single() throws Exception {
         IPath[] paths = createGroovyProject();
 
-        IPath foo = env.addGroovyClass(paths[1], "", "Foo",
-            //@formatter:off
+        //@formatter:off
+        IPath foo = env.addGroovyClass(paths[1], "Foo",
             "@Singleton\n" +
             "class Foo {\n" +
             "  void mone() {}\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         ICompilationUnit icu = env.getUnit(foo);
-        icu.becomeWorkingCopy(null);
 
         ClassNode cn = ((GroovyCompilationUnit) icu).getModuleNode().getClasses().get(0);
         assertContainsMethod(cn, "getInstance");
@@ -89,8 +86,8 @@ public final class FullProjectTests extends BuilderTestSuite {
     public void testReconcilingWithTransforms_multiple() throws Exception {
         IPath[] paths = createGroovyProject();
 
-        IPath foo = env.addGroovyClass(paths[1], "", "Foo",
-            //@formatter:off
+        //@formatter:off
+        IPath foo = env.addGroovyClass(paths[1], "Foo",
             "@Singleton\n" +
             "class Foo {\n" +
             "  @Delegate Bar b = new BarImpl();\n" +
@@ -98,11 +95,10 @@ public final class FullProjectTests extends BuilderTestSuite {
             "}\n" +
             "interface Bar { void method(); }\n" +
             "class BarImpl implements Bar { void method() {} }\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         ICompilationUnit icu = env.getUnit(foo);
-        icu.becomeWorkingCopy(null);
 
         ClassNode cn = ((GroovyCompilationUnit) icu).getModuleNode().getClasses().get(0);
         assertContainsMethod(cn, "getInstance");
@@ -113,13 +109,13 @@ public final class FullProjectTests extends BuilderTestSuite {
     public void testReconcilingWithTransforms_typeChecked() throws Exception {
         IPath[] paths = createGroovyProject();
 
-        IPath foo = env.addGroovyClass(paths[1], "", "Foo",
-            //@formatter:off
+        //@formatter:off
+        IPath foo = env.addGroovyClass(paths[1], "Foo",
             "@groovy.transform.TypeChecked\n" +
             "class Foo {\n" +
             "  void xxx(int i) { xxx('abc') }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         Set<IProblem> problems = ReconcilerUtils.reconcile(env.getUnit(foo));
@@ -130,16 +126,191 @@ public final class FullProjectTests extends BuilderTestSuite {
     public void testReconcilingWithTransforms_compileStatic() throws Exception {
         IPath[] paths = createGroovyProject();
 
-        IPath foo = env.addGroovyClass(paths[1], "", "Foo",
-            //@formatter:off
+        //@formatter:off
+        IPath foo = env.addGroovyClass(paths[1], "Foo",
             "@groovy.transform.CompileStatic\n" +
             "class Foo {\n" +
             "  void xxx(int i) { xxx('abc') }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         Set<IProblem> problems = ReconcilerUtils.reconcile(env.getUnit(foo));
         assertContainsProblem(problems, "Cannot find matching method Foo#xxx");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10075
+    public void testDefaultGroovyMethodFromProjectDependency() throws Exception {
+        IPath one = env.addProject("One");
+        env.addGroovyJars(one);
+
+        IPath src = env.getPackageFragmentRootPath(one, "src");
+        env.addGroovyClass(src, "p", "X",
+            "package p\n" +
+            "class X {\n" +
+            "  static String getString(Iterable<String> self) {\n" +
+            "  }\n" +
+            "  static <CS extends CharSequence> CharSequence getSequence(Iterable<CS> self) {\n" +
+            "  }\n" +
+            "}\n");
+        env.addFile(env.addFolder(src, "META-INF/groovy"), "org.codehaus.groovy.runtime.ExtensionModule",
+            "moduleName=ecks\n" +
+            "moduleVersion=1.0\n" +
+            "extensionClasses=p.X\n");
+
+        env.fullBuild(one);
+        expectingNoProblemsFor(one);
+
+        //
+
+        IPath two = env.addProject("Two");
+        env.addGroovyJars(two);
+        env.addRequiredTestProject(two, one);
+        src = env.getPackageFragmentRootPath(two, "src");
+
+        IPath bar = env.addGroovyClass(src, "foo", "Bar",
+            "package foo\n" +
+            "class Bar {\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  void test() {\n" +
+            "    List<String> strings = []\n" +
+            "    strings.getSequence()\n" +
+            "    strings.getString()\n" +
+            "    strings.sequence\n" +
+            "    strings.string\n" +
+            "  }\n" +
+            "}\n");
+
+        IPath baz = env.addGroovyClass(src, "foo", "Baz",
+            "package foo\n" +
+            "class Baz {\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  void test() {\n" +
+            "    List<Number> numbers = []\n" +
+            "    numbers.getSequence()\n" +
+            "    numbers.getString()\n" +
+            "    numbers.sequence\n" +
+            "    numbers.string\n" +
+            "  }\n" +
+            "}\n");
+
+        env.fullBuild(two);
+        expectingNoProblemsFor(bar);
+        expectingProblemsFor(baz, java.util.Arrays.asList(
+            "Problem : Groovy:[Static type checking] - Cannot call <CS extends java.lang.CharSequence> p.X#getSequence(##) with arguments [java.util.ArrayList<java.lang.Number>] ##",
+            "Problem : Groovy:[Static type checking] - Cannot call p.X#getString(##) with arguments [java.util.ArrayList<java.lang.Number>] ##",
+            "Problem : Groovy:[Static type checking] - No such property: sequence for class: java.util.ArrayList ##",
+            "Problem : Groovy:[Static type checking] - No such property: string for class: java.util.ArrayList ##"));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1409
+    public void testLocalTransformationFromTestBuildPathEntry() throws Exception {
+        IPath[] paths = createGroovyProject();
+
+        env.addGroovyClass(paths[1], "p", "Main",
+            "package p\n" +
+            "import java.lang.annotation.*\n" +
+            "import org.codehaus.groovy.ast.*\n" +
+            "import org.codehaus.groovy.ast.builder.AstBuilder\n" +
+            "import org.codehaus.groovy.control.CompilePhase\n" +
+            "import org.codehaus.groovy.control.SourceUnit\n" +
+            "import org.codehaus.groovy.transform.ASTTransformation\n" +
+            "import org.codehaus.groovy.transform.GroovyASTTransformation\n" +
+            "import org.codehaus.groovy.transform.GroovyASTTransformationClass\n" +
+            "import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod\n" +
+            "\n" +
+            "@GroovyASTTransformationClass('p.MainMethodTransform')\n" +
+            "@Retention(RetentionPolicy.SOURCE)\n" +
+            "@Target(ElementType.METHOD)\n" +
+            "@interface Main {\n" +
+            "}\n" +
+            "\n" +
+            "@GroovyASTTransformation\n" +
+            "class MainMethodTransform implements ASTTransformation {\n" +
+            "  @Override\n" +
+            "  void visit(ASTNode[] nodes, SourceUnit source) {\n" +
+            "    if (!nodes || !nodes[0] || !nodes[1]) return\n" +
+            "    if (!(nodes[1] instanceof MethodNode)) return\n" +
+            "    if (!(nodes[0] instanceof AnnotationNode)) return\n" +
+            "    if (nodes[0].classNode?.name != Main.name) return\n" +
+            "    try {\n" +
+            "      MethodNode annotatedMethod = nodes[1]\n" +
+            "      addGeneratedMethod(annotatedMethod.declaringClass, newMainMethod(annotatedMethod))\n" +
+            "    } catch (e) {\n" +
+            "      e.printStackTrace()\n" +
+            "    }\n" +
+            "  }\n" +
+            "  private static MethodNode newMainMethod(MethodNode target) {\n" +
+            "    def packageName = target.declaringClass.packageName\n" +
+            "    def   className = target.declaringClass.name\n" +
+            "    def  methodName = target.name\n" +
+            "    \n" +
+            "    def ast = new AstBuilder().buildFromString(CompilePhase.CANONICALIZATION, false, \"\"\"\n" +
+            "      ${packageName ? 'package ' + packageName : ''}\n" +
+            "      \n" +
+            "      class ${target.declaringClass.nameWithoutPackage} {\n" +
+            "        public static void main(String[] args) {\n" +
+            "          new ${className}().${methodName}()\n" +
+            "        }\n" +
+            "      }\n" +
+            "    \"\"\")\n" +
+            "    // ast[0] is BlockStatement\n" +
+            "    return (ast[1] as ClassNode).getDeclaredMethods('main')[0]\n" +
+            "  }\n" +
+            "}\n");
+        env.fullBuild(paths[0]);
+        expectingNoProblemsFor(paths[0]);
+
+        //
+
+        IPath shm = env.addGroovyClass(env.addTestPackageFragmentRoot(paths[0], "tests"), "q", "ShouldHaveMain",
+            "package q\n" +
+            "import p.Main\n" +
+            "class ShouldHaveMain {\n" +
+            "  @Main def foo() {\n" +
+            "    println 'bar'\n" +
+            "  }\n" +
+            "}\n");
+        env.incrementalBuild(paths[0]);
+        expectingNoProblemsFor(paths[0]);
+
+        assertContainsMethod(((GroovyCompilationUnit) env.getUnit(shm)).getModuleNode().getClasses().get(0), "main");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/903
+    public void testGlobalTransformationFromTestBuildPathEntry() throws Exception {
+        IPath one = env.addProject("One");
+        env.addGroovyJars(one);
+
+        IPath src = env.getPackageFragmentRootPath(one, "src");
+        env.addGroovyClass(src, "p", "X",
+            "package p\n" +
+            "import org.codehaus.groovy.ast.ASTNode\n" +
+            "import org.codehaus.groovy.control.SourceUnit\n" +
+            "@org.codehaus.groovy.transform.GroovyASTTransformation\n" +
+            "class X implements org.codehaus.groovy.transform.ASTTransformation {\n" +
+            "  void visit(ASTNode[] nodes, SourceUnit source) {\n" +
+            "    throw new IllegalStateException('xform fails')\n" +
+            "  }\n" +
+            "}\n");
+        env.addFile(env.addFolder(src, "META-INF/services"), "org.codehaus.groovy.transform.ASTTransformation", "p.X\n");
+        env.fullBuild(one);
+        expectingNoProblemsFor(one);
+
+        //
+
+        IPath two = env.addProject("Two");
+        env.addGroovyJars(two);
+        env.addRequiredTestProject(two, one);
+        src = env.getPackageFragmentRootPath(two, "src");
+        env.addGroovyClass(src, "foo", "Bar", "package foo\nclass Bar {}\n");
+        IPath tests = env.addGroovyClass(env.addTestPackageFragmentRoot(two, "tests"), "foo", "Baz", "package foo\nclass Baz {}\n");
+
+        // global transform p.X from One should not run for non-test source foo/Bar.groovy
+        env.fullBuild(two);
+        expectingNoProblemsFor(src);
+        expectingProblemsFor(tests, java.util.Arrays.asList(
+            "## exception in phase 'canonicalization' in source unit '##' xform fails" +
+            " [ resource : </Two/tests/foo/Baz.groovy> range : <0,1> category : <60> severity : <2>]"));
     }
 }

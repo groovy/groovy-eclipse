@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 
 import org.codehaus.groovy.ast.ClassHelper;
@@ -31,10 +31,12 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.AbstractGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
@@ -59,14 +61,20 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
 
     //--------------------------------------------------------------------------
 
-    protected static FieldNode createMockField(MethodNode method) {
+    protected static FieldNode createMockField(final MethodNode method) {
         String fieldName = ProposalUtils.createMockFieldName(method.getName());
-        int fieldModifiers = method.getModifiers() | (GroovyUtils.isDeprecated(method) ? Flags.AccDeprecated : 0);
-        ClassNode fieldType = AccessorSupport.isSetter(method) ? DefaultGroovyMethods.last(method.getParameters()).getType() : method.getReturnType();
+        int fieldModifiers = (method.getModifiers() & 0xF) | (GroovyUtils.isDeprecated(method) ? Flags.AccDeprecated : 0);
+        if (!method.getName().startsWith("set") && AccessorSupport.findAccessorMethodsForPropertyName(fieldName, method.getDeclaringClass(),
+                                                            method.getParameters().length > 0, AccessorSupport.SETTER).noneMatch(x -> true)) {
+            fieldModifiers |= Flags.AccFinal;
+        }
+        ClassNode fieldType = method.getName().startsWith("set") ? DefaultGroovyMethods.last(method.getParameters()).getType() : method.getReturnType();
 
         FieldNode fieldNode = new FieldNode(fieldName, fieldModifiers, fieldType, method.getDeclaringClass(), null);
         fieldNode.setDeclaringClass(method.getDeclaringClass());
+        fieldNode.setNodeMetaData("groovy.method", method);
         fieldNode.setSourcePosition(method);
+        fieldNode.setSynthetic(true);
         return fieldNode;
     }
 
@@ -112,7 +120,9 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
 
         Map<String, FieldNode> allFields = new HashMap<>();
 
-        Set<ClassNode> types = getAllSupers(thisType, exclude);
+        Set<ClassNode> types = new LinkedHashSet<>();
+        VariableScope.createTypeHierarchy(thisType, types, false);
+        types.removeAll(exclude);
 
         for (ClassNode type : types) {
             List<FieldNode> fields = type.getFields();
@@ -140,32 +150,50 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
     }
 
     protected Collection<MethodNode> getAllMethods(ClassNode type, Set<ClassNode> exclude) {
-        List<MethodNode> traitMethods = type.redirect().getNodeMetaData("trait.methods");
-        List<MethodNode> allMethods = type.getAllDeclaredMethods();
-        if (traitMethods != null) allMethods.addAll(traitMethods);
+        Map<String, MethodNode> methods = new HashMap<>();
 
-        if (!exclude.isEmpty()) {
-            // remove all methods from classes that have already been visited
-            for (Iterator<MethodNode> methodIter = allMethods.iterator(); methodIter.hasNext();) {
-                if (exclude.contains(methodIter.next().getDeclaringClass())) {
-                    methodIter.remove();
+        BiConsumer<MethodNode, Map<String, ClassNode>> mapper = (mn, spec) -> {
+            StringBuilder sb = new StringBuilder(mn.getName());
+            sb.append('(');
+            for (org.codehaus.groovy.ast.Parameter p : mn.getParameters()) {
+                ClassNode pt = p.getOriginType();
+                if (!pt.isGenericsPlaceHolder()) {
+                    sb.append(pt.getName());
+                } else {
+                    sb.append(spec.getOrDefault(pt.getUnresolvedName(), pt).getName());
+                }
+                sb.append(';');
+            }
+
+            methods.merge(sb.toString(), mn, (m1, m2) ->
+                // keep override method unless it's synthetic
+                !Flags.isSynthetic(m1.getModifiers()) ? m1 : m2);
+        };
+
+        if (exclude == null || !exclude.contains(type)) {
+            List<MethodNode> traitMethods = type.redirect().getNodeMetaData("trait.methods");
+            if (traitMethods != null && !traitMethods.isEmpty()) {
+                for (MethodNode mn : traitMethods) {
+                    mapper.accept(mn, Collections.emptyMap());
                 }
             }
         }
 
-        Set<ClassNode> types = getAllSupers(type, exclude);
+        Set<ClassNode> types = new LinkedHashSet<>();
+        VariableScope.createTypeHierarchy(type, types, true);
+        if (type.isInterface()) types.add(ClassHelper.OBJECT_TYPE);
+        for (ClassNode cn : types) {
+            if (!(exclude != null && exclude.contains(cn)) && !Flags.isSynthetic(cn.getModifiers())) {
+                Map<String, ClassNode> spec = GenericsUtils.createGenericsSpec(cn);
+                for (MethodNode mn : cn.getMethods()) {
+                    mapper.accept(mn, spec);
+                }
+            }
+        }
 
-        // keep track of the already seen types so that next time, we won't include them
-        exclude.addAll(types);
+        if (exclude != null) exclude.addAll(types); // exclude types next time
 
-        return allMethods;
-    }
-
-    private static Set<ClassNode> getAllSupers(ClassNode type, Set<ClassNode> exclude) {
-        Set<ClassNode> superTypes = new LinkedHashSet<>();
-        VariableScope.createTypeHierarchy(type, superTypes, false);
-        superTypes.removeAll(exclude);
-        return superTypes;
+        return methods.values();
     }
 
     protected static boolean leftIsMoreAccessible(FieldNode field, FieldNode existing) {
@@ -222,13 +250,23 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
                 return t;
             }
         }
+
+        var context = module.getContext();
+        if (context instanceof EclipseSourceUnit) {
+            ClassNode typeNode = ((EclipseSourceUnit) context).resolver.resolve(typeName);
+            if (typeNode.equals(ClassHelper.OBJECT_TYPE) &&
+                    !typeName.equals(ClassHelper.OBJECT)) {
+                return null;
+            }
+            return typeNode;
+        }
+
         try {
-            //ClassNode type = ((EclipseSourceUnit) module.getContext()).resolver.resolve(typeName);
-            Class<?> t = module.getContext().getClassLoader().loadClass(typeName, true, true, true);
+            Class<?> t = context.getClassLoader().loadClass(typeName, true, true, true);
             ClassNode typeNode = ClassHelper.make(t);
             typeNode.lazyClassInit();
             return typeNode;
-        } catch (ClassNotFoundException | NoClassDefFoundError e) {
+        } catch (ClassNotFoundException | LinkageError ignore) {
             return null;
         }
     }

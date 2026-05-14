@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,19 +91,19 @@ final class ExtractMethodTests extends GroovyEclipseTestSuite {
         switch (spec.properties['modifier']) {
         case 'def':
         case 'public':
-            refactoring.modifier = Flags.AccPublic
+            refactoring.setModifier(Flags.AccPublic)
             break
         case 'private':
-            refactoring.modifier = Flags.AccPrivate
+            refactoring.setModifier(Flags.AccPrivate)
             break
         case 'protected':
-            refactoring.modifier = Flags.AccProtected
+            refactoring.setModifier(Flags.AccProtected)
             break
         default:
-            refactoring.modifier = Flags.AccDefault
+            refactoring.setModifier(Flags.AccDefault)
         }
 
-        refactoring.newMethodname = spec.properties['newMethodName']
+        refactoring.setNewMethodname(spec.properties['newMethodName'])
 
         String moveSettings = spec.properties['moveVariable']
         if (moveSettings != null && moveSettings.trim().length() > 0) {
@@ -127,7 +127,7 @@ final class ExtractMethodTests extends GroovyEclipseTestSuite {
                     variablesToRename.put(singleRenames[0], singleRenames[1])
                 }
             }
-            refactoring.parameterRename = variablesToRename
+            refactoring.setParameterRename(variablesToRename)
         }
     }
 

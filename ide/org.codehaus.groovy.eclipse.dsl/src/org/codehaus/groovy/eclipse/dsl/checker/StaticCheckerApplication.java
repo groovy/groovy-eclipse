@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -142,40 +142,40 @@ public class StaticCheckerApplication implements IApplication {
 
         for (int i = 0; i < args.length; i += 1) {
             String arg = args[i];
-            if (arg.equals("-h") || arg.equals("--help")) {
+            if ("-h".equals(arg) || "--help".equals(arg)) {
                 doHelp = true;
                 break;
-            } else if (arg.equals("--assertions_only")) {
+            } else if ("--assertions_only".equals(arg)) {
                 assertionsOnly = true;
-            } else if (arg.equals("--excludes")) {
+            } else if ("--excludes".equals(arg)) {
                 if (i == args.length - 1) {
                     System.err.println("Missing --excludes argument");
                     doHelp = true;
                     break;
                 }
                 excludes = args[++i];
-            } else if (arg.equals("--includes")) {
+            } else if ("--includes".equals(arg)) {
                 if (i == args.length - 1) {
                     System.err.println("Missing --includes argument");
                     doHelp = true;
                     break;
                 }
                 includes = args[++i];
-            } else if (arg.equals("--extra_dslds")) {
+            } else if ("--extra_dslds".equals(arg)) {
                 if (i == args.length - 1) {
                     System.err.println("Missing --extraDslds argument");
                     doHelp = true;
                     break;
                 }
                 extraDslds = args[++i].split("\\|");
-            } else if (arg.equals("--project_path")) {
+            } else if ("--project_path".equals(arg)) {
                 if (i == args.length - 1) {
                     System.err.println("Missing --project_path argument");
                     doHelp = true;
                     break;
                 }
                 projectFolderPath = args[++i];
-            } else if (arg.equals("--result_file")) {
+            } else if ("--result_file".equals(arg)) {
                 if (i == args.length - 1) {
                     System.err.println("Missing --result_file argument");
                     doHelp = true;
@@ -212,7 +212,8 @@ public class StaticCheckerApplication implements IApplication {
         }
 
         System.out.println("Usage:");
-        System.out.println("eclipse -application org.codehause.groovy.eclipse.staticCheck [--help] [-h] [--extra_dslds <FILES>] [--assertions_only] [--excludes <PATH>] [--includes <PATH>] [--project_path <PATH>] <PROJECT_NAME>");
+        System.out.println("eclipse -application org.codehause.groovy.eclipse.staticCheck" +
+            " [--help] [-h] [--extra_dslds <FILES>] [--assertions_only] [--excludes <PATH>] [--includes <PATH>] [--project_path <PATH>] <PROJECT_NAME>");
         System.out.println("where:");
         System.out.println("\t--help OR -h  Print this message and exit.");
         System.out.println("\t--extra_dslds  list of extra dsld files to be included in this check.  Use '|' as a file separator.");
@@ -223,7 +224,9 @@ public class StaticCheckerApplication implements IApplication {
         System.out.println("\t--result_file  File to send static checking results to.  If not specified, then results sent to sysout.");
         System.out.println("\t<PROJECT_NAME>  Name of a project to type check.  If not already in workspace, then must also use '--project_path'.");
         System.out.println();
-        System.out.println("Ant style filters are allowed.  Eg, src/org/codehaus/groovy/**/*.groovy means all files with groovy extensions in the org.codehaus.groovy package or below will be ex/included   Filters can be concentenated using '|'.");
+        System.out.println("Ant style filters are allowed." +
+            "  For example, src/org/codehaus/groovy/**/*.groovy means all files with groovy extensions in the org.codehaus.groovy tree will be ex/included." +
+            "  Filters can be concentenated using '|'.");
     }
 
     private void removeExtraDslds() {

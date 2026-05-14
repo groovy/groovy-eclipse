@@ -2,7 +2,7 @@ package p
 
 import static o.Other.BAR
 
-FOO
+FOO;
 BAR()
-o.Other.FOO
+o.Other.FOO;
 o.Other.BAR()

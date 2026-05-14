@@ -183,7 +183,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             if (annotation.getClassNode().getName().equals(AnnotationCollector.class.getName())) {
                 Expression mode = annotation.getMember("mode");
                 modes.put(index, Optional.ofNullable(mode)
-                    .map(exp -> evaluateExpression(exp, source.getConfiguration()))
+                    .map(exp -> evaluateExpression(exp, source.getConfiguration(), transformLoader))
                     .map(val -> (AnnotationCollectorMode) val)
                     .orElse(AnnotationCollectorMode.DUPLICATE)
                 );
@@ -191,7 +191,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
                 Expression processor = annotation.getMember("processor");
                 AnnotationCollectorTransform act = null;
                 if (processor != null) {
-                    String className = (String) evaluateExpression(processor, source.getConfiguration());
+                    String className = (String) evaluateExpression(processor, source.getConfiguration(), transformLoader);
                     Class<?> klass = loadTransformClass(className, alias);
                     if (klass != null) {
                         try {
@@ -272,7 +272,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             annotation.getClassNode().getAnnotations().stream().filter(a -> a.getClassNode().getName().equals(GroovyASTTransformationClass.class.getName())).findFirst().ifPresent(transformClassAnnotation -> {
 
                 String[] transformClassNames = Optional.ofNullable(transformClassAnnotation.getMember("value")).map(value -> {
-                    Object result = evaluateExpression(value, source.getConfiguration());
+                    Object result = evaluateExpression(value, source.getConfiguration(), transformLoader);
                     if (result instanceof String[]) {
                         return (String[]) result;
                     } else if (result instanceof String) {
@@ -285,7 +285,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
                 }).orElseGet(() -> new String[0]);
 
                 Class[] transformClasses = Optional.ofNullable(transformClassAnnotation.getMember("classes")).map(classes -> {
-                    Object result = evaluateExpression(classes, source.getConfiguration());
+                    Object result = evaluateExpression(classes, source.getConfiguration(), transformLoader);
                     if (result instanceof Class[]) {
                         return (Class[]) result;
                     } else if (result instanceof Class) {
@@ -337,18 +337,21 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         if (!ASTTransformation.class.isAssignableFrom(transformClass)) {
             String error = "Not an ASTTransformation: " + transformClass.getName() + " declared by " + annotation.getClassNode().getName();
             source.getErrorCollector().addError(new SimpleMessage(error, source));
+            return; // GRECLIPSE add
         }
 
         GroovyASTTransformation transformationClass = transformClass.getAnnotation(GroovyASTTransformation.class);
         if (transformationClass == null) {
             String error = "AST transformation implementation classes must be annotated with " + GroovyASTTransformation.class.getName() + ". " + transformClass.getName() + " lacks this annotation.";
             source.getErrorCollector().addError(new SimpleMessage(error, source));
+            return; // GRECLIPSE add
         }
 
         CompilePhase specifiedCompilePhase = transformationClass.phase();
         if (specifiedCompilePhase.getPhaseNumber() < CompilePhase.SEMANTIC_ANALYSIS.getPhaseNumber()) {
             String error = annotation.getClassNode().getName() + " is defined to be run in compile phase " + specifiedCompilePhase + ". Local AST transformations must run in SEMANTIC_ANALYSIS or later!";
             source.getErrorCollector().addError(new SimpleMessage(error, source));
+            return; // GRECLIPSE add
         }
 
         if (!Traits.isTrait(classNode) || transformClass == TraitASTTransformation.class) {

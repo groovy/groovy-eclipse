@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.refactoring.test
 
 import org.codehaus.groovy.eclipse.refactoring.test.internal.JavaProjectHelper
-import org.codehaus.groovy.eclipse.refactoring.test.internal.TestOptions
 import org.codehaus.groovy.eclipse.refactoring.test.internal.TestRenameParticipantShared
 import org.codehaus.groovy.eclipse.refactoring.test.internal.TestRenameParticipantSingle
 import org.eclipse.core.resources.IResource
@@ -25,6 +24,7 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.IMember
 import org.eclipse.jdt.core.IMethod
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IPackageFragmentRoot
@@ -36,6 +36,8 @@ import org.eclipse.jdt.core.refactoring.descriptors.JavaRefactoringDescriptor
 import org.eclipse.jdt.internal.corext.util.Strings
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.util.CoreUtility
+import org.eclipse.jdt.ui.PreferenceConstants
+import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ltk.core.refactoring.Change
 import org.eclipse.ltk.core.refactoring.ChangeDescriptor
 import org.eclipse.ltk.core.refactoring.CheckConditionsOperation
@@ -69,16 +71,35 @@ abstract class RefactoringTestSuite {
     static final void setUpTestSuite() {
         fWasAutobuild = CoreUtility.setAutoBuilding(false)
         fWasOptions = JavaCore.getOptions()
-        TestOptions.getDefaultOptions().with {
+        JavaCore.getDefaultOptions().with {
+            JavaCore.setComplianceOptions('11', it)
+
+            put(JavaCore.COMPILER_PB_DEAD_CODE,             JavaCore.IGNORE)
+            put(JavaCore.COMPILER_PB_FIELD_HIDING,          JavaCore.IGNORE)
+            put(JavaCore.COMPILER_PB_LOCAL_VARIABLE_HIDING, JavaCore.IGNORE)
+            put(JavaCore.COMPILER_PB_RAW_TYPE_REFERENCE,    JavaCore.IGNORE)
+            put(JavaCore.COMPILER_PB_UNUSED_LOCAL,          JavaCore.IGNORE)
+            put(JavaCore.COMPILER_PB_UNUSED_PRIVATE_MEMBER, JavaCore.IGNORE)
+            put(JavaCore.COMPILER_PB_UNUSED_WARNING_TOKEN,  JavaCore.IGNORE)
+
             put(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '4')
             put(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.TAB)
             put(DefaultCodeFormatterConstants.FORMATTER_LINE_SPLIT, String.valueOf(9999))
             put(DefaultCodeFormatterConstants.FORMATTER_NUMBER_OF_EMPTY_LINES_TO_PRESERVE, '0')
+
             JavaCore.setOptions(it)
         }
-        TestOptions.initializeCodeGenerationOptions()
-        JavaPlugin.getDefault().codeTemplateStore.load()
-
+        JavaPlugin.getDefault().with {
+            getCodeTemplateStore().load()
+            IPreferenceStore store = getPreferenceStore()
+            store.setValue(PreferenceConstants.CODEGEN_ADD_COMMENTS, true)
+            store.setValue(PreferenceConstants.CODEGEN_KEYWORD_THIS, false)
+            store.setValue(PreferenceConstants.CODEGEN_IS_FOR_GETTERS, true)
+            store.setValue(PreferenceConstants.CODEGEN_EXCEPTION_VAR_NAME, 'e')
+            store.setValue(PreferenceConstants.ORGIMPORTS_ONDEMANDTHRESHOLD, 99)
+            store.setValue(PreferenceConstants.ORGIMPORTS_IGNORELOWERCASE, true)
+            store.setValue(PreferenceConstants.ORGIMPORTS_IMPORTORDER, 'java;javax;org;com')
+        }
         fgJavaTestProject = JavaProjectHelper.createGroovyProject('TestProject', 'bin')
         fgRoot = JavaProjectHelper.addSourceContainer(fgJavaTestProject, 'src')
         fgPackageP = fgRoot.createPackageFragment('p', true, null)
@@ -181,7 +202,7 @@ abstract class RefactoringTestSuite {
                 boolean cpChanged = false
                 List<IClasspathEntry> cpes = []
                 for (cpe in fgJavaTestProject.rawClasspath) {
-                    if (cpe == srcEntry || cpe.path.lastSegment() =~ 'GROOVY_SUPPORT|JRE_CONTAINER$') {
+                    if (cpe == srcEntry || cpe.path.segment(0) =~ 'GROOVY_SUPPORT|JRE_CONTAINER$') {
                         cpes << cpe
                     } else {
                         cpChanged = true
@@ -309,6 +330,15 @@ abstract class RefactoringTestSuite {
     }
 
     protected final IType getType(ICompilationUnit cu, String name) {
+        if (name =~ /\$\d$/) {
+            int n = Integer.valueOf(name.substring(name.lastIndexOf('$') + 1))
+            IType type = getType(cu, name.substring(0, name.lastIndexOf('$')))
+            return type.children.findResult { IMember member ->
+                IType anon = member.getType('', n)
+                anon.exists() ? anon : null
+            }
+        }
+
         for (type in cu.allTypes) {
             if (type.getTypeQualifiedName('.' as char) == name || type.elementName == name) {
                 return type
@@ -362,14 +392,14 @@ abstract class RefactoringTestSuite {
 
     //--------------------------------------------------------------------------
 
-    protected static ICompilationUnit createCU(IPackageFragment pack, String name, String contents) {
+    protected final ICompilationUnit createCU(IPackageFragment pack, String name, String contents) {
         assert !pack.getCompilationUnit(name).exists()
         ICompilationUnit unit = pack.createCompilationUnit(name, contents, true, null)
         unit.save(null, true)
         return unit
     }
 
-    protected static String getFileContents(String fileName) {
+    protected final String getFileContents(String fileName) {
         def fileUrl = FrameworkUtil.getBundle(RefactoringTestSuite).getEntry('/resources/' + fileName)
         fileUrl.openConnection().with {
             useCaches = false
@@ -377,7 +407,7 @@ abstract class RefactoringTestSuite {
         }
     }
 
-    /*protected static IField[] getFields(IType type, String[] names) {
+    /*protected final IField[] getFields(IType type, String[] names) {
         if (names == null) return new IField[0]
         Set<IField> fields = new HashSet<IField>()
         for (int i = 0; i < names.length; i++) {
@@ -388,7 +418,7 @@ abstract class RefactoringTestSuite {
         return fields.toArray(new IField[fields.size()])
     }
 
-    protected static IType[] getMemberTypes(IType type, String[] names) {
+    protected final IType[] getMemberTypes(IType type, String[] names) {
         if (names == null) return new IType[0]
         Set<IType> memberTypes = new HashSet<IType>()
         for (int i = 0; i < names.length; i++) {
@@ -408,7 +438,7 @@ abstract class RefactoringTestSuite {
         return memberTypes.toArray(new IType[memberTypes.size()])
     }*/
 
-    protected static IMethod[] getMethods(IType type, String[] names, String[][] signatures) {
+    protected final IMethod[] getMethods(IType type, String[] names, String[][] signatures) {
         if (names == null || signatures == null)
             return new IMethod[0]
         List<IMethod> methods = []
@@ -422,7 +452,7 @@ abstract class RefactoringTestSuite {
         return methods as IMethod[]
     }
 
-    /*protected static IType[] findTypes(IType[] types, String[] namesOfTypesToPullUp) {
+    /*protected final IType[] findTypes(IType[] types, String[] namesOfTypesToPullUp) {
         List<IType> found = new ArrayList<IType>(types.length)
         for (int i = 0; i < types.length; i++) {
             IType type = types[i]
@@ -435,7 +465,7 @@ abstract class RefactoringTestSuite {
         return found.toArray(new IType[found.size()])
     }
 
-    protected static IField[] findFields(IField[] fields, String[] namesOfFieldsToPullUp) {
+    protected final IField[] findFields(IField[] fields, String[] namesOfFieldsToPullUp) {
         List<IField> found = new ArrayList<IField>(fields.length)
         for (int i = 0; i < fields.length; i++) {
             IField field = fields[i]
@@ -448,7 +478,7 @@ abstract class RefactoringTestSuite {
         return found.toArray(new IField[found.size()])
     }
 
-    protected static IMethod[] findMethods(IMethod[] selectedMethods, String[] namesOfMethods, String[][] signaturesOfMethods) {
+    protected final IMethod[] findMethods(IMethod[] selectedMethods, String[] namesOfMethods, String[][] signaturesOfMethods) {
         List<IMethod> found = new ArrayList<IMethod>(selectedMethods.length)
         for (int i = 0; i < selectedMethods.length; i++) {
             IMethod method = selectedMethods[i]
@@ -466,7 +496,7 @@ abstract class RefactoringTestSuite {
         return found.toArray(new IMethod[found.size()])
     }
 
-    private static boolean areSameSignatures(String[] s1, String[] s2) {
+    private boolean areSameSignatures(String[] s1, String[] s2) {
         if (s1.length != s2.length)
             return false
         for (int i = 0; i < s1.length; i++) {
@@ -484,7 +514,7 @@ abstract class RefactoringTestSuite {
      * @param expected the expected value
      * @param actual the actual value
      */
-    protected static void assertEqualLines(String expected, String actual) {
+    protected final void assertEqualLines(String expected, String actual) {
         assertEqualLines('', expected, actual)
     }
 
@@ -496,7 +526,7 @@ abstract class RefactoringTestSuite {
      * @param expected the expected value
      * @param actual the actual value
      */
-    protected static void assertEqualLines(String message, String expected, String actual) {
+    protected final void assertEqualLines(String message, String expected, String actual) {
         String[] expectedLines = Strings.convertIntoLines(expected)
         String[] actualLines = Strings.convertIntoLines(actual)
         String expected2 = (expectedLines == null ? null : Strings.concatenate(expectedLines, '\n'))

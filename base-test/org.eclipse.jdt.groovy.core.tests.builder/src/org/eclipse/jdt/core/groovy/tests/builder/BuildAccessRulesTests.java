@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IAccessRule;
@@ -48,18 +48,17 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
 
     @Before
     public void setUp() throws Exception {
-        prj = env.addProject("Project", "1.7");
-        src = prj.append("src");
-        env.createFolder(src);
+        prj = env.addProject("Project", "1.8");
+        src = env.getPackageFragmentRootPath(prj, "src");
         env.setClasspath(prj, new IClasspathEntry[] {
             JavaCore.newSourceEntry(src),
-            JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID),
+            GroovyRuntime.newGroovyClasspathContainerEntry(false, false, false),
             JavaCore.newContainerEntry(JavaRuntime.newDefaultJREContainerPath(),
                 new IAccessRule[] {JavaCore.newAccessRule(new Path("java/beans/**"), IAccessRule.K_NON_ACCESSIBLE)}, null, false),
         });
         fullBuild(prj);
 
-        problemFormat = "Problem : Access restriction: The type '%s' is not API (restriction on required library '##')" +
+        problemFormat = "Problem : Access restriction: The type '%s' is not ## (restriction on required library '##')" +
                                     " [ resource : </Project/src/Foo.groovy> range : <%d,%d> category : <150> severity : <2>]";
     }
 
@@ -90,10 +89,10 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     @Test
     public void testAccessForExtends() {
         String source = "import java.beans.*\n" +
-            "class Foo extends BeanDescriptor {\n" +
+            "class Foo extends SimpleBeanInfo {\n" +
             "}";
 
-        assertAccessRestriction(source, "BeanDescriptor");
+        assertAccessRestriction(source, "SimpleBeanInfo");
     }
 
     @Test

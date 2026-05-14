@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,14 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.*;
+import static org.codehaus.groovy.runtime.StringGroovyMethods.find;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.plus;
+import static org.codehaus.groovy.transform.trait.Traits.TRAIT_CLASSNODE;
+import static org.codehaus.groovy.transform.trait.Traits.IMPLEMENTED_CLASSNODE;
+import static org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitScope.GROOVY_TRANSFORM;
+import static org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitScope.GROOVY_TRANSFORM_TRAIT;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.NumberFormat;
@@ -24,7 +32,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -34,6 +41,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import groovy.lang.GroovyRuntimeException;
+import groovy.transform.CompilationUnitAware;
 import groovy.transform.PackageScopeTarget;
 
 import org.codehaus.groovy.GroovyBugError;
@@ -68,8 +76,11 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.tools.ParameterUtils;
+import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Janitor;
@@ -89,11 +100,14 @@ import org.codehaus.groovy.syntax.CSTNode;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Token;
+import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.tools.GroovyClass;
+import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.codehaus.jdt.groovy.core.dom.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.Flags;
@@ -107,6 +121,7 @@ import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
@@ -140,6 +155,8 @@ import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.Receiver;
+import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
 import org.eclipse.jdt.internal.compiler.ast.SingleMemberAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
@@ -153,9 +170,11 @@ import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
+import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
@@ -178,6 +197,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
     public static boolean defaultCheckGenerics = Boolean.parseBoolean(Platform.getDebugOption("org.codehaus.groovy.eclipse.core/debug/generics"));
 
+    private static final ClassNode GENERATED_CLASSNODE = ClassHelper.makeCached(groovy.transform.Generated.class);
+
     private final CompilationUnit compilationUnit;
 
     private final CompilerOptions compilerOptions;
@@ -195,6 +216,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         this.compilationUnit = compilationUnit;
         this.groovySourceUnit = groovySourceUnit;
         this.compilerOptions = compilerOptions;
+        bits |= ASTNode.HasAllMethodBodies;
     }
 
     /**
@@ -218,13 +240,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         // replacement error collector doesn't cause an exception, instead errors are checked post 'compile'
         try {
             problemReporter.referenceContext = this;
-            ClassLoader cl = Thread.currentThread().getContextClassLoader();
-            try {
-                Thread.currentThread().setContextClassLoader(compilationUnit.getTransformLoader());
-                compilationUnit.compile(phase);
-            } finally {
-                Thread.currentThread().setContextClassLoader(cl);
-            }
+            compilationUnit.compile(phase);
 
             ErrorCollector collector = groovySourceUnit.getErrorCollector();
             if (collector.hasErrors() || collector.hasWarnings()) {
@@ -250,8 +266,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (GroovyLogManager.manager.hasLoggers()) {
                 GroovyLogManager.manager.log(TraceCategory.COMPILER, e.getBugText());
             }
-
-            if (e.getCause() instanceof AbortCompilation) {
+            if (e.getCause() instanceof OperationCanceledException) {
+                throw (OperationCanceledException) e.getCause();
+            } else if (e.getCause() instanceof AbortCompilation) {
                 AbortCompilation abort = (AbortCompilation) e.getCause();
                 if (!abort.isSilent) {
                     if (abort.problem != null) {
@@ -264,15 +281,26 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 Util.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Groovy compiler error", e));
                 // GRECLIPSE-1420: Need to record these problems as compiler errors since some users will not think to check the log.
                 // This is mostly a fix for problems where a GroovyBugError is thrown when it is really just a malformed syntax problem.
-                ErrorCollector collector = groovySourceUnit.getErrorCollector();
-                collector.addError(new SyntaxErrorMessage(new SyntaxException(" compiler error: " + e.getBugText(), e, 1, 1), groovySourceUnit));
+                SourceUnit unit = groovySourceUnit;
+                String unitName = find(e.getBugText(), "(?<=source unit ').+(?=')");
+                if (unitName != null) {
+                    for (Iterator<SourceUnit> it = compilationUnit.iterator(); it.hasNext();) { SourceUnit next = it.next();
+                        if (next.getName().equals(unitName)) {
+                            unit = next;
+                            break;
+                        }
+                    }
+                }
+                unit.addErrorAndContinue(new SyntaxException(
+                    " compiler error: " + e.getBugText(), e, 1, 1));
+                ErrorCollector collector = unit.getErrorCollector();
                 recordProblems(collector.getErrors(), collector.getWarnings());
             }
         } catch (AssertionError | LinkageError e) {
             if (GroovyLogManager.manager.hasLoggers()) {
                 GroovyLogManager.manager.log(TraceCategory.COMPILER, e.getMessage());
             }
-            if (!alreadyHasErrors) {
+            if (!alreadyHasErrors && compilationUnit.allowTransforms) {
                 Util.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Groovy compiler error", e));
             }
             // probably an AST transform compiled against a different Groovy
@@ -303,9 +331,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         populator.populate(this);
     }
 
-    // FIXASC are costly regens being done for all the classes???
     @Override
     public void generateCode() {
+        if (getModuleNode() != null) {
+            char[][] actualPackage = currentPackage != null
+                                   ? currentPackage.tokens : CharOperation.NO_CHAR_CHAR;
+            char[][] expectPackage = compilationResult.compilationUnit.getPackageName();
+            if (expectPackage != null && !CharOperation.equals(actualPackage, expectPackage)) {
+                char[] folder = expectPackage.length == 0 ? new char[] {'.'} : CharOperation.concatWith(expectPackage, '/');
+                getModuleNode().putNodeMetaData("source.folder", new StringBuilder().append(folder).append('/').toString());
+            }
+        }
+
         boolean successful = processToPhase(Phases.ALL);
         if (successful) {
             // At the end of this method we want to make this call for each of the classes generated during processing
@@ -532,6 +569,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 message.write(new PrintWriter(writer));
                 description = writer.toString();
             }
+            String[] problemArguments = {prepareMessage(description)};
 
             if (soffset == -1) {
                 soffset = getOffset(compilationResult.lineSeparatorPositions, line, scol);
@@ -547,7 +585,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 eoffset = sourceEnd;
             }
 
-            CategorizedProblem problem = new DefaultProblemFactory().createProblem(getFileName(), 0, new String[0], 0, new String[] {prepareMessage(description)},
+            CategorizedProblem problem = new DefaultProblemFactory().createProblem(getFileName(), 0, problemArguments, 0, problemArguments,
                 message instanceof WarningMessage ? ProblemSeverities.Warning : ProblemSeverities.Error, soffset, eoffset, line, scol);
             problemReporter.record(problem, compilationResult, this, false);
         }
@@ -557,14 +595,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
     public void finalizeProblems() {
         boolean isReconcile = (compilationUnit.allowTransforms && !compilerOptions.parseLiteralExpressionsAsConstants);
 
-        if (isScript && !isReconcile && groovySourceUnit instanceof EclipseSourceUnit) {
+        if (isScript && !isReconcile && groovySourceUnit instanceof EclipseSourceUnit esu && esu.getEclipseFile() != null) {
             CategorizedProblem[] problems = compilationResult.problems;
             if (problems != null && problems.length > 0) {
-                for (int i = 0, n = problems.length; i < n; i += 1) {
-                    CategorizedProblem problem = problems[i];
-
-                    if (problem != null && CharOperation.equals(problem.getOriginatingFileName(),
-                            ((EclipseSourceUnit) groovySourceUnit).getEclipseFile().getFullPath().toString().toCharArray())) {
+                char[] eclipseFilePath = esu.getEclipseFile().getFullPath().toString().toCharArray();
+                for (CategorizedProblem problem : problems) {
+                    if (problem != null && Arrays.equals(problem.getOriginatingFileName(), eclipseFilePath)) {
                         compilationResult.removeProblem(problem);
                     }
                 }
@@ -591,7 +627,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         return groovySourceUnit;
     }
 
-    @Override // TODO: Find a better home for this?
+    // TODO: Find a better home for this?
     public org.eclipse.jdt.core.dom.CompilationUnit getSpecialDomCompilationUnit(org.eclipse.jdt.core.dom.AST ast) {
         return new GroovyCompilationUnit(ast);
     }
@@ -603,9 +639,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
     @Override
     public void resolve() {
-        processToPhase(Phases.SEMANTIC_ANALYSIS);
-        checkForTags();
-        setComments();
+        if (processToPhase(Phases.SEMANTIC_ANALYSIS)) {
+            checkForTags();
+            setComments();
+        }
     }
 
     /**
@@ -853,45 +890,33 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
      */
     private class TraitHelper {
 
-        private boolean lookForTraitAlias;
-        private boolean toBeInitialized = true;
+        private Boolean checkTraitAlias;
 
-        private void initialize() {
-            if (imports != null) {
+        private boolean isTrait(final ClassNode classNode) {
+            if (checkTraitAlias == null) {
                 for (ImportReference i : imports) {
-                    String importedType = i.toString();
-                    if ("groovy.transform.Trait".equals(importedType)) {
-                        lookForTraitAlias = true;
-                        break;
-                    }
-                    if (importedType.endsWith(".Trait")) {
-                        lookForTraitAlias = false;
-                        break;
-                    }
-                    if ("groovy.transform.*".equals(importedType)) {
-                        lookForTraitAlias = true;
+                    if (!i.isStatic()) {
+                        if ((i.bits & ASTNode.OnDemand) != 0) {
+                            if (CharOperation.equals(i.tokens, GROOVY_TRANSFORM)) {
+                                checkTraitAlias = Boolean.TRUE;
+                            }
+                        } else if (Arrays.equals(i.getSimpleName(), GROOVY_TRANSFORM_TRAIT[2])) {
+                            checkTraitAlias = CharOperation.equals(i.tokens, GROOVY_TRANSFORM_TRAIT);
+                            break;
+                        }
+                        // TODO: If CharOperation.equals(i.tokens, GROOVY_TRANSFORM_TRAIT) then i.getSimpleName() is alias
                     }
                 }
-                toBeInitialized = true;
+                if (checkTraitAlias == null) {
+                    checkTraitAlias = Boolean.FALSE;
+                }
             }
-        }
 
-        private boolean isTrait(ClassNode classNode) {
-            if (classNode == null) {
-                return false;
-            }
-            if (toBeInitialized) {
-                initialize();
-            }
-            List<AnnotationNode> annotations = classNode.getAnnotations();
-            if (!annotations.isEmpty()) {
-                for (AnnotationNode annotation : annotations) {
-                    if ("groovy.transform.Trait".equals(annotation.getClassNode().getName())) {
-                        return true;
-                    }
-                    if (lookForTraitAlias && "Trait".equals(annotation.getClassNode().getName())) {
-                        return true;
-                    }
+            for (AnnotationNode annotation : classNode.getAnnotations()) {
+                ClassNode annotationType = annotation.getClassNode();
+                if (TRAIT_CLASSNODE.equals(annotationType) ||
+                        (checkTraitAlias && "Trait".equals(annotationType.getName()))) {
+                    return true;
                 }
             }
             return false;
@@ -948,6 +973,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         private void createImportDeclarations(ModuleNode moduleNode) {
+            // ensure BigDecimal and BigInteger are recorded
+            unitDeclaration.imports = new ImportReference[0];
+
             List<ImportNode> importNodes = moduleNode.getImports();
             List<ImportNode> importPackages = moduleNode.getStarImports();
             Map<String, ImportNode> importStatics = moduleNode.getStaticImports();
@@ -968,7 +996,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                     char[][] splits = CharOperation.splitOn('.', importNode.getClassName().toCharArray());
                     ImportReference ref;
-                    if (importNode.getAlias() == null || importNode.getAlias().length() < 1 ||
+                    if (importNode.getAlias() == null || importNode.getAlias().isEmpty() ||
                             importNode.getAlias().equals(String.valueOf(splits[splits.length - 1]))) {
                         endOffset = nameEndOffset; // endOffset may include extras before ;
                         long[] positions = positionsFor(splits, nameStartOffset, endOffset);
@@ -1002,7 +1030,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         nameEndOffset = importPackage.getNameEnd() + 1;
                         nameStartOffset = importPackage.getNameStart();
                     }
-                    char[][] splits = CharOperation.splitOn('.', importPackage.getPackageName().substring(0, importPackage.getPackageName().length() - 1).toCharArray());
+                    char[][] splits = CharOperation.splitOn('.', importPackage.getPackageName().toCharArray(), 0, importPackage.getPackageName().length() - 1);
                     ImportReference ref = new ImportReference(splits, positionsFor(splits, nameStartOffset, nameEndOffset), true, Flags.AccDefault);
                     ref.annotations = createAnnotations(importPackage.getAnnotations());
 
@@ -1018,6 +1046,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         ref.declarationSourceStart = importPackage.getStart();
                         ref.declarationSourceEnd = ref.sourceEnd;
                     }
+                    ref.trailingStarPosition = ref.sourceEnd;
 
                     importReferences.put(lexicalKey(ref), ref);
                 }
@@ -1034,9 +1063,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     long[] positions = positionsFor(splits, nameStartOffset, nameEndOffset);
                     ImportReference ref;
                     if (importNode.getAlias() == null || importNode.getAlias().length() < 1 || importNode.getAlias().equals(importNode.getFieldName())) {
-                        ref = new ImportReference(splits, positions, false, Flags.AccDefault | Flags.AccStatic);
+                        ref = new ImportReference(splits, positions, false, Flags.AccStatic);
                     } else {
-                        ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positions, false, Flags.AccDefault | Flags.AccStatic);
+                        ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positions, false, Flags.AccStatic);
                     }
                     ref.annotations = createAnnotations(importNode.getAnnotations());
 
@@ -1067,7 +1096,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                     char[][] splits = CharOperation.splitOn('.', classname.toCharArray());
                     long[] positions = positionsFor(splits, nameStartOffset, nameEndOffset);
-                    ImportReference ref = new ImportReference(splits, positions, true, Flags.AccDefault | Flags.AccStatic);
+                    ImportReference ref = new ImportReference(splits, positions, true, Flags.AccStatic);
                     ref.annotations = createAnnotations(importNode.getAnnotations());
 
                     ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
@@ -1082,17 +1111,24 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         ref.declarationSourceStart = importNode.getStart();
                         ref.declarationSourceEnd = ref.sourceEnd;
                     }
+                    ref.trailingStarPosition = ref.sourceEnd;
 
                     importReferences.put(lexicalKey(ref), ref);
                 }
 
                 if (!importReferences.isEmpty()) {
-                    ImportReference[] refs = importReferences.values().toArray(new ImportReference[0]);
+                    ImportReference last = unitDeclaration.currentPackage;
+                    ImportReference[] refs = importReferences.values().toArray(unitDeclaration.imports);
                     for (ImportReference ref : refs) {
-                        if (ref.declarationSourceStart > 0 && (ref.declarationEnd - ref.declarationSourceStart + 1) < 0) {
-                            throw new IllegalStateException(String.format(
-                                "Import reference alongside class %s will trigger later failure: %s declSourceStart=%d declEnd=%d",
-                                  moduleNode.getClasses().get(0), ref.toString(), ref.declarationSourceStart, ref.declarationEnd));
+                        if (ref.sourceStart >= 0) {
+                            last = ref;
+                        } else if (last != null) { // place after package/import
+                            ref.declarationSourceStart = last.sourceEnd + 1;
+                            ref.sourceStart = ref.declarationSourceStart;
+                            ref.declarationSourceEnd = last.sourceEnd;
+                            ref.trailingStarPosition = last.sourceEnd;
+                            ref.declarationEnd = last.sourceEnd;
+                            ref.sourceEnd = last.sourceEnd;
                         }
                     }
                     unitDeclaration.imports = refs;
@@ -1120,36 +1156,47 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 GroovyTypeDeclaration typeDeclaration = new GroovyTypeDeclaration(unitDeclaration.compilationResult, classNode);
                 typeDeclaration.annotations = createAnnotations(classNode.getAnnotations());
+                typeDeclaration.modifiers = getModifiers(classNode);
 
-                boolean isInner;
-                if (classNode.getOuterClass() != null) {
-                    isInner = true;
-                } else {
-                    isInner = false;
-                    typeDeclaration.name = classNode.getNameWithoutPackage().toCharArray();
-                    if (!CharOperation.equals(typeDeclaration.name, mainName)) {
-                        typeDeclaration.bits |= ASTNode.IsSecondaryType;
-                    }
-                }
-
-                typeDeclaration.modifiers = getModifiers(classNode, isInner);
                 fixupSourceLocationsForTypeDeclaration(typeDeclaration, classNode);
+
                 GenericsType[] generics = classNode.getGenericsTypes();
                 if (generics != null && generics.length > 0) {
                     typeDeclaration.typeParameters = createTypeParametersForGenerics(classNode.getGenericsTypes());
                 }
 
                 boolean isEnum = classNode.isEnum();
-                configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum, isTrait(classNode));
+                boolean isTrait = isTrait(classNode);
+                boolean isRecord = isRecord(classNode);
+                if (!isEnum && !isTrait && !isRecord) {
+                    ClassNode superClass = classNode.getSuperClass();
+                    configureSuperClass(typeDeclaration, superClass);
+                }
                 configureSuperInterfaces(typeDeclaration, classNode);
-                typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
-                typeDeclaration.methods = createConstructorAndMethodDeclarations(classNode, isEnum, typeDeclaration);
+                if (isSealed(classNode)) {
+                    configurePermittedSubtypes(typeDeclaration, classNode);
+                }
+                if (isRecord) {
+                    typeDeclaration.recordComponents = createRecordComponents(classNode);
+                    // prior to 3.42: typeDeclaration.nRecordComponents = typeDeclaration.recordComponents.length;
+                    if (!recordRefactor()) ReflectionUtils.setPrivateField(TypeDeclaration.class, "nRecordComponents", typeDeclaration, typeDeclaration.recordComponents.length);
+                }
+                typeDeclaration.fields  = isTrait?new FieldDeclaration[0]:createFieldDeclarations(classNode);
+                typeDeclaration.methods = createConstructorAndMethodDeclarations(classNode, typeDeclaration);
+
+                if (isTrait) classNode.getProperties().forEach(propertyNode -> // no FieldDeclaration to carry the TypeReference
+                    propertyNode.putNodeMetaData(TypeReference.class, createTypeReferenceForClassNode(propertyNode.getType())));
 
                 for (Statement statement : classNode.getObjectInitializerStatements()) {
-                    if (statement.getEnd() > 0) {
-                        Initializer initializer = new Initializer(new Block(0), Flags.AccDefault);
-                        initializer.declarationSourceEnd = initializer.sourceEnd = statement.getEnd() - 1;
+                    if (statement.getEnd() > 0 && statement instanceof BlockStatement) {
+                        Initializer initializer = new Initializer(new Block(0), /*!static:*/Flags.AccDefault);
                         initializer.declarationSourceStart = initializer.sourceStart = statement.getStart();
+                        initializer.declarationSourceEnd = initializer.sourceEnd = statement.getEnd() - 1;
+                        initializer.block.sourceStart = initializer.sourceStart;
+                        initializer.block.sourceEnd = initializer.sourceEnd;
+                        initializer.bodyStart = initializer.sourceStart + 1;
+                        initializer.bodyEnd = initializer.sourceEnd - 1;
+
                         typeDeclaration.fields = (FieldDeclaration[]) ArrayUtils.add(typeDeclaration.fields, initializer);
 
                         if (anonymousLocations != null) {
@@ -1159,7 +1206,24 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                 }
 
-                if (isInner) {
+                MethodNode clinit = classNode.getDeclaredMethod("<clinit>", Parameter.EMPTY_ARRAY);
+                if (clinit != null && clinit.getCode() instanceof BlockStatement) {
+                    for (Statement statement : ((BlockStatement) clinit.getCode()).getStatements()) {
+                        if (statement.getEnd() > 0 && statement instanceof BlockStatement) {
+                            Initializer initializer = new Initializer(new Block(0), Flags.AccStatic);
+                            initializer.declarationSourceStart = (int) statement.getNodeMetaData("static.offset");
+                            initializer.declarationSourceEnd = initializer.sourceEnd = statement.getEnd() - 1;
+                            initializer.block.sourceStart = initializer.sourceStart = statement.getStart();
+                            initializer.block.sourceEnd = initializer.sourceEnd;
+                            initializer.bodyStart = initializer.sourceStart + 1;
+                            initializer.bodyEnd = initializer.sourceEnd - 1;
+
+                            typeDeclaration.fields = (FieldDeclaration[]) ArrayUtils.add(typeDeclaration.fields, initializer);
+                        }
+                    }
+                }
+
+                if (classNode.getOuterClass() != null) {
                     InnerClassNode innerClassNode = (InnerClassNode) classNode;
                     ClassNode outerClassNode = innerClassNode.getOuterClass();
                     // record that we need to set the parent of this inner type later
@@ -1168,16 +1232,27 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     if (innerClassNode.isAnonymous()) {
                         typeDeclaration.name = CharOperation.NO_CHAR;
                         typeDeclaration.bits |= (ASTNode.IsAnonymousType | ASTNode.IsLocalType);
-                        //typeDeclaration.bits |= (typeDeclaration.superclass.bits & ASTNode.HasTypeAnnotations);
-                        QualifiedAllocationExpression allocation = new QualifiedAllocationExpression(typeDeclaration);
+                      //typeDeclaration.bits |= (typeDeclaration.superclass.bits & ASTNode.HasTypeAnnotations);
+                        QualifiedAllocationExpression allocation = new QualifiedAllocationExpression(typeDeclaration) {
+                            @Override
+                            public void checkTypeArgumentRedundancy(ParameterizedTypeBinding atype, BlockScope scope) {
+                                // https://github.com/groovy/groovy-eclipse/issues/1358
+                            }
+                        };
                         allocation.sourceStart = isEnum ? typeDeclaration.sourceStart : typeDeclaration.sourceStart - 4; // approx. offset of "new"
                         allocation.sourceEnd = typeDeclaration.bodyEnd;
-                        if (!isEnum) allocation.type = typeDeclaration.superclass;
-                        // TODO: allocation.typeArguments = something
+                        if (!isEnum) {
+                            allocation.type = typeDeclaration.superclass;
+                        }
+                        // TODO (GROOVY-10501): allocation.typeArguments = something
                     } else {
                         typeDeclaration.name = innerClassNode.getNameWithoutPackage().substring(outerClassNode.getNameWithoutPackage().length() + 1).toCharArray();
                     }
                 } else {
+                    typeDeclaration.name = classNode.getNameWithoutPackage().toCharArray();
+                    if (!Arrays.equals(typeDeclaration.name, mainName)) {
+                        typeDeclaration.bits |= ASTNode.IsSecondaryType;
+                    }
                     typeDeclarations.add(typeDeclaration);
                 }
                 fromClassNodeToDecl.put(classNode, typeDeclaration);
@@ -1216,7 +1291,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                 innerTypeDeclaration.allocation.enumConstant = fieldDeclaration;
                                 fieldDeclaration.initialization = innerTypeDeclaration.allocation;
                             } else if (fieldDeclaration.initialization == null) {
-                                if (CharOperation.equals(fieldDeclaration.type.getLastToken(), TypeConstants.OBJECT) || GroovyUtils.isAnonymous(fieldDeclaration.initializer.getType())) {
+                                if (Arrays.equals(fieldDeclaration.type.getLastToken(), TypeConstants.OBJECT) || GroovyUtils.isAnonymous(fieldDeclaration.initializer.getType())) {
                                     fieldDeclaration.initialization = innerTypeDeclaration.allocation;
                                 } else { // in case of indirect anon. inner like "Type foo = bar(1, '2', new Baz() { ... })", fool JDT with "Type foo = (Type) (Object) new Baz() { ... }"
                                     fieldDeclaration.initialization = new CastExpression(innerTypeDeclaration.allocation, createTypeReferenceForClassNode(ClassHelper.OBJECT_TYPE));
@@ -1247,37 +1322,62 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Build JDT representations of all the fields on the Groovy type.
+         * Builds JDT representation of a record header on the Groovy type.
          */
-        private FieldDeclaration[] createFieldDeclarations(ClassNode classNode, boolean isEnum) {
+        private RecordComponent[] createRecordComponents(ClassNode classNode) {
+            RecordComponent[] recordComponents = ASTNode.NO_RECORD_COMPONENTS;
+            List<FieldNode> fieldNodes = classNode.getFields();
+            if (fieldNodes != null && !fieldNodes.isEmpty()) {
+                for (FieldNode fieldNode : fieldNodes) {
+                    if (Boolean.TRUE.equals(fieldNode.getNodeMetaData("_IS_RECORD_GENERATED"))) {
+                        RecordComponent recordComponent = new RecordComponent(fieldNode.getName().toCharArray(), -1, -1);
+                        recordComponent.annotations = createAnnotations(fieldNode.getAnnotations());
+                        recordComponent.declarationSourceStart = fieldNode.getStart();
+                        recordComponent.declarationSourceEnd = fieldNode.getEnd() - 1;
+                        recordComponent.sourceStart = fieldNode.getNameStart();
+                        recordComponent.sourceEnd = fieldNode.getNameEnd();
+                        recordComponent.type = createTypeReferenceForClassNode(fieldNode.getType());
+
+                        recordComponents = (RecordComponent[]) ArrayUtils.add(recordComponents, recordComponent);
+                    }
+                }
+            }
+            return recordComponents;
+        }
+
+        /**
+         * Builds JDT representations of all the fields on the Groovy type.
+         */
+        private FieldDeclaration[] createFieldDeclarations(ClassNode classNode) {
             List<FieldDeclaration> fieldDeclarations = new ArrayList<>();
             List<FieldNode> fieldNodes = classNode.getFields();
             if (fieldNodes != null && !fieldNodes.isEmpty()) {
-                boolean isTrait = isTrait(classNode);
                 for (FieldNode fieldNode : fieldNodes) {
-                    if (isTrait && !(fieldNode.isPublic() && fieldNode.isStatic() && fieldNode.isFinal())) {
-                        continue;
-                    }
-                    if (isEnum && (fieldNode.getName().equals("MAX_VALUE") || fieldNode.getName().equals("MIN_VALUE"))) {
-                        continue;
-                    }
-                    if (fieldNode.getStart() == fieldNode.getNameStart() && ClassHelper.void_WRAPPER_TYPE.equals(fieldNode.getType())) {
-                        continue;
-                    }
-                    boolean isEnumField = fieldNode.isEnum();
-                    boolean isSynthetic = GroovyUtils.isSynthetic(fieldNode);
-                    if (!isSynthetic) {
-                        // JavaStubGenerator ignores private fields but I don't think we want to here
+                    boolean isRecordComponent = Boolean.TRUE.equals(fieldNode.getNodeMetaData("_IS_RECORD_GENERATED"));
+                    if (!GroovyUtils.isSynthetic(fieldNode) && (!isRecordComponent || !recordRefactor()) && // no post-refactor duplication
+                            !(fieldNode.getStart() == fieldNode.getNameStart() && fieldNode.getType().equals(ClassHelper.void_WRAPPER_TYPE))) {
                         FieldDeclarationWithInitializer fieldDeclaration = new FieldDeclarationWithInitializer(fieldNode.getName().toCharArray(), fieldNode.getNameStart(), fieldNode.getNameEnd());
                         fieldDeclaration.annotations = createAnnotations(fieldNode.getAnnotations());
-                        if (!isEnumField) {
+                        if (!fieldNode.isEnum()) {
                             fieldDeclaration.modifiers = getModifiers(fieldNode);
                             fieldDeclaration.initializer = fieldNode.getInitialExpression();
                             if (fieldNode.isStatic() && fieldNode.isFinal()) {
                                 // this needs to be set for static finals to correctly determine constant status
                                 fieldDeclaration.initialization = createInitializationExpression(fieldNode.getInitialExpression(), fieldNode.getType());
                             }
-                            fieldDeclaration.type = createTypeReferenceForClassNode(fieldNode.getType());
+                            // prior to 3.42: fieldDeclaration.isARecordComponent = isRecordComponent;
+                            if (isRecordComponent) ReflectionUtils.setPrivateField(FieldDeclaration.class, "isARecordComponent", fieldDeclaration, true);
+
+                            ClassNode fieldType = fieldNode.getType();
+                            if (fieldNode.getEnd() > 0 && fieldType.getEnd() < 1) { // 'def', 'var', primitive, modifier(s)
+                                assert fieldType.equals(ClassHelper.OBJECT_TYPE) || ClassHelper.isPrimitiveType(fieldType);
+                                ClassNode ft = new ClassNode(fieldType.getTypeClass());
+                                ft.setStart(fieldNode.getNameStart() - 1);
+                                ft.setEnd(fieldNode.getNameStart() - 1);
+                                ft.setRedirect(fieldType);
+                                fieldType = ft;
+                            }
+                            fieldDeclaration.type = createTypeReferenceForClassNode(fieldType);
 
                             if (anonymousLocations != null && fieldNode.getInitialExpression() != null) {
                                 fieldNode.getInitialExpression().visit(new AnonInnerFinder(fieldDeclaration));
@@ -1305,11 +1405,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                 });
                             }
                         }
-                        fixupSourceLocationsForFieldDeclaration(fieldDeclaration, fieldNode);
 
-                        if (fieldDeclarations.add(fieldDeclaration)) {
-                            unitDeclaration.sourceEnds.put(fieldDeclaration, fieldDeclaration.sourceEnd);
-                        }
+                        fieldDeclarations.add(fieldDeclaration);
+                        fixupSourceLocationsForFieldDeclaration(fieldDeclaration, fieldNode);
+                        unitDeclaration.sourceEnds.put(fieldDeclaration, fieldDeclaration.sourceEnd);
                     }
                 }
             }
@@ -1317,23 +1416,24 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Build JDT representations of all the constructors and methods on the Groovy type.
+         * Builds JDT representations of all the constructors and methods on the Groovy type.
          */
-        private AbstractMethodDeclaration[] createConstructorAndMethodDeclarations(ClassNode classNode, boolean isEnum,
+        private AbstractMethodDeclaration[] createConstructorAndMethodDeclarations(ClassNode classNode,
                 GroovyTypeDeclaration typeDeclaration) {
             List<AbstractMethodDeclaration> methodDeclarations = new ArrayList<>();
-            createConstructorDeclarations(classNode, isEnum, methodDeclarations);
-            createMethodDeclarations(classNode, isEnum, typeDeclaration, methodDeclarations);
+            createConstructorDeclarations(classNode, methodDeclarations);
+            createMethodDeclarations(classNode, typeDeclaration, methodDeclarations);
             return methodDeclarations.toArray(new AbstractMethodDeclaration[methodDeclarations.size()]);
         }
 
         /**
-         * Build JDT representations of all the constructors on the Groovy type.
+         * Builds JDT representations of all the constructors on the Groovy type.
          */
-        private void createConstructorDeclarations(ClassNode classNode, boolean isEnum, List<AbstractMethodDeclaration> methodDeclarations) {
-            List<ConstructorNode> constructorNodes = classNode.getDeclaredConstructors();
+        private void createConstructorDeclarations(ClassNode classNode, List<AbstractMethodDeclaration> methodDeclarations) {
+            List<ConstructorNode> constructorNodes = classNode.isInterface() ? Collections.emptyList() : getDeclaredAndGeneratedConstructors(classNode);
 
-            char[] ctorName; boolean isAnon = false;
+            boolean isEnum = classNode.isEnum();
+            boolean isAnon = false; char[] ctorName;
             if (classNode instanceof InnerClassNode) {
                 isAnon = ((InnerClassNode) classNode).isAnonymous();
                 int qualLength = classNode.getOuterClass().getNameWithoutPackage().length() + 1;
@@ -1342,37 +1442,70 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 ctorName = classNode.getNameWithoutPackage().toCharArray();
             }
 
+            Parameter[] components = classNode.getNodeMetaData("_RECORD_HEADER");
+            if (components != null) {
+                if (!constructorNodes.stream().filter(cn -> ParameterUtils.parametersEqual(cn.getParameters(), components)).findFirst().isPresent()) {
+                    ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult); // TODO: TypeDeclaration.createDefaultConstructorForRecord()
+                    constructorDecl.arguments = createArguments(components);
+                    constructorDecl.bits |= ASTNode.IsCanonicalConstructor;
+                  //constructorDecl.bits |= ASTNode.IsImplicit;
+                  //constructorDecl.constructorCall = SuperReference.implicitSuperConstructorCall();
+                    constructorDecl.modifiers = getModifiers(classNode) & ExtraCompilerModifiers.AccVisibilityMASK;
+                    constructorDecl.selector = ctorName;
+
+                    AnnotatedNode compactCtor = classNode.getNodeMetaData("compact.constructor");
+                    if (compactCtor == null) {
+                        constructorDecl.declarationSourceStart = constructorDecl.sourceStart = constructorDecl.bodyStart = classNode.getNameStart();
+                        constructorDecl.declarationSourceEnd = constructorDecl.sourceEnd = constructorDecl.bodyEnd = classNode.getNameEnd();
+                    } else {
+                      //constructorDecl.modifiers |= ExtraCompilerModifiers.AccCompactConstructor;
+                        constructorDecl.declarationSourceStart = compactCtor.getStart();
+                        constructorDecl.declarationSourceEnd = compactCtor.getEnd();
+                        constructorDecl.sourceStart = compactCtor.getNameStart();
+                        constructorDecl.bodyStart = compactCtor.getNameEnd() + 1;
+                        constructorDecl.sourceEnd = compactCtor.getNameEnd();
+                        constructorDecl.bodyEnd = compactCtor.getEnd();
+                    }
+
+                    if (methodDeclarations.add(constructorDecl)) {
+                        unitDeclaration.sourceEnds.put(constructorDecl, constructorDecl.sourceEnd);
+                    }
+                }
             // add default constructor if no other constructors exist (and not anonymous/interface/trait)
-            if (constructorNodes.isEmpty() && !isAnon && !classNode.isInterface() && !isTrait(classNode)) {
+            } else if (constructorNodes.isEmpty() && !isAnon && !classNode.isInterface() && !isTrait(classNode)) {
                 ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                try {
-                    constructorDecl.annotations = new Annotation[] {
-                        // TODO: Groovy 2.5+: Replace 'Class.forName("groovy.transform.Generated")' with 'groovy.transform.Generated.class'.
-                        new MarkerAnnotation(createTypeReferenceForClassNode(ClassHelper.make(Class.forName("groovy.transform.Generated"))), -1),
-                    };
-                } catch (ClassNotFoundException ignore) {
-                }
-                LinkedList<Statement> initializerStatements = (LinkedList<Statement>) classNode.getObjectInitializerStatements();
-                if (initializerStatements.isEmpty()) {
-                    constructorDecl.bits |= ASTNode.IsDefaultConstructor;
+                constructorDecl.annotations = createAnnotations(GENERATED_CLASSNODE);
+                if (!isEnum) {
+                    if (classNode.getObjectInitializerStatements().isEmpty()) {
+                        constructorDecl.bits |= ASTNode.IsDefaultConstructor;
+                    }
+                    constructorDecl.modifiers = getModifiers(classNode) & ExtraCompilerModifiers.AccVisibilityMASK;
                 } else {
-                    constructorDecl.declarationSourceStart = initializerStatements.getFirst().getStart();
-                    constructorDecl.declarationSourceEnd = initializerStatements.getLast().getEnd() - 1;
-                    constructorDecl.sourceStart = constructorDecl.declarationSourceStart + 1;
-                    constructorDecl.sourceEnd = constructorDecl.declarationSourceStart;
-                    constructorDecl.bodyStart = constructorDecl.declarationSourceStart;
-                    constructorDecl.bodyEnd = constructorDecl.declarationSourceEnd - 1;
-                }
-                if (isEnum) {
                     constructorDecl.modifiers = Flags.AccPrivate;
-                } else {
-                    int modifiers = getModifiers(classNode, classNode.getOuterClass() != null);
-                    constructorDecl.modifiers = modifiers & ExtraCompilerModifiers.AccVisibilityMASK;
                 }
                 constructorDecl.selector = ctorName;
 
+                constructorDecl.sourceEnd = -1;
+                constructorDecl.declarationSourceEnd = -1;
                 if (methodDeclarations.add(constructorDecl)) {
                     unitDeclaration.sourceEnds.put(constructorDecl, constructorDecl.sourceEnd);
+                }
+
+                if (isEnum) { // named arguments constructor
+                    constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
+                    constructorDecl.annotations = createAnnotations(GENERATED_CLASSNODE);
+                    constructorDecl.arguments = createArguments(new Parameter[] {
+                        new Parameter(ClassHelper.makeWithoutCaching(java.util.LinkedHashMap.class, false), "__namedArgs")
+                    });
+                    constructorDecl.arguments[0].type.bits |= ASTNode.IgnoreRawTypeCheck;
+                    constructorDecl.modifiers = Flags.AccPrivate;
+                    constructorDecl.selector = ctorName;
+
+                    constructorDecl.sourceEnd = -1;
+                    constructorDecl.declarationSourceEnd = -1;
+                    if (methodDeclarations.add(constructorDecl)) {
+                        unitDeclaration.sourceEnds.put(constructorDecl, constructorDecl.sourceEnd);
+                    }
                 }
             }
 
@@ -1381,10 +1514,40 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 fixupSourceLocationsForConstructorDeclaration(constructorDecl, constructorNode);
                 constructorDecl.annotations = createAnnotations(constructorNode.getAnnotations());
                 constructorDecl.arguments = createArguments(constructorNode.getParameters());
+                if (constructorDecl.arguments != null && constructorDecl.arguments.length > 0) {
+                    if (new String(constructorDecl.arguments[0].name).equals("__namedArgs")) {
+                        constructorDecl.arguments[0].type.bits |= ASTNode.IgnoreRawTypeCheck;
+                    }
+                    for (Argument argument : constructorDecl.arguments) {
+                        constructorDecl.bits |= (argument.type.bits & ASTNode.HasTypeAnnotations);
+                    }
+                    if (constructorDecl.arguments[0] instanceof Receiver) {
+                        constructorDecl.receiver = (Receiver) constructorDecl.arguments[0];
+                        constructorDecl.arguments = Arrays.copyOfRange(constructorDecl.arguments, 1, constructorDecl.arguments.length);
+                        if (classNode.getOuterClass() != null) // TODO QualifiedNameReference
+                            constructorDecl.receiver.qualifyingName = new SingleNameReference(classNode.getOuterClass().getNameWithoutPackage().toCharArray(), NON_EXISTENT_POSITION);
+                    }
+                }
                 constructorDecl.modifiers = isEnum ? Flags.AccPrivate : getModifiers(constructorNode);
                 constructorDecl.selector = ctorName;
                 constructorDecl.thrownExceptions = createTypeReferencesForClassNodes(constructorNode.getExceptions());
 
+                if (components != null && ParameterUtils.parametersEqual(components, constructorNode.getParameters())) {
+                    constructorDecl.bits |= ASTNode.IsCanonicalConstructor;
+                    AnnotatedNode compactCtor = classNode.getNodeMetaData("compact.constructor");
+                    if (compactCtor == null) {
+                        constructorDecl.declarationSourceStart = constructorDecl.sourceStart = constructorDecl.bodyStart = classNode.getNameStart();
+                        constructorDecl.declarationSourceEnd = constructorDecl.sourceEnd = constructorDecl.bodyEnd = classNode.getNameEnd();
+                    } else {
+                      //constructorDecl.modifiers |= ExtraCompilerModifiers.AccCompactConstructor;
+                        constructorDecl.declarationSourceStart = compactCtor.getStart();
+                        constructorDecl.declarationSourceEnd = compactCtor.getEnd();
+                        constructorDecl.sourceStart = compactCtor.getNameStart();
+                        constructorDecl.bodyStart = compactCtor.getNameEnd() + 1;
+                        constructorDecl.sourceEnd = compactCtor.getNameEnd();
+                        constructorDecl.bodyEnd = compactCtor.getEnd();
+                    }
+                }
                 if (methodDeclarations.add(constructorDecl)) {
                     unitDeclaration.sourceEnds.put(constructorDecl, constructorNode.getNameEnd());
                 }
@@ -1397,10 +1560,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (constructorNode.hasDefaultValue()) {
                     for (Argument[] variantArgs : getVariantsAllowingForDefaulting(constructorNode.getParameters(), constructorDecl.arguments)) {
                         ConstructorDeclaration variantDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                        variantDecl.annotations = constructorDecl.annotations;
+                        variantDecl.annotations = createAnnotations(isGenerated(constructorNode) ? constructorNode.getAnnotations()
+                            : plus(constructorNode.getAnnotations(), new AnnotationNode(GENERATED_CLASSNODE)));
                         variantDecl.arguments = variantArgs;
+                        variantDecl.bits = (constructorDecl.bits & ~ASTNode.IsCanonicalConstructor);
                         variantDecl.javadoc = constructorDecl.javadoc;
                         variantDecl.modifiers = constructorDecl.modifiers;
+                        variantDecl.receiver = constructorDecl.receiver;
                         variantDecl.selector = constructorDecl.selector;
                         variantDecl.sourceEnd = constructorDecl.sourceEnd;
                         variantDecl.sourceStart = constructorDecl.sourceStart;
@@ -1425,23 +1591,24 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Build JDT representations of all the methods on the Groovy type.
+         * Builds JDT representations of all the methods on the Groovy type.
          */
-        private void createMethodDeclarations(ClassNode classNode, boolean isEnum, GroovyTypeDeclaration typeDeclaration, List<AbstractMethodDeclaration> methodDeclarations) {
+        private void createMethodDeclarations(ClassNode classNode, GroovyTypeDeclaration typeDeclaration, List<AbstractMethodDeclaration> methodDeclarations) {
             List<MethodNode> methodNodes = classNode.getMethods();
             if (methodNodes != null && !methodNodes.isEmpty()) {
+                boolean isEnum = classNode.isEnum();
                 boolean isTrait = isTrait(classNode);
                 for (MethodNode methodNode : methodNodes) {
                     if (isEnum && methodNode.isSynthetic()) {
                         continue;
                     }
-                    if (isTrait && (!methodNode.isPublic() || methodNode.isStatic())) {
+                    if (isTrait && (!methodNode.isPublic() || methodNode.isDefault())) {
                         continue;
                     }
 
-                    AbstractMethodDeclaration methodDecl = createMethodDeclaration(classNode, isEnum, methodNode);
+                    AbstractMethodDeclaration methodDecl = createMethodDeclaration(classNode, methodNode);
                     if (methodDeclarations.add(methodDecl)) {
-                        unitDeclaration.sourceEnds.put(methodDecl, methodNode.getNameEnd());
+                        unitDeclaration.sourceEnds.put(methodDecl, methodNode.isScriptBody() ? methodNode.getStart() : methodNode.getNameEnd());
                     }
 
                     if (methodNode.isAbstract()) {
@@ -1451,9 +1618,19 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         methodNode.getCode().visit(new LocalVariableFinder(variables));
                         if (!variables.isEmpty()) methodDecl.statements = createStatements(variables.values());
                     }
+
+                    if (isTrait) {
+                        adjustMethodForTraitRestrictions(methodDecl, methodNode);
+                    }
+
                     if (methodNode.hasDefaultValue()) {
                         for (Argument[] variantArgs : getVariantsAllowingForDefaulting(methodNode.getParameters(), methodDecl.arguments)) {
-                            AbstractMethodDeclaration variantDecl = createMethodDeclaration(classNode, isEnum, methodNode);
+                            AbstractMethodDeclaration variantDecl = createMethodDeclaration(classNode, methodNode);
+                            if (variantDecl.annotations == null) {
+                                variantDecl.annotations = createAnnotations(GENERATED_CLASSNODE);
+                            } else {
+                                variantDecl.annotations = ArrayUtils.concat(variantDecl.annotations, createAnnotations(GENERATED_CLASSNODE));
+                            }
                             variantDecl.arguments = variantArgs;
 
                             variantDecl.declarationSourceStart = 0;
@@ -1464,6 +1641,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             variantDecl.bodyEnd = -1;
 
                             if (addUnlessDuplicate(methodDeclarations, variantDecl)) {
+                                if (isTrait) {
+                                    adjustMethodForTraitRestrictions(variantDecl, methodNode);
+                                }
                                 unitDeclaration.sourceEnds.put(variantDecl, methodNode.getNameEnd());
                             }
                         }
@@ -1477,9 +1657,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Create a JDT {@link MethodDeclaration} that represents a Groovy {@link MethodNode}.
+         * Creates a JDT {@link MethodDeclaration} that represents a Groovy {@link MethodNode}.
          */
-        private AbstractMethodDeclaration createMethodDeclaration(ClassNode classNode, boolean isEnum, MethodNode methodNode) {
+        private AbstractMethodDeclaration createMethodDeclaration(ClassNode classNode, MethodNode methodNode) {
             if (classNode.isAnnotationDefinition()) {
                 AnnotationMethodDeclaration methodDeclaration = new AnnotationMethodDeclaration(unitDeclaration.compilationResult);
                 methodDeclaration.annotations = createAnnotations(methodNode.getAnnotations());
@@ -1504,24 +1684,63 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 int modifiers = getModifiers(methodNode);
                 Parameter[] params = methodNode.getParameters();
                 ClassNode returnType = methodNode.getReturnType();
-                // 'static main(args)' would become 'static Object main(Object args)' so make it 'static void main(String[] args)'
-                if (Flags.isStatic(modifiers) && "main".equals(methodNode.getName()) && params != null && params.length == 1) {
-                    Parameter p = params[0];
-                    if (p.getType() == null || p.getType().getName().equals(ClassHelper.OBJECT)) {
-                        params = new Parameter[] {new Parameter(ClassHelper.STRING_TYPE.makeArray(), p.getName())};
-                        params[0].setSourcePosition(p);
-                        if (returnType.getName().equals(ClassHelper.OBJECT)) {
-                            returnType = ClassHelper.VOID_TYPE;
+
+                if (Flags.isStatic(modifiers)) {
+                    // present 'static main(args)' as 'static void main(String[] args)' to JDT model
+                    if ("main".equals(methodNode.getName()) && params != null && params.length == 1) {
+                        Parameter p = params[0];
+                        ClassNode pType = p.getType();
+                        if (pType == null || (pType.equals(ClassHelper.OBJECT_TYPE) && !pType.isGenericsPlaceHolder())) {
+                            params = new Parameter[] {new Parameter(ClassHelper.STRING_TYPE.makeArray(), p.getName())};
+                            params[0].addAnnotations(p.getAnnotations());
+                            params[0].setModifiers(p.getModifiers());
+                            params[0].setSourcePosition(p);
+                            if (pType != null) {
+                                params[0].getType().setSourcePosition(pType);
+                                params[0].getType().addTypeAnnotations(pType.getTypeAnnotations());
+                            }
+                            if (returnType.equals(ClassHelper.OBJECT_TYPE)) {
+                                returnType = ClassHelper.VOID_TYPE;
+                            }
+                        }
+                    }
+                } else if (!classNode.isAnnotationDefinition()) {
+                    // present as static and with self parameter if @Category(T)
+                    for (AnnotationNode annotation : classNode.getAnnotations()) {
+                        if (isType("groovy.lang.Category", annotation.getClassNode().getName())) {
+                            Object value = createAnnotationMemberExpression(annotation.getMember("value"), ClassHelper.CLASS_Type);
+                            value = (value instanceof ClassLiteralAccess ? ((ClassLiteralAccess) value).type : ClassHelper.OBJECT);
+                            Parameter firstParam = new Parameter(GroovyUtils.makeType(value.toString()), "$this");
+                            params = (Parameter[]) ArrayUtils.add(params, 0, firstParam);
+                            modifiers |= Flags.AccStatic;
+                            break;
                         }
                     }
                 }
 
                 methodDeclaration.modifiers = modifiers;
-                methodDeclaration.arguments = createArguments(params);
                 if (methodDeclaration instanceof MethodDeclaration) {
+                    methodDeclaration.arguments = createArguments(params);
+                    if (methodDeclaration.arguments != null && methodDeclaration.arguments.length > 0) {
+                        for (Argument argument : methodDeclaration.arguments) {
+                            methodDeclaration.bits |= (argument.type.bits & ASTNode.HasTypeAnnotations);
+                        }
+                        if (methodDeclaration.arguments[0] instanceof Receiver) {
+                            methodDeclaration.receiver = (Receiver) methodDeclaration.arguments[0];
+                            methodDeclaration.arguments = Arrays.copyOfRange(methodDeclaration.arguments, 1, methodDeclaration.arguments.length);
+                        }
+                    }
                     GenericsType[] generics = methodNode.getGenericsTypes();
                     if (generics != null && generics.length > 0) {
                         ((MethodDeclaration) methodDeclaration).typeParameters = createTypeParametersForGenerics(generics);
+                    }
+                    if (methodNode.getNameEnd() > 0 && returnType.getEnd() < 1) { // 'def' or modifier(s) or primitive
+                        assert returnType.equals(ClassHelper.OBJECT_TYPE) || ClassHelper.isPrimitiveType(returnType);
+                        ClassNode rt = new ClassNode(returnType.getTypeClass());
+                        rt.setStart(methodNode.getNameStart() - 1);
+                        rt.setEnd(methodNode.getNameStart() - 1);
+                        rt.setRedirect(returnType);
+                        returnType = rt;
                     }
                     ((MethodDeclaration) methodDeclaration).returnType = createTypeReferenceForClassNode(returnType);
                 }
@@ -1533,59 +1752,94 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
         //----------------------------------------------------------------------
 
-        private void configureSuperClass(TypeDeclaration typeDeclaration, ClassNode superclass, boolean isEnum, boolean isTrait) {
-            if ((isEnum && superclass.getName().equals("java.lang.Enum")) || isTrait) {
-                // Don't wire it in, JDT will do it
-                typeDeclaration.superclass = null;
-            } else {
-                // If the start position is 0 the superclass wasn't actually declared, it was added by Groovy
-                if (!(superclass.getStart() == 0 && superclass.equals(ClassHelper.OBJECT_TYPE))) {
-                    typeDeclaration.superclass = createTypeReferenceForClassNode(superclass);
-                }
+        private void configureSuperClass(TypeDeclaration typeDeclaration, ClassNode superClass) {
+            if (!(superClass.getStart() == 0 && superClass.equals(ClassHelper.OBJECT_TYPE))) {
+                typeDeclaration.superclass = createTypeReferenceForClassNode(superClass);
             }
         }
 
         private void configureSuperInterfaces(TypeDeclaration typeDeclaration, ClassNode classNode) {
             ClassNode[] interfaces = classNode.getInterfaces();
+            ClassNode   superClass = classNode.getSuperClass();
+            if (superClass != null && !superClass.equals(ClassHelper.OBJECT_TYPE) && isTrait(classNode)) {
+                interfaces = Arrays.copyOf(interfaces, interfaces.length + 1);
+                interfaces[interfaces.length - 1] = superClass; // super trait
+            }
             if (interfaces != null && interfaces.length > 0) {
-                typeDeclaration.superInterfaces = new TypeReference[interfaces.length];
-                for (int i = 0, n = interfaces.length; i < n; i += 1) {
-                    typeDeclaration.superInterfaces[i] = createTypeReferenceForClassNode(interfaces[i]);
-                }
+                typeDeclaration.superInterfaces = createTypeReferencesForClassNodes(interfaces);
             } else {
                 typeDeclaration.superInterfaces = new TypeReference[0];
             }
         }
 
-        private Annotation[] createAnnotations(List<AnnotationNode> groovyAnnotations) {
-            if (groovyAnnotations != null && !groovyAnnotations.isEmpty()) {
-                List<Annotation> annotations = new ArrayList<>(groovyAnnotations.size());
-
-                for (AnnotationNode annotationNode : groovyAnnotations) {
-                    TypeReference annotationReference = createTypeReferenceForClassNode(annotationNode.getClassNode());
-                    annotationReference.sourceStart = annotationNode.getStart();
-                    annotationReference.sourceEnd = annotationNode.getEnd() - 1;
-
-                    Map<String, Expression> memberValuePairs = annotationNode.getMembers();
-                    if (memberValuePairs == null || memberValuePairs.isEmpty()) {
-                        MarkerAnnotation annotation = new MarkerAnnotation(annotationReference, annotationReference.sourceStart);
-                        annotations.add(annotation);
-                    } else if (memberValuePairs.size() == 1 && memberValuePairs.containsKey("value")) {
-                        SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationReference.sourceStart);
-                        annotation.memberValue = createAnnotationMemberExpression(memberValuePairs.get("value"), null);
-                        annotations.add(annotation);
-                    } else {
-                        NormalAnnotation annotation = new NormalAnnotation(annotationReference, annotationReference.sourceStart);
-                        annotation.memberValuePairs = createAnnotationMemberValuePairs(memberValuePairs);
-                        annotations.add(annotation);
-                    }
-                    // TODO: declarationSourceEnd should be rparen position; antlr2 includes any trailing comment
-                    annotations.get(annotations.size() - 1).declarationSourceEnd = annotationReference.sourceEnd;
+        private void configurePermittedSubtypes(TypeDeclaration typeDeclaration, ClassNode classNode) {
+            java.util.function.Function<Expression, TypeReference> createTypeReference = e -> {
+                if (e instanceof ClassExpression) {
+                    return createTypeReferenceForClassNode(e.getType());
                 }
+                if (e instanceof VariableExpression) {
+                    char[] simpleName = e.getText().toCharArray(); // assume it's a type name
+                    TypeReference t = verify(new SingleTypeReference(simpleName, toPos(e.getStart(), e.getEnd() - 1)));
+                    if (!checkGenerics) t.bits |= ASTNode.IgnoreRawTypeCheck;
+                    return t;
+                }
+                if (e instanceof PropertyExpression) {
+                    PropertyExpression p = (PropertyExpression) e;
+                    if ("class".equals(p.getPropertyAsString())) {
+                        return createTypeReferenceForClassLiteral(p);
+                    }
+                    char[][] compoundName = CharOperation.splitOn('.', e.getText().toCharArray()); // assume it's a type name
+                    TypeReference t = new QualifiedTypeReference(compoundName, positionsFor(compoundName, e.getStart(), e.getEnd()));
+                    if (!checkGenerics) t.bits |= ASTNode.IgnoreRawTypeCheck;
+                    return t;
+                }
+                Util.log(IStatus.WARNING, "Unhandled reference type: " + e.getClass().getName());
+                return null;
+            };
 
-                return annotations.toArray(new Annotation[annotations.size()]);
+            for (AnnotationNode annotation : classNode.getAnnotations()) {
+                if (isType("groovy.transform.Sealed", annotation.getClassNode().getName())) {
+                    Expression permitsSpecification = annotation.getMember("permittedSubclasses");
+                    if (permitsSpecification instanceof ListExpression) {
+                        typeDeclaration.permittedTypes = ((ListExpression) permitsSpecification).getExpressions()
+                                                .stream().map(createTypeReference).toArray(TypeReference[]::new);
+                    } else if (permitsSpecification != null) {
+                        typeDeclaration.permittedTypes = new TypeReference[] {createTypeReference.apply(permitsSpecification)};
+                    }
+                }
             }
-            return null;
+        }
+
+        private Annotation[] createAnnotations(ClassNode annotationType) {
+            Annotation annotation = new MarkerAnnotation(createTypeReferenceForClassNode(annotationType), -1);
+            annotation.declarationSourceEnd = annotation.sourceEnd;
+            return new Annotation[] {annotation};
+        }
+
+        private Annotation[] createAnnotations(List<AnnotationNode> annotationNodes) {
+            if (annotationNodes == null || annotationNodes.isEmpty()) return null;
+            Annotation[] annotations = new Annotation[annotationNodes.size()];
+            int i = 0;
+            for (AnnotationNode annotationNode : annotationNodes) {
+                TypeReference annotationType = createTypeReferenceForClassNode(annotationNode.getClassNode());
+
+                Map<String, Expression> memberValuePairs = annotationNode.getMembers();
+                if (memberValuePairs == null || memberValuePairs.isEmpty()) {
+                    MarkerAnnotation annotation = new MarkerAnnotation(annotationType, annotationNode.getStart());
+                    annotations[i] = annotation;
+                } else if (memberValuePairs.size() == 1 && memberValuePairs.containsKey("value")) {
+                    SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationType, annotationNode.getStart());
+                    annotation.memberValue = createAnnotationMemberExpression(memberValuePairs.get("value"), null);
+                    annotations[i] = annotation;
+                } else {
+                    NormalAnnotation annotation = new NormalAnnotation(annotationType, annotationNode.getStart());
+                    annotation.memberValuePairs = createAnnotationMemberValuePairs(memberValuePairs);
+                    annotations[i] = annotation;
+                }
+                // TODO: declarationSourceEnd should be rparen position; antlr2 includes trailing comment
+                annotations[i++].declarationSourceEnd = annotationNode.getEnd() - 1;
+            }
+            return annotations;
         }
 
         private org.eclipse.jdt.internal.compiler.ast.Expression createAnnotationMemberExpression(Expression expr, ClassNode type) {
@@ -1609,13 +1863,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 return annos[0];
 
             } else if (expr instanceof VariableExpression) {
-                String name = ((VariableExpression) expr).getName();
-                // could be a class literal; Groovy does not require ".class" -- resolved in MemberValuePair
-                return new SingleNameReference(name.toCharArray(), toPos(expr.getStart(), expr.getEnd() - 1));
+                char[] name = ((VariableExpression) expr).getName().toCharArray();
+                long   pos  = toPos(expr.getStart(), expr.getEnd() - 1);
+                if (ClassHelper.CLASS_Type.equals(type)) {
+                    return new ClassLiteralAccess(expr.getEnd() - 1, new SingleTypeReference(name, pos));
+                }
+                // could still be a class literal; Groovy does not require ".class" -- resolved in MemberValuePair
+                return new SingleNameReference(name, pos);
 
             } else if (expr instanceof PropertyExpression) {
                 PropertyExpression prop = (PropertyExpression) expr;
-                int propertyEnd = prop.getProperty().getEnd() - 1;
+                int propertyEnd =  prop.getProperty().getEnd() - 1;
+                if (ClassHelper.CLASS_Type.equals(type) && !"class".equals(prop.getPropertyAsString())) {
+                    prop = new PropertyExpression(expr, "class");
+                }
                 if ("class".equals(prop.getPropertyAsString())) {
                     return new ClassLiteralAccess(propertyEnd, createTypeReferenceForClassLiteral(prop));
                 }
@@ -1636,15 +1897,30 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 long[] poss = positionsFor(toks, expr.getStart(), expr.getEnd() - 1);
 
                 return new ClassLiteralAccess(expr.getEnd() - 1, n == 1 ? new SingleTypeReference(toks[0], poss[0])
-                        : new QualifiedTypeReference(Arrays.copyOfRange(toks, 0, n), Arrays.copyOfRange(poss, 0, n)));
+                        : new QualifiedTypeReference(Arrays.copyOf(toks, n), Arrays.copyOf(poss, n)));
 
             } else if (expr instanceof ClosureExpression) {
-                // annotation is something like "@Tag(value = { -> ... })" return "Closure.class" to appease JDT
-                return new ClassLiteralAccess(expr.getEnd() - 1, new SingleTypeReference("Closure".toCharArray(), toPos(expr.getStart(), expr.getEnd() - 1)));
+                // annotation is something like "@Tag(value = { -> ... })"
+                TypeReference stub = new Wildcard(Wildcard.UNBOUND);
+                stub.sourceStart = expr.getStart();
+                stub.sourceEnd = expr.getEnd() - 1;
+                return new ClassLiteralAccess(stub.sourceEnd, stub);
 
             } else if (expr instanceof BinaryExpression) {
-                // annotation may be something like "@Tag(value = List<String)" (incomplete generics specification)
-
+                BinaryExpression be = (BinaryExpression) expr;
+                if (be.getOperation().getType() == Types.PLUS) {
+                    org.eclipse.jdt.internal.compiler.ast.Expression expression = new org.eclipse.jdt.internal.compiler.ast.BinaryExpression(
+                        createAnnotationMemberExpression(be.getLeftExpression(),  type),
+                        createAnnotationMemberExpression(be.getRightExpression(), type),
+                        org.eclipse.jdt.internal.compiler.ast.OperatorIds.PLUS
+                    );
+                    expression.sourceStart = expr.getStart();
+                    expression.sourceEnd = expr.getEnd() - 1;
+                    return expression;
+                } else if (be.getOperation().getType() == Types.LEFT_SQUARE_BRACKET && be.getRightExpression() instanceof ListExpression) {
+                    return new ClassLiteralAccess(expr.getEnd() - 1, createTypeReferenceForClassLiteral(new PropertyExpression(expr, "class")));
+                }
+                // or annotation may be something like "@Tag(value = List<String)" (incomplete generics specification)
             } else {
                 org.eclipse.jdt.internal.compiler.ast.Expression expression = createInitializationExpression(expr, type);
                 if (expression != null) {
@@ -1674,24 +1950,41 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (parameters == null || parameters.length == 0) {
                 return null;
             }
-            Argument[] arguments = new Argument[parameters.length];
-            for (int i = 0, n = parameters.length; i < n; i += 1) {
+            int n = parameters.length;
+            Argument[] arguments = new Argument[n];
+            for (int i = 0; i < n; i += 1) {
                 Parameter parameter = parameters[i];
-                TypeReference parameterTypeReference = createTypeReferenceForClassNode(parameter.getType());
-                long pos;
-                int pstart = parameter.getStart();
-                if (parameter.getStart() == 0 && parameter.getEnd() == 0) {
-                    pos = toPos(-1, -2);
-                    pstart = -1;
-                } else {
-                    pos = toPos(parameter.getStart(), parameter.getEnd() - 1);
+                ClassNode parameterType = parameter.getType();
+                if (parameter.getEnd() > 0 && parameterType.getEnd() < 1) { // 'def' or 'final' or annotated or primitive
+                    assert parameterType.equals(ClassHelper.OBJECT_TYPE) || ClassHelper.isPrimitiveType(parameterType) ||
+                            (parameterType.isArray() && parameterType.getComponentType().equals(ClassHelper.STRING_TYPE));
+                    ClassNode pt = !parameterType.isArray() ? new ClassNode(parameterType.getTypeClass())
+                            : new ClassNode(parameterType.getComponentType().getTypeClass()).makeArray();
+                    pt.setStart(parameter.getNameStart());
+                    pt.setEnd(parameter.getNameStart());
+                    pt.setRedirect(parameterType);
+                    parameterType = pt;
                 }
-                arguments[i] = new Argument(parameter.getName().toCharArray(), pos, parameterTypeReference, Flags.AccDefault);
-                arguments[i].annotations = createAnnotations(parameter.getAnnotations());
-                arguments[i].declarationSourceStart = pstart;
+                if (i == 0 && parameter.getName().equals("this")) { // JSR 308
+                    arguments[i] = new Receiver(parameter.getName().toCharArray(), toPos(parameter.getStart(), parameter.getEnd() - 1), createTypeReferenceForClassNode(parameterType), null, parameter.getModifiers());
+                    List<AnnotationNode> annotations = new ArrayList<>();
+                    annotations.addAll(parameter.getAnnotations());
+                    annotations.addAll(parameter.getOriginType().getAnnotations());
+                    annotations.addAll(parameter.getOriginType().getTypeAnnotations());
+                    if (!annotations.isEmpty()) {
+                        Annotation[][] thisTypeAnnotations = new Annotation[arguments[i].type.getAnnotatableLevels()][];
+                        thisTypeAnnotations[thisTypeAnnotations.length - 1] = createAnnotations(annotations);
+                        arguments[i].type.annotations = thisTypeAnnotations;
+                        arguments[i].type.bits |= ASTNode.HasTypeAnnotations;
+                    }
+                } else {
+                    arguments[i] = new Argument(parameter.getName().toCharArray(), toPos(parameter.getStart(), parameter.getEnd() - 1), createTypeReferenceForClassNode(parameterType), parameter.getModifiers());
+                    arguments[i].annotations = createAnnotations(parameter.getAnnotations());
+                }
+                arguments[i].declarationSourceStart = arguments[i].sourceStart;
             }
             if (isVargs(parameters)) {
-                arguments[parameters.length - 1].type.bits |= ASTNode.IsVarArgs;
+                arguments[n - 1].type.bits |= ASTNode.IsVarArgs;
             }
             return arguments;
         }
@@ -1714,6 +2007,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 case "int":
                 case "java.lang.Integer":
+                    if (type != null && type.getName().endsWith("BigInteger")) break;
                     switch (chars[0]) {
                     case '+':
                     case '-':
@@ -1773,11 +2067,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
 
                 case "java.math.BigDecimal":
+                    if (type != null && !ClassHelper.isPrimitiveType(type)) break;
                     return new DoubleLiteral(value.toString().toCharArray(), start, until);
 
                 case "java.math.BigInteger":
-                    chars[chars.length - 1] = 'L'; // replace 'g' or 'G' with 'L'
-                    return LongLiteral.buildLongLiteral(chars, start, start + chars.length);
+                    AllocationExpression alloc = new AllocationExpression();
+                    alloc.type = createTypeReferenceForClassNode(ClassHelper.BigInteger_TYPE);
+                    alloc.arguments = new org.eclipse.jdt.internal.compiler.ast.Expression[2];
+                    alloc.arguments[1] = IntLiteral.buildIntLiteral("10".toCharArray(), 0, 0);
+                    alloc.arguments[0] = new StringLiteral(value.toString().toCharArray(), start, until, expr.getLineNumber());
+                    return alloc;
 
                 case "byte":
                 case "java.lang.Byte":
@@ -1863,16 +2162,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     throw new IllegalStateException("node " + node + " reported it had a primitive component type, but it does not!");
                 } else {
                     TypeReference baseTypeReference = TypeReference.baseTypeReference(typeId, dim);
+                    if (sourceEnd > 0)  sourceEnd = sourceStart + componentType.getName().length();
                     baseTypeReference.sourceStart = sourceStart;
-                    baseTypeReference.sourceEnd = sourceStart + componentType.getName().length();
+                    baseTypeReference.sourceEnd = sourceEnd - 1;
                     return baseTypeReference;
                 }
             }
-            assert dim > 0 : "array ClassNode with no dimensions: " + name;
 
             char[] typeName = name.substring(0, pos + 2).toCharArray();
 
-            if (unitDeclaration.imports != null) {
+            if (!node.isResolved() && unitDeclaration.imports.length > 0) {
                 char[][] compoundName = CharOperation.splitOn('.', typeName);
                 for (ImportReference importReference : unitDeclaration.imports) {
                     if (isAliasForType(importReference, compoundName[0])) {
@@ -1907,81 +2206,89 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     throw new IllegalStateException("node " + node + " reported it had a primitive component type, but it does not!");
                 } else {
                     TypeReference baseTypeReference = TypeReference.baseTypeReference(typeId, dim);
+                    if (sourceEnd > 0)  sourceEnd = sourceStart + componentType.getName().length();
                     baseTypeReference.sourceStart = sourceStart;
-                    baseTypeReference.sourceEnd = sourceStart + componentType.getName().length();
+                    baseTypeReference.sourceEnd = sourceEnd - 1;
                     return baseTypeReference;
                 }
-            } else {
-                name = name.substring(dim);
-                if (name.charAt(name.length() - 1) == ';') {
-                    name = name.substring(1, name.length() - 1); // chop off 'L' and ';'
-                }
+            }
 
-                char[] typeName = name.toCharArray();
+            name = name.substring(dim);
+            if (name.charAt(name.length() - 1) == ';') {
+                name = name.substring(1, name.length() - 1); // chop off 'L' and ';'
+            }
 
-                if (unitDeclaration.imports != null) {
-                    char[][] compoundName = CharOperation.splitOn('.', typeName);
-                    for (ImportReference importReference : unitDeclaration.imports) {
-                        if (isAliasForType(importReference, compoundName[0])) {
-                            typeName = CharOperation.concatWith(importReference.getImportName(), '.');
-                            if (compoundName.length > 1) {
-                                typeName = CharOperation.concatWith(typeName, CharOperation.subarray(compoundName, 1, -1), '.');
-                            }
-                            break;
+            char[] typeName = name.toCharArray();
+
+            if (!node.isResolved() && unitDeclaration.imports.length > 0) {
+                char[][] compoundName = CharOperation.splitOn('.', typeName);
+                for (ImportReference importReference : unitDeclaration.imports) {
+                    if (isAliasForType(importReference, compoundName[0])) {
+                        typeName = CharOperation.concatWith(importReference.getImportName(), '.');
+                        if (compoundName.length > 1) {
+                            typeName = CharOperation.concatWith(typeName, CharOperation.subarray(compoundName, 1, -1), '.');
                         }
+                        break;
                     }
                 }
-
-                return createTypeReferenceForArrayName(typeName, componentType, dim, sourceStart, sourceEnd);
             }
+
+            return createTypeReferenceForArrayName(typeName, componentType, dim, sourceStart, sourceEnd);
         }
 
         private TypeReference createTypeReferenceForArrayName(char[] typeName, ClassNode typeNode, int dim, int sourceStart, int sourceEnd) {
-            if (!typeNode.isUsingGenerics()) {
+            int nameEnd = (sourceEnd < 0 ? -1 : typeNode.getEnd());
+            GenericsType[] generics = typeNode.getGenericsTypes();
+            if (generics == null) {
                 if (CharOperation.indexOf('.', typeName) < 0) {
                     // For a single array reference, for example 'String[]' start will be 'S' and end will be the char after ']'. When the
-                    // ArrayTypeReference is built we need these positions for the result: sourceStart - the 'S'; sourceEnd - the ']';
+                    // ArrayTypeReference is built we need these positions for the result: sourceStart - the 'S'; sourceEnd - the last ']';
                     // originalSourceEnd - the 'g'
-                    ArrayTypeReference tr = new ArrayTypeReference(typeName, dim, toPos(sourceStart, sourceEnd - 1));
-                    tr.originalSourceEnd = typeNode.getEnd() - 1;
+                    ArrayTypeReference tr = new ArrayTypeReference(typeName, dim, toPos(sourceStart, nameEnd - 1));
+                    tr.sourceEnd = sourceEnd - 1;
                     return tr;
                 } else {
                     // For a qualified array reference, for example 'java.lang.Number[][]' start will be 'j' and end will be the char after ']'.
                     // When the ArrayQualifiedTypeReference is built we need these positions for the result: sourceStart - the 'j'; sourceEnd - the
-                    // final ']'; the positions computed for the reference components would be j..a l..g and N..r
+                    // last ']'; the positions computed for the reference components would be j..a l..g and N..r
                     char[][] compoundName = CharOperation.splitOn('.', typeName);
-                    ArrayQualifiedTypeReference tr = new ArrayQualifiedTypeReference(compoundName, dim,
-                        positionsFor(compoundName, sourceStart, (sourceEnd == -2 ? -2 : sourceEnd - dim * 2)));
-                    tr.sourceEnd = sourceEnd == -2 ? -2 : sourceEnd - 1;
+                    ArrayQualifiedTypeReference tr = new ArrayQualifiedTypeReference(compoundName, dim, positionsFor(compoundName, sourceStart, nameEnd - 1));
+                    tr.sourceEnd = sourceEnd - 1;
                     return tr;
                 }
             } else {
-                GenericsType[] generics = typeNode.getGenericsTypes();
                 TypeReference[] typeArgs = new TypeReference[generics.length];
                 for (int i = 0; i < generics.length; i += 1) {
                     typeArgs[i] = createTypeReferenceForGenerics(generics[i]);
                 }
 
                 if (CharOperation.indexOf('.', typeName) < 0) {
-                    ParameterizedSingleTypeReference tr = new ParameterizedSingleTypeReference(typeName, typeArgs, dim, toPos(sourceStart, sourceEnd - 1));
-                    tr.originalSourceEnd = typeNode.getEnd() - 1;
+                    ParameterizedSingleTypeReference tr = new ParameterizedSingleTypeReference(typeName, typeArgs, dim, toPos(sourceStart, nameEnd - 1));
+                    tr.sourceEnd = sourceEnd - 1;
                     return tr;
                 } else {
                     char[][] compoundName = CharOperation.splitOn('.', typeName);
                     TypeReference[][] compoundArgs = new TypeReference[compoundName.length][];
                     compoundArgs[compoundName.length - 1] = typeArgs;
-                    ParameterizedQualifiedTypeReference tr = new ParameterizedQualifiedTypeReference(compoundName, compoundArgs, dim,
-                        positionsFor(compoundName, sourceStart, (sourceEnd == -2 ? -2 : sourceEnd - dim * 2)));
-                    tr.sourceEnd = sourceEnd == -2 ? -2 : sourceEnd - 1;
+                    ParameterizedQualifiedTypeReference tr = new ParameterizedQualifiedTypeReference(compoundName, compoundArgs, dim, positionsFor(compoundName, sourceStart, nameEnd - 1));
+                    tr.sourceEnd = sourceEnd - 1;
                     return tr;
                 }
             }
         }
 
         private TypeReference createTypeReferenceForClassLiteral(PropertyExpression expression) {
+            int arrayDims = 0;
             // FIXASC ignore type parameters for now
             Expression candidate = expression.getObjectExpression();
-            List<char[]> nameParts = new LinkedList<>();
+            while (candidate instanceof BinaryExpression) {
+                assert ((BinaryExpression) candidate).getOperation().getType() == Types.LEFT_SQUARE_BRACKET;
+                assert ((BinaryExpression) candidate).getRightExpression() instanceof ListExpression;
+                candidate = ((BinaryExpression) candidate).getLeftExpression();
+                arrayDims += 1;
+            }
+
+            List<char[]> nameParts = new ArrayList<>(8);
             while (candidate instanceof PropertyExpression) {
                 nameParts.add(0, ((PropertyExpression) candidate).getPropertyAsString().toCharArray());
                 candidate = ((PropertyExpression) candidate).getObjectExpression();
@@ -1990,13 +2297,23 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 nameParts.add(0, ((VariableExpression) candidate).getName().toCharArray());
             }
             char[][] namePartsArr = nameParts.toArray(new char[nameParts.size()][]);
-            long[] poss = positionsFor(namePartsArr, expression.getObjectExpression().getStart(), expression.getObjectExpression().getEnd());
+            long[] poss = positionsFor(namePartsArr, expression.getObjectExpression().getStart(), expression.getObjectExpression().getEnd() - (arrayDims * 2));
 
             TypeReference ref;
             if (namePartsArr.length > 1) {
-                ref = new QualifiedTypeReference(namePartsArr, poss);
+                if (arrayDims > 0) {
+                    ref = new ArrayQualifiedTypeReference(namePartsArr, arrayDims, poss);
+                    ref.sourceEnd = expression.getObjectExpression().getEnd() - 1;
+                } else {
+                    ref = new QualifiedTypeReference(namePartsArr, poss);
+                }
             } else if (namePartsArr.length == 1) {
-                ref = new SingleTypeReference(namePartsArr[0], poss[0]);
+                if (arrayDims > 0) {
+                    ref = new ArrayTypeReference(namePartsArr[0], arrayDims, poss[0]);
+                    ref.sourceEnd = expression.getObjectExpression().getEnd() - 1;
+                } else {
+                    ref = new SingleTypeReference(namePartsArr[0], poss[0]);
+                }
             } else { // should not happen
                 ref = TypeReference.baseTypeReference(TypeIds.T_void, 0);
             }
@@ -2016,7 +2333,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         private TypeReference createTypeReferenceForClassNode(ClassNode classNode) {
-            return createTypeReferenceForClassNode(classNode, startOffset(classNode), endOffset(classNode));
+            return createTypeReferenceForClassNode(classNode, startOffset(classNode), Math.max(endOffset(classNode), -1));
         }
 
         private TypeReference createTypeReferenceForClassNode(ClassNode classNode, int sourceStart, int sourceEnd) {
@@ -2039,11 +2356,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
 
             String name = classNode.getName();
+            if (name.lastIndexOf('$') != -1) {
+                name = name.replace('$', '.');
+            }
 
             if (name.length() == 1 && name.charAt(0) == '?') {
                 TypeReference tr = new Wildcard(Wildcard.UNBOUND);
                 tr.sourceStart = sourceStart;
-                tr.sourceEnd = sourceEnd;
+                tr.sourceEnd = sourceEnd - 1;
                 return tr;
             }
 
@@ -2057,16 +2377,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (nameToPrimitiveTypeId.containsKey(name)) {
                 TypeReference tr = TypeReference.baseTypeReference(nameToPrimitiveTypeId.get(name), 0);
                 tr.sourceStart = sourceStart;
-                tr.sourceEnd = sourceEnd;
+                tr.sourceEnd = sourceEnd - 1;
                 return tr;
             }
 
-            char[] typeName = name.toCharArray();
-            char[][] compoundName = CharOperation.splitOn('.', typeName);
+            char[][] compoundName = CharOperation.splitOn('.', name.toCharArray());
 
-            if (unitDeclaration.imports != null) {
+            if (!classNode.isResolved() && unitDeclaration.imports != null) {
+                char[] firstToken = compoundName[0];
                 for (ImportReference importReference : unitDeclaration.imports) {
-                    if (isAliasForType(importReference, compoundName[0])) {
+                    if (isAliasForType(importReference, firstToken)) {
                         if (compoundName.length == 1) {
                             compoundName = importReference.getImportName();
                         } else {
@@ -2079,27 +2399,23 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             if (compoundName.length == 1) {
                 if (typeArguments == null) {
-                    TypeReference tr = verify(new SingleTypeReference(typeName, toPos(sourceStart, sourceEnd - 1)));
-                    if (!checkGenerics) {
-                        tr.bits |= ASTNode.IgnoreRawTypeCheck;
-                    }
-                    return tr;
+                    TypeReference t = verify(new SingleTypeReference(compoundName[0], toPos(sourceStart, sourceEnd - 1)));
+                    if (!checkGenerics) t.bits |= ASTNode.IgnoreRawTypeCheck;
+                    return t;
                 } else {
                     TypeReference[] typeRefs = typeArguments.toArray(new TypeReference[typeArguments.size()]);
-                    return new ParameterizedSingleTypeReference(typeName, typeRefs, 0, toPos(sourceStart, sourceEnd - 1));
+                    return new ParameterizedSingleTypeReference(compoundName[0], typeRefs, 0, toPos(sourceStart, sourceEnd - 1));
                 }
             } else {
                 if (typeArguments == null) {
-                    TypeReference tr = new QualifiedTypeReference(compoundName, positionsFor(compoundName, sourceStart, sourceEnd));
-                    if (!checkGenerics) {
-                        tr.bits |= ASTNode.IgnoreRawTypeCheck;
-                    }
-                    return tr;
+                    TypeReference t = new QualifiedTypeReference(compoundName, positionsFor(compoundName, sourceStart, sourceEnd));
+                    if (!checkGenerics) t.bits |= ASTNode.IgnoreRawTypeCheck;
+                    return t;
                 } else {
                     // TODO: Support individual component parameterization: A<X>.B<Y>
-                    TypeReference[][] typeRefs = new TypeReference[compoundName.length][];
-                    typeRefs[compoundName.length - 1] = typeArguments.toArray(new TypeReference[typeArguments.size()]);
-                    return new ParameterizedQualifiedTypeReference(compoundName, typeRefs, 0, positionsFor(compoundName, sourceStart, sourceEnd));
+                    TypeReference[][] types = new TypeReference[compoundName.length][];
+                    types[compoundName.length - 1] = typeArguments.toArray(new TypeReference[typeArguments.size()]);
+                    return new ParameterizedQualifiedTypeReference(compoundName, types, 0, positionsFor(compoundName, sourceStart, sourceEnd));
                 }
             }
         }
@@ -2132,8 +2448,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
                 // FIXASC what does the check on this next really line mean?
             } else if (!genericsType.getType().isGenericsPlaceHolder()) {
-                TypeReference typeReference = createTypeReferenceForClassNode(genericsType.getType());
-                return typeReference;
+                return createTypeReferenceForClassNode(genericsType.getType());
             } else {
                 // this means it is a placeholder. As an example, if the reference is to 'List'
                 // then the genericsType info may include a placeholder for the type variable (as the user
@@ -2162,7 +2477,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 int offset = generics[i].getStart(),
                     length = typeParameter.name.length;
                 typeParameter.sourceStart = offset;
-                typeParameter.sourceEnd = offset + length;
+                typeParameter.sourceEnd = offset + length - 1;
 
                 ClassNode[] upperBounds = generics[i].getUpperBounds();
                 if (upperBounds != null && upperBounds.length > 0) {
@@ -2221,7 +2536,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         }
 
                         typeParameter.bounds[j - 1] = createTypeReferenceForClassNode(upperBounds[j], offset, offset + length);
-                        typeParameter.bounds[j - 1].bits |= ASTNode.IsSuperType;
+                        typeParameter.bounds[j - 1].bits |= ASTNode.Bit5/*IsSuperType*/;
                     }
                 }
             }
@@ -2260,49 +2575,39 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         //----------------------------------------------------------------------
 
         /**
-         * For some input array (usually representing a reference), work out the offset positions, assuming they are dotted. <br>
-         * Currently this uses the size of each component to move from start towards end. For the very last one it makes the end
-         * position 'end' because in some cases just adding 1+length of previous reference isn't enough. For example in java.util.List[]
-         * the end will be the end of [] but reference will only contain 'java' 'util' 'List'
+         * For some input array (usually representing a reference), work out the
+         * start and end positions of each element, assuming they are dotted.
          * <p>
-         * Because the 'end' is quite often wrong right now (for example on a return type 'java.util.List[]' the end can be two
-         * characters off the end (set to the start of the method name...) - we are just computing the positional information from the
-         * start.
+         * Because 'end' is quite often wrong right now (for example on a return
+         * type 'java.util.List[]' the end can be two characters off by the end
+         * (set to the start of the method name...) -- we are just computing the
+         * positional information from the start.
          * <p>
-         * FIXASC: seems that sometimes, especially for types that are defined as 'def', but are converted to java.lang.Object, end
-         * < start. This causes no end of problems. I don't think it is so much the 'declaration' as the fact that is no reference and
-         * really what is computed here is the reference for something actually specified in the source code. Coming up with fake
-         * positions for something not specified is not entirely unreasonable we should check
-         * if the reference in particular needed creating at all in the first place...
+         * FIXASC: It seems that sometimes, especially for types that are defined
+         * as 'def', but are converted to java.lang.Object, end &lt; start. This
+         * causes no end of problems. I don't think it's so much the declaration
+         * as the fact that is no reference and really what is computed here is
+         * the reference for something actually specified in the source code.
          */
         private long[] positionsFor(char[][] reference, long start, long end) {
-            long[] result = new long[reference.length];
-            if (start == -1 && end == -2) {
-                for (int i = 0, max = result.length; i < max; i++) {
-                    result[i] = ((-1L << 32) | -2L);
-                }
-                return result;
-            }
+            int n = reference.length;
+            long[] result = new long[n];
             if (start < end) {
-                // Do the right thing
-                long pos = start;
-                for (int i = 0, max = result.length; i < max; i++) {
-                    long s = pos;
-                    pos = pos + reference[i].length - 1; // jump to the last char of the name
-                    result[i] = ((s << 32) | pos);
-                    pos += 2; // jump onto the following '.' then off it
+                long offset = start;
+                for (int i = 0; i < n; i += 1) {
+                    long length = reference[i].length - 1;
+                    result[i] = ((offset << 32) | offset + length);
+                    offset += length + 2; // advance past the next '.'
                 }
-            } else {
-                // FIXASC this case shouldn't happen (end<start) - uncomment following if to collect diagnostics
-                long pos = (start << 32) | start;
-                for (int i = 0, max = result.length; i < max; i++) {
-                    result[i] = pos;
-                }
+            } else if (start == -1) {
+                Arrays.fill(result, (-1L << 32) | -2L);
+            } else { // length is 0 or ...
+                Arrays.fill(result, (start << 32) | start);
             }
             return result;
         }
 
-        /** Check for trailing semicolons, spaces, tabs, etc. */
+        /** Checks for trailing semicolons, spaces, tabs, etc. */
         private int trailerLength(org.codehaus.groovy.ast.ASTNode node) {
             int length = 0;
 
@@ -2342,45 +2647,64 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
         }
 
-        private int getModifiers(ClassNode node, boolean isInner) {
+        private int getModifiers(ClassNode node) {
             int modifiers = node.getModifiers();
-            if (isTrait(node)) {
+            if (isRecord(node)) {
+                modifiers |= Flags.AccRecord;
+            } else if (isTrait(node)) {
                 modifiers |= Flags.AccInterface;
+            }
+            if (isSealed(node)) {
+                modifiers |= Flags.AccSealed;
+            } else if (isNonSealed(node)) {
+                modifiers |= Flags.AccNonSealed;
             }
             if (node.isInterface()) {
                 modifiers &= ~Flags.AccAbstract;
-            }
-            if (node.isEnum()) {
+            } else if (node.isEnum()) {
                 modifiers &= ~(Flags.AccAbstract | Flags.AccFinal);
-                if (isInner && ((InnerClassNode) node).isAnonymous()) {
-                    modifiers &= ~(Flags.AccEnum | Flags.AccPublic);
-                }
             }
-            if (!isInner) {
+            if (!(node instanceof InnerClassNode innerClass)) {
                 modifiers &= ~(Flags.AccProtected | Flags.AccPrivate | Flags.AccStatic);
+            } else if (innerClass.isAnonymous()) {
+                modifiers &= ~(Flags.AccEnum | Flags.AccPublic);
             }
-            if (/*node.isSyntheticPublic() &&*/ hasPackageScopeXform(node, PackageScopeTarget.CLASS)) {
-                modifiers &= ~Flags.AccPublic;
+            if (!isMetaAnnotation(node)) {
+                if (hasAnnotation(node, "groovy.transform.Final")) {
+                    modifiers |= Flags.AccFinal;
+                }
+                if (/*node.isSyntheticPublic() && */hasPackageScopeXform(node, PackageScopeTarget.CLASS)) {
+                    modifiers &= ~Flags.AccPublic;
+                }
             }
             return modifiers;
         }
 
         private int getModifiers(FieldNode node) {
             int modifiers = node.getModifiers();
-            if (node.getDeclaringClass().getProperty(node.getName()) != null && hasPackageScopeXform(node, PackageScopeTarget.FIELDS)) {
+            var type = node.getDeclaringClass();
+            // native and non-native (aka emulated) record fields are final
+            if (!type.isAnnotationDefinition() && hasAnnotation(type, "groovy.transform.RecordType")) {
+                modifiers |= Flags.AccFinal + ExtraCompilerModifiers.AccRecord;
+            } else if (hasAnnotation(node, "groovy.transform.Final")) {
+                modifiers |= Flags.AccFinal;
+            }
+            if (type.getProperty(node.getName()) != null && hasPackageScopeXform(node, PackageScopeTarget.FIELDS)) {
                 modifiers &= ~Flags.AccPrivate;
             }
             return modifiers;
         }
 
         private int getModifiers(MethodNode node) {
-            int modifiers = node.getModifiers();
-            modifiers &= ~(Flags.AccSynthetic | Flags.AccTransient);
+            int modifiers = node.getModifiers() & ~(Flags.AccSynthetic | Flags.AccTransient); // GRECLIPSE-370, GROOVY-10140
             if (node.isDefault()) {
-                modifiers |= Flags.AccDefaultMethod;
+                modifiers |= ExtraCompilerModifiers.AccDefaultMethod;
             }
             if (node.getCode() == null) {
                 modifiers |= ExtraCompilerModifiers.AccSemicolonBody;
+            }
+            if (hasAnnotation(node, "groovy.transform.Final")) {
+                modifiers |= Flags.AccFinal;
             }
             if (node.isSyntheticPublic() && hasPackageScopeXform(node, PackageScopeTarget.METHODS)) {
                 modifiers &= ~Flags.AccPublic;
@@ -2394,6 +2718,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 modifiers &= ~Flags.AccPublic;
             }
             return modifiers;
+        }
+
+        private boolean hasAnnotation(AnnotatedNode node, String type) {
+            for (AnnotationNode anno : node.getAnnotations()) {
+                if (isType(type,anno.getClassNode().getName()))
+                    return !(anno.getMember("enabled") instanceof ConstantExpression e && e.isFalseExpression());
+            }
+            return false;
         }
 
         private boolean hasPackageScopeXform(AnnotatedNode node, PackageScopeTarget type) {
@@ -2431,21 +2763,67 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     return val[0];
                 }
             }
-            if (member) { // check for @PackageScope(XXX) on class
+            if (member && !isMetaAnnotation(node.getDeclaringClass())) { // check for @PackageScope(XXX) on enclosing class
                 return hasPackageScopeXform(node.getDeclaringClass(), type);
             }
             return false;
         }
 
         private boolean isAliasForType(ImportReference importReference, char[] typeName) {
-            if (importReference instanceof AliasImportReference && !importReference.isStatic()) {
-                return CharOperation.equals(importReference.getSimpleName(), typeName);
-            }
-            return false;
+            return importReference.modifiers == 0 &&
+                (importReference.bits & ASTNode.OnDemand) == 0 &&
+                (importReference instanceof AliasImportReference) &&
+                Arrays.equals(importReference.getSimpleName(), typeName);
+        }
+
+        private boolean isMetaAnnotation(ClassNode classNode) {
+            return classNode.isAnnotationDefinition() && hasAnnotation(classNode, "groovy.transform.AnnotationCollector");
+        }
+
+        private boolean isNonSealed(ClassNode classNode) {
+            return !classNode.isAnnotationDefinition() && hasAnnotation(classNode, "groovy.transform.NonSealed");
+        }
+
+        private boolean isRecord(ClassNode classNode) {
+            // TODO: support @groovy.transform.RecordType(mode=NATIVE)
+            return classNode.getNodeMetaData("_RECORD_HEADER") != null;
+        }
+
+        private boolean isSealed(ClassNode classNode) {
+            return !classNode.isAnnotationDefinition() && hasAnnotation(classNode, "groovy.transform.Sealed");
         }
 
         private boolean isTrait(ClassNode classNode) {
-            return unitDeclaration.traitHelper.isTrait(classNode);
+            return !classNode.isAnnotationDefinition() && unitDeclaration.traitHelper.isTrait(classNode);
+        }
+
+        /**
+         * @param expect fully-qualified type name
+         * @param actual fully-qualified or unqualified type name (may be resolved against imports)
+         */
+        private boolean isType(String expect, String actual) {
+            if (actual.equals(expect)) {
+                return true;
+            }
+            int dot = expect.lastIndexOf('.');
+            if (dot != -1) {
+                ModuleNode mod = sourceUnit.getAST();
+                ClassNode  imp = mod.getImportType(actual); // handles aliases
+                if (imp != null) {
+                    return imp.getName().equals(expect);
+                }
+                if (actual.equals(expect.substring(dot + 1))){
+                    String pkg = expect.substring(0, dot + 1);
+                    for (ImportNode sin : mod.getStarImports()) {
+                        if (pkg.equals(sin.getPackageName())) {
+                            return true;
+                        }
+                    }
+                    return "groovy.lang.".equals(pkg) || pkg.equals(mod.getPackageName());
+                  //return Stream.of(org.codehaus.groovy.control.ResolveVisitor.DEFAULT_IMPORTS).anyMatch(pkg::equals);
+                }
+            }
+            return false;
         }
 
         /**
@@ -2461,39 +2839,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * @param expect fully-qualified type name
-         * @param actual fully-qualified or unqualified type name (may be resolved against imports)
-         */
-        private boolean isType(String expect, String actual) {
-            if (actual.equals(expect)) {
-                return true;
-            }
-            int dot = expect.lastIndexOf('.');
-            if (dot != -1 && actual.equals(expect.substring(dot + 1))) {
-                ModuleNode mod = sourceUnit.getAST();
-                ClassNode imp = mod.getImportType(actual);
-                if (imp != null) {
-                    return imp.getName().equals(expect);
-                }
-                String pkg = expect.substring(0, dot + 1);
-                for (ImportNode sin : mod.getStarImports()) {
-                    if (sin.getPackageName().equals(pkg)) {
-                        return true;
-                    }
-                }
-                // TODO: check default imports
-            }
-            return false;
-        }
-
-        /**
          * Ensures lexical ordering and synthetic de-duplication.
          */
         private static String lexicalKey(ImportReference ref) {
-            StringBuilder key = new StringBuilder();
-            key.append(Prefix.format(ref.declarationSourceStart));
+            StringBuilder key = new StringBuilder(64);
+            int pos = ref.sourceStart;
+            if (pos < 0) pos = 999999;
+            key.append(Prefix.format(pos));
             key.append(CharOperation.concatWith(ref.tokens, '.'));
-            if ((ref.bits & ASTNode.OnDemand) == 0) {
+            if (ref instanceof AliasImportReference) {
                 key.append(" as ").append(ref.getSimpleName());
             }
             return key.toString();
@@ -2501,7 +2855,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private static final NumberFormat Prefix;
         static {
             Prefix = NumberFormat.getInstance();
-            Prefix.setMinimumIntegerDigits(5);
+            Prefix.setMinimumIntegerDigits(6);
             Prefix.setGroupingUsed(false);
         }
 
@@ -2518,7 +2872,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (end == -1)
                 end = fileName.length;
 
-            return CharOperation.subarray(fileName, start, end);
+            char[] mainName = CharOperation.subarray(fileName, start, end);
+            for (char c : mainName) { if (c < 'A' || (c > 'Z' && c < 'a') || c > 'z') {
+                mainName = GeneratorContext.encodeAsValidClassName(String.valueOf(mainName)).toCharArray();
+                break;
+            }}
+            return mainName;
         }
 
         // because 'length' is computed as 'end-start+1' and start==-1 indicates it does not exist, then
@@ -2526,7 +2885,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private static long NON_EXISTENT_POSITION = ((-1L << 32) | -2L);
 
         /**
-         * Pack start and end positions into a long - no adjustments are made to the values passed in, the caller must make any required
+         * Packs start and end positions into a long - no adjustments are made to the values passed in, the caller must make any required
          * adjustments.
          */
         private static long toPos(long start, long end) {
@@ -2539,7 +2898,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Find any javadoc that terminates on one of the two lines before the specified line, return the first bit encountered. A
+         * Finds any javadoc that terminates on one of the two lines before the specified line, return the first bit encountered. A
          * little crude but will cover a lot of common cases... <br>
          */
         // FIXASC when the parser correctly records javadoc for nodes alongside them during a parse, we will not have to search
@@ -2577,10 +2936,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 typeDeclaration.sourceStart = Math.max(classNode.getNameStart(), classNode.getStart());
                 typeDeclaration.sourceEnd = Math.max(classNode.getNameEnd(), classNode.getStart() - 1);
 
-                // start and end of the entire declaration including Javadoc and ending at the last close bracket
+                // start and end of the entire declaration including Javadoc and ending at the last close brace
                 Javadoc doc = findJavadoc(classNode.getLineNumber());
                 if (doc != null) {
-                    if (unitDeclaration.imports != null && unitDeclaration.imports.length > 0) {
+                    if (unitDeclaration.imports.length > 0) {
                         if (doc.sourceStart < unitDeclaration.imports[unitDeclaration.imports.length - 1].sourceStart) {
                             // ignore the doc if it should be associated with and import statement
                             doc = null;
@@ -2595,10 +2954,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
 
                 typeDeclaration.declarationSourceStart = (doc != null ? doc.sourceStart : classNode.getStart());
-                // without the -1 we can hit AIOOBE in org.eclipse.jdt.internal.core.Member.getJavadocRange where it
-                // calls getText() because the source range length causes us to ask for more data than is in the buffer
-                // What does this mean? For hovers, the AIOOBE is swallowed and you just see no hover box.
-                typeDeclaration.declarationSourceEnd = classNode.getEnd() - 1;
+                typeDeclaration.declarationSourceEnd   = Math.max(classNode.getEnd() - 1, classNode.getStart());
 
                 // TODO: start past the opening brace and end before the closing brace
                 //       except that scripts do not have a name, use the start instead
@@ -2607,6 +2963,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 // start of the modifiers after the javadoc
                 typeDeclaration.modifiersSourceStart = classNode.getStart();
+                // start of the modifiers if "record" exists or after name if "permits"
+                if (isRecord(classNode)) {
+                    typeDeclaration.restrictedIdentifierStart = classNode.getStart();
+                } else if (isSealed(classNode)) {
+                    typeDeclaration.restrictedIdentifierStart = classNode.getNameEnd() + 2;
+                }
             }
         }
 
@@ -2623,12 +2985,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             constructorDecl.sourceStart = constructorNode.getNameStart();
             constructorDecl.sourceEnd = rparenOffset(constructorNode);
 
-            // opening bracket -- should it be first character after?
+            // opening brace -- should it be first character after?
             constructorDecl.bodyStart = (constructorNode.getCode() != null ? constructorNode.getCode().getStart()
                 : constructorDecl.sourceEnd + 1); // approximate position of anticipated '{'
 
-            // last character before closing bracket
-            constructorDecl.bodyEnd = constructorDecl.declarationSourceEnd - 1;
+            // last character before closing brace
+            constructorDecl.bodyEnd = Math.max(constructorDecl.bodyStart - 1, constructorDecl.declarationSourceEnd - 1);
         }
 
         /**
@@ -2642,18 +3004,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             methodDecl.modifiersSourceStart = methodNode.getStart();
             methodDecl.declarationSourceEnd = methodNode.getEnd()-1;
 
-            // script run() methods have no name, so use the start of the method instead
+            // script run() method has no name, so use the start of the method instead
             methodDecl.sourceStart = Math.max(methodNode.getNameStart(), methodNode.getStart());
             methodDecl.sourceEnd = Math.max(rparenOffset(methodNode), methodNode.getStart());
 
-            // opening bracket -- abstract methods, annotation methods, and script run() methods have no opening bracket
+            // opening brace -- except for abstract method, annotation method or script run() method
             methodDecl.bodyStart = (methodNode.getCode() != null ? methodNode.getCode().getStart() : methodDecl.sourceEnd + 1);
 
-            // last character before closing bracket or semicolon
-            methodDecl.bodyEnd = methodDecl.declarationSourceEnd - 1;
-            if (methodDecl instanceof AnnotationMethodDeclaration) {
-                methodDecl.bodyEnd += 1; // no '}' and usually no ';'
-            }
+            // last character before closing brace or semicolon -- except for abstract method, annotation method or script run() method
+            methodDecl.bodyEnd = Math.max(methodDecl.bodyStart - 1, methodDecl.declarationSourceEnd - (methodDecl instanceof AnnotationMethodDeclaration ? 0 : 1));
         }
 
         /**
@@ -2727,16 +3086,114 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
         }
 
+        private List<ConstructorNode> getDeclaredAndGeneratedConstructors(ClassNode classNode) {
+            List<ConstructorNode> constructorNodes = classNode.getDeclaredConstructors();
+
+            for (AnnotationNode annotation : classNode.getAnnotations()) {
+                String annotationType = annotation.getClassNode().getName();
+                if (isType("groovy.transform.Canonical", annotationType) ||
+                    isType("groovy.transform.Immutable", annotationType) ||
+                    isType("groovy.transform.RecordType", annotationType) ||
+                    isType("groovy.transform.TupleConstructor", annotationType)){
+                    Map<String, Expression> attributes = annotation.getMembers();
+                    if (!attributes.containsKey("includeSuperFields") &&
+                        !attributes.containsKey("includeSuperProperties")) {
+
+                        List<ConstructorNode> generated = new ArrayList<>();
+
+                        AnnotationNode anno = new AnnotationNode(ClassHelper.makeCached(groovy.transform.TupleConstructor.class));
+                        if (isType("groovy.transform.Immutable", annotationType))
+                            anno.addMember("defaults", ConstantExpression.FALSE);
+                        else if (isType("groovy.transform.RecordType", annotationType)) {
+                            anno.addMember("defaultsMode", new PropertyExpression(new ClassExpression(ClassHelper.make("groovy.transform.DefaultsMode")), "AUTO"));
+                            anno.addMember("namedVariant", ConstantExpression.TRUE);
+                            anno.addMember("force", ConstantExpression.TRUE);
+                        }
+                        attributes.forEach((name, value) -> anno.setMember(name, value));
+
+                        // create type that intercepts generated constructors
+                        ClassNode type = new ClassNode(classNode.getName(), 0, null) {
+                            {
+                                isPrimaryNode = false;
+                                setRedirect(classNode);
+                            }
+
+                            @Override
+                            public void addConstructor(ConstructorNode ctor) {
+                                // remove source offsets from param type
+                                for (Parameter p : ctor.getParameters()) {
+                                    ClassNode pt = p.getType().redirect();
+                                    if (!ClassHelper.isPrimitiveType(pt)){
+                                        pt = pt.getPlainNodeReference();
+                                    }
+                                    p.setType(pt);
+                                }
+                                generated.add(ctor);
+                            }
+                        };
+
+                        ASTTransformation astt = new org.codehaus.groovy.transform.TupleConstructorASTTransformation() {
+                            @Override public void addError(String msg, org.codehaus.groovy.ast.ASTNode node) {}
+                        };
+                        ((CompilationUnitAware) astt).setCompilationUnit(unitDeclaration.compilationUnit);
+                        // apply TupleConstructorASTTransformation early to generate constructor(s)
+                        astt.visit(new org.codehaus.groovy.ast.ASTNode[] {anno, type}, null);
+
+                        if (!generated.isEmpty()) {
+                            constructorNodes = new ArrayList<>(constructorNodes);
+                            constructorNodes.addAll(generated);
+                        }
+                    }
+                    break;
+                }
+            }
+
+            boolean map = false, noArg = false;
+            for (AnnotationNode annotation : classNode.getAnnotations()) {
+                String annotationType = annotation.getClassNode().getName();
+                if (isType("groovy.transform.MapConstructor", annotationType)) {
+                    map = true;
+                    Expression value = annotation.getMember("noArg");
+                    if (value instanceof ConstantExpression) {
+                        noArg = Boolean.TRUE.equals(((ConstantExpression) value).getValue());
+                    }
+                } else if (isType("groovy.transform.Immutable", annotationType)) {
+                    map = true;
+                    Expression value = annotation.getMember("noArg");
+                    if (value instanceof ConstantExpression) {
+                        noArg = Boolean.TRUE.equals(((ConstantExpression) value).getValue());
+                    } else {
+                        noArg = true; // declared by Immutable
+                    }
+                }
+            }
+            if (map) {
+                constructorNodes = new ArrayList<>(constructorNodes);
+                if (constructorNodes.stream().map(MethodNode::getParameters)
+                        .noneMatch(pa -> pa.length == 1 && pa[0].getType().equals(ClassHelper.MAP_TYPE))) {
+                    Parameter[] pa = {new Parameter(ClassHelper.MAP_TYPE.getPlainNodeReference(), "args")};
+                    constructorNodes.add(markAsGenerated(classNode, new ConstructorNode(Flags.AccPublic, pa, ClassNode.EMPTY_ARRAY, null)));
+                }
+                if (noArg && constructorNodes.stream().map(MethodNode::getParameters).noneMatch(pa -> pa.length == 0)) {
+                    constructorNodes.add(markAsGenerated(classNode, new ConstructorNode(Flags.AccPublic, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null)));
+                }
+            }
+
+            return constructorNodes;
+        }
+
         /**
          * In the given list of groovy parameters, some are defined as defaulting to an initial value. This method computes all the
          * variants of defaulting parameters allowed and returns a List of Argument arrays. Each argument array represents a variation.
          */
-        private static List<Argument[]> getVariantsAllowingForDefaulting(Parameter[] groovyParameters, Argument[] javaArguments) {
+        private List<Argument[]> getVariantsAllowingForDefaulting(Parameter[] groovyParameters, Argument[] javaArguments) {
             List<Argument[]> variants = new ArrayList<>();
 
+            if (groovyParameters[0].getName().equals("this"))
+                groovyParameters = Arrays.copyOfRange(groovyParameters, 1, groovyParameters.length);
+
             final int nParams = groovyParameters.length;
-            Parameter[] wipableParameters = new Parameter[nParams];
-            System.arraycopy(groovyParameters, 0, wipableParameters, 0, nParams);
+            Parameter[] wipableParameters = groovyParameters.clone();
 
             // Algorithm: wipableParameters is the 'full list' of parameters at the start. As the loop is repeated, all the non-null
             // values in the list indicate a parameter variation. On each repeat we null the last one in the list that
@@ -2750,7 +3207,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // create a variation based on the non-null entries left in the array
                 for (int p = 0; p < nParams; p += 1) {
                     if (wipableParameters[p] != null) {
-                        variantArgs.add(javaArguments[p]);
+                        if (javaArguments[p].type.isParameterizedTypeReference()) {
+                            // STS-3930: TypeVariableBinding#declaringElement must equal the method variant for type parameter resolution to work
+                            Argument clone = new Argument(javaArguments[p].name, toPos(javaArguments[p].sourceStart, javaArguments[p].sourceEnd),
+                                createTypeReferenceForClassNode(groovyParameters[p].getType()), javaArguments[p].modifiers);
+                            if (javaArguments[p].isVarArgs()) clone.type.bits |= ASTNode.IsVarArgs;
+                            clone.annotations = javaArguments[p].annotations;
+                            clone.declarationSourceStart = clone.sourceStart;
+                            variantArgs.add(clone);
+                        } else {
+                            variantArgs.add(javaArguments[p]);
+                        }
                         if (wipableParameters[p].hasInitialExpression()) {
                             nextToLetDefault = p;
                         }
@@ -2769,7 +3236,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Add the new declaration to the list of those already built unless it clashes with an existing one. This can happen where the
+         * Adds the new declaration to the list of those already built unless it clashes with an existing one. This can happen where the
          * default parameter mechanism causes creation of a variant that collides with an existing declaration. I'm not sure if Groovy
          * should be reporting an error when this occurs, but Grails does actually do it and gets no error.
          */
@@ -2777,7 +3244,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             boolean isDuplicate = false;
 
             for (AbstractMethodDeclaration aMethodDecl : methodDeclarations) {
-                if (CharOperation.equals(aMethodDecl.selector, newDeclaration.selector)) {
+                if (Arrays.equals(aMethodDecl.selector, newDeclaration.selector)) {
                     Argument[] mdArgs = aMethodDecl.arguments;
                     Argument[] vmdArgs = newDeclaration.arguments;
                     int mdArgsLen = mdArgs == null ? 0 : mdArgs.length;
@@ -2804,6 +3271,27 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             return !isDuplicate ? methodDeclarations.add(newDeclaration) : false;
         }
 
+        private void adjustMethodForTraitRestrictions(AbstractMethodDeclaration methodDecl, MethodNode methodNode) {
+            if (methodNode.isFinal()) {
+                methodDecl.modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
+            } else if (methodNode.isStatic()) {
+                if (unitDeclaration.compilerOptions.targetJDK >= ClassFileConstants.JDK9) {
+                    methodDecl.modifiers ^= Flags.AccPublic | Flags.AccPrivate; // hide from JDT
+                } else if (unitDeclaration.compilerOptions.targetJDK < ClassFileConstants.JDK1_8) {
+                    methodDecl.modifiers ^= Flags.AccStatic | ExtraCompilerModifiers.AccModifierProblem;
+                }
+            }
+            if (!methodNode.isAbstract()) {
+                Annotation[] implemented = createAnnotations(IMPLEMENTED_CLASSNODE);
+                methodDecl.annotations = methodDecl.annotations == null ? implemented : ArrayUtils.concat(methodDecl.annotations, implemented);
+            }
+        }
+
+        private static boolean recordRefactor() {
+            return org.eclipse.jdt.core.JavaCore.getPlugin().getBundle().getVersion()
+                    .compareTo(org.osgi.framework.Version.parseVersion("3.42")) >= 0;
+        }
+
         private static int rparenOffset(MethodNode methodNode) {
             Integer rparenOffset = methodNode.getNodeMetaData("rparen.offset");
             if (rparenOffset != null) return rparenOffset.intValue();
@@ -2813,7 +3301,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Check the supplied TypeReference. If there are problems with the construction of a TypeReference then these may not surface
+         * Checks the supplied TypeReference. If there are problems with the construction of a TypeReference then these may not surface
          * until it is used later, perhaps when reconciling. The easiest way to check there will not be problems later is to check it at
          * construction time.
          *
@@ -2849,7 +3337,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             public void visitMethodNode(MethodNode node) {
                 node.getCode().visit(this);
                 if (node.hasDefaultValue()) {
-                    Arrays.stream(node.getParameters())
+                    Stream.of(node.getParameters())
                         .filter(Parameter::hasInitialExpression)
                         .forEach(p -> p.getInitialExpression().visit(this));
                 }

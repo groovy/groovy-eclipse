@@ -1,9 +1,8 @@
-// Generated from GroovyParser.g4 by ANTLR 4.7.4
+// Generated from GroovyParser.g4 by ANTLR 4.9.0
 package org.apache.groovy.parser.antlr4;
 
     import java.util.Map;
     import org.codehaus.groovy.ast.NodeMetaDataHandler;
-    import org.apache.groovy.parser.antlr4.SemanticPredicates;
 
 import groovyjarjarantlr4.v4.runtime.Token;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
@@ -393,14 +392,6 @@ public class GroovyParserBaseVisitor<Result> extends AbstractParseTreeVisitor<Re
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
 	@Override public Result visitLocalVariableDeclarationStmtAlt(@NotNull GroovyParser.LocalVariableDeclarationStmtAltContext ctx) { return visitChildren(ctx); }
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public Result visitMethodDeclarationStmtAlt(@NotNull GroovyParser.MethodDeclarationStmtAltContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}
@@ -1064,14 +1055,6 @@ public class GroovyParserBaseVisitor<Result> extends AbstractParseTreeVisitor<Re
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public Result visitClassifiedModifiers(@NotNull GroovyParser.ClassifiedModifiersContext ctx) { return visitChildren(ctx); }
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
 	@Override public Result visitVariableDeclaration(@NotNull GroovyParser.VariableDeclarationContext ctx) { return visitChildren(ctx); }
 
 	/**
@@ -1528,7 +1511,7 @@ public class GroovyParserBaseVisitor<Result> extends AbstractParseTreeVisitor<Re
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public Result visitEnhancedArgumentList(@NotNull GroovyParser.EnhancedArgumentListContext ctx) { return visitChildren(ctx); }
+	@Override public Result visitEnhancedArgumentListInPar(@NotNull GroovyParser.EnhancedArgumentListInParContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}

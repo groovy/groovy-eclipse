@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
 import static org.codehaus.jdt.groovy.model.JavaCoreUtil.findType
+import static org.eclipse.jdt.core.JavaCore.*
 import static org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor
-
-import groovy.transform.NotYetImplemented
 
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -41,11 +40,11 @@ final class RenameMethodTests extends RefactoringTestSuite {
         def method = type.getMethod(methodName, paramSignatures as String[])
 
         def descriptor = createRenameJavaElementDescriptor(IJavaRefactorings.RENAME_METHOD)
-        descriptor.deprecateDelegate = deprecateDelegate
-        descriptor.javaElement = method
-        descriptor.keepOriginal = createDelegate
-        descriptor.newName = newMethodName
-        descriptor.updateReferences = updateReferences
+        descriptor.setDeprecateDelegate(deprecateDelegate)
+        descriptor.setJavaElement(method)
+        descriptor.setKeepOriginal(createDelegate)
+        descriptor.setNewName(newMethodName)
+        descriptor.setUpdateReferences(updateReferences)
 
         def status = performRefactoring(createRefactoring(descriptor), true)
         assertEqualLines('invalid change', getFileContents(getOutputTestFileName('A')), unit.source)
@@ -70,13 +69,13 @@ final class RenameMethodTests extends RefactoringTestSuite {
     @Test
     void test1() {
         def status = runTest('A', 'm', 'k')
-        assert status.isOK() : 'rename failed'
+        assert status.entries[0].message.startsWith('Found potential matches.')
     }
 
     @Test
     void test2() {
         def status = runTest('A', 'm', 'k')
-        assert status.isOK() : 'rename failed'
+        assert status.entries[0].message.startsWith('Found potential matches.')
     }
 
     @Test
@@ -94,7 +93,7 @@ final class RenameMethodTests extends RefactoringTestSuite {
     @Test
     void test5() {
         def status = runTest('A', 'm', 'k')
-        assert status.entries[0].message.startsWith('Found potential matches.')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
@@ -118,7 +117,7 @@ final class RenameMethodTests extends RefactoringTestSuite {
     @Test
     void test9() {
         def status = runTest('A', 'm', 'k')
-        assert status.entries[0].message.startsWith('Found potential matches.')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
@@ -152,6 +151,12 @@ final class RenameMethodTests extends RefactoringTestSuite {
     }
 
     @Test
+    void test15() {
+        def status = runTest('A', 'getFoo', 'getBar')
+        assert status.isOK()
+    }
+
+    @Test
     void testStaticImport() {
         createCU(root.createPackageFragment('o', true, null), 'Other.java', '''\
         |package o;
@@ -165,6 +170,12 @@ final class RenameMethodTests extends RefactoringTestSuite {
 
         def status = runTest('o.Other', 'FOO', 'BAR')
         assert status.entries[0].message.startsWith('This name is discouraged.')
+    }
+
+    @Test
+    void testStaticImportAlias() {
+        def status = runTest('A', 'm', 'k', ['[Ljava.lang.Object;'])
+        assert status.entries[0].message.startsWith('Found potential matches.')
     }
 
     @Test
@@ -188,7 +199,7 @@ final class RenameMethodTests extends RefactoringTestSuite {
         assert status.isOK() : 'rename failed'
     }
 
-    @Test @NotYetImplemented // need to get ref to method in enum const // https://github.com/groovy/groovy-eclipse/issues/389
+    @Test // https://github.com/groovy/groovy-eclipse/issues/389
     void testEnumOverrides3() {
         // rename A.ONE.getFoo() to foo() and enum constant overrides should change
         def status = runTest('A$1', 'getFoo', 'foo')
@@ -233,20 +244,39 @@ final class RenameMethodTests extends RefactoringTestSuite {
     void testOverload1() {
         // rename single-parameter method 'm' to 'k'
         def status = runTest('A', 'm', 'k', ['Ljava.lang.Object;'])
-        assert status.entries[0].message.startsWith('Found potential matches.')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
     void testOverload2() {
         // rename single-parameter method 'm' to 'k'
         def status = runTest('A', 'm', 'k', ['Ljava.lang.Object;'])
-        assert status.entries[0].message.startsWith('Found potential matches.')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
     void testOverload3() {
         // rename single-parameter method 'm' to 'k'
         def status = runTest('A', 'm', 'k', ['Ljava.lang.Object;'])
+        assert status.isOK() : 'rename failed'
+    }
+
+    @Test
+    void testOverload4() {
+        project.setOptions(project.getOptions(true).tap {
+            put(COMPILER_CODEGEN_TARGET_PLATFORM, '11')
+            put(COMPILER_COMPLIANCE, '11')
+            put(COMPILER_SOURCE, '11')
+        })
+
+        def java = getInputTestFileName('B').replace('.groovy', '.java')
+        def unit = createCU(packageP, 'B.java', getFileContents(java))
+
+        // rename single-parameter method 'm' to 'x'
+        def status = runTest('A', 'm', 'x', ['Ljava.lang.Object;'])
         assert status.entries[0].message.startsWith('Found potential matches.')
+
+        java = getOutputTestFileName('B').replace('.groovy', '.java')
+        assertEqualLines(getFileContents(java), unit.source)
     }
 }

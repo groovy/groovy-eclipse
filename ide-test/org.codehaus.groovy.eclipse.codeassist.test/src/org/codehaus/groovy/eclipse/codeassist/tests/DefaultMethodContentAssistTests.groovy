@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,12 +26,12 @@ final class DefaultMethodContentAssistTests extends CompletionTestSuite {
     @Test
     void testDefaultMethods1() {
         String contents = '''\
-            class Default {
-              def meth(int a, b = 9, c = 10) {
-              }
-            }
-            new Default().me
-            '''.stripIndent()
+            |class Default {
+            |  def meth(int a, b = 9, c = 10) {
+            |  }
+            |}
+            |new Default().me
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.lastIndexOf('e'))
         proposalExists(proposals, 'meth', 3)
     }
@@ -39,14 +39,14 @@ final class DefaultMethodContentAssistTests extends CompletionTestSuite {
     @Test
     void testDefaultMethods2() {
         String contents = '''\
-            class Default {
-              def meth(int a, b = 9, c = 10) {
-              }
-              def meth(String other) {
-              }
-            }
-            new Default().me
-            '''.stripIndent()
+            |class Default {
+            |  def meth(int a, b = 9, c = 10) {
+            |  }
+            |  def meth(String other) {
+            |  }
+            |}
+            |new Default().me
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.lastIndexOf('e'))
         proposalExists(proposals, 'meth', 4)
     }

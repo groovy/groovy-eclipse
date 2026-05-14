@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,6 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
-import org.eclipse.jdt.internal.core.nd.util.CharArrayUtils;
 import org.eclipse.jdt.internal.ui.text.java.AnnotationAtttributeProposalInfo;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
@@ -216,7 +215,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         if (includeParens) {
             name.append("()");
         }
-        return CharArrayUtils.extractChars(name);
+        return name.toString().toCharArray();
     }
 
     protected int getModifiers() {

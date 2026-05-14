@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,11 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.internal.core.JavaElement;
+import org.eclipse.jdt.internal.core.LocalVariable;
+import org.junit.Assert;
 import org.junit.Test;
 
 public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
@@ -81,10 +86,8 @@ public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testVarReference8() throws Exception {
-        String contents = "for (xxx in 0..7)\n {\n xxx\n}\n";
-        int nameStart = contents.indexOf("xxx", contents.indexOf('('));
-        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
-        doTestForReferencesInScript(contents, createRegions(nameStart, nameStart2));
+        String contents = "for (xxx in 0..7) {\n xxx\n}\n";
+        doTestForReferencesInScript(contents, createRegions(contents.indexOf("xxx"), contents.lastIndexOf("xxx")));
     }
 
     @Test
@@ -154,10 +157,24 @@ public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
     }
 
     private void doTestForReferencesInScript(String contents, MatchRegion[] matchLocations) throws Exception {
-        doTestForVarReferences(contents, 3, "xxx", matchLocations[0].offset, matchLocations);
+        doTestForVarReferences(contents, 3, matchLocations[0].offset, matchLocations);
     }
 
     private void doTestForReferences(String contents, int locationInParent, MatchRegion[] matchLocations) throws Exception {
-        doTestForVarReferences(contents, locationInParent, "xxx", matchLocations[0].offset, matchLocations);
+        doTestForVarReferences(contents, locationInParent, matchLocations[0].offset, matchLocations);
+    }
+
+    private void doTestForVarReferences(String contents, int memberIndex, int start, MatchRegion[] matchRegions) throws Exception {
+        var unit = createUnit("First", contents);
+        var parent = (JavaElement) findType("First", unit).getChildren()[memberIndex];
+        var variable = new LocalVariable(parent, "xxx", start, start + 2, start, start + 2, "I", null, 0, false);
+
+        var matches = search(SearchPattern.createPattern(variable, IJavaSearchConstants.REFERENCES), unit);
+
+        Assert.assertEquals("Should have found " + matchRegions.length + " matches, but found: " + toString(matches), matchRegions.length, matches.size());
+
+        for (int i = 0, n = matches.size(); i < n; i += 1) {
+            assertLocation(matches.get(i), matchRegions[i].offset, matchRegions[i].length);
+        }
     }
 }

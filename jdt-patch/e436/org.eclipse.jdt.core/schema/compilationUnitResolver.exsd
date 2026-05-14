@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.eclipse.jdt.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.eclipse.jdt.core" id="compilationUnitResolver" name="Compilation Unit Resolver"/>
+      </appInfo>
+      <documentation>
+         This extension point provides the ability to override the default behavior of converting source files into the JDT DOM tree. The resolver will be instantiated on-demand based on the value of the system property `ICompilationUnitResolver`, which must be set to the id of an implementing extension. This extension point is not intended to be implemented by clients. This extension point is not considered API. This extension point may be modified or removed at any moment. 
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="resolver" minOccurs="0" maxOccurs="1"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="resolver">
+      <annotation>
+         <documentation>
+            Definition of a compilation unit resolver.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The class that implements this compilation unit resolver. This class must implement the  &lt;code&gt;org.eclipse.jdt.internal.core.dom.ICompilationUnitResolver&lt;/code&gt; interface with a public 0-arg constructor.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.eclipse.jdt.core.dom.ICompilationUnitResolver"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  A unique identifier for this resolver.
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         3.38
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         Example of a declaration of a &lt;code&gt;compilationUnitResolver&lt;/code&gt;:  &lt;pre&gt;                                                                       
+&lt;extension
+      point=&quot;org.eclipse.jdt.core.compilationParticipant&quot;&gt;
+   &lt;resolver
+         class=&quot;org.eclipse.jdt.core.CompilationUnitResolver1&quot;
+         id=&quot;org.eclipse.jdt.core.MyCustomResolver&quot;&gt;
+   &lt;/resolver&gt;
+&lt;/extension&gt;
+&lt;/pre&gt;
+      </documentation>
+   </annotation>
+
+
+
+   <annotation>
+      <appInfo>
+         <meta.section type="copyright"/>
+      </appInfo>
+      <documentation>
+         Copyright (c) 2024 Red Hat, Inc. and others.&lt;br&gt;
+
+This program and the accompanying materials
+are made available under the terms of the Eclipse Public License 2.0
+which accompanies this distribution, and is available at 
+&lt;a href=&quot;https://www.eclipse.org/legal/epl-2.0&quot;&gt;https://www.eclipse.org/legal/epl-v20.html&lt;/a&gt;/
+
+SPDX-License-Identifier: EPL-2.0
+      </documentation>
+   </annotation>
+
+</schema>

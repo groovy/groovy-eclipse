@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,7 +44,7 @@ public class AndPointcut extends AbstractPointcut {
             }
             result.addAll(intermediate);
         }
-        return result.size() > 0 ? result : null;
+        return !result.isEmpty() ? result : null;
     }
 
     /**
@@ -53,29 +53,28 @@ public class AndPointcut extends AbstractPointcut {
     @Override
     public IPointcut normalize() {
         IPointcut newPointcut = super.normalize();
-
         if (newPointcut instanceof AndPointcut) {
-        	AndPointcut newAnd = (AndPointcut) newPointcut;
-        	AndPointcut newNewAnd = new AndPointcut(getContainerIdentifier(), "and");
-        	// flatten the ands
-        	for (int i = 0; i < newAnd.getArgumentValues().length; i++) {
+            AndPointcut newAnd = (AndPointcut) newPointcut;
+            AndPointcut newNewAnd = new AndPointcut(getContainerIdentifier(), "and");
+            // flatten the ands
+            for (int i = 0; i < newAnd.getArgumentValues().length; i++) {
                 String name = newAnd.getArgumentNames()[i];
                 Object argument = newAnd.getArgumentValues()[i];
                 if (argument instanceof AndPointcut && name == null) {
-                	AndPointcut other = (AndPointcut) argument;
-                	Object[] argumentValues = other.getArgumentValues();
-                	String[] argumentNames = other.getArgumentNames();
-                	int argCount = argumentNames.length;
-                	for (int j = 0; j < argCount; j++) {
-                		newNewAnd.addArgument(argumentNames[j], argumentValues[j]);
-                	}
+                    AndPointcut other = (AndPointcut) argument;
+                    Object[] argumentValues = other.getArgumentValues();
+                    String[] argumentNames = other.getArgumentNames();
+                    int argCount = argumentNames.length;
+                    for (int j = 0; j < argCount; j++) {
+                        newNewAnd.addArgument(argumentNames[j], argumentValues[j]);
+                    }
                 } else {
-                	newNewAnd.addArgument(name, argument);
+                    newNewAnd.addArgument(name, argument);
                 }
             }
-        	return newNewAnd;
+            return newNewAnd;
         } else {
-        	return newPointcut;
+            return newPointcut;
         }
     }
 
@@ -88,18 +87,18 @@ public class AndPointcut extends AbstractPointcut {
         }
     }
 
-//    @Override
-//    protected IPointcut and(IPointcut other) {
-//        if (other instanceof AndPointcut) {
-//            Object[] argumentValues = other.getArgumentValues();
-//            String[] argumentNames = other.getArgumentNames();
-//            int argCount = argumentNames.length;
-//            for (int i = 0; i < argCount; i++) {
-//                this.addArgument(argumentNames[i], argumentValues[i]);
-//            }
-//        } else {
-//            addArgument(other);
-//        }
-//        return this;
-//    }
+    /*@Override
+    protected IPointcut and(IPointcut other) {
+        if (other instanceof AndPointcut) {
+            Object[] argumentValues = other.getArgumentValues();
+            String[] argumentNames = other.getArgumentNames();
+            int argCount = argumentNames.length;
+            for (int i = 0; i < argCount; i++) {
+                this.addArgument(argumentNames[i], argumentValues[i]);
+            }
+        } else {
+            addArgument(other);
+        }
+        return this;
+    }*/
 }

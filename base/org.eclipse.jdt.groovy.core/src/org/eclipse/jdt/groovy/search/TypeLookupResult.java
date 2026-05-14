@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,47 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import static java.util.Collections.singletonList;
+import static java.util.stream.IntStream.range;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
+
+import groovy.transform.stc.ClosureParams;
+import groovy.transform.stc.ClosureSignatureHint;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MethodCall;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.MethodPointerExpression;
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
+import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
+import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 public class TypeLookupResult {
+
     /**
      * Specifies the kind of match found for this type
      */
@@ -71,6 +98,7 @@ public class TypeLookupResult {
 
     public final TypeConfidence confidence;
     public final ClassNode declaringType;
+    public       ClassNode receiverType;
     public final ClassNode type;
 
     /**
@@ -91,6 +119,14 @@ public class TypeLookupResult {
      * The assignment statement that encloses this expression, or null if there is none.
      */
     public BinaryExpression enclosingAssignment;
+
+    public TypeLookupResult(ClassNode type, ClassNode declaringType, ASTNode declaration, TypeLookupResult that) {
+        this(type, declaringType, declaration, that.confidence, that.scope, that.extraDoc);
+        this.enclosingAnnotation = that.enclosingAnnotation;
+        this.enclosingAssignment = that.enclosingAssignment;
+        this.receiverType = that.receiverType;
+        this.isGroovy = that.isGroovy;
+    }
 
     /**
      * @param type the type of the expression being analyzed
@@ -123,56 +159,262 @@ public class TypeLookupResult {
     /**
      * Replaces type parameters with resolved types.
      */
-    public TypeLookupResult resolveTypeParameterization(ClassNode objExprType, boolean isStatic) {
+    public TypeLookupResult resolveTypeParameterization(final ClassNode objExprType, final boolean isStatic) {
         if (declaringType != null && (declaration instanceof FieldNode || declaration instanceof PropertyNode ||
                                       declaration instanceof MethodNode && !(declaration instanceof ConstructorNode))) {
-            ClassNode targetType = objExprType;
-            if (targetType == null) {
+            ClassNode objectType = objExprType;
+            if (objectType == null) {
                 if (isGroovy || !isStatic) {
-                    targetType = scope.getDelegateOrThis();
+                    objectType = scope.getDelegateOrThis();
                 } else {
-                    targetType = declaringType;
+                    objectType = declaringType;
                 }
             }
-            targetType = GroovyUtils.getWrapperTypeIfPrimitive(targetType);
+            if (ClassHelper.isPrimitiveType(objectType)) {
+                objectType = ClassHelper.getWrapper(objectType);
+            } else if (objectType.isGenericsPlaceHolder()) { // T extends Type & Face; select Type or Face
+                objectType = Arrays.stream(GroovyUtils.getTypeParameterBounds(objectType)).filter(bound ->
+                    bound.isDerivedFrom(declaringType) || bound.implementsInterface(declaringType)
+                ).findFirst().orElse(objectType);
+            } else if (objectType.equals(VariableScope.CLASS_CLASS_NODE) &&
+                   !declaringType.equals(VariableScope.CLASS_CLASS_NODE) && !isGroovy) {
+                objectType = VariableScope.getFirstGenerics(objectType); // peel Class<>
+            }
 
             if (!(declaration instanceof MethodNode)) {
-                GenericsMapper mapper = GenericsMapper.gatherGenerics(targetType, declaringType.redirect());
-                ClassNode maybe = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(type));
-                if (!maybe.toString(false).equals(type.toString(false))) {
-                    TypeLookupResult result = new TypeLookupResult(maybe, declaringType, declaration, confidence, scope, extraDoc);
-                    result.enclosingAnnotation = enclosingAnnotation;
-                    result.enclosingAssignment = enclosingAssignment;
-                    result.isGroovy = isGroovy;
-                    return result;
+                if (GenericsUtils.hasUnresolvedGenerics(type)) {
+                    GenericsMapper mapper = GenericsMapper.gatherGenerics(objectType, declaringType);
+                    ClassNode maybe = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(type));
+                    if (!maybe.toString(false).equals(type.toString(false))) {
+                        return new TypeLookupResult(maybe, declaringType, declaration, this);
+                    }
                 }
             } else {
-                List<ClassNode> argumentTypes = scope.getMethodCallArgumentTypes();
-                if (isGroovy) {
-                    argumentTypes = new ArrayList<>();
-                    argumentTypes.add(targetType);
-                    if (scope.getMethodCallArgumentTypes() != null)
-                        argumentTypes.addAll(scope.getMethodCallArgumentTypes());
-                }
-
                 MethodNode method = (MethodNode) declaration;
                 if (!isStatic && method.getName().equals("getClass") && method.getParameters().length == 0) {
                     ClassNode classType = VariableScope.clone(method.getReturnType());
-                    classType.getGenericsTypes()[0].setUpperBounds(new ClassNode[] {targetType});
-                    return new TypeLookupResult(classType, method.getDeclaringClass(), method, confidence, scope, extraDoc);
-                } else {
-                    GenericsMapper mapper = GenericsMapper.gatherGenerics(argumentTypes, targetType, method, scope.getMethodCallGenericsTypes());
-                    method = VariableScope.resolveTypeParameterization(mapper, method);
+                    classType.getGenericsTypes()[0].setUpperBounds(new ClassNode[] {objectType});
+                    return new TypeLookupResult(classType, declaringType, method, confidence, scope, extraDoc);
+                }
+                if (GenericsUtils.hasUnresolvedGenerics(method.getReturnType()) ||
+                        GroovyUtils.getParameterTypes(method.getParameters()).stream().anyMatch(GenericsUtils::hasUnresolvedGenerics)) {
+                    method = resolveTypeParameterization(method, objectType, isStatic);
                     if (method != declaration) {
-                        TypeLookupResult result = new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method, confidence, scope, extraDoc);
-                        result.enclosingAnnotation = enclosingAnnotation;
-                        result.enclosingAssignment = enclosingAssignment;
-                        result.isGroovy = isGroovy;
-                        return result;
+                        return new TypeLookupResult(method.getReturnType(), declaringType, method, this);
                     }
                 }
             }
         }
         return this;
+    }
+
+    private MethodNode resolveTypeParameterization(MethodNode method, ClassNode selfType, final boolean isStatic) {
+        List<ClassNode> argumentTypes = new ArrayList<>();
+        if (isGroovy) argumentTypes.add(selfType);
+        ClassNode targetType = null;
+        GenericsMapper mapper;
+
+        if (!(scope.getEnclosingNode() instanceof MethodPointerExpression)) {
+            if (scope.getMethodCallArgumentTypes() != null) argumentTypes.addAll(scope.getMethodCallArgumentTypes());
+            mapper = GenericsMapper.gatherGenerics(argumentTypes, selfType, method, scope.getMethodCallGenericsTypes());
+
+            BiFunction<String, ClassNode, ClassNode> finder = mapper::findParameter;
+            Predicate<GenericsType> unresolved = (tp) -> (finder.apply(tp.getName(), null) == null);
+
+            if (scope.getMethodCallGenericsTypes() == null &&
+                    Arrays.stream(GroovyUtils.getGenericsTypes(method)).anyMatch(unresolved)) {
+                Predicate<Expression> test = (exp) -> // finds call expression for current node
+                    (exp instanceof StaticMethodCallExpression && exp == scope.getCurrentNode()) ||
+                    (exp instanceof MethodCallExpression && ((MethodCallExpression) exp).getMethod() == scope.getCurrentNode());
+
+                if (testEnclosingAssignment(scope, test)) {
+                    // maybe the assign target type can help resolve type parameters of method
+                    targetType = scope.getEnclosingAssignment().getLeftExpression().getType();
+                } else {
+                    // maybe outer call target type can help resolve type parameters of method
+                    VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
+                    if (cat != null) { Parameter[] params;
+                        int index = indexOf(asList(cat.call.getArguments()), test);
+                        if (index != -1 && (params = parameters(cat)).length > 0) {
+                            targetType = params[Math.min(index, params.length - 1)].getType();
+                            if (targetType.isArray() && index > params.length - 1) targetType = targetType.getComponentType();
+                        }
+                    }
+                }
+                if (targetType != null) {
+                    GenericsMapper gm = GenericsMapper.gatherGenerics(singletonList(targetType), selfType, returnTypeStub(method));
+                    if (gm.hasGenerics()) {
+                        for (GenericsType tp : method.getGenericsTypes()) {
+                            if (unresolved.test(tp) && gm.findParameter(tp.getName(), null) != null) {
+                                mapper.allGenerics.getLast().put(tp.getName(), gm.findParameter(tp.getName(), null));
+                            }
+                        }
+                    }
+                }
+
+                // do not return method type parameters; "def <T> T m()" returns Object if "T" unknown
+                for (GenericsType tp : method.getGenericsTypes()) {
+                    if (unresolved.test(tp)) {
+                        GenericsMapper gm = GenericsMapper.gatherGenerics(singletonList(type), selfType, returnTypeStub(method));
+                        ClassNode cn = gm.findParameter(tp.getName(), null);
+                        if (cn == null || (cn.isGenericsPlaceHolder() && cn.getUnresolvedName().equals(tp.getName()))) {
+                            cn = erasure(tp);
+                        }
+                        mapper.allGenerics.getLast().put(tp.getName(), cn);
+                    }
+                }
+            }
+
+            return VariableScope.resolveTypeParameterization(mapper, (MethodNode) declaration);
+        }
+
+        // method pointer or reference
+
+        if (!isStatic && !method.isStatic()) {
+            // apply type arguments from the object expression to the referenced method
+            mapper = GenericsMapper.gatherGenerics(argumentTypes, selfType, method);
+            method = VariableScope.resolveTypeParameterization(mapper, method);
+        }
+
+        // check for Closure or SAM-type coercion of the method pointer/reference
+        VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
+        if (cat != null) { Parameter[] params;
+            int index = asList(cat.call.getArguments()).indexOf(scope.getEnclosingNode());
+            if (index != -1 && (params = parameters(cat)).length > 0) {
+                targetType = params[Math.min(index, params.length - 1)].getType();
+                if (targetType.isArray() && index >= params.length - 1) { // vargs
+                    targetType = targetType.getComponentType();
+                }
+
+                if (targetType.equals(VariableScope.CLOSURE_CLASS_NODE)) {
+                    MethodNode source = method; // effectively final version
+                    Parameter  target = params[Math.min(index, params.length - 1)];
+                    method = findClosureSignature(target, source, scope.getEnclosingModuleNode().getContext(), cat.call).map(types -> {
+                        GenericsMapper gm = GenericsMapper.gatherGenerics(Arrays.asList(types), cat.declaringType, source);
+                        MethodNode mn = VariableScope.resolveTypeParameterization(gm, source);
+                        return mn;
+                    }).orElse(method);
+                }
+            }
+        } else if (testEnclosingAssignment(scope, rhs -> rhs == scope.getEnclosingNode())) {
+            // maybe the assign target type can help resolve type parameters of method
+            targetType = scope.getEnclosingAssignment().getLeftExpression().getType();
+        }
+
+        if (targetType != null) {
+            if (targetType.equals(VariableScope.CLOSURE_CLASS_NODE)) {
+                ClassNode returnType = Optional.of(targetType).map(ClassNode::getGenericsTypes)
+                    .filter(Objects::nonNull).map(gts -> gts[0].getType()).orElse(VariableScope.OBJECT_CLASS_NODE);
+
+                mapper = GenericsMapper.gatherGenerics(singletonList(returnType), declaringType, returnTypeStub(method));
+                method = VariableScope.resolveTypeParameterization(mapper, method);
+            } else if (ClassHelper.isSAMType(targetType)) {
+                ClassNode[] pt = GenericsUtils.parameterizeSAM(targetType).getV1();
+                if (isStatic && !method.isStatic()) { // GROOVY-10734, GROOVY-11259
+                    selfType = pt[0];  pt = Arrays.copyOfRange(pt, 1, pt.length);
+                }
+                // use parameter types of SAM as "argument types" for referenced method to help resolve type parameters
+                mapper = GenericsMapper.gatherGenerics(Arrays.asList(pt), selfType, method);
+                method = VariableScope.resolveTypeParameterization(mapper, method);
+
+                mapper = GenericsMapper.gatherGenerics(targetType);
+                method = VariableScope.resolveTypeParameterization(mapper, method);
+            }
+        }
+
+        // do not return method type parameters; "def <T> T m()" returns Object if "T" unknown
+        if (method.getGenericsTypes() != null && GenericsUtils.hasUnresolvedGenerics(method.getReturnType())) {
+            mapper = GenericsMapper.gatherGenerics(GroovyUtils.getParameterTypes(method.getParameters()), selfType, method);
+            for (GenericsType tp : method.getGenericsTypes()) {
+                if (mapper.findParameter(tp.getName(), null) == null) {
+                    mapper.allGenerics.getLast().put(tp.getName(), erasure(tp));
+                }
+            }
+            method = VariableScope.resolveTypeParameterization(mapper, (MethodNode) declaration);
+        }
+
+        return method;
+    }
+
+    //--------------------------------------------------------------------------
+
+    private static ClassNode erasure(GenericsType tp) {
+        ClassNode cn = tp.getType().redirect();
+        if (tp.getType().getGenericsTypes() != null) {
+            tp = tp.getType().getGenericsTypes()[0];
+        }
+        if (tp.getUpperBounds() != null) {
+            cn = tp.getUpperBounds()[0];
+        }
+        if (GenericsUtils.hasUnresolvedGenerics(cn)) {
+            // deal with T extends Comparable<T>
+            cn = cn.getPlainNodeReference();
+        }
+        return cn;
+    }
+
+    private static List<Expression> asList(final Expression args) {
+        if (args instanceof TupleExpression) {
+            return ((TupleExpression) args).getExpressions();
+        }
+        return singletonList(args);
+    }
+
+    private static Parameter[] parameters(final VariableScope.CallAndType cat) {
+        if (cat.declaration instanceof MethodNode) {
+            MethodNode declaration = (MethodNode)cat.declaration;
+            Parameter[] parameters = declaration.getParameters();
+            // check for groovy method; compare real declaring class to the self-type class
+            if (!declaration.getDeclaringClass().equals(cat.getPerceivedDeclaringType())) {
+                parameters = Arrays.copyOfRange(parameters, 1, parameters.length);
+            }
+            return parameters;
+        }
+        return Parameter.EMPTY_ARRAY;
+    }
+
+    private static MethodNode returnTypeStub(final MethodNode node) {
+        MethodNode stub = new MethodNode("", 0, VariableScope.VOID_CLASS_NODE, new Parameter[] {new Parameter(node.getReturnType(), "")}, null, null);
+        stub.setDeclaringClass(node.getDeclaringClass());
+        stub.setGenericsTypes(node.getGenericsTypes());
+        return stub;
+    }
+
+    private static <T> int indexOf(final List<T> list, final Predicate<? super T> test) {
+        for (java.util.ListIterator<T> iter = list.listIterator(); iter.hasNext(); ) {
+            if (test.test(iter.next())) return iter.previousIndex();
+        }
+        return -1;
+    }
+
+    private static boolean testEnclosingAssignment(final VariableScope scope, final Predicate<Expression> rhsTest) {
+        return Optional.ofNullable(scope.getEnclosingAssignment())
+            .filter(bexp -> bexp instanceof DeclarationExpression)
+            .map(BinaryExpression::getRightExpression).filter(rhsTest)
+            .isPresent();
+    }
+
+    private static Optional<ClassNode[]> findClosureSignature(final Parameter target, final MethodNode origin, final SourceUnit unit, final MethodCall call) {
+        return GroovyUtils.getAnnotations(target, VariableScope.CLOSURE_PARAMS.getName()).findFirst().map(cp -> {
+            org.codehaus.groovy.control.CompilationUnit cu = ((EclipseSourceUnit) unit).resolver.compilationUnit;
+            try {
+                @SuppressWarnings("unchecked") Class<? extends ClosureSignatureHint> hint = (Class<? extends ClosureSignatureHint>) StaticTypeCheckingSupport.evaluateExpression(GeneralUtils.castX(VariableScope.CLASS_CLASS_NODE, cp.getMember("value")), unit.getConfiguration(), cu.getTransformLoader());
+                String[] opts = (String[]) (cp.getMember("options") == null ? ClosureParams.class.getMethod("options").getDefaultValue() : StaticTypeCheckingSupport.evaluateExpression(GeneralUtils.castX(VariableScope.STRING_CLASS_NODE.makeArray(), cp.getMember("options")), unit.getConfiguration(), cu.getTransformLoader()));
+
+                // determine closure param types from ClosureSignatureHint
+                List<ClassNode[]> sigs = hint.newInstance().getClosureSignatures(origin, unit, cu, opts, (Expression) call);
+                if (sigs != null) {
+                    List<ClassNode> parameterTypes = GroovyUtils.getParameterTypes(origin.getParameters());
+                    for (ClassNode[] sig : sigs) {
+                        if (sig.length == parameterTypes.size() && range(0, sig.length).allMatch(i -> GroovyUtils.isAssignable(sig[i], parameterTypes.get(i)))) {
+                            return sig;
+                        }
+                    }
+                }
+            } catch (Exception | LinkageError e) {
+                org.eclipse.jdt.internal.core.util.Util.log(e, "Error processing @ClosureParams of " + call.getMethodAsString());
+            }
+            return null;
+        });
     }
 }

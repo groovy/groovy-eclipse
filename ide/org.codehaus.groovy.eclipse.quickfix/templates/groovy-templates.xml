@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-   Copyright 2009-2017 the original author or authors.
+   Copyright 2009-2024 the original author or authors.
    
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
    
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
    
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +19,7 @@
 
 <template name="ase"
 	description="assert equals"
-	id="org.codehaus.groovy.eclipse.templates.assert"
+	id="org.codehaus.groovy.eclipse.templates.ase"
 	autoinsert="true"
 	context="groovy"
 	enabled="true"
@@ -39,9 +39,17 @@
 	autoinsert="false"
 	context="groovy"
 	enabled="true"
->{ ${vars} ->
+>{ ${parameters} ->
 	${line_selection}${cursor}
 }</template>
+
+<template name="def"
+	description="define variable (Groovy)"
+	id="org.codehaus.groovy.eclipse.templates.def"
+	autoinsert="true"
+	context="groovy"
+	enabled="true"
+>def ${:word_selection(name)} = ${value}${cursor}</template>
 
 <template name="for_in"
 	description="for..in loop (Groovy)"
@@ -49,7 +57,7 @@
 	autoinsert="false"
 	context="groovy"
 	enabled="true"
->for (${var} in ${collection}) {
+>for (${iterable_element} in ${iterable}) {
 	${line_selection}${cursor}
 }</template>
 
@@ -97,7 +105,7 @@
 	enabled="true"
 >try {
 	${line_selection}${cursor}
-} catch (${Exception} ${e}) {
+} catch (${e}) {
 	${e}.printStackTrace()
 }</template>
 
@@ -123,21 +131,13 @@
 
 <!-- GContracts -->
 
-<template name="Ensures"
-	description="GContracts postcondition(s)"
-	id="org.eclipse.jdt.ui.templates.ensures"
-	autoinsert="false"
-	context="groovy"
-	enabled="true"
->@${enclosing_type:newType(org.gcontracts.annotations.Ensures)}({ ${predicate} })</template>
-
 <template name="Invariant"
 	description="GContracts invariant(s)"
 	id="org.eclipse.jdt.ui.templates.invariant"
 	autoinsert="false"
 	context="groovy"
 	enabled="true"
->@${enclosing_type:newType(org.gcontracts.annotations.Invariant)}({ ${predicate} })</template>
+>@${:newType(groovy.contracts.Invariant)}({ ${predicate} })</template>
 
 <template name="Requires"
 	description="GContracts precondition(s)"
@@ -145,18 +145,70 @@
 	autoinsert="false"
 	context="groovy"
 	enabled="true"
->@${enclosing_type:newType(org.gcontracts.annotations.Requires)}({ ${predicate} })</template>
+>@${:newType(groovy.contracts.Requires)}({ ${predicate} })</template>
+
+<template name="Ensures"
+	description="GContracts postcondition(s)"
+	id="org.eclipse.jdt.ui.templates.ensures"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>@${:newType(groovy.contracts.Ensures)}({ ${predicate} })</template>
 
 <!-- JUnit -->
 
+<template name="Before"
+	description="before method (JUnit 4) (Groovy)"
+	id="org.codehaus.groovy.eclipse.templates.before"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>@${:newType(org.junit.Before)}
+void setUp() {
+	${cursor}
+}</template>
+
+<template name="BeforeEach"
+	description="before method (JUnit 5) (Groovy)"
+	id="org.codehaus.groovy.eclipse.templates.before_each"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>@${:newType(org.junit.jupiter.api.BeforeEach)}
+void setUp() {
+	${cursor}
+}</template>
+
+<template name="After"
+	description="after method (JUnit 4) (Groovy)"
+	id="org.codehaus.groovy.eclipse.templates.after"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>@${:newType(org.junit.After)}
+void tearDown() {
+	${cursor}
+}</template>
+
+<template name="AfterEach"
+	description="after method (JUnit 5) (Groovy)"
+	id="org.codehaus.groovy.eclipse.templates.after_each"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>@${:newType(org.junit.jupiter.api.AfterEach)}
+void tearDown() {
+	${cursor}
+}</template>
+
 <template name="test"
-	description="test method (Groovy)"
+	description="test method (JUnit 3) (Groovy)"
 	id="org.eclipse.jdt.ui.templates.test_junit3"
 	autoinsert="false"
 	context="groovy"
 	enabled="true"
->void test${name}() {
-	${staticImport:importStatic('org.junit.Assert.*')}${cursor}
+>void test${Name}() {
+	${cursor}
 }</template>
 
 <template name="Test"
@@ -165,31 +217,43 @@
 	autoinsert="false"
 	context="groovy"
 	enabled="true"
->@${testType:newType(org.junit.Test)}
+>@${type:newType(org.junit.Test)}
 void ${testName}() {
-	${cursor}
+	${:importStatic('org.junit.Assert.*','org.junit.Assume.*')}${cursor}
 }</template>
 
-<template name="Before"
-	description="before method (JUnit 4) (Groovy)"
-	id="org.codehaus.groovy.eclipse.templates.before"
-	autoinsert="true"
+<template name="Test"
+	description="test method (JUnit 5) (Groovy)"
+	id="org.eclipse.jdt.ui.templates.test_junit5"
+	autoinsert="false"
 	context="groovy"
 	enabled="true"
->@${testType:newType(org.junit.Before)}
-void before() {
-	${cursor}
+>@${type:newType(org.junit.jupiter.api.Test)} @${name:newType(org.junit.jupiter.api.DisplayName)}(&apos;${scenario_description}&apos;)
+void ${testName}() {
+	${:importStatic('org.junit.jupiter.api.Assertions.*','org.junit.jupiter.api.Assumptions.*')}${cursor}
 }</template>
 
-<template name="After"
-	description="after method (JUnit 4) (Groovy)"
-	id="org.codehaus.groovy.eclipse.templates.after"
-	autoinsert="true"
+<template name="Test"
+	description="tests method (JUnit 5) (Groovy)"
+	id="org.eclipse.jdt.ui.templates.test_junit5_params"
+	autoinsert="false"
 	context="groovy"
 	enabled="true"
->@${testType:newType(org.junit.After)}
-void after() {
-	${cursor}
+>@${type:newType(org.junit.jupiter.params.ParameterizedTest)} ${params:import('org.junit.jupiter.params.provider.*')}@${values:link('MethodSource','ValueSource','EmptySource','NullSource','EnumSource')}()
+void ${testName}(${input:var}) {
+	${:importStatic('org.junit.jupiter.api.Assertions.*','org.junit.jupiter.api.Assumptions.*')}${cursor}
+}</template>
+
+<template name="Test"
+	description="test factory method (JUnit 5) (Groovy)"
+	id="org.eclipse.jdt.ui.templates.test_junit5_factory"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>@${type:newType(org.junit.jupiter.api.TestFactory)}
+${returnType:link('DynamicNode','Stream&lt;DynamicNode&gt;','Collection&lt;DynamicNode&gt;','Iterable&lt;DynamicNode&gt;','Iterator&lt;DynamicNode&gt;','DynamicNode[]')} ${testFactoryName}() {
+	// ${todo}: generate dynamic tests
+	${node:import('org.junit.jupiter.api.DynamicNode')}${:importStatic('org.junit.jupiter.api.Assertions.*','org.junit.jupiter.api.Assumptions.*','org.junit.jupiter.api.DynamicContainer.*','org.junit.jupiter.api.DynamicTest.*')}${cursor}
 }</template>
 
 </templates>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,18 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.Set;
 
 import org.codehaus.groovy.ast.MethodNode;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public final class GenericInferencingTests extends InferencingTestSuite {
@@ -68,6 +67,22 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "def xxx = (x*1)..x\n";
 
         assertType(contents, "xxx", "groovy.lang.Range<java.lang.Integer>");
+    }
+
+    @Test
+    public void testList0() {
+        String contents =
+            "def xxx = Collections.emptyList()\n";
+
+        assertType(contents, "xxx", "java.util.List<java.lang.Object>");
+        assertType(contents, "emptyList", "java.util.List<java.lang.Object>");
+
+        contents = "@groovy.transform.TypeChecked test() {\n" +
+            "  " + contents +
+            "}\n";
+
+        assertType(contents, "xxx", "java.util.List<java.lang.Object>");
+        assertType(contents, "emptyList", "java.util.List<#T>"); // TODO
     }
 
     @Test // GRECLIPSE-1040
@@ -163,18 +178,43 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testList12() {
         String contents =
             "def x = 9\n" +
-            "def xxx = [x, '']\n";
+            "def xxx = [x, (Number)8]\n";
 
-        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
+        assertType(contents, "xxx", "java.util.List<java.lang.Number>");
     }
 
     @Test
     public void testList13() {
         String contents =
             "def x = 9\n" +
-            "def xxx = [x + 9 * 8, '']\n";
+            "def xxx = [x + 8 * 7, (Serializable)6]\n";
 
-        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
+        assertType(contents, "xxx", "java.util.List<java.io.Serializable>");
+    }
+
+    @Test // GROOVY-11615
+    public void testList14() {
+        String contents =
+            "import java.util.stream.Collectors\n" +
+            "List<String> list = ['foo','bar','baz']\n" +
+            "def copy = list.stream().collect(Collectors.toList())\n";
+
+        assertType(contents, "copy", "java.util.List<java.lang.Object>");
+        assertType(contents, "list", "java.util.List<java.lang.String>");
+        assertType(contents, "stream", "java.util.stream.Stream<java.lang.String>");
+        assertType(contents, "toList", "java.util.stream.Collector<java.lang.String,?,java.util.List<java.lang.String>>");
+
+        int offset = contents.indexOf("collect"); // String is known input type and accumulation type should not be reduced to Object
+        MethodNode m = assertDeclaration(contents, offset, offset + 7, "java.util.stream.Stream", "collect", DeclarationKind.METHOD);
+        assertEquals("java.util.stream.Collector<? super java.lang.String,?,java.util.List<java.lang.Object>>", printTypeName(m.getParameters()[0].getType()));
+    }
+
+    @Test
+    public void testSet0() {
+        String contents =
+            "def xxx = Collections.emptySet()\n";
+
+        assertType(contents, "xxx", "java.util.Set<java.lang.Object>");
     }
 
     @Test // GRECLIPSE-1040
@@ -241,6 +281,26 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "def xxx = ints*.shortValue()\n";
 
         assertType(contents, "xxx", "java.util.List<java.lang.Short>");
+    }
+
+    @Test
+    public void testSet9() {
+        String contents =
+            "@groovy.transform.TypeChecked\n" +
+            "void test(obj) {\n" +
+            "  if (obj instanceof Map)\n" +
+            "    def xxx = obj.entrySet()\n" +
+            "}\n";
+
+        assertType(contents, "xxx", "java.util.Set<java.util.Map$Entry<java.lang.Object,java.lang.Object>>");
+    }
+
+    @Test
+    public void testMap0() {
+        String contents =
+            "def xxx = Collections.emptyMap()\n";
+
+        assertType(contents, "xxx", "java.util.Map<java.lang.Object,java.lang.Object>");
     }
 
     @Test // GRECLIPSE-1040
@@ -321,7 +381,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "def xxx = [:]\n";
 
-        assertType(contents, "xxx", "java.util.Map<java.lang.Object,java.lang.Object>");
+        assertType(contents, "xxx", "java.util.Map<java.lang.Object,java.lang.Object>"); // raw type?
     }
 
     @Test
@@ -377,6 +437,209 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "def xxx = [(x+x):!y, a:'a', b:'b']\n";
 
         assertType(contents, "xxx", "java.util.Map<java.lang.Integer,java.lang.Boolean>");
+    }
+
+    @Test
+    public void testMap17() {
+        String contents =
+            "def xxx = [*:[1:true]]\n";
+
+        assertType(contents, "xxx", "java.util.Map<java.lang.Integer,java.lang.Boolean>");
+    }
+
+    @Test
+    public void testMap18() {
+        String contents =
+            "def xxx = ['item'].collectEntries {str -> /*...*/}\n";
+
+        assertType(contents, "str", "java.lang.String");
+        assertType(contents, "xxx", "java.util.Map<java.lang.Object,java.lang.Object>");
+    }
+
+    @Test
+    public void testMap19() {
+        String contents =
+            "def map = [key:'val']\n" +
+            "map.getAt('key').toUpperCase()\n" +
+            "map.get('key').toUpperCase()\n" +
+            "map['key'].toUpperCase()\n" +
+            "map['key'] = 'value'\n" +
+            "map.key.toUpperCase()\n" +
+            "map.key = 'value'\n";
+
+        int offset = contents.indexOf("map");
+        assertType(contents, offset, offset + 3, "java.util.Map<java.lang.String,java.lang.String>");
+
+            offset = contents.indexOf("toUpperCase");
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("map['key'] = 'value'", offset + 1);
+        assertType(contents, offset, offset + "map['key'] = 'value'".length(), "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("map.key = 'value'", offset + 1);
+        assertType(contents, offset, offset + "map.key = 'value'".length(), "java.lang.String");
+    }
+
+    @Test
+    public void testMap20() {
+        String contents =
+            "import groovy.transform.stc.*\n" +
+            "def map = [key:'val']\n" +
+            "with(map) {\n" +
+            "  it.getAt('key').toUpperCase()\n" +
+            "  getAt('key').toUpperCase()\n" +
+            "  it.get('key').toUpperCase()\n" +
+            "  get('key').toUpperCase()\n" +
+            "  it['key'].toUpperCase()\n" +
+            "  it['key'] = 'value'\n" +
+            "  it.key.toUpperCase()\n" +
+            "  key.toUpperCase()\n" +
+            "  it.key = 'value'\n" +
+            "  key = 'value'\n" +
+            "}\n" +
+            "private <T> void with(@DelegatesTo.Target T map, @DelegatesTo(strategy=Closure.DELEGATE_FIRST) @ClosureParams(FirstParam) Closure block) {\n" +
+            "  map.with(block)\n" +
+            "}\n";
+
+        int offset = contents.indexOf("it."); // line 4
+        assertType(contents, offset, offset + 2, "java.util.Map<java.lang.String,java.lang.String>");
+
+            offset = contents.indexOf("toUpperCase");
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("it['key'] = 'value'", offset + 1);
+        assertType(contents, offset, offset + "it['key'] = 'value'".length(), "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("it.key = 'value'", offset + 1);
+        assertType(contents, offset, offset + "it.key = 'value'".length(), "java.lang.String");
+
+            offset = contents.lastIndexOf("key = 'value'");
+        assertType(contents, offset, offset + "key = 'value'".length(), "java.lang.String");
+    }
+
+    @Test // methods and property resolution differs
+    public void testMap21() {
+        String contents =
+            "def map = [foo:'bar']\n" +
+            "map.getMetaClass()\n" +
+            "map.metaClass\n" +
+            "map.getClass()\n" +
+            "map.class\n" +
+            "map.with {\n" +
+            "  getMetaClass()\n" +
+            "  metaClass\n" +
+            "  isEmpty()\n" +
+            "  empty\n" +
+            "}\n";
+
+        int offset = contents.indexOf("map");
+        assertType(contents, offset, offset + 3, "java.util.Map<java.lang.String,java.lang.String>");
+
+            offset = contents.indexOf("getMetaClass");
+        assertType(contents, offset, offset + "getMetaClass".length(), "groovy.lang.MetaClass");
+
+            offset = contents.indexOf("metaClass");
+        assertType(contents, offset, offset + "metaClass".length(), isAtLeastGroovy(50) ? "groovy.lang.MetaClass" : "java.lang.String");
+
+            offset = contents.indexOf("getClass");
+        assertType(contents, offset, offset + "getClass".length(), "java.lang.Class<? extends java.util.Map<java.lang.String,java.lang.String>>");
+
+            offset = contents.indexOf("class");
+        assertType(contents, offset, offset + "class".length(), "java.lang.String");
+
+        //
+
+            offset = contents.lastIndexOf("getMetaClass");
+        assertType(contents, offset, offset + "getMetaClass".length(), "groovy.lang.MetaClass");
+
+            offset = contents.lastIndexOf("metaClass");
+        assertType(contents, offset, offset + "metaClass".length(), "groovy.lang.MetaClass");
+
+            offset = contents.indexOf("isEmpty");
+        assertType(contents, offset, offset + "isEmpty".length(), "java.lang.Boolean");
+
+            offset = contents.indexOf("empty");
+        assertType(contents, offset, offset + "empty".length(), "java.lang.String");
+    }
+
+    @Test
+    public void testMap22() {
+        String contents =
+            "LinkedHashMap<String,String> map = [foo:'bar']\n" +
+            "def put = map.&put\n" +
+            "put('key', 'val')\n" +
+            "map.@accessOrder\n" +
+            "map.@class\n" +
+            "map.&getAt\n" +
+            "map.with {\n" +
+            "  put = it.&put\n" +
+            "  put('key', 'val')\n" +
+            "  it.@accessOrder\n" +
+            "  it.@class\n" +
+            "  it.&getAt\n" +
+            "}\n";
+
+        int offset = contents.indexOf("map");
+        assertType(contents, offset, offset + 3, "java.util.LinkedHashMap<java.lang.String,java.lang.String>");
+
+            offset = contents.indexOf(".&put") + 2;
+        assertDeclaration(contents, offset, offset + 3, "java.util.HashMap", "put", DeclarationKind.METHOD);
+
+            offset = contents.indexOf("put(");
+        assertType(contents, offset, offset + 3, "groovy.lang.Closure<java.lang.String>");
+
+            offset = contents.indexOf("accessOrder");
+        assertType(contents, offset, offset + "accessOrder".length(), "java.lang.Boolean");
+
+            offset = contents.indexOf("class");
+        assertUnknownConfidence(contents, offset, offset + "class".length());
+
+            offset = contents.indexOf("getAt");
+        assertDeclaringType(contents, offset, offset + "getAt".length(), "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+
+        //
+
+            offset = contents.lastIndexOf(".&put") + 2;
+        assertDeclaration(contents, offset, offset + 3, "java.util.HashMap", "put", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("put(");
+        assertType(contents, offset, offset + 3, "groovy.lang.Closure<java.lang.String>");
+
+            offset = contents.lastIndexOf("accessOrder");
+        assertType(contents, offset, offset + "accessOrder".length(), "java.lang.Boolean");
+
+            offset = contents.lastIndexOf("class");
+        assertUnknownConfidence(contents, offset, offset + "class".length());
+
+            offset = contents.lastIndexOf("getAt");
+        assertDeclaringType(contents, offset, offset + "getAt".length(), "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test
@@ -445,8 +708,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test
     public void testMapOfList6() {
         String contents =
-            "Map<String, Map<Integer, List<Date>>> m\n" +
-            "def xxx = m.get('foo').get(5).get(2)\n";
+            "Map<Integer, Map<Integer, List<Date>>> m\n" +
+            "def xxx = m.get(1).get(2).get(3)\n";
 
         assertType(contents, "xxx", "java.util.Date");
     }
@@ -454,8 +717,17 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test // GRECLIPSE-941
     public void testMapOfList7() {
         String contents =
-            "Map<String, Map<Integer, List<Date>>> m\n" +
-            "def xxx = m['foo'][5][2]\n";
+            "Map<Integer, Map<Integer, List<Date>>> m\n" +
+            "def xxx = m[1][2][3]\n";
+
+        assertType(contents, "xxx", "java.util.Date");
+    }
+
+    @Test // GROOVY-9420
+    public void testMapOfList8() {
+        String contents =
+            "Map<String, List<Date>> m\n" +
+            "def xxx = m['a'][1]\n";
 
         assertType(contents, "xxx", "java.util.Date");
     }
@@ -470,14 +742,60 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testTypeExtendsMap() {
+    public void testTypeExtendsMap1() {
         String contents =
-            "interface Config extends Map<String, Number> {}\n" +
-            "void meth(Config config) {\n" +
+            "interface I extends Map<String, Number> {}\n" +
+            "void m(I config) {\n" +
             "  def xxx = config.whatever\n" +
+            "  def yyy = config['whatever']\n" +
             "}\n";
 
         assertType(contents, "xxx", "java.lang.Number");
+        assertType(contents, "yyy", "java.lang.Number");
+    }
+
+    @Test
+    public void testTypeExtendsMap2() {
+        String contents =
+            "interface I extends Map<String, Number> {}\n" +
+            "abstract class A implements I {}\n" +
+            "void m(A config) {\n" +
+            "  def xxx = config.whatever\n" +
+            "  def yyy = config['whatever']\n" +
+            "}\n";
+
+        assertType(contents, "xxx", "java.lang.Number");
+        assertType(contents, "yyy", "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1189
+    public void testTypeExtendsMap3() {
+        String contents =
+            "interface I extends Map<String, Number> {}\n" +
+            "abstract class A implements I {}\n" +
+            "class C extends A {}\n" +
+            "void m(C config) {\n" +
+            "  def xxx = config.whatever\n" +
+            "  def yyy = config['whatever']\n" +
+            "}\n";
+
+        assertType(contents, "xxx", "java.lang.Number");
+        assertType(contents, "yyy", "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1189
+    public void testTypeExtendsMap4() {
+        String contents =
+            "interface I<T> extends Map<String, T> {}\n" +
+            "abstract class A<U> implements I<U> {}\n" +
+            "class C extends A<Number> {}\n" +
+            "void m(C config) {\n" +
+            "  def xxx = config.whatever\n" +
+            "  def yyy = config['whatever']\n" +
+            "}\n";
+
+        assertType(contents, "xxx", "java.lang.Number");
+        assertType(contents, "yyy", "java.lang.Number");
     }
 
     @Test
@@ -485,99 +803,69 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents = "def x = 1..4\n" +
             "for (a in x) {\n" +
             "  a\n" +
-            "}";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+            "}\n";
+        assertType(contents, "a", "java.lang.Integer");
     }
 
     @Test
     public void testForLoop2() {
         String contents = "for (a in 1..4) {\n" +
             "  a\n" +
-            "}";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testForLoop2a() {
-        String contents = "for (a in 1..4) {\n}";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+            "}\n";
+        assertType(contents, "a", "java.lang.Integer");
     }
 
     @Test
     public void testForLoop3() {
-        String contents = "for (a in [1, 2].iterator()) {\n a\n}";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        String contents = "for (a in 1..4) {\n}";
+        assertType(contents, "a", "java.lang.Integer");
     }
 
     @Test
     public void testForLoop4() {
-        String contents = "for (a in (1..4).iterator()) {\n a\n}";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        String contents = "for (a in [1, 2].iterator()) {\n a\n}";
+        assertType(contents, "a", "java.lang.Integer");
     }
 
     @Test
     public void testForLoop5() {
-        String contents = "for (a in [1 : 1]) {\n a.key\n}";
-        String toFind = "key";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        String contents = "for (a in (1..4).iterator()) {\n a\n}";
+        assertType(contents, "a", "java.lang.Integer");
     }
 
     @Test
     public void testForLoop6() {
-        String contents = "for (a in [1 : 1]) {\n a.value\n}";
-        String toFind = "value";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        String contents = "for (a in [1 : 1]) {\n a.key\n}";
+        assertType(contents, "key", "java.lang.Integer");
     }
 
     @Test
     public void testForLoop7() {
-        String contents = "InputStream x\nfor (a in x) {\n a\n}";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Byte");
+        String contents = "for (a in [1 : 1]) {\n a.value\n}";
+        assertType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testForLoop8() {
-        String contents = "DataInputStream x\nfor (a in x) {\n a\n}";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Byte");
+        String contents = "InputStream x\nfor (a in x) {\n a\n}";
+        assertType(contents, "a", "java.lang.Byte");
     }
 
     @Test
     public void testForLoop9() {
+        String contents = "DataInputStream x\nfor (a in x) {\n a\n}";
+        assertType(contents, "a", "java.lang.Byte");
+    }
+
+    @Test
+    public void testForLoop10() {
         String contents = "class X {\n" +
             "  List<String> images\n" +
             "}\n" +
             "def sample = new X()\n" + "for (img in sample.images) {\n" +
             "  img\n" +
             "}";
-        String toFind = "img";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertType(contents, "img", "java.lang.String");
     }
 
     @Test
@@ -591,44 +879,425 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "  }\n" +
             " }\n" +
             "}\n";
-        String toFind = "foo";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertType(contents, "foo", "java.lang.String");
     }
 
     @Test
     public void testClosure1() {
         String contents = "def fn = { int a, int b ->\n a + b\n}";
-        assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Integer>");
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.Integer>");
     }
 
     @Test
     public void testClosure2() {
         String contents = "def fn = 'abc'.&length";
-        assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Integer>");
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.Integer>");
+
+        contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.Integer>");
     }
 
     @Test
     public void testClosure3() {
         String contents = "def fn = Collections.&emptyList";
-        assertType(contents, 4, 6, "groovy.lang.Closure<java.util.List<T>>");
+        assertType(contents, "fn", "groovy.lang.Closure<java.util.List<java.lang.Object>>");
+
+        contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
+        assertType(contents, "fn", "groovy.lang.Closure<java.util.List<java.lang.Object>>");
     }
 
     @Test
     public void testClosure4() {
         String contents = "def fn = (String.&trim) >> (Class.&forName)";
-        assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Class<?>>");
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.Class<?>>");
+
+        contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.Class<?>>");
+    }
+
+    @Test
+    public void testClosure5() {
+        String contents = "def fn = String[].&new";
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.String[]>");
+
+        contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.String[]>");
+    }
+
+    @Test
+    public void testClosure6() {
+        assumeTrue(isParrotParser());
+        String contents = "def fn = String[]::new";
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.String[]>");
+
+        contents = "@groovy.transform.TypeChecked m() {" + contents + ";}";
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.String[]>");
+    }
+
+    @Test
+    public void testClosure7() {
+        String contents =
+            "void test(List<String> list) {\n" +
+            "  def array = list.stream().toArray {\n" +
+            "    int n -> new String[n]\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "array", "java.lang.String[]");
+    }
+
+    @Test
+    public void testClosure8() {
+        assumeTrue(isParrotParser());
+        String contents =
+            "void test(List<String> list) {\n" +
+            "  def array = list.stream().toArray(String[]::new)\n" +
+            "}\n";
+        assertType(contents, "toArray", "java.lang.String[]");
+        assertType(contents, "array", "java.lang.String[]");
+    }
+
+    @Test
+    public void testClosure9() {
+        String contents =
+            "void test(List<String> list) {\n" +
+            "  def array = list.stream().toArray(String[].&new)\n" +
+            "}\n";
+        assertType(contents, "toArray", "java.lang.String[]");
+        assertType(contents, "array", "java.lang.String[]");
+    }
+
+    @Test // incorrect LHS type should not alter RHS type
+    public void testClosure10() {
+        String contents =
+            "void test(List<String> list) {\n" +
+            "  Number[] array = list.stream().toArray(String[].&new)\n" +
+            "}\n";
+        assertType(contents, "toArray", "java.lang.String[]");
+        assertType(contents, "array", "java.lang.Number[]");
+    }
+
+    @Test // GROOVY-9803
+    public void testClosure11() {
+        for (String toSet : new String[] {"D.&wrap", "Collections.&singleton", "{x -> [x].toSet()}", "{Collections.singleton(it)}"}) {
+            String contents =
+                "class C<T> {\n" +
+                "  static <U> C<U> of(U item) {}\n" +
+                "  def <V> C<V> map(F<? super T, ? extends V> func) {}\n" +
+                "}\n" +
+                "class D {\n" +
+                "  static <W> Set<W> wrap(W o) {}\n" +
+                "}\n" +
+                "interface F<X,Y> {\n" +
+                "  Y apply(X x)\n" +
+                "}\n" +
+                "def c = C.of(123)\n" +
+                "def d = c.map(" + toSet + ")\n" +
+                "def e = d.map{x -> x.first()}\n";
+            assertType(contents, "d", "C<java.util.Set<java.lang.Integer>>");
+            assertType(contents, "x", "java.util.Set<java.lang.Integer>");
+            assertType(contents, "e", "C<java.lang.Integer>");
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1194
+    public void testClosure12() {
+        String contents = "Optional.of(1).map(Arrays.&asList).map{x -> x.first()}\n";
+        assertType(contents, "asList", "java.util.List<java.lang.Integer>");
+        assertType(contents, "x", "java.util.List<java.lang.Integer>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1194
+    public void testClosure13() {
+        String contents = "Optional.of(1).map(Collections.&singletonList).map{x -> x.first()}\n";
+        assertType(contents, "singletonList", "java.util.List<java.lang.Integer>");
+        assertType(contents, "x", "java.util.List<java.lang.Integer>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1194
+    public void testClosure14() {
+        String contents = "void test(Closure<List<Integer>> cl) {}\n" + "test(Arrays.&asList)\n";
+        assertType(contents, "asList", "java.util.List<java.lang.Integer>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1194
+    public void testClosure15() {
+        String contents = "import groovy.transform.stc.*\n" +
+            "def m(@ClosureParams(value=SimpleType,options='java.lang.Integer') Closure c) {}\n" +
+            "def <T> String test(T t) {}\n" +
+            "m(this.&test)\n";
+        int offset = contents.lastIndexOf("test");
+
+        MethodNode m = assertDeclaration(contents, offset, offset + 4, "Search", "test", DeclarationKind.METHOD);
+        assertEquals("java.lang.Integer", printTypeName(m.getParameters()[0].getType()));
+        assertEquals("java.lang.String", printTypeName(m.getReturnType()));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1198
+    public void testClosure16() {
+        assumeTrue(isParrotParser());
+        String contents = "Optional.of(21).map(num -> num * 2).get()\n";
+        assertType(contents, "get", "java.lang.Integer");
+        assertDeclaringType(contents, "get", "java.util.Optional");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1199
+    public void testClosure17() {
+        String contents = "java.util.function.Function<Integer, List<Integer>> f = Arrays.&asList\n";
+        assertType(contents, "asList", "java.util.List<java.lang.Integer>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1199
+    public void testClosure18() {
+        String contents =
+            "def <T> String test(T t) {}\n" +
+            "java.util.function.Function<Integer, String> f = this.&test\n";
+
+        int offset = contents.lastIndexOf("test");
+
+        MethodNode m = assertDeclaration(contents, offset, offset + 4, "Search", "test", DeclarationKind.METHOD);
+        assertEquals("java.lang.Integer", printTypeName(m.getParameters()[0].getType()));
+        assertEquals("java.lang.String", printTypeName(m.getReturnType()));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1282
+    public void testClosure19() {
+        String contents =
+            "def <T> void test(Iterator<T> it) {\n" +
+            "  it.forEachRemaining{t->}\n" +
+            "}\n";
+        assertType(contents, "t", "T");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1000
+    public void testClosure20() {
+        String contents =
+            "void test(Collection<Integer> c) {\n" +
+            "  boolean b = c.removeIf{i->false}\n" +
+            "}\n";
+        assertType(contents, "i", "java.lang.Integer");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1000
+    public void testClosure21() {
+        assumeTrue(isParrotParser());
+        String contents =
+            "void test(Collection<Integer> c) {\n" +
+            "  boolean b = c.removeIf(i->false)\n" +
+            "}\n";
+        assertType(contents, "i", "java.lang.Integer");
+    }
+
+    @Test
+    public void testClosure22() {
+        String contents =
+            "void test(Collection<Integer> c) {\n" +
+            "  boolean b = c.removeIf{Number n->}\n" +
+            "}\n";
+        assertType(contents, "n", "java.lang.Number");
+    }
+
+    @Test
+    public void testClosure23() {
+        String contents =
+            "void test(List list) {\n" +
+            "  list.stream().map{e->}\n" +
+            "}\n";
+        assertType(contents, "e", "java.lang.Object");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1368
+    public void testClosure24() {
+        createUnit("F",
+            "import java.util.function.Function\n" +
+            "interface F extends Function<Number,String> {\n" +
+            "}\n");
+
+        String contents =
+            "def m(F function) {}\n" +
+            "m {it.intValue().toString()}\n";
+        assertType(contents, "it", "java.lang.Number");
+
+        if (isParrotParser()) {
+            contents =
+                "def m(F function) {}\n" +
+                "m(x -> x.intValue().toString())\n";
+            assertType(contents, "x", "java.lang.Number");
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1527
+    public void testClosure25() {
+        String contents =
+            "void test(Map<String, String> map) {\n" +
+            "  def eSet = map.entrySet()\n" +
+            "  def eStr = eSet.stream()\n" +
+            "  def kStr = eStr.map(Map.Entry.&getKey)\n" +
+            "  def kSet = kStr.toSet()\n" +
+            "}\n";
+        assertType(contents, "eSet", "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.String>>");
+        assertType(contents, "eStr", "java.util.stream.Stream<java.util.Map$Entry<java.lang.String,java.lang.String>>");
+        assertType(contents, "kStr", "java.util.stream.Stream<java.lang.String>"); // GROOVY-11259: not java.lang.Object
+        assertType(contents, "kSet", "java.util.Set<java.lang.String>");
+
+        contents = contents.replace("Map.Entry.&getKey", isParrotParser() ? "e -> e.key" : "{e -> e.key}");
+        assertType(contents, "eSet", "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.String>>");
+        assertType(contents, "eStr", "java.util.stream.Stream<java.util.Map$Entry<java.lang.String,java.lang.String>>");
+        assertType(contents, "kStr", "java.util.stream.Stream<java.lang.String>");
+        assertType(contents, "kSet", "java.util.Set<java.lang.String>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1626
+    public void testClosure26() {
+        assumeTrue(isParrotParser());
+        String function = isAtLeastGroovy(50) ? "List::stream" : "List<String>::stream";
+        String contents =
+            "@groovy.transform.TypeChecked\n" +
+            "void test(List<String> list_of_string) {\n" +
+            "  def stream_of_list_of_string = java.util.stream.Stream.of(list_of_string)\n" +
+            "  def stream_of_string = stream_of_list_of_string.flatMap(" + function + ")\n" +
+            "  def stream_of_integer = stream_of_string.map(Integer::valueOf)\n" +
+            "  def list_of_integer = stream_of_integer.toList()\n" +
+            "}\n";
+        assertType(contents, "stream_of_list_of_string", "java.util.stream.Stream<java.util.List<java.lang.String>>");
+        assertType(contents, "flatMap",                  "java.util.stream.Stream<java.lang.String>"); // GROOVY-11683
+        assertType(contents, "stream_of_string",         "java.util.stream.Stream<java.lang.String>");
+        assertType(contents, "map",                      "java.util.stream.Stream<java.lang.Integer>");
+        assertType(contents, "stream_of_integer",        "java.util.stream.Stream<java.lang.Integer>");
+        assertType(contents, "toList",                   "java.util.List<java.lang.Integer>");
+        assertType(contents, "list_of_integer",          "java.util.List<java.lang.Integer>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1627
+    public void testClosure27() {
+        String contents =
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  java.util.stream.Collectors.groupingBy(String.&trim)\n" +
+            "}\n";
+        assertType(contents, "groupingBy", "java.util.stream.Collector<java.lang.String,?,java.util.Map<java.lang.String,java.util.List<java.lang.String>>>");
+
+        contents = contents.replace("(String.&trim)", "{String s -> s.trim()}");
+        assertType(contents, "groupingBy", "java.util.stream.Collector<java.lang.String,?,java.util.Map<java.lang.String,java.util.List<java.lang.String>>>");
+    }
+
+    @Test
+    public void testClosure28() {
+        String contents =
+            "@groovy.transform.TypeChecked\n" +
+            "void test(java.util.stream.Stream<String> stream) {\n" +
+            "  stream.collect(java.util.stream.Collectors.groupingBy(String.&trim))\n" +
+            "}\n";
+        int offset = contents.indexOf("collect");
+        MethodNode m = assertDeclaration(contents, offset, offset + 7, "java.util.stream.Stream", "collect", DeclarationKind.METHOD);
+        String resultType = "java.util.Map<java.lang.String,java.util.List<java.lang.String>>"; // maps from String to String, not Object
+        assertEquals("java.util.stream.Collector<? super java.lang.String,?," + resultType + ">", printTypeName(m.getParameters()[0].getType()));
+        assertEquals(resultType, printTypeName(m.getReturnType()));
+
+        contents = contents.replace("(String.&trim)", "{String s -> s.trim()}");
+        m = assertDeclaration(contents, offset, offset + 7, "java.util.stream.Stream", "collect", DeclarationKind.METHOD);
+        assertEquals("java.util.stream.Collector<? super java.lang.String,?," + resultType + ">", printTypeName(m.getParameters()[0].getType()));
+        assertEquals(resultType, printTypeName(m.getReturnType()));
     }
 
     @Test
     public void testArrayDGM() {
-        String contents = "String[] strings = ['1', '2'];  strings.iterator()";
-        String toFind = "iterator";
-        int start = contents.lastIndexOf(toFind), end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Iterator<java.lang.String>");
-        MethodNode dgm = assertDeclaration(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods", "iterator", DeclarationKind.METHOD);
+        String contents =
+            "void test(String[] array) {\n" +
+            "  array.iterator()\n" +
+            "}\n";
+        String target = "iterator";
+        int offset = contents.lastIndexOf(target), end = offset + target.length();
+        assertType(contents, offset, end, "java.util.Iterator<java.lang.String>");
+        MethodNode dgm = assertDeclaration(contents, offset, end, "org.codehaus.groovy.runtime." + (isAtLeastGroovy(50) ? "Array" : "Default") + "GroovyMethods", "iterator", DeclarationKind.METHOD);
         assertEquals("First parameter type should be resolved from object expression", "java.lang.String[]", printTypeName(dgm.getParameters()[0].getType()));
+    }
+
+    @Test
+    public void testTypeVariable1() {
+        String contents =
+            "class C<T> {\n" +
+            "  void test(T t) {\n" +
+            "    t.notify()\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "notify", "java.lang.Void");
+        assertDeclaringType(contents, "notify", "java.lang.Object");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1563
+    public void testTypeVariable2() {
+        String contents =
+            "class C<T extends Thread> {\n" +
+            "  void test(T thread) {\n" +
+            "    thread.getName()\n" +
+            "    thread.name\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "name", "java.lang.String");
+        assertDeclaringType(contents, "name", "java.lang.Thread");
+
+        assertType(contents, "getName", "java.lang.String");
+        assertDeclaringType(contents, "getName", "java.lang.Thread");
+    }
+
+    @Test
+    public void testTypeVariable3() {
+        String contents =
+            "class C<T extends Thread> {\n" +
+            "  void test(T thread) {\n" +
+            "    thread.with {" +
+            "      getName()\n" +
+            "      name\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "name", "java.lang.String");
+        assertDeclaringType(contents, "name", "java.lang.Thread");
+
+        assertType(contents, "getName", "java.lang.String");
+        assertDeclaringType(contents, "getName", "java.lang.Thread");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1564
+    public void testTypeVariable4() {
+        String contents =
+            "class C<T extends Object & Runnable> {\n" +
+            "  void test(T thingy) {\n" +
+            "    thingy.run()\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "run", "java.lang.Void");
+        assertDeclaringType(contents, "run", "java.lang.Runnable");
+    }
+
+    @Test
+    public void testTypeVariable5() {
+        String contents =
+            "class C<T extends List<String>> {\n" +
+            "  void test(T thingy) {\n" +
+            "    thingy.get(0)\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "get", "java.lang.String");
+        assertDeclaringType(contents, "get", "java.util.List");
+    }
+
+    @Test
+    public void testTypeVariable6() {
+        String contents =
+            "class C<T extends Thread & List<String>> {\n" +
+            "  void test(T thingy) {\n" +
+            "    thingy.get(0)\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "get", "java.lang.String");
+        assertDeclaringType(contents, "get", "java.util.List");
     }
 
     @Test // GRECLIPSE-997
@@ -636,11 +1305,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "class MyMap extends HashMap<String,Class> {\n}\n" +
             "MyMap m\n" +
-            "m.get()";
-        String toFind = "get";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Class");
+            "m.get('')";
+        assertType(contents, "get", "java.lang.Class");
     }
 
     @Test // GRECLIPSE-997
@@ -649,10 +1315,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "class MyMap extends HashMap<String,Class> {\n}\n" +
             "MyMap m\n" +
             "m.entrySet()";
-        String toFind = "entrySet";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.Class>>");
+        assertType(contents, "entrySet", "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.Class>>");
     }
 
     @Test // GRECLIPSE-997
@@ -662,10 +1325,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{\n}\n" +
             "MyMap<String,Class> m\n" +
             "m.entrySet()";
-        String toFind = "entrySet";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.lang.Class>>>");
+        assertType(contents, "entrySet", "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.lang.Class>>>");
     }
 
     @Test // GRECLIPSE-997
@@ -676,10 +1336,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "class MySubMap extends MyMap<String,Class>{\n}\n" +
             "MySubMap m\n" +
             "m.entrySet()";
-        String toFind = "entrySet";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.lang.Class>>>");
+        assertType(contents, "entrySet", "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.lang.Class>>>");
     }
 
     @Test // GRECLIPSE-997
@@ -687,15 +1344,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "import java.lang.ref.WeakReference\n" +
             "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{\n}\n" +
-            "class MySubMap<L> extends MyMap<String,Class>{ \n" +
+            "class MySubMap<L> extends MyMap<String,Class>{\n" +
             "  Map<L,Class> val\n" +
             "}\n" +
             "MySubMap<Integer> m\n" +
-            "m.val";
-        String toFind = "val";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Class>");
+            "m.@val";
+        assertType(contents, "val", "java.util.Map<java.lang.Integer,java.lang.Class>");
     }
 
     @Test // GRECLIPSE-997
@@ -706,10 +1360,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "class MySubMap extends MyMap<String,Class>{\n}\n" +
             "MySubMap m\n" +
             "m.entrySet()";
-        String toFind = "entrySet";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.util.List<java.lang.String>>>>");
+        assertType(contents, "entrySet", "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.util.List<java.lang.String>>>>");
     }
 
     @Test // GRECLIPSE-997
@@ -718,23 +1369,72 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "class MyMap<K,V> extends HashMap<V,K>{\n}\n" +
             "MyMap<Integer,Class> m\n" +
             "m.get(Object)";
-        String toFind = "get";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertType(contents, "get", "java.lang.Integer");
     }
 
     @Test // GRECLIPSE-997
     public void testNestedGenerics8() {
         String contents =
             "class MyMap<K,V> extends HashMap<K,V>{\n" +
-            "Map<V,Class<K>> val}\n" +
+            "  Map<V,Class<K>> val\n" +
+            "}\n" +
             "MyMap<Integer,Class> m\n" +
-            "m.val";
-        String toFind = "val";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Map<java.lang.Class,java.lang.Class<java.lang.Integer>>");
+            "m.@val";
+        assertType(contents, "val", "java.util.Map<java.lang.Class,java.lang.Class<java.lang.Integer>>");
+    }
+
+    @Test
+    public void testNestedGenerics9() {
+        String contents =
+            "abstract class Channel {\n" +
+            "}\n" +
+            "class ChannelSpec<S extends ChannelSpec<S,C>, C extends Channel> {\n" +
+            "  S prop(value) {\n" +
+            "    this\n" +
+            "  }\n" +
+            "}\n" +
+            "class Cat {\n" +
+            "  static <X extends ChannelSpec<X,Y>, Y extends Channel> X m(X self) {\n" +
+            "    self.prop(null)\n" + // returns self
+            "  }\n" +
+            "}\n" +
+
+            "class DirectChannel extends Channel {\n" +
+            "}\n" +
+            "class DirectChannelSpec extends ChannelSpec<DirectChannelSpec,DirectChannel> {\n" +
+            "}\n" +
+            "use(Cat){new DirectChannelSpec().m()}\n";
+
+        assertType(contents, "prop", "X");
+        assertDeclaringType(contents, "prop", "ChannelSpec");
+
+        assertType(contents, "m", "DirectChannelSpec"); // GROOVY-10887
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1369
+    public void testNestedGenerics10() {
+        String contents =
+            "interface Buildable<R> {\n" +
+            "  R build()\n" +
+            "}\n" +
+            "abstract class WhereDSL<S> {\n" +
+            "  abstract S where()\n" +
+            "}\n" +
+            "abstract class Input<T> extends WhereDSL<ReferencesOuterClassTP> {\n" +
+            "  class ReferencesOuterClassTP implements Buildable<T> {\n" +
+            "    @Override T build() {\n" +
+            "      return null\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "class Model {\n" +
+            "}\n" +
+            "void m(Input<Model> input) {\n" +
+            "  def where = input.where();\n" +
+            "  def model = where.build();\n" +
+            "}";
+        assertType(contents, "where", "Input$ReferencesOuterClassTP");
+        assertType(contents, "model", "Model");
     }
 
     @Test
@@ -761,18 +1461,16 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test // GRECLIPSE-1696: Generic method type inference with @CompileStatic
     public void testMethod1() {
         String contents =
-            "import groovy.transform.CompileStatic\n" +
             "class A {\n" +
-            "    public <T> T myMethod(Class<T> claz) {\n" +
-            "        return null\n" +
-            "    }\n" +
-            "    @CompileStatic\n" +
-            "    static void main(String[] args) {\n" +
-            "        A a = new A()\n" +
-            "        def val = a.myMethod(String.class)\n" +
-            "        val.trim()\n" +
-            "    }\n" +
-            "}";
+            "  def <T> T myMethod(Class<T> claz) {\n" +
+            "  }\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  static main(args) {\n" +
+            "    A a = new A()\n" +
+            "    def val = a.myMethod(String.class)\n" +
+            "    val.trim()\n" +
+            "  }\n" +
+            "}\n";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
@@ -782,15 +1480,14 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testMethod2() {
         String contents =
             "class A {\n" +
-            "    public <T> T myMethod(Class<T> claz) {\n" +
-            "        return null\n" +
-            "    }\n" +
-            "    static void main(String[] args) {\n" +
-            "        A a = new A()\n" +
-            "        def val = a.myMethod(String.class)\n" +
-            "        val.trim()\n" +
-            "    }\n" +
-            "}";
+            "  def <T> T myMethod(Class<T> claz) {\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    A a = new A()\n" +
+            "    def val = a.myMethod(String.class)\n" +
+            "    val.trim()\n" +
+            "  }\n" +
+            "}\n";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
@@ -799,17 +1496,15 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test // Generic method without object type inference with @CompileStatic
     public void testMethod3() {
         String contents =
-            "import groovy.transform.CompileStatic\n" +
             "class A {\n" +
-            "    public <T> T myMethod(Class<T> claz) {\n" +
-            "        return null\n" +
-            "    }\n" +
-            "    @CompileStatic\n" +
-            "    def m() {\n" +
-            "        def val = myMethod(String.class)\n" +
-            "        val.trim()\n" +
-            "    }\n" +
-            "}";
+            "  def <T> T myMethod(Class<T> claz) {\n" +
+            "  }\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  def m() {\n" +
+            "    def val = myMethod(String.class)\n" +
+            "    val.trim()\n" +
+            "  }\n" +
+            "}\n";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
@@ -819,17 +1514,86 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testMethod4() {
         String contents =
             "class A {\n" +
-            "    public <T> T myMethod(Class<T> claz) {\n" +
-            "        return null\n" +
-            "    }\n" +
-            "    def m() {\n" +
-            "        def val = myMethod(String.class)\n" +
-            "        val.trim()\n" +
-            "    }\n" +
-            "}";
+            "  def <T> T myMethod(Class<T> claz) {\n" +
+            "  }\n" +
+            "  def m() {\n" +
+            "    def val = myMethod(String.class)\n" +
+            "    val.trim()\n" +
+            "  }\n" +
+            "}\n";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1266
+    public void testMethod5() {
+        String contents =
+            "class C {\n" +
+            "  private <N extends Number> N m(Class<N> t) {\n" +
+            "    t.newInstance()\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    def n = m()\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "m", "java.lang.Number");
+        assertType(contents, "n", "java.lang.Number");
+    }
+
+    @Test
+    public void testMethod6() {
+        String contents =
+            "class C {\n" +
+            "  private <N extends Number> N m(Class<N> t) {\n" +
+            "    t.newInstance()\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    def n = m(Byte)\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "m", "java.lang.Byte");
+        assertType(contents, "n", "java.lang.Byte");
+    }
+
+    @Test
+    public void testMethod7() {
+        String contents =
+            "class C<T> {\n" +
+            "  T[] m() {\n" +
+            "  }\n" +
+            "}\n" +
+            "new C<String>().m()\n";
+        assertType(contents, "m", "java.lang.String[]");
+    }
+
+    @Test
+    public void testMethod8() {
+        String contents =
+            "class C<T> {\n" +
+            "  class D {\n" +
+            "    T[] m() {\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new C.D(new C<String>()).m()\n";
+        assertType(contents, "m", "java.lang.String[]");
+    }
+
+    @Test // GROOVY-10544
+    public void testMethod9() {
+        String contents =
+            "import java.util.function.Function\n" +
+            "interface I<T> {\n" +
+            "  def <U> Iterable<U> m(Function<? super T, ? extends U> f)\n" +
+            "}\n" +
+            "interface J<T> extends I<T> {\n" +
+            "  def <U> List<U> m(Function<? super T, ? extends U> f)\n" +
+            "}\n" +
+            "void test(J<String> j) {\n" +
+            "  def list = j.m{s -> java.util.regex.Pattern.compile(s)}\n" +
+            "}\n";
+        assertType(contents, "list", "java.util.List<java.util.regex.Pattern>");
     }
 
     @Test // GRECLIPSE-1129: Static generic method type inference with @CompileStatic
@@ -916,7 +1680,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "B");
     }
 
-    @Test // Actually type should not be inferred for fields with type def
+    @Test
     public void testStaticMethod6() {
         String contents =
             "class A {}\n" +
@@ -930,13 +1694,40 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "    col\n" +
             "  }\n" +
             "}\n";
-        int start = contents.lastIndexOf("col");
-        int end = start + "col".length();
-        assertType(contents, start, end, "java.lang.Object");
+        assertType(contents, "col", "B");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1199
+    public void testStaticMethod7() {
+        // Arrays: public static final <T> List<T> asList(T...)
+        String contents = "List<String> list = Arrays.asList()";
+        assertType(contents, "asList", "java.util.List<java.lang.String>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1199
+    public void testStaticMethod8() {
+        // Collections: public static final <T> List<T> emptyList()
+        String contents = "List<String> list = Collections.emptyList()";
+        assertType(contents, "emptyList", "java.util.List<java.lang.String>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1199
+    public void testStaticMethod8a() {
+        // Collections: public static final <T> List<T> emptyList()
+        String contents = "import static java.util.Collections.*; List<String> list = emptyList()";
+        assertType(contents, "emptyList", "java.util.List<java.lang.String>");
     }
 
     @Test
-    public void testStaticMethod7() {
+    public void testStaticMethod9() {
+        // Collections: public static final <T> List<T> emptyList()
+        String contents = "def list = Collections.<String>emptyList()";
+        assertType(contents, "list", "java.util.List<java.lang.String>");
+        assertType(contents, "emptyList", "java.util.List<java.lang.String>");
+    }
+
+    @Test
+    public void testStaticMethod10() {
         // Collections: public static final <T> List<T> singletonList(T)
         String contents = "List<String> list = Collections.singletonList('')";
         String toFind = "singletonList";
@@ -946,44 +1737,32 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertEquals("Parameter type should be resolved", "java.lang.String", printTypeName(m.getParameters()[0].getType()));
     }
 
-    @Test @Ignore
-    public void testStaticMethod8() { // no help from parameters
-        // Collections: public static final <T> List<T> emptyList()
-        String contents = "List<String> list = Collections.emptyList()";
-        String toFind = "emptyList";
-        int start = contents.indexOf(toFind), end = start + toFind.length();
-        assertType(contents, start, end, "java.util.List<java.lang.String>");
-    }
-
     @Test
-    public void testStaticMethod9() {
-        // Collections: public static final <T> List<T> emptyList()
-        String contents = "def list = Collections.<String>emptyList()";
-        String toFind = "list";
-        int start = contents.indexOf(toFind), end = start + toFind.length();
-        assertType(contents, start, end, "java.util.List<java.lang.String>");
-    }
-
-    @Test
-    public void testStaticMethod10() {
+    public void testStaticMethod11() {
         // Collection: public boolean removeAll(Collection<?>)
         String contents = "List<String> list = ['1','2']; list.removeAll(['1'])";
         String toFind = "removeAll";
         int start = contents.indexOf(toFind), end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Boolean");
-        MethodNode m = assertDeclaration(contents, start, end, "java.util.Collection<java.lang.String>", toFind, DeclarationKind.METHOD);
-        assertEquals("Parameter type should be resolved", "java.util.Collection<?>", printTypeName(m.getParameters()[0].getType()));
+        MethodNode m = assertDeclaration(contents, start, end, "java.util.List", toFind, DeclarationKind.METHOD);
+        assertEquals("java.util.Collection<?>", printTypeName(m.getParameters()[0].getType()));
     }
 
     @Test
-    public void testStaticMethod11() {
+    public void testStaticMethod12() {
         // Collection: public boolean addAll(Collection<? extends E>)
         String contents = "List<String> list = ['1','2']; list.addAll(['3'])";
         String toFind = "addAll";
         int start = contents.indexOf(toFind), end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Boolean");
-        MethodNode m = assertDeclaration(contents, start, end, "java.util.Collection<java.lang.String>", toFind, DeclarationKind.METHOD);
-        assertEquals("Parameter type should be resolved", "java.util.Collection<? extends java.lang.String>", printTypeName(m.getParameters()[0].getType()));
+        MethodNode m = assertDeclaration(contents, start, end, "java.util.List", toFind, DeclarationKind.METHOD);
+        assertEquals("Parameter type should be resolved", "java.util.Collection<java.lang.String>", printTypeName(m.getParameters()[0].getType()));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1249
+    public void testStaticMethod13() {
+        String contents = "Comparator.<String>comparing{it.length()}";
+        assertType(contents, "comparing", "java.util.Comparator<java.lang.String>");
     }
 
     @Test
@@ -1177,7 +1956,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testCircularReference() {
+    public void testCircularReference1() {
         String contents =
             "abstract class Abstract<T extends Abstract<T>> {\n" +
             "  T withStuff(value) {\n" +
@@ -1195,22 +1974,85 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
         int offset = contents.lastIndexOf("withThing(x)");
         assertType(contents, offset, offset + "withThing".length(), "Concrete");
-            offset = contents.lastIndexOf("withStuff(x)");
+        /**/offset = contents.lastIndexOf("withStuff(x)");
         assertType(contents, offset, offset + "withStuff".length(), "Concrete");
     }
 
-    @Test @Ignore
-    public void testJira1718() throws Exception {
-        IPath p2 = env.addPackage(project.getFolder("src").getFullPath(), "p2");
+    @Test
+    public void testCircularReference2() {
+        createJavaUnit("FeatureName",
+            "enum FeatureName{\n" +
+            "}\n");
 
-        env.addGroovyClass(p2, "Renderer",
+        createJavaUnit("Scorable",
+            "interface Scorable<T, F extends Enum<F>> extends Comparable<T> {\n" +
+            "}\n");
+
+        createJavaUnit("ScoreAndRank", "import java.util.concurrent.Callable;\n" +
+            "abstract class ScoreAndRank<T extends Scorable<? super T, FeatureName>, O> implements Callable<O> {\n" +
+            "}\n");
+
+        createJavaUnit("ScoreAndRankWithSearchRequest",
+            "abstract class ScoreAndRankWithSearchRequest<T extends Scorable<? super T, FeatureName>, O> extends ScoreAndRank<T, O> {\n" +
+            "}\n");
+
+        String contents =
+            "abstract class FakeScoreAndRank<T extends Scorable<? super T, FeatureName>> extends ScoreAndRankWithSearchRequest<T, Object> {\n" +
+            "}\n";
+
+        int offset = contents.indexOf("T");
+        assertType(contents, offset, offset + 1, "T");
+        /**/offset = contents.indexOf("Scorable");
+        assertType(contents, offset, offset + 8, "Scorable<? super T,FeatureName>");
+    }
+
+    @Test // GROOVY-10671
+    public void testCircularReference3() {
+        createJavaUnit("p", "ObjectAssert",
+            "package p;\n" +
+            "abstract class ObjectAssert<SELF extends ObjectAssert<SELF>> {\n" +
+            "  SELF as(String description) {\n" +
+            "    return (SELF) this;\n" +
+            "  }\n" +
+            "}\n");
+
+        createJavaUnit("p", "IterableAssert",
+            "package p;\n" +
+            "abstract class IterableAssert<SELF extends IterableAssert<SELF>> extends ObjectAssert<SELF> {\n" +
+            "}\n");
+
+        createJavaUnit("p", "CollectionAssert",
+            "package p;\n" +
+            "abstract class CollectionAssert<SELF extends CollectionAssert<SELF>> extends IterableAssert<SELF> {\n" +
+            "  void containsExactlyInAnyOrderElementsOf(java.util.Collection<?> expect) {\n" +
+            "  }\n" +
+            "}\n");
+
+        createJavaUnit("p", "Assert",
+            "package p;\n" +
+            "class Assert {\n" +
+            "  public static <E> CollectionAssert<?> assertThat(java.util.Collection<? extends E> c) {return null;}\n" +
+            "}\n");
+
+        String contents =
+            "import static p.Assert.assertThat\n" +
+            "def strings = (Collection<String>) ['a','b']\n" +
+            "assertThat(strings).as('assertion description')\n" +
+            "  .containsExactlyInAnyOrderElementsOf(['a','b'])\n";
+
+        assertDeclaringType(contents, "containsExactlyInAnyOrderElementsOf", "p.CollectionAssert");
+    }
+
+    @Test
+    public void testJira1718() throws Exception {
+        createUnit("p2", "Renderer",
             "package p2\n" +
             "interface Renderer<T> {\n" +
             "  Class<T> getTargetType()\n" +
             "  void render(T object, String context)\n" +
             "}\n");
 
-        env.addGroovyClass(p2, "AbstractRenderer",
+        createUnit("p2", "AbstractRenderer",
             "package p2\n" +
             "abstract class AbstractRenderer<T> implements Renderer<T> {\n" +
             "  private Class<T> targetType\n" +
@@ -1221,7 +2063,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n");
 
-        env.addGroovyClass(p2, "DefaultRenderer",
+        createUnit("p2", "DefaultRenderer",
             "package p2\n" +
             "class DefaultRenderer<T> implements Renderer<T> {\n" +
             "  Class<T> targetType\n" +
@@ -1235,13 +2077,13 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n");
 
-        env.addGroovyClass(p2, "RendererRegistry",
+        createUnit("p2", "RendererRegistry",
             "package p2\n" +
             "interface RendererRegistry {\n" +
             "  public <T> Renderer<T> findRenderer(String contentType, T object)\n" +
             "}\n");
 
-        env.addGroovyClass(p2, "DefaultRendererRegistry",
+        createUnit("p2", "DefaultRendererRegistry",
             "package p2\n" +
             "class DefaultRendererRegistry implements RendererRegistry {\n" +
             "  def <T> Renderer<T> findRenderer(String contentType, T object) {\n" +
@@ -1249,7 +2091,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n");
 
-        IPath path = env.addGroovyClass(p2, "LinkingRenderer",
+        ICompilationUnit unit = createUnit("p2", "LinkingRenderer",
             "package p2\n" +
             "@groovy.transform.CompileStatic\n" +
             "class LinkingRenderer<T> extends AbstractRenderer<T> {\n" +
@@ -1259,12 +2101,11 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "    if (htmlRenderer == null) {\n" +
             "      htmlRenderer = new DefaultRenderer(targetType)\n" +
             "    }\n" +
-            "    htmlRenderer.render(object, context)\n" + // TODO: Cannot call p2.Renderer<java.lang.Object>#render(java.lang.Object<java.lang.Object>, java.lang.String) with arguments [T, java.lang.String]
+            "    htmlRenderer.render(object, context)\n" + // Cannot call p2.Renderer#render(java.lang.Object<java.lang.Object>, java.lang.String) with arguments [T, java.lang.String]
             "  }\n" +
             "}\n");
 
-        IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
-        Set<IProblem> problems = ReconcilerUtils.reconcile(JavaCore.createCompilationUnitFrom(file));
+        Set<IProblem> problems = ReconcilerUtils.reconcile(unit);
 
         assertTrue(problems.isEmpty());
     }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -81,18 +81,17 @@ public class SuggestionsViewer {
             tree.setSortColumn(sortColumn);
             tree.setSortDirection(SWT.UP);
         }
-        TreeColumn[] columns = viewer.getTree().getColumns();
+        TreeColumn[] treeColumns = viewer.getTree().getColumns();
         if (columnListener != null) {
             removeListeners();
         }
         columnListener = new ColumnSortListener();
-        for (TreeColumn column : columns) {
-            column.addSelectionListener(columnListener);
+        for (TreeColumn treeColumn : treeColumns) {
+            treeColumn.addSelectionListener(columnListener);
         }
         tree.setHeaderVisible(true);
         tree.setLinesVisible(true);
         viewer.refresh();
-
     }
 
     public ContainerCheckedTreeViewer getTreeViewer() {
@@ -104,25 +103,20 @@ public class SuggestionsViewer {
     }
 
     protected TreeColumn getDefaultSortColumn() {
-        if (defaultSortColumn == null) {
-            return null;
-        }
-
-        String sortColumnName = defaultSortColumn.getName();
-
-        if (sortColumnName != null) {
-            Tree tree = viewer.getTree();
-            TreeColumn[] columns = tree.getColumns();
-            if (columns != null) {
-
-                for (TreeColumn column : columns) {
-                    if (sortColumnName.equals(column.getText())) {
-                        return column;
+        if (defaultSortColumn != null) {
+            String sortColumnName = defaultSortColumn.getName();
+            if (sortColumnName != null) {
+                Tree tree = viewer.getTree();
+                TreeColumn[] treeColumns = tree.getColumns();
+                if (treeColumns != null) {
+                    for (TreeColumn treeColumn : treeColumns) {
+                        if (sortColumnName.equals(treeColumn.getText())) {
+                            return treeColumn;
+                        }
                     }
                 }
             }
         }
-
         return null;
     }
 
@@ -135,11 +129,8 @@ public class SuggestionsViewer {
     }
 
     protected void removeListeners() {
-
         if (columnListener != null) {
-            TreeColumn[] columns = viewer.getTree().getColumns();
-
-            for (TreeColumn column : columns) {
+            for (TreeColumn column : viewer.getTree().getColumns()) {
                 column.removeSelectionListener(columnListener);
             }
         }
@@ -149,18 +140,18 @@ public class SuggestionsViewer {
         @Override
         public void widgetSelected(SelectionEvent e) {
             if (e.widget instanceof TreeColumn) {
-                TreeColumn selected = (TreeColumn) e.widget;
                 Tree tree = viewer.getTree();
-                TreeColumn current = tree.getSortColumn();
+                TreeColumn selected = (TreeColumn) e.widget;
+                TreeColumn sortColumn = tree.getSortColumn();
 
                 int newDirection = SWT.UP;
-                if (current == selected) {
+                if (sortColumn == selected) {
                     newDirection = tree.getSortDirection() == SWT.UP ? SWT.DOWN : SWT.UP;
-
                 } else {
                     tree.setSortColumn(selected);
                 }
                 tree.setSortDirection(newDirection);
+
                 viewer.refresh();
             }
         }

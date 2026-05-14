@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,14 +69,13 @@ public class DSLDScriptExecutor {
                 GroovyLogManager.manager.logStart(event);
             }
             factory = new PointcutFactory(scriptFile, project.getProject());
-            try {
-                GroovyClassLoader classLoader = getGroovyClassLoader();
+            try (GroovyClassLoader classLoader = getGroovyClassLoader()) {
                 String scriptText = getContents(scriptFile);
                 @SuppressWarnings("rawtypes")
                 Class scriptType = null;
                 try {
                     scriptType = classLoader.parseClass(scriptText, scriptName);
-                } catch (AssertionError | Exception e) {
+                } catch (AssertionError | LinkageError | Exception e) {
                     if (GroovyLogManager.manager.hasLoggers()) {
                         StringWriter writer = new StringWriter();
                         e.printStackTrace(new PrintWriter(writer));
@@ -96,13 +95,11 @@ public class DSLDScriptExecutor {
                 dsldScript.setBinding(new DSLDScriptBinding(dsldScript));
 
                 return dsldScript.run();
-
             } catch (UnsupportedDSLVersion e) {
                 if (GroovyLogManager.manager.hasLoggers()) {
                     GroovyLogManager.manager.log(TraceCategory.DSL, e.getMessage());
                 }
-            } catch (AssertionError | Exception e) {
-                // log exception to the event console and the error log
+            } catch (AssertionError | LinkageError | Exception e) {
                 GroovyDSLCoreActivator.logException(e);
             }
             return null;
@@ -318,6 +315,7 @@ public class DSLDScriptExecutor {
         DSLDScriptBinding(Script dsldScript) {
             this.dsldScript = dsldScript;
         }
+
         private final Script dsldScript;
 
         @Override
@@ -368,7 +366,7 @@ public class DSLDScriptExecutor {
                 return new RegisterClosure(this);
 
             case "supportsVersion":
-                return new Closure<Object>(this) {
+                return new Closure<>(this) {
                     private static final long serialVersionUID = 1L;
 
                     @Override
@@ -379,7 +377,7 @@ public class DSLDScriptExecutor {
                 };
 
             case "assertVersion":
-                return new Closure<Object>(this) {
+                return new Closure<>(this) {
                     private static final long serialVersionUID = 1L;
 
                     @Override
@@ -393,7 +391,7 @@ public class DSLDScriptExecutor {
                 };
 
             case "contribute":
-                return new Closure<Object>(this) {
+                return new Closure<>(this) {
                     private static final long serialVersionUID = 1L;
                     @Override
                     public Object call(Object... args) {
@@ -406,7 +404,7 @@ public class DSLDScriptExecutor {
                 };
 
             case "log":
-                return new Closure<Object>(this) {
+                return new Closure<>(this) {
                     private static final long serialVersionUID = 1L;
                     @Override
                     public Object call(Object... args) {

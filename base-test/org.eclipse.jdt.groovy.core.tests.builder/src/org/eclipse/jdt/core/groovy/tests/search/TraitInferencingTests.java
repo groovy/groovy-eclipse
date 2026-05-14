@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.eclipse.jdt.core.groovy.tests.search;
+
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 
 import org.junit.Test;
 
@@ -31,6 +33,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty1() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -38,6 +41,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    println number\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -45,6 +49,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty2() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -52,6 +57,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    number = 42\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -59,6 +65,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty3() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -66,6 +73,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    println this.number\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -73,6 +81,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty4() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -80,6 +89,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    this.number = 42\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -87,6 +97,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty5() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -94,6 +105,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    println getNumber()\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "getNumber", "T");
         assertExprType(source, "getNumber", "java.lang.Number");
@@ -101,6 +113,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty6() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -108,6 +121,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    setNumber(42)\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "setNumber", "T");
         assertExprType(source, "setNumber", "java.lang.Void");
@@ -115,6 +129,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty7() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -124,6 +139,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    println number\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -131,6 +147,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty8() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -140,6 +157,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    number = 42\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -147,6 +165,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty9() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -156,6 +175,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    println this.number\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -163,6 +183,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty10() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -172,6 +193,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    this.number = 42\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -179,6 +201,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty11() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -188,6 +211,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    println getNumber()\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "getNumber", "T");
         assertExprType(source, "getNumber", "java.lang.Number");
@@ -195,6 +219,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty12() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -204,6 +229,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    setNumber(42)\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "setNumber", "T");
         assertExprType(source, "setNumber", "java.lang.Void");
@@ -211,23 +237,187 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty13() {
+        //@formatter:off
         String source =
-            "trait T {\n" +
-            "  Number thing\n" +
+            "trait A {\n" +
+            "  Number number\n" +
             "}\n" +
-            "class C implements T {\n" +
-            "  void meth() {\n" +
-            "    println T.super.thing\n" +
-            "  }\n" +
+            "trait B {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "class C implements A, B {\n" +
+            "  def n = number\n" +
             "}\n";
+        //@formatter:on
 
-        // TODO: assertDeclType(source, "thing", "T");
-        // TODO: assertExprType(source, "thing", "java.lang.Number");
-        assertUnknownConfidence(source, source.lastIndexOf("thing"), source.lastIndexOf("thing") + "thing".length());
+        assertDeclType(source, "number", "B");
+        assertExprType(source, "number", "java.lang.Number");
     }
 
     @Test
     public void testProperty14() {
+        createUnit("A",
+            "trait A {\n" +
+            "  Number number\n" +
+            "}\n");
+        createUnit("B",
+            "trait B {\n" +
+            "  Number number\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements A, B {\n" +
+            "  def n = number\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "number", "B");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty15() {
+        createUnit("A",
+            "trait A {\n" +
+            "  Number number\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "trait B {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "class C implements A, B {\n" +
+            "  def n = number\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "number", "B");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty16() {
+        createUnit("B",
+            "trait B {\n" +
+            "  Number number\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "trait A {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "class C implements A, B {\n" +
+            "  def n = number\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "number", "B");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7909
+    public void testProperty17() {
+        //@formatter:off
+        String source =
+            "class C implements A, B {\n" +
+            "  def n = number\n" +
+            "}\n" +
+            "trait B {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "trait A {\n" +
+            "  Number number\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = source.indexOf("number");
+        assertDeclaringType(source, offset, offset + 6, "B");
+        assertType(source, offset, offset + 6, "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty18() {
+        //@formatter:off
+        String source =
+            "trait A {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "trait B extends A {\n" +
+            "}\n" +
+            "class C implements B {\n" +
+            "  def n = number\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "number", "A");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1361
+    public void testProperty19() {
+        createUnit("T",
+            "trait A {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "trait B extends A {\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements B {\n" +
+            "  def n = number\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "number", "A");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1361
+    public void testProperty20() {
+        createUnit("A",
+            "trait A {\n" +
+            "  Number number\n" +
+            "}\n");
+        createUnit("B",
+            "trait B extends A {\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements B {\n" +
+            "  def n = number\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "number", "A");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9255
+    public void testProperty21() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  Number number = 42\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    println T.super.number\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty22() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -237,15 +427,338 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    T.super.number = 42\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Void");
+    }
+
+    @Test
+    public void testProperty23() {
+        createUnit("T",
+            "trait T {\n" +
+            "  Number number\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    def n = number\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty24() {
+        createUnit("T",
+            "trait T {\n" +
+            "  Number number\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    number = 42\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty25() {
+        createUnit("T",
+            "trait T {\n" +
+            "  Number number\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    def n = getNumber()\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "getNumber", "T");
+        assertExprType(source, "getNumber", "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty26() {
+        createUnit("T",
+            "trait T {\n" +
+            "  Number number\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    setNumber(42)\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "setNumber", "T");
+        assertExprType(source, "setNumber", "java.lang.Void");
+    }
+
+    @Test
+    public void testProperty27() {
+        createUnit("T",
+            "trait T {\n" +
+            "  Number[] numbers\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    def anArray = numbers\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "numbers", "T");
+        assertExprType(source, "numbers", "java.lang.Number[]");
+        assertExprType(source, "anArray", "java.lang.Number[]");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1599
+    public void testProperty28() {
+        createUnit("T",
+            "import java.beans.BeanInfo\n" +
+            "trait T {\n" +
+            "  Map<BeanInfo,Number[]> numbers\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    def anArray = numbers['k']\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "numbers", "T");
+        assertExprType(source, "numbers", "java.util.Map<java.beans.BeanInfo,java.lang.Number[]>");
+        assertExprType(source, "anArray", "java.lang.Number[]");
+    }
+
+    @Test
+    public void testProperty29() {
+        createUnit("T",
+            "trait T {\n" +
+            "  static Number number\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements T {\n" +
+            "  def m() {\n" +
+            "    number\n" +
+            "  }\n" +
+            "  static sm(C c, T t) {\n" +
+            "    c.number\n" +
+            "    t.number\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = source.indexOf("number");
+        assertDeclaringType(source, offset, offset + 6, "T");
+        assertType/*     */(source, offset, offset + 6, "java.lang.Number");
+
+        /**/offset = source.indexOf("c.number") + 2;
+        assertDeclaringType(source, offset, offset + 6, "T");
+        assertType/*     */(source, offset, offset + 6, "java.lang.Number");
+
+        /**/offset = source.indexOf("t.number") + 2;
+        assertDeclaringType(source, offset, offset + 6, "T");
+        assertType/*     */(source, offset, offset + 6, "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty30() {
+        createUnit("T",
+            "trait T {\n" +
+            "  static final Number number = 1\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements T {\n" +
+            "  def m() {\n" +
+            "    number\n" +
+            "  }\n" +
+            "  static sm(C c, T t) {\n" +
+            "    c.number\n" +
+            "    t.number\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = source.indexOf("number");
+        assertDeclaringType(source, offset, offset + 6, "T");
+        assertType/*     */(source, offset, offset + 6, "java.lang.Number");
+
+        /**/offset = source.indexOf("c.number") + 2;
+        assertDeclaringType(source, offset, offset + 6, "T");
+        assertType/*     */(source, offset, offset + 6, "java.lang.Number");
+
+        /**/offset = source.indexOf("t.number") + 2;
+        assertDeclaringType(source, offset, offset + 6, "T");
+        assertType/*     */(source, offset, offset + 6, "java.lang.Number");
+    }
+
+    @Test
+    public void testPublicField1() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  public String field\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
+    }
+
+    @Test
+    public void testPublicField2() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  public String field\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void m() {\n" +
+            "    T__field\n" +
+            "  }\n" +
+            "}";
+        //@formatter:on
+
+        assertDeclType(source, "T__field", "T");
+        assertExprType(source, "T__field", "java.lang.String");
+    }
+
+    @Test
+    public void testPublicStaticField() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  public static String field\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
+    }
+
+    @Test
+    public void testPublicStaticFinalField() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  public static final String field = 'value'\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
+    }
+
+    @Test
+    public void testPrivateField1() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  private String field\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
+    }
+
+    @Test
+    public void testPrivateField2() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  private String field\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void m() {\n" +
+            "    T__field\n" +
+            "  }\n" +
+            "}";
+        //@formatter:on
+
+        assertDeclType(source, "T__field", "T");
+        assertExprType(source, "T__field", "java.lang.String");
+    }
+
+    @Test
+    public void testPrivateStaticField() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  private static String field\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
+    }
+
+    @Test
+    public void testPrivateStaticFinalField() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  private static final String field = 'value'\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
     }
 
     //
 
     @Test
     public void testPublicMethod1() {
+        //@formatter:off
         String source =
             "trait Auditable {\n" +
             "  boolean check() {\n" +
@@ -257,6 +770,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "check", "Auditable");
         assertExprType(source, "check", "java.lang.Boolean");
@@ -264,7 +778,8 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPublicMethod2() {
-        String contents =
+        //@formatter:off
+        String source =
             "trait A {\n" +
             "  void method() {}\n" +
             "}\n" +
@@ -275,15 +790,17 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
+        //@formatter:on
 
-        assertDeclType(contents, "method", "A");
-        assertExprType(contents, "method", "java.lang.Void");
+        assertDeclType(source, "method", "B");
+        assertExprType(source, "method", "java.lang.Void");
     }
 
     @Test
     public void testPublicMethod3() {
-        String contents =
+        //@formatter:off
+        String source =
             "trait A {\n" +
             "  void method() {}\n" +
             "}\n" +
@@ -294,15 +811,17 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    A.super.method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
+        //@formatter:on
 
-        assertDeclType(contents, "method", "A");
-        assertExprType(contents, "method", "java.lang.Void");
+        assertDeclType(source, "method", "A");
+        assertExprType(source, "method", "java.lang.Void");
     }
 
     @Test
     public void testPublicMethod4() {
-        String contents =
+        //@formatter:off
+        String source =
             "trait A {\n" +
             "  void method() {}\n" +
             "}\n" +
@@ -313,14 +832,334 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    B.super.method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
+        //@formatter:on
 
-        assertDeclType(contents, "method", "B");
-        assertExprType(contents, "method", "java.lang.Void");
+        assertDeclType(source, "method", "B");
+        assertExprType(source, "method", "java.lang.Void");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8587
+    public void testPublicMethod5() {
+        //@formatter:off
+        String source =
+            "trait A {\n" +
+            "  void method() {}\n" +
+            "}\n" +
+            "trait B extends A {\n" +
+            "}\n" +
+            "class C implements B {\n" +
+            "  @Override\n" +
+            "  void method() {\n" +
+            "    B.super.method()\n" + // B$Trait$Helper.method(this)
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        if (isAtLeastGroovy(50)) {
+            assertDeclType(source, "method", "A");
+            assertExprType(source, "method", "java.lang.Void");
+        } else {
+            int offset = source.lastIndexOf("method");
+            assertUnknownConfidence(source, offset, offset + 6);
+        }
+    }
+
+    @Test
+    public void testPublicMethod6() {
+        //@formatter:off
+        String source =
+            "trait A {\n" +
+            "  void m() {}\n" +
+            "}\n" +
+            "trait B {\n" +
+            "  void m() {}\n" +
+            "}\n" +
+            "class C implements A, B {\n" +
+            "}\n" +
+            "trait T {\n" +
+            "  void m() {}\n" +
+            "}\n" +
+            "class D extends C implements T {\n" +
+            "  void test() {\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "m", "T");
+        assertExprType(source, "m", "java.lang.Void");
+    }
+
+    @Test
+    public void testPublicMethod7() {
+        //@formatter:off
+        String source =
+            "trait A<B> {\n" +
+            "  B m() {\n" +
+            "  }\n" +
+            "}\n" +
+            "class C<T> implements A<T> {\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked p() {\n" +
+            "  def x = new C<Number>().m()\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "m", "A");
+        assertExprType(source, "m", "java.lang.Number");
+        assertExprType(source, "x", "java.lang.Number");
+    }
+
+    @Test
+    public void testPublicStaticMethod1() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  static m() {}\n" +
+            "  void x() {\n" +
+            "    T.m()\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = source.indexOf("T.m()") + 2;
+        assertUnknownConfidence(source, offset, offset + 1);
+
+        /**/offset = source.lastIndexOf("m()");
+        assertDeclaringType(source, offset, offset + 1, "T");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8854
+    public void testPublicStaticMethod2() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  static m() {}\n" +
+            "  static x() {\n" +
+            "    T.m()\n" +
+            "    m()\n" + // this.m($static$self)
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = source.indexOf("T.m()") + 2;
+        assertUnknownConfidence(source, offset, offset + 1);
+
+        /**/offset = source.lastIndexOf("m()");
+        assertDeclaringType(source, offset, offset + 1, "T");
+    }
+
+    @Test
+    public void testPublicStaticMethod3() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  static m() {}\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void x() {\n" +
+            "    T.m()\n" +
+            "    C.m()\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = source.indexOf("T.m()") + 2;
+        assertUnknownConfidence(source, offset, offset + 1);
+
+        /**/offset = source.indexOf("C.m()") + 2;
+        assertDeclaringType(source, offset, offset + 1, "T");
+
+        /**/offset = source.lastIndexOf("m()");
+        assertDeclaringType(source, offset, offset + 1, "T");
+    }
+
+    @Test
+    public void testPublicStaticMethod4() {
+        createUnit("T",
+            "trait T {\n" +
+            "  static m() {}\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements T {\n" +
+            "  void x() {\n" +
+            "    T.m()\n" +
+            "    C.m()\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = source.indexOf("T.m()") + 2;
+        assertUnknownConfidence(source, offset, offset + 1);
+
+        /**/offset = source.indexOf("C.m()") + 2;
+        assertDeclaringType(source, offset, offset + 1, "T");
+
+        /**/offset = source.lastIndexOf("m()");
+        assertDeclaringType(source, offset, offset + 1, "T");
+    }
+
+    @Test
+    public void testPublicStaticMethod5() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  static m() {}\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "T.m()\n" +
+            "C.m()\n";
+        //@formatter:on
+
+        int offset = source.indexOf("T.m()") + 2;
+        assertUnknownConfidence(source, offset, offset + 1);
+
+        /**/offset = source.indexOf("C.m()") + 2;
+        assertDeclaringType(source, offset, offset + 1, "T");
+    }
+
+    @Test
+    public void testPublicStaticMethod6() {
+        createUnit("T",
+            "trait T {\n" +
+            "  static m() {}\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C implements T {\n" +
+            "}\n" +
+            "T.m()\n" +
+            "C.m()\n";
+        //@formatter:on
+
+        int offset = source.indexOf("T.m()") + 2;
+        assertUnknownConfidence(source, offset, offset + 1);
+
+        /**/offset = source.indexOf("C.m()") + 2;
+        assertDeclaringType(source, offset, offset + 1, "T");
+    }
+
+    @Test
+    public void testPublicStaticMethod7() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  static m() {'T'}\n" +
+            "}\n" +
+            "class C {\n" +
+            "  def m() {'C'}\n" +
+            "}\n" +
+            "class D extends C implements T {\n" +
+            "}\n" +
+            "new D().m()\n";
+        //@formatter:on
+
+        assertDeclType(source, "m", "T");
+    }
+
+    @Test
+    public void testPublicStaticMethod8() {
+        createUnit("T",
+            "trait T {\n" +
+            "  static m() {'T'}\n" +
+            "}\n");
+
+        //@formatter:off
+        String source =
+            "class C {\n" +
+            "  def m() {'C'}\n" +
+            "}\n" +
+            "class D extends C implements T {\n" +
+            "}\n" +
+            "new D().m()\n";
+        //@formatter:on
+
+        assertDeclType(source, "m", "T");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10106
+    public void testPublicStaticMethod9() {
+        for (String mods : new String[] {"", "@groovy.transform.TypeChecked ", "@groovy.transform.CompileStatic "}) {
+            //@formatter:off
+            String source =
+                "class C {\n" +
+                "}\n" +
+                mods + "trait T {\n" +
+                "  static void m(C c) {\n" +
+                "  }\n" +
+                "  final C c = new C().tap {\n" +
+                "    m(it)\n" +
+                "  }\n" +
+                "}\n";
+            //@formatter:on
+
+            assertDeclType(source, "m", "T");
+            assertDeclType(source, "tap", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1509
+    public void testPublicStaticMethod10() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  static getX() {}\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "T.x\n" +
+            "C.x\n";
+        //@formatter:on
+
+        int offset = source.indexOf("T.x") + 2;
+        assertUnknownConfidence(source, offset, offset + 1);
+
+        /**/offset = source.indexOf("C.x") + 2;
+        assertDeclaringType(source, offset, offset + 1, "T");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1540
+    public void testPublicStaticMethod11() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  static m() {\n" +
+            "    this.m()\n" +
+            "    def that = this\n" +
+            "    that.m()\n" +
+            "  }\n" +
+            "  def foo() {\n" +
+            "    this.m()\n" +
+            "    def that = this\n" +
+            "    that.m()\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        int offset = source.indexOf("this.m()") + 5;
+        assertDeclaringType(source, offset, offset + 1, "T");
+
+        /**/offset = source.indexOf("that.m()") + 5;
+        assertDeclaringType(source, offset, offset + 1, "T");
+
+        /**/offset = source.lastIndexOf("this.m()") + 5;
+        assertDeclaringType(source, offset, offset + 1, "T");
+
+        /**/offset = source.lastIndexOf("that.m()") + 5;
+        assertDeclaringType(source, offset, offset + 1, "T");
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-8272
     public void testPublicStaticSuperMethod1() {
+        //@formatter:off
         String source =
             "trait Checkable {\n" +
             "  static boolean check() {\n" +
@@ -329,11 +1168,12 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "}\n" +
             "trait Auditable extends Checkable {\n" +
             "  boolean audit() {\n" +
-            "    if (check()) {\n" +
+            "    if (check()) {\n" + // this.check((Class)$self.getClass())
             "      ;\n" +
             "    }\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "check", "Checkable");
         assertExprType(source, "check", "java.lang.Boolean");
@@ -341,6 +1181,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPublicStaticSuperMethod2() {
+        //@formatter:off
         String source =
             "trait Checkable {\n" +
             "  static boolean check() {\n" +
@@ -354,73 +1195,15 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "check", "Checkable");
         assertExprType(source, "check", "java.lang.Boolean");
     }
 
     @Test
-    public void testPublicField1() {
-        String source =
-            "trait T {\n" +
-            "  public String field\n" +
-            "  void m() {\n" +
-            "    field\n" +
-            "  }\n" +
-            "}\n";
-
-        assertDeclType(source, "field", "T");
-        assertExprType(source, "field", "java.lang.String");
-    }
-
-    @Test
-    public void testPublicField2() {
-        String source =
-            "trait T {\n" +
-            "  public String field\n" +
-            "}\n" +
-            "class C implements T {\n" +
-            "  void m() {\n" +
-            "    T__field\n" +
-            "  }\n" +
-            "}";
-
-        assertDeclType(source, "T__field", "T");
-        assertExprType(source, "T__field", "java.lang.String");
-    }
-
-    @Test
-    public void testPublicStaticField() {
-        String source =
-            "trait T {\n" +
-            "  public static String field\n" +
-            "  void m() {\n" +
-            "    field\n" +
-            "  }\n" +
-            "}\n";
-
-        assertDeclType(source, "field", "T");
-        assertExprType(source, "field", "java.lang.String");
-    }
-
-    @Test
-    public void testPublicStaticFinalField() {
-        String source =
-            "trait T {\n" +
-            "  public static final String field = 'value'\n" +
-            "  void m() {\n" +
-            "    field\n" +
-            "  }\n" +
-            "}\n";
-
-        assertDeclType(source, "field", "T");
-        assertExprType(source, "field", "java.lang.String");
-    }
-
-    //
-
-    @Test
     public void testPrivateMethod1() {
+        //@formatter:off
         String source =
             "trait Auditable {\n" +
             "  private boolean check() {\n" +
@@ -432,14 +1215,16 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "check", "Auditable");
         assertExprType(source, "check", "java.lang.Boolean");
     }
 
-    @Test
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8859
     public void testPrivateMethod2() {
-        String contents =
+        //@formatter:off
+        String source =
             "trait A {\n" +
             "  private void method() {}\n" +
             "}\n" +
@@ -450,15 +1235,17 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
+        //@formatter:on
 
-        assertDeclType(contents, "method", "A");
-        assertExprType(contents, "method", "java.lang.Void");
+        int offset = source.lastIndexOf("method");
+        assertUnknownConfidence(source, offset, offset + 6);
     }
 
     @Test
     public void testPrivateMethod3() {
-        String contents =
+        //@formatter:off
+        String source =
             "trait A {\n" +
             "  private void method() {}\n" +
             "}\n" +
@@ -469,15 +1256,17 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    A.super.method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
+        //@formatter:on
 
-        assertDeclType(contents, "method", "A");
-        assertExprType(contents, "method", "java.lang.Void");
+        assertDeclType(source, "method", "A");
+        assertExprType(source, "method", "java.lang.Void");
     }
 
     @Test
     public void testPrivateMethod4() {
-        String contents =
+        //@formatter:off
+        String source =
             "trait A {\n" +
             "  private void method() {}\n" +
             "}\n" +
@@ -488,85 +1277,70 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    B.super.method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
+        //@formatter:on
 
-        assertDeclType(contents, "method", "B");
-        assertExprType(contents, "method", "java.lang.Void");
+        assertDeclType(source, "method", "B");
+        assertExprType(source, "method", "java.lang.Void");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7486
+    public void testPrivateMethod5() {
+        //@formatter:off
+        String source =
+            "trait T {\n" +
+            "  private String f(String s) { s }\n" +
+            "  void test() {\n" +
+            "    ['x'].collect { String s -> f(s) }\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "f", "T");
+        assertExprType(source, "f", "java.lang.String");
+
+        assertDeclType(source, "collect", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-8854
-    public void testPrivateStaticMethod() {
+    public void testPrivateStaticMethod1() {
+        //@formatter:off
         String source =
             "trait Auditable {\n" +
             "  private static boolean check() {\n" +
             "    true\n" +
             "  }\n" +
             "  boolean audit() {\n" +
-            "    if (check()) {\n" +
+            "    if (check()) {\n" + // this.check((Class)$self.getClass())
             "      ;\n" +
             "    }\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "check", "Auditable");
         assertExprType(source, "check", "java.lang.Boolean");
     }
 
-    @Test
-    public void testPrivateField1() {
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8859
+    public void testPrivateStaticMethod2() {
+        createUnit("A",
+            "trait A {\n" +
+            "  private static boolean test() {\n" +
+            "    true\n" +
+            "  }\n" +
+            "}\n");
+
+        //@formatter:off
         String source =
-            "trait T {\n" +
-            "  private String field\n" +
-            "  void m() {\n" +
-            "    field\n" +
+            "class C implements A {\n" +
+            "  boolean m() {\n" +
+            "    test()\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
-        assertDeclType(source, "field", "T");
-        assertExprType(source, "field", "java.lang.String");
-    }
-
-    @Test
-    public void testPrivateField2() {
-        String source =
-            "trait T {\n" +
-            "  private String field\n" +
-            "}\n" +
-            "class C implements T {\n" +
-            "  void m() {\n" +
-            "    T__field\n" +
-            "  }\n" +
-            "}";
-
-        assertDeclType(source, "T__field", "T");
-        assertExprType(source, "T__field", "java.lang.String");
-    }
-
-    @Test
-    public void testPrivateStaticField() {
-        String source =
-            "trait T {\n" +
-            "  private static String field\n" +
-            "  void m() {\n" +
-            "    field\n" +
-            "  }\n" +
-            "}\n";
-
-        assertDeclType(source, "field", "T");
-        assertExprType(source, "field", "java.lang.String");
-    }
-
-    @Test
-    public void testPrivateStaticFinalField() {
-        String source =
-            "trait T {\n" +
-            "  private static final String field = 'value'\n" +
-            "  void m() {\n" +
-            "    field\n" +
-            "  }\n" +
-            "}\n";
-
-        assertDeclType(source, "field", "T");
-        assertExprType(source, "field", "java.lang.String");
+        int offset = source.lastIndexOf("test");
+        assertUnknownConfidence(source, offset, offset + 4);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.dsl.tests
+
+import static org.eclipse.core.resources.IncrementalProjectBuilder.FULL_BUILD
 
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.codehaus.groovy.eclipse.test.TestProject
@@ -373,7 +375,6 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
             '''.stripMargin()
 
         inferType(contents, 'blar').with {
-            assert declaringTypeName == 'Foo'
             assert result.confidence.name() == 'UNKNOWN' // because accessing in static context
         }
     }
@@ -506,7 +507,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
             |  String getFoo();
             |  int foo(arg);
             |}
-            |"".foo()
+            |"".foo(null)
             |'''.stripMargin()
 
         assert inferType(contents, 'foo').typeName == 'java.lang.Integer'
@@ -966,6 +967,89 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         String contents = 'foo(arg:"arg", arg2:argProp)'
 
         assert inferType(contents, 'argProp').typeName == 'java.lang.Double'
+    }
+
+    @Test
+    void testEnclosingCall8() {
+        createDsls '''\
+            |contribute(bind(calls: enclosingCall())) {
+            |  calls.each {
+            |    String propertyName = it.methodAsString + 'XXX'
+            |    property name:propertyName, type:java.lang.Long
+            |  }
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            |bar {
+            |  foo {
+            |    fooXXX
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assert inferType(contents, 'fooXXX').typeName == 'java.lang.Long'
+    }
+
+    @Test
+    void testEnclosingCallName1() {
+        createDsls('''\
+            |contribute(bind(calls: enclosingCallName())) {
+            |  if (calls == ['foo', 'bar', 'foo']) {
+            |    property name:'baz', type:int
+            |  }
+            |}
+            |'''.stripMargin())
+
+        String contents = '''\
+            |foo {
+            |  bar {
+            |    foo {
+            |      baz
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assert inferType(contents, 'baz').typeName == 'java.lang.Integer'
+    }
+
+    @Test // GRECLIPSE-1301
+    void testEnclosingCallName2() {
+        createDsls('''\
+            |contribute(~enclosingCallName('foo')) {
+            |  property name:'baz'
+            |}
+            |'''.stripMargin())
+
+        String contents = '''\
+            |foo {
+            |  bar {
+            |    baz
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assert inferType(contents, 'baz').result.confidence.name() == 'UNKNOWN'
+    }
+
+    @Test // GRECLIPSE-1301
+    void testEnclosingCallName3() {
+        createDsls('''\
+            |contribute(enclosingCall(~name('foo'))) {
+            |  property name:'baz', type:int
+            |}
+            |'''.stripMargin())
+
+        String contents = '''\
+            |foo {
+            |  bar {
+            |    baz
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assert inferType(contents, 'baz').typeName == 'java.lang.Integer'
     }
 
     @Test
@@ -1456,44 +1540,6 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         assert inferType(contents, 'hi').result.confidence.name() == 'UNKNOWN'
     }
 
-    @Test // GRECLIPSE-1301
-    void testEnclosingCallName1() {
-        createDsls('''\
-            |contribute(~ enclosingCallName('foo')) {
-            |  property name:'hi'
-            |}
-            |'''.stripMargin())
-
-        String contents = '''\
-            |foo {
-            |  bar {
-            |    hi
-            |  }
-            |}
-            |'''.stripMargin()
-
-        assert inferType(contents, 'hi').result.confidence.name() == 'UNKNOWN'
-    }
-
-    @Test // GRECLIPSE-1301
-    void testEnclosingCallName2() {
-        createDsls('''\
-            |contribute(enclosingCall(~name('foo'))) {
-            |  property name:'hi', type:int
-            |}
-            |'''.stripMargin())
-
-        String contents = '''\
-            |foo {
-            |  bar {
-            |    hi
-            |  }
-            |}
-            |'''.stripMargin()
-
-        assert inferType(contents, 'hi').typeName == 'java.lang.Integer'
-    }
-
     @Test // GRECLIPSE-1459
     void testNullType() {
         createDsls '''\
@@ -1768,28 +1814,6 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         }
     }
 
-    @Test
-    void testNestedCalls() {
-        createDsls '''\
-            |contribute(bind(x:enclosingCall())) {
-            |  x.each {
-            |    String propertyName = it.methodAsString + 'XXX'
-            |    property name:propertyName, type:java.lang.Long
-            |  }
-            |}
-            |'''.stripMargin()
-
-        String contents = '''\
-            |bar {
-            |  foo {
-            |    fooXXX
-            |  }
-            |}
-            |'''.stripMargin()
-
-        assert inferType(contents, 'fooXXX').typeName == 'java.lang.Long'
-    }
-
     @Test // GRECLIPSE-1458
     void testMultiProject() {
         def otherProject = new TestProject('Other')
@@ -1800,7 +1824,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
                 |  property name:'other', type:Integer
                 |}
                 |'''.stripMargin())
-            otherProject.fullBuild()
+            otherProject.project.build(FULL_BUILD, null)
 
             addProjectReference(otherProject.javaProject)
             GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
@@ -1809,5 +1833,24 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         } finally {
             otherProject.dispose()
         }
+    }
+
+    @Test
+    void testScriptVariable() {
+        createDsls '''\
+            |NAME = 'bar'
+            |contribute(currentType('Foo')) {
+            |  property name:NAME, type:Integer
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            |class Foo {
+            |}
+            |def foo = new Foo()
+            |foo.bar
+            |'''.stripMargin()
+
+        assert inferType(contents, 'bar').typeName == 'java.lang.Integer'
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,19 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveType;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.first;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.tail;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isClassClassNodeWrappingConcreteType;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
@@ -29,7 +38,6 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.reflection.ParameterTypes;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
-import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
 /**
  * Looks up the type of an expression in the currently applicable categories.
@@ -39,7 +47,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 public class CategoryTypeLookup implements ITypeLookup {
 
     @Override
-    public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
+    public TypeLookupResult lookupType(final Expression node, final VariableScope scope, final ClassNode objectExpressionType) {
         if (node instanceof VariableExpression || isCompatibleConstantExpression(node, scope, objectExpressionType)) {
             String simpleName = node.getText();
             ClassNode selfType = GroovyUtils.getWrapperTypeIfPrimitive(
@@ -49,9 +57,9 @@ public class CategoryTypeLookup implements ITypeLookup {
             //
             List<MethodNode> candidates = new ArrayList<>();
 
-            if (isMethodPointer || scope.isMethodCall()) {
+            if (isMethodPointer || (scope.isMethodCall() && scope.getWormhole().get("lhs") != node)) {
                 for (ClassNode category : scope.getCategoryNames()) {
-                    for (MethodNode method : category.getMethods(simpleName)) {
+                    for (MethodNode method : category.getDeclaredMethods(simpleName)) {
                         if (isCompatibleCategoryMethod(method, selfType, scope)) {
                             candidates.add(method);
                         }
@@ -63,10 +71,10 @@ public class CategoryTypeLookup implements ITypeLookup {
                     String methodName = kind.createAccessorName(simpleName);
                     if (methodName != null) {
                         for (ClassNode category : scope.getCategoryNames()) {
-                            for (MethodNode method : category.getMethods(methodName)) {
+                            for (MethodNode method : category.getDeclaredMethods(methodName)) {
                                 if (kind.isAccessorKind(method, true) && isCompatibleCategoryMethod(method, selfType, scope) &&
                                         // GROOVY-5245: isPropName() methods cannot be used for bean-style property expressions
-                                        (kind != AccessorSupport.ISSER || isDefaultGroovyMethod(method, scope) || isDefaultGroovyStaticMethod(method, scope))) {
+                                        (kind != AccessorSupport.ISSER || isDefaultGroovyMethod(method, scope) || GroovyUtils.getGroovyVersion().getMajor() > 3)) {
                                     candidates.add(method);
                                 }
                             }
@@ -78,56 +86,80 @@ public class CategoryTypeLookup implements ITypeLookup {
             if (!candidates.isEmpty()) {
                 int args = 1 + scope.getMethodCallNumberOfArguments();
                 List<ClassNode> argumentTypes = new ArrayList<>(args);
-                argumentTypes.add(selfType); // lhs of dot or delegate type
+                argumentTypes.add(selfType); // lhs of dot or implicit-this type
                 if (args > 1) argumentTypes.addAll(scope.getMethodCallArgumentTypes());
 
-                MethodNode method = selectBestMatch(candidates, argumentTypes);
-
-                TypeLookupResult result = new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method,
-                    isDefaultGroovyMethod(method, scope) ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED, scope);
-                result.isGroovy = true; // enable semantic highlighting as Groovy method
-                return result;
+                MethodNode method = selectBestMatch(candidates, argumentTypes, scope);
+                if (method != null) {
+                    ClassNode returnType = method.getReturnType();
+                    // getAt(Object,String):Object supersedes getAt(Map<K,V>,Object):V when first param is String or GString; restore return type V for user experience
+                    if ("getAt".equals(simpleName) && VariableScope.OBJECT_CLASS_NODE.equals(returnType) && isOrImplements(selfType, VariableScope.MAP_CLASS_NODE)) {
+                        for (ClassNode face : GroovyUtils.getAllInterfaces(selfType)) {
+                            if (VariableScope.MAP_CLASS_NODE.equals(face)) { // Map<K,V>
+                                GenericsType[] generics = GroovyUtils.getGenericsTypes(face);
+                                if (generics.length == 2) returnType = generics[1].getType();
+                                break;
+                            }
+                        }
+                    }
+                    TypeLookupResult.TypeConfidence confidence = TypeLookupResult.TypeConfidence.INFERRED;
+                    if (isDefaultGroovyMethod(method, scope) ||
+                            (!method.getName().equals(simpleName) && method.getName().startsWith("get") && scope.isMethodCall())) {
+                        confidence = TypeLookupResult.TypeConfidence.LOOSELY_INFERRED;
+                    }
+                    TypeLookupResult result = new TypeLookupResult(returnType, method.getDeclaringClass(), method, confidence, scope);
+                    result.isGroovy = true; // enable semantic highlighting for category/extension method
+                    return result;
+                }
             }
         }
         return null;
     }
 
-    protected static boolean isCompatibleConstantExpression(Expression node, VariableScope scope, ClassNode selfType) {
-        if (node instanceof ConstantExpression && !scope.isTopLevel()) {
-            org.codehaus.groovy.ast.ASTNode enclosingNode = scope.getEnclosingNode();
+    private static boolean isCompatibleConstantExpression(final Expression node, final VariableScope scope, final ClassNode selfType) {
+        if (node instanceof ConstantExpression && !scope.isTopLevel() && !VariableScope.VOID_CLASS_NODE.equals(selfType)) {
+            ASTNode enclosingNode = scope.getEnclosingNode();
             if (!(enclosingNode instanceof AttributeExpression || (enclosingNode instanceof MethodPointerExpression &&
-                                                                    VariableScope.CLASS_CLASS_NODE.equals(selfType)))) {
+                                                                    VariableScope.CLASS_CLASS_NODE.equals(selfType) &&
+                                                                    GroovyUtils.getGroovyVersion().getMajor() < 3))) {
                 return (VariableScope.STRING_CLASS_NODE.equals(node.getType()) && node.getLength() <= node.getText().length());
             }
         }
         return false;
     }
 
-    protected static boolean isCompatibleCategoryMethod(MethodNode method, ClassNode firstArgumentType, VariableScope scope) {
-        if (method.isStatic()) {
-            Parameter[] paramters = method.getParameters();
-            if (paramters != null && paramters.length > 0) {
-                ClassNode parameterType = paramters[0].getType();
-                if (VariableScope.CLASS_CLASS_NODE.equals(firstArgumentType) && isDefaultGroovyStaticMethod(method, scope)) {
-                    parameterType = VariableScope.newClassClassNode(parameterType);
+    private static boolean isCompatibleCategoryMethod(final MethodNode method, final ClassNode firstArgumentType, final VariableScope scope) {
+        if (method.isPublic() && method.isStatic()) {
+            Parameter[] parameters = method.getParameters();
+            if (parameters != null && parameters.length > 0) {
+                ClassNode firstParamType = parameters[0].getType();
+                if (isClassClassNodeWrappingConcreteType(firstArgumentType) &&
+                        !VariableScope.CLASS_CLASS_NODE.equals(firstParamType) &&
+                        // references like "this.name" (in static scope), "Type.name" or "Type::name" match with "Class<SelfType>"
+                        (isDefaultGroovyStaticMethod(method, scope) || SimpleTypeLookup.isStaticReferenceToInstanceMethod(scope))) {
+                    firstParamType = VariableScope.newClassClassNode(firstParamType);
                 }
-                if (isTypeCompatible(firstArgumentType, parameterType)) {
-                    return !isDefaultGroovyMethod(method, scope) || !GroovyUtils.isDeprecated(method);
-                }
-            }
-        }
-        return false;
-    }
-
-    protected static boolean isTypeCompatible(ClassNode source, ClassNode target) {
-        if (SimpleTypeLookup.isTypeCompatible(source, target) != Boolean.FALSE) {
-            if (!(VariableScope.CLASS_CLASS_NODE.equals(source) && source.isUsingGenerics()) ||
-                    VariableScope.OBJECT_CLASS_NODE.equals(target) || !target.isUsingGenerics()) {
-                return true;
-            } else {
-                source = source.getGenericsTypes()[0].getType();
-                target = target.getGenericsTypes()[0].getType();
-                if (SimpleTypeLookup.isTypeCompatible(source, target) != Boolean.FALSE) {
+                if (isSelfTypeCompatible(firstArgumentType, firstParamType)) {
+                    if (isDefaultGroovyMethod(method, scope)) {
+                        if (GroovyUtils.isDeprecated(method)) {
+                            return false;
+                        }
+                        // with unknown arguments, method cannot be overruled by others
+                        if (scope.getEnclosingNode() instanceof MethodPointerExpression) {
+                            ClassNode selfType = isClassClassNodeWrappingConcreteType(firstArgumentType)
+                                ? VariableScope.getFirstGenerics(firstArgumentType) : firstArgumentType;
+                            // check for inexact match of category method, in which case the self-type method(s) take precedence
+                            if (!selfType.equals(parameters[0].getType()) && !selfType.getMethods(method.getName()).isEmpty()) {
+                                return false;
+                            }
+                            // "Type.&name" or "Type::name" supports Class methods as of Groovy 4
+                            if (VariableScope.CLASS_CLASS_NODE.equals(parameters[0].getType()) &&
+                                    isClassClassNodeWrappingConcreteType(firstArgumentType) &&
+                                    GroovyUtils.getGroovyVersion().getMajor() < 4) {
+                                return false;
+                            }
+                        }
+                    }
                     return true;
                 }
             }
@@ -135,64 +167,123 @@ public class CategoryTypeLookup implements ITypeLookup {
         return false;
     }
 
-    protected static boolean isDefaultGroovyMethod(MethodNode method, VariableScope scope) {
+    private static boolean isSelfTypeCompatible(final ClassNode source, final ClassNode target) {
+        if (!Boolean.FALSE.equals(SimpleTypeLookup.isTypeCompatible(source, target))) {
+            if (!(VariableScope.CLASS_CLASS_NODE.equals(source) && source.isUsingGenerics()) ||
+                    VariableScope.OBJECT_CLASS_NODE.equals(target) || !target.isUsingGenerics()) {
+                return true;
+            }
+            // check compatibility of "X" and "Y" in "A<X>" and "B<Y>"
+            ClassNode sourceGT = VariableScope.getFirstGenerics(source);
+            ClassNode targetGT = VariableScope.getFirstGenerics(target);
+            if (sourceGT.equals(targetGT) || GroovyUtils.isAssignable(sourceGT, targetGT)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isDefaultGroovyMethod(final MethodNode method, final VariableScope scope) {
         return (VariableScope.DGM_CLASS_NODE.equals(method.getDeclaringClass()) || scope.isDefaultCategory(method.getDeclaringClass()));
     }
 
-    protected static boolean isDefaultGroovyStaticMethod(MethodNode method, VariableScope scope) {
+    private static boolean isDefaultGroovyStaticMethod(final MethodNode method, final VariableScope scope) {
         return (VariableScope.DGSM_CLASS_NODE.equals(method.getDeclaringClass()) || scope.isDefaultStaticCategory(method.getDeclaringClass()));
     }
 
-    /**
-     * Selects the candidate that most closely matches the method call arguments.
-     */
-    protected static MethodNode selectBestMatch(List<MethodNode> candidates, List<ClassNode> argumentTypes) {
-        MethodNode method = null;
+    private static MethodNode selectBestMatch(final List<MethodNode> candidates, final List<ClassNode> argumentTypes, final VariableScope scope) {
+        java.util.function.Function<MethodNode, List<ClassNode>> argsWithSelfTypeFix;
+        if (!VariableScope.CLASS_CLASS_NODE.equals(argumentTypes.get(0))) {
+            argsWithSelfTypeFix = x -> argumentTypes;
+        } else {
+            argsWithSelfTypeFix = m -> {
+                if (isDefaultGroovyStaticMethod(m, scope)) {
+                    List<ClassNode> adjusted = new ArrayList<>(argumentTypes);
+                    adjusted.set(0, VariableScope.getFirstGenerics(argumentTypes.get(0)));
+                    return adjusted;
+                }
+                return argumentTypes;
+            };
+        }
+
+        // Phase 1: find best self-type match for each set of parameters
+        Map<String, MethodNode> m = new java.util.LinkedHashMap<>();
         for (MethodNode candidate : candidates) {
-            if (argumentTypes.size() == candidate.getParameters().length) {
-                Boolean compatible = SimpleTypeLookup.isTypeCompatible(argumentTypes, candidate.getParameters());
+            StringBuilder signature = new StringBuilder();
+            Parameter[] parameters = candidate.getParameters();
+            for (int i = 1, n = parameters.length; i < n; i += 1) {
+                signature.append(parameters[i].getType().getName()).append(',');
+            }
+            MethodNode previous = m.put(signature.toString(), candidate);
+            if (previous != null) {
+                long d1 = selfParameterDistance(argsWithSelfTypeFix.apply(previous), previous.getParameters());
+                long d2 = selfParameterDistance(argsWithSelfTypeFix.apply(candidate), candidate.getParameters());
+
+                if (d1 <= d2) m.put(signature.toString(), previous);
+            }
+        }
+
+        if (scope.getEnclosingNode() instanceof MethodPointerExpression) {
+            return first(m.values());
+        }
+
+        // Phase 2: find best set of parameters for given call arguments
+        MethodNode method = null;
+        for (MethodNode candidate : m.values()) {
+            int argumentCount = argumentTypes.size(), parameterCount = candidate.getParameters().length;
+            if (argumentCount == parameterCount || (parameterCount > 1 && argumentCount >= parameterCount - 1 && GenericsMapper.isVargs(candidate.getParameters()))) {
+                Boolean compatible = SimpleTypeLookup.isTypeCompatible(argumentTypes.subList(1, argumentCount), tail(candidate.getParameters()));
                 if (compatible == Boolean.TRUE) { // exact match
                     method = candidate;
                     break;
                 } else if (compatible != Boolean.FALSE) { // fuzzy match
                     if (method != null) {
-                        long d1 = calculateParameterDistance(argumentTypes, method.getParameters());
-                        long d2 = calculateParameterDistance(argumentTypes, candidate.getParameters());
+                        long d1 = tailParameterDistance(argumentTypes, method.getParameters());
+                        long d2 = tailParameterDistance(argumentTypes, candidate.getParameters());
 
                         if (d1 <= d2) continue; // stick with current selection
                     }
                     method = candidate;
-                } else if (method == null) {
-                    method = candidate; // at least arguments line up with parameters
                 }
             }
         }
-        return method != null ? method : candidates.get(0);
+        // "self.m()" is implicitly "self.m(null)" if only one method exists and it has two parameters and the non-self parameter is non-primitive
+        if (method == null && argumentTypes.size() == 1 && candidates.size() == 1 && candidates.get(0).getParameters().length == 2 && !isPrimitiveType(candidates.get(0).getParameters()[1].getOriginType())) {
+            method = candidates.get(0);
+        }
+
+        return method;
     }
 
-    protected static long calculateParameterDistance(List<ClassNode> arguments, Parameter[] parameters) {
+    private static long selfParameterDistance(final List<ClassNode> arguments, final Parameter[] parameters) {
         try {
-            // weight self type higher to prevent considering getAt(Map, Object)
-            // and getAt(Object, String) equally for the arguments (Map, String)
+            Class<?>[] a = {arguments.get(0).getTypeClass()};
+            Class<?>[] p = {parameters[0].getType().getTypeClass()};
+            // TODO: This can fail in a lot of cases; is there a better way to call it?
+            return MetaClassHelper.calculateParameterDistance(a, new ParameterTypes(p));
+        } catch (Throwable t) {
+            return Long.MAX_VALUE - (VariableScope.isVoidOrObject(parameters[0].getType()) ? 0 : 1);
+        }
+    }
 
-            int n = 1 + arguments.size();
+    private static long tailParameterDistance(final List<ClassNode> arguments, final Parameter[] parameters) {
+        try {
+            int n = arguments.size() - 1;
             Class<?>[] args = new Class[n];
-            for (int i = 1; i < n; i += 1) {
-                args[i] = arguments.get(i - 1).getTypeClass();
+            for (int i = 0; i < n; i += 1) {
+                args[i] = arguments.get(i + 1).getTypeClass();
             }
-            args[0] = args[1]; // repeat the self type for effect
 
-            n = 1 + parameters.length;
+            n = parameters.length - 1;
             Class<?>[] prms = new Class[n];
-            for (int i = 1; i < n; i += 1) {
-                prms[i] = parameters[i - 1].getType().getTypeClass();
+            for (int i = 0; i < n; i += 1) {
+                prms[i] = parameters[i + 1].getType().getTypeClass();
             }
-            prms[0] = prms[1]; // repeat the self type for effect
 
             // TODO: This can fail in a lot of cases; is there a better way to call it?
             return MetaClassHelper.calculateParameterDistance(args, new ParameterTypes(prms));
         } catch (Throwable t) {
-            return Long.MAX_VALUE - (VariableScope.isVoidOrObject(parameters[0].getType()) ? 0 : 1);
+            return Long.MAX_VALUE;
         }
     }
 }

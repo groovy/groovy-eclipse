@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.codeassist.tests
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeFalse
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jdt.core.Flags
@@ -28,12 +27,25 @@ import org.junit.Test
  */
 final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
-    private static final String CONTENTS = 'class Class {\n public Class(int x) {\n }\n void doNothing(int x) {\n  this.toString();\n  new Object().toString();\n }\n}'
-    private static final String SCRIPTCONTENTS = 'def x = 9\nx++\nnew Object().toString()'
+    private static final String CONTENTS = '''\
+        |class Type {
+        |  public Type(int x) {
+        |  }
+        |  void doNothing(int x) {
+        |    this.toString();
+        |    new Object().toString();
+        |  }
+        |}
+        |'''.stripMargin()
+    private static final String SCRIPTCONTENTS = '''\
+        |def x = 9
+        |x++
+        |new Object().toString()
+        |'''.stripMargin()
     private static final String CLOSURECONTENTS = 'def x = { t -> print t }'
 
-    private void setDGMFilter(String... filter) {
-        GroovyContentAssist.default.setFilteredDGMs(filter as Set)
+    private void setDGMFilter(String[] names) {
+        GroovyContentAssist.getDefault().setFilteredDGMs(Set.of(names))
     }
 
     private org.codehaus.jdt.groovy.model.GroovyCompilationUnit createGroovy() {
@@ -52,7 +64,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testDGMInJavaFile() {
-        def unit = addJavaSource(CONTENTS, 'Class')
+        def unit = addJavaSource(CONTENTS, 'Type')
         ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'this.'))
         proposalExists(proposals, 'identity', 0)
     }
@@ -74,7 +86,14 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testDGMInConstructorScope() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Class(int x) {\n'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Type(int x) {\n'))
+        proposalExists(proposals, 'identity', 1)
+    }
+
+    @Test
+    void testDGMInClassScope() {
+        def unit = createGroovy()
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, '}')) // after ctor
         proposalExists(proposals, 'identity', 1)
     }
 
@@ -93,13 +112,6 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testDGMInClassScope() {
-        def unit = createGroovy()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Class(int x) {\n }'))
-        proposalExists(proposals, 'identity', 1) // TODO: Is there a restriction on what DGMs may run in constructor?
-    }
-
-    @Test
     void testDGMInMethodParamScope() {
         def unit = createGroovy()
         ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'void doNothing('))
@@ -109,14 +121,14 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testDGMInConstructorParamScope() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Class('))
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Type('))
         proposalExists(proposals, 'identity', 0)
     }
 
     @Test
     void testDGMInModuleScope() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, '; } }'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getLastIndexOf(CONTENTS, '}'))
         proposalExists(proposals, 'identity', 0)
     }
 
@@ -129,38 +141,37 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testDGMJavadoc() {
-        String contents = '[].so', target = 'so'
+        String contents = '((Collection) []).so', target = 'so'
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, target)))
 
-        // Java 8 adds default method sort(Comparator) to the List interface
-        boolean jdkListSort
-        try {
-            List.getDeclaredMethod('sort', Comparator)
-            jdkListSort = true
-        } catch (any) {
-            jdkListSort = false
-        }
-
-        String info = proposals[jdkListSort ? 1 : 0].proposalInfo.getInfo(null)
-        assert info ==~ /(?s)Sorts the Collection\. .*/ : 'CategoryProposalCreator.CategoryMethodProposal.createJavaProposal locates javadoc'
+        String info = proposals[0].proposalInfo.getInfo(null)
+        assert info ==~ /(?s)(Sorts the Collection|Determines if the Iterable is sorted)\. .*/ : 'CategoryProposalCreator.CategoryMethodProposal.createJavaProposal locates javadoc'
     }
 
     @Test
     void testDGMParameters() {
-        String contents = '[].collect', target = 'collect'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, target))
-        proposalExists(proposals, 'collect(Collection<T> collector, Closure<? extends T> transform)', 1)
+        String contents = '[].collect'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'collect'))
+        proposalExists(proposals, 'collect(C collector, Closure<? extends T> transform)', 1)
         proposalExists(proposals, 'collect(Closure<T> transform)', 1)
         proposalExists(proposals, 'collect()', 1)
     }
 
     @Test
+    void testDGMReference() {
+        String contents = '[:].&every'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'every'))
+        proposalExists(proposals, 'every(Closure)', 1)
+        proposalExists(proposals, 'every()', 1)
+    }
+
+    @Test
     void testPropertyDGM() {
         String contents = '''\
-            import java.util.regex.*
-            Matcher m
-            m.co
-            '''.stripIndent()
+            |import java.util.regex.*
+            |Matcher m
+            |m.co
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.co'))
         proposalExists(proposals, 'count', 1)
     }
@@ -168,10 +179,10 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testIrrelevantDGM() {
         String contents = '''\
-            import java.util.regex.*
-            Pattern p
-            p.co
-            '''.stripIndent()
+            |import java.util.regex.*
+            |Pattern p
+            |p.co
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.co'))
         proposalExists(proposals, 'count', 0) // irrelevant category accessor StringGroovyMethods.getCount(Matcher)
     }
@@ -179,10 +190,10 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testPropertyRelevance() {
         String contents = '''\
-            import java.util.regex.*
-            Matcher m
-            m = m.la
-            '''.stripIndent()
+            |import java.util.regex.*
+            |Matcher m
+            |m = m.la
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.la'))
         assertProposalOrdering(orderByRelevance(proposals), 'lastMatcher', 'lastAppendPosition') // lastMatcher has more relevant type
     }
@@ -210,7 +221,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testSystemDGSM2() {
-        String contents = 'def sys = System.class\nsys.cu'
+        String contents = 'def sys = System\nsys.cu'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
         def proposal = findFirstProposal(proposals, 'currentTimeSeconds')
         assert Flags.toString(proposal.proposal.flags).contains('static')
@@ -221,14 +232,6 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
         String contents = '"".toURL().text'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'toURL().t'))
         proposalExists(proposals, 'text', 1)
-    }
-
-    @Test // GRECLIPSE-1158
-    void testDateGM() {
-        assumeFalse(isAtLeastGroovy(25))
-        String contents = 'new Date().toCal'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'toCal'))
-        proposalExists(proposals, 'toCalendar', 1)
     }
 
     @Test // GRECLIPSE-1158
@@ -282,16 +285,42 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
         }
     }
 
-    @Test // GRECLIPSE-1422
+    @Test
     void testNoDups1() {
+        ICompletionProposal[] proposals = createProposalsAtOffset('[].collectEnt', 13)
+        proposalExists(proposals, 'collectEntries', isAtLeastGroovy(50) ? 6 : 4) // (), (Map), (Closure), (Map,Closure), (Function,Function), (Map,Function,Function)
+    }
+
+    @Test // GRECLIPSE-1422
+    void testNoDups2() {
         ICompletionProposal[] proposals = createProposalsAtOffset('[].findA', getIndexOf('[].findA', 'findA'))
-        // should find 2, not 4.  dups removed
-        proposalExists(proposals, 'findAll', 2)
+        proposalExists(proposals, 'findAll', 2) // should find 2, not 4
     }
 
     @Test
-    void testNoDups2() {
-        ICompletionProposal[] proposals = createProposalsAtOffset('[].collectEnt', 13)
-        proposalExists(proposals, 'collectEntries', 4) // collectEntries(), collectEntries(Closure), collectEntries(Map), collectEntries(Map, Closure)
+    void testNoDups3() {
+        ICompletionProposal[] proposals = createProposalsAtOffset('List<String> strings = []; strings.find', 39)
+        proposalExists(proposals, 'find(Closure closure) : T', 1) // not Object
+        proposalExists(proposals, 'find() : T', 1) // not Object
+    }
+
+    @Test
+    void testNoDups4() {
+        ICompletionProposal[] proposals = createProposalsAtOffset('List<String> strings = []; strings.findA', 40)
+        proposalExists(proposals, 'findAll(Closure closure) : List<T>', 1) // not Collection<T>
+        proposalExists(proposals, 'findAll() : List<T>', 1) // not Collection<T>
+    }
+
+    @Test
+    void testNoSuper() {
+        ICompletionProposal[] proposals = createProposalsAtOffset('void m(InputStream s){s.c}\n', 25)
+        proposalExists(proposals, 'closeQuietly()', 0) // from DefaultGroovyMethodsSupport
+        proposalExists(proposals, 'withCloseable', 1)
+    }
+
+    @Test
+    void testNoExtras() {
+        ICompletionProposal[] proposals = createProposalsAtOffset('[].stream().collect()\n', 20)
+        proposalExists(proposals, 'collect', 5) // (), (Closure), (Collector), (Collection,Closure), (Supplier,BiConsumer,BiConsumer)
     }
 }

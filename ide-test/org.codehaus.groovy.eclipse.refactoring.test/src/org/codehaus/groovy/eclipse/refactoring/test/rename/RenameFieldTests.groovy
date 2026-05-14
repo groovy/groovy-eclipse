@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,11 @@ import groovy.transform.CompileStatic
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.codehaus.groovy.eclipse.refactoring.test.internal.ParticipantTesting
 import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.jdt.core.Flags
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings
 import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor
 import org.eclipse.jdt.internal.corext.refactoring.rename.RenameFieldProcessor
-import org.eclipse.jdt.internal.corext.util.JdtFlags
 import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.core.refactoring.participants.RenameArguments
@@ -46,7 +46,7 @@ final class RenameFieldTests extends RefactoringTestSuite {
         def unit = createCUfromTestFile(packageP, 'A')
         def type = getType(unit, typeName) ?: findType(typeName, unit)
         def field = type.getField(fieldName)
-        boolean isEnum = JdtFlags.isEnum(field)
+        boolean isEnum = Flags.isEnum(field.flags)
         boolean renameGetters = flags.getOrDefault('renameGetters', false)
         boolean renameSetters = flags.getOrDefault('renameSetters', false)
         boolean updateReferences = flags.getOrDefault('updateReferences', true)
@@ -116,6 +116,18 @@ final class RenameFieldTests extends RefactoringTestSuite {
     @Test
     void testInitializer3() {
         def status = runTest('A', 'f', 'g')
+        assert status.isOK()
+    }
+
+    @Test
+    void testScript1() {
+        def status = runTest('B', 'f', 'g')
+        assert status.isOK()
+    }
+
+    @Test
+    void testScript2() {
+        def status = runTest('B', 'f', 'g')
         assert status.isOK()
     }
 
@@ -193,18 +205,6 @@ final class RenameFieldTests extends RefactoringTestSuite {
     }
 
     @Test
-    void testScript1() {
-        def status = runTest('B', 'f', 'g')
-        assert status.isOK()
-    }
-
-    @Test
-    void testScript2() {
-        def status = runTest('B', 'f', 'g')
-        assert status.isOK()
-    }
-
-    @Test
     void test12() {
         def status = runTest('A', 'f', 'g', updateTextualOccurrences: true)
         assert status.isOK()
@@ -226,5 +226,35 @@ final class RenameFieldTests extends RefactoringTestSuite {
     void test15() {
         def status = runTest('MyBean', 'foo', 'fooBar')
         assert status.entries[0].message.startsWith('Found potential matches.')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1091
+    void test16() {
+        def status = runTest('MyBean', 'fooBar', 'foo')
+        assert status.isOK()
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1396
+    void test17() {
+        def status = runTest('Foo', 'bar', 'baz', renameGetters: true, renameSetters: true)
+        assert status.isOK()
+    }
+
+    @Test
+    void test18() {
+        def status = runTest('A', 'p', 'q')
+        assert status.isOK()
+    }
+
+    @Test
+    void test19() {
+        def status = runTest('A', 'p', 'q')
+        assert status.isOK()
+    }
+
+    @Test
+    void test20() {
+        def status = runTest('A', 'CONST', 'VALUE')
+        assert status.isOK()
     }
 }

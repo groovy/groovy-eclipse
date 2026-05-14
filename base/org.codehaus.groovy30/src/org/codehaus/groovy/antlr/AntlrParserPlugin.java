@@ -20,6 +20,7 @@ package org.codehaus.groovy.antlr;
 
 import groovyjarjarantlr.RecognitionException;
 import groovyjarjarantlr.TokenStreamException;
+import groovyjarjarantlr.TokenStreamIOException;
 import groovyjarjarantlr.TokenStreamRecognitionException;
 import groovyjarjarantlr.collections.AST;
 import groovy.transform.Trait;
@@ -125,17 +126,16 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.lang.annotation.Annotation;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
-import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 
 /**
  * A parser plugin which adapts the JSR Antlr Parser to the Groovy runtime.
@@ -211,32 +211,99 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         GroovyLexer lexer = new GroovyLexer(inputState);
         unicodeReader.setLexer(lexer);
         GroovyRecognizer parser = GroovyRecognizer.make(lexer);
+        /* GRECLIPSE edit
         parser.setSourceBuffer(sourceBuffer);
+        */
         tokenNames = parser.getTokenNames();
         parser.setFilename(sourceUnit.getName());
 
         // start parsing at the compilationUnit rule
         try {
             parser.compilationUnit();
+            // GRECLIPSE add
+            configureLocationSupport(sourceBuffer);
+            // GRECLIPSE end
         }
         catch (TokenStreamRecognitionException tsre) {
+            // GRECLIPSE add
+            configureLocationSupport(sourceBuffer);
+            // GRECLIPSE end
             RecognitionException e = tsre.recog;
             SyntaxException se = new SyntaxException(e.getMessage(), e, e.getLine(), e.getColumn());
             se.setFatal(true);
             sourceUnit.addError(se);
         }
         catch (RecognitionException e) {
-            SyntaxException se = new SyntaxException(e.getMessage(), e, e.getLine(), e.getColumn());
+            // GRECLIPSE add
+            configureLocationSupport(sourceBuffer);
+
+            // TODO: Sometimes the line/column is after the end of the file. Why is this? Fix if possible.
+            int line = e.getLine(), column = e.getColumn();
+            if (locations.isPopulated()) {
+                int offset = locations.findOffset(line, column);
+                if (offset >= locations.getEnd() - 1) {
+                    int[] row_col = locations.getRowCol(locations.getEnd() - 1);
+                    line = row_col[0];
+                    column = row_col[1];
+                }
+            }
+            // GRECLIPSE end
+            SyntaxException se = new SyntaxException(e.getMessage(), e, line, column);
             se.setFatal(true);
             sourceUnit.addError(se);
         }
         catch (TokenStreamException e) {
+            // GRECLIPSE add
+            configureLocationSupport(sourceBuffer);
+
+            boolean handled = false;
+            if (e instanceof TokenStreamIOException) {
+                // GRECLIPSE-896: "Did not find four digit hex character code. line: 1 col:7"
+                String m = e.getMessage();
+                if (m != null && m.startsWith("Did not find four digit hex character code.")) {
+                    try {
+                        int linepos = m.indexOf("line:");
+                        int colpos = m.indexOf("col:");
+                        int line = Integer.valueOf(m.substring(linepos + 5, colpos).trim());
+                        int column = Integer.valueOf(m.substring(colpos + 4).trim());
+                        SyntaxException se = new SyntaxException(e.getMessage(), e, line, column);
+                        se.setFatal(true);
+                        sourceUnit.addError(se);
+                        handled = true;
+                    } catch (Throwable t) {
+                        System.err.println(m);
+                        t.printStackTrace();
+                    }
+                }
+            }
+            if (!handled)
+            // GRECLIPSE end
             sourceUnit.addException(e);
         }
-        // GRECLIPSE add
-        configureLocationSupport(sourceBuffer);
-        // GRECLIPSE end
+
         ast = parser.getAST();
+
+        // GRECLIPSE add
+        sourceUnit.setComments(parser.getComments());
+
+        for (Map<String, Object> error : (List<Map<String, Object>>) parser.getErrorList()) {
+            int line = ((Integer) error.get("line")).intValue();
+            int column = ((Integer) error.get("column")).intValue();
+
+            // TODO: Sometimes the line/column is after the end of the file. Why is this? Fix if possible.
+            if (locations.isPopulated()) {
+                int offset = locations.findOffset(line, column);
+                if (offset >= locations.getEnd() - 1) {
+                    int[] row_col = locations.getRowCol(locations.getEnd() - 1);
+                    line = row_col[0];
+                    column = row_col[1];
+                }
+            }
+
+            SyntaxException se = new SyntaxException((String) error.get("error"), line, column);
+            sourceUnit.addError(se);
+        }
+        // GRECLIPSE end
     }
 
     // GRECLIPSE add
@@ -251,10 +318,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     public Reduction outputAST(final SourceUnit sourceUnit, final SourceBuffer sourceBuffer) {
+        /* GRECLIPSE edit
         return AccessController.doPrivileged((PrivilegedAction<Reduction>) () -> {
+        */
             outputASTInVariousFormsIfNeeded(sourceUnit, sourceBuffer);
             return null;
+        /* GRECLIPSE edit
         });
+        */
     }
 
     private void outputASTInVariousFormsIfNeeded(SourceUnit sourceUnit, SourceBuffer sourceBuffer) {
@@ -331,25 +402,38 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             }
             // GRECLIPSE end
             if (output.getStatementBlock().isEmpty() && output.getMethods().isEmpty() && output.getClasses().isEmpty()) {
-                // GRECLIPSE add
+                /* GRECLIPSE edit
+                output.addStatement(ReturnStatement.RETURN_NULL_OR_VOID);
+                */
+                output.addStatement(createEmptyScriptStatement());
                 if (ast == null && sourceUnit.getErrorCollector().hasErrors()) {
                     output.setEncounteredUnrecoverableError(true);
                 }
                 // GRECLIPSE end
-                output.addStatement(ReturnStatement.RETURN_NULL_OR_VOID);
             }
 
             // set the script source position
             ClassNode scriptClassNode = output.getScriptClassDummy();
             if (scriptClassNode != null) {
-                List<Statement> statements = output.getStatementBlock().getStatements();
+                BlockStatement  scriptBlockNode = output.getStatementBlock();
+                List<Statement> statements = scriptBlockNode.getStatements();
                 if (!statements.isEmpty()) {
                     Statement firstStatement = statements.get(0);
-                    Statement lastStatement = statements.get(statements.size() - 1);
-
+                    Statement lastStatement  = statements.get(statements.size() - 1);
+                    /* GRECLIPSE edit
                     scriptClassNode.setSourcePosition(firstStatement);
-                    scriptClassNode.setLastColumnNumber(lastStatement.getLastColumnNumber());
                     scriptClassNode.setLastLineNumber(lastStatement.getLastLineNumber());
+                    scriptClassNode.setLastColumnNumber(lastStatement.getLastColumnNumber());
+                    */
+                    scriptBlockNode.setStart(firstStatement.getStart());
+                    scriptBlockNode.setLineNumber(firstStatement.getLineNumber());
+                    scriptBlockNode.setColumnNumber(firstStatement.getColumnNumber());
+                    scriptBlockNode.setEnd(lastStatement.getEnd());
+                    scriptBlockNode.setLastLineNumber(lastStatement.getLastLineNumber());
+                    scriptBlockNode.setLastColumnNumber(lastStatement.getLastColumnNumber());
+
+                    scriptClassNode.setSourcePosition(scriptBlockNode);
+                    // GRECLIPSE end
                 }
             }
             // GRECLIPSE add
@@ -363,31 +447,23 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             if (!blockStatement.isEmpty() || !output.getMethods().isEmpty()) {
                 ASTNode first = getFirst(blockStatement, output.getMethods());
                 ASTNode last = getLast(blockStatement, output.getMethods());
-                if (!blockStatement.isEmpty()) {
-                    blockStatement.setStart(first.getStart());
-                    blockStatement.setLineNumber(first.getLineNumber());
-                    blockStatement.setColumnNumber(first.getColumnNumber());
-                    blockStatement.setEnd(last.getEnd());
-                    blockStatement.setLastLineNumber(last.getLastLineNumber());
-                    blockStatement.setLastColumnNumber(last.getLastColumnNumber());
-                }
-                if (!output.getClasses().isEmpty()) {
-                    ClassNode scriptClass = output.getClasses().get(0);
+
+                ClassNode scriptClass = output.getClasses().get(0);
+                if (first instanceof MethodNode) {
                     scriptClass.setStart(first.getStart());
                     scriptClass.setLineNumber(first.getLineNumber());
                     scriptClass.setColumnNumber(first.getColumnNumber());
+                }
+                if (last instanceof MethodNode) {
                     scriptClass.setEnd(last.getEnd());
                     scriptClass.setLastLineNumber(last.getLastLineNumber());
                     scriptClass.setLastColumnNumber(last.getLastColumnNumber());
+                }
 
-                    // fix the run method to contain the start and end locations of the statement block
-                    MethodNode runMethod = scriptClass.getDeclaredMethod("run", Parameter.EMPTY_ARRAY);
-                    runMethod.setStart(first.getStart());
-                    runMethod.setLineNumber(first.getLineNumber());
-                    runMethod.setColumnNumber(first.getColumnNumber());
-                    runMethod.setEnd(last.getEnd());
-                    runMethod.setLastLineNumber(last.getLastLineNumber());
-                    runMethod.setLastColumnNumber(last.getLastColumnNumber());
+                // fix the run method to contain the start and end locations of the statement block
+                MethodNode runMethod = scriptClass.getDeclaredMethod("run", Parameter.EMPTY_ARRAY);
+                if (runMethod != null) {
+                    runMethod.setSourcePosition(blockStatement);
                     runMethod.addAnnotation(makeAnnotationNode(Override.class));
                 }
             }
@@ -426,12 +502,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     /** Returns the first ast node in the script, either a method or a statement. */
     private ASTNode getFirst(BlockStatement blockStatement, List<MethodNode> methods) {
-        MethodNode method = (!methods.isEmpty() ? methods.get(0) : null);
         Statement statement = (!blockStatement.isEmpty() ? blockStatement.getStatements().get(0) : null);
-        if (method == null && (statement == null || (statement.getStart() == 0 && statement.getLength() == 0))) {
-            // a script with no methods or statements; add a synthetic statement after the end of the package declaration/import statements
-            statement = createEmptyScriptStatement();
-        }
+        MethodNode method = (!methods.isEmpty() ? methods.get(0) : null);
         int statementStart = (statement != null ? statement.getStart() : Integer.MAX_VALUE);
         int methodStart = (method != null ? method.getStart() : Integer.MAX_VALUE);
         return (statementStart <= methodStart ? statement : method);
@@ -439,15 +511,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     /** Returns the last ast node in the script, either a method or a statement. */
     private ASTNode getLast(BlockStatement blockStatement, List<MethodNode> methods) {
-        MethodNode method = (!methods.isEmpty() ? last(methods) : null);
         Statement statement = (!blockStatement.isEmpty() ? last(blockStatement.getStatements()) : null);
-        if (method == null && (statement == null || (statement.getStart() == 0 && statement.getLength() == 0))) {
-            // a script with no methods or statements; add a synthetic statement after the end of the package declaration/import statements
-            statement = createEmptyScriptStatement();
-        }
-        int statementStart = (statement != null ? statement.getEnd() : Integer.MIN_VALUE);
+        MethodNode method = (!methods.isEmpty() ? last(methods) : null);
+        int statementEnd = (statement != null ? statement.getEnd() : Integer.MIN_VALUE);
         int methodStart = (method != null ? method.getStart() : Integer.MIN_VALUE);
-        return (statementStart >= methodStart ? statement : method);
+        return (statementEnd >= methodStart ? statement : method);
     }
 
     /** Creates a synthetic statement that starts after the last import or package statement. */
@@ -481,40 +549,39 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
      */
     protected void convertGroovy(AST node) {
         while (node != null) {
-            int type = node.getType();
-            switch (type) {
-                case PACKAGE_DEF:
-                    packageDef(node);
-                    break;
+            switch (node.getType()) {
+              case PACKAGE_DEF:
+                packageDef(node);
+                break;
 
-                case STATIC_IMPORT:
-                case IMPORT:
-                    importDef(node);
-                    break;
+              case STATIC_IMPORT:
+              case IMPORT:
+                importDef(node);
+                break;
 
-                case TRAIT_DEF:
-                case CLASS_DEF:
-                    classDef(node);
-                    break;
+              case TRAIT_DEF:
+              case CLASS_DEF:
+                classDef(node);
+                break;
 
-                case INTERFACE_DEF:
-                    interfaceDef(node);
-                    break;
+              case INTERFACE_DEF:
+                interfaceDef(node);
+                break;
 
-                case METHOD_DEF:
-                    methodDef(node);
-                    break;
+              case METHOD_DEF:
+                methodDef(node);
+                break;
 
-                case ENUM_DEF:
-                    enumDef(node);
-                    break;
+              case ENUM_DEF:
+                enumDef(node);
+                break;
 
-                case ANNOTATION_DEF:
-                    annotationDef(node);
-                    break;
+              case ANNOTATION_DEF:
+                annotationDef(node);
+                break;
 
-                default:
-                    output.addStatement(statement(node));
+              default:
+                output.addStatement(statement(node));
             }
             node = node.getNextSibling();
         }
@@ -531,8 +598,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             node = node.getNextSibling();
         }
         PackageNode packageNode = setPackage(qualifiedName(node), annotations);
-        // GRECLIPSE edit
-        //configureAST(packageNode, packageDef);
+        /* GRECLIPSE edit
+        configureAST(packageNode, packageDef);
+        */
         configureAST(packageNode, node);
         // GRECLIPSE end
     }
@@ -573,7 +641,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // GRECLIPSE end
                 addImport(type, name, alias, annotations);
                 imp = last(output.getImports());
-                // GRECLIPSE edit
+                /* GRECLIPSE edit
+                configureAST(imp, importNode);
+                */
                 configureAST(imp, importNode, node, null);
                 // GRECLIPSE end
                 return;
@@ -595,14 +665,18 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     // GRECLIPSE end
                     addStaticStarImport(type, packageName, annotations);
                     imp = output.getStaticStarImports().get(packageName);
-                    // GRECLIPSE edit
+                    /* GRECLIPSE edit
+                    configureAST(imp, importNode);
+                    */
                     configureAST(imp, importNode, packageNode, null);
                     // GRECLIPSE end
                 } else {
                     // import is like "import foo.*"
                     addStarImport(packageName, annotations);
                     imp = last(output.getStarImports());
-                    // GRECLIPSE edit
+                    /* GRECLIPSE edit
+                    configureAST(imp, importNode);
+                    */
                     configureAST(imp, importNode, packageNode, null);
                     // GRECLIPSE end
                 }
@@ -623,7 +697,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     // GRECLIPSE end
                     addStaticImport(type, name, alias, annotations);
                     imp = output.getStaticImports().get(alias == null ? name : alias);
-                    // GRECLIPSE edit
+                    /* GRECLIPSE edit
+                    configureAST(imp, importNode);
+                    */
                     imp.setFieldNameExpr(literalExpression(nameNode, name));
                     configureAST(imp, importNode, packageNode, nameNode);
                     // GRECLIPSE end
@@ -643,7 +719,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     // GRECLIPSE end
                     addImport(type, name, alias, annotations);
                     imp = last(output.getImports());
-                    // GRECLIPSE edit
+                    /* GRECLIPSE edit
+                    configureAST(imp, importNode);
+                    */
                     configureAST(imp, importNode, packageNode, nameNode);
                     // GRECLIPSE end
                 }
@@ -776,6 +854,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         classNode.setGenericsTypes(genericsType);
         configureAST(classNode, classDef);
         // GRECLIPSE add
+        if (genericsType != null)
+            for (GenericsType tp: genericsType)
+                tp.getType().setDeclaringClass(classNode);
         classNode.setNameStart(nameStart);
         classNode.setNameEnd(nameEnd - 1);
         // GRECLIPSE end
@@ -809,25 +890,25 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected Expression anonymousInnerClassDef(AST node) {
-        ClassNode oldNode = classNode;
-        ClassNode outerClass = getClassOrScript(oldNode);
+        ClassNode otherClass = classNode;
+        ClassNode outerClass = getClassOrScript(otherClass);
         String innerClassName = outerClass.getName() + "$" + (anonymousClassCount(outerClass) + 1);
         if (enumConstantBeingDef) {
-            classNode = new EnumConstantClassNode(outerClass, innerClassName, Opcodes.ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
+            classNode = new EnumConstantClassNode(outerClass, innerClassName, Opcodes.ACC_ENUM | Opcodes.ACC_FINAL, ClassHelper.OBJECT_TYPE);
         } else {
-            classNode = new InnerClassNode(outerClass, innerClassName, 0, ClassHelper.OBJECT_TYPE);
+            classNode = new InnerClassNode(outerClass, innerClassName, Opcodes.ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
         }
         ((InnerClassNode) classNode).setAnonymous(true);
         classNode.setEnclosingMethod(methodNode);
         configureAST(classNode, node);
+        output.addClass(classNode);
 
         assertNodeType(OBJBLOCK, node);
         objectBlock(node);
 
         AnonymousInnerClassCarrier ret = new AnonymousInnerClassCarrier();
         ret.innerClass = classNode;
-        output.addClass(classNode);
-        classNode = oldNode;
+        classNode = otherClass;
         return ret;
     }
 
@@ -896,6 +977,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         classNode.setSyntheticPublic(syntheticPublic);
         configureAST(classNode, classDef);
         // GRECLIPSE add
+        if (genericsType != null)
+            for (GenericsType tp: genericsType)
+                tp.getType().setDeclaringClass(classNode);
         classNode.setNameStart(nameStart);
         classNode.setNameEnd(nameEnd - 1);
         // GRECLIPSE end
@@ -922,52 +1006,51 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     protected void objectBlock(AST objectBlock) {
         for (AST node = objectBlock.getFirstChild(); node != null; node = node.getNextSibling()) {
-            int type = node.getType();
-            switch (type) {
-                case OBJBLOCK:
-                    objectBlock(node);
-                    break;
+            switch (node.getType()) {
+              case OBJBLOCK:
+                objectBlock(node);
+                break;
 
-                case ANNOTATION_FIELD_DEF:
-                case METHOD_DEF:
-                    methodDef(node);
-                    break;
+              case ANNOTATION_FIELD_DEF:
+              case METHOD_DEF:
+                methodDef(node);
+                break;
 
-                case CTOR_IDENT:
-                    constructorDef(node);
-                    break;
+              case CTOR_IDENT:
+                constructorDef(node);
+                break;
 
-                case VARIABLE_DEF:
-                    fieldDef(node);
-                    break;
+              case VARIABLE_DEF:
+                fieldDef(node);
+                break;
 
-                case STATIC_INIT:
-                    staticInit(node);
-                    break;
+              case STATIC_INIT:
+                staticInit(node);
+                break;
 
-                case INSTANCE_INIT:
-                    objectInit(node);
-                    break;
+              case INSTANCE_INIT:
+                objectInit(node);
+                break;
 
-                case ENUM_DEF:
-                    enumDef(node);
-                    break;
+              case ENUM_DEF:
+                enumDef(node);
+                break;
 
-                case ENUM_CONSTANT_DEF:
-                    enumConstantDef(node);
-                    break;
+              case ENUM_CONSTANT_DEF:
+                enumConstantDef(node);
+                break;
 
-                case TRAIT_DEF:
-                case CLASS_DEF:
-                    innerClassDef(node);
-                    break;
+              case TRAIT_DEF:
+              case CLASS_DEF:
+                innerClassDef(node);
+                break;
 
-                case INTERFACE_DEF:
-                    innerInterfaceDef(node);
-                    break;
+              case INTERFACE_DEF:
+                innerInterfaceDef(node);
+                break;
 
-                default:
-                    unknownAST(node);
+              default:
+                unknownAST(node);
             }
         }
     }
@@ -988,7 +1071,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
         int nameEnd = locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast());
         // GRECLIPSE end
-
         String name = identifier(node);
         node = node.getNextSibling();
 
@@ -1051,7 +1133,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // we have to handle an enum constant with a class overriding
                 // a method in which case we need to configure the inner class
                 innerClass.setSuperClass(classNode.getPlainNodeReference());
-                innerClass.setModifiers(classNode.getModifiers() | Opcodes.ACC_FINAL);
                 // GRECLIPSE add
                 innerClass.setNameStart(nameStart);
                 innerClass.setNameEnd(nameEnd - 1);
@@ -1099,8 +1180,20 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         } else {
             name = identifier(node);
         }
+        /* GRECLIPSE edit
         ClassNode exception = ClassHelper.make(name);
+        */
+        ClassNode exception = makeClassNode(name);
+        // GRECLIPSE end
         configureAST(exception, node);
+        // GRECLIPSE add
+        if (isType(DOT, node)) {
+            GroovySourceAST type = (GroovySourceAST) node.getFirstChild().getNextSibling();
+            exception.setNameStart2(locations.findOffset(type.getLine(), type.getColumn()));
+            exception.setEnd(locations.findOffset(type.getLineLast(), type.getColumnLast()));
+            exception.setLastLineNumber(type.getLineLast()); exception.setLastColumnNumber(type.getColumnLast());
+        }
+        // GRECLIPSE end
         list.add(exception);
         AST next = node.getNextSibling();
         if (next != null) throwsList(next, list);
@@ -1183,8 +1276,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         methodNode = new MethodNode(name, modifiers, returnType, parameters, exceptions, code);
         if ((modifiers & Opcodes.ACC_ABSTRACT) == 0) {
             if (node == null) {
-                // GRECLIPSE edit
-                //throw new ASTRuntimeException(methodDef, "You defined a method without a body. Try adding a body, or declare it abstract.");
+                /* GRECLIPSE edit
+                throw new ASTRuntimeException(methodDef, "You defined a method without a body. Try adding a body, or declare it abstract.");
+                */
                 if (getController() != null) getController().addError(new SyntaxException(
                     "You defined a method without a body. Try adding a body, or declare it abstract.", methodDef.getLine(), methodDef.getColumn()));
                 // create a fake node that can pretend to be the body
@@ -1202,7 +1296,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 throw new ASTRuntimeException(methodDef, "Abstract methods do not define a body.");
             }
         }
-        // GRECLIPSE end
         methodNode.setCode(code);
         methodNode.addAnnotations(annotations);
         methodNode.setGenericsTypes(generics);
@@ -1240,10 +1333,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         BlockStatement code = (BlockStatement) statementList(staticInit);
         classNode.addStaticInitializerStatements(code.getStatements(), false);
         // GRECLIPSE add
-        MethodNode clinit = classNode.getDeclaredMethod("<clinit>", Parameter.EMPTY_ARRAY);
-        if (clinit.getEnd() < 1) { // set source position for first initializer only
-            configureAST(clinit, staticInit);
-        }
+        code.getStatements().get(0).putNodeMetaData("static.offset", code.getStart());
         // GRECLIPSE end
     }
 
@@ -1494,12 +1584,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         int nameEnd = nameStart + name.length();
         // GRECLIPSE end
         node = node.getNextSibling();
-
+        /* GRECLIPSE edit
         VariableExpression leftExpression = new VariableExpression(name, type);
         leftExpression.setModifiers(modifiers);
         configureAST(leftExpression, paramNode);
-
-        Parameter parameter = null;
+        */
+        Parameter parameter;
         if (node != null) {
             assertNodeType(ASSIGN, node);
             Expression rightExpression = expression(node.getFirstChild());
@@ -1507,15 +1597,23 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 throw new ASTRuntimeException(node, "Cannot specify default value for method parameter '" + name + " = " + rightExpression.getText() + "' inside an interface");
             }
             parameter = new Parameter(type, name, rightExpression);
-        } else
+        } else {
             parameter = new Parameter(type, name);
-
+        }
         if (firstParam) firstParamIsVarArg = variableParameterDef;
 
         configureAST(parameter, paramNode);
         // GRECLIPSE add
         parameter.setNameStart(nameStart);
-        parameter.setNameEnd(nameEnd);
+        parameter.setNameEnd(nameEnd - 1);
+        // paramNode includes space(s) before arrow, comma or paren
+        if (parameter.hasInitialExpression()) {
+            setSourceEnd(parameter, parameter.getInitialExpression());
+        } else if (parameter.getEnd() > nameEnd) {
+            parameter.setEnd(nameEnd);
+            int[] row_col = locations.getRowCol(nameEnd);
+            parameter.setLastLineNumber(row_col[0]); parameter.setLastColumnNumber(row_col[1]);
+        }
         // GRECLIPSE end
         parameter.addAnnotations(annotations);
         parameter.setModifiers(modifiers);
@@ -1529,68 +1627,64 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         int answer = 0;
 
         for (AST node = modifierNode.getFirstChild(); node != null; node = node.getNextSibling()) {
-            int type = node.getType();
-            switch (type) {
-                case STATIC_IMPORT:
-                    // ignore
-                    break;
+            switch (node.getType()) {
+              case STATIC_IMPORT:
+                // ignore
+                break;
 
-                // annotations
-                case ANNOTATION:
-                    annotations.add(annotation(node));
-                    break;
+              case ANNOTATION:
+                annotations.add(annotation(node));
+                break;
 
-                // core access scope modifiers
-                case LITERAL_private:
-                    answer = setModifierBit(node, answer, Opcodes.ACC_PRIVATE);
-                    access = setAccessTrue(node, access);
-                    break;
+              case LITERAL_private:
+                answer = setModifierBit(node, answer, Opcodes.ACC_PRIVATE);
+                access = setAccessTrue(node, access);
+                break;
 
-                case LITERAL_protected:
-                    answer = setModifierBit(node, answer, Opcodes.ACC_PROTECTED);
-                    access = setAccessTrue(node, access);
-                    break;
+              case LITERAL_protected:
+                answer = setModifierBit(node, answer, Opcodes.ACC_PROTECTED);
+                access = setAccessTrue(node, access);
+                break;
 
-                case LITERAL_public:
-                    answer = setModifierBit(node, answer, Opcodes.ACC_PUBLIC);
-                    access = setAccessTrue(node, access);
-                    break;
+              case LITERAL_public:
+                answer = setModifierBit(node, answer, Opcodes.ACC_PUBLIC);
+                access = setAccessTrue(node, access);
+                break;
 
-                // other modifiers
-                case ABSTRACT:
-                    answer = setModifierBit(node, answer, Opcodes.ACC_ABSTRACT);
-                    break;
+              case ABSTRACT:
+                answer = setModifierBit(node, answer, Opcodes.ACC_ABSTRACT);
+                break;
 
-                case FINAL:
-                    answer = setModifierBit(node, answer, Opcodes.ACC_FINAL);
-                    break;
+              case FINAL:
+                answer = setModifierBit(node, answer, Opcodes.ACC_FINAL);
+                break;
 
-                case LITERAL_native:
-                    answer = setModifierBit(node, answer, Opcodes.ACC_NATIVE);
-                    break;
+              case LITERAL_native:
+                answer = setModifierBit(node, answer, Opcodes.ACC_NATIVE);
+                break;
 
-                case LITERAL_static:
-                    answer = setModifierBit(node, answer, Opcodes.ACC_STATIC);
-                    break;
+              case LITERAL_static:
+                answer = setModifierBit(node, answer, Opcodes.ACC_STATIC);
+                break;
 
-                case STRICTFP:
-                    answer = setModifierBit(node, answer, Opcodes.ACC_STRICT);
-                    break;
+              case STRICTFP:
+                answer = setModifierBit(node, answer, Opcodes.ACC_STRICT);
+                break;
 
-                case LITERAL_synchronized:
-                    answer = setModifierBit(node, answer, Opcodes.ACC_SYNCHRONIZED);
-                    break;
+              case LITERAL_synchronized:
+                answer = setModifierBit(node, answer, Opcodes.ACC_SYNCHRONIZED);
+                break;
 
-                case LITERAL_transient:
-                    answer = setModifierBit(node, answer, Opcodes.ACC_TRANSIENT);
-                    break;
+              case LITERAL_transient:
+                answer = setModifierBit(node, answer, Opcodes.ACC_TRANSIENT);
+                break;
 
-                case LITERAL_volatile:
-                    answer = setModifierBit(node, answer, Opcodes.ACC_VOLATILE);
-                    break;
+              case LITERAL_volatile:
+                answer = setModifierBit(node, answer, Opcodes.ACC_VOLATILE);
+                break;
 
-                default:
-                    unknownAST(node);
+              default:
+                unknownAST(node);
             }
         }
         if (!access) {
@@ -1619,8 +1713,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     protected AnnotationNode annotation(AST annotationNode) {
         annotationBeingDef = true;
         AST node = annotationNode.getFirstChild();
-        // GRECLIPSE edit
-        //AnnotationNode annotatedNode = new AnnotationNode(ClassHelper.make(qualifiedName(node)));
+        /* GRECLIPSE edit
+        AnnotationNode annotatedNode = new AnnotationNode(ClassHelper.make(qualifiedName(node)));
+        */
         AnnotationNode annotatedNode = new AnnotationNode(makeType(annotationNode));
         // GRECLIPSE end
         configureAST(annotatedNode, annotationNode);
@@ -1669,70 +1764,69 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         if (node == null) return new EmptyStatement();
         // GRECLIPSE end
         Statement statement = null;
-        int type = node.getType();
-        switch (type) {
-            case SLIST:
-            case LITERAL_finally:
-                statement = statementList(node);
-                break;
+        switch (node.getType()) {
+          case SLIST:
+          case LITERAL_finally:
+            statement = statementList(node);
+            break;
 
-            case METHOD_CALL:
-                statement = methodCall(node);
-                break;
+          case METHOD_CALL:
+            statement = methodCall(node);
+            break;
 
-            case VARIABLE_DEF:
-                statement = variableDef(node);
-                break;
+          case VARIABLE_DEF:
+            statement = variableDef(node);
+            break;
 
-            case LABELED_STAT:
-                return labelledStatement(node);
+          case LABELED_STAT:
+            return labelledStatement(node);
 
-            case LITERAL_assert:
-                statement = assertStatement(node);
-                break;
+          case LITERAL_assert:
+            statement = assertStatement(node);
+            break;
 
-            case LITERAL_break:
-                statement = breakStatement(node);
-                break;
+          case LITERAL_break:
+            statement = breakStatement(node);
+            break;
 
-            case LITERAL_continue:
-                statement = continueStatement(node);
-                break;
+          case LITERAL_continue:
+            statement = continueStatement(node);
+            break;
 
-            case LITERAL_if:
-                statement = ifStatement(node);
-                break;
+          case LITERAL_if:
+            statement = ifStatement(node);
+            break;
 
-            case LITERAL_for:
-                statement = forStatement(node);
-                break;
+          case LITERAL_for:
+            statement = forStatement(node);
+            break;
 
-            case LITERAL_return:
-                statement = returnStatement(node);
-                break;
+          case LITERAL_return:
+            statement = returnStatement(node);
+            break;
 
-            case LITERAL_synchronized:
-                statement = synchronizedStatement(node);
-                break;
+          case LITERAL_synchronized:
+            statement = synchronizedStatement(node);
+            break;
 
-            case LITERAL_switch:
-                statement = switchStatement(node);
-                break;
+          case LITERAL_switch:
+            statement = switchStatement(node);
+            break;
 
-            case LITERAL_try:
-                statement = tryStatement(node);
-                break;
+          case LITERAL_try:
+            statement = tryStatement(node);
+            break;
 
-            case LITERAL_throw:
-                statement = throwStatement(node);
-                break;
+          case LITERAL_throw:
+            statement = throwStatement(node);
+            break;
 
-            case LITERAL_while:
-                statement = whileStatement(node);
-                break;
+          case LITERAL_while:
+            statement = whileStatement(node);
+            break;
 
-            default:
-                statement = new ExpressionStatement(expression(node));
+          default:
+            statement = new ExpressionStatement(expression(node));
         }
         if (statement != null) {
             configureAST(statement, node);
@@ -1811,7 +1905,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             AST variableNode = inNode.getFirstChild();
             AST collectionNode = variableNode.getNextSibling();
 
-            ClassNode type = ClassHelper.OBJECT_TYPE;
+            ClassNode type = ClassHelper.DYNAMIC_TYPE;
             if (isType(VARIABLE_DEF, variableNode)) {
                 AST node = variableNode.getFirstChild();
                 // skip the final modifier if it's present
@@ -1834,7 +1928,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             configureAST(forParameter, variableNode);
             // GRECLIPSE add
             forParameter.setNameStart(forParameter.getStart());
-            forParameter.setNameEnd(forParameter.getEnd());
+            forParameter.setNameEnd(forParameter.getEnd() - 1);
             if (type.getStart() > 0) {
                 // set start of parameter node to start of parameter type
                 setSourceStart(forParameter, type);
@@ -1855,26 +1949,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected Statement ifStatement(AST ifNode) {
-        AST node = ifNode.getFirstChild();
-        assertNodeType(EXPR, node);
+        AST node = ifNode.getFirstChild(); assertNodeType(EXPR, node);
         BooleanExpression booleanExpression = booleanExpression(node);
 
         node = node.getNextSibling();
-        Statement ifBlock = statement(node);
+        Statement thenBlock = isType(SEMI, node) ? EmptyStatement.INSTANCE : statement(node); // GROOVY-11565
 
-        Statement elseBlock = EmptyStatement.INSTANCE;
-        // GRECLIPSE add
-        // coping with a missing 'then' block (can happen due to recovery)
-        if (node != null) {
-        // GRECLIPSE end
+        if (node != null) // GRECLIPSE add -- coping with a missing 'then' block (can happen due to recovery)
         node = node.getNextSibling();
-        if (node != null) {
-            elseBlock = statement(node);
-        }
-        // GRECLIPSE add
-        }
-        // GRECLIPSE end
-        IfStatement ifStatement = new IfStatement(booleanExpression, ifBlock, elseBlock);
+        Statement elseBlock = (node == null || isType(SEMI, node)) ? EmptyStatement.INSTANCE : statement(node);
+
+        IfStatement ifStatement = new IfStatement(booleanExpression, thenBlock, elseBlock);
         configureAST(ifStatement, ifNode);
         return ifStatement;
     }
@@ -1925,6 +2010,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             leftExpression = alist;
             right = node.getNextSibling();
             if (right != null) rightExpression = expression(right);
+            // GRECLIPSE add
+            configureAST(leftExpression, node); // <<< left paren; right paren vvv
+            leftExpression.setLastLineNumber(((GroovySourceAST) left).getLineLast());
+            leftExpression.setLastColumnNumber(((GroovySourceAST) left).getColumnLast());
+            leftExpression.setEnd(locations.findOffset(leftExpression.getLastLineNumber(), leftExpression.getLastColumnNumber()));
+            // GRECLIPSE end
         } else {
             String name = identifier(node);
             VariableExpression ve = new VariableExpression(name, type);
@@ -1936,9 +2027,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 assertNodeType(ASSIGN, right);
                 rightExpression = expression(right.getFirstChild());
             }
-        }
 
-        configureAST(leftExpression, node);
+            configureAST(leftExpression, node);
+        }
 
         Token token = makeToken(Types.ASSIGN, variableDef);
         DeclarationExpression expression = new DeclarationExpression(leftExpression, token, rightExpression);
@@ -2096,8 +2187,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 Parameter catchParameter = new Parameter(ClassHelper.DYNAMIC_TYPE, variable);
                 // GRECLIPSE add
                 configureAST(catchParameter, multicatches);
-                catchParameter.setNameEnd(catchParameter.getEnd());
-                catchParameter.setNameStart(catchParameter.getEnd() - catchParameter.getName().length());
+                catchParameter.setNameStart(catchParameter.getStart());
+                catchParameter.setNameEnd(catchParameter.getEnd() - 1);
                 // GRECLIPSE end
                 CatchStatement answer = new CatchStatement(catchParameter, statement(node.getNextSibling()));
                 configureAST(answer, catchNode);
@@ -2112,23 +2203,26 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     ClassNode exceptionType = buildName(exceptionNodes);
                     Parameter catchParameter = new Parameter(exceptionType, variable);
                     // GRECLIPSE add
-                    // a little tricky since there can be multi-catches and the
-                    // multicatches node doesn't include sloc for parameter name
-                    configureAST(catchParameter, multicatches);
-                    GroovySourceAST paramAST = (GroovySourceAST) multicatches.getNextSibling();
-                    int lastLine = paramAST.getLineLast();
-                    catchParameter.setLastLineNumber(lastLine);
-                    int lastCol = paramAST.getColumnLast();
-                    catchParameter.setLastColumnNumber(lastCol);
-                    catchParameter.setEnd(locations.findOffset(lastLine, lastCol));
-                    catchParameter.setNameEnd(catchParameter.getEnd());
-                    catchParameter.setNameStart(catchParameter.getEnd() - catchParameter.getName().length());
+                    configureAST(catchParameter, multicatches.getNextSibling());
+                    catchParameter.setNameStart(catchParameter.getStart());
+                    catchParameter.setNameEnd(catchParameter.getEnd() - 1);
                     // GRECLIPSE end
                     CatchStatement answer = new CatchStatement(catchParameter, statement(node.getNextSibling()));
+                    /* GRECLIPSE edit -- cannot select multi-catch types when a catch covers others
                     configureAST(answer, catchNode);
+                    */
                     catches.add(answer);
                     exceptionNodes = exceptionNodes.getNextSibling();
                 }
+                // GRECLIPSE add
+                if (catches.size() > 1) {
+                    List<ClassNode> types = new ArrayList<>();
+                    for (CatchStatement catchStmt : catches) {
+                        types.add(catchStmt.getExceptionType());
+                        catchStmt.putNodeMetaData("catch.types", types);
+                    }
+                }
+                // GRECLIPSE end
             }
         }
         return catches;
@@ -2176,12 +2270,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // method doesn't know we want a ConstantExpression instead of a
             // VariableExpression
             VariableExpression ve = (VariableExpression) expression;
+            /* GRECLIPSE edit
             if (!ve.isThisExpression() && !ve.isSuperExpression()) {
                 expression = new ConstantExpression(ve.getName());
-                // GRECLIPSE add
-                configureAST(expression, node);
-                // GRECLIPSE end
             }
+            */
+            expression = new ConstantExpression(ve.getName());
+            expression.setSourcePosition(ve);
+            // GRECLIPSE end
         }
         /* GRECLIPSE edit -- each case of expressionSwitch does this already
         configureAST(expression, node);
@@ -2190,302 +2286,300 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected Expression expressionSwitch(AST node) {
-        int type = node.getType();
-        switch (type) {
-            case EXPR:
-                Expression expression = expression(node.getFirstChild());
-                // GRECLIPSE add -- enclosing parentheses
-                int row = node.getLine(), col = node.getColumn();
-                int offset = locations.findOffset(row, col);
-                if (offset < expression.getStart()) {
-                    configureAST(expression, node);
+        switch (node.getType()) {
+          case EXPR:
+            Expression expression = expression(node.getFirstChild());
+            // GRECLIPSE add -- command expression or enclosing parentheses
+            int offset = locations.findOffset(node.getLine(), node.getColumn());
+            if (offset < expression.getStart()) {
+                if (expression instanceof ArrayExpression ||
+                    expression instanceof ConstructorCallExpression) {
+                    expression.putNodeMetaData("new.offset", expression.getStart());
                 }
-                // GRECLIPSE end
-                return expression;
-
-            case ELIST:
-                return expressionList(node);
-
-            case SLIST:
-                return blockExpression(node);
-
-            case CLOSABLE_BLOCK:
-                return closureExpression(node);
-
-            case SUPER_CTOR_CALL:
-                return specialConstructorCallExpression(node, ClassNode.SUPER);
-
-            case METHOD_CALL:
-                return methodCallExpression(node);
-
-            case LITERAL_new:
-                return constructorCallExpression(node);
-
-            case CTOR_CALL:
-                return specialConstructorCallExpression(node, ClassNode.THIS);
-
-            case QUESTION:
-            case ELVIS_OPERATOR:
-                return ternaryExpression(node);
-
-            case OPTIONAL_DOT:
-            case SPREAD_DOT:
-            case DOT:
-                return dotExpression(node);
-
-            case IDENT:
-            case LITERAL_boolean:
-            case LITERAL_byte:
-            case LITERAL_char:
-            case LITERAL_double:
-            case LITERAL_float:
-            case LITERAL_int:
-            case LITERAL_long:
-            case LITERAL_short:
-            case LITERAL_void:
-            case LITERAL_this:
-            case LITERAL_super:
-                return variableExpression(node);
-
-            case LIST_CONSTRUCTOR:
-                return listExpression(node);
-
-            case MAP_CONSTRUCTOR:
-                return mapExpression(node);
-
-            case LABELED_ARG:
-                return mapEntryExpression(node);
-
-            case SPREAD_ARG:
-                return spreadExpression(node);
-
-            case SPREAD_MAP_ARG:
-                return spreadMapExpression(node);
-
-            case MEMBER_POINTER:
-                return methodPointerExpression(node);
-
-            case INDEX_OP:
-                return indexExpression(node);
-
-            case LITERAL_instanceof:
-                return instanceofExpression(node);
-
-            case LITERAL_as:
-                return asExpression(node);
-
-            case TYPECAST:
-                return castExpression(node);
-
-            case LITERAL_true:
-                return literalExpression(node, Boolean.TRUE);
-
-            case LITERAL_false:
-                return literalExpression(node, Boolean.FALSE);
-
-            case LITERAL_null:
-                return literalExpression(node, null);
-
-            case STRING_LITERAL:
-                return literalExpression(node, node.getText());
-
-            case STRING_CONSTRUCTOR:
-                return gstring(node);
-
-            case NUM_DOUBLE:
-            case NUM_FLOAT:
-            case NUM_BIG_DECIMAL:
-                return decimalExpression(node);
-
-            case NUM_BIG_INT:
-            case NUM_INT:
-            case NUM_LONG:
-                return integerExpression(node);
-
-            // Unary expressions
-            case LNOT:
-                NotExpression notExpression = new NotExpression(expression(node.getFirstChild()));
-                configureAST(notExpression, node);
-                // GRECLIPSE add -- sloc for node only covers the operator
-                setSourceEnd(notExpression, notExpression.getExpression());
-                // GRECLIPSE end
-                return notExpression;
-
-            case UNARY_MINUS:
-                return unaryMinusExpression(node);
-
-            case BNOT:
-                BitwiseNegationExpression bitwiseNegationExpression = new BitwiseNegationExpression(expression(node.getFirstChild()));
-                configureAST(bitwiseNegationExpression, node);
-                // GRECLIPSE add -- sloc for node only covers the operator
-                setSourceEnd(bitwiseNegationExpression, bitwiseNegationExpression.getExpression());
-                // GRECLIPSE end
-                return bitwiseNegationExpression;
-
-            case UNARY_PLUS:
-                return unaryPlusExpression(node);
-
-            case INC:
-                return prefixExpression(node, Types.PLUS_PLUS);
-
-            case DEC:
-                return prefixExpression(node, Types.MINUS_MINUS);
-
-            case POST_INC:
-                return postfixExpression(node, Types.PLUS_PLUS);
-
-            case POST_DEC:
-                return postfixExpression(node, Types.MINUS_MINUS);
-
-            // Binary expressions
-            case ASSIGN:
-                return binaryExpression(Types.ASSIGN, node);
-
-            case EQUAL:
-                return binaryExpression(Types.COMPARE_EQUAL, node);
-
-            case IDENTICAL:
-                return binaryExpression(Types.COMPARE_IDENTICAL, node);
-
-            case NOT_EQUAL:
-                return binaryExpression(Types.COMPARE_NOT_EQUAL, node);
-
-            case NOT_IDENTICAL:
-                return binaryExpression(Types.COMPARE_NOT_IDENTICAL, node);
-
-            case COMPARE_TO:
-                return binaryExpression(Types.COMPARE_TO, node);
-
-            case LE:
-                return binaryExpression(Types.COMPARE_LESS_THAN_EQUAL, node);
-
-            case LT:
-                return binaryExpression(Types.COMPARE_LESS_THAN, node);
-
-            case GT:
-                return binaryExpression(Types.COMPARE_GREATER_THAN, node);
-
-            case GE:
-                return binaryExpression(Types.COMPARE_GREATER_THAN_EQUAL, node);
-
-            case LAND:
-                return binaryExpression(Types.LOGICAL_AND, node);
-
-            case LOR:
-                return binaryExpression(Types.LOGICAL_OR, node);
-
-            case BAND:
-                return binaryExpression(Types.BITWISE_AND, node);
-
-            case BAND_ASSIGN:
-                return binaryExpression(Types.BITWISE_AND_EQUAL, node);
-
-            case BOR:
-                return binaryExpression(Types.BITWISE_OR, node);
-
-            case BOR_ASSIGN:
-                return binaryExpression(Types.BITWISE_OR_EQUAL, node);
-
-            case BXOR:
-                return binaryExpression(Types.BITWISE_XOR, node);
-
-            case BXOR_ASSIGN:
-                return binaryExpression(Types.BITWISE_XOR_EQUAL, node);
-
-            case PLUS:
-                return binaryExpression(Types.PLUS, node);
-
-            case PLUS_ASSIGN:
-                return binaryExpression(Types.PLUS_EQUAL, node);
-
-            case MINUS:
-                return binaryExpression(Types.MINUS, node);
-
-            case MINUS_ASSIGN:
-                return binaryExpression(Types.MINUS_EQUAL, node);
-
-            case STAR:
-                return binaryExpression(Types.MULTIPLY, node);
-
-            case STAR_ASSIGN:
-                return binaryExpression(Types.MULTIPLY_EQUAL, node);
-
-            case STAR_STAR:
-                return binaryExpression(Types.POWER, node);
-
-            case STAR_STAR_ASSIGN:
-                return binaryExpression(Types.POWER_EQUAL, node);
-
-            case DIV:
-                return binaryExpression(Types.DIVIDE, node);
-
-            case DIV_ASSIGN:
-                return binaryExpression(Types.DIVIDE_EQUAL, node);
-
-            case MOD:
-                return binaryExpression(Types.MOD, node);
-
-            case MOD_ASSIGN:
-                return binaryExpression(Types.MOD_EQUAL, node);
-
-            case SL:
-                return binaryExpression(Types.LEFT_SHIFT, node);
-
-            case SL_ASSIGN:
-                return binaryExpression(Types.LEFT_SHIFT_EQUAL, node);
-
-            case SR:
-                return binaryExpression(Types.RIGHT_SHIFT, node);
-
-            case SR_ASSIGN:
-                return binaryExpression(Types.RIGHT_SHIFT_EQUAL, node);
-
-            case BSR:
-                return binaryExpression(Types.RIGHT_SHIFT_UNSIGNED, node);
-
-            case BSR_ASSIGN:
-                return binaryExpression(Types.RIGHT_SHIFT_UNSIGNED_EQUAL, node);
-
-            case VARIABLE_DEF:
-                return declarationExpression(node);
-
-            // Regex
-            case REGEX_FIND:
-                return binaryExpression(Types.FIND_REGEX, node);
-
-            case REGEX_MATCH:
-                return binaryExpression(Types.MATCH_REGEX, node);
-
-            // Ranges
-            case RANGE_INCLUSIVE:
-                return rangeExpression(node, true);
-
-            case RANGE_EXCLUSIVE:
-                return rangeExpression(node, false);
-
-            case DYNAMIC_MEMBER:
-                return dynamicMemberExpression(node);
-
-            case LITERAL_in:
-                return binaryExpression(Types.KEYWORD_IN, node);
-
-            case ANNOTATION:
-                expression = new AnnotationConstantExpression(annotation(node));
                 configureAST(expression, node);
-                return expression;
+            }
+            // GRECLIPSE end
+            return expression;
 
-            case CLOSURE_LIST:
-                return closureListExpression(node);
+          case ELIST:
+            return expressionList(node);
 
-            case LBRACK:
-            case LPAREN:
-                return tupleExpression(node);
+          case SLIST:
+            return blockExpression(node);
 
-            case OBJBLOCK:
-                return anonymousInnerClassDef(node);
+          case CLOSABLE_BLOCK:
+            return closureExpression(node);
 
-            default:
-                unknownAST(node);
+          case SUPER_CTOR_CALL:
+            return specialConstructorCallExpression(node, ClassNode.SUPER);
+
+          case METHOD_CALL:
+            return methodCallExpression(node);
+
+          case LITERAL_new:
+            return constructorCallExpression(node);
+
+          case CTOR_CALL:
+            return specialConstructorCallExpression(node, ClassNode.THIS);
+
+          case QUESTION:
+          case ELVIS_OPERATOR:
+            return ternaryExpression(node);
+
+          case OPTIONAL_DOT:
+          case SPREAD_DOT:
+          case DOT:
+            return dotExpression(node);
+
+          case IDENT:
+          case LITERAL_boolean:
+          case LITERAL_byte:
+          case LITERAL_char:
+          case LITERAL_double:
+          case LITERAL_float:
+          case LITERAL_int:
+          case LITERAL_long:
+          case LITERAL_short:
+          case LITERAL_void:
+          case LITERAL_this:
+          case LITERAL_super:
+            return variableExpression(node);
+
+          case LIST_CONSTRUCTOR:
+            return listExpression(node);
+
+          case MAP_CONSTRUCTOR:
+            return mapExpression(node);
+
+          case LABELED_ARG:
+            return mapEntryExpression(node);
+
+          case SPREAD_ARG:
+            return spreadExpression(node);
+
+          case SPREAD_MAP_ARG:
+            return spreadMapExpression(node);
+
+          case MEMBER_POINTER:
+            return methodPointerExpression(node);
+
+          case INDEX_OP:
+            return indexExpression(node);
+
+          case LITERAL_instanceof:
+            return instanceofExpression(node);
+
+          case LITERAL_as:
+            return asExpression(node);
+
+          case TYPECAST:
+            return castExpression(node);
+
+          case LITERAL_true:
+            return literalExpression(node, Boolean.TRUE);
+
+          case LITERAL_false:
+            return literalExpression(node, Boolean.FALSE);
+
+          case LITERAL_null:
+            return literalExpression(node, null);
+
+          case STRING_LITERAL:
+            return literalExpression(node, node.getText());
+
+          case STRING_CONSTRUCTOR:
+            return gstring(node);
+
+          case NUM_DOUBLE:
+          case NUM_FLOAT:
+          case NUM_BIG_DECIMAL:
+            return decimalExpression(node);
+
+          case NUM_BIG_INT:
+          case NUM_INT:
+          case NUM_LONG:
+            return integerExpression(node);
+
+          case LNOT:
+            NotExpression notExpression = new NotExpression(expression(node.getFirstChild()));
+            configureAST(notExpression, node);
+            // GRECLIPSE add -- sloc for node only covers the operator
+            setSourceEnd(notExpression, notExpression.getExpression());
+            // GRECLIPSE end
+            return notExpression;
+
+          case UNARY_MINUS:
+            return unaryMinusExpression(node);
+
+          case BNOT:
+            BitwiseNegationExpression bitwiseNegationExpression = new BitwiseNegationExpression(expression(node.getFirstChild()));
+            configureAST(bitwiseNegationExpression, node);
+            // GRECLIPSE add -- sloc for node only covers the operator
+            setSourceEnd(bitwiseNegationExpression, bitwiseNegationExpression.getExpression());
+            // GRECLIPSE end
+            return bitwiseNegationExpression;
+
+          case UNARY_PLUS:
+            return unaryPlusExpression(node);
+
+          case INC:
+            return prefixExpression(node, Types.PLUS_PLUS);
+
+          case DEC:
+            return prefixExpression(node, Types.MINUS_MINUS);
+
+          case POST_INC:
+            return postfixExpression(node, Types.PLUS_PLUS);
+
+          case POST_DEC:
+            return postfixExpression(node, Types.MINUS_MINUS);
+
+          case ASSIGN:
+            return binaryExpression(Types.ASSIGN, node);
+
+          case EQUAL:
+            return binaryExpression(Types.COMPARE_EQUAL, node);
+
+          case IDENTICAL:
+            return binaryExpression(Types.COMPARE_IDENTICAL, node);
+
+          case NOT_EQUAL:
+            return binaryExpression(Types.COMPARE_NOT_EQUAL, node);
+
+          case NOT_IDENTICAL:
+            return binaryExpression(Types.COMPARE_NOT_IDENTICAL, node);
+
+          case COMPARE_TO:
+            return binaryExpression(Types.COMPARE_TO, node);
+
+          case LE:
+            return binaryExpression(Types.COMPARE_LESS_THAN_EQUAL, node);
+
+          case LT:
+            return binaryExpression(Types.COMPARE_LESS_THAN, node);
+
+          case GT:
+            return binaryExpression(Types.COMPARE_GREATER_THAN, node);
+
+          case GE:
+            return binaryExpression(Types.COMPARE_GREATER_THAN_EQUAL, node);
+
+          case LAND:
+            return binaryExpression(Types.LOGICAL_AND, node);
+
+          case LOR:
+            return binaryExpression(Types.LOGICAL_OR, node);
+
+          case BAND:
+            return binaryExpression(Types.BITWISE_AND, node);
+
+          case BAND_ASSIGN:
+            return binaryExpression(Types.BITWISE_AND_EQUAL, node);
+
+          case BOR:
+            return binaryExpression(Types.BITWISE_OR, node);
+
+          case BOR_ASSIGN:
+            return binaryExpression(Types.BITWISE_OR_EQUAL, node);
+
+          case BXOR:
+            return binaryExpression(Types.BITWISE_XOR, node);
+
+          case BXOR_ASSIGN:
+            return binaryExpression(Types.BITWISE_XOR_EQUAL, node);
+
+          case PLUS:
+            return binaryExpression(Types.PLUS, node);
+
+          case PLUS_ASSIGN:
+            return binaryExpression(Types.PLUS_EQUAL, node);
+
+          case MINUS:
+            return binaryExpression(Types.MINUS, node);
+
+          case MINUS_ASSIGN:
+            return binaryExpression(Types.MINUS_EQUAL, node);
+
+          case STAR:
+            return binaryExpression(Types.MULTIPLY, node);
+
+          case STAR_ASSIGN:
+            return binaryExpression(Types.MULTIPLY_EQUAL, node);
+
+          case STAR_STAR:
+            return binaryExpression(Types.POWER, node);
+
+          case STAR_STAR_ASSIGN:
+            return binaryExpression(Types.POWER_EQUAL, node);
+
+          case DIV:
+            return binaryExpression(Types.DIVIDE, node);
+
+          case DIV_ASSIGN:
+            return binaryExpression(Types.DIVIDE_EQUAL, node);
+
+          case MOD:
+            return binaryExpression(Types.MOD, node);
+
+          case MOD_ASSIGN:
+            return binaryExpression(Types.MOD_EQUAL, node);
+
+          case SL:
+            return binaryExpression(Types.LEFT_SHIFT, node);
+
+          case SL_ASSIGN:
+            return binaryExpression(Types.LEFT_SHIFT_EQUAL, node);
+
+          case SR:
+            return binaryExpression(Types.RIGHT_SHIFT, node);
+
+          case SR_ASSIGN:
+            return binaryExpression(Types.RIGHT_SHIFT_EQUAL, node);
+
+          case BSR:
+            return binaryExpression(Types.RIGHT_SHIFT_UNSIGNED, node);
+
+          case BSR_ASSIGN:
+            return binaryExpression(Types.RIGHT_SHIFT_UNSIGNED_EQUAL, node);
+
+          case VARIABLE_DEF:
+            return declarationExpression(node);
+
+          case REGEX_FIND:
+            return binaryExpression(Types.FIND_REGEX, node);
+
+          case REGEX_MATCH:
+            return binaryExpression(Types.MATCH_REGEX, node);
+
+          case RANGE_INCLUSIVE:
+            return rangeExpression(node, true);
+
+          case RANGE_EXCLUSIVE:
+            return rangeExpression(node, false);
+
+          case DYNAMIC_MEMBER:
+            return dynamicMemberExpression(node);
+
+          case LITERAL_in:
+            return binaryExpression(Types.KEYWORD_IN, node);
+
+          case ANNOTATION:
+            expression = new AnnotationConstantExpression(annotation(node));
+            configureAST(expression, node);
+            return expression;
+
+          case CLOSURE_LIST:
+            return closureListExpression(node);
+
+          case LBRACK:
+          case LPAREN:
+            return tupleExpression(node);
+
+          case OBJBLOCK:
+            return anonymousInnerClassDef(node);
+
+          default:
+            unknownAST(node);
         }
         return null;
     }
@@ -2553,8 +2647,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             booleanExpression.setSourcePosition(base);
             ret = new TernaryExpression(booleanExpression, left, right);
         }
-        // GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
-        //configureAST(ret, ternaryNode);
+        /* GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
+        configureAST(ret, ternaryNode);
+        */
         setSourceStart(ret, base);
         setSourceEnd(ret, ((TernaryExpression) ret).getFalseExpression());
         // GRECLIPSE end
@@ -2572,7 +2667,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected ConstantExpression literalExpression(AST node, Object value) {
-        ConstantExpression constantExpression = new ConstantExpression(value, value instanceof Boolean);
+        ConstantExpression constantExpression = new ConstantExpression(value, true);
         configureAST(constantExpression, node);
         return constantExpression;
     }
@@ -2582,8 +2677,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Expression left = expression(node);
         Expression right = expression(node.getNextSibling());
         RangeExpression rangeExpression = new RangeExpression(left, right, inclusive);
-        // GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
-        //configureAST(rangeExpression, rangeNode);
+        /* GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
+        configureAST(rangeExpression, rangeNode);
+        */
         setSourceStart(rangeExpression, left);
         setSourceEnd(rangeExpression, right);
         // GRECLIPSE end
@@ -2607,9 +2703,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Expression expr = expression(exprNode);
         SpreadMapExpression spreadMapExpression = new SpreadMapExpression(expr);
         configureAST(spreadMapExpression, node);
-        // GRECLIPSE add -- sloc for node only covers the operator; must include the expression
-        setSourceEnd(spreadMapExpression, expr);
-        // GRECLIPSE end
         return spreadMapExpression;
     }
 
@@ -2637,12 +2730,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         for (AST node = elist.getFirstChild(); node != null; node = node.getNextSibling()) {
             // check for stray labeled arguments:
             switch (node.getType()) {
-                case LABELED_ARG:
-                    assertNodeType(COMMA, node);
-                    break;  // helpful error?
-                case SPREAD_MAP_ARG:
-                    assertNodeType(SPREAD_ARG, node);
-                    break;  // helpful error
+              case LABELED_ARG:
+                assertNodeType(COMMA, node);
+                break;  // helpful error?
+              case SPREAD_MAP_ARG:
+                assertNodeType(SPREAD_ARG, node);
+                break;  // helpful error
             }
             expressions.add(expression(node));
         }
@@ -2658,15 +2751,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             assertNodeType(ELIST, elist);
             for (AST node = elist.getFirstChild(); node != null; node = node.getNextSibling()) {
                 switch (node.getType()) {
-                    case LABELED_ARG:
-                    case SPREAD_MAP_ARG:
-                        break;  // legal cases
-                    case SPREAD_ARG:
-                        assertNodeType(SPREAD_MAP_ARG, node);
-                        break;
-                    default:
-                        assertNodeType(LABELED_ARG, node);
-                        break;
+                  case LABELED_ARG:
+                  case SPREAD_MAP_ARG:
+                    break;  // legal cases
+                  case SPREAD_ARG:
+                    assertNodeType(SPREAD_MAP_ARG, node);
+                    break;
+                  default:
+                    assertNodeType(LABELED_ARG, node);
                 }
                 entryExpressions.add(mapEntryExpression(node));
             }
@@ -2709,8 +2801,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             AST valueNode = keyNode.getNextSibling();
             Expression valueExpression = expression(valueNode);
             MapEntryExpression mapEntryExpression = new MapEntryExpression(keyExpression, valueExpression);
-            // GRECLIPSE edit -- sloc for node only covers the ':'; must include the expressions
-            //configureAST(mapEntryExpression, node);
+            /* GRECLIPSE edit -- sloc for node only covers the ':'; must include the expressions
+            configureAST(mapEntryExpression, node);
+            */
             setSourceStart(mapEntryExpression, keyExpression);
             setSourceEnd(mapEntryExpression, valueExpression);
             // GRECLIPSE end
@@ -2729,8 +2822,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Expression rightExpression = new ClassExpression(type);
         configureAST(rightExpression, rightNode);
         BinaryExpression binaryExpression = new BinaryExpression(leftExpression, makeToken(Types.KEYWORD_INSTANCEOF, node), rightExpression);
-        // GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
-        //configureAST(binaryExpression, node);
+        /* GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
+        configureAST(binaryExpression, node);
+        */
         setSourceStart(binaryExpression, leftExpression);
         setSourceEnd(binaryExpression, rightExpression);
         // GRECLIPSE end
@@ -2751,8 +2845,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         ClassNode type = makeTypeWithArguments(rightNode);
 
         CastExpression asExpression = CastExpression.asExpression(type, leftExpression);
-        // GRECLIPSE edit -- set the sloc from the start of the target and the end of the type
-        //configureAST(asExpression, node);
+        /* GRECLIPSE edit -- set the sloc from the start of the target to the end of the type
+        configureAST(asExpression, node);
+        */
         asExpression.setStart(leftExpression.getStart());
         asExpression.setLineNumber(leftExpression.getLineNumber());
         asExpression.setColumnNumber(leftExpression.getColumnNumber());
@@ -2772,6 +2867,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // set the range of the type by itself
         asExpression.setNameStart(typeStart);
         asExpression.setNameEnd(asExpression.getEnd());
+
+        if (leftExpression instanceof VariableExpression && ((VariableExpression) leftExpression).isSuperExpression())
+            getController().addError(new SyntaxException("Cannot cast or coerce `super`", asExpression)); // GROOVY-9391
         // GRECLIPSE end
         return asExpression;
     }
@@ -2799,6 +2897,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             castExpression.setNameStart(locations.findOffset(typeNode.getLine(), typeNode.getColumn()));
             castExpression.setNameEnd(locations.findOffset(typeNode.getLineLast(), typeNode.getColumnLast()));
         }
+        if (expression instanceof VariableExpression && ((VariableExpression) expression).isSuperExpression())
+            getController().addError(new SyntaxException("Cannot cast or coerce `super`", castExpression)); // GROOVY-9391
         // GRECLIPSE end
         return castExpression;
     }
@@ -2863,8 +2963,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }*/
         Expression rightExpression = expression(rightNode);
         BinaryExpression binaryExpression = new BinaryExpression(leftExpression, token, rightExpression);
-        // GRECLIPSE edit -- sloc for node only covers the operator; must include the left and right expressions
-        //configureAST(binaryExpression, node);
+        /* GRECLIPSE edit -- sloc for node only covers the operator; must include the left and right expressions
+        configureAST(binaryExpression, node);
+        */
         setSourceStart(binaryExpression, leftExpression);
         setSourceEnd(binaryExpression, rightExpression);
         // GRECLIPSE end
@@ -2897,6 +2998,28 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return booleanExpression;
     }
 
+    // GRECLIPSE add
+    private PropertyExpression chomp(PropertyExpression propertyExpression) {
+        if (propertyExpression.getEnd() > propertyExpression.getProperty().getEnd() && getController() != null) {
+            char[] sourceChars = getController().readSourceRange(propertyExpression.getStart(), propertyExpression.getLength());
+            if (sourceChars != null) {
+                int idx = (sourceChars.length - 1);
+                int off = propertyExpression.getEnd();
+                while (idx >= 0 && Character.isWhitespace(sourceChars[idx])) {
+                    idx -= 1; off -= 1;
+                }
+                if (off < propertyExpression.getEnd()) {
+                    int[] row_col = locations.getRowCol(off);
+                    propertyExpression.setEnd(off);
+                    propertyExpression.setLastLineNumber(row_col[0]);
+                    propertyExpression.setLastColumnNumber(row_col[1]);
+                }
+            }
+        }
+        return propertyExpression;
+    }
+    // GRECLIPSE end
+
     protected Expression dotExpression(AST node) {
         // let's decide if this is a property invocation or a method call
         AST leftNode = node.getFirstChild();
@@ -2905,13 +3028,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             if (identifierNode != null) {
                 Expression leftExpression = expression(leftNode);
                 if (isType(SELECT_SLOT, identifierNode)) {
+                    /* GRECLIPSE edit
                     Expression field = expression(identifierNode.getFirstChild(), true);
+                    */
+                    Expression field = expression(identifierNode.getFirstChild(), !isType(DYNAMIC_MEMBER, identifierNode.getFirstChild()));
+                    // GRECLIPSE end
                     AttributeExpression attributeExpression = new AttributeExpression(leftExpression, field, node.getType() != DOT);
                     if (node.getType() == SPREAD_DOT) {
                         attributeExpression.setSpreadSafe(true);
                     }
                     configureAST(attributeExpression, node);
-                    return attributeExpression;
+                    return chomp(attributeExpression);
                 }
                 if (isType(SLIST, identifierNode)) {
                     Statement code = statementList(identifierNode);
@@ -2922,8 +3049,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                         propertyExpression.setSpreadSafe(true);
                     }
                     configureAST(propertyExpression, node);
-                    return propertyExpression;
+                    return chomp(propertyExpression);
                 }
+                /* GRECLIPSE edit
                 Expression property = expression(identifierNode, true);
 
 
@@ -2934,13 +3062,15 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     property = new ConstantExpression(ve.getName());
                     property.setSourcePosition(ve);
                 }
-
+                */
+                Expression property = expression(identifierNode, !isType(DYNAMIC_MEMBER, identifierNode));
+                // GRECLIPSE end
                 PropertyExpression propertyExpression = new PropertyExpression(leftExpression, property, node.getType() != DOT);
                 if (node.getType() == SPREAD_DOT) {
                     propertyExpression.setSpreadSafe(true);
                 }
                 configureAST(propertyExpression, node);
-                return propertyExpression;
+                return chomp(propertyExpression);
             }
         }
         return methodCallExpression(node);
@@ -2985,10 +3115,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             selector = objectNode.getNextSibling();
         } else {
             implicitThis = true;
-            /* GRECLIPSE edit
-            objectExpression = VariableExpression.THIS_EXPRESSION;
-            */
             objectExpression = new VariableExpression("this");
+            // GRECLIPSE add
             objectExpression.setLineNumber(node.getLine());
             objectExpression.setColumnNumber(node.getColumn());
             // GRECLIPSE end
@@ -3010,7 +3138,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         } else if (isPrimitiveTypeLiteral(selector)) {
             throw new ASTRuntimeException(selector, "Primitive type literal: " + selector.getText() + " cannot be used as a method name");
         } else if (isType(SELECT_SLOT, selector)) {
+            /* GRECLIPSE edit
             Expression field = expression(selector.getFirstChild(), true);
+            */
+            Expression field = expression(selector.getFirstChild(), !isType(DYNAMIC_MEMBER, selector.getFirstChild()));
+            // GRECLIPSE end
             AttributeExpression attributeExpression = new AttributeExpression(objectExpression, field, node.getType() != DOT);
             configureAST(attributeExpression, node);
             Expression arguments = arguments(elist);
@@ -3020,7 +3152,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             return expression;
         } else if (!implicitThis || isType(DYNAMIC_MEMBER, selector) || isType(IDENT, selector) ||
                 isType(STRING_CONSTRUCTOR, selector) || isType(STRING_LITERAL, selector)) {
+            /* GRECLIPSE edit
             name = expression(selector, true);
+            */
+            name = expression(selector, !isType(DYNAMIC_MEMBER, selector));
+            // GRECLIPSE end
         } else {
             implicitThis = false;
             name = new ConstantExpression("call");
@@ -3069,21 +3205,26 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
     }
 
-    protected Expression constructorCallExpression(AST node) {
+    protected Expression constructorCallExpression(AST constructorCallNode) {
+        /* GRECLIPSE edit
         AST constructorCallNode = node;
         ClassNode type = makeTypeWithArguments(constructorCallNode);
-
         if (isType(CTOR_CALL, node) || isType(LITERAL_new, node)) {
             node = node.getFirstChild();
         }
-        // GRECLIPSE add
-        // not quite ideal -- a null node is a sign of a new call without the type being specified
-        // (it is a syntax error); setting up with Object here prevents multiple downstream issues
+        */
+        ClassNode type = makeTypeWithArguments(constructorCallNode);
+        AST node = constructorCallNode.getFirstChild();
         if (node == null) {
-            return new ConstructorCallExpression(ClassHelper.OBJECT_TYPE, new ArgumentListExpression());
+            // not quite ideal -- a null node is a sign of "new" call without the type being specified
+            // (it is a syntax error); setting up with Object here prevents multiple downstream issues
+            return new ConstructorCallExpression(type, new ArgumentListExpression());
+        } else if (isPrimitiveTypeLiteral(node)) {
+            ClassNode proxy = ClassHelper.makeWithoutCaching(type.getName());
+            proxy.setRedirect(type); type = proxy;
+            configureAST(type,node);
         }
         // GRECLIPSE end
-
         AST elist = node.getNextSibling();
 
         if (elist == null && isType(ELIST, node)) {
@@ -3102,9 +3243,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             ArrayExpression arrayExpression = new ArrayExpression(type, null, size);
             configureAST(arrayExpression, constructorCallNode);
             // GRECLIPSE add
-            Expression name = literalExpression(node, null);
-            arrayExpression.setNameStart(name.getStart());
-            arrayExpression.setNameEnd(name.getEnd() - 1);
+            arrayExpression.setNameStart(type.getStart());
+            arrayExpression.setNameEnd(type.getEnd() - 1);
             // GRECLIPSE end
             return arrayExpression;
         }
@@ -3324,33 +3464,33 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // as the negation operator on MIN_INT causes rounding to a long
         String text = node.getText();
         switch (node.getType()) {
-            case NUM_DOUBLE:
-            case NUM_FLOAT:
-            case NUM_BIG_DECIMAL:
-                ConstantExpression constantExpression = new ConstantExpression(Numbers.parseDecimal("-" + text));
-                configureAST(constantExpression, unaryMinusExpr);
-                // GRECLIPSE add
-                setSourceEnd(constantExpression, expression(node));
-                // GRECLIPSE end
-                return constantExpression;
+          case NUM_DOUBLE:
+          case NUM_FLOAT:
+          case NUM_BIG_DECIMAL:
+            ConstantExpression constantExpression = new ConstantExpression(Numbers.parseDecimal("-" + text), true);
+            configureAST(constantExpression, unaryMinusExpr);
+            // GRECLIPSE add
+            setSourceEnd(constantExpression, expression(node));
+            // GRECLIPSE end
+            return constantExpression;
 
-            case NUM_BIG_INT:
-            case NUM_INT:
-            case NUM_LONG:
-                ConstantExpression constantLongExpression = new ConstantExpression(Numbers.parseInteger("-" + text));
-                configureAST(constantLongExpression, unaryMinusExpr);
-                // GRECLIPSE add
-                setSourceEnd(constantLongExpression, expression(node));
-                // GRECLIPSE end
-                return constantLongExpression;
+          case NUM_BIG_INT:
+          case NUM_INT:
+          case NUM_LONG:
+            ConstantExpression constantLongExpression = new ConstantExpression(Numbers.parseInteger("-" + text), true);
+            configureAST(constantLongExpression, unaryMinusExpr);
+            // GRECLIPSE add
+            setSourceEnd(constantLongExpression, expression(node));
+            // GRECLIPSE end
+            return constantLongExpression;
 
-            default:
-                UnaryMinusExpression unaryMinusExpression = new UnaryMinusExpression(expression(node));
-                configureAST(unaryMinusExpression, unaryMinusExpr);
-                // GRECLIPSE add
-                setSourceEnd(unaryMinusExpression, unaryMinusExpression.getExpression());
-                // GRECLIPSE end
-                return unaryMinusExpression;
+          default:
+            UnaryMinusExpression unaryMinusExpression = new UnaryMinusExpression(expression(node));
+            configureAST(unaryMinusExpression, unaryMinusExpr);
+            // GRECLIPSE add
+            setSourceEnd(unaryMinusExpression, unaryMinusExpression.getExpression());
+            // GRECLIPSE end
+            return unaryMinusExpression;
         }
     }
 
@@ -3359,39 +3499,35 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         UnaryPlusExpression unaryPlusExpression = new UnaryPlusExpression(expression(node));
         configureAST(unaryPlusExpression, unaryPlusExpr);
         switch (node.getType()) {
-            case NUM_DOUBLE:
-            case NUM_FLOAT:
-            case NUM_BIG_DECIMAL:
-            case NUM_BIG_INT:
-            case NUM_INT:
-            case NUM_LONG:
-                // GRECLIPSE add
-                setSourceStart(unaryPlusExpression.getExpression(), unaryPlusExpression);
-                // GRECLIPSE end
-                return unaryPlusExpression.getExpression();
+          case NUM_DOUBLE:
+          case NUM_FLOAT:
+          case NUM_BIG_DECIMAL:
+          case NUM_BIG_INT:
+          case NUM_INT:
+          case NUM_LONG:
+            // GRECLIPSE add
+            setSourceStart(unaryPlusExpression.getExpression(), unaryPlusExpression);
+            // GRECLIPSE end
+            return unaryPlusExpression.getExpression();
 
-            default:
-                // GRECLIPSE add
-                setSourceEnd(unaryPlusExpression, unaryPlusExpression.getExpression());
-                // GRECLIPSE end
-                return unaryPlusExpression;
+          default:
+            // GRECLIPSE add
+            setSourceEnd(unaryPlusExpression, unaryPlusExpression.getExpression());
+            // GRECLIPSE end
+            return unaryPlusExpression;
         }
     }
 
     protected ConstantExpression decimalExpression(AST node) {
-        String text = node.getText();
-        Object number = Numbers.parseDecimal(text);
-        ConstantExpression constantExpression = new ConstantExpression(number,
-                number instanceof Double || number instanceof Float);
+        Object number = Numbers.parseDecimal(node.getText());
+        ConstantExpression constantExpression = new ConstantExpression(number, true);
         configureAST(constantExpression, node);
         return constantExpression;
     }
 
     protected ConstantExpression integerExpression(AST node) {
-        String text = node.getText();
-        Object number = Numbers.parseInteger(text);
-        boolean keepPrimitive = number instanceof Integer || number instanceof Long;
-        ConstantExpression constantExpression = new ConstantExpression(number, keepPrimitive);
+        Object number = Numbers.parseInteger(node.getText());
+        ConstantExpression constantExpression = new ConstantExpression(number, true);
         configureAST(constantExpression, node);
         return constantExpression;
     }
@@ -3406,28 +3542,23 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         for (AST node = gstringNode.getFirstChild(); node != null; node = node.getNextSibling()) {
             int type = node.getType();
-            String text = null;
             switch (type) {
-
-                case STRING_LITERAL:
-                    if (isPrevString) assertNodeType(IDENT, node);  // parser bug
-                    isPrevString = true;
-                    text = node.getText();
-                    ConstantExpression constantExpression = new ConstantExpression(text);
-                    configureAST(constantExpression, node);
-                    strings.add(constantExpression);
-                    buffer.append(text);
-                    break;
-
-                default: {
-                    if (!isPrevString) assertNodeType(IDENT, node);  // parser bug
-                    isPrevString = false;
-                    Expression expression = expression(node);
-                    values.add(expression);
-                    buffer.append("$");
-                    buffer.append(expression.getText());
-                }
+              case STRING_LITERAL:
+                if (isPrevString) assertNodeType(IDENT, node); // parser bug
+                isPrevString = true;
+                String text = node.getText();
+                ConstantExpression constantExpression = new ConstantExpression(text);
+                configureAST(constantExpression, node);
+                strings.add(constantExpression);
+                buffer.append(text);
                 break;
+              default:
+                if (!isPrevString) assertNodeType(IDENT, node); // parser bug
+                isPrevString = false;
+                Expression expression = expression(node);
+                values.add(expression);
+                buffer.append("$");
+                buffer.append(expression.getText());
             }
         }
         GStringExpression gStringExpression = new GStringExpression(buffer.toString(), strings, values);
@@ -3592,8 +3723,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // GRECLIPSE end
             } else {
                 checkTypeArgs(node, false);
-                // GRECLIPSE edit
-                //answer = ClassHelper.make(qualifiedName(node));
+                /* GRECLIPSE edit
+                answer = ClassHelper.make(qualifiedName(node));
+                */
                 answer = makeClassNode(qualifiedName(node));
                 // GRECLIPSE end
                 if (answer.isUsingGenerics()) {
@@ -3652,6 +3784,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         } else {
             name = node.getText();
         }
+        /* GRECLIPSE edit
         ClassNode answer = ClassHelper.make(name);
         AST nextSibling = node.getNextSibling();
         if (isType(ARRAY_DECLARATOR, nextSibling) || isType(INDEX_OP, nextSibling)) {
@@ -3660,23 +3793,38 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             configureAST(answer, node);
             return answer;
         }
+        */
+        if (isType(ARRAY_DECLARATOR, node.getNextSibling()) || isType(INDEX_OP, node.getNextSibling())) {
+            throw new ASTRuntimeException(node, "Unexpected '[' sibling in type name");
+        }
+
+        ClassNode answer = makeClassNode(name);
+        configureAST(answer, node);
+        if (isType(DOT, node) || isType(OPTIONAL_DOT, node)) {
+            GroovySourceAST type = (GroovySourceAST) node.getFirstChild().getNextSibling();
+            answer.setLastLineNumber(type.getLineLast());
+            answer.setLastColumnNumber(type.getColumnLast());
+            answer.setNameStart2(locations.findOffset(type.getLine(), type.getColumn()));
+            answer.setEnd(locations.findOffset(type.getLineLast(), type.getColumnLast()));
+        }
+        return answer;
+        // GRECLIPSE end
     }
 
     protected boolean isPrimitiveTypeLiteral(AST node) {
-        int type = node.getType();
-        switch (type) {
-            case LITERAL_boolean:
-            case LITERAL_byte:
-            case LITERAL_char:
-            case LITERAL_double:
-            case LITERAL_float:
-            case LITERAL_int:
-            case LITERAL_long:
-            case LITERAL_short:
-                return true;
+        switch (node.getType()) {
+          case LITERAL_boolean:
+          case LITERAL_byte:
+          case LITERAL_char:
+          case LITERAL_double:
+          case LITERAL_float:
+          case LITERAL_int:
+          case LITERAL_long:
+          case LITERAL_short:
+            return true;
 
-            default:
-                return false;
+          default:
+            return false;
         }
     }
 

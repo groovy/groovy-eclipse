@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assume.assumeTrue
 
@@ -28,15 +29,15 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, true)
     }
 
     @Test
     void testAfterParens1() {
         String contents = '''\
-            HttpRetryException f() { null }
-            f().
-            '''.stripIndent()
+            |HttpRetryException f() { null }
+            |f().
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'f().'))
         proposalExists(proposals, 'cause', 1)
     }
@@ -44,9 +45,9 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testAfterParens2() {
         String contents = '''\
-            HttpRetryException f() { null }
-            this.f().
-            '''.stripIndent()
+            |HttpRetryException f() { null }
+            |this.f().
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'f().'))
         proposalExists(proposals, 'cause', 1)
     }
@@ -54,9 +55,9 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testAfterParens3() {
         String contents = '''\
-            class Super { HttpRetryException f() { null } }
-            new Super().f().
-            '''.stripIndent()
+            |class Super { HttpRetryException f() { null } }
+            |new Super().f().
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'f().'))
         proposalExists(proposals, 'cause', 1)
     }
@@ -64,10 +65,10 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testAfterParens4() {
         String contents = '''\
-            class Super { HttpRetryException f() { null } }
-            class Sub extends Super { }
-            new Sub().f().
-            '''.stripIndent()
+            |class Super { HttpRetryException f() { null } }
+            |class Sub extends Super { }
+            |new Sub().f().
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'f().'))
         proposalExists(proposals, 'cause', 1)
     }
@@ -75,10 +76,10 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testAfterParens5() {
         String contents = '''\
-            class Super { HttpRetryException f(arg) { null } }
-            def s = new Super()
-            s.f(null).
-            '''.stripIndent()
+            |class Super { HttpRetryException f(arg) { null } }
+            |def s = new Super()
+            |s.f(null).
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'f(null).'))
         proposalExists(proposals, 'cause', 1)
     }
@@ -86,10 +87,10 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testAfterParens6() {
         String contents = '''\
-            class Super { HttpRetryException f() { null } }
-            def s = new Super()
-            s.f().
-            '''.stripIndent()
+            |class Super { HttpRetryException f() { null } }
+            |def s = new Super()
+            |s.f().
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'f().'))
         proposalExists(proposals, 'cause', 1)
     }
@@ -97,9 +98,9 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testObjectExpr1() {
         String contents = '''\
-            1.
-            p
-            '''.stripIndent()
+            |1.
+            |p
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'abs', 1)
     }
@@ -107,9 +108,9 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testObjectExpr2() {
         String contents = '''\
-            1.
-            m()
-            '''.stripIndent()
+            |1.
+            |m()
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'abs', 1)
     }
@@ -117,9 +118,9 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testObjectExpr3() {
         String contents = '''\
-            1.
-            'p'
-            '''.stripIndent()
+            |1.
+            |'p'
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'abs', 1)
     }
@@ -127,9 +128,9 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testObjectExpr4() {
         String contents = '''\
-            1.
-            'm'()
-            '''.stripIndent()
+            |1.
+            |'m'()
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'abs', 1)
     }
@@ -137,9 +138,9 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testObjectExpr5() {
         String contents = '''\
-            1.
-            "$p"
-            '''.stripIndent()
+            |1.
+            |"$p"
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'abs', 1)
     }
@@ -147,9 +148,9 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/792
     void testObjectExpr6() {
         String contents = '''\
-            1.
-            "$m"()
-            '''.stripIndent()
+            |1.
+            |"$m"()
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'abs', 1)
     }
@@ -157,69 +158,126 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/946
     void testObjectExpr7() {
         String contents = '''\
-            class C {
-              static Date date(whatever) {
-              }
-              static main(args) {
-                date('x').
-              }
-            }
-            '''.stripIndent()
+            |class C {
+            |  static Date date(whatever) {
+            |  }
+            |  static main(args) {
+            |    date('x').
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         proposalExists(proposals, 'time', 1)
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/946
-    void testObjectExpr7a() {
+    void testObjectExpr8() {
         String contents = '''\
-            class C {
-              static Date date(whatever) {
-              }
-              static main(args) {
-                date('x').t
-              }
-            }
-            '''.stripIndent()
+            |class C {
+            |  static Date date(whatever) {
+            |  }
+            |  static main(args) {
+            |    date('x').t
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 't'))
         proposalExists(proposals, 'time', 1)
     }
 
     @Test
-    void testObjectExpr8() {
+    void testObjectExpr9() {
         String contents = '''\
-            class C {
-              Date date(whatever) {
-              }
-              void meth() {
-                date('x').
-              }
-            }
-            '''.stripIndent()
+            |class C {
+            |  Date date(whatever) {
+            |  }
+            |  void meth() {
+            |    date('x').
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         proposalExists(proposals, 'time', 1)
     }
 
     @Test
-    void testObjectExpr8a() {
+    void testObjectExpr10() {
         String contents = '''\
-            class C {
-              Date date(whatever) {
-              }
-              void meth() {
-                date('x').t
-              }
-            }
-            '''.stripIndent()
+            |class C {
+            |  Date date(whatever) {
+            |  }
+            |  void meth() {
+            |    date('x').t
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 't'))
         proposalExists(proposals, 'time', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1129
+    void testObjectExpr11() {
+        String contents = '''\
+            |class C {
+            |  void meth(Number n) {
+            |    n.
+            |    def x = 1
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'byteValue()', 1)
+        proposalExists(proposals, 'intValue()', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1129
+    void testObjectExpr12() {
+        String contents = '''\
+            |class C {
+            |  void meth(Number n) {
+            |    println n.
+            |    def x = 1
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'byteValue()', 1)
+        proposalExists(proposals, 'intValue()', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1129
+    void testObjectExpr13() {
+        String contents = '''\
+            |class C {
+            |  void meth(Number n) {
+            |    println n.
+            |    Number x = 1
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'byteValue()', 1)
+        proposalExists(proposals, 'intValue()', 1)
+    }
+
+    @Test
+    void testObjectExpr14() {
+        String contents = '''\
+            |void meth(Serializable s) {
+            |  s.
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'finalize', 1)
+        proposalExists(proposals, 'wait', 3)
     }
 
     @Test // GRECLIPSE-1374
     void testParensExpr1() {
         String contents = '''\
-            (1).
-            def u
-            '''.stripIndent()
+            |(1).
+            |def u
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'abs', 1)
     }
@@ -227,9 +285,9 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test // GRECLIPSE-1374
     void testParensExpr2() {
         String contents = '''\
-            (((1))).
-            def u
-            '''.stripIndent()
+            |(((1))).
+            |def u
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'abs', 1)
     }
@@ -243,7 +301,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test // GRECLIPSE-1528
     void testGetterSetter1() {
-        String contents = 'class A { private int value\n}'
+        String contents = 'class C {\n private int value\n}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '\n'))
         proposalExists(proposals, 'getValue', 1)
         proposalExists(proposals, 'setValue', 1)
@@ -251,7 +309,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testGetterSetter2() {
-        String contents = 'class A { private final int value\n}'
+        String contents = 'class C {\n private final int value\n}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '\n'))
         proposalExists(proposals, 'getValue', 1)
         proposalExists(proposals, 'setValue', 0)
@@ -259,22 +317,41 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testGetterSetter3() {
-        String contents = 'class A { private boolean value\n}'
+        String contents = 'class C {\n private boolean value\n}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '\n'))
         proposalExists(proposals, 'isValue', 1)
         proposalExists(proposals, 'setValue', 1)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/820
+    void testGetterSetter4() {
+        String contents = 'enum E {\n VALUE\n}'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '\n'))
+        proposalExists(proposals, 'getVALUE', 0)
+        proposalExists(proposals, 'setVALUE', 0)
+    }
+
+    @Test
+    void testGetterSetter5() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String contents = 'record R(String value) {\n}'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '\n'))
+        proposalExists(proposals, 'getValue', 0)
+        proposalExists(proposals, 'setValue', 0)
+        proposalExists(proposals, 'value', 0)
+    }
+
     @Test
     void testOverride1() {
         String contents = '''\
-            interface I {
-              String m(List<String> strings, Object[] objects)
-            }
-            class A implements I {
-              x
-            }
-            '''.stripIndent()
+            |interface I {
+            |  String m(List<String> strings, Object[] objects)
+            |}
+            |class A implements I {
+            |  x
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'm(List<String> strings, Object[] objects) : String - Override method in \'I\'', 1)
         proposalExists(proposals, 'equals(Object obj) : boolean - Override method in \'Object\'', 1)
@@ -283,10 +360,10 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testOverride2() {
         String contents = '''\
-            class A implements Comparable<String> {
-              x
-            }
-            '''.stripIndent()
+            |class A implements Comparable<String> {
+            |  x
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'compareTo(String o) : int - Override method in \'Comparable\'', 1)
     }
@@ -294,102 +371,100 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/711
     void testOverride3() {
         String contents = '''\
-            class A implements Comparable {
-              x
-            }
-            '''.stripIndent()
+            |class A implements Comparable {
+            |  x
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'compareTo(Object o) : int - Override method in \'Comparable\'', 1)
     }
 
     @Test
-    void testOverride3a() {
-        addGroovySource '''\
-            interface I<T extends CharSequence> {
-              void m(T chars)
-            }
-            '''.stripIndent()
-        String contents = '''\
-            class A implements I {
-              x
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
-        proposalExists(proposals, 'm(CharSequence chars) : void - Override method in \'I\'', 1)
-    }
-
-    @Test
-    void testOverride3b() {
-        addGroovySource '''\
-            interface I<T extends CharSequence & Serializable> {
-              void m(T chars)
-            }
-            '''.stripIndent()
-        String contents = '''\
-            class A implements I {
-              x
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
-        proposalExists(proposals, 'm(CharSequence chars) : void - Override method in \'I\'', 1)
-    }
-
-    @Test
     void testOverride4() {
+        addGroovySource '''\
+            |interface I<T extends CharSequence> {
+            |  void m(T chars)
+            |}
+            |'''.stripMargin()
         String contents = '''\
-            import java.util.concurrent.Callable
-            class A implements Callable<String> {
-              x
-            }
-            '''.stripIndent()
+            |class A implements I {
+            |  x
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm(CharSequence chars) : void - Override method in \'I\'', 1)
+    }
+
+    @Test
+    void testOverride5() {
+        addGroovySource '''\
+            |interface I<T extends CharSequence & Serializable> {
+            |  void m(T chars)
+            |}
+            |'''.stripMargin()
+        String contents = '''\
+            |class A implements I {
+            |  x
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm(CharSequence chars) : void - Override method in \'I\'', 1)
+    }
+
+    @Test
+    void testOverride6() {
+        String contents = '''\
+            |import java.util.concurrent.Callable
+            |class A implements Callable<String> {
+            |  x
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'call() : String - Override method in \'Callable\'', 1)
     }
 
     @Test
-    void testOverride5() {
+    void testOverride7() {
         String contents = '''\
-            // Comparator redeclares equals(Object)
-            class A implements Comparator<String> {
-              x
-            }
-            '''.stripIndent()
+            |// Comparator redeclares equals(Object)
+            |class A implements Comparator<String> {
+            |  x
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'equals(Object obj) : boolean - Override method in \'Comparator\'', 1)
     }
 
     @Test
-    void testOverride6() {
+    void testOverride8() {
         addGroovySource '''\
-            trait T {
-              String getFoo() { 'foo' }
-            }
-            '''.stripIndent()
+            |trait T {
+            |  String getFoo() { 'foo' }
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            class A implements T {
-              x
-            }
-            '''.stripIndent()
+            |class A implements T {
+            |  x
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'getFoo() : String - Override method in \'T\'', 1)
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/705
-    void testOverride6a() {
+    void testOverride9() {
         addGroovySource '''\
-            trait T {
-              String getFoo() { 'foo' }
-            }
-            '''.stripIndent()
-
-        buildProject()
+            |trait T {
+            |  String getFoo() { 'foo' }
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            class A implements T {
-              x
-            }
-            '''.stripIndent()
+            |class A implements T {
+            |  x
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'getFoo() : String - Override method in \'T\'', 1)
     }
@@ -397,13 +472,13 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test // GRECLIPSE-1752
     void testStatic1() {
         String contents = '''\
-            class A {
-              static void util() {}
-              void foo() {
-                A.
-              }
-            }
-            '''.stripIndent()
+            |class A {
+            |  static void util() {}
+            |  void foo() {
+            |    A.
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'A.'))
         proposalExists(proposals, 'util', 1)
     }
@@ -411,14 +486,15 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testStatic2() {
         String contents = '''\
-            @groovy.transform.CompileStatic
-            class A {
-                static void util() {}
-                void foo() {
-                    A.
-                }
-            }
-            '''.stripIndent()
+            |@groovy.transform.CompileStatic
+            |class A {
+            |  static void util() {
+            |  }
+            |  void foo() {
+            |    A.
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'A.'))
         proposalExists(proposals, 'util', 1)
     }
@@ -426,13 +502,13 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testClass1() {
         String contents = '''\
-            class A {
-              static void util() {}
-              void foo() {
-                A.class.
-              }
-            }
-            '''.stripIndent()
+            |class A {
+            |  static void util() {}
+            |  void foo() {
+            |    A.class.
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'A.class.'))
         proposalExists(proposals, 'util', 1)
     }
@@ -440,13 +516,13 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testClass2() {
         String contents = '''\
-            @groovy.transform.CompileStatic
-            class A {
-              static void util() {}
-              void foo() {
-                A.class.
-              }
-            }'''.stripIndent()
+            |@groovy.transform.CompileStatic
+            |class A {
+            |  static void util() {}
+            |  void foo() {
+            |    A.class.
+            |  }
+            |}'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         proposalExists(proposals, 'util', 1)
     }
@@ -454,43 +530,46 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testClass3() {
         String contents = '''\
-            import java.util.regex.Pattern
-            Pattern.com
-            '''.stripIndent()
+            |import java.util.regex.Pattern
+            |Pattern.com
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.com'))
-        proposalExists(proposals, 'componentType', 1) // from Class
+        def version = Float.parseFloat(System.getProperty('java.specification.version'))
+        proposalExists(proposals, 'componentType', version < 12 ? 1 : 2) // from Class
         proposalExists(proposals, 'compile', 2) // from Pattern
     }
 
     @Test
     void testClass4() {
         String contents = '''\
-            import java.util.regex.Pattern
-            Pattern.class.com
-            '''.stripIndent()
+            |import java.util.regex.Pattern
+            |Pattern.class.com
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.com'))
-        proposalExists(proposals, 'componentType', 1) // from Class
+        def version = Float.parseFloat(System.getProperty('java.specification.version'))
+        proposalExists(proposals, 'componentType', version < 12 ? 1 : 2) // from Class
         proposalExists(proposals, 'compile', 2) // from Pattern
     }
 
     @Test
     void testClass5() {
         String contents = '''\
-            import java.util.regex.Pattern
-            def pat = Pattern.class
-            pat.com
-            '''.stripIndent()
+            |import java.util.regex.Pattern
+            |def pat = Pattern
+            |pat.com
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.com'))
-        proposalExists(proposals, 'componentType', 1) // from Class
+        def version = Float.parseFloat(System.getProperty('java.specification.version'))
+        proposalExists(proposals, 'componentType', version < 12 ? 1 : 2) // from Class
         proposalExists(proposals, 'compile', 2) // from Pattern
     }
 
     @Test
     void testClass6() {
         String contents = '''\
-            Class cls
-            cls.can
-            '''.stripIndent()
+            |Class cls
+            |cls.can
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'can'))
         proposalExists(proposals, 'canonicalName', 1)
     }
@@ -498,38 +577,80 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testClass7() {
         String contents = '''\
-            Class cls
-            cls.get
-            '''.stripIndent()
+            |Class cls
+            |cls.get
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'get'))
         proposalExists(proposals, 'getCanonicalName', 1)
     }
 
     @Test
+    void testDefaultMethods() {
+        String contents = '''\
+            |class C implements Comparator<String> {
+            |  @Override
+            |  Comparator<String> reversed() {
+            |    super.r
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'reversed', isAtLeastGroovy(40) ? 1 : 0)
+        proposalExists(proposals, 'thenComparing', isAtLeastGroovy(40) ? 3 : 0)
+        proposalExists(proposals, 'comparing', 0) // no static methods
+    }
+
+    @Test
     void testStaticMethods1() {
         String contents = '''\
-            import java.util.regex.Pattern
-            Pattern.
-            '''.stripIndent()
+            |class C implements Comparator<String> {
+            |  static m() {
+            |    r
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'r'))
+        proposalExists(proposals, 'naturalOrder', 0)
+        proposalExists(proposals, 'reverseOrder', 0)
+        proposalExists(proposals, 'reversed', 0)
+    }
+
+    @Test
+    void testStaticMethods2() {
+        String contents = '''\
+            |class C implements Comparator<String> {}
+            |C.c
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'c'))
+        proposalExists(proposals, 'thenComparing', 0)
+        proposalExists(proposals, 'comparing', 0)
+    }
+
+    @Test
+    void testStaticMethods3() {
+        String contents = '''\
+            |import java.util.regex.Pattern
+            |Pattern.
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         proposalExists(proposals, 'compile', 2) // 2 static, 1 non-static
         proposalExists(proposals, 'flags', 0) // 1 non-static
     }
 
     @Test
-    void testStaticMethods2() {
+    void testStaticMethods4() {
         addGroovySource '''\
-            abstract class A {
-              static void someThing() {}
-            }
-            class C extends A {
-              static void someThang() {}
-            }
-            '''.stripIndent(), 'C', 'p'
+            |abstract class A {
+            |  static void someThing() {}
+            |}
+            |class C extends A {
+            |  static void someThang() {}
+            |}
+            |'''.stripMargin(), 'C', 'p'
         String contents = '''\
-            import p.C
-            C.some
-            '''.stripIndent()
+            |import p.C
+            |C.some
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'some'))
         proposalExists(proposals, 'someThang', 1)
         proposalExists(proposals, 'someThing', 1)
@@ -538,9 +659,9 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testImportStaticMethod1() {
         String contents = '''\
-            import static java.util.regex.Pattern.compile
-            comp
-            '''.stripIndent()
+            |import static java.util.regex.Pattern.compile
+            |comp
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
     }
@@ -548,18 +669,18 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testImportStaticMethod2() {
         addGroovySource '''\
-            abstract class A {
-              static void someThing() {}
-            }
-            class C extends A {
-              static void someThang() {}
-            }
-            '''.stripIndent(), 'C', 'p'
+            |abstract class A {
+            |  static void someThing() {}
+            |}
+            |class C extends A {
+            |  static void someThang() {}
+            |}
+            |'''.stripMargin(), 'C', 'p'
         String contents = '''\
-            import static p.C.someThang
-            import static p.C.someThing
-            some
-            '''.stripIndent()
+            |import static p.C.someThang
+            |import static p.C.someThing
+            |some
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'some'))
         proposalExists(proposals, 'someThang', 1)
         proposalExists(proposals, 'someThing', 1)
@@ -568,9 +689,9 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testImportStaticStarMethod1() {
         String contents = '''\
-            import static java.util.regex.Pattern.*
-            comp
-            '''.stripIndent()
+            |import static java.util.regex.Pattern.*
+            |comp
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
     }
@@ -578,17 +699,17 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testImportStaticStarMethod2() {
         addGroovySource '''\
-            abstract class A {
-              static void someThing() {}
-            }
-            class C extends A {
-              static void someThang() {}
-            }
-            '''.stripIndent(), 'C', 'p'
+            |abstract class A {
+            |  static void someThing() {}
+            |}
+            |class C extends A {
+            |  static void someThang() {}
+            |}
+            |'''.stripMargin(), 'C', 'p'
         String contents = '''\
-            import static p.C.*
-            some
-            '''.stripIndent()
+            |import static p.C.*
+            |some
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'some'))
         proposalExists(proposals, 'someThang', 1)
         proposalExists(proposals, 'someThing', 1)
@@ -599,8 +720,8 @@ final class MethodCompletionTests extends CompletionTestSuite {
         setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.*')
 
         String contents = '''\
-            comp
-            '''.stripIndent()
+            |comp
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
 
@@ -616,9 +737,9 @@ final class MethodCompletionTests extends CompletionTestSuite {
         setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.*')
 
         String contents = '''\
-            import static java.util.regex.Pattern.*
-            comp
-            '''.stripIndent()
+            |import static java.util.regex.Pattern.*
+            |comp
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
     }
@@ -628,8 +749,8 @@ final class MethodCompletionTests extends CompletionTestSuite {
         setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.compile')
 
         String contents = '''\
-            comp
-            '''.stripIndent()
+            |comp
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
 
@@ -646,8 +767,8 @@ final class MethodCompletionTests extends CompletionTestSuite {
         setJavaPreference(AssistOptions.OPTION_SuggestStaticImports, AssistOptions.DISABLED)
         try {
             String contents = '''\
-                comp
-                '''.stripIndent()
+                |comp
+                |'''.stripMargin()
             ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
             proposalExists(proposals, 'compile', 2)
 
@@ -664,17 +785,17 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testFavoriteStaticMethod3() {
         setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.compile')
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, false)
 
         String contents = '''\
-            comp
-            '''.stripIndent()
+            |comp
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
 
         applyProposalAndCheck(findFirstProposal(proposals, 'compile(String regex)'), '''\
-            java.util.regex.Pattern.compile(regex)
-            '''.stripIndent())
+            |java.util.regex.Pattern.compile(regex)
+            |'''.stripMargin())
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/984
@@ -685,13 +806,23 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testAttributeExpression0() {
+        String contents = 'HashMap map = [:]\nmap.@e'
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'e'))
+        proposalExists(proposals, 'isEmpty', 0)
+        proposalExists(proposals, 'empty', 0)
+    }
+
+    @Test
     void testMethodPointer0() {
         String contents = 'class Foo { public static Foo instance }\nFoo.&in'
         proposalExists(createProposalsAtOffset(contents, getLastIndexOf(contents, 'in')), 'instance', 0)
     }
 
     @Test
-    void testMethodPointer0a() {
+    void testMethodReference0() {
+        assumeTrue(isParrotParser())
         String contents = 'class Foo { public static Foo instance }\nFoo::in'
         proposalExists(createProposalsAtOffset(contents, getLastIndexOf(contents, 'in')), 'instance', 0)
     }
@@ -703,7 +834,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodPointer1a() {
+    void testMethodReference1() {
         assumeTrue(isParrotParser())
         String contents = 'String::isE'
         applyProposalAndCheck(checkUniqueProposal(contents, 'isE', 'isEmpty'), contents + 'mpty')
@@ -716,7 +847,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodPointer2a() {
+    void testMethodReference2() {
         assumeTrue(isParrotParser())
         String contents = 'String::  isE'
         applyProposalAndCheck(checkUniqueProposal(contents, 'isE', 'isEmpty'), contents + 'mpty')
@@ -729,7 +860,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodPointer3a() {
+    void testMethodReference3() {
         assumeTrue(isParrotParser())
         String contents = 'String::isEmpty.mem'
         applyProposalAndCheck(checkUniqueProposal(contents, 'mem', 'memoize()'), contents + 'oize()')
@@ -742,22 +873,62 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodPointer4a() {
+    void testMethodReference4() {
         assumeTrue(isParrotParser())
         String contents = '(String::isEmpty).mem'
         applyProposalAndCheck(checkUniqueProposal(contents, 'mem', 'memoize()'), contents + 'oize()')
     }
 
     @Test
+    void testMethodPointer5() {
+        String contents = 'def map = [:]\nmap.&e'
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'e'))
+        proposalExists(proposals, 'isEmpty', 1)
+        proposalExists(proposals, 'empty', 0)
+    }
+
+    @Test
+    void testMethodReference5() {
+        assumeTrue(isParrotParser())
+        String contents = 'def map = [:]\nmap::e'
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'e'))
+        proposalExists(proposals, 'isEmpty', 1)
+        proposalExists(proposals, 'empty', 0)
+    }
+
+    @Test // GROOVY-8633, GROOVY-10057
+    void testMethodPointer6() {
+        String contents = 'String.&get'
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'get'))
+        proposalExists(proposals, 'getCanonicalName()', isAtLeastGroovy(40) ? 1 : 0)
+        proposalExists(proposals, 'getClass()', 1)
+        proposalExists(proposals, 'getBytes()', 1)
+    }
+
+    @Test // GROOVY-8633, GROOVY-10057
+    void testMethodReference6() {
+        assumeTrue(isParrotParser())
+        String contents = 'String::get'
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'get'))
+        proposalExists(proposals, 'getCanonicalName()', isAtLeastGroovy(40) ? 1 : 0)
+        proposalExists(proposals, 'getClass()', 1)
+        proposalExists(proposals, 'getBytes()', 1)
+    }
+
+    @Test
     void testAnnotatedMethod1() {
         String contents = '''\
-            class Foo {
-              @SuppressWarnings(value=[])
-              def bar(def baz) {
-                baz.
-              }
-            }
-            '''.stripIndent()
+            |class Foo {
+            |  @SuppressWarnings(value=[])
+            |  def bar(def baz) {
+            |    baz.
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'baz.'))
         proposalExists(proposals, 'equals', 1)
     }
@@ -765,14 +936,14 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnotatedMethod2() {
         String contents = '''\
-            class Foo {
-              @SuppressWarnings(value=[])
-              def bar() {
-                def baz = whatever()
-                baz.
-              }
-            }
-            '''.stripIndent()
+            |class Foo {
+            |  @SuppressWarnings(value=[])
+            |  def bar() {
+            |    def baz = whatever()
+            |    baz.
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'baz.'))
         proposalExists(proposals, 'equals', 1)
     }
@@ -780,14 +951,14 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testIncompleteMethodCall() {
         String contents = '''\
-            class Foo {
-              void bar(Object param) {
-                baz(param.getC
-              }
-              void baz(Object param) {
-              }
-            }
-            '''.stripIndent()
+            |class Foo {
+            |  void bar(Object param) {
+            |    baz(param.getC
+            |  }
+            |  void baz(Object param) {
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'getC'))
         proposalExists(proposals, 'getClass', 1)
     }
@@ -795,37 +966,38 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testStaticInitializerMethod() {
         String contents = '''\
-            class Foo {
-              static {
-                println '<clinit>'
-              }
-              void bar() {
-                |
-              }
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+            |class Foo {
+            |  static {
+            |    println '<clinit>'
+            |  }
+            |  void bar() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, '<clinit>', 0)
     }
 
     @Test
     void testSyntheticBridgeMethod() {
         String contents = '''\
-            class Foo implements Comparable<Foo> {
-              int compareTo(Foo that) { return 0 }
-              void bar() {
-                this.com
-              }
-            }
-            '''.stripIndent()
+            |class Foo implements Comparable<Foo> {
+            |  int compareTo(Foo that) { return 0 }
+            |  void bar() {
+            |    this.com
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'com'))
+        proposalExists(proposals, 'compareTo(Foo', 1)
         proposalExists(proposals, 'compareTo', 1)
     }
 
     @Test
     void testTrailingClosure1() {
         String contents = 'def foo(Closure block) {}\nfoo'
-        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, false)
         ICompletionProposal proposal = findFirstProposal(
             createProposalsAtOffset(contents, contents.length()), 'foo(Closure block)')
 
@@ -836,7 +1008,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testTrailingClosure1a() {
         String contents = 'def foo(Collection items, Closure block) {}\nfoo'
-        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, false)
         ICompletionProposal proposal = findFirstProposal(
             createProposalsAtOffset(contents, contents.length()), 'foo(Collection items, Closure block)')
 
@@ -847,7 +1019,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/633
     void testTrailingClosure2() {
         String contents = 'def foo(Closure block) {}\nfoo'
-        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, false)
         ICompletionProposal proposal = findFirstProposal(
             createProposalsAtOffset(contents, contents.length()), 'foo(Closure block)')
 
@@ -862,7 +1034,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testTrailingClosure2a() {
         String contents = 'def foo(Collection items, Closure block) {}\nfoo'
-        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, false)
         ICompletionProposal proposal = findFirstProposal(
             createProposalsAtOffset(contents, contents.length()), 'foo(Collection items, Closure block)')
 
@@ -877,7 +1049,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testTrailingFunctionalInterface() {
         String contents = 'def foo(Comparator c) {}\nfoo'
-        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, false)
         ICompletionProposal proposal = findFirstProposal(
             createProposalsAtOffset(contents, contents.length()), 'foo(Comparator c)')
 
@@ -892,8 +1064,8 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testRangeExpressionCompletion1() {
         String contents = '''\
-            (0..1).
-            '''.stripIndent()
+            |(0..1).
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         proposalExists(proposals, 'getTo', 1)
         proposalExists(proposals, 'getFrom', 1)
@@ -906,10 +1078,10 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testRangeExpressionCompletion2() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, true)
         String contents = '''\
-            def range = 0.
-            '''.stripIndent()
+            |def range = 0.
+            |'''.stripMargin()
         ICompletionProposal proposal = findFirstProposal(
             createProposalsAtOffset(contents, getLastIndexOf(contents, '.')), 'hashCode')
         char[] triggers = proposal.triggerCharacters
@@ -924,10 +1096,10 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testRangeExpressionCompletion3() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, true)
         String contents = '''\
-            def other = 0.h
-            '''.stripIndent()
+            |def other = 0.h
+            |'''.stripMargin()
         ICompletionProposal proposal = findFirstProposal(
             createProposalsAtOffset(contents, getLastIndexOf(contents, 'h')), 'hashCode')
         char[] triggers = proposal.triggerCharacters
@@ -942,10 +1114,10 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testRangeExpressionCompletion4() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, true)
         String contents = '''\
-            def other = 0.
-            '''.stripIndent()
+            |def other = 0.
+            |'''.stripMargin()
         ICompletionProposal proposal = findFirstProposal(
             createProposalsAtOffset(contents, getLastIndexOf(contents, '.')), 'equals')
         char[] triggers = proposal.triggerCharacters
@@ -955,14 +1127,14 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testTraitMethods1() {
         String contents = '''\
-            trait T {
-              def m1() { | }
-              private def m2() {}
-              public static def m3() {}
-              private static def m4() {}
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+            |trait T {
+            |  public  m1() { x }
+            |  private m2() {   }
+            |  public  static m3() {}
+            |  private static m4() {}
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'm1', 1)
         proposalExists(proposals, 'm2', 1)
         proposalExists(proposals, 'm3', 1)
@@ -972,14 +1144,14 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testTraitMethods2() {
         String contents = '''\
-            trait T {
-              def m1() {}
-              private def m2() { | }
-              public static def m3() {}
-              private static def m4() {}
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+            |trait T {
+            |  public  m1() {   }
+            |  private m2() { x }
+            |  public  static def m3() {}
+            |  private static def m4() {}
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'm1', 1)
         proposalExists(proposals, 'm2', 1)
         proposalExists(proposals, 'm3', 1)
@@ -989,14 +1161,14 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testTraitMethods3() {
         String contents = '''\
-            trait T {
-              def m1() {}
-              private def m2() {}
-              public static def m3() { | }
-              private static def m4() {}
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+            |trait T {
+            |  public  m1() {}
+            |  private m2() {}
+            |  public  static m3() { x }
+            |  private static m4() {   }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'm1', 0)
         proposalExists(proposals, 'm2', 0)
         proposalExists(proposals, 'm3', 1)
@@ -1006,14 +1178,14 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testTraitMethods4() {
         String contents = '''\
-            trait T {
-              def m1() {}
-              private def m2() {}
-              public static def m3() {}
-              private static def m4() { | }
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+            |trait T {
+            |  public  m1() {}
+            |  private m2() {}
+            |  public  static m3() {   }
+            |  private static m4() { x }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'm1', 0)
         proposalExists(proposals, 'm2', 0)
         proposalExists(proposals, 'm3', 1)
@@ -1023,61 +1195,235 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testTraitMethods5() {
         String contents = '''\
-            trait T {
-              def m1() {}
-              private def m2() {}
-              public static def m3() {}
-              private static def m4() {}
-            }
-            class C implements T {
-              def m() {
-                |
-              }
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
-        proposalExists(proposals, 'm1', 1)
-        proposalExists(proposals, 'm2', 0)
+            |trait T {
+            |  public  m1() {}
+            |  private m2() {}
+            |  public  static m3() {}
+            |  private static m4() {}
+            |}
+            |class C implements T {
+            |  def m() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1', 2)
+        proposalExists(proposals, 'm2', 0) // GROOVY-7213
         proposalExists(proposals, 'm3', 1)
-        proposalExists(proposals, 'm4', 1)
+        proposalExists(proposals, 'm4', isAtLeastGroovy(50) ? 0 : 1) // GROOVY-8859
     }
 
     @Test
     void testTraitMethods6() {
         String contents = '''\
-            trait T {
-              def m1() {}
-              private def m2() {}
-              public static def m3() {}
-              private static def m4() {}
-            }
-            class C implements T {
-              static def m() {
-                |
-              }
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+            |trait T {
+            |  public  m1() {}
+            |  private m2() {}
+            |  public  static m3() {}
+            |  private static m4() {}
+            |}
+            |class C implements T {
+            |  static m() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'm1', 0)
         proposalExists(proposals, 'm2', 0)
         proposalExists(proposals, 'm3', 1)
-        proposalExists(proposals, 'm4', 1)
+        proposalExists(proposals, 'm4', isAtLeastGroovy(50) ? 0 : 1) // GROOVY-8859
+    }
+
+    @Test
+    void testTraitMethods7() {
+        String contents = '''\
+            |trait T {
+            |  static m1() {}
+            |  static m() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1', 1)
+    }
+
+    @Test
+    void testTraitMethods8() {
+        String contents = '''\
+            |trait T {
+            |  static m1() {}
+            |  static m() {
+            |    T.x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1', 0)
+    }
+
+    @Test
+    void testTraitMethods9() {
+        String contents = '''\
+            |trait T {
+            |  static m1() {}
+            |}
+            |class C implements T {
+            |  static m() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1', 1)
+    }
+
+    @Test
+    void testTraitMethods10() {
+        String contents = '''\
+            |trait T {
+            |  static m1() {}
+            |}
+            |class C implements T {
+            |  static m() {
+            |    T.x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1', 0)
+    }
+
+    @Test
+    void testTraitMethods11() {
+        String contents = '''\
+            |trait T {
+            |  def m1() {}
+            |}
+            |class C implements T {
+            |  static m(C that) {
+            |    that.x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1() : Object - C', 1)
+        proposalExists(proposals, 'm1() : Object - T', 0)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/760
+    void testTraitMethods12() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  def m1() {}
+            |}
+            |'''.stripMargin(), 'T', 'p'
+        buildProject()
+
+        String contents = '''\
+            |class C implements p.T {
+            |  def m1() {}
+            |  void test() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1', 2)
+
+        applyProposalAndCheck(findFirstProposal(proposals, 'm1() : Object - p.T'), '''\
+            |import p.T
+            |
+            |class C implements p.T {
+            |  def m1() {}
+            |  void test() {
+            |    T.super.m1()
+            |  }
+            |}
+            |'''.stripMargin())
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/760
+    void testTraitMethods13() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  static m1() {}
+            |}
+            |'''.stripMargin(), 'T', 'p'
+        buildProject()
+
+        String contents = '''\
+            |class C implements p.T {
+            |  static m1() {}
+            |  void test() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1', 2)
+
+        applyProposalAndCheck(findFirstProposal(proposals, 'm1() : Object - p.T'), '''\
+            |import p.T
+            |
+            |class C implements p.T {
+            |  static m1() {}
+            |  void test() {
+            |    T.super.m1()
+            |  }
+            |}
+            |'''.stripMargin())
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/760
+    void testTraitMethods14() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  def getFoo() { 'foo' }
+            |}
+            |'''.stripMargin(), 'T', 'p'
+        buildProject()
+
+        String contents = '''\
+            |class C implements p.T {
+            |  void test() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'foo', 2)
+
+        applyProposalAndCheck(findFirstProposal(proposals, 'foo : Object - T'), '''\
+            |import p.T
+            |
+            |class C implements p.T {
+            |  void test() {
+            |    T.super.foo
+            |  }
+            |}
+            |'''.stripMargin())
     }
 
     @Test
     void testTraitSyntheticMethods1() {
         String contents = '''\
-            trait T {
-              private String field1
-              private static String field2
-            }
-            class C implements T {
-              def m() {
-                |
-              }
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+            |trait T {
+            |  private String field1
+            |  private static String field2
+            |}
+            |class C implements T {
+            |  def m() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'T__field1$get', 0)
         proposalExists(proposals, 'T__field1$set', 0)
         proposalExists(proposals, 'T__field2$get', 0)
@@ -1087,17 +1433,17 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testTraitSyntheticMethods2() {
         String contents = '''\
-            trait T {
-              private String field1
-              private static String field2
-            }
-            class C implements T {
-              static def m() {
-                |
-              }
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+            |trait T {
+            |  private String field1
+            |  private static String field2
+            |}
+            |class C implements T {
+            |  static def m() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'T__field1$get', 0)
         proposalExists(proposals, 'T__field1$set', 0)
         proposalExists(proposals, 'T__field2$get', 0)

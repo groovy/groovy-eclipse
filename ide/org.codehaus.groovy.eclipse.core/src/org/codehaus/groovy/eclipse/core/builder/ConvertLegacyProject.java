@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,13 +46,13 @@ public class ConvertLegacyProject {
     public static final String OLD_BUILDER = "org.codehaus.groovy.eclipse.groovyBuilder";
     public static final String GROOVY_NATURE = "org.eclipse.jdt.groovy.core.groovyNature"; //$NON-NLS-1$
 
-    public void convertProjects(IProject[] projects) {
+    public void convertProjects(final IProject[] projects) {
         for (IProject project : projects) {
             convertProject(project);
         }
     }
 
-    public void convertProject(IProject project) {
+    public void convertProject(final IProject project) {
         try {
             IProjectDescription desc = project.getDescription();
 
@@ -87,22 +87,20 @@ public class ConvertLegacyProject {
 
             project.setDescription(desc, null);
         } catch (CoreException e) {
-            GroovyCore.logException("Exception thrown when converting for legacy project " + project.getName(), e);
+            GroovyCore.logException("Failed to convert legacy project " + project.getName(), e);
         }
     }
 
     public IProject[] getAllOldProjects() {
-        IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-        List<IProject> legacyProjects = new ArrayList<>();
-        for (IProject project : projects) {
-            try {
-                if (project.isAccessible() && project.hasNature(OLD_NATURE)) {
-                    legacyProjects.add(project);
+        return Arrays.stream(ResourcesPlugin.getWorkspace().getRoot().getProjects())
+            .filter(project -> {
+                try {
+                    return (project.isAccessible() && project.hasNature(OLD_NATURE));
+                } catch (CoreException e) {
+                    GroovyCore.logException("Failed to check legacy status for project " + project.getName(), e);
+                    return false;
                 }
-            } catch (CoreException e) {
-                GroovyCore.logException("Exception thrown when checking for legacy projects", e);
-            }
-        }
-        return legacyProjects.toArray(new IProject[0]);
+            })
+            .toArray(IProject[]::new);
     }
 }

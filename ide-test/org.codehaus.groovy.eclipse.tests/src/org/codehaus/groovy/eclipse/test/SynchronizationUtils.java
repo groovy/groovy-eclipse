@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +20,11 @@ import java.util.List;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
-import org.eclipse.jdt.core.groovy.tests.search.SearchTestSuite;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.internal.core.JavaModelManager;
+import org.eclipse.jdt.internal.core.search.processing.IJob;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IViewPart;
@@ -63,80 +58,132 @@ public class SynchronizationUtils {
             }
         } while (interrupted);
 
-        joinJobs(100, 1000, 100);
-    }
-
-    private static boolean joinJobs(long minTime, long maxTime, long intervalTime) {
-        long startTime = System.currentTimeMillis() + minTime;
         runEventQueue();
-        while (System.currentTimeMillis() < startTime) {
-            runEventQueue(intervalTime);
-        }
 
-        long endTime = maxTime > 0 && maxTime < Long.MAX_VALUE ? System.currentTimeMillis() + maxTime : Long.MAX_VALUE;
-        boolean calm = allJobsQuiet();
-        while (!calm && System.currentTimeMillis() < endTime) {
-            runEventQueue(intervalTime);
-          //printJobs();
-            calm = allJobsQuiet();
+        final long stopTime = (System.currentTimeMillis() + 1500);
+        while (anyRunJobs() && System.currentTimeMillis() < stopTime) {
+            runEventQueue();
+            printJobs();
+            sleep(100);
         }
-        return calm;
     }
 
-    public static void sleep(int intervalTime) {
+    public static void waitForIndexingToComplete() {
+        if (JavaModelManager.getIndexManager().awaitingJobsCount() > 0) {
+            // adapted from org.eclipse.jdt.internal.core.JavaModelManager#secondaryTypes and
+            // org.eclipse.jdt.internal.core.SearchableEnvironment#findConstructorDeclarations
+            JavaModelManager.getIndexManager().performConcurrentJob(new IJob() {
+                @Override
+                public boolean belongsTo(final String family) {
+                    return true;
+                }
+
+                @Override
+                public void cancel() {
+                }
+
+                @Override
+                public void ensureReadyToRun() {
+                }
+
+                @Override
+                public boolean execute(final IProgressMonitor progress) {
+                    return progress == null || !progress.isCanceled();
+                }
+
+                @Override
+                public String getJobFamily() {
+                    return "";
+                }
+            }, IJob.WaitUntilReady, null);
+        }
+
+        for (Job job : Job.getJobManager().find(null)) {
+            switch (job.getState()) {
+            case Job.RUNNING:
+            case Job.WAITING:
+                if (job.getName().contains("Java index")) {
+                    joinUninterruptibly(job);
+                }
+            }
+        }
+    }
+
+    public static void waitForDSLDProcessingToComplete() {
+        for (Job job : Job.getJobManager().find(null)) {
+            switch (job.getState()) {
+            case Job.RUNNING:
+            case Job.WAITING:
+                if (job.getName().startsWith("Refresh DSLD")) {
+                    joinUninterruptibly(job);
+                }
+            }
+        }
+    }
+
+    public static void sleep(final int ms) {
         try {
-            Thread.sleep(intervalTime);
+            Thread.sleep(ms);
         } catch (InterruptedException ignore) {
         }
     }
 
-    private static void runEventQueue() {
-        IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-        if (window != null) {
-            runEventQueue(window.getShell());
-        }
-    }
-
-    private static void runEventQueue(Shell shell) {
-        try {
-            while (shell.getDisplay().readAndDispatch()) {
-                // do nothing
-            }
-        } catch (SWTException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void runEventQueue(long minTime) {
-        long nextCheck = System.currentTimeMillis() + minTime;
-        while (System.currentTimeMillis() < nextCheck) {
-            runEventQueue();
-            sleep(1);
-        }
-    }
-
-    public static IViewPart showView(String id) throws Exception {
+    public static IViewPart showView(final String id) {
         try {
             return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(id);
+        } catch (CoreException e) {
+            throw new RuntimeException(e);
         } finally {
             runEventQueue();
         }
     }
 
-    private static boolean allJobsQuiet() {
+    public static void joinUninterruptibly(final Job job) {
+        boolean interrupted;
+        do {
+            interrupted = false;
+            try {
+                System.err.println("Waiting for: " + job.getName());
+                job.join();
+            } catch (OperationCanceledException ignore) {
+
+            } catch (InterruptedException e) {
+                interrupted = true;
+            }
+        } while (interrupted);
+    }
+
+    //--------------------------------------------------------------------------
+
+    private static void runEventQueue() {
+        IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (window != null) {
+            Shell shell = window.getShell();
+            try {
+                while (shell.getDisplay().readAndDispatch()) {
+                    // do nothing
+                }
+            } catch (SWTException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static boolean anyRunJobs() {
         for (Job job : Job.getJobManager().find(null)) {
             switch (job.getState()) {
             case Job.RUNNING:
             case Job.WAITING:
                 if (!SKIP_JOBS.contains(job.getName().toLowerCase())) {
-                    return false;
+                    return true;
                 }
             }
         }
-        return true;
+        return false;
     }
 
-    public static void printJobs() {
+    private static void printJobs() {
+        /*
         System.out.println("=============Printing Jobs==============");
         for (Job job : Job.getJobManager().find(null)) {
             switch (job.getState()) {
@@ -148,51 +195,8 @@ public class SynchronizationUtils {
             }
         }
         System.out.println("========================================");
+        */
     }
 
-    public static void waitForIndexingToComplete(IJavaElement element) {
-        try {
-            JavaModelManager.getIndexManager().indexAll(element.getJavaProject().getProject());
-            SimpleProgressMonitor monitor = new SimpleProgressMonitor("Search to trigger indexing");
-            new SearchEngine().searchAllTypeNames(
-                null,
-                SearchPattern.R_EXACT_MATCH,
-                "XXXXXXXXX".toCharArray(), // make sure we search a concrete name. This is faster according to Kent
-                SearchPattern.R_EXACT_MATCH,
-                IJavaSearchConstants.CLASS,
-                SearchEngine.createJavaSearchScope(new IJavaElement[]{element}),
-                new TypeNameRequestor() {},
-                IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-                monitor);
-            monitor.waitForCompletion();
-        } catch (CoreException e) {
-            e.printStackTrace();
-        }
-
-        SynchronizationUtils.joinBackgroundActivities();
-        for (Job job : Job.getJobManager().find(null)) {
-            switch (job.getState()) {
-            case Job.RUNNING:
-            case Job.WAITING:
-                if (job.getName().contains("Java index")) {
-                    SearchTestSuite.joinUninterruptibly(job);
-                }
-            }
-        }
-    }
-
-    public static void waitForDSLDProcessingToComplete() {
-        SynchronizationUtils.joinBackgroundActivities();
-        for (Job job : Job.getJobManager().find(null)) {
-            switch (job.getState()) {
-            case Job.RUNNING:
-            case Job.WAITING:
-                if (job.getName().startsWith("Refresh DSLD scripts")) {
-                    SearchTestSuite.joinUninterruptibly(job);
-                }
-            }
-        }
-    }
-
-    private static final List<String> SKIP_JOBS = Arrays.asList("animation start", "decoration calculation", "flush cache job", "open blocked dialog", "sending problem marker updates...", "update for decoration completion", "update dynamic java sources working sets", "update package explorer", "update progress", "usage data event consumer");
+    private static final List<String> SKIP_JOBS = Arrays.asList("animation start", "change cursor", "decoration calculation", "flush cache job", "open blocked dialog", "refreshing view", "sending problem marker updates...", "update for decoration completion", "update dynamic java sources working sets", "update package explorer", "update progress", "usage data event consumer");
 }

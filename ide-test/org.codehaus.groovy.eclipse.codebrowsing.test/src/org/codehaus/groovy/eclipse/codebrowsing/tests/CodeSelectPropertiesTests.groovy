@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,152 @@ import org.junit.Test
 
 final class CodeSelectPropertiesTests extends BrowsingTestSuite {
 
+    private static final String XX = '''\
+        |class XX {
+        |  XX[] getXx() { null }
+        |  XX   getYy() { null }
+        |}
+        |'''.stripMargin()
+    private static final String YY = '''\
+        |class YY {
+        |  YY[] xx
+        |  YY   yy
+        |}
+        |'''.stripMargin()
+
     @Test
-    void testGetProperty1() {
+    void testCodeSelectArray1() {
+        String contents = 'new XX().xx[0].xx'
+        String toFind = 'xx'
+        String elementName = 'getXx'
+        assertCodeSelect([XX, contents], toFind, elementName)
+    }
+
+    @Test
+    void testCodeSelectArray2() {
+        String contents = 'new XX().xx[0].yy'
+        String toFind = 'yy'
+        String elementName = 'getYy'
+        assertCodeSelect([XX, contents], toFind, elementName)
+    }
+
+    @Test
+    void testCodeSelectArray3() {
+        String contents = 'new XX().xx[0].getXx()'
+        String toFind = 'getXx'
+        assertCodeSelect([XX, contents], toFind)
+    }
+
+    @Test
+    void testCodeSelectArray4() {
+        String contents = 'new XX().xx[0].getYy()'
+        String toFind = 'getYy'
+        assertCodeSelect([XX, contents], toFind)
+    }
+
+    @Test
+    void testCodeSelectArray5() {
+        String contents = 'new YY().xx[0].setXx()'
+        String toFind = 'setXx'
+        String elementName = 'xx'
+        assertCodeSelect([XX, YY, contents], toFind, elementName)
+    }
+
+    @Test
+    void testCodeSelectArray6() {
+        String contents = 'new YY().xx[0].setYy(null)'
+        String toFind = 'setYy'
+        String elementName = 'yy'
+        assertCodeSelect([XX, YY, contents], toFind, elementName)
+    }
+
+    @Test
+    void testCodeSelectArray7() {
+        String contents = 'new YY().xx[0].getXx()'
+        String toFind = 'getXx'
+        String elementName = 'xx'
+        assertCodeSelect([XX, YY, contents], toFind, elementName)
+    }
+
+    @Test
+    void testCodeSelectArray8() {
+        String contents = 'new YY().xx[0].getYy()'
+        String toFind = 'getYy'
+        String elementName = 'yy'
+        assertCodeSelect([XX, YY, contents], toFind, elementName)
+    }
+
+    @Test // GRECLIPSE-1050
+    void testCodeSelectArray9() {
+        String contents = 'org.codehaus.groovy.ast.ClassHelper.make(List)'
+        String toFind = 'make'
+        assertCodeSelect([XX, contents], toFind)
+    }
+
+    @Test // GRECLIPSE-1050
+    void testCodeSelectArray10() {
+        String contents = 'org.codehaus.groovy.ast.ClassHelper.make(new Class[0])[0].nameWithoutPackage'
+        String toFind = 'nameWithoutPackage'
+        String elementName = 'getNameWithoutPackage'
+        assertCodeSelect([XX, contents], toFind, elementName)
+    }
+
+    @Test
+    void testCodeSelectMap1() {
+        String contents = 'def map = [foo:"bar"]'
+        assertCodeSelect([contents], 'foo', null)
+    }
+
+    @Test
+    void testCodeSelectMap1a() {
+        String contents = 'def map = ["foo":"bar"]'
+        assertCodeSelect([contents], 'foo', null)
+        assertCodeSelect([contents], '"foo"', null)
+    }
+
+    @Test
+    void testCodeSelectMap2() {
+        String contents = 'def map = [foo:"bar"]; map.foo'
+        assertCodeSelect([contents], 'foo', null)
+    }
+
+    @Test
+    void testCodeSelectMap3() {
+        String contents = 'def map = [foo:"bar"]; map["foo"]'
+        assertCodeSelect([contents], 'foo', null)
+        assertCodeSelect([contents], '"foo"', null)
+    }
+
+    @Test
+    void testCodeSelectMap4() {
+        String contents = '[foo:"bar"].with { foo }'
+        assertCodeSelect([contents], 'foo', null)
+    }
+
+    @Test
+    void testCodeSelectMap4a() {
+        String contents = '[foo:"bar"].with { it.foo }'
+        assertCodeSelect([contents], 'foo', null)
+    }
+
+    @Test
+    void testCodeSelectMap5() {
+        String contents = '[foo:"bar"].with { foo = "baz" }'
+        assertCodeSelect([contents], 'foo', null)
+    }
+
+    @Test
+    void testCodeSelectMap5a() {
+        String contents = '[foo:"bar"].with { it.foo = "baz" }'
+        assertCodeSelect([contents], 'foo', null)
+    }
+
+    @Test
+    void testCodeSelectGetProperty1() {
         String contents = '''\
             |class C {
             |  String string = ""
-            |  def meth() {
+            |  void test() {
             |    def str = string
             |  }
             |}
@@ -33,12 +173,12 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGetProperty1a() {
+    void testCodeSelectGetProperty2() {
         String contents = '''\
             |@groovy.transform.TypeChecked
             |class C {
             |  String string = ""
-            |  def meth() {
+            |  void test() {
             |    def str = string
             |  }
             |}
@@ -47,7 +187,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGetProperty1b() {
+    void testCodeSelectGetProperty3() {
         String contents = '''\
             |@groovy.transform.CompileStatic
             |class C {
@@ -61,11 +201,26 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSetProperty1() {
+    void testCodeSelectGetProperty4() {
+        String contents = '''\
+            |class C {
+            |  def getFoo() { }
+            |}
+            |class D extends C {
+            |  void test() {
+            |    foo
+            |  }
+            |}
+            |'''.stripMargin()
+        assertCodeSelect([contents], 'foo', 'getFoo')
+    }
+
+    @Test
+    void testCodeSelectSetProperty1() {
         String contents = '''\
             |class C {
             |  String string
-            |  def meth() {
+            |  void test() {
             |    string = ""
             |  }
             |}
@@ -74,12 +229,12 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSetProperty1a() {
+    void testCodeSelectSetProperty2() {
         String contents = '''\
             |@groovy.transform.TypeChecked
             |class C {
             |  String string
-            |  def meth() {
+            |  void test() {
             |    string = ""
             |  }
             |}
@@ -88,12 +243,12 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSetProperty1b() {
+    void testCodeSelectSetProperty3() {
         String contents = '''\
             |@groovy.transform.CompileStatic
             |class C {
             |  String string
-            |  def meth() {
+            |  void test() {
             |    string = ""
             |  }
             |}
@@ -101,8 +256,22 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'string')
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1247
+    void testCodeSelectSetProperty4() {
+        String contents = '''\
+            |@groovy.transform.CompileStatic
+            |class C {
+            |  void set$xyz(value) { }
+            |  void test() {
+            |    $xyz = ""
+            |  }
+            |}
+            |'''.stripMargin()
+        assertCodeSelect([contents], '$xyz', 'set$xyz')
+    }
+
     @Test
-    void testGettersAndField1() {
+    void testCodeSelectGettersAndField1() {
         String contents = '''\
             |class C {
             |  String xxx
@@ -114,7 +283,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField2() {
+    void testCodeSelectGettersAndField2() {
         String contents = '''\
             |class C {
             |  String xxx
@@ -126,7 +295,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField3() {
+    void testCodeSelectGettersAndField3() {
         String contents = '''\
             |class C {
             |  String xxx
@@ -137,7 +306,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField4() {
+    void testCodeSelectGettersAndField4() {
         String contents = '''\
             |class C {
             |  def getXxx() { xxx }
@@ -148,7 +317,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField5() {
+    void testCodeSelectGettersAndField5() {
         String contents = '''\
             |class C {
             |  String xxx
@@ -160,7 +329,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField6() {
+    void testCodeSelectGettersAndField6() {
         String contents = '''\
             |class C {
             |  String xxx
@@ -172,7 +341,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField7() {
+    void testCodeSelectGettersAndField7() {
         String contents = '''\
             |class C {
             |  public getXxx() { xxx }
@@ -183,7 +352,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField8() {
+    void testCodeSelectGettersAndField8() {
         String contents = '''\
             |class C {
             |  String xxx
@@ -194,7 +363,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/888
-    void testGetter1() {
+    void testCodeSelectGetter1() {
         addGroovySource('''\
             |class Pogo {
             |  String string
@@ -204,7 +373,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         def unit = addJavaSource('''\
             |class Main {
             |  void meth() {
-            |    new Pogo().getString()
+            |    new Pogo().getString();
             |  }
             |}
             |'''.stripMargin())
@@ -223,7 +392,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGetter1a() {
+    void testCodeSelectGetter1a() {
         addGroovySource('''\
             |class Pogo {
             |  private String string
@@ -233,7 +402,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         def unit = addJavaSource('''\
             |class Main {
             |  void meth() {
-            |    new Pogo().getString()
+            |    new Pogo().getString();
             |  }
             |}
             |'''.stripMargin())
@@ -250,7 +419,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGetter1b() {
+    void testCodeSelectGetter1b() {
         addGroovySource('''\
             |class Pogo {
             |  String string
@@ -260,7 +429,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         def unit = addJavaSource('''\
             |class Main {
             |  void meth() {
-            |    new Pogo().getValue()
+            |    new Pogo().getValue();
             |  }
             |}
             |'''.stripMargin())
@@ -277,7 +446,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/888
-    void testSetter1() {
+    void testCodeSelectSetter1() {
         addGroovySource('''\
             |class Pogo {
             |  String string
@@ -287,7 +456,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         def unit = addJavaSource('''\
             |class Main {
             |  void meth() {
-            |    new Pogo().setString("")
+            |    new Pogo().setString("");
             |  }
             |}
             |'''.stripMargin())
@@ -306,7 +475,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test // GRECLIPSE-1162
-    void testIsGetter1() {
+    void testCodeSelectIsGetter1() {
         String contents = '''\
             |class C {
             |  boolean xxx
@@ -317,7 +486,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testIsGetter2() {
+    void testCodeSelectIsGetter2() {
         addGroovySource('''\
             |class Pogo {
             |  boolean value
@@ -327,7 +496,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         def unit = addJavaSource('''\
             |class Main {
             |  void meth() {
-            |    new Pogo().isValue()
+            |    new Pogo().isValue();
             |  }
             |}
             |'''.stripMargin())
@@ -343,22 +512,6 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         assert elements.length == 1
         assert elements[0].exists()
         assert elements[0].elementName == 'value'
-    }
-
-    @Test
-    void testCodeSelectNonStaticProperty1() {
-        String contents = '''\
-            |class Super {
-            |  def getSql() { null }
-            |}
-            |
-            |class Foo extends Super {
-            |  def foo() {
-            |    sql
-            |  }
-            |}
-            |'''.stripMargin()
-        assertCodeSelect([contents], 'sql', 'getSql')
     }
 
     @Test
@@ -404,5 +557,90 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'log', 'getLog')
     }
 
-    // TODO: map properties, unknown properties
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1113
+    void testCodeSelectTraitProperty1() {
+        def elem = assertCodeSelect(['''\
+            |trait T {
+            |  def p
+            |}
+            |'''.stripMargin(), '''\
+            |class C implements T {
+            |  def m() {
+            |    p
+            |  }
+            |}
+            |'''.stripMargin()], 'p')
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 16
+    }
+
+    @Test
+    void testCodeSelectTraitProperty2() {
+        def elem = assertCodeSelect(['''\
+            |trait T {
+            |  int p
+            |}
+            |'''.stripMargin(), '''\
+            |class C implements T {
+            |  def m() {
+            |    p
+            |  }
+            |}
+            |'''.stripMargin()], 'p')
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 16
+    }
+
+    @Test
+    void testCodeSelectTraitProperty3() {
+        def elem = assertCodeSelect(['''\
+            |trait T {
+            |  final p
+            |}
+            |'''.stripMargin(), '''\
+            |class C implements T {
+            |  def m() {
+            |    p
+            |  }
+            |}
+            |'''.stripMargin()], 'p')
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 18
+    }
+
+    @Test
+    void testCodeSelectTraitProperty4() {
+        def elem = assertCodeSelect(['''\
+            |trait T {
+            |  static p
+            |}
+            |'''.stripMargin(), '''\
+            |class C implements T {
+            |  def m() {
+            |    p
+            |  }
+            |}
+            |'''.stripMargin()], 'p')
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 19
+    }
+
+    @Test
+    void testCodeSelectTraitProperty5() {
+        def elem = assertCodeSelect(['''\
+            |trait T {
+            |  static final p = null
+            |}
+            |'''.stripMargin(), '''\
+            |class C implements T {
+            |  def m() {
+            |    p
+            |  }
+            |}
+            |'''.stripMargin()], 'p')
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 25
+    }
+
+    // TODO: unknown properties
 }

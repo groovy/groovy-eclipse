@@ -31,7 +31,6 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.BooleanExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -39,11 +38,8 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.EmptyStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
-import org.codehaus.groovy.ast.stmt.IfStatement;
-import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
@@ -57,6 +53,7 @@ import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.ASTTransformationCollectorCodeVisitor;
 import org.codehaus.groovy.transform.sc.StaticCompileTransformation;
+import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.util.ArrayList;
@@ -69,9 +66,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.assignX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.block;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.ifElseS;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.isInstanceOfX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
@@ -118,7 +122,7 @@ public abstract class TraitComposer {
 
     private static void checkTraitAllowed(final ClassNode bottomTrait, final SourceUnit unit) {
         ClassNode superClass = bottomTrait.getSuperClass();
-        if (superClass==null || ClassHelper.OBJECT_TYPE.equals(superClass)) return;
+        if (superClass == null || superClass.equals(ClassHelper.OBJECT_TYPE)) return;
         if (!Traits.isTrait(superClass)) {
             unit.addError(new SyntaxException("A trait can only inherit from another trait", superClass.getLineNumber(), superClass.getColumnNumber()));
         }
@@ -141,9 +145,11 @@ public abstract class TraitComposer {
                 Parameter[] origParams = new Parameter[nParams - 1];
                 Parameter[] params = new Parameter[nParams - 1];
                 System.arraycopy(methodNode.getParameters(), 1, params, 0, params.length);
+
                 MethodNode originalMethod = trait.getMethod(name, params);
-                Map<String, ClassNode> methodGenericsSpec = Optional.ofNullable(originalMethod)
-                    .map(m -> GenericsUtils.addMethodGenerics(m, genericsSpec)).orElse(genericsSpec);
+                Map<String, ClassNode> methodGenericsSpec = GenericsUtils.addMethodGenerics(
+                        Optional.ofNullable(originalMethod).orElse(methodNode), genericsSpec);
+
                 for (int i = 1; i < nParams; i += 1) {
                     Parameter parameter = helperMethodParams[i];
                     ClassNode originType = parameter.getOriginType();
@@ -177,9 +183,10 @@ public abstract class TraitComposer {
             cNode.addInterface(fieldHelperClassNode);
             // implementation of methods
             List<MethodNode> declaredMethods = new LinkedList<>();
+            int pos = 0; // keep direct getters at start but in declaration order
             for (MethodNode declaredMethod : fieldHelperClassNode.getAllDeclaredMethods()) {
                 if (declaredMethod.getName().endsWith(Traits.DIRECT_GETTER_SUFFIX)) {
-                    declaredMethods.add(0, declaredMethod);
+                    declaredMethods.add(pos++, declaredMethod);
                 } else {
                     declaredMethods.add(declaredMethod);
                 }
@@ -188,7 +195,7 @@ public abstract class TraitComposer {
             if (staticFieldHelperClassNode != null) {
                 for (MethodNode declaredMethod : staticFieldHelperClassNode.getAllDeclaredMethods()) {
                     if (declaredMethod.getName().endsWith(Traits.DIRECT_GETTER_SUFFIX)) {
-                        declaredMethods.add(0, declaredMethod);
+                        declaredMethods.add(pos++, declaredMethod);
                     } else {
                         declaredMethods.add(declaredMethod);
                     }
@@ -198,7 +205,7 @@ public abstract class TraitComposer {
             for (MethodNode methodNode : declaredMethods) {
                 String fieldName = methodNode.getName();
                 if (fieldName.endsWith(Traits.DIRECT_GETTER_SUFFIX) || fieldName.endsWith(Traits.DIRECT_SETTER_SUFFIX)) {
-                    int suffixIdx = fieldName.lastIndexOf("$");
+                    int suffixIdx = fieldName.lastIndexOf('$');
                     fieldName = fieldName.substring(0, suffixIdx);
                     String operation = methodNode.getName().substring(suffixIdx + 1);
                     boolean getter = "get".equals(operation);
@@ -290,7 +297,7 @@ public abstract class TraitComposer {
                     // but add empty body for setter for legacy compatibility
                     MethodNode impl = new MethodNode(
                             methodNode.getName(),
-                            /*GRECLIPSE add*/Opcodes.ACC_SYNTHETIC | /*GRECLIPSE end*/Opcodes.ACC_PUBLIC | isStatic,
+                            Opcodes.ACC_PUBLIC | isStatic | Opcodes.ACC_SYNTHETIC,
                             returnType,
                             newParams,
                             ClassNode.EMPTY_ARRAY,
@@ -299,7 +306,7 @@ public abstract class TraitComposer {
                     AnnotationNode an = new AnnotationNode(COMPILESTATIC_CLASSNODE);
                     impl.addAnnotation(an);
                     cNode.addTransform(StaticCompileTransformation.class, an);
-                    cNode.addMethod(impl);
+                    addGeneratedMethod(cNode, impl);
                 }
             }
         }
@@ -328,30 +335,31 @@ public abstract class TraitComposer {
                 helperMethodArgList
         );
         mce.setImplicitThis(false);
-        /* GRECLIPSE edit -- GROOVY-8757
-        genericsSpec = GenericsUtils.addMethodGenerics(helperMethod,genericsSpec);
-        */
-        ClassNode[] exceptionNodes = correctToGenericsSpecRecurse(genericsSpec, copyExceptions(helperMethod.getExceptions()));
-        ClassNode fixedReturnType = correctToGenericsSpecRecurse(genericsSpec, helperMethod.getReturnType());
-        boolean noCastRequired = genericsSpec.isEmpty() || fixedReturnType.getName().equals(ClassHelper.VOID_TYPE.getName());
-        Expression forwardExpression = noCastRequired ? mce : new CastExpression(fixedReturnType,mce);
-        // we could rely on the first parameter name ($static$self) but that information is not
-        // guaranteed to be always present
-        boolean isHelperForStaticMethod = helperMethodParams[0].getOriginType().equals(ClassHelper.CLASS_Type);
+
+        ClassNode[] exceptionTypes = correctToGenericsSpecRecurse(genericsSpec, copyExceptions(helperMethod.getExceptions()));
+        ClassNode returnType = correctToGenericsSpecRecurse(genericsSpec, helperMethod.getReturnType());
+        // we could rely on the first parameter name ($static$self) but that information is not guaranteed to be always present
+        boolean noCastRequired = genericsSpec.isEmpty() || ClassHelper.VOID_TYPE.equals(returnType);
+        Expression forwardExpression = noCastRequired ? mce : new CastExpression(returnType, mce);
+
+        boolean isHelperForStaticMethod = ClassHelper.CLASS_Type.equals(helperMethodParams[0].getOriginType());
         if (helperMethod.isPrivate() && !isHelperForStaticMethod) {
-            // GROOVY-7213: do not create forwarder for private methods
-            return;
+            return; // GROOVY-7213: don't create forwarder for private method
         }
-        int modifiers = helperMethod.getModifiers();
+        int modifiers = helperMethod.getModifiers() & ~Opcodes.ACC_PROTECTED;
+        if (!helperMethod.isPublic()) {
+            modifiers |= Opcodes.ACC_PRIVATE;
+        }
         if (!isHelperForStaticMethod) {
-            modifiers ^= Opcodes.ACC_STATIC;
+            modifiers &= ~Opcodes.ACC_STATIC;
         }
+
         MethodNode forwarder = new MethodNode(
                 helperMethod.getName(),
                 modifiers,
-                fixedReturnType,
+                returnType,
                 forwarderParams,
-                exceptionNodes,
+                exceptionTypes,
                 new ExpressionStatement(forwardExpression)
         );
         List<AnnotationNode> copied = new LinkedList<>();
@@ -360,11 +368,11 @@ public abstract class TraitComposer {
         if (!copied.isEmpty()) {
             forwarder.addAnnotations(copied);
         }
-        if (originalMethod != null) {
+        if (originalMethod != null) { forwarder.setOriginal(originalMethod); // GRECLIPSE add
             GenericsType[] newGt = GenericsUtils.applyGenericsContextToPlaceHolders(genericsSpec, originalMethod.getGenericsTypes());
             newGt = removeNonPlaceHolders(newGt);
             forwarder.setGenericsTypes(newGt);
-        } else {
+        } else { forwarder.setOriginal(helperMethod.getOriginal()); // GRECLIPSE add
             // null indicates a static method which may still need generics correction
             GenericsType[] genericsTypes = helperMethod.getGenericsTypes();
             if (genericsTypes != null) {
@@ -470,18 +478,17 @@ public abstract class TraitComposer {
 
     /**
      * Creates a method to dispatch to "super traits" in a "stackable" fashion. The generated method looks like this:
-     * <p>
-     * <code>ReturnType trait$super$method(Class clazz, Arg1 arg1, Arg2 arg2, ...) {
-     *     if (SomeTrait.is(A) { return SomeOtherTrait$Trait$Helper.method(this, arg1, arg2) }
+     * <pre>ReturnType trait$super$method(Class clazz, Arg1 arg1, Arg2 arg2, ...) {
+     *     if (SomeTrait.is(A) return SomeOtherTrait$Trait$Helper.method(this, arg1, arg2)
      *     super.method(arg1,arg2)
-     * }</code>
-     * </p>
+     * }
+     * </pre>
      * @param targetNode
      * @param forwarderMethod
      * @param interfacesToGenerateForwarderFor
      * @param genericsSpec
      */
-    private static void doCreateSuperForwarder(ClassNode targetNode, MethodNode forwarderMethod, ClassNode[] interfacesToGenerateForwarderFor, Map<String,ClassNode> genericsSpec) {
+    private static void doCreateSuperForwarder(final ClassNode targetNode, final MethodNode forwarderMethod, final ClassNode[] interfacesToGenerateForwarderFor, final Map<String,ClassNode> genericsSpec) {
         Parameter[] parameters = forwarderMethod.getParameters();
         Parameter[] superForwarderParams = new Parameter[parameters.length];
         for (int i = 0; i < parameters.length; i++) {
@@ -496,65 +503,46 @@ public abstract class TraitComposer {
             if (targetNode.getDeclaredMethod(forwarderName, superForwarderParams) == null) {
                 ClassNode returnType = correctToGenericsSpecRecurse(genericsSpec, forwarderMethod.getReturnType());
                 Statement delegate = next == null ? createSuperFallback(forwarderMethod, returnType) : createDelegatingForwarder(forwarderMethod, next);
-                MethodNode methodNode = targetNode.addMethod(forwarderName, Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, returnType, superForwarderParams, ClassNode.EMPTY_ARRAY, delegate);
+
+                MethodNode methodNode = addGeneratedMethod(targetNode, forwarderName, Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, returnType, superForwarderParams, ClassNode.EMPTY_ARRAY, delegate);
                 methodNode.setGenericsTypes(forwarderMethod.getGenericsTypes());
             }
         }
     }
 
-    private static Statement createSuperFallback(MethodNode forwarderMethod, ClassNode returnType) {
-        ArgumentListExpression args = new ArgumentListExpression();
-        Parameter[] forwarderMethodParameters = forwarderMethod.getParameters();
-        for (final Parameter forwarderMethodParameter : forwarderMethodParameters) {
-            args.addExpression(new VariableExpression(forwarderMethodParameter));
-        }
-        BinaryExpression instanceOfExpr = new BinaryExpression(new VariableExpression("this"), Token.newSymbol(Types.KEYWORD_INSTANCEOF, -1, -1), new ClassExpression(Traits.GENERATED_PROXY_CLASSNODE));
-        MethodCallExpression superCall = new MethodCallExpression(
-                new VariableExpression("super"),
-                forwarderMethod.getName(),
-                args
+    private static Statement createSuperFallback(final MethodNode forwarderMethod, final ClassNode returnType) {
+        ArgumentListExpression paramTuple = args(Arrays.stream(forwarderMethod.getParameters()).map(p -> varX(p)).toArray(Expression[]::new));
+
+        MethodCallExpression proxyTarget = callX(castX(Traits.GENERATED_PROXY_CLASSNODE, varX("this")), "getProxyTarget");
+        proxyTarget.setImplicitThis(false);
+
+        Expression proxyCall = callX(ClassHelper.make(InvokerHelper.class), "invokeMethod",
+                args(proxyTarget, constX(forwarderMethod.getName()), new ArrayExpression(ClassHelper.OBJECT_TYPE, paramTuple.getExpressions()))
         );
+
+        MethodCallExpression superCall = callX(varX("super"), forwarderMethod.getName(), paramTuple);
+        superCall.putNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION, Boolean.TRUE); //GROOVY-10478
         superCall.setImplicitThis(false);
-        CastExpression proxyReceiver = new CastExpression(Traits.GENERATED_PROXY_CLASSNODE, new VariableExpression("this"));
-        MethodCallExpression getProxy = new MethodCallExpression(proxyReceiver, "getProxyTarget", ArgumentListExpression.EMPTY_ARGUMENTS);
-        getProxy.setImplicitThis(true);
-        StaticMethodCallExpression proxyCall = new StaticMethodCallExpression(
-                ClassHelper.make(InvokerHelper.class),
-                "invokeMethod",
-                new ArgumentListExpression(getProxy, new ConstantExpression(forwarderMethod.getName()), new ArrayExpression(ClassHelper.OBJECT_TYPE, args.getExpressions()))
+
+        // if (this instanceof GeneratedGroovyProxy)
+        //   (ReturnType) InvokerHelper.invokeMethod(((GeneratedGroovyProxy) this).getProxyTarget(), "targetMethod", new Object[]{arguments})
+        // else
+        //   super.targetMethod(arguments)
+        return ifElseS(
+                isInstanceOfX(varX("this"), Traits.GENERATED_PROXY_CLASSNODE),
+                stmt(castX(returnType, proxyCall)),
+                stmt(superCall)
         );
-        IfStatement stmt = new IfStatement(
-                new BooleanExpression(instanceOfExpr),
-                new ExpressionStatement(new CastExpression(returnType,proxyCall)),
-                new ExpressionStatement(superCall)
-        );
-        return stmt;
     }
 
     private static Statement createDelegatingForwarder(final MethodNode forwarderMethod, final ClassNode next) {
         // generates --> next$Trait$Helper.method(this, arg1, arg2)
-        TraitHelpersTuple helpers = Traits.findHelpers(next);
         ArgumentListExpression args = new ArgumentListExpression();
-        args.addExpression(new VariableExpression("this"));
-        Parameter[] forwarderMethodParameters = forwarderMethod.getParameters();
-        for (final Parameter forwarderMethodParameter : forwarderMethodParameters) {
-            args.addExpression(new VariableExpression(forwarderMethodParameter));
-        }
-        StaticMethodCallExpression delegateCall = new StaticMethodCallExpression(
-                helpers.getHelper(),
-                forwarderMethod.getName(),
-                args
-        );
-        Statement result;
-        if (ClassHelper.VOID_TYPE.equals(forwarderMethod.getReturnType())) {
-            BlockStatement stmt = new BlockStatement();
-            stmt.addStatement(new ExpressionStatement(delegateCall));
-            stmt.addStatement(new ReturnStatement(new ConstantExpression(null)));
-            result = stmt;
-        } else {
-            result = new ReturnStatement(delegateCall);
-        }
-        return result;
+        args.addExpression(varX("this"));
+        for (Parameter p : forwarderMethod.getParameters()) args.addExpression(varX(p));
+        Expression delegateCall = callX(Traits.findHelper(next), forwarderMethod.getName(), args);
+
+        return forwarderMethod.isVoidMethod() ? block(stmt(delegateCall), returnS(nullX())) : returnS(delegateCall);
     }
 
     private static ClassNode[] copyExceptions(final ClassNode[] sourceExceptions) {

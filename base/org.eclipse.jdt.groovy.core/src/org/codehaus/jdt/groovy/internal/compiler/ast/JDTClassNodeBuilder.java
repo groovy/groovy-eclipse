@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -150,16 +147,10 @@ class JDTClassNodeBuilder {
         return result;
     }
 
-    private Map<TypeVariableBinding, ClassNode> typeVariableConfigurationInProgress = new HashMap<>();
-
     /**
      * Based on Java5.configureTypeVariableReference()
      */
     private ClassNode configureTypeVariableReference(TypeVariableBinding tv) {
-        ClassNode node = typeVariableConfigurationInProgress.get(tv);
-        if (node != null) {
-            return node;
-        }
         String name = String.valueOf(tv.sourceName);
         if (name.indexOf('@') >= 0) {
             throw new IllegalStateException("Invalid type variable name: " + name);
@@ -167,17 +158,20 @@ class JDTClassNodeBuilder {
 
         ClassNode cn = ClassHelper.makeWithoutCaching(name);
         cn.setGenericsPlaceHolder(true);
-        ClassNode cn2 = ClassHelper.makeWithoutCaching(name);
-        cn2.setGenericsPlaceHolder(true);
-        cn.setGenericsTypes(new GenericsType[] {new GenericsType(cn2)});
 
-        typeVariableConfigurationInProgress.put(tv, cn);
-        if (tv.firstBound != null && tv.firstBound.id != TypeIds.T_JavaLangObject) {
-            setRedirect(cn, configureType(tv.firstBound));
-        } else {
-            cn.setRedirect(ClassHelper.OBJECT_TYPE);
+        if (tv.enterRecursiveFunction()) {
+            ClassNode cn2 = ClassHelper.makeWithoutCaching(name);
+            cn2.setGenericsPlaceHolder(true);
+            cn.setGenericsTypes(new GenericsType[] {new GenericsType(cn2)});
+
+            if (tv.firstBound != null && tv.firstBound.id != TypeIds.T_JavaLangObject) {
+                setRedirect(cn, configureType(tv.firstBound)); // GRECLIPSE-1563
+            } else {
+                cn.setRedirect(ClassHelper.OBJECT_TYPE);
+            }
+
+            tv.exitRecursiveFunction();
         }
-        typeVariableConfigurationInProgress.remove(tv);
 
         return cn;
     }
@@ -193,8 +187,9 @@ class JDTClassNodeBuilder {
         if (tBounds.length == 0) {
             gt = new GenericsType(cn);
         } else {
-            ClassNode[] cBounds = configureTypes(tBounds);
-            gt = new GenericsType(cn, cBounds, null);
+            tv.enterRecursiveFunction(); // "T extends Foo<? super T>"
+            gt = new GenericsType(cn, configureTypes(tBounds), null);
+            tv.exitRecursiveFunction();
             gt.setName(cn.getName());
             gt.setPlaceholder(true);
         }
@@ -211,13 +206,13 @@ class JDTClassNodeBuilder {
 
         ClassNode[] uppers = configureTypes(getUpperBounds(wildcard));
         ClassNode[] lowers = configureTypes(getLowerBounds(wildcard));
-        GenericsType t = new GenericsType(base, uppers,
+        GenericsType gt = new GenericsType(base, uppers,
             lowers != null && lowers.length > 0 ? lowers[0] : null);
-        t.setWildcard(true);
+        gt.setWildcard(true);
 
-        ClassNode ref = ClassHelper.makeWithoutCaching(Object.class, false);
-        ref.setGenericsTypes(new GenericsType[] {t});
-        return ref;
+        ClassNode cn = ClassHelper.makeWithoutCaching(Object.class, false);
+        cn.setGenericsTypes(new GenericsType[] {gt});
+        return cn;
     }
 
     private ClassNode configureParameterizedType(ParameterizedTypeBinding tb) {
@@ -237,11 +232,22 @@ class JDTClassNodeBuilder {
             // the messing about in here is for a few reasons. Contrast it with the ClassHelper.makeWithoutCaching
             // that code when called for Iterable will set the redirect to point to the generics. That is what
             // we are trying to achieve here.
-            if (!(tb instanceof RawTypeBinding)) {
-                setRedirect(cn, configureType(tb.genericType()));
+            setRedirect(cn, configureType(tb.genericType()));
+        }
+        GenericsType[] gts = configureTypeArguments(tb.arguments);
+        if (gts != null && cn.isRedirectNode()) {
+            for (int i = 0, n = gts.length; i < n; i += 1) { // GROOVY-10671
+                if (!gts[i].isWildcard() || gts[i].getUpperBounds() != null) continue;
+                if (tb.genericType().typeVariables()[i].enterRecursiveFunction()) { // GROOVY-10651
+                    ClassNode[] implicitBounds = cn.redirect().getGenericsTypes()[i].getUpperBounds();
+                    if (implicitBounds != null && !ClassHelper.OBJECT_TYPE.equals(implicitBounds[0])){
+                        gts[i].getType().setRedirect(implicitBounds[0]); // "?" erasure is not Object!
+                    }
+                    tb.genericType().typeVariables()[i].exitRecursiveFunction();
+                }
             }
         }
-        cn.setGenericsTypes(configureTypeArguments(tb.arguments));
+        cn.setGenericsTypes(gts);
         return cn;
     }
 
@@ -263,6 +269,10 @@ class JDTClassNodeBuilder {
             return ClassHelper.long_TYPE;
         case TypeIds.T_short:
             return ClassHelper.short_TYPE;
+        case TypeIds.T_void:
+            return ClassHelper.VOID_TYPE;
+        case TypeIds.T_null:
+            return ClassHelper.OBJECT_TYPE;
         default:
             throw new GroovyEclipseBug("Unexpected BaseTypeBinding: " + tb + "(type.id=" + tb.id + ")");
         }
@@ -286,9 +296,6 @@ class JDTClassNodeBuilder {
             return ClassHelper.Long_TYPE;
         case TypeIds.T_JavaLangShort:
             return ClassHelper.Short_TYPE;
-
-        case TypeIds.T_void:
-            return ClassHelper.VOID_TYPE;
         case TypeIds.T_JavaLangVoid:
             return ClassHelper.void_WRAPPER_TYPE;
 
@@ -296,6 +303,16 @@ class JDTClassNodeBuilder {
             return ClassHelper.OBJECT_TYPE;
         case TypeIds.T_JavaLangString:
             return ClassHelper.STRING_TYPE;
+        /* TODO:
+        case TypeIds.T_JavaLangNumber:
+            return ClassHelper.Number_TYPE;
+        case TypeIds.T_JavaMathBigDecimal:
+            return ClassHelper.BigDecimal_TYPE;
+        case TypeIds.T_JavaMathBigInteger:
+            return ClassHelper.BigInteger_TYPE;
+        case TypeIds.T_JavaIoSerializable:
+            return ClassHelper.SERIALIZABLE_TYPE;
+        */
 
         default:
             return new JDTClassNode(tb, resolver);
@@ -369,16 +386,21 @@ class JDTClassNodeBuilder {
 
     //--------------------------------------------------------------------------
 
-    static ClassNode removeRedirect(ClassNode node) {
+    static ClassNode removeRedirect(final ClassNode node) {
         ClassNode redirect = ReflectionUtils.getPrivateField(ClassNode.class, "redirect", node);
         node.setRedirect(null);
         return redirect;
     }
 
-    static void setRedirect(ClassNode node, ClassNode redirect) {
-        if (node.isPrimaryClassNode()) throw new GroovyEclipseBug(
-            "Tried to set a redirect for a primary ClassNode (" + node.getName() + "->" + redirect.getName() + ")");
-        if (node != redirect)
+    static void setRedirect(final ClassNode node, final ClassNode redirect) {
+        if (node.isPrimaryClassNode()) {
+            throw new GroovyEclipseBug("Tried to set a redirect for a primary ClassNode (" + node.getName() + "->" + redirect.getName() + ")");
+        }
+        if (node != redirect) {
             ReflectionUtils.setPrivateField(ClassNode.class, "redirect", node, redirect);
+            if (node instanceof JDTClassNode) {
+                ReflectionUtils.setPrivateField(JDTClassNode.class, "bits", node, 65535);
+            }
+        }
     }
 }

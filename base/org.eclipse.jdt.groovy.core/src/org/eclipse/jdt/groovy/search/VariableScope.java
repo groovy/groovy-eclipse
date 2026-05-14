@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.parseClassNodesFromString;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression;
 
-import java.beans.Introspector;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -29,6 +28,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,6 +41,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -52,33 +53,38 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImmutableClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.SwitchStatement;
 import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
+import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
 import org.codehaus.groovy.syntax.Token;
+import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory.GrapeAwareGroovyClassLoader;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.eclipse.core.runtime.Assert;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
@@ -91,10 +97,10 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode VOID_CLASS_NODE = ClassHelper.VOID_TYPE; // void.class
     public static final ClassNode VOID_WRAPPER_CLASS_NODE = ClassHelper.void_WRAPPER_TYPE; // Void.class
 
+    public static final ClassNode CLASS_CLASS_NODE = ClassHelper.CLASS_Type;
     public static final ClassNode OBJECT_CLASS_NODE = ClassHelper.OBJECT_TYPE;
     public static final ClassNode GROOVY_OBJECT_CLASS_NODE = ClassHelper.GROOVY_OBJECT_TYPE;
     public static final ClassNode GROOVY_SUPPORT_CLASS_NODE = ClassHelper.GROOVY_OBJECT_SUPPORT_TYPE;
-    public static final ClassNode CLOSURE_CLASS_NODE = ClassHelper.CLOSURE_TYPE;
     public static final ClassNode ENUMERATION_CLASS_NODE = ClassHelper.make(Enumeration.class);
     public static final ClassNode COLLECTION_CLASS_NODE = ClassHelper.make(Collection.class);
     public static final ClassNode ITERABLE_CLASS_NODE = ClassHelper.make(Iterable.class);
@@ -104,11 +110,12 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode ENTRY_CLASS_NODE = ClassHelper.make(Map.Entry.class);
     public static final ClassNode RANGE_CLASS_NODE = ClassHelper.RANGE_TYPE;
     public static final ClassNode TUPLE_CLASS_NODE = ClassHelper.make(Tuple.class);
-    public static final ClassNode STRING_CLASS_NODE = ClassHelper.STRING_TYPE;
-    public static final ClassNode GSTRING_CLASS_NODE = ClassHelper.GSTRING_TYPE;
-    public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.Number_TYPE;
     public static final ClassNode BIG_DECIMAL_CLASS = ClassHelper.BigDecimal_TYPE;
     public static final ClassNode BIG_INTEGER_CLASS = ClassHelper.BigInteger_TYPE;
+    public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.Number_TYPE;
+    public static final ClassNode STRING_CLASS_NODE = ClassHelper.STRING_TYPE;
+    public static final ClassNode GSTRING_CLASS_NODE = ClassHelper.GSTRING_TYPE;
+    public static final ClassNode CLOSURE_CLASS_NODE = ClassHelper.CLOSURE_TYPE;
     public static final ClassNode PATTERN_CLASS_NODE = ClassHelper.PATTERN_TYPE;
     public static final ClassNode MATCHER_CLASS_NODE = ClassHelper.make(Matcher.class);
 
@@ -137,18 +144,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode LONG_CLASS_NODE = ClassHelper.Long_TYPE;
     public static final ClassNode FLOAT_CLASS_NODE = ClassHelper.Float_TYPE;
     public static final ClassNode DOUBLE_CLASS_NODE = ClassHelper.Double_TYPE;
-
-    // don't cache because we have to add properties
-    public static final ClassNode CLASS_CLASS_NODE = initializeProperties(ClassHelper.makeWithoutCaching(Class.class));
-
-    // NOTE: JDTClassNode contains very similar method
-    private static ClassNode initializeProperties(ClassNode node) {
-        node.getMethods().stream().filter(AccessorSupport::isGetter).forEach(methodNode -> {
-            String propertyName = Introspector.decapitalize(methodNode.getName().substring(methodNode.getName().startsWith("is") ? 2 : 3));
-            node.addProperty(new PropertyNode(propertyName, methodNode.getModifiers(), methodNode.getReturnType(), null, null, null, null));
-        });
-        return node;
-    }
 
     //--------------------------------------------------------------------------
 
@@ -196,8 +191,8 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         this.scopeNode = enclosingNode;
         this.shared = (parent != null ? parent.shared : new SharedState());
         this.enclosingCallStackDepth = this.shared.enclosingCallStack.size();
-        this.isStaticScope = (isStatic || (!(enclosingNode instanceof ClassNode) && parent != null && parent.isStaticScope)) &&
-            (getEnclosingClosureScope() == null); // if in a closure, items may be found on delegate or owner
+        this.isStaticScope = (isStatic || (parent != null && parent.isStaticScope && !(enclosingNode instanceof ClassNode))) &&
+                              (getEnclosingClosureScope() == null); // if in a closure, items may be found on delegate or owner
 
         // determine if scope belongs to script body
         if (enclosingNode instanceof ClassNode || enclosingNode instanceof FieldNode) {
@@ -205,13 +200,13 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         } else if (enclosingNode instanceof MethodNode) {
             this.shared.isRunMethod = ((MethodNode) enclosingNode).isScriptBody();
         }
-        // TODO: When scope is popped, should the flag be restored to its previous value?
+        // TODO: Should the flag be restored to its previous value when scope is popped?
 
         // initialize type of "this" (and by extension "super"; see lookupName("super"))
         if (enclosingNode instanceof ClassNode) {
             ClassNode type = (ClassNode) enclosingNode;
             addVariable("this", newClassClassNode(type), type);
-        } else if (!isStatic && (parent != null && parent.scopeNode instanceof ClassNode)) {
+        } else if (!isStaticScope && !(enclosingNode instanceof ClosureExpression) && (parent != null && parent.scopeNode instanceof ClassNode)) {
             ClassNode type = (ClassNode) parent.scopeNode;
             addVariable("this", type, type); // switch from Class<T> to T
         }
@@ -275,12 +270,22 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             if (parent.isCategoryBeingDeclared()) {
                 categories = new LinkedHashSet<>(categories);
                 categories.add(parent.categoryBeingDeclared);
+                for (ClassNode superClass = parent.categoryBeingDeclared.getSuperClass();
+                        superClass != OBJECT_CLASS_NODE && superClass != null;
+                        superClass = superClass.getSuperClass()) {
+                    categories.add(superClass);
+                }
             }
         } else {
-            categories = scopeNode.getNodeMetaData(DefaultGroovyMethods.class, key -> {
+            categories = scopeNode.getNodeMetaData(DefaultGroovyMethods.class);
+            if (categories == null) {
                 GrapeAwareGroovyClassLoader gcl = (GrapeAwareGroovyClassLoader) ((ModuleNode) scopeNode).getUnit().getClassLoader();
-                return gcl.getDefaultCategories().stream().map(ClassNode::new).collect(Collectors.toCollection(LinkedHashSet::new));
-            });
+                categories = gcl.getDefaultCategories().stream().map(ClassNode::new).collect(Collectors.toCollection(LinkedHashSet::new));
+                synchronized (scopeNode) {
+                    Set<ClassNode> value = categories;
+                    scopeNode.getNodeMetaData(DefaultGroovyMethods.class, key -> value);
+                }
+            }
         }
 
         return categories;
@@ -326,12 +331,20 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                     // Class<super of T> (static scope) or Object (Is this a Groovy bug?)
                     if (!isStatic()) {
                         superType = type.getSuperClass();
-                        if (OBJECT_CLASS_NODE.equals(superType) && GroovyUtils.isAnonymous(type)) {
-                            superType = type.getInterfaces()[0];
+                        ClassNode[] superInterfaces = type.getInterfaces();
+                        if (superInterfaces.length > 0 && GroovyUtils.getGroovyVersion().getMajor() > 3) {
+                            String union = Stream.concat(Stream.of(superType), Stream.of(superInterfaces))
+                                .map(t -> t.toString(false)).collect(Collectors.joining(" | ", "(", ")"));
+                            superType = new ClassNode(union, 0, superType, superInterfaces.clone(), null){
+                                @Override
+                                public boolean equals(Object that) {
+                                    return that == this || that.equals(getSuperClass()) || Stream.of(getInterfaces()).anyMatch(that::equals);
+                                }
+                            };
                         }
-                    } else { // type is Class<T>, so produce Class<super of T>
-                        assert type.equals(CLASS_CLASS_NODE) && type.getGenericsTypes() != null;
-                        superType = type.getGenericsTypes()[0].getType().getSuperClass(); //super of T
+                    } else { // type is Class<T>, so produce Class<"super of T">
+                        assert (type.equals(CLASS_CLASS_NODE) && type.getGenericsTypes() != null);
+                        superType = type.getGenericsTypes()[0].getType().getSuperClass();
                         if (superType != null && !superType.equals(OBJECT_CLASS_NODE)) {
                             superType = newClassClassNode(superType);
                         }
@@ -395,21 +408,17 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public boolean isOwnerStatic() {
-        if (isStatic()) {
-            return true;
+        for (VariableScope scope = this; scope != null; scope = scope.parent) {
+            if (scope.isStatic()) {
+                return true;
+            }
+            if (scope.scopeNode instanceof ClassNode ||
+                scope.scopeNode instanceof FieldNode ||
+                scope.scopeNode instanceof MethodNode) {
+                break;
+            }
         }
-
-        FieldNode field = getEnclosingFieldDeclaration();
-        if (field != null && field.isStatic()) {
-            return true;
-        }
-
-        MethodNode method = getEnclosingMethodDeclaration();
-        if (method != null && method.isStatic()) {
-            return true;
-        }
-
-        return false;
+        return CLASS_CLASS_NODE.equals(getOwner());
     }
 
     public boolean isFieldAccessDirect() {
@@ -474,16 +483,14 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     /*package*/ VariableScope getEnclosingClosureScope() {
-        VariableScope scope = this;
-        do {
+        for (VariableScope scope = this; scope != null; scope = scope.parent) {
             if (scope.scopeNode instanceof ClosureExpression) {
                 return scope;
             }
             if (scope.scopeNode instanceof ClassNode) {
                 break;
             }
-        } while ((scope = scope.parent) != null);
-
+        }
         return null;
     }
 
@@ -556,7 +563,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         if (info == null && parent != null) {
             info = parent.lookupName(name);
         }
-        if (info != null && info.type != null) {
+        if (info != null) {
             nameVariableMap.put(name, merge(info, type, declaringType));
             // if variable is declared in a parent scope, mark it dirty
             if (info.scopeNode != this.scopeNode) {
@@ -578,9 +585,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      * @param type type of variable
      */
     /*package*/ void updateVariableSoft(String name, ClassNode type) {
-        VariableInfo info = merge(parent.lookupName(name), type, null);
-        info = nameVariableMap.put(name, info);
-        assert info == null;
+        nameVariableMap.put(name, merge(parent.lookupName(name), type, null));
     }
 
     private static VariableInfo merge(VariableInfo base, ClassNode type, ClassNode declaringType) {
@@ -600,18 +605,51 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         dirtyNames = null;
     }
 
+    void bubbleUpdates(final VariableScope defaultBranch, final VariableScope... conditionalBranches) {
+
+        VariableScope[] nonTerminalBranches = Stream.concat(Stream.of(conditionalBranches), Stream.of(defaultBranch)).filter(it -> !it.isTerminal()).toArray(VariableScope[]::new);
+
+        Stream.of(nonTerminalBranches).flatMap(it -> it.dirtyNames != null ? it.dirtyNames.stream() : Stream.empty()).distinct().forEach(name -> {
+            ClassNode type = null;
+
+            // if name is not set in all branches, mix with current type (if non-null), otherwise replace current type
+            if (!Stream.of(nonTerminalBranches).allMatch(it -> it.dirtyNames != null && it.dirtyNames.contains(name))) {
+                type = lookupName(name).type;
+            }
+
+            type = Stream.of(nonTerminalBranches).filter(it -> it.dirtyNames != null && it.dirtyNames.contains(name))
+                .map(it -> it.nameVariableMap.get(name).type).reduce(type, (t0, t1) -> t0 == null ? t1 : WideningCategories.lowestUpperBound(t0, t1));
+
+            parent.updateVariable(name, type, lookupName(name).declaringType);
+            if (dirtyNames != null) dirtyNames.remove(name);
+        });
+
+        bubbleUpdates();
+    }
+
     public static ClassNode resolveTypeParameterization(GenericsMapper mapper, ClassNode type) {
         if (mapper.hasGenerics()) {
-            GenericsType[] parameterizedTypes = GroovyUtils.getGenericsTypes(type);
-            if (parameterizedTypes.length > 0) {
-                for (int i = 0, n = parameterizedTypes.length; i < n; i += 1) {
-                    GenericsType parameterizedType = parameterizedTypes[i];
-                    ClassNode maybe = resolveTypeParameterization(mapper, parameterizedType, type);
+            GenericsType[] genericsTypes = GroovyUtils.getGenericsTypes(type);
+            int n = genericsTypes.length;
+            if (n > 0) {
+                for (int i = 0; i < n; i += 1) {
+                    ClassNode maybe = resolveTypeParameterization(mapper, genericsTypes[i], type);
                     if (maybe != type) {
                         assert n == 1;
                         type = maybe;
                         break;
                     }
+                }
+            } else if (GroovyUtils.getBaseType(type).isGenericsPlaceHolder()) {
+                int dims = 0;
+                while (type.isArray()) {
+                    type = type.getComponentType();
+                    dims += 1;
+                }
+                type = mapper.findParameter(type.getUnresolvedName(), type);
+                while (dims > 0) {
+                    type = type.makeArray();
+                    dims -= 1;
                 }
             }
         }
@@ -620,34 +658,44 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     public static ClassNode resolveTypeParameterization(GenericsMapper mapper, GenericsType generic, ClassNode unresolved) {
         if (!generic.isWildcard()) {
-            resolveTypeParameterization(mapper, generic.getType()); // TODO: capture return value?
+            int dims = 0;
+            ClassNode type = generic.getType();
+            while (type.isArray()) {
+                dims += 1;
+                type = type.getComponentType();
+            }
+            if (!type.isGenericsPlaceHolder()) {
+                if (GenericsUtils.hasUnresolvedGenerics(type))
+                    resolveTypeParameterization(mapper, type); // drill down
+                return unresolved;
+            }
+            String typeParameterName = type.getUnresolvedName();
+            type = mapper.findParameter(typeParameterName, type);
+            while (dims > 0) {
+                dims -= 1;
+                type = type.makeArray();
+            }
 
-            String toParameterizeName = generic.getName();
-            ClassNode resolved = mapper.findParameter(toParameterizeName, generic.getType());
-
-            // there are three known possibilities for resolved:
-            // 1. it is the resolution of a type parameter itself (e.g. E --> String)
-            // 2. it is the resolved type parameter of a generic type (e.g. Iterator<E> --> Iterator<String>)
-            // 3. it is a substitution of one type parameter for another (e.g. List<T> --> List<E>, where T comes from the declaring type)
-
-            if (!unresolved.toString(false).equals(toParameterizeName) && typeParameterExistsInRedirected(unresolved, toParameterizeName)) {
-                Assert.isLegal(unresolved.redirect() != unresolved, "Error: trying to resolve type parameters of a type declaration: " + unresolved);
-                // Iterator<E> --> Iterator<String>
+            if (unresolved.toString(false).equals(typeParameterName)) {
+                // E --> String
+                return type;
+            } else {
+                Assert.isLegal(unresolved.redirect() != unresolved, "Error: trying to mutate type parameters of a type declaration: " + unresolved);
+                Assert.isLegal(unresolved.redirect().getGenericsTypes() != null, "Error: trying to add type arguments to non-generic type: " + unresolved);
+                // List<E> --> List<String>
+                // List<E[]> --> List<String[]>
+                if (Boolean.TRUE.equals(type.getNodeMetaData("?"))) {
+                    type = ClassHelper.makeWithoutCaching("?");
+                    generic.setWildcard(true);
+                } else {
+                    generic.setWildcard(false);
+                    generic.setPlaceHolder(type.isGenericsPlaceHolder());
+                    generic.setName(type.isGenericsPlaceHolder() ? type.getUnresolvedName() : type.getName());
+                }
+                generic.setType(type);
+                generic.setResolved(true);
                 generic.setLowerBound(null);
                 generic.setUpperBounds(null);
-                generic.setPlaceHolder(false); // prevent mutation of resolved
-                generic.setWildcard(false);
-                generic.setResolved(true);
-                generic.setType(resolved);
-                generic.setName(generic.getType().getName());
-            } else {
-                // E --> String
-                // E[] --> String[]
-                while (unresolved.isArray()) {
-                    unresolved = unresolved.getComponentType();
-                    resolved = resolved.makeArray();
-                }
-                return resolved;
             }
         } else if (generic.getLowerBound() != null) {
             // List<? super E> --> List<? super String>
@@ -660,6 +708,12 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             for (int j = 0, k = parameterizedTypeUpperBounds.length; j < k; j += 1) {
                 ClassNode resolved = resolveTypeParameterization(mapper, parameterizedTypeUpperBounds[j]);
                 parameterizedTypeUpperBounds[j] = resolved;
+                // simplify "? extends FinalClass" to just "FinalClass"
+                if (k == 1 && Flags.isFinal(resolved.getModifiers())) {
+                    generic.setUpperBounds(null);
+                    generic.setWildcard(false);
+                    generic.setType(resolved);
+                }
             }
             generic.setResolved(true);
         }
@@ -667,7 +721,8 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public static MethodNode resolveTypeParameterization(GenericsMapper mapper, MethodNode method) {
-        if (mapper.hasGenerics() && GroovyUtils.isUsingGenerics(method)) {
+        if (mapper.hasGenerics() && (GenericsUtils.hasUnresolvedGenerics(method.getReturnType()) ||
+                GroovyUtils.getParameterTypes(method.getParameters()).stream().anyMatch(GenericsUtils::hasUnresolvedGenerics))) {
 
             ClassNode returnType = resolveTypeParameterization(mapper, clone(method.getReturnType()));
 
@@ -716,16 +771,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             method = resolved;
         }
         return method;
-    }
-
-    private static boolean typeParameterExistsInRedirected(ClassNode type, String toParameterizeName) {
-        ClassNode redirect = type.redirect();
-        GenericsType[] genericsTypes = redirect.getGenericsTypes();
-        if (genericsTypes != null) {
-            // I don't *think* we need to check here. if any type parameter exists in the redirect, then we are parameterizing
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -879,6 +924,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return nameVariableMap.containsKey(name);
     }
 
+    /*package*/ boolean isCasePredicate(ClosureExpression closure) {
+        return (parent != null && parent.scopeNode instanceof SwitchStatement &&
+            ((SwitchStatement) parent.scopeNode).getCaseStatements().stream().anyMatch(cs -> cs.getExpression() == closure));
+    }
+
     /*package*/ void setMethodCallArgumentTypes(List<ClassNode> methodCallArgumentTypes) {
         this.methodCallArgumentTypes = methodCallArgumentTypes;
     }
@@ -928,6 +978,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         if (scopeNode instanceof ThrowStatement) {
             // TODO: What about throw? Could be caught by outer scope...
         }
+        if (scopeNode instanceof MethodNode && !(scopeNode instanceof ConstructorNode ||
+                (((MethodNode) scopeNode).isStatic() && ((MethodNode) scopeNode).getName().equals("<clinit>")) ||
+                (!((MethodNode) scopeNode).isStatic() && GroovyUtils.getAnnotations((MethodNode) scopeNode, "javax.annotation.PostConstruct").anyMatch(x -> true)))) {
+            return true;
+        }
         return false;
     }
 
@@ -967,70 +1022,75 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     /**
      * Finds all interfaces implemented by {@code type} (including itself, if it
-     * is an interface).  The ordering is that the interfaces closest to type are
-     * first (in declared order) and then interfaces declared on super interfaces
-     * occur (if they are not duplicates).
+     * is an interface). The ordering is that the interfaces closest to type are
+     * first (in declared order with traits reversed) and then any non-duplicate
+     * interfaces declared on super interfaces.
      *
-     * @param allInterfaces an accumulator set that will ensure that each interface exists at most once and in a predictible order
+     * @param accumulator ensures that each interface exists at most once and in a predictible order
      * @param useResolved whether or not to use the resolved interfaces
      */
-    public static void findAllInterfaces(ClassNode type, Set<ClassNode> allInterfaces, boolean useResolved) {
+    public static void findAllInterfaces(ClassNode type, final Set<ClassNode> accumulator, final boolean useResolved) {
         if (!useResolved) type = type.redirect();
         boolean isInterface = type.isInterface();
-        if (!isInterface || !allInterfaces.contains(type)) {
-            if (isInterface) {
-                allInterfaces.add(type);
-            }
-            // Urrrgh...I don't like this.
-            // Groovy compiler has a different notion of 'resolved' than we do here.
-            // Groovy compiler considers a resolved ClassNode one that has no redirect.
-            // However, we consider a ClassNode to be resolved if its type parameters are resolved.
-            ClassNode[] faces = !useResolved ? type.getInterfaces() : type.getUnresolvedInterfaces();
-            if (faces != null) {
-                for (ClassNode face : faces) {
-                    findAllInterfaces(face, allInterfaces, useResolved);
+        if (!isInterface || accumulator.add(type)) {
+            ClassNode[] interfaces = type.getInterfaces();
+            if (interfaces != null && interfaces.length > 0) {
+                // put traits first, in reverse declared order
+                Deque<ClassNode> todo = new LinkedList<>();
+                for (ClassNode face : interfaces) {
+                    if (Traits.isTrait(face)) {
+                        todo.addFirst(face);
+                    } else {
+                        todo.addLast(face);
+                    }
+                }
+                for (ClassNode face : todo) {
+                    findAllInterfaces(face, accumulator, useResolved);
                 }
             }
             if (!isInterface) {
-                ClassNode superType = type.getSuperClass();
-                if (superType != null && !OBJECT_CLASS_NODE.equals(superType)) {
-                    findAllInterfaces(superType, allInterfaces, useResolved);
+                ClassNode sc = type.getUnresolvedSuperClass();
+                if (sc != null && !sc.equals(OBJECT_CLASS_NODE)) {
+                    findAllInterfaces(sc, accumulator, useResolved);
                 }
             }
         }
     }
 
     /**
-     * Creates a type hierarchy for the <code>clazz</code>>, including self.
-     * Classes come first and then interfaces.
+     * Creates a type hierarchy for {@code type}, including itself. Classes come
+     * first, followed by interfaces.
      * <p>
-     * TODO: The ordering of super interfaces will not be the same as in {@link VariableScope#findAllInterfaces}. Should it be the same?
+     * TODO: The order of super interfaces will not be the same as in {@link #findAllInterfaces}.  Should it be the same?
      */
-    public static void createTypeHierarchy(ClassNode type, Set<ClassNode> allClasses, boolean useResolved) {
-        if (!useResolved) {
-            type = type.redirect();
-        }
-        if (!allClasses.contains(type)) {
+    public static void createTypeHierarchy(ClassNode type, final Set<ClassNode> accumulator, final boolean useResolved) {
+        if (!useResolved) type = type.redirect();
+        if (!accumulator.contains(type)) {
+            ClassNode[] bounds = null;
             if (!type.isInterface()) {
-                allClasses.add(type);
-                ClassNode superClass;
-                // Urrrgh...I don't like this.
-                // Groovy compiler has a different notion of 'resolved' than we do here.
-                // Groovy compiler considers a resolved ClassNode one that has no redirect.
-                // however, we consider a ClassNode to be resolved if its type parameters are resolved.
-                // that is why we call getUnresolvedSuperClass if useResolved is true (and vice versa).
-                if (useResolved) {
-                    superClass = type.getUnresolvedSuperClass();
-                } else {
-                    superClass = type.getSuperClass();
+                if (type.isGenericsPlaceHolder() && type.getGenericsTypes() != null) {
+                    bounds = type.getGenericsTypes()[0].getUpperBounds();
+                    if (bounds != null && bounds.length > 0) {
+                        type = bounds[0]; // "T extends X ..."
+                    }
                 }
-
-                if (superClass != null) {
-                    createTypeHierarchy(superClass, allClasses, useResolved);
+                accumulator.add(type);
+                // Groovy compiler has a different notion of 'resolved' than we do here.
+                // It considers a ClassNode resolved if it is primary or has type class.
+                // We consider a ClassNode resolved if it has resolved type argument(s).
+                ClassNode sc = type.getUnresolvedSuperClass();
+                if (sc != null) { // includes java.lang.Object
+                    createTypeHierarchy(sc, accumulator, useResolved);
                 }
             }
-            // interfaces will be added from the top-most type first
-            findAllInterfaces(type, allClasses, useResolved);
+            if (!OBJECT_CLASS_NODE.equals(type)) {
+                findAllInterfaces(type, accumulator, useResolved);
+            }
+            if (bounds != null && bounds.length > 1) {
+                for (int i = 1; i < bounds.length; i += 1) {
+                    findAllInterfaces(bounds[i], accumulator, useResolved);
+                }
+            }
         }
     }
 
@@ -1112,6 +1172,12 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return elementType;
     }
 
+    public static ClassNode getFirstGenerics(ClassNode type) {
+        GenericsType[] genericsTypes = type.getGenericsTypes();
+        if (genericsTypes != null) return genericsTypes[0].getType();
+        return type.redirect().getGenericsTypes()[0].getType().redirect();
+    }
+
     public static boolean isPlainClosure(ClassNode type) {
         return CLOSURE_CLASS_NODE.equals(type) && type.getGenericsTypes() == null;
     }
@@ -1174,9 +1240,9 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     public static class CallAndType {
 
+        public final MethodCall call;
         public final ASTNode declaration;
         public final ClassNode declaringType;
-        public final MethodCallExpression call;
         private Map<ClosureExpression, Object[]> delegatesTo;
 
         /**
@@ -1184,7 +1250,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
          *        if {@code call} is a category method it's likely the calling object
          *        type; if {@code call} is an implicit-this call in a closure, then...
          */
-        public CallAndType(MethodCallExpression call, ASTNode declaration, ClassNode declaringType, ModuleNode enclosingModule) {
+        public CallAndType(final MethodCall call, final ASTNode declaration, final ClassNode declaringType, final ModuleNode enclosingModule) {
             this.call = call;
             this.declaration = declaration;
             this.declaringType = declaringType;
@@ -1250,6 +1316,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                                 compilationUnit = ((org.codehaus.jdt.groovy.control.EclipseSourceUnit) enclosingModule.getContext()).resolver.compilationUnit;
                                             }
                                             ClassNode[] resolved = parseClassNodesFromString(typeName, enclosingModule.getContext(), compilationUnit, methodNode, delegatesToType);
+                                            if (GenericsUtils.hasUnresolvedGenerics(resolved[0])) { // @DelegatesTo(type="T") or @DelegatesTo(type="List<T>")
+                                                GenericsMapper mapper = GenericsMapper.gatherGenerics(GroovyUtils.getParameterTypes(methodNode.getParameters()), declaringType,
+                                                    methodNode.getOriginal(), (call instanceof MethodCallExpression ? ((MethodCallExpression) call).getGenericsTypes() : null));
+                                                resolved[0] = resolveTypeParameterization(mapper, resolved[0]);
+                                            }
                                             addDelegatesToClosure(closure, resolved[0], strategy);
 
                                         } else if (delegatesToValue == null || (delegatesToValue instanceof ClassExpression && delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target"))) {
@@ -1259,8 +1330,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                                 if (j >= 0 && j < arguments.size()) {
                                                     Expression target = arguments.get(j);
                                                     ClassNode targetType = target.getType(); // TODO: Look up expression type (unless j is 0 and it's a category method).
-                                                    if (generics != null && generics >= 0 && targetType.getGenericsTypes() != null) {
-                                                        targetType.getGenericsTypes()[generics].getType();
+                                                    if (!targetType.isDerivedFrom(parameters[j].getType())) targetType = parameters[j].getType();
+                                                    if (generics != null && generics >= 0) { // -1 is the default value
+                                                        targetType = Optional.ofNullable(targetType.getGenericsTypes())
+                                                            .filter(targetGenerics -> generics < targetGenerics.length)
+                                                            .map(targetGenerics -> targetGenerics[generics].getType()).orElse(OBJECT_CLASS_NODE);
                                                     }
                                                     addDelegatesToClosure(closure, targetType, strategy);
                                                 }
@@ -1270,18 +1344,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                         }
                                     }
                                 }
-                            }
-                        }
-                        // TODO: Remove when minimum supported Groovy runtime is 2.5
-                        if (delegatesTo == null) {
-                            if (arguments.get(0) instanceof ClosureExpression &&
-                                    methodNode.getName().matches("build|do(Later|Outside)|edt(Builder)?") &&
-                                    methodNode.getDeclaringClass().getName().equals("groovy.swing.SwingBuilder")) {
-                                addDelegatesToClosure((ClosureExpression) arguments.get(0), methodNode.getDeclaringClass(), Closure.OWNER_FIRST);
-                            } else if (arguments.size() > 1 && arguments.get(1) instanceof ClosureExpression &&
-                                    methodNode.getName().matches("identity|with") && DGM_CLASS_NODE.equals(methodNode.getDeclaringClass())) {
-                                // prior to Groovy 2.3, "with" lacked @DelegatesTo metadata; same goes for "identity" (see GROOVY-8376)
-                                addDelegatesToClosure((ClosureExpression) arguments.get(1), declaringType, Closure.DELEGATE_FIRST);
                             }
                         }
                     }
@@ -1298,26 +1360,22 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
          */
         public ClassNode getPerceivedDeclaringType() {
             if (declaringType.equals(CLASS_CLASS_NODE)) {
-                if (declaringType.getGenericsTypes() != null) {
-                    GenericsType genericsType = declaringType.getGenericsTypes()[0];
-                    return genericsType.getType();
-                }
-                return OBJECT_CLASS_NODE;
+                return getFirstGenerics(declaringType);
             }
             return declaringType;
         }
 
-        public ClassNode getDelegateType(ClosureExpression closure) {
+        public ClassNode getDelegateType(final ClosureExpression closure) {
             Object[] tuple = delegatesTo.get(closure);
             return (tuple != null ? (ClassNode) tuple[0] : null);
         }
 
-        public int getResolveStrategy(ClosureExpression closure) {
+        public int getResolveStrategy(final ClosureExpression closure) {
             Object[] tuple = delegatesTo.get(closure);
             return (tuple != null && tuple[1] != null ? (Integer) tuple[1] : Closure.OWNER_FIRST);
         }
 
-        private void addDelegatesToClosure(ClosureExpression closure, ClassNode delegateType, Integer resolveStrategy) {
+        private void addDelegatesToClosure(final ClosureExpression closure, final ClassNode delegateType, final Integer resolveStrategy) {
             if (delegatesTo == null) {
                 delegatesTo = new HashMap<>();
             }
@@ -1327,7 +1385,8 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         /**
          * Finds param with DelegatesTo.Target annotation that has matching value string.
          */
-        private static int indexOfDelegatesToTarget(Parameter[] parameters, String target, CompilerConfiguration config) throws NoSuchMethodException {
+        private static int indexOfDelegatesToTarget(final Parameter[] parameters, final String target, final CompilerConfiguration config)
+                throws NoSuchMethodException {
             for (int i = 0, n = parameters.length; i < n; i += 1) {
                 List<AnnotationNode> annotations = parameters[i].getAnnotations();
                 if (annotations != null && !annotations.isEmpty()) {

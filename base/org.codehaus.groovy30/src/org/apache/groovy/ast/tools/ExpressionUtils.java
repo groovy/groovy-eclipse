@@ -18,7 +18,6 @@
  */
 package org.apache.groovy.ast.tools;
 
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -48,7 +47,7 @@ import static org.codehaus.groovy.syntax.Types.POWER;
 import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT;
 import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT_UNSIGNED;
 
-public class ExpressionUtils {
+public final class ExpressionUtils {
 
     // NOTE: values are sorted in ascending order
     private static final int[] HANDLED_TYPES = {
@@ -78,7 +77,11 @@ public class ExpressionUtils {
                 Expression left = transformInlineConstants(be.getLeftExpression(), targetType);
                 Expression right = transformInlineConstants(be.getRightExpression(), targetType);
                 if (left instanceof ConstantExpression && right instanceof ConstantExpression) {
-                    return configure(be, new ConstantExpression((String) ((ConstantExpression) left).getValue() + ((ConstantExpression) right).getValue()));
+                    Object leftV = ((ConstantExpression) left).getValue();
+                    if (leftV == null) leftV = "null";
+                    if (leftV instanceof String) {
+                        return configure(be, new ConstantExpression(((String)leftV) + ((ConstantExpression) right).getValue()));
+                    }
                 }
             }
         } else if (isNumberOrArrayOfNumber(wrapperType, false)) {
@@ -170,9 +173,10 @@ public class ExpressionUtils {
     // GRECLIPSE end
 
     private static ConstantExpression configure(final Expression origX, final ConstantExpression newX) {
-        // GRECLIPSE edit
-        newX.setNodeMetaData(ClassCodeVisitorSupport.ORIGINAL_EXPRESSION, origX);
-        //newX.setSourcePosition(origX);
+        /* GRECLIPSE edit
+        newX.setSourcePosition(origX);
+        */
+        newX.setNodeMetaData(org.codehaus.groovy.ast.ClassCodeVisitorSupport.ORIGINAL_EXPRESSION, origX);
         // GRECLIPSE end
         return newX;
     }
@@ -251,7 +255,7 @@ public class ExpressionUtils {
                             configure(exp, ce3);
                             return ce3;
                         }
-                    } catch(Exception e) {
+                    } catch (Exception | LinkageError e) {
                         // ignore, leave property expression in place and we'll report later
                     }
                 }
@@ -298,7 +302,7 @@ public class ExpressionUtils {
                 Expression transformed = transformInlineConstants(e, attrType);
                 newList.addExpression(transformed);
                 if (transformed != e) changed = true;
-            } catch(Exception ignored) {
+            } catch (Exception ignored) {
                 newList.addExpression(e);
             }
         }
@@ -329,8 +333,9 @@ public class ExpressionUtils {
                 FieldNode field = ClassNodeUtils.getField(type, pe.getPropertyAsString());
                 if (type.isEnum() && field != null && field.isEnum()) return exp;
                 Expression constant = findConstant(field);
-                // GRECLIPSE edit
-                //if (constant != null) return constant;
+                /* GRECLIPSE edit
+                if (constant != null) return constant;
+                */
                 if (constant instanceof ConstantExpression) {
                     return clone((ConstantExpression) constant, exp);
                 }
@@ -338,8 +343,15 @@ public class ExpressionUtils {
             }
         } else if (exp instanceof BinaryExpression) {
             BinaryExpression be = (BinaryExpression) exp;
-            be.setLeftExpression(transformInlineConstants(be.getLeftExpression()));
-            be.setRightExpression(transformInlineConstants(be.getRightExpression()));
+            Expression lhs = transformInlineConstants(be.getLeftExpression());
+            Expression rhs = transformInlineConstants(be.getRightExpression());
+            if (be.getOperation().getType() == PLUS && lhs instanceof ConstantExpression && rhs instanceof ConstantExpression &&
+                    lhs.getType().equals(ClassHelper.STRING_TYPE) && rhs.getType().equals(ClassHelper.STRING_TYPE)) {
+                // GROOVY-9855: inline string concat
+                return configure(be, new ConstantExpression(lhs.getText() + rhs.getText()));
+            }
+            be.setLeftExpression(lhs);
+            be.setRightExpression(rhs);
             return be;
         } else if (exp instanceof ListExpression) {
             ListExpression origList = (ListExpression) exp;
@@ -367,4 +379,21 @@ public class ExpressionUtils {
         }
         return null;
     }
+
+    public static boolean isThisExpression(final Expression expression) {
+        return expression instanceof VariableExpression && ((VariableExpression) expression).isThisExpression();
+    }
+
+    public static boolean isSuperExpression(final Expression expression) {
+        return expression instanceof VariableExpression && ((VariableExpression) expression).isSuperExpression();
+    }
+
+    public static boolean isThisOrSuper(final Expression expression) {
+        return isThisExpression(expression) || isSuperExpression(expression);
+    }
+
+    public static boolean isNullConstant(final Expression expr) {
+        return expr instanceof ConstantExpression && ((ConstantExpression) expr).isNullExpression();
+    }
+
 }

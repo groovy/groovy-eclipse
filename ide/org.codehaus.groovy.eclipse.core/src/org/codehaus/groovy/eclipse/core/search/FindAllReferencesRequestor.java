@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.EqualityVisitor;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
@@ -70,17 +71,11 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
                     return VisitStatus.CONTINUE;
                 }
 
-                // also ignore sctipt declarations
-                if (node instanceof ClassNode) {
-                    ClassNode script = (ClassNode) node;
-                    if (script.isScript()) {
-                        // ugghh...I don't like this: if the length of the node is different from the length
-                        // of the name of the script we know that this is the declaration, not a reference
-                        if (script.getNameWithoutPackage().length() != script.getLength()) {
-                            return VisitStatus.CONTINUE;
-                        }
-                    }
+                // also ignore script declarations
+                if (node instanceof ClassNode && !((ClassNode) node).isRedirectNode() && GroovyUtils.isScript((ClassNode) node)) {
+                    return VisitStatus.CONTINUE;
                 }
+
                 maybeDeclaration = ((ClassNode) maybeDeclaration).redirect();
             }
 

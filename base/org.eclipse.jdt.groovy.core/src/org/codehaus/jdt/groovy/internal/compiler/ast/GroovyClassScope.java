@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import static org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration.ENUM_CONSTANT;
+import static org.eclipse.jdt.internal.compiler.lookup.TypeConstants.BEANS;
+import static org.eclipse.jdt.internal.compiler.lookup.TypeConstants.JAVA;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,14 +27,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
+import java.util.function.Consumer;
 
 import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.CastExpression;
@@ -40,129 +43,167 @@ import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.impl.StringConstant;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
+import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
-import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
-import org.eclipse.jdt.internal.core.nd.util.CharArrayMap;
 
 public class GroovyClassScope extends ClassScope {
 
-    // SET FOR TESTING ONLY, enables tests to listen for interesting events
+    // SET FOR TESTING ONLY; enables tests to listen for interesting events
     public static EventListener debugListener;
 
     private final TraitHelper traitHelper = new TraitHelper();
 
-    public GroovyClassScope(Scope parent, TypeDeclaration typeDecl) {
+    public GroovyClassScope(final Scope parent, final TypeDeclaration typeDecl) {
         super(parent, typeDecl);
     }
 
-    public final ReferenceBinding getGroovyLangMetaClassBinding() {
-        CompilationUnitScope unitScope = compilationUnitScope();
-        unitScope.recordQualifiedReference(GroovyCompilationUnitScope.GROOVY_LANG_METACLASS);
-        return unitScope.environment.getResolvedType(GroovyCompilationUnitScope.GROOVY_LANG_METACLASS, this);
+    /**
+     * Ensures classes implement {@code groovy.lang.GroovyObject}.
+     */
+    @Override
+    protected boolean connectSuperInterfaces() {
+        boolean noProblems = super.connectSuperInterfaces();
+        SourceTypeBinding sourceType = referenceContext.binding;
+        if (!sourceType.isInterface() && !sourceType.isAnnotationType()) { // TODO: @POGO
+            ReferenceBinding groovyObject = getGroovyLangGroovyObject();
+            if (!sourceType.implementsInterface(groovyObject, true)) {
+                int n = sourceType.superInterfaces.length;
+                if (n == 0) {
+                    sourceType.superInterfaces = new ReferenceBinding[1];
+                } else {
+                    ReferenceBinding[] types = sourceType.superInterfaces;
+                    sourceType.superInterfaces = new ReferenceBinding[n + 1];
+                    System.arraycopy(types, 0, sourceType.superInterfaces, 0, n);
+                }
+                sourceType.superInterfaces[n] = groovyObject;
+            }
+        }
+        return noProblems;
     }
 
     /**
      * Adds any Groovy-specific method bindings to the set determined by the compiler.
      */
     @Override
-    protected MethodBinding[] augmentMethodBindings(MethodBinding[] methodBindings) {
-        SourceTypeBinding typeBinding = referenceContext.binding;
-        if (typeBinding == null || typeBinding.isInterface() || typeBinding.isAnnotationType()) {
+    protected MethodBinding[] augmentMethodBindings(final MethodBinding[] methodBindings) {
+        SourceTypeBinding sourceType = referenceContext.binding;
+        if (sourceType == null || sourceType.isAnnotationType() ||
+                (sourceType.isInterface() && !traitHelper.isTrait(sourceType))) {
             return methodBindings;
         }
 
-        ReferenceBinding[] superInterfaces = Optional.ofNullable(typeBinding.superInterfaces).orElse(Binding.NO_SUPERINTERFACES);
+        boolean implementsGroovyObject = false;
+        ReferenceBinding[] superInterfaces = sourceType.superInterfaces();
+        if (superInterfaces == null) superInterfaces = Binding.NO_SUPERINTERFACES;
 
-        boolean implementsGroovyLangObject = false;
-        for (ReferenceBinding face : superInterfaces) {
-            if (CharOperation.equals(face.compoundName, GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT)) {
-                implementsGroovyLangObject = true;
+        for (int i = superInterfaces.length; i != 0;) {
+            if (CharOperation.equals(superInterfaces[--i].compoundName, GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT)) {
+                implementsGroovyObject = true;
                 break;
             }
         }
 
         List<MethodBinding> groovyMethods = new ArrayList<>();
 
-        if (implementsGroovyLangObject) {
+        if (implementsGroovyObject) {
             if (debugListener != null) {
-                debugListener.record("augment: type " + String.valueOf(referenceContext.name) + " having GroovyObject methods added");
+                debugListener.record(new StringBuilder("augment: type ").append(referenceContext.name).append(" having GroovyObject methods added").toString());
             }
             TypeBinding bindingJLO = getJavaLangObject();
             TypeBinding bindingJLS = getJavaLangString();
-            TypeBinding bindingGLM = getGroovyLangMetaClassBinding();
+            TypeBinding bindingGLM = getGroovyLangMetaClass();
+
+            Consumer<MethodBinding> markTransient = (methodBinding) -> {
+                AnnotationBinding atTransient = environment().createAnnotation(getJavaBeansTransient(), Binding.NO_ELEMENT_VALUE_PAIRS);
+                methodBinding.setAnnotations((AnnotationBinding[]) ArrayUtils.add(methodBinding.getAnnotations(), atTransient), false);
+            };
 
             // Now add the groovy.lang.GroovyObject methods:
             //   Object invokeMethod(String name, Object args);
             //   Object getProperty(String propertyName);
             //   void setProperty(String propertyName, Object newValue);
-            //   MetaClass getMetaClass();
+            //   @Transient MetaClass getMetaClass();
             //   void setMetaClass(MetaClass metaClass);
 
-            // Note on synthetic: javac/ecj doesn't see synthetic methods when considering if a type implements an interface; so don't make these synthetic
+            // Note: javac/ecj doesn't see synthetic methods when considering if a type implements an interface; so don't make these synthetic
 
-            createMethod("invokeMethod", false, new TypeBinding[] {bindingJLS, bindingJLO}, bindingJLO, methodBindings)
+            createMethod("invokeMethod", new TypeBinding[] {bindingJLS, bindingJLO}, bindingJLO, methodBindings)
                 .ifPresent(groovyMethods::add);
-            createMethod("getProperty", false, new TypeBinding[] {bindingJLS}, bindingJLO, methodBindings)
+            createMethod("getProperty", new TypeBinding[] {bindingJLS}, bindingJLO, methodBindings)
                 .ifPresent(groovyMethods::add);
-            createMethod("setProperty", false, new TypeBinding[] {bindingJLS, bindingJLO}, TypeBinding.VOID, methodBindings)
+            createMethod("setProperty", new TypeBinding[] {bindingJLS, bindingJLO}, TypeBinding.VOID, methodBindings)
                 .ifPresent(groovyMethods::add);
-            createMethod("getMetaClass", false, Binding.NO_TYPES, bindingGLM, methodBindings)
-                .ifPresent(groovyMethods::add);
-            createMethod("setMetaClass", false, new TypeBinding[] {bindingGLM}, TypeBinding.VOID, methodBindings)
+            createMethod("getMetaClass", Binding.NO_TYPES, bindingGLM, methodBindings)
+                .ifPresent(markTransient.andThen(groovyMethods::add)); // GROOVY-8284
+            createMethod("setMetaClass", new TypeBinding[] {bindingGLM}, TypeBinding.VOID, methodBindings)
                 .ifPresent(groovyMethods::add);
         }
 
         // create property accessors without resolving the types
-        if (referenceContext instanceof GroovyTypeDeclaration) {
-            for (PropertyNode property : ((GroovyTypeDeclaration) referenceContext).getClassNode().getProperties()) {
+        if (referenceContext instanceof GroovyTypeDeclaration groovyTypeDecl) {
+            for (PropertyNode property : groovyTypeDecl.getClassNode().getProperties()) {
                 int modifiers = getModifiers(property);
                 if (Flags.isPackageDefault(modifiers)) continue;
 
-                String name = property.getName(), capitalizedName = MetaClassHelper.capitalize(name);
+                String capitalizedName = org.apache.groovy.util.BeanUtils.capitalize(property.getName());
 
-                if (ClassHelper.boolean_TYPE.equals(property.getType())) {
-                    createGetterMethod(name, "is" + capitalizedName, modifiers, methodBindings)
+                if (!groovyTypeDecl.isRecord() && ClassHelper.boolean_TYPE.equals(property.getType())) {
+                    if (!createGetterMethod(property, "get" + capitalizedName, modifiers, methodBindings).isPresent()) {
+                        continue; // only generate accessor method(s) if one or both are not explicitly declared
+                    }
+                    createGetterMethod(property, "is" + capitalizedName, modifiers, methodBindings) // TODO: PropertyNode#getGetterNameOrDefault
                         .ifPresent(binding -> {
                             groovyMethods.add(binding);
-                            // GROOVY-9382: no getter generated if isser declared
-                            createGetterMethod(name, "get" + capitalizedName, modifiers, methodBindings)
+                            createGetterMethod(property, "get" + capitalizedName, modifiers, methodBindings)
                                 .ifPresent(groovyMethods::add);
                         });
                 } else {
-                    createGetterMethod(name, "get" + capitalizedName, modifiers, methodBindings)
+                    String propertyAccessorName = groovyTypeDecl.isRecord() ? property.getName() : "get" + capitalizedName;
+                    createGetterMethod(property, propertyAccessorName, modifiers, methodBindings) // TODO: PropertyNode#getGetterNameOrDefault
                         .ifPresent(groovyMethods::add);
                 }
 
                 if (!Flags.isFinal(property.getModifiers())) {
-                    createSetterMethod(name, "set" + capitalizedName, modifiers, property.getType().getName(), methodBindings)
+                    createSetterMethod(property, "set" + capitalizedName, modifiers, methodBindings) // TODO: PropertyNode#getSetterNameOrDefault
                         .ifPresent(groovyMethods::add);
                 }
             }
         }
 
         Map<String, MethodBinding> traitMethods = new HashMap<>();
-        for (ReferenceBinding face : superInterfaces) {
-            if (traitHelper.isTrait(face)) {
-                ReferenceBinding helperBinding = traitHelper.getHelperBinding(face);
-                for (MethodBinding method : face.availableMethods()) {
-                    if (!method.isPrivate() && !method.isStatic() &&
-                            isNotActuallyAbstract(method, helperBinding)) {
-                        traitMethods.put(getMethodAsString(method), method);
+        if (!sourceType.isInterface()) {
+            for (ReferenceBinding face : superInterfaces) {
+                if (face != null && traitHelper.isTrait(face)) {
+                    ReferenceBinding helperBinding = traitHelper.getHelperBinding(face);
+                    for (MethodBinding method : face.availableMethods()) {
+                        if (!method.isSynthetic() && isNotActuallyAbstract(method, helperBinding)) {
+                            if ((method.modifiers & ExtraCompilerModifiers.AccModifierProblem) != 0) { // Java 7: +static, -abstract
+                                method.modifiers ^= Flags.AccStatic | Flags.AccAbstract | ExtraCompilerModifiers.AccModifierProblem;
+                            }
+                            if ((method.modifiers & ExtraCompilerModifiers.AccBlankFinal) != 0) { // +final
+                                method.modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
+                            }
+                            if (method.isPublic() || method.isStatic()) {
+                                traitMethods.putIfAbsent(getMethodAsString(method), method);
+                            }
+                        }
                     }
                 }
             }
@@ -170,46 +211,118 @@ public class GroovyClassScope extends ClassScope {
         if (!traitMethods.isEmpty()) {
             Set<String> canBeOverridden = new HashSet<>();
 
-            ReferenceBinding superclass = typeBinding;
+            ReferenceBinding superclass = sourceType;
             while ((superclass = superclass.superclass()) != null) {
                 for (MethodBinding method : superclass.availableMethods()) {
-                    if (!method.isPrivate() && !method.isPublic() && !method.isStatic()) {
+                    if (!method.isConstructor() && !method.isPrivate() && !method.isStatic() && !method.isFinal()) {
                         canBeOverridden.add(getMethodAsString(method));
                     }
                 }
             }
             for (MethodBinding method : methodBindings) {
-                canBeOverridden.remove(getMethodAsString(method));
+                if (!method.isConstructor()) {
+                    String signature = getMethodAsString(method);
+                    canBeOverridden.remove(signature);
+                    traitMethods.remove(signature);
+                }
             }
 
             for (String key : canBeOverridden) {
                 MethodBinding method = traitMethods.remove(key);
                 if (method != null) {
-                    method = new MethodBinding(method, typeBinding);
-                    method.modifiers &= ~Flags.AccAbstract;
-                    groovyMethods.add(method);
+                    // trait method overrides superclass method
+                    groovyMethods.add(traitHelper.bridge(method));
                 }
             }
 
             for (MethodBinding method : traitMethods.values()) {
-                method.modifiers &= ~Flags.AccAbstract;
+                if (method.isStatic()) {
+                    groovyMethods.add(traitHelper.bridge(method));
+                }
             }
         }
 
-        return Stream.concat(Stream.of(methodBindings), groovyMethods.stream()).toArray(MethodBinding[]::new);
+        if (groovyMethods.isEmpty()) {
+            return methodBindings;
+        }
+
+        int m = methodBindings.length, n = m + groovyMethods.size();
+        MethodBinding[] methods = Arrays.copyOf(methodBindings, n);
+        for (int i = m, j = 0; i < n; i += 1, j += 1) {
+            methods[i] = groovyMethods.get(j);
+        }
+        return methods;
     }
 
-    private int getModifiers(PropertyNode property) {
-        int modifiers = (property.getModifiers() & 0xF);
+    private static final char[][] JAVA_BEANS_TRANSIENT = {JAVA, BEANS, "Transient".toCharArray()};
 
-        if (property.getType().isUsingGenerics()) {
+    private ReferenceBinding getJavaBeansTransient() {
+        CompilationUnitScope unitScope = compilationUnitScope();
+        unitScope.recordQualifiedReference(JAVA_BEANS_TRANSIENT);
+        return unitScope.environment.getResolvedType(JAVA_BEANS_TRANSIENT, this);
+    }
+
+    private ReferenceBinding getGroovyLangMetaClass() {
+        CompilationUnitScope unitScope = compilationUnitScope();
+        unitScope.recordQualifiedReference(GroovyCompilationUnitScope.GROOVY_LANG_METACLASS);
+        return unitScope.environment.getResolvedType(GroovyCompilationUnitScope.GROOVY_LANG_METACLASS, this);
+    }
+
+    private ReferenceBinding getGroovyLangGroovyObject() {
+        CompilationUnitScope unitScope = compilationUnitScope();
+        unitScope.recordQualifiedReference(GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT);
+        return unitScope.environment.getResolvedType(GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT, this);
+    }
+
+    private ReferenceBinding getGroovyTraitsImplemented() {
+        final char[][] groovyTraitsImplemented = CharOperation.splitOn('.',
+            "org.codehaus.groovy.transform.trait.Traits$Implemented".toCharArray());
+
+        CompilationUnitScope unitScope = compilationUnitScope();
+        unitScope.recordQualifiedReference(groovyTraitsImplemented);
+        return unitScope.environment.getResolvedType(groovyTraitsImplemented, this);
+    }
+
+    private ReferenceBinding getGroovyTraitsTraitBridge() {
+        final char[][] groovyTraitsTraitBridge = CharOperation.splitOn('.',
+            "org.codehaus.groovy.transform.trait.Traits$TraitBridge".toCharArray());
+
+        CompilationUnitScope unitScope = compilationUnitScope();
+        unitScope.recordQualifiedReference(groovyTraitsTraitBridge);
+        return unitScope.environment.getResolvedType(groovyTraitsTraitBridge, GroovyClassScope.this);
+    }
+
+    private ReferenceBinding getGroovyTransformInternal() {
+        CompilationUnitScope unitScope = compilationUnitScope();
+        unitScope.recordQualifiedReference(GroovyCompilationUnitScope.GROOVY_TRANSFORM_INTERNAL);
+        return unitScope.environment.getResolvedType(GroovyCompilationUnitScope.GROOVY_TRANSFORM_INTERNAL, this);
+    }
+
+    private ReferenceBinding getGroovyTransformGenerated() {
+        CompilationUnitScope unitScope = compilationUnitScope();
+        unitScope.recordQualifiedReference(GroovyCompilationUnitScope.GROOVY_TRANSFORM_GENERATED);
+        return unitScope.environment.getResolvedType(GroovyCompilationUnitScope.GROOVY_TRANSFORM_GENERATED, this);
+    }
+
+    private int getModifiers(final PropertyNode propertyNode) {
+        int modifiers = (propertyNode.getModifiers() & 0xF);
+
+        if (referenceContext.binding.isInterface()) {//trait
+            if (!Flags.isStatic(modifiers)) {
+                modifiers |= Flags.AccAbstract;
+            } else {
+                modifiers ^= Flags.AccPublic | Flags.AccPrivate;
+            }
+        }
+
+        if (propertyNode.getType().isUsingGenerics()) {
             modifiers |= ExtraCompilerModifiers.AccGenericSignature;
         }
 
         // if @PackageScope was detected by GCUD, field's modifiers will show it
-        char[] nameChars = property.getName().toCharArray();
+        char[] nameChars = propertyNode.getName().toCharArray();
         for (FieldDeclaration field : referenceContext.fields) {
-            if (CharOperation.equals(field.name, nameChars)) {
+            if (Arrays.equals(field.name, nameChars)) {
                 if (Flags.isPackageDefault(field.modifiers)) {
                     modifiers &= ~Flags.AccPublic;
                 }
@@ -217,7 +330,7 @@ public class GroovyClassScope extends ClassScope {
             }
         }
 
-        if (property.getField().getAnnotations().stream().map(anno -> anno.getClassNode().getName())
+        if (propertyNode.getField().getAnnotations().stream().map(tag -> tag.getClassNode().getName())
                 .anyMatch(name -> name.equals("Deprecated") || name.equals("java.lang.Deprecated"))) {
             modifiers |= Flags.AccDeprecated;
         }
@@ -225,22 +338,26 @@ public class GroovyClassScope extends ClassScope {
         return modifiers;
     }
 
-    private String getMethodAsString(MethodBinding method) {
-        StringBuilder key = new StringBuilder(new String(method.selector));
-        key.append(" ");
-        for (TypeBinding param : method.parameters) {
-            char[] type = param.readableName();
-            if (type != null) {
-                key.append(type);
-                key.append(" ");
-            } else {
-                key.append("null ");
+    /**
+     * @see MethodBinding#readableName()
+     */
+    private String getMethodAsString(final MethodBinding methodBinding) {
+        StringBuilder key = new StringBuilder();
+        key.append(methodBinding.selector).append('(');
+        for (TypeBinding tb : methodBinding.parameters) {
+            if (tb instanceof ReferenceBinding) {
+                key.append(((ReferenceBinding) tb).readableName(false));
+            } else if (tb != null) {
+                key.append(tb.readableName());
             }
+            key.append(';');
         }
+        key.append(')');
+
         return key.toString();
     }
 
-    private boolean isNotActuallyAbstract(MethodBinding methodBinding, ReferenceBinding helperBinding) {
+    private boolean isNotActuallyAbstract(final MethodBinding methodBinding, final ReferenceBinding helperBinding) {
         if (methodBinding.declaringClass instanceof SourceTypeBinding) {
             AbstractMethodDeclaration methodDeclaration =
                 ((SourceTypeBinding) methodBinding.declaringClass).scope.referenceContext.declarationOf(methodBinding);
@@ -275,115 +392,138 @@ public class GroovyClassScope extends ClassScope {
         return true;
     }
 
-    private Optional<MethodBinding> createMethod(String name, boolean isStatic, TypeBinding[] parameterTypes, TypeBinding returnType,
-            MethodBinding[] existingMethods) {
-        boolean found = false;
-        char[] nameAsCharArray = name.toCharArray();
-        for (MethodBinding existingMethod : existingMethods) {
-            if (CharOperation.equals(nameAsCharArray, existingMethod.selector)) {
-                // TODO: Is it safe to do this resolution so early?
-                ((SourceTypeBinding) existingMethod.declaringClass).resolveTypesFor(existingMethod);
-                boolean equalParameters = (parameterTypes.length == existingMethod.parameters.length);
+    private Optional<MethodBinding> createMethod(final String methodName, final TypeBinding[] parameterTypes, final TypeBinding returnType, final MethodBinding[] methodBindings) {
+        final char[] nameChars = methodName.toCharArray();
+        for (MethodBinding methodBinding : methodBindings) {
+            if (Arrays.equals(nameChars, methodBinding.selector)) {
+                ((SourceTypeBinding) methodBinding.declaringClass).resolveTypesFor(methodBinding);
+                boolean equalParameters = (parameterTypes.length == methodBinding.parameters.length);
                 if (equalParameters) {
                     for (int i = 0, n = parameterTypes.length; i < n; i += 1) {
-                        if (!CharOperation.equals(parameterTypes[i].signature(), existingMethod.parameters[i].signature())) {
+                        if (!Arrays.equals(parameterTypes[i].signature(), methodBinding.parameters[i].signature())) {
                             equalParameters = false;
                             break;
                         }
                     }
                 }
-                // TODO: Check return type?
                 if (equalParameters) {
-                    found = true;
-                    break;
+                    return Optional.empty();
                 }
             }
         }
-        if (!found) {
-            int modifiers = Flags.AccPublic;
-            if (isStatic) {
-                modifiers |= Flags.AccStatic;
-            }
-            if (referenceContext.binding.isInterface()) {
-                modifiers |= Flags.AccAbstract;
-            }
 
-            return Optional.of(new MethodBinding(modifiers, nameAsCharArray, returnType, parameterTypes, null, referenceContext.binding));
-        }
-        return Optional.empty();
+        return asInternal(new MethodBinding(Flags.AccPublic, nameChars, returnType, parameterTypes, Binding.NO_EXCEPTIONS, referenceContext.binding));
     }
 
-    private Optional<MethodBinding> createGetterMethod(String propertyName, String name, int modifiers,
-            MethodBinding[] existingMethods) {
-        boolean found = false;
-        char[] nameAsCharArray = name.toCharArray();
-        for (MethodBinding existingMethod : existingMethods) {
-            if (CharOperation.equals(nameAsCharArray, existingMethod.selector)) {
-                if ((existingMethod.modifiers & ExtraCompilerModifiers.AccUnresolved) != 0) {
-                    Argument[] arguments = existingMethod.sourceMethod().arguments;
+    private Optional<MethodBinding> createGetterMethod(final PropertyNode propertyNode, final String methodName, final int modifiers, final MethodBinding[] methodBindings) {
+        final char[] nameChars = methodName.toCharArray();
+        for (MethodBinding methodBinding : methodBindings) {
+            if (Arrays.equals(nameChars, methodBinding.selector)) {
+                if ((methodBinding.modifiers & ExtraCompilerModifiers.AccUnresolved) != 0) {
+                    Argument[] arguments = methodBinding.sourceMethod().arguments;
                     if (arguments == null || arguments.length == 0) {
-                        found = true;
-                        break;
+                        return Optional.empty();
                     }
                 } else {
-                    TypeBinding[] parameters = existingMethod.parameters;
+                    TypeBinding[] parameters = methodBinding.parameters;
                     if (parameters == null || parameters.length == 0) {
-                        found = true;
-                        break;
+                        return Optional.empty();
                     }
                 }
             }
         }
 
-        if (!found) {
-            if (referenceContext.binding.isInterface()) {
-                modifiers |= Flags.AccAbstract;
-            }
-            return Optional.of(new LazilyResolvedMethodBinding(true, propertyName, modifiers, nameAsCharArray, null, referenceContext.binding));
+        MethodBinding methodBinding;
+        TypeReference typeReference = propertyNode.getNodeMetaData(TypeReference.class);
+
+        ClassNode propertyType = propertyNode.getType();
+        if (ClassHelper.isPrimitiveType(propertyType) &&
+                propertyType.getTypeAnnotations().isEmpty()) {
+            TypeBinding returnType = Scope.getBaseType(propertyType.getName().toCharArray());
+            methodBinding = new MethodBinding(modifiers, nameChars, returnType, Binding.NO_PARAMETERS, Binding.NO_EXCEPTIONS, referenceContext.binding);
+        } else if (typeReference != null) {
+            TypeBinding returnType = typeReference.resolveType(this);
+            methodBinding = new MethodBinding(modifiers, nameChars, returnType, Binding.NO_PARAMETERS, Binding.NO_EXCEPTIONS, referenceContext.binding);
+        } else {
+            String propertyName = propertyNode.getName();
+            methodBinding = new LazilyResolvedMethodBinding(true, propertyName, modifiers, nameChars, Binding.NO_EXCEPTIONS, referenceContext.binding);
         }
-        return Optional.empty();
+        return referenceContext.binding.isInterface() ? asImplemented(methodBinding) : asGenerated(methodBinding);
     }
 
-    private Optional<MethodBinding> createSetterMethod(String propertyName, String name, int modifiers, String propertyType,
-            MethodBinding[] existingMethods) {
-        boolean found = false;
-        char[] nameAsCharArray = name.toCharArray();
-        for (MethodBinding existingMethod : existingMethods) {
-            if (CharOperation.equals(nameAsCharArray, existingMethod.selector)) {
-                if ((existingMethod.modifiers & ExtraCompilerModifiers.AccUnresolved) != 0) {
-                    Argument[] arguments = existingMethod.sourceMethod().arguments;
+    private Optional<MethodBinding> createSetterMethod(final PropertyNode propertyNode, final String methodName, final int modifiers, final MethodBinding[] methodBindings) {
+        final char[] nameChars = methodName.toCharArray();
+        for (MethodBinding methodBinding : methodBindings) {
+            if (Arrays.equals(nameChars, methodBinding.selector)) {
+                if ((methodBinding.modifiers & ExtraCompilerModifiers.AccUnresolved) != 0) {
+                    Argument[] arguments = methodBinding.sourceMethod().arguments;
                     if (arguments != null && arguments.length == 1) {
                         // TODO: Check argument type vs property type?
-                        found = true;
-                        break;
+                        return Optional.empty();
                     }
                 } else {
-                    TypeBinding[] parameters = existingMethod.parameters;
+                    TypeBinding[] parameters = methodBinding.parameters;
                     if (parameters != null && parameters.length == 1) {
                         // TODO: Check parameter type vs property type?
-                        found = true;
-                        break;
+                        return Optional.empty();
                     }
                 }
             }
         }
 
-        if (!found) {
-            if (referenceContext.binding.isInterface()) {
-                modifiers |= Flags.AccAbstract;
-            }
-            return Optional.of(new LazilyResolvedMethodBinding(false, propertyName, modifiers, nameAsCharArray, null, referenceContext.binding));
+        MethodBinding methodBinding;
+        TypeReference typeReference = propertyNode.getNodeMetaData(TypeReference.class);
+
+        ClassNode propertyType = propertyNode.getType();
+        int va = (propertyType.isArray() ? Flags.AccVarargs : 0); // GROOVY-10249: see AsmClassGenerator#visitConstructorOrMethod
+
+        if (ClassHelper.isPrimitiveType(propertyType) &&
+                propertyType.getTypeAnnotations().isEmpty()) {
+            TypeBinding[] parameterTypes = {Scope.getBaseType(propertyType.getName().toCharArray())};
+            methodBinding = new MethodBinding(modifiers, nameChars, TypeBinding.VOID, parameterTypes, Binding.NO_EXCEPTIONS, referenceContext.binding);
+        } else if (typeReference != null) {
+            TypeBinding[] parameterTypes = {typeReference.resolveType(this)};
+            methodBinding = new MethodBinding(modifiers | va, nameChars, TypeBinding.VOID, parameterTypes, Binding.NO_EXCEPTIONS, referenceContext.binding);
+        } else {
+            String propertyName = propertyNode.getName();
+            methodBinding = new LazilyResolvedMethodBinding(false, propertyName, modifiers | va, nameChars, Binding.NO_EXCEPTIONS, referenceContext.binding);
         }
-        return Optional.empty();
+        return referenceContext.binding.isInterface() ? asImplemented(methodBinding) : asGenerated(methodBinding);
+    }
+
+    private Optional<MethodBinding> asGenerated  (final MethodBinding methodBinding) {
+        AnnotationBinding atGenerated = environment().createAnnotation(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        return asOptional(methodBinding, atGenerated);
+    }
+
+    private Optional<MethodBinding> asImplemented(final MethodBinding methodBinding) {
+        AnnotationBinding atGenerated = environment().createAnnotation(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        AnnotationBinding atImplemented = environment().createAnnotation(getGroovyTraitsImplemented(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        return asOptional(methodBinding, atGenerated, atImplemented);
+    }
+
+    private Optional<MethodBinding> asInternal(final MethodBinding methodBinding) {
+        AnnotationBinding atGenerated = environment().createAnnotation(getGroovyTransformGenerated(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        AnnotationBinding atInternal = environment().createAnnotation(getGroovyTransformInternal(), Binding.NO_ELEMENT_VALUE_PAIRS);
+        return asOptional(methodBinding, atGenerated, atInternal);
+    }
+
+    private Optional<MethodBinding> asOptional(final MethodBinding methodBinding,
+        final AnnotationBinding... annotationBindings) {
+        methodBinding.setAnnotations(annotationBindings, false);
+        methodBinding.modifiers |= 0x400000; // see JDTClassNode#methodBindingToMethodNode
+        methodBinding.tagBits |= (TagBits.AnnotationResolved | TagBits.DeprecatedAnnotationResolved);
+        return Optional.of(methodBinding);
     }
 
     @Override
     protected void buildFieldsAndMethods() {
         super.buildFieldsAndMethods();
 
+        if (referenceContext.fields == null) return;
         for (FieldDeclaration field : referenceContext.fields) {
             Expression initialization = field.initialization;
-            // unwrap "field = (Type) (Object) new Anon() {}"
+            // unwrap "field = (Type) (Object) new Type() {}"
             while (initialization instanceof CastExpression) {
                 initialization = ((CastExpression) initialization).expression;
             }
@@ -398,49 +538,25 @@ public class GroovyClassScope extends ClassScope {
                 }
             }
         }
-
-        /*
-         * Fix generic methods with default parameter values. For those methods
-         * type variables and parameter arguments should be the same as it is
-         * for all other methods.
-         */
-        for (MethodBinding method : referenceContext.binding.methods()) {
-            if (method.parameters != null && method.parameters.length > 0 &&
-                    method.typeVariables != null && method.typeVariables.length > 0) {
-                CharArrayMap<TypeVariableBinding> bindings = new CharArrayMap<>();
-                for (TypeVariableBinding tvb : method.typeVariables) {
-                    bindings.put(tvb.sourceName, tvb);
-                }
-                for (TypeBinding parameter : method.parameters) {
-                    if (parameter instanceof ParameterizedTypeBinding) {
-                        TypeBinding[] arguments = ((ParameterizedTypeBinding) parameter).arguments;
-                        if (arguments != null) {
-                            for (int i = 0, n = arguments.length; i < n; i += 1) {
-                                if (arguments[i] instanceof TypeVariableBinding) {
-                                    TypeBinding argument = bindings.get(arguments[i].sourceName());
-                                    if (argument != null && arguments[i].id != argument.id) {
-                                        arguments[i] = argument;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     @Override
-    public boolean shouldReport(int problem) {
+    public boolean shouldReport(final int problem) {
         switch (problem) {
+        case IProblem.CannotOverrideAStaticMethodWithAnInstanceMethod:
+        case IProblem.CannotHideAnInstanceMethodWithAStaticMethod:
         case IProblem.EnumConstantMustImplementAbstractMethod:
+        case IProblem.IncorrectArityForParameterizedType:
+        case IProblem.InheritedMethodReducesVisibility:
         case IProblem.AbstractMethodMustBeImplemented:
         case IProblem.MissingValueForAnnotationMember:
+        case IProblem.SuperInterfaceMustBeAnInterface:
         case IProblem.FinalMethodCannotBeOverridden:
         case IProblem.MethodMustOverrideOrImplement:
         case IProblem.MethodReducesVisibility:
         case IProblem.IncompatibleReturnType:
         case IProblem.SuperclassMustBeAClass:
+        case IProblem.HierarchyCircularity:
         case IProblem.UndefinedConstructor:
         case IProblem.MethodNameClash:
         case IProblem.VarargsConflict:
@@ -459,43 +575,44 @@ public class GroovyClassScope extends ClassScope {
         private boolean toBeInitialized = true;
 
         private void initialize() {
-            ImportBinding[] imports = referenceContext.scope.compilationUnitScope().imports;
+            ImportBinding[] imports = compilationUnitScope().imports;
             if (imports != null) {
                 for (ImportBinding i : imports) {
-                    String importedType = new String(i.readableName());
-                    if ("groovy.transform.Trait".equals(importedType)) {
-                        lookForTraitAlias = true;
-                        break;
-                    }
-                    if (importedType.endsWith(".Trait")) {
-                        lookForTraitAlias = false;
-                        break;
-                    }
-                    if ("groovy.transform.*".equals(importedType)) {
-                        lookForTraitAlias = true;
+                    if (i.isStatic()) continue;
+                    if (i.onDemand) {
+                        if (CharOperation.equals(i.compoundName, GroovyCompilationUnitScope.GROOVY_TRANSFORM)) {
+                            lookForTraitAlias = true;
+                        }
+                    } else {
+                        if (CharOperation.equals(i.compoundName, GroovyCompilationUnitScope.GROOVY_TRANSFORM_TRAIT)) {
+                            lookForTraitAlias = true;
+                            break;
+                        }
+                        if (Arrays.equals(ArrayUtils.lastElement(i.compoundName), GroovyCompilationUnitScope.GROOVY_TRANSFORM_TRAIT[2])) {
+                            lookForTraitAlias = false;
+                            break;
+                        }
                     }
                 }
                 toBeInitialized = true;
             }
         }
 
-        private boolean isTrait(ReferenceBinding referenceBinding) {
-            if (referenceBinding != null) {
-                if (toBeInitialized) {
-                    initialize();
-                }
-                AnnotationBinding[] annotations = referenceBinding.getAnnotations();
-                if (annotations != null) {
-                    for (AnnotationBinding annotation : annotations) {
-                        if (annotation != null) {
-                            ReferenceBinding annotationType = annotation.getAnnotationType();
-                            String annotationName = CharOperation.toString(annotationType.compoundName);
-                            if ("groovy.transform.Trait".equals(annotationName)) {
-                                return true;
-                            }
-                            if (lookForTraitAlias && "Trait".equals(annotationName)) {
-                                return true;
-                            }
+        private boolean isTrait(final ReferenceBinding interfaceBinding) {
+            if (toBeInitialized) {
+                initialize();
+            }
+            AnnotationBinding[] annotations = interfaceBinding.getAnnotations();
+            if (annotations != null) {
+                for (AnnotationBinding annotation : annotations) {
+                    if (annotation != null) {
+                        char[][] annotationType = annotation.getAnnotationType().compoundName;
+                        if (CharOperation.equals(annotationType, GroovyCompilationUnitScope.GROOVY_TRANSFORM_TRAIT)) {
+                            return true;
+                        }
+                        if (lookForTraitAlias && annotationType.length == 1 &&
+                                Arrays.equals(annotationType[0], GroovyCompilationUnitScope.GROOVY_TRANSFORM_TRAIT[2])) {
+                            return true;
                         }
                     }
                 }
@@ -503,11 +620,45 @@ public class GroovyClassScope extends ClassScope {
             return false;
         }
 
-        private ReferenceBinding getHelperBinding(ReferenceBinding interfaceBinding) {
+        private MethodBinding bridge(final MethodBinding traitMethodBinding) {
+            int access = traitMethodBinding.modifiers;
+            access &= ~Flags.AccAbstract;
+            access &= ~Flags.AccPrivate;
+            access |=  Flags.AccPublic;
+
+            var mb = new MethodBinding(access, traitMethodBinding.selector,
+                traitMethodBinding.returnType, traitMethodBinding.parameters,
+                traitMethodBinding.thrownExceptions, referenceContext.binding);
+
+            var aba = traitMethodBinding.getAnnotations();
+            int i = aba.length - 1;
+            for (; i >= 0; i -= 1) {
+                char[][] nameParts = aba[i].getAnnotationType().compoundName;
+                if (nameParts.length == 7) {
+                    if (Arrays.equals(nameParts[6], "Implemented".toCharArray())) break;
+                } else if (nameParts.length == 6) {
+                    if (Arrays.equals(nameParts[5], "Traits$Implemented".toCharArray())) break;
+                }
+            }
+            if (i != -1) {
+                aba = aba.clone();
+            } else { i = aba.length;
+                aba = Arrays.copyOf(aba, i + 1);
+            }
+            aba[i] = environment().createAnnotation(getGroovyTraitsTraitBridge(), new ElementValuePair[] {
+                new ElementValuePair("traitClass".toCharArray(), traitMethodBinding.declaringClass, null),
+                new ElementValuePair("desc".toCharArray(), StringConstant.fromValue(String.valueOf(mb.signature())), null),
+            });
+            mb.setAnnotations(aba, false);
+
+            return mb;
+        }
+
+        private ReferenceBinding getHelperBinding(final ReferenceBinding interfaceBinding) {
             if (interfaceBinding instanceof BinaryTypeBinding) {
                 StringBuilder nameBuilder = new StringBuilder();
                 nameBuilder.append(interfaceBinding.sourceName);
-                nameBuilder.append("$Trait$Helper");
+                nameBuilder.append("$Trait$Helper"); // Traits.TRAIT_HELPER
                 ReferenceBinding helperBinding = compilationUnitScope().findType(
                     nameBuilder.toString().toCharArray(), interfaceBinding.fPackage, interfaceBinding.fPackage);
                 if (helperBinding != null) {

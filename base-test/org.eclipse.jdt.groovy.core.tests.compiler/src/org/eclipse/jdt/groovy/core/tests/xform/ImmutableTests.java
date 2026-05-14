@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,11 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
+import static java.lang.reflect.Modifier.isFinal;
+
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.Optional;
 
@@ -23,10 +27,11 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
- * Test cases for {@link groovy.transform.Immutable}, at al.
+ * Test cases for {@link groovy.transform.Immutable}, et al.
  */
 public final class ImmutableTests extends GroovyCompilerTestSuite {
 
@@ -37,7 +42,8 @@ public final class ImmutableTests extends GroovyCompilerTestSuite {
             "c/Main.java",
             "package c;\n" +
             "public class Main {\n" +
-            "  public static void main(String[] args) {" +
+            "  public static void main(String[] args) {\n" +
+            "    new b.SomeValueObject(new a.SomeId(java.util.UUID.randomUUID()));\n" +
             "  }\n" +
             "}\n",
 
@@ -64,10 +70,95 @@ public final class ImmutableTests extends GroovyCompilerTestSuite {
 
         CompilationUnit unit = getCUDeclFor("SomeValueObject.groovy").getCompilationUnit();
         ClassNode fieldType = unit.getClassNode("b.SomeValueObject").getField("id").getType();
-        Optional<AnnotationNode> anno = fieldType.getAnnotations().stream().filter(node -> {
+        Optional<AnnotationNode> marker = fieldType.getAnnotations().stream().filter(node -> {
             String name = node.getClassNode().getName();
             return name.matches("groovy.transform.(Known)?Immutable");
         }).findFirst();
-        assertTrue(anno.isPresent());
+        assertTrue(marker.isPresent());
+    }
+
+    @Ignore @Test
+    public void testImmutable2() {
+        assumeTrue(isAtLeastGroovy(40));
+
+        //@formatter:off
+        String[] sources = {
+            "Pogo.groovy",
+            "@groovy.transform.Immutable\n" +
+            "class Pogo {\n" +
+            "  String foo\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+        // @Immutable includes @Final
+        assertTrue(isFinal(getCUDeclFor("Pogo.groovy").types[0].modifiers));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/421
+    public void testImmutable3() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.print(new Foo(\"one\", \"two\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "@groovy.transform.Immutable\n" +
+            "class Foo {\n" +
+            "  String bar, baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one, two)");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/421
+    public void testImmutable4() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.print(new Foo(\"one\", \"two\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "@groovy.transform.Immutable(defaults=false)\n" +
+            "class Foo {\n" +
+            "  String bar, baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one, two)");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/421
+    public void testImmutable5() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.print(new Foo(\"one\"));\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "@groovy.transform.Immutable(defaults=true,noArg=false)\n" + //TODO: GROOVY-10790
+            "class Foo {\n" +
+            "  String bar, baz = \"two\"\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(one, two)");
     }
 }

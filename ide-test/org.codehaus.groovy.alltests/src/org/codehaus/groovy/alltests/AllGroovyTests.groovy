@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.junit.runners.Suite
 
 @RunWith(Suite) @Suite.SuiteClasses([
     org.codehaus.groovy.alltests.SanityTests,
-    org.codehaus.groovy.eclipse.test.ErrorLogTest,
+    org.codehaus.groovy.eclipse.test.ErrorLogTests,
 
     // org.codehaus.groovy.eclipse.codeassist.tests
     org.codehaus.groovy.eclipse.codeassist.tests.AnnotationCompletionTests,
@@ -38,9 +38,9 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.codeassist.tests.GenericCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.GroovyLikeCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.GuessingCompletionTests,
+    org.codehaus.groovy.eclipse.codeassist.tests.ImportCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.InferencingCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.InnerTypeCompletionTests,
-    org.codehaus.groovy.eclipse.codeassist.tests.ImportCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.LocalVariableCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.MethodCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.NewFieldCompletionTests,
@@ -94,6 +94,7 @@ import org.junit.runners.Suite
     // org.codehaus.groovy.eclipse.junit.tests
     org.codehaus.groovy.eclipse.junit.test.JUnit3TestFinderTests,
     org.codehaus.groovy.eclipse.junit.test.JUnit4TestFinderTests,
+    org.codehaus.groovy.eclipse.junit.test.JUnit5TestFinderTests,
     org.codehaus.groovy.eclipse.junit.test.MainMethodFinderTests,
 
     // org.codehaus.groovy.eclipse.quickfix.tests
@@ -113,16 +114,16 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.refactoring.test.extract.StaticFragmentCheckerTests,
     org.codehaus.groovy.eclipse.refactoring.test.formatter.FindIndentsTests,
     org.codehaus.groovy.eclipse.refactoring.test.formatter.FormatterPreferencesTests,
-    org.codehaus.groovy.eclipse.refactoring.test.formatter.GroovyFormatterTests,
     org.codehaus.groovy.eclipse.refactoring.test.formatter.GroovyDocumentScannerTests,
+    org.codehaus.groovy.eclipse.refactoring.test.formatter.GroovyFormatterTests,
     org.codehaus.groovy.eclipse.refactoring.test.formatter.SemicolonRemoverTests,
     org.codehaus.groovy.eclipse.refactoring.test.formatter.WhitespaceRemoverTests,
+    org.codehaus.groovy.eclipse.refactoring.test.rename.MoveCURefactoringTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.RenameFieldTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.RenameLocalTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.RenameMethodTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.RenamePackageTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.RenameTypeTests,
-    org.codehaus.groovy.eclipse.refactoring.test.rename.MoveCURefactoringTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.SyntheticAccessorRenamingTests,
 
     // org.codehaus.groovy.eclipse.ui.tests
@@ -135,13 +136,15 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.test.actions.SaveParticipantRegistryTests,
     org.codehaus.groovy.eclipse.test.adapters.GroovyFileAdapterFactoryTests,
     org.codehaus.groovy.eclipse.test.adapters.GroovyIFileEditorInputAdapterFactoryTests,
-    org.codehaus.groovy.eclipse.test.adapters.IsMainTesterTests,
+    org.codehaus.groovy.eclipse.test.adapters.HasMainTesterTests,
+    org.codehaus.groovy.eclipse.test.adapters.IsScriptTesterTests,
     org.codehaus.groovy.eclipse.test.core.util.ArrayUtilsTests,
     org.codehaus.groovy.eclipse.test.core.util.ExpressionFinderTests,
     org.codehaus.groovy.eclipse.test.core.util.StringSourceBufferTests,
     org.codehaus.groovy.eclipse.test.core.util.TokenStreamTests,
     org.codehaus.groovy.eclipse.test.debug.BreakpointLocationTests,
     org.codehaus.groovy.eclipse.test.debug.DebugBreakpointsTests,
+    org.codehaus.groovy.eclipse.test.debug.EvaluationEngineTests,
     org.codehaus.groovy.eclipse.test.launch.GroovyScriptLaunchShortcutTests,
     org.codehaus.groovy.eclipse.test.search.FindOccurrencesTests,
     org.codehaus.groovy.eclipse.test.ui.BracketInserterTests,
@@ -152,6 +155,7 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.test.ui.HighlightingExtenderTests,
     org.codehaus.groovy.eclipse.test.ui.OutlineExtenderTests,
     org.codehaus.groovy.eclipse.test.ui.SemanticHighlightingTests,
+    org.codehaus.groovy.eclipse.test.ui.SmartInsertTests,
     org.codehaus.groovy.eclipse.test.wizards.NewGroovyTestWizardTests,
     org.codehaus.groovy.eclipse.test.wizards.NewGroovyTypeWizardTests,
 ])

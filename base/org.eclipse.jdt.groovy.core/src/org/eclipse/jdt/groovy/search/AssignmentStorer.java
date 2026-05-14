@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,12 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import java.util.Collections;
+import static java.util.Arrays.stream;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+
+import static org.eclipse.jdt.groovy.core.util.GroovyUtils.getGenericsTypes;
+
 import java.util.List;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -32,6 +37,7 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.syntax.Types;
+import org.eclipse.jdt.core.Flags;
 
 /**
  * Records variable types in the scope based on declarations and assignments.
@@ -39,7 +45,7 @@ import org.codehaus.groovy.syntax.Types;
 public class AssignmentStorer {
 
     /**
-     * Stores the result of an current assignment expression in the given scope.
+     * Stores the result of an assignment expression in the given scope.
      * <p>
      * There are several possibilities here:
      * <ul>
@@ -54,10 +60,10 @@ public class AssignmentStorer {
      * </ul>
      *
      * @param exp assignment expression
-     * @param scope scope to store result in
+     * @param scope scope to store result(s)
      * @param rhsType inferred type of the right-hand side (right expression of {@code exp})
      */
-    public void storeAssignment(BinaryExpression exp, VariableScope scope, ClassNode rhsType) {
+    public void storeAssignment(final BinaryExpression exp, final VariableScope scope, final ClassNode rhsType) {
         assert exp.getOperation().isA(Types.ASSIGNMENT_OPERATOR);
 
         if (exp instanceof DeclarationExpression) {
@@ -80,47 +86,39 @@ public class AssignmentStorer {
         }
     }
 
-    public void storeField(FieldNode node, VariableScope scope) {
-        Expression init = node.getInitialExpression();
-        if (init != null && !VariableScope.OBJECT_CLASS_NODE.equals(init.getType())) {
-            scope.addVariable(node.getName(), init.getType(), node.getDeclaringClass());
-        }
-    }
-
-    public void storeImport(ImportNode node, VariableScope scope) {
-        // if this is a static import, then add to the top level scope
+    /**
+     * Stores static import fields and methods in the given scope.
+     */
+    public void storeImport(final ImportNode node, final VariableScope scope) {
         ClassNode type = node.getType();
         if (node.isStar() && type != null) {
-            // importing all static fields in the class
             List<FieldNode> fields = type.getFields();
             for (FieldNode field : fields) {
-                if (field.isStatic()) {
+                if (isStaticNotSynthetic(field)) {
                     scope.addVariable(field.getName(), field.getType(), type);
                 }
             }
 
-            List<MethodNode> methods = node.getType().getMethods();
+            List<MethodNode> methods = type.getMethods();
             for (MethodNode method : methods) {
-                if (method.isStatic()) {
+                if (isStaticNotSynthetic(method)) {
                     scope.addVariable(method.getName(), method.getReturnType(), type);
                 }
             }
-        } else {
-            String fieldName = node.getFieldName();
-            if (node.isStatic() && type != null && fieldName != null) {
-                String alias;
-                if (node.getAlias() != null) {
-                    alias = node.getAlias();
-                } else {
-                    alias = fieldName;
-                }
-                FieldNode field = type.getField(fieldName);
-                if (field != null) {
+        } else if (node.isStatic() && type != null) {
+            String name = node.getFieldName();
+            if (name != null) {
+                String alias = node.getAlias();
+                if (alias == null) alias = name;
+
+                FieldNode field = type.getField(name);
+                if (isStaticNotSynthetic(field)) {
                     scope.addVariable(alias, field.getType(), type);
                 }
-                List<MethodNode> methods = type.getDeclaredMethods(fieldName);
-                if (methods != null) {
-                    for (MethodNode method : methods) {
+
+                List<MethodNode> methods = type.getDeclaredMethods(name);
+                for (MethodNode method : methods) {
+                    if (isStaticNotSynthetic(method)) {
                         scope.addVariable(alias, method.getReturnType(), type);
                     }
                 }
@@ -130,14 +128,22 @@ public class AssignmentStorer {
 
     //--------------------------------------------------------------------------
 
-    private static void handleMultiAssignment(TupleExpression lhs, Expression rhs, VariableScope scope, ClassNode rhsListType) {
+    private static void handleMultiAssignment(final TupleExpression lhs, final Expression rhs, final VariableScope scope, final ClassNode rhsListType) {
         List<Expression> lhsExprs = lhs.getExpressions();
-        List<Expression> rhsExprs = rhs instanceof ListExpression ? ((ListExpression) rhs).getExpressions() : Collections.emptyList();
+        List<ClassNode>  rhsTypes = rhs.getNodeMetaData("tuple.types");
+
+        if (rhs instanceof ListExpression) {
+            if (rhsTypes == null) rhsTypes = ((ListExpression) rhs).getExpressions().stream().map(e -> e.getType()).collect(toList());
+        } else if (rhsListType.isDerivedFrom(VariableScope.TUPLE_CLASS_NODE) && !rhsListType.equals(VariableScope.TUPLE_CLASS_NODE)) {
+            rhsTypes = stream(getGenericsTypes(rhsListType)).map(gt -> gt.getType()).collect(toList());
+        } else {
+            rhsTypes = emptyList();
+        }
 
         // try to associate each tuple expression element with something on the right-hand side
-        for (int i = 0, lhsSize = lhsExprs.size(), rhsSize = rhsExprs.size(); i < lhsSize; i += 1) {
+        for (int i = 0, lhsSize = lhsExprs.size(), rhsSize = rhsTypes.size(); i < lhsSize; i += 1) {
             Expression lhsExpr = lhsExprs.get(i);
-            ClassNode  rhsType = (i < rhsSize ? rhsExprs.get(i).getType() : findComponentType(rhsListType));
+            ClassNode  rhsType = (i < rhsSize ? rhsTypes.get(i) : findComponentType(rhsListType));
 
             if (lhsExpr instanceof VariableExpression) {
                 VariableExpression var = (VariableExpression) lhsExpr;
@@ -146,7 +152,7 @@ public class AssignmentStorer {
         }
     }
 
-    private static void handleSingleAssignment(Expression lhs, VariableScope scope, ClassNode rhsType) {
+    private static void handleSingleAssignment(final Expression lhs, final VariableScope scope, final ClassNode rhsType) {
         if (lhs instanceof VariableExpression) {
             VariableExpression var = (VariableExpression) lhs;
             if (var.getAccessedVariable() == var) {
@@ -162,7 +168,7 @@ public class AssignmentStorer {
             }
             scope.getWormhole().put("lhs", lhs);
 
-        } else if (lhs instanceof ConstantExpression) {
+        } else if (lhs instanceof ConstantExpression || lhs instanceof BinaryExpression) {
             // in "a.b.c = x", lhs is "c" and rhsType is "typeof(x)"
 
             // save ref to help find an accessor
@@ -171,27 +177,28 @@ public class AssignmentStorer {
 
         } else if (lhs instanceof PropertyExpression) {
             PropertyExpression exp = (PropertyExpression) lhs;
-            handleSingleAssignment(exp.getProperty(), scope, rhsType);
+            if (!(exp.getProperty() instanceof VariableExpression))
+                handleSingleAssignment(exp.getProperty(), scope, rhsType);
         }/* else {
             System.err.println("AssignmentStorer.storeAssignment: LHS is " + lhs.getClass().getSimpleName());
         }*/
     }
 
-    private static ClassNode findComponentType(ClassNode type) {
+    private static ClassNode findComponentType(final ClassNode type) {
         return (type == null ? VariableScope.OBJECT_CLASS_NODE : VariableScope.extractElementType(type));
     }
 
     /**
      * Finds the declaring type of the accessed variable. Will be {@code null} if this is a local variable.
      */
-    private static ClassNode findDeclaringType(VariableExpression var) {
+    private static ClassNode findDeclaringType(final VariableExpression var) {
         if (var.getAccessedVariable() instanceof AnnotatedNode) {
             return ((AnnotatedNode) var.getAccessedVariable()).getDeclaringClass();
         }
         return null;
     }
 
-    private static ClassNode findVariableType(VariableExpression var, ClassNode rhsType) {
+    private static ClassNode findVariableType(final VariableExpression var, final ClassNode rhsType) {
         ClassNode varType = var.getOriginType();
         if (varType == null) {
             varType = var.getType();
@@ -199,9 +206,17 @@ public class AssignmentStorer {
         if (varType != null && !VariableScope.isVoidOrObject(varType)) {
             return varType;
         }
-        if (rhsType != null && !VariableScope.isVoidOrObject(rhsType)) {
+        if (!VariableScope.isVoidOrObject(rhsType)) {
             return rhsType;
         }
         return VariableScope.OBJECT_CLASS_NODE;
+    }
+
+    private static boolean isStaticNotSynthetic(final FieldNode node) {
+        return node != null && (node.getModifiers() & (Flags.AccStatic | Flags.AccSynthetic)) == Flags.AccStatic;
+    }
+
+    private static boolean isStaticNotSynthetic(final MethodNode node) {
+        return node != null && (node.getModifiers() & (Flags.AccBridge | Flags.AccStatic | Flags.AccSynthetic)) == Flags.AccStatic;
     }
 }

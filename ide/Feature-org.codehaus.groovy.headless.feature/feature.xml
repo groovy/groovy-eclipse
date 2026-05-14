@@ -2,7 +2,7 @@
 
 <feature id="org.codehaus.groovy.headless.feature"
       label="%featureName"
-      version="3.7.0.qualifier"
+      version="6.2.0.qualifier"
       provider-name="%providerName">
 
    <description url="%descriptionURL">
@@ -18,6 +18,8 @@
    </license>
 
    <includes id="org.codehaus.groovy.jdt.patch" version="0.0.0"/>
+   <!-- https://github.com/eclipse-tycho/tycho/issues/893 -->
+   <requires> <import feature="org.eclipse.jdt"/> </requires>
 
    <plugin
          id="org.codehaus.groovy.eclipse.ant"
@@ -29,6 +31,14 @@
 
    <plugin
          id="org.codehaus.groovy.eclipse.compilerResolver"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"
+   />
+
+   <plugin
+         id="org.codehaus.groovy.eclipse.frameworkAdapter"
          download-size="0"
          install-size="0"
          version="0.0.0"

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,6 @@ import org.apache.xbean.classloader.MultiParentClassLoader;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilerConfiguration;
-import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.ResolveVisitor;
 import org.codehaus.groovy.control.SourceUnit;
@@ -55,7 +54,6 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
@@ -69,7 +67,6 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -105,6 +102,7 @@ import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
 import org.eclipse.jdt.internal.core.search.matching.MatchLocatorParser;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.Util;
+import org.osgi.framework.Version;
 
 /**
  * Groovy implementation of LanguageSupport. This class is dynamically loaded by
@@ -191,38 +189,34 @@ public class GroovyLanguageSupport implements LanguageSupport {
     @Override
     public CompilationUnitDeclaration newCompilationUnitDeclaration(final ICompilationUnit icu, final ProblemReporter problemReporter, final CompilationResult compilationResult, final int sourceLength) {
         if (ContentTypeUtils.isGroovyLikeFileName(icu.getFileName())) {
-
+            char[] unitText = icu.getContents();
             String unitName = String.valueOf(icu.getFileName());
-            ReaderSource unitSource = new CharArrayReaderSource(icu.getContents()) {
+            ReaderSource unitSource = new CharArrayReaderSource(unitText) {
                 @Override public URI getURI() {
                     return URI.create("platform:/resource" + unitName);
                 }
             };
 
-            if (problemReporter.options.groovyCompilerConfigScript != null) {
-                IWorkspace workspace = ResourcesPlugin.getWorkspace();
-                if (workspace != null && workspace.getRoot() != null) {
-                    IFile eclipseFile = workspace.getRoot().getFile(new Path(unitName));
-                    if (eclipseFile != null && eclipseFile.getProject().isAccessible() &&
-                            !JavaCore.create(eclipseFile.getProject()).isOnClasspath(eclipseFile)) {
-                        problemReporter.options.groovyCompilerConfigScript = null;
-                    }
+            if (problemReporter.options.groovyCompilerConfigScript != null && ResourcesPlugin.getPlugin() != null) {
+                IFile eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(unitName));
+                if (eclipseFile != null && eclipseFile.getProject().isAccessible() &&
+                        !JavaCore.create(eclipseFile.getProject()).isOnClasspath(eclipseFile)) {
+                    problemReporter.options.groovyCompilerConfigScript = null;
                 }
             }
 
             CompilerConfiguration compilerConfig = newCompilerConfiguration(problemReporter.options, problemReporter);
-            GroovyClassLoader classLoader = null; // TODO: missing the GroovyClassLoader configuration
-            ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(compilerConfig);
-            SourceUnit groovySourceUnit = new SourceUnit(unitName, unitSource, compilerConfig, classLoader, errorCollector);
+            GroovyClassLoader[] classLoaders = new GroovyClassLoaderFactory(problemReporter.options, null).getGroovyClassLoaders(compilerConfig);
+            SourceUnit sourceUnit = new SourceUnit(unitName, unitSource, compilerConfig, null, new GroovyErrorCollectorForJDT(compilerConfig));
 
-            org.codehaus.groovy.control.CompilationUnit gcu = new org.codehaus.groovy.control.CompilationUnit(compilerConfig);
+            org.codehaus.groovy.control.CompilationUnit gcu = new org.codehaus.groovy.control.CompilationUnit(compilerConfig, null, classLoaders[0], classLoaders[1], false, null);
             JDTResolver resolver = new JDTResolver(gcu);
             gcu.setResolveVisitor(resolver);
-            gcu.addSource(groovySourceUnit);
+            gcu.addSource(sourceUnit);
 
-            compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(icu.getContents()); // TODO: Get from Antlr
+            compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(unitText); // TODO: get from parser
 
-            GroovyCompilationUnitDeclaration decl = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult, sourceLength, gcu, groovySourceUnit, problemReporter.options);
+            GroovyCompilationUnitDeclaration decl = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult, sourceLength, gcu, sourceUnit, problemReporter.options);
 
             decl.processToPhase(Phases.CONVERSION);
 
@@ -245,9 +239,21 @@ public class GroovyLanguageSupport implements LanguageSupport {
         config.setParameters(compilerOptions.produceMethodParameters);
         config.setPreviewFeatures(compilerOptions.enablePreviewFeatures);
         config.setTargetBytecode(CompilerOptions.versionFromJdkLevel(compilerOptions.targetJDK));
+        config.setWarningLevel(org.codehaus.groovy.control.messages.WarningMessage.POSSIBLE_ERRORS);
 
         if (compilerOptions.defaultEncoding != null && !compilerOptions.defaultEncoding.isEmpty()) {
             config.setSourceEncoding(compilerOptions.defaultEncoding);
+        }
+
+        if (compilerOptions.buildGroovyFiles > 2) {
+            // create type-checking script configuration
+            ImportCustomizer ic = new ImportCustomizer();
+            ic.addStarImports("org.codehaus.groovy.ast.expr");
+            if (GroovyUtils.getGroovyVersion().compareTo(new Version(4, 0, 6)) >= 0) ic.addStarImports("org.codehaus.groovy.ast");
+            ic.addStaticStars("org.codehaus.groovy.ast.ClassHelper","org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport");
+            config.addCompilationCustomizers(ic).setScriptBaseClass("org.codehaus.groovy.transform.stc.GroovyTypeCheckingExtensionSupport$TypeCheckingDSL");
+
+            return config;
         }
 
         if (compilerOptions.buildGroovyFiles > 1 && compilerOptions.groovyCompilerConfigScript != null) {
@@ -274,12 +280,20 @@ public class GroovyLanguageSupport implements LanguageSupport {
             }
         }
 
-        if ((compilerOptions.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
-            config.getOptimizationOptions().put(CompilerConfiguration.INVOKEDYNAMIC, Boolean.TRUE);
+        if ((compilerOptions.groovyFlags & CompilerOptions.InvokeDynamic) != 0) {
+            config.getOptimizationOptions().putIfAbsent(CompilerConfiguration.INVOKEDYNAMIC, Boolean.TRUE);
         }
         if (Boolean.TRUE.equals(config.getOptimizationOptions().get(CompilerConfiguration.INVOKEDYNAMIC))) {
             if (config.getTargetBytecode().compareTo(CompilerConfiguration.JDK7) < 0) {
                 config.setTargetBytecode(CompilerConfiguration.JDK7);
+            }
+        }
+
+        if (CompilerOptions.versionToJdkLevel(config.getTargetBytecode()) > compilerOptions.targetJDK) {
+            Map<String, String> javaOptions = JavaCore.getOptions(); // ensure marker of incompatibility
+            if (JavaCore.IGNORE.equals(javaOptions.get(JavaCore.CORE_INCOMPATIBLE_JDK_LEVEL))) {
+                javaOptions.put(JavaCore.CORE_INCOMPATIBLE_JDK_LEVEL, JavaCore.ERROR);
+                JavaCore.setOptions((java.util.Hashtable<String,String>) javaOptions);
             }
         }
 
@@ -288,7 +302,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
 
     public static GroovyClassLoader newGroovyClassLoader(final IJavaProject project, final ClassLoader parentLoader) {
         Map<String, String> options = project.getOptions(true);
-        CompilerUtils.configureOptionsBasedOnNature(options, project);
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, project.getElementName());
         GroovyClassLoaderFactory factory = new GroovyClassLoaderFactory(new CompilerOptions(options), null);
         CompilerConfiguration config = CompilerConfiguration.DEFAULT; // TODO: Use newCompilerConfiguration?
         ClassLoader projectLoader = factory.getGroovyClassLoaders(config)[1]; // the Groovy transform loader
@@ -370,7 +384,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
             JavaModelManager manager = JavaModelManager.getJavaModelManager();
             for (JavaElement removedChild : removedChildren) {
                 if (removedChild instanceof BinaryType) {
-                    manager.removeInfoAndChildren((JavaElement) removedChild.getParent());
+                    manager.removeInfoAndChildren(removedChild.getParent());
                 } else {
                     manager.removeInfoAndChildren(removedChild);
                 }

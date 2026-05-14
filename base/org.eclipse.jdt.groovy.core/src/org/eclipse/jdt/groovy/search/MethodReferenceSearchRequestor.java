@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         this.requestor = requestor;
         this.participant = participant;
 
-        this.methodName = String.valueOf(pattern.selector);
+        methodName = String.valueOf(pattern.selector);
         parameterTypeSignatures = getParameterTypeSignatures(pattern);
         IType declaringType = ReflectionUtils.getPrivateField(MethodPattern.class, "declaringType", pattern);
 
@@ -122,47 +122,50 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     }
 
     protected static String[] getParameterTypeNames(MethodPattern pattern, String[] parameterTypeSignatures, IType declaringType) {
+        if (pattern.parameterCount < 0) return null;
         int n = parameterTypeSignatures.length;
         String[] typeNames = new String[n];
-        if (declaringType != null) // TODO: Should searches like "main(String[])", which have null declaring type, check param types?
-        try {
-            int candidates = 0;
-            if (n > 0) { // check for method overloads
-                for (IMethod m : declaringType.getMethods()) {
-                    if (equal(pattern.selector, m.getElementName()) && n == m.getNumberOfParameters()) { // TODO: What about variadic methods?
-                        candidates += 1;
+        if (declaringType != null) { // TODO: Should searches like "main(String[])", which have null declaring type, check param types?
+            try {
+                int candidates = 0;
+                if (n > 0) { // check for method overloads
+                    for (IMethod m : declaringType.getMethods()) {
+                        if (equal(pattern.selector, m.getElementName()) && n == m.getNumberOfParameters()) { // TODO: What about variadic methods?
+                            candidates += 1;
+                        }
                     }
                 }
-            }
-            if (candidates > 1) {
-                for (int i = 0; i < n; i += 1) {
-                    if (pattern.parameterQualifications[i] != null || isPrimitiveType(pattern.parameterSimpleNames[i])) {
-                        typeNames[i] = String.valueOf(CharOperation.concat(pattern.parameterQualifications[i], pattern.parameterSimpleNames[i], '.'));
-                    } else {
-                        int arrayCount = Signature.getArrayCount(parameterTypeSignatures[i]);
-                        String[][] resolved = declaringType.resolveType(String.valueOf(pattern.parameterSimpleNames[i], 0, pattern.parameterSimpleNames[i].length - (2*arrayCount)));
-                        if (resolved != null) {
-                            typeNames[i] = Signature.toQualifiedName(resolved[0]);
-                            if (typeNames[i].charAt(0) == '.') { // default pkg
-                                typeNames[i] = typeNames[i].substring(1);
-                            }
+                if (candidates > 1) {
+                    for (int i = 0; i < n; i += 1) {
+                        if (pattern.parameterQualifications[i] != null || isPrimitiveType(pattern.parameterSimpleNames[i])) {
+                            typeNames[i] = String.valueOf(CharOperation.concat(pattern.parameterQualifications[i], pattern.parameterSimpleNames[i], '.'));
                         } else {
-                            // something unresolvable like a parameterized type
-                            typeNames[i] = String.valueOf(pattern.parameterSimpleNames[i]);
-                        }
-                        while (arrayCount-- > 0) {
-                            typeNames[i] += "[]";
+                            int arrayCount = Signature.getArrayCount(parameterTypeSignatures[i]);
+                            String[][] resolved = declaringType.resolveType(String.valueOf(pattern.parameterSimpleNames[i], 0, pattern.parameterSimpleNames[i].length - (2*arrayCount)));
+                            if (resolved != null) {
+                                typeNames[i] = Signature.toQualifiedName(resolved[0]);
+                                if (typeNames[i].charAt(0) == '.') { // default pkg
+                                    typeNames[i] = typeNames[i].substring(1);
+                                }
+                            } else {
+                                // something unresolvable like a parameterized type
+                                typeNames[i] = String.valueOf(pattern.parameterSimpleNames[i]);
+                            }
+                            while (arrayCount-- > 0) {
+                                typeNames[i] += "[]";
+                            }
                         }
                     }
                 }
+            } catch (Exception e) {
+                Util.log(e);
             }
-        } catch (Exception e) {
-            Util.log(e);
         }
         return typeNames;
     }
 
     protected static String[] getParameterTypeSignatures(MethodPattern pattern) {
+        if (pattern.parameterCount < 0) return null;
         char[][][] signatures = ReflectionUtils.getPrivateField(MethodPattern.class, "parametersTypeSignatures", pattern);
         int n = (signatures == null ? 0 : signatures.length);
         String[] parameterTypeSignatures = new String[n];
@@ -210,30 +213,31 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         }
 
         boolean isDeclaration = (node instanceof MethodNode);
-        int start = 0;
-        int end = 0;
+        int start = 0, end = 0;
 
         if (methodName.equals(((MethodNode) result.declaration).getName())) {
             if (isDeclaration || node instanceof StaticMethodCallExpression) {
                 start = ((AnnotatedNode) node).getNameStart();
                 end = ((AnnotatedNode) node).getNameEnd() + 1;
 
-                // check for "foo.bar" where "bar" refers to "getBar()", "isBar()" or "setBar(...)"
-                if (!isDeclaration && skipPseudoProperties && (end - start) < ((StaticMethodCallExpression) node).getMethod().length()) {
+                // check for "foo as bar" or "foo.bar" where "bar" refers to "isBar()", "getBar()" or "setBar(...)"
+                if (!isDeclaration && skipPseudoProperties && (isStaticImportAlias(node) ||
+                        (end - start) < ((StaticMethodCallExpression) node).getMethod().length())) {
                     start = 0;
                     end = 0;
                 } else if (end < 1 && isDeclaration && ((MethodNode) node).isStatic() && "main".equals(methodName)) {
                     end = 1;
                 }
 
-            // check for non-synthetic match; SyntheticAccessorSearchRequestor matches "bar" to generated "getBar()", "isBar()" or "setBar(...)"
-            } else if (methodName.equals(node.getText()) || (!skipPseudoProperties && !((MethodNode) result.declaration).isSynthetic())) {
+            // check for non-synthetic match; SyntheticAccessorSearchRequestor matches "bar" to generated accessors
+            } else if ((methodName.equals(node.getText()) && !isStaticImportAlias(result.scope.getEnclosingNode())) ||
+                                        (!skipPseudoProperties && !((MethodNode) result.declaration).isSynthetic())) {
                 start = node.getStart();
                 end = node.getEnd();
             }
 
         // check for pseudo-property match on behalf of SyntheticAccessorsRenameParticipant
-        } else if ((node instanceof ConstantExpression || node instanceof VariableExpression) && methodName.equals(node.getText())) {
+        } else if (methodName.equals(node.getText()) && (node instanceof ConstantExpression || node instanceof VariableExpression)) {
             if (parameterTypesMatch((MethodNode) result.declaration)) {
                 start = node.getStart();
                 end = node.getEnd();
@@ -314,20 +318,26 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     }
 
     private boolean parameterTypesMatch(MethodNode methodNode) {
-        Parameter[] parameters = methodNode.getOriginal().getParameters();
-        List<ClassNode> parameterTypes = GroovyUtils.getParameterTypes(parameters);
-        int n; if ((n = parameterTypes.size()) != parameterTypeSignatures.length) {
-            return false;
-        }
-        for (int i = 0; i < n; i += 1) {
-            ClassNode parameterType = parameterTypes.get(i);
-            String parameterTypeSignature = Signature.getTypeErasure(parameterTypeSignatures[i]);
+        if (parameterTypeSignatures != null) {
+            // in case of resolved type parameter(s), redirect to unresolved
+            Parameter[] parameters = (methodNode == methodNode.getOriginal() ||
+                    parameterCountOf(methodNode) != parameterCountOf(methodNode.getOriginal())
+                        ? methodNode.getParameters() : methodNode.getOriginal().getParameters());
 
-            if (GroovyUtils.getTypeSignatureWithoutGenerics(parameterType, false, false).equals(parameterTypeSignature)) {
-                continue;
-            }
-            if (ClassHelper.isPrimitiveType(parameterType) || !GroovyUtils.getTypeSignatureWithoutGenerics(parameterType, true, false).equals(parameterTypeSignature)) {
+            List<ClassNode> parameterTypes = GroovyUtils.getParameterTypes(parameters);
+            int n; if ((n = parameterTypes.size()) != parameterTypeSignatures.length) {
                 return false;
+            }
+            for (int i = 0; i < n; i += 1) {
+                ClassNode parameterType = parameterTypes.get(i);
+                String parameterTypeSignature = Signature.getTypeErasure(parameterTypeSignatures[i]);
+
+                if (GroovyUtils.getTypeSignatureWithoutGenerics(parameterType, false, false).equals(parameterTypeSignature)) {
+                    continue;
+                }
+                if (ClassHelper.isPrimitiveType(parameterType) || !GroovyUtils.getTypeSignatureWithoutGenerics(parameterType, true, false).equals(parameterTypeSignature)) {
+                    return false;
+                }
             }
         }
         return true;
@@ -354,21 +364,19 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
      * </ol>
      */
     private boolean argumentTypesMatch(List<ClassNode> argumentTypes, ClassNode declaringType) {
-        if (argumentTypes == null) {
+        if (argumentTypes == null || parameterTypeNames == null) {
             return true;
         }
-
         if (argumentTypes.size() == parameterTypeNames.length) {
             for (int i = 0; i < parameterTypeNames.length; i += 1) {
                 if (parameterTypeNames[i] == null) continue; // skip check
-                ClassNode source = argumentTypes.get(i), target = ConstructorReferenceSearchRequestor.makeType(parameterTypeNames[i]);
+                ClassNode source = argumentTypes.get(i), target = GroovyUtils.makeType(parameterTypeNames[i]);
                 if (Boolean.FALSE.equals(SimpleTypeLookup.isTypeCompatible(source, target))) {
                     return false;
                 }
             }
             return true;
         }
-
         BitSet foundParameterCounts = cachedParameterCounts.computeIfAbsent(declaringType, t -> {
             BitSet parameterCounts = new BitSet(MAX_PARAMS + 1);
             gatherParameters(declaringType, parameterCounts);
@@ -380,18 +388,17 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     }
 
     private void gatherParameters(ClassNode declaringType, BitSet foundParameterCounts) {
-        if (declaringType == null) {
-            return;
-        }
-        declaringType = findWrappedNode(declaringType.redirect());
-        List<MethodNode> methods = declaringType.getMethods(methodName);
-        for (MethodNode method : methods) {
-            Parameter[] parameters = method.getParameters();
-            foundParameterCounts.set(Math.min(parameters.length, MAX_PARAMS));
-        }
-        gatherParameters(declaringType.getSuperClass(), foundParameterCounts);
-        for (ClassNode face : declaringType.getInterfaces()) {
-            gatherParameters(face, foundParameterCounts);
+        if (declaringType != null) {
+            declaringType = findWrappedNode(declaringType.redirect());
+            List<MethodNode> methods = declaringType.getMethods(methodName);
+            for (MethodNode method : methods) {
+                Parameter[] parameters = method.getParameters();
+                foundParameterCounts.set(Math.min(parameters.length, MAX_PARAMS));
+            }
+            gatherParameters(declaringType.getSuperClass(), foundParameterCounts);
+            for (ClassNode face : declaringType.getInterfaces()) {
+                gatherParameters(face, foundParameterCounts);
+            }
         }
     }
 
@@ -399,7 +406,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
      * Converts from a {@link JDTClassNode} to a {@link ClassNode} in order to
      * check default parameters.
      */
-    private ClassNode findWrappedNode(ClassNode declaringType) {
+    private static ClassNode findWrappedNode(ClassNode declaringType) {
         ClassNode wrappedNode = null;
         if (declaringType instanceof JDTClassNode) {
             ReferenceBinding binding = ((JDTClassNode) declaringType).getJdtBinding();
@@ -425,9 +432,17 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         return SearchMatch.A_INACCURATE;
     }
 
+    private static int parameterCountOf(MethodNode method) {
+        return method.getParameters().length;
+    }
+
     private static boolean supportsOverride(IMethod method) throws JavaModelException {
         int flags = method.getFlags();
         return !Flags.isPrivate(flags) && !Flags.isStatic(flags);
+    }
+
+    private static boolean isStaticImportAlias(ASTNode node) {
+        return (node != null && node.getNodeMetaData("static.import.alias") != null);
     }
 
     private static boolean equal(char[] arr, CharSequence seq) {

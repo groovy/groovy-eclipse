@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,6 +63,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private static final String STRING_HIGHLIGHT_PREFERENCE             = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR.replaceFirst("\\.color$", "");
     private static final String NUMBER_HIGHLIGHT_PREFERENCE             = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.NUMBER;
     private static final String COMMENT_HIGHLIGHT_PREFERENCE            = IJavaColorConstants.JAVA_SINGLE_LINE_COMMENT;
+    private static final String DEFAULT_HIGHLIGHT_PREFERENCE            = IJavaColorConstants.JAVA_DEFAULT;
     private static final String KEYWORD_HIGHLIGHT_PREFERENCE            = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR.replaceFirst("\\.color$", "");
     private static final String RESERVED_HIGHLIGHT_PREFERENCE           = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_PRIMITIVES_COLOR.replaceFirst("\\.color$", "");
     private static final String DEPRECATED_HIGHLIGHT_PREFERENCE         = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.DEPRECATED_MEMBER;
@@ -92,19 +93,24 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     static {
         try {
             Class<?> style = Class.forName("org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingManager$Highlighting");
-            HIGHLIGHTING_STYLE = ReflectionUtils.getConstructor(style, TextAttribute.class, boolean.class);
+            try {
+                HIGHLIGHTING_STYLE = style.getDeclaredConstructor(String.class, TextAttribute.class, boolean.class);
+            } catch (NoSuchMethodException nsme) {
+                HIGHLIGHTING_STYLE = style.getDeclaredConstructor(TextAttribute.class, boolean.class);
+            }
+            HIGHLIGHTING_STYLE.setAccessible(true);
 
             Class<?> position = Class.forName("org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingManager$HighlightedPosition");
-            HIGHLIGHTED_POSITION = ReflectionUtils.getConstructor(position, int.class, int.class, style, Object.class);
+            HIGHLIGHTED_POSITION = position.getDeclaredConstructor(int.class, int.class, style, Object.class);
+            HIGHLIGHTED_POSITION.setAccessible(true);
 
             GET_HIGHLIGHTING = position.getDeclaredMethod("getHighlighting");
             GET_HIGHLIGHTING.setAccessible(true);
 
-        } catch (ClassNotFoundException cnfe) {
+        } catch (ReflectiveOperationException e) {
             HIGHLIGHTING_STYLE = null;
             HIGHLIGHTED_POSITION = null;
-            GroovyPlugin.getDefault().logError("Semantic highlighting disabled", cnfe);
-        } catch (NoSuchMethodException nsme) {
+            GroovyPlugin.getDefault().logError("Semantic highlighting disabled", e);
         }
     }
 
@@ -119,6 +125,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private Object numberRefHighlighting;
     private Object regexpRefHighlighting;
     private Object commentRefHighlighting;
+    private Object defaultRefHighlighting;
     private Object keywordRefHighlighting;
     private Object reservedRefHighlighting;
     private Object undefinedRefHighlighting;
@@ -153,6 +160,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         Color stringColor        = loadColorFrom(prefs, STRING_HIGHLIGHT_PREFERENCE);
         Color tagKeyColor        = loadColorFrom(prefs, ATTRIBUTE_HIGHLIGHT_PREFERENCE);
         Color commentColor       = loadColorFrom(prefs, COMMENT_HIGHLIGHT_PREFERENCE);
+        Color defaultColor       = loadColorFrom(prefs, DEFAULT_HIGHLIGHT_PREFERENCE);
         Color keywordColor       = loadColorFrom(prefs, KEYWORD_HIGHLIGHT_PREFERENCE);
         Color reservedColor      = loadColorFrom(prefs, RESERVED_HIGHLIGHT_PREFERENCE);
 
@@ -179,6 +187,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         numberRefHighlighting = newHighlightingStyle(numberColor, loadStyleFrom(prefs, NUMBER_HIGHLIGHT_PREFERENCE));
         regexpRefHighlighting = newHighlightingStyle(stringColor, loadStyleFrom(prefs, STRING_HIGHLIGHT_PREFERENCE) | SWT.ITALIC);
         commentRefHighlighting = newHighlightingStyle(commentColor);
+        defaultRefHighlighting = newHighlightingStyle(defaultColor);
         keywordRefHighlighting = newHighlightingStyle(keywordColor, loadStyleFrom(prefs, KEYWORD_HIGHLIGHT_PREFERENCE));
         reservedRefHighlighting = newHighlightingStyle(reservedColor, loadStyleFrom(prefs, RESERVED_HIGHLIGHT_PREFERENCE));
         deprecatedRefHighlighting = newHighlightingStyle(loadStyleFrom(prefs, DEPRECATED_HIGHLIGHT_PREFERENCE));
@@ -211,7 +220,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
             color = PreferenceConverter.getColor(prefs, which.startsWith("java_") ? which : which + ".color");
         } else {
             return null; // allow contextual default (i.e. string color)
-            //color = PreferenceConverter.getColor(prefs, "java_default");
+            //color = PreferenceConverter.getColor(prefs, IJavaColorConstants.JAVA_DEFAULT);
             //color = PreferenceConverter.getColor(GroovyPlugin.getDefault().getPreferenceStore(), PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR);
         }
         return GroovyPlugin.getDefault().getTextTools().getColorManager().getColor(color);
@@ -235,18 +244,27 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     }
 
     protected Object newHighlightingStyle(Color color) {
+        Object[] arguments = new Object[HIGHLIGHTING_STYLE.getParameterCount()];
         //return new HighlightingStyle(new TextAttribute(color), true);
-        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, new TextAttribute(color), Boolean.TRUE);
+        arguments[arguments.length - 2] = new TextAttribute(color);
+        arguments[arguments.length - 1] = Boolean.TRUE;
+        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, arguments);
     }
 
     protected Object newHighlightingStyle(int style) {
-        //return new HighlightingStyle(new TextAttribute(color), true);
-        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, new TextAttribute(null, null, style), Boolean.TRUE);
+        Object[] arguments = new Object[HIGHLIGHTING_STYLE.getParameterCount()];
+        //return new HighlightingStyle(new TextAttribute(null, null, style), true);
+        arguments[arguments.length - 2] = new TextAttribute(null, null, style);
+        arguments[arguments.length - 1] = Boolean.TRUE;
+        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, arguments);
     }
 
     protected Object newHighlightingStyle(Color color, int style) {
-        //return new HighlightingStyle(new TextAttribute(color, null, style), true);
-        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, new TextAttribute(color, null, style), color == null ? Boolean.FALSE : Boolean.TRUE);
+        Object[] arguments = new Object[HIGHLIGHTING_STYLE.getParameterCount()];
+        //return new HighlightingStyle(new TextAttribute(color, null, style), color != null);
+        arguments[arguments.length - 2] = new TextAttribute(color, null, style);
+        arguments[arguments.length - 1] = Boolean.valueOf(color != null);
+        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, arguments);
     }
 
     protected void setHighlightingStyle(Position pos, Object val) {
@@ -294,7 +312,9 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
                 HighlightedTypedPosition last = null; Position x = null;
                 for (HighlightedTypedPosition ref : semanticReferences) {
-                    if (ref.compareTo(last) != 0) {
+                    if (last == null ||
+                            last.getOffset() != ref.getOffset() ||
+                            last.getLength() != ref.getLength()) {
                         Position pos = newHighlightedPosition(ref);
                         x = tryAddPosition(newPositions, oldPositions, pos);
 
@@ -379,6 +399,9 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
             break;
         case COMMENT:
             style = commentRefHighlighting;
+            break;
+        case DEFAULT:
+            style = defaultRefHighlighting;
             break;
         case KEYWORD:
             style = keywordRefHighlighting;

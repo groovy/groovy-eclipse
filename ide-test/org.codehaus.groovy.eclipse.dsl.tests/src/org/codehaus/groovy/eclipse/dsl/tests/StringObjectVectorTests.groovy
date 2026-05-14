@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -74,7 +74,6 @@ final class StringObjectVectorTests {
         assertFalse(vector.contains(new Object()))
         assertFalse(vector.containsName(''))
         assertFalse(vector.contains(str1))
-
 
         assertTrue(vector.contains(obj1))
         assertTrue(vector.contains(obj2))
@@ -163,7 +162,7 @@ final class StringObjectVectorTests {
         vector.add(str3, obj3)
         vector.add(str4, obj4)
         vector.add(str5, obj5)
-        Object[] elts = vector.getElements()
+        Object[] elts = vector.elements
         assertEquals(5, elts.length)
         assertEquals(obj1, elts[0])
         assertEquals(obj2, elts[1])
@@ -171,7 +170,7 @@ final class StringObjectVectorTests {
         assertEquals(obj4, elts[3])
         assertEquals(obj5, elts[4])
 
-        String[] names = vector.getNames()
+        String[] names = vector.names
         assertEquals(5, names.length)
         assertEquals(str1, names[0])
         assertEquals(str2, names[1])
@@ -182,7 +181,7 @@ final class StringObjectVectorTests {
         vector.add(null, null)
         vector.add(null, null)
 
-        elts = vector.getElements()
+        elts = vector.elements
         assertEquals(7, elts.length)
         assertEquals(obj1, elts[0])
         assertEquals(obj2, elts[1])
@@ -192,7 +191,7 @@ final class StringObjectVectorTests {
         assertEquals(null, elts[5])
         assertEquals(null, elts[6])
 
-        names = vector.getNames()
+        names = vector.names
         assertEquals(7, names.length)
         assertEquals(str1, names[0])
         assertEquals(str2, names[1])

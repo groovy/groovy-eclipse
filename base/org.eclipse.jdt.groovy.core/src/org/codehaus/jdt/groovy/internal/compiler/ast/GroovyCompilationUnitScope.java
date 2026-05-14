@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,21 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import static java.util.Collections.addAll;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
+import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory.GrapeAwareGroovyClassLoader;
+
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
-import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
+import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
@@ -40,7 +44,6 @@ import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
-import org.eclipse.jdt.internal.core.builder.NameEnvironment;
 
 /**
  * A subtype of CompilationUnitScope that allows us to override some methods and
@@ -49,24 +52,30 @@ import org.eclipse.jdt.internal.core.builder.NameEnvironment;
  */
 public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
+    private static final char[] GROOVY = "groovy".toCharArray();
+    private static final char[] TRANSFORM = "transform".toCharArray();
+
     private static final char[][] javaLang = TypeConstants.JAVA_LANG;
-    // Matches ResolveVisitor - these are the additional automatic imports for groovy files
-    private static final char[][] javaIo = CharOperation.splitOn('.', "java.io".toCharArray());
-    private static final char[][] javaNet = CharOperation.splitOn('.', "java.net".toCharArray());
-    private static final char[][] javaUtil = CharOperation.splitOn('.', "java.util".toCharArray());
-    private static final char[][] groovyLang = CharOperation.splitOn('.', "groovy.lang".toCharArray());
-    private static final char[][] groovyUtil = CharOperation.splitOn('.', "groovy.util".toCharArray());
+    // Matches ResolveVisitor - these are the additional default imports for groovy files
+    private static final char[][] javaIo     = TypeConstants.JAVA_IO;
+    private static final char[][] javaNet    = {TypeConstants.JAVA, "net".toCharArray()};
+    private static final char[][] javaUtil   = {TypeConstants.JAVA, TypeConstants.UTIL};
+    private static final char[][] groovyLang = {GROOVY, TypeConstants.LANG};
+    private static final char[][] groovyUtil = {GROOVY, TypeConstants.UTIL};
 
     private static final char[][] javaMathBigDecimal = CharOperation.splitOn('.', "java.math.BigDecimal".toCharArray());
     private static final char[][] javaMathBigInteger = CharOperation.splitOn('.', "java.math.BigInteger".toCharArray());
-    /*   */ static final char[][] GROOVY_LANG_METACLASS = CharOperation.splitOn('.', "groovy.lang.MetaClass".toCharArray());
-    /*   */ static final char[][] GROOVY_LANG_GROOVYOBJECT = CharOperation.splitOn('.', "groovy.lang.GroovyObject".toCharArray());
+
+    /*   */ static final char[][] GROOVY_LANG_METACLASS    = {GROOVY, TypeConstants.LANG, "MetaClass".toCharArray()};
+    /*   */ static final char[][] GROOVY_LANG_GROOVYOBJECT = {GROOVY, TypeConstants.LANG, "GroovyObject".toCharArray()};
+
+    /*   */ static final char[][] GROOVY_TRANSFORM           = {GROOVY, TRANSFORM};
+    /*   */ static final char[][] GROOVY_TRANSFORM_TRAIT     = {GROOVY, TRANSFORM, "Trait".toCharArray()};
+    /*   */ static final char[][] GROOVY_TRANSFORM_INTERNAL  = {GROOVY, TRANSFORM, "Internal".toCharArray()};
+    /*   */ static final char[][] GROOVY_TRANSFORM_GENERATED = {GROOVY, TRANSFORM, "Generated".toCharArray()};
 
     public GroovyCompilationUnitScope(GroovyCompilationUnitDeclaration compilationUnitDeclaration, LookupEnvironment lookupEnvironment) {
         super(compilationUnitDeclaration, lookupEnvironment);
-        if (lookupEnvironment.nameEnvironment instanceof NameEnvironment) {
-            ((NameEnvironment) lookupEnvironment.nameEnvironment).avoidAdditionalGroovyAnswers = true;
-        }
     }
 
     private boolean isScript;
@@ -85,7 +94,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     protected ImportBinding[] getDefaultImports() {
         if (defaultGroovyImports == null) {
             List<ImportBinding> importBindings = new ArrayList<>(8);
-            Collections.addAll(importBindings, super.getDefaultImports()); // picks up 'java.lang'
+            addAll(importBindings, super.getDefaultImports()); // includes 'java.lang'
 
             // augment with the Groovy on-demand imports
             importBindings.add(new ImportBinding(javaIo, true, environment.getPackage(javaIo, module()), null));
@@ -107,10 +116,10 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
              *   static class Inner {}
              * }
              */
-            //for (SourceTypeBinding topLevelType : topLevelTypes) {
-            //    if (topLevelType.hasMemberTypes()) // add synthetic import to help resolve inner types
-            //        importBindings.add(new ImportBinding(topLevelType.compoundName, true, topLevelType, null));
-            //}
+            for (SourceTypeBinding topLevelType : topLevelTypes) {
+                if (topLevelType.hasMemberTypes()) // add synthetic import to help resolve inner types
+                    importBindings.add(new ImportBinding(topLevelType.compoundName, true, topLevelType, null));
+            }
 
             defaultGroovyImports = importBindings.toArray(new ImportBinding[importBindings.size()]);
         }
@@ -118,34 +127,62 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     }
 
     @Override
-    protected ClassScope buildClassScope(Scope parent, TypeDeclaration typeDecl) {
-        return new GroovyClassScope(parent, typeDecl);
-    }
-
-    @Override
-    protected void buildTypeBindings(AccessRestriction accessRestriction) {
-        super.buildTypeBindings(accessRestriction);
-    }
-
-    /**
-     * Ensures Groovy types implement {@code groovy.lang.GroovyObject}.
-     */
-    @Override
-    public void augmentTypeHierarchy() {
-        for (SourceTypeBinding topLevelType : topLevelTypes) {
-            if (!topLevelType.isInterface() && !topLevelType.isAnnotationType() && topLevelType.superInterfaces != null) {
-                CompilationUnitScope unitScope = compilationUnitScope();
-                unitScope.recordQualifiedReference(GROOVY_LANG_GROOVYOBJECT);
-                ReferenceBinding groovyLangObjectBinding = unitScope.environment.getResolvedType(GROOVY_LANG_GROOVYOBJECT, this);
-                if (!topLevelType.implementsInterface(groovyLangObjectBinding, true)) {
-                    topLevelType.superInterfaces = (ReferenceBinding[]) ArrayUtils.add(topLevelType.superInterfaces, groovyLangObjectBinding);
-                }
-            }
-        }
+    protected ClassScope buildClassScope(Scope scope, TypeDeclaration typeDecl) {
+        return new GroovyClassScope(scope, typeDecl);
     }
 
     @Override
     protected void checkPublicTypeNameMatchesFilename(TypeDeclaration typeDecl) {
+    }
+
+    @Override
+    protected Binding findImport(char[][] compoundName, int length) {
+        if (length == 0) return environment.defaultPackage;
+        if (length == 1) { // GROOVY-8389: import static Type.name
+            for (SourceTypeBinding topLevelType : topLevelTypes) {
+                if (CharOperation.equals(topLevelType.sourceName, compoundName[0])) {
+                    return topLevelType;
+                }
+            }
+        }
+
+        Binding binding = super.findImport(compoundName, length); // normal import resolve
+        if (!binding.isValidBinding() && binding.problemId() == ProblemReasons.NotFound) {
+            var sourceUnit = ((GroovyCompilationUnitDeclaration) referenceContext).getSourceUnit();
+            if (sourceUnit.getClassLoader() instanceof GrapeAwareGroovyClassLoader loader && loader.grabbed) {
+                String typeName = CharOperation.toString(CharOperation.subarray(compoundName, 0, length));
+                try {
+                    Class<?> c = loader.loadClass(typeName, false, true, false);
+                    String fileName = c.getSimpleName() + ".class";
+                    try (var s = c.getResourceAsStream(fileName)) {
+                        IBinaryType bType = org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader.read(s, fileName);
+                        PackageBinding pBind = environment.createPackage(CharOperation.subarray(compoundName, 0, length - 1)); // TODO: inner class
+
+                        binding = environment.createBinaryTypeFrom(bType, pBind, null);
+                    }
+                } catch (ClassNotFoundException ignore) {
+                } catch (Exception | LinkageError nope) {
+                    if (GroovyLogManager.manager.hasLoggers()) {
+                        GroovyLogManager.manager.log(TraceCategory.CLASSPATH, "Failed to init " + typeName + "\n\t" + nope.getMessage());
+                    }
+                }
+            }
+        }
+        return binding;
+    }
+
+    @Override
+    protected Binding findSingleImport(char[][] compoundName, int mask, boolean staticImport) {
+        Binding binding;
+        if (compoundName.length == 1) { assert ((mask & Binding.TYPE) != 0) && !staticImport;
+            // Groovy supports this kind of import for name aliasing or disambiguation
+            binding = findType(compoundName[0], environment.defaultPackage, fPackage);
+            if (binding == null)
+                binding = new ProblemReferenceBinding(compoundName, null, ProblemReasons.NotFound);
+        } else {
+            binding = super.findSingleImport(compoundName, mask, staticImport);
+        }
+        return binding;
     }
 
     @Override
@@ -165,23 +202,13 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
     @Override
     public boolean reportInvalidType(TypeReference typeReference, TypeBinding resolvedType) {
-        if (resolvedType instanceof ProblemReferenceBinding) {
-            ProblemReferenceBinding problemRefBinding = (ProblemReferenceBinding) resolvedType;
-            if (problemRefBinding.problemId() == ProblemReasons.Ambiguous) {
-                return true;
-            }
-        }
-        return false;
+        return (resolvedType.problemId() > ProblemReasons.NotFound);
     }
 
     @Override
     protected void reportImportProblem(ImportReference importReference, Binding importBinding) {
-        // no eclipse 'not found' imports for groovy types (in case grab satisfies them)
-        if (importBinding instanceof ProblemReferenceBinding &&
-                ((ProblemReferenceBinding) importBinding).problemId() == ProblemReasons.NotFound) {
-            return;
-        }
-        super.reportImportProblem(importReference, importBinding);
+        if (importBinding.problemId() != ProblemReasons.NotFound)
+            super.reportImportProblem(importReference, importBinding);
     }
 
     @Override
@@ -255,5 +282,6 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
             }
         }
     }
+
     private volatile boolean verified;
 }

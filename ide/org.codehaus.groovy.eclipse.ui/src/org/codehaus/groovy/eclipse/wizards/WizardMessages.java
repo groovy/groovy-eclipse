@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,7 @@ package org.codehaus.groovy.eclipse.wizards;
 
 import org.eclipse.osgi.util.NLS;
 
-public class WizardMessages extends NLS {
+public final class WizardMessages extends NLS {
 
     private WizardMessages() {}
 
@@ -38,6 +38,8 @@ public class WizardMessages extends NLS {
     public static String NewTypeWizard_page2_class_message;
     public static String NewTypeWizard_page2_trait_title;
     public static String NewTypeWizard_page2_trait_message;
+    public static String NewTypeWizard_page2_record_title;
+    public static String NewTypeWizard_page2_record_message;
     public static String NewTypeWizard_page2_script_title;
     public static String NewTypeWizard_page2_script_message;
     public static String NewTypeWizard_page2_interface_title;
@@ -54,6 +56,7 @@ public class WizardMessages extends NLS {
     public static String NewTypeWizard_page1_typeKind4;
     public static String NewTypeWizard_page1_typeKind5;
     public static String NewTypeWizard_page1_typeKind6;
+    public static String NewTypeWizard_page1_typeKind7;
     public static String NewTypeWizard_page1_error_java;
     public static String NewTypeWizard_page1_error_script;
     public static String NewTypeWizard_page1_info_groovyNature;
@@ -65,6 +68,6 @@ public class WizardMessages extends NLS {
     public static String NewTypeWizard_page2_basescript_label;
 
     static {
-        NLS.initializeMessages(WizardMessages.class.getName(), WizardMessages.class);
+        initializeMessages(WizardMessages.class.getName(), WizardMessages.class);
     }
 }

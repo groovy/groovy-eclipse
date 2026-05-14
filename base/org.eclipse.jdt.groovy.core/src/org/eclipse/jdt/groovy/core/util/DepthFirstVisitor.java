@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,12 @@
 package org.eclipse.jdt.groovy.core.util;
 
 import static org.codehaus.groovy.ast.ClassCodeVisitorSupport.ORIGINAL_EXPRESSION;
-import static org.eclipse.jdt.groovy.core.util.GroovyUtils.getAllImportNodes;
-import static org.eclipse.jdt.groovy.core.util.GroovyUtils.getTraitFieldExpression;
-import static org.eclipse.jdt.groovy.core.util.GroovyUtils.getTransformNodes;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -40,6 +38,7 @@ import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
@@ -98,10 +97,9 @@ import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.runtime.GeneratedClosure;
-import org.codehaus.groovy.runtime.MetaClassHelper;
+import org.codehaus.groovy.transform.ASTTestTransformation;
 import org.codehaus.groovy.transform.FieldASTTransformation;
 import org.codehaus.groovy.transform.LazyASTTransformation;
-import org.eclipse.core.runtime.Assert;
 
 /**
  * Groovy AST visitor that performs a depth-first traversal.
@@ -119,7 +117,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         if (node.getPackage() != null) {
             visitPackage(node.getPackage());
         }
-        for (ImportNode importNode : getAllImportNodes(node)) {
+        for (ImportNode importNode : GroovyUtils.getAllImportNodes(node)) {
             visitImport(importNode);
         }
         for (ClassNode classNode : node.getClasses()) {
@@ -127,15 +125,22 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
                 continue; // visited under ctor call expr
             }
             // GRECLIPSE-781: visit script's run method last
-            if (classNode.isScript()) {
-                runMethod = classNode.getMethod("run", Parameter.EMPTY_ARRAY);
-                Assert.isNotNull(runMethod);
+            if (GroovyUtils.isScript(classNode)) {
+                assert (runMethod == null) : "multiple scripts";
+                for (MethodNode method : classNode.getMethods()) {
+                    if (method.isScriptBody()) {
+                        runMethod = method;
+                        break;
+                    }
+                }
+                assert (runMethod != null);
             }
             visitClass(classNode);
         }
         if (runMethod != null) {
             // allow visit method to pass guard condition
-            MethodNode run = runMethod; runMethod = null;
+            MethodNode run = runMethod;
+            runMethod = null;
             visitMethod(run);
         }
     }
@@ -158,8 +163,15 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
         // visit "<clinit>" statements before visitContents
         MethodNode clinit = node.getMethod("<clinit>", Parameter.EMPTY_ARRAY);
-        if (clinit != null && !node.isEnum()) {
-            visitIfPresent(clinit.getCode());
+        if (clinit != null) {
+            if (!node.isEnum() || !(clinit.getCode() instanceof BlockStatement))
+                visitIfPresent(clinit.getCode());
+            else {
+                BlockStatement block = (BlockStatement) clinit.getCode();
+                for (Statement stmt : block.getStatements()) { // some generated
+                    if (!(stmt instanceof ExpressionStatement)) stmt.visit(this);
+                }
+            }
         }
         for (Statement stmt : node.getObjectInitializerStatements()) {
             stmt.visit(this);
@@ -202,8 +214,8 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     public void visitField(FieldNode node) {
         visitAnnotations(node.getAnnotations());
         // script field annotations are saved in script transforms map
-        if (node.getEnd() > 0 && node.getDeclaringClass().isScript()) {
-            for (ASTNode anno : getTransformNodes(node.getDeclaringClass(), FieldASTTransformation.class)) {
+        if (node.getEnd() > 0 && GroovyUtils.isScript(node.getDeclaringClass())) {
+            for (ASTNode anno : GroovyUtils.getTransformNodes(node.getDeclaringClass(), FieldASTTransformation.class)) {
                 if (anno.getStart() >= node.getStart() && anno.getEnd() < node.getEnd()) {
                     visitAnnotation((AnnotationNode) anno);
                 }
@@ -212,10 +224,16 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitVariable(node);
 
         // visit lazy field initializer inline with field
-        for (ASTNode anno : getTransformNodes(node.getDeclaringClass(), LazyASTTransformation.class)) {
+        for (ASTNode anno : GroovyUtils.getTransformNodes(node.getDeclaringClass(), LazyASTTransformation.class)) {
             if (node.getAnnotations().contains(anno)) {
-                MethodNode init = node.getDeclaringClass().getDeclaredMethod(
-                    "get" + MetaClassHelper.capitalize(node.getName().substring(1)), Parameter.EMPTY_ARRAY);
+                String name = node.getName().substring(1);
+                if (!node.isStatic()) {
+                    name = "get" + org.apache.groovy.util.BeanUtils.capitalize(name);
+                } else {
+                    name = node.getDeclaringClass().getName().replace('.', '_') + "$" +
+                        node.getType().getNameWithoutPackage() + "Holder_" + name + "_initExpr";
+                }
+                MethodNode init = node.getDeclaringClass().getDeclaredMethod(name, Parameter.EMPTY_ARRAY);
                 if (init != null && init.getEnd() < 1) {
                     visitMethod(init);
                 }
@@ -223,7 +241,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
             }
         }
 
-        // visit enum field initializer inline with field
+        // visit enum constant initializer inline with field
         if (node.isEnum() && node.isStatic() && !node.getName().matches("(MAX|MIN)_VALUE|\\$VALUES")) {
             MethodNode clinit = node.getDeclaringClass().getMethod("<clinit>", Parameter.EMPTY_ARRAY);
             for (Statement stmt : ((BlockStatement) clinit.getCode()).getStatements()) {
@@ -246,7 +264,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     @Override
     public void visitMethod(MethodNode node) {
-        if (node == runMethod || "<clinit>".equals(node.getName())) return;
+        if (node == runMethod || node.isStaticConstructor()) return;
         visitAnnotations(node.getAnnotations());
         visitParameters(node.getParameters());
         visitIfPresent(node.getCode());
@@ -300,6 +318,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitStatement(statement);
     }
 
+    @Override
     public void visitEmptyStatement(EmptyStatement statement) {
         visitStatement(statement);
     }
@@ -312,7 +331,8 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     @Override
     public void visitForLoop(ForStatement statement) {
-        visitParameter(statement.getVariable());
+        Optional.ofNullable(statement.getIndexVariable()).ifPresent(this::visitParameter);
+        Optional.ofNullable(statement.getValueVariable()).ifPresent(this::visitParameter);
         visitIfPresent(statement.getCollectionExpression());
         visitIfPresent(statement.getLoopBlock());
         visitStatement(statement);
@@ -457,6 +477,9 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     @Override
     public void visitConstantExpression(ConstantExpression expression) {
+        if (expression instanceof AnnotationConstantExpression) {
+            visitAnnotation((AnnotationNode) expression.getValue());
+        }
         visitExpression(expression);
     }
 
@@ -524,12 +547,13 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         expression.getArguments().visit(this);
 
         // check for trait field re-written as call to helper method
-        visitIfPresent(getTraitFieldExpression(expression));
+        visitIfPresent(GroovyUtils.getTraitFieldExpression(expression));
 
-        ClassNode type = expression.getType(); // check for enum init body
-        if (type.isEnum() && GroovyUtils.isAnonymous(type.redirect()) &&
+        // check for enum init body
+        ClassNode type = expression.getType().redirect();
+        if (type.isEnum() && GroovyUtils.isAnonymous(type) &&
                 expression.getMethodAsString().equals("$INIT")) {
-            visitClass(type.redirect());
+            visitClass(type); // visit enum constant methods
         }
 
         visitExpression(expression);
@@ -593,18 +617,21 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     @Override
     public void visitSpreadMapExpression(SpreadMapExpression expression) {
         visitAnnotations(expression.getAnnotations());
-        expression.getExpression().visit(this);
         visitExpression(expression);
     }
 
     @Override
     public void visitStaticMethodCallExpression(StaticMethodCallExpression expression) {
         visitAnnotations(expression.getAnnotations());
-        ClassNode ownerType = expression.getOwnerType();
         expression.getArguments().visit(this);
-        if (GroovyUtils.isAnonymous(ownerType)) {
-            visitClass(ownerType);
+
+        // check for enum init body
+        ClassNode type = expression.getOwnerType();
+        if (type.isEnum() && GroovyUtils.isAnonymous(type) &&
+                expression.getMethodAsString().equals("$INIT")) {
+            visitClass(type); // visit enum constant methods
         }
+
         visitExpression(expression);
     }
 
@@ -662,6 +689,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     }
 
     protected void visitAnnotation(AnnotationNode node) {
+        visitIfPresent(node.getNodeMetaData(ASTTestTransformation.class));
         for (Map.Entry<String, Expression> pair : node.getMembers().entrySet()) {
             // provide some context for the visitation of the initial value expression
             visitVariable(new MemberValueExpression(pair.getKey(), pair.getValue(), node));
@@ -682,10 +710,10 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitIfPresent(expression.getNodeMetaData(ORIGINAL_EXPRESSION));
     }
 
-    protected void visitParameters(Parameter[] nodes) {
-        if (isNotEmpty(nodes)) {
-            for (Parameter node : nodes) {
-                visitParameter(node);
+    protected void visitParameters(Parameter[] params) {
+        if (isNotEmpty(params)) {
+            for (Parameter param : params) {
+                visitParameter(param);
             }
         }
     }

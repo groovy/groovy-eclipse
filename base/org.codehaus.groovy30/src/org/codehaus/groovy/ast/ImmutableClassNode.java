@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,6 +84,14 @@ public class ImmutableClassNode extends ClassNode {
     // ClassNode overrides:
 
     @Override
+    public void addProperty(PropertyNode pn) {}
+
+    @Override
+    public List<PropertyNode> getProperties() {
+        return Collections.emptyList();
+    }
+
+    @Override
     public List<MethodNode> getDeclaredMethods(String name) {
         if (lazyInitDone && !writeProtected) {
             synchronized (methods) {
@@ -106,9 +114,6 @@ public class ImmutableClassNode extends ClassNode {
 
     @Override
     public void setAnnotated(boolean b) {}
-
-    @Override
-    protected void setCompileUnit(CompileUnit cu) {}
 
     @Override
     public void setEnclosingMethod(MethodNode mn) {}
@@ -173,7 +178,7 @@ public class ImmutableClassNode extends ClassNode {
         genericsInitialized = true;
     }
 
-    static class ImmutableGenericsType extends GenericsType {
+    private static class ImmutableGenericsType extends GenericsType {
 
         ImmutableGenericsType(GenericsType delegate, String typeName) {
             this.typeName = typeName;

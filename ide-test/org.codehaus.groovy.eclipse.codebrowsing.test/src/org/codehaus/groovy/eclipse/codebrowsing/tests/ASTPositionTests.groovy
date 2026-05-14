@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ import org.junit.Test
 
 final class ASTPositionTests extends BrowsingTestSuite {
 
-    private WorkingCopyOwner workingCopyOwner
     private IProblemRequestor problemRequestor
+    private WorkingCopyOwner workingCopyOwner
 
     @Before
     void setUp() {
@@ -53,6 +53,7 @@ final class ASTPositionTests extends BrowsingTestSuite {
                 println "problem: $problem"
             }
         }
+
         workingCopyOwner = new WorkingCopyOwner() {
             @Override
             IProblemRequestor getProblemRequestor(ICompilationUnit workingCopy) {
@@ -61,8 +62,28 @@ final class ASTPositionTests extends BrowsingTestSuite {
         }
     }
 
-    @Test
-    void testAnnotationPositions_STS3822() {
+    @Test // GROOVY-9206
+    void testAnnotationPositions1() {
+        addJavaSource '''\
+            |import java.lang.annotation.*;
+            |@Target(ElementType.FIELD)
+            |@interface Separator {
+            |  char value();
+            |}
+            |'''.stripMargin(), 'Separator'
+
+        String contents = '''\
+            |class C {
+            |  @Separator((char)';')
+            |  String tokens
+            |}
+            |'''.stripMargin()
+
+        traverseAST(contents)
+    }
+
+    @Test // STS-3822
+    void testAnnotationPositions2() {
         String contents = '''\
             |class main_test extends BaseTest {
             |  @Foo(s = '%1')
@@ -90,12 +111,12 @@ final class ASTPositionTests extends BrowsingTestSuite {
             |  }
             |}
             |'''.stripMargin()
-        CompilationUnit ast = getAST(contents)
-        traverseAst(contents, ast)
+
+        traverseAST(contents)
     }
 
-    @Test // This variant doesn't have a well formed array spec on method P()
-    void testAnnotationPositions_STS3822_2() {
+    @Test // STS-3822: This variant doesn't have a well-formed array spec on P()
+    void testAnnotationPositions3() {
         String contents = '''\
             |class main_test extends BaseTest {
             |  @Foo(s = '%1')
@@ -123,46 +144,38 @@ final class ASTPositionTests extends BrowsingTestSuite {
             |  }
             |}
             |'''.stripMargin()
-        CompilationUnit ast = getAST(contents)
-        traverseAst(contents, ast)
+
+        traverseAST(contents)
     }
 
-    @Test
-    void testStringArrayArgs_STS3787() {
+    @Test // STS-3787
+    void testStringArrayArgs() {
         String contents = '''\
             |class MyMain {
             |  static void main(String[] args) {
             |  }
             |}
             |'''.stripMargin()
-        CompilationUnit ast = getAST(contents)
-        //I wished to check the String[] node has correct source location info
+
+        // I wished to check the String[] node has correct source location info
         // but it does not appear in the final AST. Instead it seems to be
         // represented as a String vararg parameter. There's no 'ArrayType' node in the AST at all.
-        traverseAst(contents, ast)
+        traverseAST(contents)
     }
 
-    @Test
-    void testStringVarArg_STS3787() {
+    @Test // STS-3787
+    void testStringVarArg() {
         String contents = '''\
             |class MyMain {
             |  static void munching(String... args) {
             |  }
             |}
             |'''.stripMargin()
-        CompilationUnit ast = getAST(contents)
-        traverseAst(contents, ast)
+
+        traverseAST(contents)
     }
 
     //--------------------------------------------------------------------------
-
-    private void traverseAst(String contents, CompilationUnit ast) {
-        ast.accept([preVisit: { ASTNode node ->
-            println "--- ${node.class}"
-            println getText(node, contents)
-            println '----------------------------------------'
-        }] as ASTVisitor)
-    }
 
     private String getText(ASTNode node, String text) {
         int offset = node.startPosition, length = node.length
@@ -175,5 +188,14 @@ final class ASTPositionTests extends BrowsingTestSuite {
     private CompilationUnit getAST(String contents) {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
         unit.reconcile(JavaConstants.AST_LEVEL, true, workingCopyOwner, new NullProgressMonitor())
+    }
+
+    private void traverseAST(String contents) {
+        CompilationUnit ast = getAST(contents)
+        ast.accept([preVisit: { ASTNode node ->
+            println "--- ${node.class}"
+            println getText(node, contents)
+            println '----------------------------------------'
+        }] as ASTVisitor)
     }
 }
