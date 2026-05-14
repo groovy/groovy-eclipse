@@ -30,9 +30,8 @@ import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 public class GroovyTokenTypeBridge {
 
     // Only the GroovyTokenTypes that we use inside Greclipse are represented here.
-    // More can be added on an as needed basis.
+    // More can be added on an as-needed basis.
 
-    public static int ABSTRACT             = GroovyTokenTypes.ABSTRACT;
     public static int ASSIGN               = GroovyTokenTypes.ASSIGN;
     public static int CLOSABLE_BLOCK_OP    = GroovyTokenTypes.CLOSABLE_BLOCK_OP;
     public static int COLON                = GroovyTokenTypes.COLON;
@@ -45,38 +44,11 @@ public class GroovyTokenTypeBridge {
     public static int LBRACK               = GroovyTokenTypes.LBRACK;
     public static int LCURLY               = GroovyTokenTypes.LCURLY;
     public static int LE                   = GroovyTokenTypes.LE;
-    public static int LITERAL_as           = GroovyTokenTypes.LITERAL_as;
-    public static int LITERAL_assert       = GroovyTokenTypes.LITERAL_assert;
-    public static int LITERAL_boolean      = GroovyTokenTypes.LITERAL_boolean;
-    public static int LITERAL_byte         = GroovyTokenTypes.LITERAL_byte;
-    public static int LITERAL_char         = GroovyTokenTypes.LITERAL_char;
-    public static int LITERAL_class        = GroovyTokenTypes.LITERAL_class;
-    public static int LITERAL_def          = GroovyTokenTypes.LITERAL_def;
-    public static int LITERAL_double       = GroovyTokenTypes.LITERAL_double;
     public static int LITERAL_else         = GroovyTokenTypes.LITERAL_else;
     public static int LITERAL_enum         = GroovyTokenTypes.LITERAL_enum;
-    public static int LITERAL_extends      = GroovyTokenTypes.LITERAL_extends;
-    public static int LITERAL_float        = GroovyTokenTypes.LITERAL_float;
     public static int LITERAL_for          = GroovyTokenTypes.LITERAL_for;
     public static int LITERAL_if           = GroovyTokenTypes.LITERAL_if;
-    public static int LITERAL_implements   = GroovyTokenTypes.LITERAL_implements;
-    public static int LITERAL_int          = GroovyTokenTypes.LITERAL_int;
-    public static int LITERAL_interface    = GroovyTokenTypes.LITERAL_interface;
-    public static int LITERAL_long         = GroovyTokenTypes.LITERAL_long;
-    public static int LITERAL_native       = GroovyTokenTypes.LITERAL_native;
-    public static int LITERAL_package      = GroovyTokenTypes.LITERAL_package;
-    public static int LITERAL_private      = GroovyTokenTypes.LITERAL_private;
-    public static int LITERAL_protected    = GroovyTokenTypes.LITERAL_protected;
-    public static int LITERAL_public       = GroovyTokenTypes.LITERAL_public;
-    public static int LITERAL_return       = GroovyTokenTypes.LITERAL_return;
-    public static int LITERAL_short        = GroovyTokenTypes.LITERAL_short;
-    public static int LITERAL_static       = GroovyTokenTypes.LITERAL_static;
     public static int LITERAL_switch       = GroovyTokenTypes.LITERAL_switch;
-    public static int LITERAL_synchronized = GroovyTokenTypes.LITERAL_synchronized;
-    public static int LITERAL_threadsafe   = GroovyTokenTypes.LITERAL_threadsafe;
-    public static int LITERAL_transient    = GroovyTokenTypes.LITERAL_transient;
-    public static int LITERAL_void         = GroovyTokenTypes.LITERAL_void;
-    public static int LITERAL_volatile     = GroovyTokenTypes.LITERAL_volatile;
     public static int LITERAL_while        = GroovyTokenTypes.LITERAL_while;
     public static int LPAREN               = GroovyTokenTypes.LPAREN;
     public static int LT                   = GroovyTokenTypes.LT;

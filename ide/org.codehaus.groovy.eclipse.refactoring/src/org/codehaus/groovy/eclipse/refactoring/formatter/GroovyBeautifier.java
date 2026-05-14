@@ -489,7 +489,7 @@ public class GroovyBeautifier {
             GroovyTokenTypeBridge.NUM_BIG_DECIMAL
         ).contains(token.getType());
     }
-
+/*
     private boolean isValueLiteralToken(Token token) {
         return List.of(
             GroovyTokenTypeBridge.LITERAL_boolean,
@@ -523,7 +523,7 @@ public class GroovyBeautifier {
             nextToken.getType() == GroovyTokenTypeBridge.NUM_LONG
         );
     }
-
+*/
     private void addEdit(TextEdit edit, TextEdit container) {
         if (edit != null &&
             edit.getOffset() >= formatter.formatOffset &&
