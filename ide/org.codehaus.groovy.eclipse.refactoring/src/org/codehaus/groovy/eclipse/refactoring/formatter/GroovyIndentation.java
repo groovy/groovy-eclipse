@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -79,6 +81,9 @@ public class GroovyIndentation {
 
         // GRECLIPSE-1478
         handleMultilineMethodParameters();
+
+        // GRECLIPSE issue #591
+        handleNestedParenWraps();
 
         try {
             Token firstToken = tokens.get(0);
@@ -234,6 +239,45 @@ public class GroovyIndentation {
                         }
                         if (doLastLineIndent) {
                             tempIndentation[lineEnd - 1] += indentationMultiline;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // https://github.com/groovy/groovy-eclipse/issues/591
+    // Adds extra indentation for nested method-call argument lists whose
+    // contents start on a line after the opening paren. Each such paren pair
+    // that is itself contained within another paren (i.e. not the outermost
+    // paren of the statement) contributes one additional indentationMultiline
+    // to the lines it spans. The outermost wrap is already handled by the
+    // multiline-statement rule in getIndentationEdits.
+    private void handleNestedParenWraps() {
+        int indentationMultiline = pref.getIndentationMultiline();
+        // Each entry: { openLine, isWrapOpen (1/0), enclosingDepth }
+        Deque<int[]> parenStack = new ArrayDeque<>();
+
+        for (int i = 0, n = tokens.size(); i < n; i++) {
+            Token token = tokens.get(i);
+            int ttype = token.getType();
+            if (ttype == GroovyTokenTypeBridge.LPAREN) {
+                Token nextNonNLS = formatter.getNextToken(i);
+                boolean isWrapOpen = (nextNonNLS != null && nextNonNLS.getLine() > token.getLine());
+                int enclosingDepth = parenStack.size();
+                parenStack.push(new int[] {token.getLine(), isWrapOpen ? 1 : 0, enclosingDepth});
+            } else if (ttype == GroovyTokenTypeBridge.RPAREN) {
+                if (!parenStack.isEmpty()) {
+                    int[] entry = parenStack.pop();
+                    int openLine = entry[0];
+                    boolean wasWrapOpen = entry[1] != 0;
+                    int enclosingDepth = entry[2];
+                    int closeLine = token.getLine();
+
+                    if (wasWrapOpen && enclosingDepth > 0 && closeLine > openLine) {
+                        for (int line = openLine + 1; line <= closeLine; line++) {
+                            tempIndentation[line - 1] += indentationMultiline;
+                            lineInd.setMultilineIndentation(line, true);
                         }
                     }
                 }

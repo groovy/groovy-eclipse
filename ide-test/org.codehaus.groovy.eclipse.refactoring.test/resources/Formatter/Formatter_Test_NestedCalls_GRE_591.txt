@@ -1,0 +1,46 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+class Formatting {
+	StringBuilder m1() {
+		return new StringBuilder();
+	}
+	StringBuilder m2(String p1, StringBuilder p2) {
+		return new StringBuilder();
+	}
+
+	def main(args) {
+		println(m1().
+				append("a").
+				append("b").
+				append("c").
+				append(m2(
+				"x",
+				m1().
+				append("aa").
+				append("ab"))))
+	}
+}
+###exp
+class Formatting {
+	StringBuilder m1() {
+		return new StringBuilder();
+	}
+	StringBuilder m2(String p1, StringBuilder p2) {
+		return new StringBuilder();
+	}
+
+	def main(args) {
+		println(m1().
+				append("a").
+				append("b").
+				append("c").
+				append(m2(
+						"x",
+						m1().
+						append("aa").
+						append("ab"))))
+	}
+}
+###end
