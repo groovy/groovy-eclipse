@@ -4831,7 +4831,8 @@ public final class InferencingTests extends InferencingTestSuite {
             assertType(contents, offset, offset + 6, "java.lang.Number");
 
             offset = contents.lastIndexOf("number\n");
-            assertType(contents, offset, offset + 6, "java.lang.Number");
+            assertType(contents, offset, offset + 6, "java.lang.Number" +
+                (mode.endsWith("Dynamic") || !isAtLeastGroovy(60) ? "" : " & (java.lang.Cloneable | java.io.Closeable)")); // GROOVY-12000
         }
     }
 

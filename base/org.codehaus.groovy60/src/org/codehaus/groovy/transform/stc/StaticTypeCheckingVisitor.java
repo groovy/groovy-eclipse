@@ -6671,6 +6671,18 @@ out:    for (ClassNode type : todo) {
         tti.addAll(types); // stash negative type(s)
     }
 
+    private boolean optInstanceOfTypeInfo(final Expression expression, final ClassNode type) {
+        var tti = typeCheckingContext.temporaryIfBranchTypeInformation.peek().get(extractTemporaryTypeInfoKey(expression));
+        if (tti != null) { assert !tti.isEmpty();
+            tti.add(type);
+            ClassNode ut = newUnionTypeClassNode(tti);
+            tti.clear();
+            tti.add(ut);
+            return true;
+        }
+        return false;
+    }
+
     /**
      * GROOVY-11983: Whether the temporary type info captured while visiting {@code expr}
      * may be soundly inverted for the else branch of {@code if (expr) ... else ...} (or
@@ -6692,9 +6704,10 @@ out:    for (ClassNode type : todo) {
      * being true — exactly the condition under which the else fires.
      */
     private static boolean canInvertNarrowingForElseBranch(final Expression expr) {
-        // NotExpression extends BooleanExpression -- must check before the BooleanExpression branch
         if (expr instanceof NotExpression) return true;
-        if (expr instanceof BooleanExpression be) return canInvertNarrowingForElseBranch(be.getExpression());
+        if (expr instanceof BooleanExpression be) {
+            return canInvertNarrowingForElseBranch(be.getExpression());
+        }
         if (expr instanceof BinaryExpression be) {
             switch (be.getOperation().getType()) {
               case LOGICAL_AND:
@@ -6711,27 +6724,12 @@ out:    for (ClassNode type : todo) {
                 return true; // instanceof, ==, comparisons, etc.
             }
         }
-        if (expr instanceof BooleanExpression be) {
-            return canInvertNarrowingForElseBranch(be.getExpression());
-        }
         if (expr instanceof TernaryExpression te) {
             return canInvertNarrowingForElseBranch(te.getBooleanExpression().getExpression())
                 && canInvertNarrowingForElseBranch(te.getTrueExpression())
                 && canInvertNarrowingForElseBranch(te.getFalseExpression());
         }
         return true;
-    }
-
-    private boolean optInstanceOfTypeInfo(final Expression expression, final ClassNode type) {
-        var tti = typeCheckingContext.temporaryIfBranchTypeInformation.peek().get(extractTemporaryTypeInfoKey(expression));
-        if (tti != null) { assert !tti.isEmpty();
-            tti.add(type);
-            ClassNode ut = newUnionTypeClassNode(tti);
-            tti.clear();
-            tti.add(ut);
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -6824,6 +6822,14 @@ out:    for (ClassNode type : todo) {
         Map<Boolean, List<ClassNode>> spec = types.stream().collect(Collectors.partitioningBy(ClassNode::isInterface));
         ClassNode[] interfaces = spec.get(Boolean.TRUE ).toArray(ClassNode[]::new);
         List<ClassNode> supers = spec.get(Boolean.FALSE);
+        // GRECLIPSE add
+        if (supers.size() > 1) {
+            for (ClassNode sc : supers) {
+                if (supers.stream().anyMatch(t -> t != sc && !t.isDerivedFrom(sc) && !sc.isDerivedFrom(t)))
+                    return VOID_TYPE;
+            }
+        }
+        // GRECLIPSE end
         if (interfaces.length == 0) return supers.get(0);
         supers.add(OBJECT_TYPE); // ensure get(0) nothrow
         return new WideningCategories.LowestUpperBoundClassNode("IntersectionTypeClassNode", supers.get(0), interfaces);

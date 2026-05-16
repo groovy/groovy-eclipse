@@ -23,7 +23,6 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringJoiner;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -42,7 +41,6 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
@@ -278,20 +276,13 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             type = type.getComponentType();
         }
         if (type.isGenericsPlaceHolder()) {
-            return type.getUnresolvedName() + arraySuffix;
-        }
-        if (type.getUnresolvedName().startsWith("<UnionType:")) {
-            ClassNode[] types = ReflectionUtils.executePrivateMethod(type.getClass(), "getDelegates", type);
-            var spec = new StringJoiner(" | ", arraySuffix.isEmpty() ? "" : "(", arraySuffix.isEmpty() ? "" : ")" + arraySuffix);
-            for (ClassNode t : types) {
-                spec.add(printTypeName(t));
-            }
-            return spec.toString();
+            return type.getUnresolvedName()+arraySuffix;
         }
         String name = type.getText();
         if (name.charAt(0) == '(') // Groovy 4.0.0-rc-1+
-            name = name.substring(1, name.length() - 1);
-        return name + (name.contains(" & ") ? "" : printGenerics(type)) + arraySuffix;
+            return name.substring(1, name.length() - 1);
+
+        return name + printGenerics(type) + arraySuffix;
     }
 
     public static String printGenerics(ClassNode type) {
