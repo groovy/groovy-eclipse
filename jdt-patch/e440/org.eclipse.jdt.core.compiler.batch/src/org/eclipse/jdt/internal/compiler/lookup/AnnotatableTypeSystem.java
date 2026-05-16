@@ -17,6 +17,7 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 /* AnnotatableTypeSystem: Keep track of annotated types so as to provide unique bindings for identically annotated versions identical underlying "naked" types.
@@ -187,6 +188,13 @@ public class AnnotatableTypeSystem extends TypeSystem {
 		if (genericType.hasTypeAnnotations())
 			throw new IllegalStateException();
 
+		long objectBoundNullTagBits = 0;
+		if (boundKind == Wildcard.EXTENDS && bound != null && bound.id == TypeIds.T_JavaLangObject && otherBounds == null) {
+			objectBoundNullTagBits = bound.tagBits & TagBits.AnnotationNullMASK;
+			boundKind = Wildcard.UNBOUND;
+			bound = null;
+		}
+
 		WildcardBinding nakedType = null;
 		boolean useDerivedTypesOfBound = bound instanceof TypeVariableBinding || (bound instanceof ParameterizedTypeBinding && !(bound instanceof RawTypeBinding)) ;
 		TypeBinding[] derivedTypes = getDerivedTypes(useDerivedTypesOfBound ? bound : genericType);
@@ -197,20 +205,22 @@ public class AnnotatableTypeSystem extends TypeSystem {
 				continue;
 			if (derivedType.boundKind() != boundKind || derivedType.bound() != bound || !Util.effectivelyEqual(derivedType.additionalBounds(), otherBounds)) //$IDENTITY-COMPARISON$
 				continue;
-			if (Util.effectivelyEqual(derivedType.getTypeAnnotations(), annotations))
-				return (WildcardBinding) derivedType;
+			WildcardBinding derivedWildcard = (WildcardBinding) derivedType;
+			if (Util.effectivelyEqual(derivedType.getTypeAnnotations(), annotations) && derivedWildcard.hasNullTagBits(objectBoundNullTagBits))
+				return derivedWildcard;
 			if (!derivedType.hasTypeAnnotations())
-				nakedType = (WildcardBinding) derivedType;
+				nakedType = derivedWildcard;
 		}
 
 		if (nakedType == null)
 			nakedType = super.getWildcard(genericType, rank, bound, otherBounds, boundKind);
 
-		if (!haveTypeAnnotations(genericType, bound, otherBounds, annotations))
+		if (!haveTypeAnnotations(genericType, bound, otherBounds, annotations) && objectBoundNullTagBits == 0)
 			return nakedType;
 
 		WildcardBinding wildcard = new WildcardBinding(genericType, rank, bound, otherBounds, boundKind, this.environment);
 		wildcard.id = nakedType.id;
+		wildcard.nullTagBitsFromErasedObjectBound = objectBoundNullTagBits;
 		wildcard.setTypeAnnotations(annotations, this.isAnnotationBasedNullAnalysisEnabled);
 		return (WildcardBinding) cacheDerivedType(useDerivedTypesOfBound ? bound : genericType, nakedType, wildcard);
 	}

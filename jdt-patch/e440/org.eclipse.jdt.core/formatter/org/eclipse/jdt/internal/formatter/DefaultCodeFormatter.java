@@ -226,6 +226,7 @@ public class DefaultCodeFormatter extends CodeFormatter {
 			findHeader();
 
 		prepareSpaces();
+		prepareReplaceTextBlocks();
 		prepareLineBreaks();
 		prepareComments();
 		prepareWraps(kind);
@@ -399,6 +400,15 @@ public class DefaultCodeFormatter extends CodeFormatter {
 				if (tokenType == TokenNameEOF)
 					break;
 				Token token = Token.fromCurrent(scanner, tokenType);
+				if (this.workingOptions.put_text_block_quotes_on_new_line && token.tokenType == TerminalToken.TokenNameTextBlock) {
+					for (IRegion region : this.formatRegions) {
+						if (region.getOffset() <= token.originalStart &&
+								region.getOffset() + region.getLength() >= token.originalEnd) {
+							token = new TokenTextBlock(token.originalStart, token.originalEnd,TerminalToken.TokenNameTextBlock);
+							break;
+						}
+					}
+				}
 				this.tokens.add(token);
 			} catch (InvalidInputException e) {
 				Token token = Token.fromCurrent(scanner, TokenNameNotAToken);
@@ -435,6 +445,11 @@ public class DefaultCodeFormatter extends CodeFormatter {
 		this.astRoot.accept(wrapPreparator);
 		applyFormatOff();
 		wrapPreparator.finishUp(this.astRoot, this.formatRegions);
+	}
+
+	private void prepareReplaceTextBlocks() {
+		TextBlockReplacePreparator tbrPreparator = new TextBlockReplacePreparator(this.tokenManager, this.originalOptions);
+		this.astRoot.accept(tbrPreparator);
 	}
 
 	private void applyFormatOff() {

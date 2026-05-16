@@ -548,6 +548,26 @@ public class SearchEngine {
 	}
 
 	/**
+	 * Returns an array of search participants that includes the default Java search
+	 * participant followed by any participants contributed via the
+	 * {@code org.eclipse.jdt.core.derivedSourceSearchParticipant} extension point.
+	 * <p>
+	 * If no extension point contributions exist, the returned array contains only
+	 * the default Java search participant (equivalent to wrapping
+	 * {@link #getDefaultSearchParticipant()} in a single-element array).
+	 * <p>
+	 * The default Java search participant is a new instance on each call (consistent
+	 * with {@link #getDefaultSearchParticipant()}). Contributed participants are
+	 * singleton instances shared across calls.
+	 *
+	 * @return array of search participants, never {@code null} or empty
+	 * @since 3.46
+	 */
+	public static SearchParticipant[] getSearchParticipants() {
+		return BasicSearchEngine.getSearchParticipants();
+	}
+
+	/**
 	 * Searches for the Java element determined by the given signature. The signature
 	 * can be incomplete. For example, a call like
 	 * <code>search(ws, "run()", METHOD,REFERENCES, col)</code>

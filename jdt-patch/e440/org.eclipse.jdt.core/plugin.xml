@@ -87,6 +87,13 @@
 	schema="schema/javaSearchDelegate.exsd"/>
 
 <!-- =================================================================================== -->
+<!-- Extension Point: Search Participant for Java Derived Source                          -->
+<!-- =================================================================================== -->
+<extension-point name="%derivedSourceSearchParticipantsName"
+	id="derivedSourceSearchParticipant"
+	schema="schema/derivedSourceSearchParticipant.exsd"/>
+
+<!-- =================================================================================== -->
 <!-- Extension Point: Java 6 Annotation Processor Manager                                -->
 <!-- =================================================================================== -->
 

@@ -10,6 +10,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Arcadiy Ivanov - javaDerivedSource indexing support
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
 
@@ -105,6 +106,7 @@ public class IndexAllProject extends IndexRequest {
 			String[] paths = index.queryDocumentNames(""); // all file names //$NON-NLS-1$
 			int max = paths == null ? 0 : paths.length;
 			final SimpleLookupTable indexedFileNames = new SimpleLookupTable(max == 0 ? 33 : max + 11);
+			final SimpleLookupTable derivedFileNames = new SimpleLookupTable(11);
 			final String OK = "OK"; //$NON-NLS-1$
 			final String DELETED = "DELETED"; //$NON-NLS-1$
 			if (paths != null) {
@@ -151,6 +153,13 @@ public class IndexAllProject extends IndexRequest {
 													if (Util.isExcluded(file, inclusionPatterns, exclusionPatterns))
 														return false;
 												indexedFileNames.put(Util.relativePath(file.getFullPath(), 1/*remove project segment*/), file);
+											} else if (org.eclipse.jdt.internal.core.util.Util.isJavaDerivedFileName(proxy.getName())
+													&& DerivedSourceSearchParticipantRegistry.hasParticipant(DerivedSourceSearchParticipantRegistry.getFileExtension(proxy.getName()))) {
+												IFile file = (IFile) proxy.requestResource();
+												if (exclusionPatterns != null || inclusionPatterns != null)
+													if (Util.isExcluded(file, inclusionPatterns, exclusionPatterns))
+														return false;
+												derivedFileNames.put(Util.relativePath(file.getFullPath(), 1/*remove project segment*/), file);
 											}
 											return false;
 										case IResource.FOLDER :
@@ -188,6 +197,20 @@ public class IndexAllProject extends IndexRequest {
 															|| indexLastModified < EFS.getStore(location).fetchInfo().getLastModified()
 														? (Object) file
 														: (Object) OK);
+											} else if (org.eclipse.jdt.internal.core.util.Util.isJavaDerivedFileName(proxy.getName())
+													&& DerivedSourceSearchParticipantRegistry.hasParticipant(DerivedSourceSearchParticipantRegistry.getFileExtension(proxy.getName()))) {
+												IFile file = (IFile) proxy.requestResource();
+												URI location = file.getLocationURI();
+												if (location == null) return false;
+												if (exclusionPatterns != null || inclusionPatterns != null)
+													if (Util.isExcluded(file, inclusionPatterns, exclusionPatterns))
+														return false;
+												String relativePathString = Util.relativePath(file.getFullPath(), 1/*remove project segment*/);
+												boolean needsIndexing = indexedFileNames.get(relativePathString) == null
+														|| indexLastModified < EFS.getStore(location).fetchInfo().getLastModified();
+												// clear DELETED marker so the indexedFileNames loop does not issue a spurious remove()
+												indexedFileNames.put(relativePathString, OK);
+												derivedFileNames.put(relativePathString, needsIndexing ? (Object) file : (Object) OK);
 											}
 											return false;
 										case IResource.FOLDER :
@@ -220,6 +243,23 @@ public class IndexAllProject extends IndexRequest {
 							this.manager.remove(name, this.containerPath);
 						else
 							this.manager.addSource((IFile) value, this.containerPath, parser);
+					}
+				}
+			}
+
+			// index derived source files via their registered search participants
+			names = derivedFileNames.keyTable;
+			values = derivedFileNames.valueTable;
+			for (int i = 0, namesLength = names.length; i < namesLength; i++) {
+				String name = (String) names[i];
+				if (name != null) {
+					if (this.isCancelled) return false;
+					Object value = values[i];
+					if (value != OK) {
+						if (value == DELETED)
+							this.manager.remove(name, this.containerPath);
+						else
+							this.manager.addDerivedSource((IFile) value, this.containerPath);
 					}
 				}
 			}

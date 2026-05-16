@@ -261,6 +261,20 @@ public void addSource(IFile resource, IPath containerPath, SourceElementParser p
 	scheduleDocumentIndexing(document, containerPath, indexLocation, participant);
 }
 /**
+ * Trigger addition of a derived source file to an index via its registered search participant.
+ * Note: the actual operation is performed in background
+ */
+public void addDerivedSource(IFile resource, IPath containerPath) {
+	if (JavaCore.getPlugin() == null) return;
+	String extension = DerivedSourceSearchParticipantRegistry.getFileExtension(resource.getName());
+	if (extension == null) return;
+	SearchParticipant participant = DerivedSourceSearchParticipantRegistry.getParticipant(extension);
+	if (participant == null) return;
+	SearchDocument document = participant.getDocument(resource.getFullPath().toString());
+	IndexLocation indexLocation = computeIndexLocation(containerPath);
+	scheduleDocumentIndexing(document, containerPath, indexLocation, participant);
+}
+/**
  * Removes unused indexes from disk.
  */
 public synchronized void cleanUpIndexes() {

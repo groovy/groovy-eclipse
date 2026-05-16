@@ -16,15 +16,15 @@ package org.eclipse.jdt.internal.compiler.codegen;
 public class CaseLabel extends BranchLabel {
 
 	public int instructionPosition = POS_NOT_SET;
-	private BranchLabel branchLabel; // doppelganger
+	public BranchLabel branchLabel; // doppelganger label useful in situations where the location can be reached via a goto or goto_w. The CaseLabel itself is reachable only by switch
 
 public CaseLabel(CodeStream codeStream) {
 	super(codeStream);
 }
 
-public CaseLabel(CodeStream codeStream, boolean allowNarrowBranch) {
+public CaseLabel(CodeStream codeStream, boolean reachableViaGoto) {
 	super(codeStream);
-	if (allowNarrowBranch)
+	if (reachableViaGoto)
 		this.branchLabel = new BranchLabel(codeStream);
 }
 

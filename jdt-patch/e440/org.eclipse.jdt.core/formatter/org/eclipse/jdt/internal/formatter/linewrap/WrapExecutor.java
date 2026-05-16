@@ -767,7 +767,6 @@ public class WrapExecutor {
 			} else if (indentOption == Alignment.M_INDENT_ON_COLUMN) {
 				lineIndent = this.tm.toIndent(this.tm.getPositionInLine(this.tm.indexOf(token)), true) - indent;
 			} else {
-				assert false;
 				lineIndent = 0;
 			}
 			structure.stream().skip(1).forEach(t -> t.setIndent(lineIndent));

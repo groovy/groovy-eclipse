@@ -116,12 +116,12 @@ public abstract class Pattern extends Expression {
 	public boolean coversValue(Constant cst, BlockScope scope) {
 		if (!isUnguarded())
 			return false;
-		if (!(this.resolvedType instanceof BaseTypeBinding baseType))
+		if (!(this.resolvedType.unboxedType() instanceof BaseTypeBinding baseType))
 			return false;
 		if (!cst.isExactTestingConversion(baseType))
 			return false;
 		int constantTypeID = cst.typeID();
-		PrimitiveConversionRoute route = findPrimitiveConversionRoute(this.resolvedType, TypeBinding.wellKnownBaseType(constantTypeID), scope);
+		PrimitiveConversionRoute route = findPrimitiveConversionRoute(baseType, TypeBinding.wellKnownBaseType(constantTypeID), scope);
 		switch (route) {
 			// JLS §5.7.2:
 			case NARROWING_PRIMITVE_CONVERSION:

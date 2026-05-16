@@ -930,9 +930,6 @@ protected static class JavacTestOptions {
 				new EclipseHasABug(MismatchType.JavacErrorsEclipseWarnings),
 			EclipseBug421922 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=421922
 						new EclipseHasABug(MismatchType.EclipseErrorsJavacNone),
-			EclipseBug428061 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428061
-								new EclipseHasABug(MismatchType.JavacErrorsEclipseNone |
-										MismatchType.JavacErrorsEclipseWarnings),
 			EclipseBug510528 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=510528
 				new EclipseHasABug(MismatchType.JavacErrorsEclipseNone),
 			EclipseBug531531 = // https://bugs.eclipse.org/bugs/show_bug.cgi?id=531531

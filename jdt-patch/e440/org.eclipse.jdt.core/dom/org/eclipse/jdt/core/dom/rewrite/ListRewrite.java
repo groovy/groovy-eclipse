@@ -36,7 +36,7 @@ import org.eclipse.text.edits.TextEditGroup;
  * @see ASTRewrite#getListRewrite(ASTNode, ChildListPropertyDescriptor)
  * @since 3.0
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings("rawtypes")
 public final class ListRewrite {
 
 	private final ASTNode parent;
@@ -418,7 +418,7 @@ public final class ListRewrite {
 	 * @return a list of all original nodes in the list
 	 */
 	public List getOriginalList() {
-		List list= (List) getEvent().getOriginalValue();
+		var list= (List<?>) getEvent().getOriginalValue();
 		return Collections.unmodifiableList(list);
 	}
 
@@ -430,8 +430,7 @@ public final class ListRewrite {
 	 * all the described changes
 	 */
 	public List getRewrittenList() {
-		List list= (List) getEvent().getNewValue();
+		var list= (List<?>) getEvent().getNewValue();
 		return Collections.unmodifiableList(list);
 	}
-
 }

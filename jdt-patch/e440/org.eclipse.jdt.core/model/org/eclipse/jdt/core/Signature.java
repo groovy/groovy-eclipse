@@ -638,6 +638,8 @@ private static int appendClassTypeSignature(char[] string, int start, boolean fu
 			throw newIllegalArgumentException(string, start);
 		}
 		c = string[p];
+		char prevC = string[p - 1];
+		char nextC = p < string.length - 1 ? string[p + 1] : 0;
 		switch(c) {
 			case C_SEMICOLON :
 				// all done
@@ -668,15 +670,19 @@ private static int appendClassTypeSignature(char[] string, int start, boolean fu
 			 	innerTypeStart = buffer.length();
 			 	inAnonymousType = false;
 			 	if (resolved) {
-					// once we hit "$" there are no more package prefixes
-					removePackageQualifiers = false;
-					/**
-					 * Convert '$' in resolved type signatures into '.'.
-					 * NOTE: This assumes that the type signature is an inner type
-					 * signature. This is true in most cases, but someone can define a
-					 * non-inner type name containing a '$'.
-					 */
-					buffer.append('.');
+			 		if (prevC == C_DOT || nextC == C_DOT) {
+			 			buffer.append('$');
+			 		} else {
+			 			// once we hit "$" there are no more package prefixes
+			 			removePackageQualifiers = false;
+			 			/**
+			 			 * Convert '$' in resolved type signatures into '.'.
+			 			 * NOTE: This assumes that the type signature is an inner type
+			 			 * signature. This is true in most cases, but someone can define a
+			 			 * non-inner type name containing a '$'.
+			 			 */
+			 			buffer.append('.');
+			 		}
 			 	}
 			 	break;
 			 default :

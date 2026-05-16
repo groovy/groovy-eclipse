@@ -164,7 +164,7 @@ public class LineBreaksPreparator extends ASTVisitor {
 		for (int i = 0; i < enumConstants.size(); i++) {
 			EnumConstantDeclaration declaration = enumConstants.get(i);
 			if (declaration.getJavadoc() != null)
-				this.tm.firstTokenIn(declaration, TokenNameCOMMENT_JAVADOC).breakBefore();
+				this.tm.firstTokenIn(declaration.getJavadoc(), ANY).breakBefore();
 			if (declaration.getAnonymousClassDeclaration() != null && i < enumConstants.size() - 1)
 				this.tm.firstTokenAfter(declaration, TokenNameCOMMA).breakAfter();
 		}
@@ -577,12 +577,16 @@ public class LineBreaksPreparator extends ASTVisitor {
 	@Override
 	public boolean visit(TextBlock node) {
 		int indentOption = this.options.text_block_indentation;
-		if (indentOption == Alignment.M_INDENT_PRESERVE)
+		if (indentOption == Alignment.M_INDENT_PRESERVE && !this.options.put_text_block_quotes_on_new_line)
 			return true;
 		Token block = this.tm.firstTokenIn(node, TokenNameTextBlock);
-		ArrayList<Token> lines = new ArrayList<>();
-		lines.add(new Token(block.originalStart, block.originalStart + 2, TokenNameNotAToken)); // first line; """
 		int incidentalWhitespace = Integer.MAX_VALUE;
+		ArrayList<Token> lines = new ArrayList<>();
+		Token newLine = new Token(block.originalStart, block.originalStart + 2, TokenNameNotAToken); // first line; """
+		lines.add(newLine); // first line; """
+		if (this.options.put_text_block_quotes_on_new_line) {
+				breakLineBefore(node);
+		}
 		int blankLines = -1; // will go to 0 on line break after first line
 		int i = block.originalStart + 3;
 		while (i <= block.originalEnd) {
@@ -619,13 +623,37 @@ public class LineBreaksPreparator extends ASTVisitor {
 			Token line = new Token(t, t.originalStart + incidentalWhitespace, t.originalEnd, TokenNameTextBlock);
 			line.setWrapPolicy(wrapPolicy);
 			lines.set(i, line);
+			block.setInternalStructure(lines);
 		}
-		block.setInternalStructure(lines);
+		if (this.options.put_text_block_quotes_on_new_line) {
+			if (block instanceof TokenTextBlock && !checkSemicolonTextBlock(block)) {
+				breakLineAfter(node);
+			}
+		}
+
 		return true;
+	}
+
+	private boolean checkSemicolonTextBlock(Token token) {
+		boolean semicolonFound = false;
+		if (token instanceof TokenTextBlock) {
+			String source = this.tm.getSource();
+			for(int i=token.originalEnd+1; i < source.length(); i++) {
+				char curChar = source.charAt(i);
+				if (curChar == ' ' || curChar == '\t') continue;
+				if (curChar == ';') semicolonFound = true;
+				break;
+			}
+		}
+		return semicolonFound;
 	}
 
 	private void breakLineBefore(ASTNode node) {
 		this.tm.firstTokenIn(node, ANY).breakBefore();
+	}
+
+	private void breakLineAfter(ASTNode node) {
+		this.tm.firstTokenIn(node, ANY).breakAfter();
 	}
 
 	private void putBlankLinesBefore(ASTNode node, int linesCount) {

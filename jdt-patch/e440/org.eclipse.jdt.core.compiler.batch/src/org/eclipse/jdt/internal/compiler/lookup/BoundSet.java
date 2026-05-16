@@ -867,12 +867,19 @@ class BoundSet {
 
 	private ConstraintTypeFormula combineEqualSupers(TypeBound boundS, TypeBound boundT) {
 		//  more permutations of: S <: α and α <: T imply ⟨S <: T⟩
+		boolean outerSame = false;
+		boolean innerSame = false;
 		if (TypeBinding.equalsEquals(boundS.left, boundT.right))
-			// came in as: α REL S and T REL α imply ⟨T REL S⟩
-			return ConstraintTypeFormula.create(boundT.left, boundS.right, boundS.relation, boundT.isSoft||boundS.isSoft);
+			outerSame = true; // came in as: α REL S and T REL α imply ⟨T REL S⟩
 		if (TypeBinding.equalsEquals(boundS.right, boundT.left))
-			// came in as: S REL α and α REL T imply ⟨S REL T⟩
+			innerSame = true; // came in as: S REL α and α REL T imply ⟨S REL T⟩
+		if (outerSame) {
+			if (innerSame) // NON-JLS bidirectional subtyping implies equality:
+				return ConstraintTypeFormula.create(boundS.left, boundS.right, ReductionResult.SAME, false);
+			return ConstraintTypeFormula.create(boundT.left, boundS.right, boundS.relation, boundT.isSoft||boundS.isSoft);
+		} else if (innerSame) {
 			return ConstraintTypeFormula.create(boundS.left, boundT.right, boundS.relation, boundT.isSoft||boundS.isSoft);
+		}
 		return null;
 	}
 

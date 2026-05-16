@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2024, 2025 IBM Corporation and others.
+ * Copyright (c) 2024, 2026 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,7 +30,7 @@ public class PrimitiveInPatternsTest extends AbstractRegressionTest9 {
 	static {
 //		TESTS_NUMBERS = new int [] { 1 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "testSwitchPrimitiveboolean_04" };
+//		TESTS_NAMES = new String[] { "testDominanceIssue4979_001" };
 	}
 	private String extraLibPath;
 	public static Class<?> testClass() {
@@ -7612,6 +7612,40 @@ public class PrimitiveInPatternsTest extends AbstractRegressionTest9 {
 		"	Method arguments:\n" +
 		"		#31 10.0\n";
 		verifyClassFile(expectedOutput, "X.class", ClassFileBytesDisassembler.SYSTEM);
+	}
+	public void testDominanceIssue4979_001() {
+		runNegativeTest(new String[] {
+			"X.java",
+				"""
+				public class X {
+					public int foo(Character c) {
+						int result = 0;
+						switch (c) {
+							case Character c1 -> {
+								result = c1;
+								break;
+							}
+							case 0 -> {  // Same goes for case (int) 0
+								result = 0;
+								break;
+							}
+						}
+						return result;
+					}
+				}
+				"""
+			},
+			"----------\n" +
+			"1. WARNING in X.java (at line 5)\n" +
+			"	case Character c1 -> {\n" +
+			"	     ^^^^^^^^^^^^\n" +
+			"You are using a preview language feature that may or may not be supported in a future release\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 9)\n" +
+			"	case 0 -> {  // Same goes for case (int) 0\n" +
+			"	     ^\n" +
+			"This case label is dominated by one of the preceding case labels\n" +
+			"----------\n");
 	}
 
 }

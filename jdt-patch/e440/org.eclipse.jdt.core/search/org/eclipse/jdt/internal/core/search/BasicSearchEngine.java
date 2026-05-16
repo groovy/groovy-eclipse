@@ -64,6 +64,7 @@ import org.eclipse.jdt.internal.core.SourceMethod;
 import org.eclipse.jdt.internal.core.SourceMethodElementInfo;
 import org.eclipse.jdt.internal.core.search.indexing.IIndexConstants;
 import org.eclipse.jdt.internal.core.search.indexing.IndexManager;
+import org.eclipse.jdt.internal.core.search.indexing.DerivedSourceSearchParticipantRegistry;
 import org.eclipse.jdt.internal.core.search.matching.*;
 import org.eclipse.jdt.internal.core.util.Messages;
 
@@ -297,6 +298,21 @@ public class BasicSearchEngine {
 	 */
 	public static SearchParticipant getDefaultSearchParticipant() {
 		return new JavaSearchParticipant();
+	}
+
+	/**
+	 * Returns the default participant plus all contributed participants.
+	 */
+	public static SearchParticipant[] getSearchParticipants() {
+		SearchParticipant defaultParticipant = getDefaultSearchParticipant();
+		SearchParticipant[] contributed = DerivedSourceSearchParticipantRegistry.getContributedParticipants();
+		if (contributed.length == 0) {
+			return new SearchParticipant[] { defaultParticipant };
+		}
+		SearchParticipant[] result = new SearchParticipant[1 + contributed.length];
+		result[0] = defaultParticipant;
+		System.arraycopy(contributed, 0, result, 1, contributed.length);
+		return result;
 	}
 
 	public static String getMatchRuleString(final int matchRule) {

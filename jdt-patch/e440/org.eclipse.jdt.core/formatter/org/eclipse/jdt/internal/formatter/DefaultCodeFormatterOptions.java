@@ -515,6 +515,7 @@ public class DefaultCodeFormatterOptions {
 	public boolean join_lines_in_comments;
 	public boolean join_line_comments;
 	public boolean put_empty_statement_on_new_line;
+	public boolean put_text_block_quotes_on_new_line;
 	public int tab_size;
 	public int page_width;
 	public int tab_char;
@@ -953,6 +954,7 @@ public class DefaultCodeFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_JOIN_LINES_IN_COMMENTS, this.join_lines_in_comments ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_JOIN_LINE_COMMENTS, this.join_line_comments ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_PUT_EMPTY_STATEMENT_ON_NEW_LINE, this.put_empty_statement_on_new_line ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_PUT_TEXT_BLOCK_QUOTES_ON_NEW_LINE, this.put_text_block_quotes_on_new_line ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_LINE_SPLIT, Integer.toString(this.page_width));
 		switch(this.tab_char) {
 			case SPACE :
@@ -2539,6 +2541,10 @@ public class DefaultCodeFormatterOptions {
 		if (putEmptyStatementOnNewLineOption != null) {
 			this.put_empty_statement_on_new_line = DefaultCodeFormatterConstants.TRUE.equals(putEmptyStatementOnNewLineOption);
 		}
+		final Object putNewLineOnTextBlockOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_PUT_TEXT_BLOCK_QUOTES_ON_NEW_LINE);
+		if (putNewLineOnTextBlockOption != null) {
+			this.put_text_block_quotes_on_new_line = DefaultCodeFormatterConstants.TRUE.equals(putNewLineOnTextBlockOption);
+		}
 		final Object tabSizeOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE);
 		if (tabSizeOption != null) {
 			int tabSize = 4;
@@ -3356,6 +3362,7 @@ public class DefaultCodeFormatterOptions {
 		this.join_line_comments = false;
 		this.join_wrapped_lines = true;
 		this.put_empty_statement_on_new_line = false;
+		this.put_text_block_quotes_on_new_line = false;
 		this.tab_size = 4;
 		this.page_width = 120;
 		this.tab_char = TAB; // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=49081
@@ -3762,6 +3769,7 @@ public class DefaultCodeFormatterOptions {
 		this.join_line_comments = false;
 		this.join_wrapped_lines = true;
 		this.put_empty_statement_on_new_line = true;
+		this.put_text_block_quotes_on_new_line = false;
 		this.tab_size = 8;
 		this.page_width = 120;
 		this.tab_char = MIXED;

@@ -2074,6 +2074,100 @@ public void testIssue4864() {
 	});
 }
 
+public void testGH5052() {
+	runConformTest(new String[] {
+			"Freeze.java",
+			"""
+			import java.util.function.Function;
+
+			public class Freeze {
+				interface Ifc<S> {}
+				class Val implements Ifc<Val> {}
+
+				public static void main(String... args) {
+					Val v = null; // specific value doesn't matter here
+					consume(v, t -> someMapper(t));
+				}
+
+				static <T> void consume(T t, Function<T,T> mapper) {
+					mapper.apply(null);
+					System.out.print("consume");
+					// impl doesn't matter here
+				}
+
+				static <U extends Ifc<U>> U someMapper(U u) {
+					System.out.print("map.");
+					return null; // impl doesn't matter here
+				}
+			}
+			"""
+		},
+		"map.consume");
+}
+public void testGH5028() {
+	if (isJRE10Plus) // var, etc.
+	runConformTest(new String[] {
+			"InferredGenerics.java",
+			"""
+			import java.util.Map;
+
+			public class InferredGenerics {
+			    public static void main(String[] args) {
+			        var child1 = new ParentGeneric<String>();
+			        var child2 = new ParentGeneric<Integer>();
+
+			        var wrappedChild1 = new WrapperGeneric<ParentGeneric<String>>();
+			        var wrappedChild2 = new WrapperGeneric<ParentGeneric<Object>>();
+
+			        var generics = Map.of(
+			                "wrap1", wrappedChild1,
+			                "wrap2", wrappedChild2);
+			        System.out.println(new GenericRegistry(generics));
+			    }
+
+			    static class GenericRegistry {
+			        Map<String, WrapperGeneric<? extends ParentGeneric<?>>> registry;
+
+			        public GenericRegistry(Map<String, WrapperGeneric<? extends ParentGeneric<?>>> registry) {
+			            this.registry = registry;
+			        }
+			    }
+
+			    static class WrapperGeneric<T> {}
+			    static class ParentGeneric<T> { }
+			    static class ChildOne extends ParentGeneric<String> {}
+			    static class ChildTwo extends ParentGeneric<Integer> {}
+			}
+			"""});
+}
+
+public void testListRewrite() {
+	// previously this triggered an unchecked warning
+	runNegativeTest(new String[] {
+			"X.java",
+			"""
+			import java.util.*;
+			public class X {
+				public List getOriginalList(List list) {
+					return Collections.unmodifiableList(list);
+				}
+			}
+			"""
+		},
+		"""
+		----------
+		1. WARNING in X.java (at line 3)
+			public List getOriginalList(List list) {
+			       ^^^^
+		List is a raw type. References to generic type List<E> should be parameterized
+		----------
+		2. WARNING in X.java (at line 3)
+			public List getOriginalList(List list) {
+			                            ^^^^
+		List is a raw type. References to generic type List<E> should be parameterized
+		----------
+		""");
+}
 public static Class<GenericsRegressionTest_9> testClass() {
 	return GenericsRegressionTest_9.class;
 }

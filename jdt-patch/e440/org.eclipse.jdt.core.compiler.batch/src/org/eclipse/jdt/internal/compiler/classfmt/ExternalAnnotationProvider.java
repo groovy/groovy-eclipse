@@ -150,6 +150,8 @@ public class ExternalAnnotationProvider {
 
 				// discard optional meta data (separated by whitespace):
 				annotSig = trimTail(annotSig);
+				rawSig = normalizeWildcards(rawSig, false);
+				annotSig = normalizeWildcards(annotSig, true);
 				if (isSuper) {
 					if (this.supertypeAnnotationSources == null)
 						this.supertypeAnnotationSources = new HashMap<>();
@@ -165,6 +167,23 @@ public class ExternalAnnotationProvider {
 				}
 			} while (((line = pendingLine) != null) || (line = reader.readLine()) != null);
 		}
+	}
+
+	private String normalizeWildcards(String signature, boolean isAnnotated) {
+		signature = signature.replaceAll("\\+Ljava/lang/Object;", "*"); //$NON-NLS-1$ //$NON-NLS-2$
+		if (isAnnotated) {
+			// '1' on either the wildcard or its Object bound or both => treat like '@NonNull ?'
+			final String nonNullWildcard = "*1"; //$NON-NLS-1$
+			signature = signature.replaceAll("\\+1L1java/lang/Object;", nonNullWildcard); //$NON-NLS-1$
+			signature = signature.replaceAll("\\+L1java/lang/Object;", nonNullWildcard); //$NON-NLS-1$
+			signature = signature.replaceAll("\\+1Ljava/lang/Object;", nonNullWildcard); //$NON-NLS-1$
+			// '0' on either the wildcard or its Object bound or both => treat like '@Nullable ?'
+			final String nullableWildcard = "*0"; //$NON-NLS-1$
+			signature = signature.replaceAll("\\+0L0java/lang/Object;", nullableWildcard); //$NON-NLS-1$
+			signature = signature.replaceAll("\\+L0java/lang/Object;", nullableWildcard); //$NON-NLS-1$
+			signature = signature.replaceAll("\\+0Ljava/lang/Object;", nullableWildcard); //$NON-NLS-1$
+		}
+		return signature;
 	}
 
 	private boolean isValidSignature(String trim, boolean expectTypeArguments) {

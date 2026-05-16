@@ -335,8 +335,11 @@ public MatchLocator(
 	}
 	if (pattern instanceof MethodPattern) {
 	    IType type = ((MethodPattern) pattern).declaringType;
-	    if (type != null && !type.isBinary()) {
-	    	SourceType sourceType = (SourceType) type;
+	    // Guard with instanceof: contributed search participants
+	    // (e.g., Kotlin) may provide IType implementations that are
+	    // non-binary but not SourceType. The local-class statement
+	    // retention optimization only applies to Java source types.
+	    if (type instanceof SourceType sourceType) {
 	    	IMember local = sourceType.getOuterMostLocalContext();
 	    	if (local instanceof IMethod) { // remember this method's range so we don't purge its statements.
 	    		try {

@@ -10,6 +10,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Arcadiy Ivanov - javaDerivedSource indexing support
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
 
@@ -70,6 +71,9 @@ class AddFolderToIndex extends IndexRequest {
 							if (proxy.getType() == IResource.FILE) {
 								if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName()))
 									indexManager.addSource((IFile) proxy.requestResource(), container, parser);
+								else if (org.eclipse.jdt.internal.core.util.Util.isJavaDerivedFileName(proxy.getName())
+										&& DerivedSourceSearchParticipantRegistry.hasParticipant(DerivedSourceSearchParticipantRegistry.getFileExtension(proxy.getName())))
+									indexManager.addDerivedSource((IFile) proxy.requestResource(), container);
 								return false;
 							}
 							return true;
@@ -88,6 +92,11 @@ class AddFolderToIndex extends IndexRequest {
 										IResource resource = proxy.requestResource();
 										if (!Util.isExcluded(resource, AddFolderToIndex.this.inclusionPatterns, AddFolderToIndex.this.exclusionPatterns))
 											indexManager.addSource((IFile)resource, container, parser);
+									} else if (org.eclipse.jdt.internal.core.util.Util.isJavaDerivedFileName(proxy.getName())
+											&& DerivedSourceSearchParticipantRegistry.hasParticipant(DerivedSourceSearchParticipantRegistry.getFileExtension(proxy.getName()))) {
+										IResource resource = proxy.requestResource();
+										if (!Util.isExcluded(resource, AddFolderToIndex.this.inclusionPatterns, AddFolderToIndex.this.exclusionPatterns))
+											indexManager.addDerivedSource((IFile)resource, container);
 									}
 									return false;
 								case IResource.FOLDER :

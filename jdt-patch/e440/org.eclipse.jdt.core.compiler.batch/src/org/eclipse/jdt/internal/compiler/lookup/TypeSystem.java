@@ -22,6 +22,7 @@ package org.eclipse.jdt.internal.compiler.lookup;
 import java.util.HashMap;
 import java.util.function.Supplier;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
@@ -373,6 +374,10 @@ public class TypeSystem {
 	public WildcardBinding getWildcard(ReferenceBinding genericType, int rank, TypeBinding bound, TypeBinding[] otherBounds, int boundKind) {
 		if (genericType == null) // pseudo wildcard denoting composite bounds for lub computation
 			genericType = ReferenceBinding.LUB_GENERIC;
+		if (boundKind == Wildcard.EXTENDS && bound != null && bound.id == TypeIds.T_JavaLangObject && otherBounds == null) {
+			boundKind = Wildcard.UNBOUND;
+			bound = null;
+		}
 
 		ReferenceBinding unannotatedGenericType = (ReferenceBinding) getUnannotatedType(genericType);
 		int otherBoundsLength = otherBounds == null ? 0: otherBounds.length;

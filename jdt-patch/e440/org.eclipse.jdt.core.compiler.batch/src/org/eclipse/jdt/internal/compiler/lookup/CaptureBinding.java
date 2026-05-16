@@ -65,6 +65,7 @@ public class CaptureBinding extends TypeVariableBinding {
 			// propagate from wildcard to capture - use super version, because our own method propagates type annotations in the opposite direction:
 			super.setTypeAnnotations(wildcard.getTypeAnnotations(), wildcard.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled);
 			this.tagBits |= wildcard.tagBits & (TagBits.HasNullTypeAnnotation|TagBits.HasMissingType);
+			this.tagBits |= wildcard.nullTagBitsFromErasedObjectBound;
 		} else {
 			computeId(this.environment);
 			this.tagBits |= wildcard.tagBits & (TagBits.AnnotationNullMASK|TagBits.HasNullTypeAnnotation|TagBits.HasMissingType);

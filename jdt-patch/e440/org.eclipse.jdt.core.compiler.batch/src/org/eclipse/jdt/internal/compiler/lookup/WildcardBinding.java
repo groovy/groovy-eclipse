@@ -52,6 +52,7 @@ public class WildcardBinding extends ReferenceBinding implements HotSwappable{
 	ReferenceBinding[] superInterfaces;
 	TypeVariableBinding typeVariable; // corresponding variable
 	LookupEnvironment environment;
+	long nullTagBitsFromErasedObjectBound = 0; // stores null info from '? extends @NonNull Object'
 
 	/**
 	 * When unbound, the bound denotes the corresponding type variable (so as to retrieve its bound lazily)
@@ -161,46 +162,46 @@ public class WildcardBinding extends ReferenceBinding implements HotSwappable{
 				}
 			}
 		}
-		if (this.bound != null && this.bound.isValidBinding()) {
-			long boundNullTagBits = this.bound.tagBits & TagBits.AnnotationNullMASK;
-			if (boundNullTagBits != 0L) {
-				if (this.boundKind == Wildcard.SUPER) {
-					if ((boundNullTagBits & TagBits.AnnotationNullable) != 0) {
-						if (nullTagBits == 0L) {
-							nullTagBits = TagBits.AnnotationNullable;
-						} else if (wildcard != null && (nullTagBits & TagBits.AnnotationNonNull) != 0) {
-							Annotation annotation = wildcard.bound.findAnnotation(boundNullTagBits);
-							if (annotation == null) { // false alarm, implicit annotation is no conflict, but should be removed:
-								// may not be reachable, how could we have an implicit @Nullable (not via @NonNullByDefault)?
-								TypeBinding newBound = this.bound.withoutToplevelNullAnnotation();
-								this.bound = newBound;
-								wildcard.bound.resolvedType = newBound;
-							} else {
-								scope.problemReporter().contradictoryNullAnnotationsOnBounds(annotation, nullTagBits);
-							}
+		long boundNullTagBits = this.bound != null && this.bound.isValidBinding()
+				? this.bound.tagBits & TagBits.AnnotationNullMASK
+				: this.nullTagBitsFromErasedObjectBound;
+		if (boundNullTagBits != 0L) {
+			if (this.boundKind == Wildcard.SUPER) {
+				if ((boundNullTagBits & TagBits.AnnotationNullable) != 0) {
+					if (nullTagBits == 0L) {
+						nullTagBits = TagBits.AnnotationNullable;
+					} else if (wildcard != null && (nullTagBits & TagBits.AnnotationNonNull) != 0) {
+						Annotation annotation = wildcard.bound.findAnnotation(boundNullTagBits);
+						if (annotation == null) { // false alarm, implicit annotation is no conflict, but should be removed:
+							// may not be reachable, how could we have an implicit @Nullable (not via @NonNullByDefault)?
+							TypeBinding newBound = this.bound.withoutToplevelNullAnnotation();
+							this.bound = newBound;
+							wildcard.bound.resolvedType = newBound;
+						} else {
+							scope.problemReporter().contradictoryNullAnnotationsOnBounds(annotation, nullTagBits);
 						}
 					}
-				} else {
-					if ((boundNullTagBits & TagBits.AnnotationNonNull) != 0) {
-						if (nullTagBits == 0L) {
+				}
+			} else {
+				if ((boundNullTagBits & TagBits.AnnotationNonNull) != 0) {
+					if (nullTagBits == 0L) {
+						nullTagBits = TagBits.AnnotationNonNull;
+					} else if (wildcard != null && (nullTagBits & TagBits.AnnotationNullable) != 0) {
+						Annotation annotation = wildcard.bound.findAnnotation(boundNullTagBits);
+						if (annotation == null) { // false alarm, implicit annotation is no conflict, but should be removed:
+							TypeBinding newBound = this.bound.withoutToplevelNullAnnotation();
+							this.bound = newBound;
+							wildcard.bound.resolvedType = newBound;
+						} else {
+							scope.problemReporter().contradictoryNullAnnotationsOnBounds(annotation, nullTagBits);
+						}
+					}
+				}
+				if (nullTagBits == 0L && this.otherBounds != null) {
+					for (TypeBinding otherBound : this.otherBounds) {
+						if ((otherBound.tagBits & TagBits.AnnotationNonNull) != 0) { // can this happen?
 							nullTagBits = TagBits.AnnotationNonNull;
-						} else if (wildcard != null && (nullTagBits & TagBits.AnnotationNullable) != 0) {
-							Annotation annotation = wildcard.bound.findAnnotation(boundNullTagBits);
-							if (annotation == null) { // false alarm, implicit annotation is no conflict, but should be removed:
-								TypeBinding newBound = this.bound.withoutToplevelNullAnnotation();
-								this.bound = newBound;
-								wildcard.bound.resolvedType = newBound;
-							} else {
-								scope.problemReporter().contradictoryNullAnnotationsOnBounds(annotation, nullTagBits);
-							}
-						}
-					}
-					if (nullTagBits == 0L && this.otherBounds != null) {
-						for (TypeBinding otherBound : this.otherBounds) {
-							if ((otherBound.tagBits & TagBits.AnnotationNonNull) != 0) { // can this happen?
-								nullTagBits = TagBits.AnnotationNonNull;
-								break;
-							}
+							break;
 						}
 					}
 				}
@@ -300,7 +301,9 @@ public class WildcardBinding extends ReferenceBinding implements HotSwappable{
 
 	@Override
 	public TypeBinding clone(TypeBinding immaterial) {
-		return new WildcardBinding(this.genericType, this.rank, this.bound, this.otherBounds, this.boundKind, this.environment);
+		WildcardBinding clone = new WildcardBinding(this.genericType, this.rank, this.bound, this.otherBounds, this.boundKind, this.environment);
+		clone.nullTagBitsFromErasedObjectBound = this.nullTagBitsFromErasedObjectBound;
+		return clone;
 	}
 
 	@Override
@@ -880,5 +883,11 @@ public class WildcardBinding extends ReferenceBinding implements HotSwappable{
 		if (annots == null)
 			return type;
 		return this.environment.createAnnotatedType(type, annots);
+	}
+
+	public boolean hasNullTagBits(long nullTagBits) {
+		if (nullTagBits == this.nullTagBitsFromErasedObjectBound)
+			return true;
+		return (this.tagBits & TagBits.AnnotationNullMASK) == nullTagBits;
 	}
 }

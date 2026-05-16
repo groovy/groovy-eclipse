@@ -89,6 +89,15 @@ public class OrPattern extends SearchPattern implements IIndexConstants, IParall
 		return null;
 	}
 
+	/**
+	 * Returns the sub-patterns combined by this OR pattern.
+	 *
+	 * @return the component patterns, never {@code null}
+	 */
+	public SearchPattern[] getPatterns() {
+		return this.patterns;
+	}
+
 	boolean isErasureMatch() {
 		return (this.matchCompatibility & R_ERASURE_MATCH) != 0;
 	}

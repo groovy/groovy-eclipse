@@ -596,12 +596,8 @@ public class SpacePreparator extends ASTVisitor {
 				this.options.insert_space_after_lambda_arrow);
 		List<VariableDeclaration> parameters = node.parameters();
 		if (node.hasParentheses()) {
-			if (handleEmptyParens(node, this.options.insert_space_between_empty_parens_in_method_declaration)) {
-				handleToken(node, TokenNameLPAREN,
-						this.options.insert_space_before_opening_paren_in_method_declaration, false);
-			} else {
-				handleToken(node, TokenNameLPAREN,
-						this.options.insert_space_before_opening_paren_in_method_declaration,
+			if (!handleEmptyParens(node, this.options.insert_space_between_empty_parens_in_method_declaration)) {
+				handleToken(node, TokenNameLPAREN, false,
 						this.options.insert_space_after_opening_paren_in_method_declaration);
 
 				handleTokenBefore(node.getBody(), TokenNameRPAREN,

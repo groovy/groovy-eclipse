@@ -348,17 +348,27 @@ public class NullAnnotationMatching {
 						okStatus = okNonNullStatus(providedExpression, localFlow || requiredBits == TagBits.AnnotationNonNull);
 				}
 				if (severity != Severity.MISMATCH && nullStatus != FlowInfo.NULL) {  // null value has no details
-					TypeBinding providedSuper = providedType.findSuperTypeOriginatingFrom(requiredType);
-					TypeBinding providedSubstituteSuper = providedSubstitute != null ? providedSubstitute.findSuperTypeOriginatingFrom(requiredType) : null;
-					if (severity == Severity.UNCHECKED && requiredType.isTypeVariable() && providedType.isTypeVariable() && (providedSuper == requiredType || providedSubstituteSuper == requiredType)) { //$IDENTITY-COMPARISON$
+					TypeBinding providedToCheck = providedType.findSuperTypeOriginatingFrom(requiredType);
+					TypeBinding providedSubstituteToCheck = providedSubstitute != null ? providedSubstitute.findSuperTypeOriginatingFrom(requiredType) : null;
+					if (severity == Severity.UNCHECKED && requiredType.isTypeVariable() && providedType.isTypeVariable() && (providedToCheck == requiredType || providedSubstituteToCheck == requiredType)) { //$IDENTITY-COMPARISON$
 						severity = Severity.OK;
 					}
-					if (providedSuper != providedType) //$IDENTITY-COMPARISON$
-						superTypeHint = providedSuper;
-					if (requiredType.isParameterizedType()  && providedSuper instanceof ParameterizedTypeBinding) { // TODO(stephan): handle providedType.isRaw()
-						TypeBinding[] requiredArguments = ((ParameterizedTypeBinding) requiredType).arguments;
-						TypeBinding[] providedArguments = ((ParameterizedTypeBinding) providedSuper).arguments;
-						TypeBinding[] providedSubstitutes = (providedSubstituteSuper instanceof ParameterizedTypeBinding) ? ((ParameterizedTypeBinding)providedSubstituteSuper).arguments : null;
+					if (providedToCheck != providedType) //$IDENTITY-COMPARISON$
+						superTypeHint = providedToCheck;
+					TypeBinding requiredToCheck = requiredType;
+					if (providedToCheck == null) { // when analyzing a cast expression, supertype search goes the opposite direction:
+						requiredToCheck = requiredType.findSuperTypeOriginatingFrom(providedType);
+						if (requiredToCheck != null) {
+							providedToCheck = providedType;
+							providedSubstituteToCheck = providedSubstitute;
+						} else {
+							requiredToCheck = requiredType;
+						}
+					}
+					if (requiredToCheck.isParameterizedType()  && providedToCheck instanceof ParameterizedTypeBinding) { // TODO(stephan): handle providedType.isRaw()
+						TypeBinding[] requiredArguments = ((ParameterizedTypeBinding) requiredToCheck).arguments;
+						TypeBinding[] providedArguments = ((ParameterizedTypeBinding) providedToCheck).arguments;
+						TypeBinding[] providedSubstitutes = (providedSubstituteToCheck instanceof ParameterizedTypeBinding) ? ((ParameterizedTypeBinding)providedSubstituteToCheck).arguments : null;
 						if (requiredArguments != null && providedArguments != null && requiredArguments.length == providedArguments.length) {
 							for (int i = 0; i < requiredArguments.length; i++) {
 								TypeBinding providedArgSubstitute = providedSubstitutes != null ? providedSubstitutes[i] : null;

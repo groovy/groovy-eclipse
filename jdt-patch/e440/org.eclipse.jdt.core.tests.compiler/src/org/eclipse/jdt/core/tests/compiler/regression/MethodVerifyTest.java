@@ -8381,7 +8381,7 @@ public void test132() {
 		"2. ERROR in X.java (at line 7)\n" +
 		"	public Object foo2(I<?> p) { return null; }\n" +
 		"	       ^^^^^^\n" +
-		"The return type is incompatible with I<U>.foo2(I<? extends Object>)\n" +
+		"The return type is incompatible with I<U>.foo2(I<?>)\n" +
 		"----------\n"
 	);
 }

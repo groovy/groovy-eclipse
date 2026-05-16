@@ -2917,7 +2917,7 @@ public void testBug399778a() {
 			"1. WARNING in X.java (at line 4)\n" +
 			"	List<String> l = (List<String>) (null == null ? Arrays.asList() : Arrays.asList(\"Hello\",\"world\"));\n" +
 			"	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"Type safety: Unchecked cast from List<capture#1-of ? extends Object> to List<String>\n" +
+			"Type safety: Unchecked cast from List<capture#1-of ?> to List<String>\n" +
 			"----------\n";
 
 	runComplianceParserTest(

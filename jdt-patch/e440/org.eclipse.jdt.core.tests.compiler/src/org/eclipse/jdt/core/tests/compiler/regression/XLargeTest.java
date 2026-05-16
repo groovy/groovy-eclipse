@@ -2041,6 +2041,49 @@ public void testIssue1359() {
 			"The operand stack is exceeding the 65535 bytes limit\n" +
 			"----------\n");
 }
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5020
+// VerifyError: Instruction type does not match stack map - Regression in String-switch dispatch for methods exceeding 32 KB
+public void testIssue5020() {
+	StringBuilder sourceCode = new StringBuilder(
+			"""
+			public class X {
+			    public int run(String label) {
+			        int x = 0; int y = 0;
+			        loop: while (true) {
+			            switch (label) {
+			                default:
+			                case "A":
+
+			""");
+
+	for (int i = 0; i < 49; i++) {
+		for (int j = 0; j < 100; j++)
+			sourceCode.append("\t\t		x += " + j + "; y = x ^ y;\n");
+	}
+	sourceCode.append(
+			"""
+			    				label = "B";
+			                    continue loop;
+			                case "B":
+			                    return x + y;
+			            }
+			        }
+			    }
+			    public static void main(String[] args) {
+			        System.out.println(new X().run("A"));
+			    }
+			}
+			""");
+
+
+	this.runConformTest(
+			new String[] {
+					"X.java",
+					sourceCode.toString()
+			},
+			"413914");
+
+}
 public static Class testClass() {
 	return XLargeTest.class;
 }
