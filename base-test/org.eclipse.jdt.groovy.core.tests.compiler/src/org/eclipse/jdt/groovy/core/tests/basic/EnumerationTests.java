@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -605,16 +605,16 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             //@formatter:off
             String[] sources = {
                 "p/Run.groovy",
-                "package p;\n" +
-                "import static p.q.r.Colour.*;\n" +
-                "import p.q.r.Colour2;\n" +
-                "public class Run {\n" +
-                "  public static void main(String[] argv) {\n" +
-                "    System.out.print(Red);\n" +
-                "    System.out.print(Green);\n" +
-                "    System.out.print(Blue);\n" +
-                "   Colour2 c2 = new Colour2();\n" +
-                "   int i = c2.compareTo('abc');\n" +
+                "package p\n" +
+                "import p.q.r.*\n" +
+                "import static p.q.r.Colour.*\n" +
+                "class Run {\n" +
+                "  static main(args) {\n" +
+                "    print(Red)\n" +
+                "    print(Green)\n" +
+                "    print(Blue)\n" +
+                "    def c = new Colour2()\n" +
+                "    int i = c.compareTo('abc')\n" +
                 "  }\n" +
                 "}\n",
 
@@ -622,16 +622,16 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
                 "package p.q.r;\n" +
                 "enum Colour { Red,Green,Blue; }\n",
 
-                "p/q/r/Colour3.java",
-                "package p.q.r;\n" +
-                "@SuppressWarnings(\"rawtypes\")\n" +
-                "class Colour3 implements Comparable { public int compareTo(Object o) { return 0;}}\n",
-
                 "p/q/r/Colour2.java",
                 "package p.q.r;\n" +
                 "public class Colour2 implements Comparable<String> { \n" +
                 "  public int compareTo(String s) { return 0; } \n" +
                 "}\n",
+
+                "p/q/r/Colour3.java",
+                "package p.q.r;\n" +
+                "@SuppressWarnings(\"rawtypes\")\n" +
+                "class Colour3 implements Comparable { public int compareTo(Object o) { return 0;}}\n",
             };
             //@formatter:on
 
