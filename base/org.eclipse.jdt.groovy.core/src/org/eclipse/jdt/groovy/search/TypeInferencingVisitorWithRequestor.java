@@ -956,7 +956,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     @Override
     public void visitBlockStatement(final BlockStatement block) {
-        VariableScope scope = new VariableScope(scopes.getLast(), block, false);
+        var scope = new VariableScope(scopes.getLast(), block, false);
         scope.setCurrentNode(block);
         scopes.add(scope);
         try {
@@ -1334,6 +1334,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     @Override
     public void visitForLoop(final ForStatement node) {
+        visitStatement(node);
+        visitStatementAnnotations(node);
+
         completeExpressionStack.add(node);
         try {
             node.getCollectionExpression().visit(this);
@@ -1820,6 +1823,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     @Override
     public void visitSpreadMapExpression(final SpreadMapExpression node) {
+    }
+
+    protected void visitStatementAnnotations(final Statement node) {
+        List<AnnotationNode> list = node.getNodeMetaData("_statementAnnotations_");
+        if (isNotEmpty(list)) visitAnnotations(list);
     }
 
     @Override

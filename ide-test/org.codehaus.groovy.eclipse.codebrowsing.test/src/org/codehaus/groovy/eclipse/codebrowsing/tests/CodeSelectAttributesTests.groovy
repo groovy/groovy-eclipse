@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.eclipse.jdt.groovy.core.util.JavaConstants.AST_LEVEL
 import static org.junit.Assume.assumeTrue
@@ -338,8 +339,30 @@ final class CodeSelectAttributesTests extends BrowsingTestSuite {
         assert !(elem instanceof Annotation) : 'expect closure placeholder'
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/15xx
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1672
     void testCodeSelectOnAttributeValue12() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String source = '''\
+            |@groovy.transform.ASTTest({
+            |  node
+            |})
+            |for (i in []) {
+            |}
+            |'''.stripMargin()
+
+        assertCodeSelect([source], 'node').with {
+            assert elementType == IJavaElement.LOCAL_VARIABLE
+        }
+
+        def unit = addGroovySource(source, nextUnitName())
+        unit = unit.reconcile(AST_LEVEL, true, null, null)
+        def elem = NodeFinder.perform(unit, source.indexOf('node'), 4)
+        assert !(elem instanceof Annotation) : 'expect closure placeholder'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/15xx
+    void testCodeSelectOnAttributeValue13() {
         String source = '''import groovy.transform.*
             |class C {
             |  @NamedVariant m(@NamedParam( type = String) p) {  }

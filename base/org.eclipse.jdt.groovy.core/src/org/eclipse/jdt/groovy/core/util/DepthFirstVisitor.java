@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -679,11 +679,8 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     protected void visitAnnotations(Collection<? extends AnnotationNode> nodes) {
         if (isNotEmpty(nodes)) {
             for (AnnotationNode node : nodes) {
-                if (node.isBuiltIn()) continue;
-
-                visitAnnotations(node.getNodeMetaData("AnnotationCollector"));
-
                 visitAnnotation(node);
+                visitAnnotations(node.getNodeMetaData("AnnotationCollector"));
             }
         }
     }
@@ -724,6 +721,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     }
 
     protected void visitStatement(Statement statement) {
+        visitAnnotations(statement.getNodeMetaData("_statementAnnotations_"));
     }
 
     protected void visitVariable(Variable variable) {
