@@ -24,16 +24,12 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
  */
 public class GenericsRegressionTest_9 extends AbstractRegressionTest9 {
 
-static {
-//	TESTS_NAMES = new String[] { "testBug551913_001", "testBug551913_002" };
-//	TESTS_NUMBERS = new int[] { 40, 41, 43, 45, 63, 64 };
-//	TESTS_RANGE = new int[] { 11, -1 };
-}
 public GenericsRegressionTest_9(String name) {
 	super(name);
 }
+
 public static Test suite() {
-	return buildMinimalComplianceTestSuite(testClass(), F_9);
+	return buildMinimalComplianceTestSuite(GenericsRegressionTest_9.class, F_9);
 }
 
 // vanilla test case
@@ -2105,7 +2101,7 @@ public void testGH5052() {
 		"map.consume");
 }
 public void testGH5028() {
-	if (isJRE10Plus) // var, etc.
+	if (this.complianceLevel >= ClassFileConstants.JDK10) // for var and Map.of
 	runConformTest(new String[] {
 			"InferredGenerics.java",
 			"""
@@ -2168,8 +2164,4 @@ public void testListRewrite() {
 		----------
 		""");
 }
-public static Class<GenericsRegressionTest_9> testClass() {
-	return GenericsRegressionTest_9.class;
-}
-
 }

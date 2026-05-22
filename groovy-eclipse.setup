@@ -311,7 +311,7 @@
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.40"/>
         <repository
-            url="https://download.eclipse.org/eclipse/updates/4.40-I-builds/I20260515-1811"/>
+            url="https://download.eclipse.org/eclipse/updates/4.40-I-builds/I20260520-1800"/>
       </repositoryList>
       <repositoryList
           name="2026-03">
