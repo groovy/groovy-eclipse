@@ -86,7 +86,12 @@ interface IGenerateTypeCheck {
 				setPatternIsTotalType();
 			}
 			case NO_CONVERSION_ROUTE -> {
-				codeStream.instance_of(expectedTypeRef, expectedTypeRef.resolvedType);
+				if (isUnnamed() && expectedTypeRef == null) { // for a type elided unnamed pattern, there is no need for a type check.
+					consumeProvidedValue(providedType, codeStream);
+					codeStream.iconst_1();
+				} else {
+					codeStream.instance_of(expectedTypeRef, expectedTypeRef.resolvedType);
+				}
 				break;
 			}
 			default -> {
@@ -101,6 +106,11 @@ interface IGenerateTypeCheck {
 	}
 
 	void setPatternIsTotalType();
+
+	/* Overridden in Pattern */
+	default boolean isUnnamed() {
+		return false;
+	}
 
 	default void generateExactConversions(TypeBinding provided, TypeBinding expected, BlockScope scope, CodeStream codeStream) {
 		if (BaseTypeBinding.isExactWidening(expected.id, provided.id)) {

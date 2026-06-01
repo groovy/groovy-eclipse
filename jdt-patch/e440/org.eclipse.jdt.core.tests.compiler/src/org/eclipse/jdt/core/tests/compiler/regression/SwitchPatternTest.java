@@ -9948,4 +9948,94 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 			},
 			"bad");
 	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5081
+	// NPE in IGenerateTypeCheck.generateTypeCheck with record patterns in switch expression inside lambda
+	public void testIssue5081() {
+		if (this.complianceLevel < ClassFileConstants.JDK22)
+			return;
+		runConformTest(
+			new String[] {
+				"X.java",
+				"""
+				import java.util.function.Function;
+				import java.util.function.Predicate;
+
+				public class X {
+
+					sealed interface Result<T> permits Valid, ValidWarning, InvalidWarning, InvalidError {}
+					record Valid<T>(T value) implements Result<T> {}
+					record ValidWarning<T>(T value, String warning) implements Result<T> {}
+					record InvalidWarning<T>(String warning) implements Result<T> {}
+					record InvalidError<T>(String error) implements Result<T> {}
+
+					public <Item, Res> Predicate<Item> filter(Function<Item, Result<Res>> validator) {
+						return item -> {
+							var validation = validator.apply(item);
+							return switch (validation) {
+								case Valid<?> _ -> true;
+								case ValidWarning<?>(_, var warning) -> {
+									System.out.println(warning);
+									yield true;
+								}
+								case InvalidWarning<?>(var warning) -> {
+									System.out.println(warning);
+									yield false;
+								}
+								case InvalidError<?>(var error) -> {
+									System.out.println(error);
+									yield false;
+								}
+							};
+						};
+					}
+				}
+				"""
+			});
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5081
+	// NPE in IGenerateTypeCheck.generateTypeCheck with record patterns in switch expression inside lambda
+	public void testIssue5081_2() {
+		if (this.complianceLevel < ClassFileConstants.JDK22)
+			return;
+		runConformTest(
+			new String[] {
+				"X.java",
+				"""
+				import java.util.function.Function;
+				import java.util.function.Predicate;
+
+				public class X {
+
+					sealed interface Result<T> permits Valid, ValidWarning, InvalidWarning, InvalidError {}
+					record Valid<T>(T value) implements Result<T> {}
+					record ValidWarning<T>(T value, String warning) implements Result<T> {}
+					record InvalidWarning<T>(String warning) implements Result<T> {}
+					record InvalidError<T>(String error) implements Result<T> {}
+
+					public <Item, Res> Predicate<Item> filter(Function<Item, Result<Res>> validator) {
+						return item -> {
+							var validation = validator.apply(item);
+							return switch (validation) {
+								case Valid<?> _ -> true;
+								case ValidWarning<?>(var _, var warning) -> {
+									System.out.println(warning);
+									yield true;
+								}
+								case InvalidWarning<?>(var warning) -> {
+									System.out.println(warning);
+									yield false;
+								}
+								case InvalidError<?>(var error) -> {
+									System.out.println(error);
+									yield false;
+								}
+							};
+						};
+					}
+				}
+				"""
+			});
+	}
 }
