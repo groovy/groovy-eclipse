@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,21 +26,24 @@ import java.util.List;
  */
 public abstract class Comment {
 
-    protected static final boolean debug = false;
-
-    protected static final int BLOCK = 0; // text surrounded by /* .. */
-    protected static final int LINE = 1; // text prefixed with //
+    protected static final int BLOCK   = 0; // text surrounded by /* .. */
+    protected static final int LINE    = 1; // text prefixed with //
     protected static final int JAVADOC = 2; // text surrounded by /** .. */
 
     protected String comment;
+
     private int kind;
 
-    // set when the comment is associated with a source element
+    /**
+     * Indicates the comment is associated with a source element.
+     */
     public boolean usedUp;
 
-    // Start/Ends for line/columns
-    // Lines are from 1..N
-    // Columns are from 1..N
+    /**
+     * Start or end for line or column.
+     * <p>
+     * Lines and columns are from 1..N
+     */
     public int sline, scol, eline, ecol;
 
     public Comment(int kind, int sline, int scol, int eline, int ecol, String string) {
@@ -104,8 +107,7 @@ public abstract class Comment {
             }
         }
 
-        // ensure tag is not followed with letter if tag finishes with a
-        // letter
+        // ensure tag is not followed with letter if tag finishes with a letter
         if ((index + tagLen) < comment.length() && Character.isJavaIdentifierStart(comment.charAt(index + tagLen - 1))) {
             if (Character.isJavaIdentifierPart(comment.charAt(index + tagLen))) {
                 return false;
@@ -121,11 +123,11 @@ public abstract class Comment {
             int taglen = tag.length();
             String lcTag = tag.toLowerCase();
             char firstChar = lcTag.charAt(0);
-            for (int p = fromIndex, max = text.length() - tag.length() + 1; p < max; p++) {
+            for (int p = fromIndex, max = text.length() - tag.length() + 1; p < max; ++p) {
                 if (Character.toLowerCase(text.charAt(p)) == firstChar) {
                     // possible match
                     boolean matched = true;
-                    for (int t = 1; t < taglen; t++) {
+                    for (int t = 1; t < taglen; ++t) {
                         if (Character.toLowerCase(text.charAt(p + t)) != lcTag.charAt(t)) {
                             matched = false;
                             break;
@@ -146,22 +148,16 @@ public abstract class Comment {
 }
 
 /**
- * Represents a single line comment of the form '// blahblahblah'
+ * Represents a comment of the form: <pre>// blahblahblah</pre>
  */
 class SingleLineComment extends Comment {
 
     SingleLineComment(int sline, int scol, int eline, int ecol, String string) {
         super(LINE, sline, scol, eline, ecol, string);
-        if (debug) {
-            System.out.println("Lexer found SL comment: [" + string + "] at L" + sline + "C" + scol + ">L" + eline + "C" + ecol);
-        }
     }
 
     public List<TaskEntry> getPositionsOf(String taskTag, String taskPriority, int[] lineseps, boolean caseSensitive) {
         int i = findTaskTag(comment, taskTag, caseSensitive, 0);
-        if (debug) {
-            System.out.println("searching slc: [" + comment + "] for '" + taskTag + "' " + i);
-        }
         if (i == -1) {
             return Collections.emptyList();
         }
@@ -172,9 +168,6 @@ class SingleLineComment extends Comment {
                 int taskTagStart = offsetToLineStart + (scol - 1) + i;
                 int taskEnd = offsetToLineStart + ecol - 2;
                 TaskEntry taskEntry = new TaskEntry(taskTagStart, taskEnd, taskTag, taskPriority, comment, offsetToLineStart + scol - 1);
-                if (debug) {
-                    System.out.println("Built task entry " + taskEntry.toString());
-                }
                 tasks.add(taskEntry);
             }
             i = findTaskTag(comment, taskTag, caseSensitive, i + taskTag.length());
@@ -184,23 +177,17 @@ class SingleLineComment extends Comment {
 }
 
 /**
- * Represents a multi line comment of the form '/<star> blahblahblah <star>/'
+ * Represents a comment of the form: <pre>/* blahblahblah {@literal *}/</pre>
  */
 class MultiLineComment extends Comment {
 
     MultiLineComment(int sline, int scol, int eline, int ecol, String string) {
         super(string.charAt(2) == '*' ? JAVADOC : BLOCK, sline, scol, eline, ecol, string);
-        if (debug) {
-            System.out.println("Lexer found ML comment: [" + string + "] at L" + sline + "C" + scol + ">L" + eline + "C" + ecol);
-        }
     }
 
     @Override
     public List<TaskEntry> getPositionsOf(String taskTag, String taskPriority, int[] lineseps, boolean caseSensitive) {
         int i = findTaskTag(comment, taskTag, caseSensitive, 0);
-        if (debug) {
-            System.out.println("searching mlc: [" + comment + "] for '" + taskTag + "' " + i);
-        }
         if (i == -1) {
             return Collections.emptyList();
         }
@@ -226,9 +213,6 @@ class MultiLineComment extends Comment {
                     taskEnd++;
                 }
                 TaskEntry taskEntry = new TaskEntry(taskTagStart, taskEnd - 1, taskTag, taskPriority, comment, offsetToCommentStart);
-                if (debug) {
-                    System.out.println("Built task entry " + taskEntry.toString());
-                }
                 taskPositions.add(taskEntry);
             }
             i = findTaskTag(comment, taskTag, caseSensitive, i + taskTag.length());

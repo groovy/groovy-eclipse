@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.editor;
 
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 
@@ -27,9 +26,9 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMethod;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
-import org.codehaus.groovy.transform.trait.Traits;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
@@ -41,14 +40,13 @@ import org.eclipse.jdt.ui.text.folding.DefaultJavaFoldingStructureProvider;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
-import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.source.projection.ProjectionViewer;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 /**
- * Replacement for {@link DefaultJavaFoldingStructureProvider} that is intended
- * to provide Groovy-specific folding behavior for the {@link GroovyEditor}.
+ * Replacement for the {@link DefaultJavaFoldingStructureProvider} that provides
+ * Groovy-specific folding regions for the {@link GroovyEditor}.
  */
 public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStructureProvider {
 
@@ -56,9 +54,23 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
 
     @Override
     public void install(final ITextEditor editor, final ProjectionViewer viewer) {
+        if (editor instanceof GroovyEditor) { this.editor = (GroovyEditor) editor;
+            ReflectionUtils.setPrivateField(DefaultJavaFoldingStructureProvider.class, "fPropertyChangeListener", this,
+                (org.eclipse.jface.util.IPropertyChangeListener) (/*org.eclipse.jface.util.PropertyChangeEvent*/ event) -> {
+                    if (event.getProperty().startsWith("editor_folding_") &&
+                            !event.getProperty().startsWith("editor_folding_custom_")) {
+                        this.editor.withoutSpecialFolding(this::initialize);
+                    }
+                }
+            );
+        }
         super.install(editor, viewer);
-        if (editor instanceof GroovyEditor)
-            this.editor = (GroovyEditor) editor;
+    }
+
+    @Override
+    protected void handleProjectionEnabled() {
+        if (editor == null) super.handleProjectionEnabled();
+        else editor.withoutSpecialFolding(super::handleProjectionEnabled);
     }
 
     @Override
@@ -67,32 +79,52 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
         super.uninstall();
     }
 
+    //--------------------------------------------------------------------------
+
     @Override
     protected void computeFoldingStructure(final IJavaElement element, final FoldingStructureComputationContext context) {
-        // NOTE: be sure to call super.computeFoldingStructure when editor is null to preserve Java behavior
         try {
             if (editor != null && editor.getModuleNode() != null) {
                 if (isMainType(element)) {
-                    // add folding for multi-line closures
-                    computeClosureFoldingStructure(element, context);
-
-                    // TODO: add folding for multi-line strings or array/list/map literals?
-                } else if (isScriptMethod(element)) {
                     // add folding for multi-line comments
                     computeCommentFoldingStructure(element, context);
 
-                    // TODO: add folding for top-level types?
+                    // add folding for multi-line closures
+                    computeClosureFoldingStructure(element, context);
 
-                    return; // prevent folding of entire script body
+                    // add folding for multi-line literals (list/map)
+                } else if (isScriptMethod(element)) {
+                    return; // prevent folding the entire script body
                 }
 
-                if (element instanceof IType) {
+                switch (element.getElementType()) {
+                  case IJavaElement.TYPE:
                     computeTraitMethodFoldingStructure((IType) element, context);
+                    if (!((IType) element).isMember()) break; //else fall through
+                  case IJavaElement.FIELD:
+                  case IJavaElement.METHOD:
+                  case IJavaElement.INITIALIZER:
+                    var range  = ((IMember) element).getSourceRange();
+                    int offset = range.getOffset();
+                    int length = range.getLength();
+                    /**/range = ((IMember) element).getJavadocRange();
+                    if (range != null) { // advance past the javadoc commnet
+                        offset  = range.getOffset() + range.getLength() + 2;
+                        length -= range.getLength() + 2;
+                    }
+                    IRegion normalized = alignRegion(offset, length, context);
+                    if (normalized != null) {
+                        boolean isCollapsed = element.getElementType()==IJavaElement.TYPE?context.collapseInnerTypes():context.collapseMembers(), isComment = false;
+                        context.addProjectionRange(new JavaProjectionAnnotation(isCollapsed, element, isComment), createMemberPosition(normalized, (IMember) element));
+                    }
                 }
             }
-        } catch (Exception | LinkageError | AssertionError ignore) {
+        } catch (AssertionError | LinkageError | Exception ignore) {
         }
-        super.computeFoldingStructure(element, context);
+        // NOTE: call super.computeFoldingStructure for null editor to preserve Java behavior
+        if (editor == null || element.getElementType() == IJavaElement.IMPORT_CONTAINER) {
+            super.computeFoldingStructure(element, context);
+        }
     }
 
     protected void computeClosureFoldingStructure(final IJavaElement element, final FoldingStructureComputationContext context) {
@@ -100,14 +132,13 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
             @Override
             public void visitClosureExpression(final ClosureExpression expression) {
                 if (expression.getEnd() > 0) {
-                    IRegion normalized = alignRegion(new Region(expression.getStart(), expression.getLength()), context);
+                    IRegion normalized = alignRegion(expression.getStart(), expression.getLength(), context);
                     if (normalized != null) {
-                        // TODO: any consequences to using the main type as the member?
-                        Position position = createMemberPosition(normalized, (IMember) element);
-                        if (position != null) {
-                            boolean isCollapsed = false, isComment = false;
-                            context.addProjectionRange(new JavaProjectionAnnotation(isCollapsed, element, isComment), position);
-                        }
+                        boolean isCollapsed = false, isComment = false;
+                        var lambda = org.eclipse.jdt.internal.core.LambdaFactory.createLambdaExpression(
+                            (org.eclipse.jdt.internal.core.JavaElement) element, "Ljava.lang.Runnable;",
+                            expression.getStart(), expression.getEnd() - 1, expression.getCode().getStart());
+                        context.addProjectionRange(new JavaProjectionAnnotation(isCollapsed, element, isComment), createMemberPosition(normalized, lambda));
                     }
                 }
                 super.visitClosureExpression(expression);
@@ -118,20 +149,18 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
 
     protected void computeCommentFoldingStructure(final IJavaElement element, final FoldingStructureComputationContext context) {
         for (Comment comment : editor.getModuleNode().getContext().getComments()) {
-            if (!comment.isJavadoc() && comment.eline > comment.sline) {
+            if (comment.eline > comment.sline) {
                 try {
                     // translate lines and columns to region
                     IDocument document = getDocument(context);
                     int offset = document.getLineOffset(comment.sline - 1) + (comment.scol - 1);
                     int length = (document.getLineOffset(comment.eline - 1) + (comment.ecol - 1)) - offset;
 
-                    IRegion normalized = alignRegion(new Region(offset, length), context);
-                    if (normalized != null && isScriptMethodElement(normalized)) {
-                        Position position = createCommentPosition(normalized);
-                        if (position != null) {
-                            boolean isCollapsed = false, isComment = true;
-                            context.addProjectionRange(new JavaProjectionAnnotation(isCollapsed, element, isComment), position);
-                        }
+                    boolean head = comment.sline <= 2 && !comment.isJavadoc();
+                    IRegion normalized = alignRegion(offset, length, context);
+                    if (normalized != null && (head || comment.isJavadoc() || isScriptMethodElement(normalized))) {
+                        boolean isCollapsed = (head ? context.collapseHeaderComments() : context.collapseJavadoc()), isComment = true;
+                        context.addProjectionRange(new JavaProjectionAnnotation(isCollapsed, element, isComment), createCommentPosition(normalized));
                     }
                 } catch (BadLocationException e) {
                     GroovyPlugin.getDefault().logError("Failed to compute region for comment", e);
@@ -141,19 +170,15 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
     }
 
     protected void computeTraitMethodFoldingStructure(final IType maybeTrait, final FoldingStructureComputationContext context) {
-        findType(maybeTrait).filter(Traits::isTrait).ifPresent(traitType -> {
-            List<MethodNode> traitMethods = traitType.getNodeMetaData("trait.methods");
-            if (traitMethods != null && !traitMethods.isEmpty()) {
-                for (MethodNode traitMethod : traitMethods) {
-                    IRegion normalized = alignRegion(new Region(traitMethod.getStart(), traitMethod.getLength()), context);
-                    if (normalized != null) {
-                        IMember method = maybeTrait.getMethod(traitMethod.getName(), GroovyUtils.getParameterTypeSignatures(traitMethod, true));
-                        Position position = createMemberPosition(normalized, method);
-                        if (position != null) {
-                            boolean isCollapsed = false, isComment = false;
-                            context.addProjectionRange(new JavaProjectionAnnotation(isCollapsed, method, isComment), position);
-                        }
-                    }
+        findType(maybeTrait).map(t -> t.<Iterable<MethodNode>>getNodeMetaData("trait.methods")).ifPresent(traitMethods -> {
+            for (MethodNode traitMethod : traitMethods) {
+                IRegion normalized = alignRegion(traitMethod.getStart(), traitMethod.getLength(), context);
+                if (normalized != null) {
+                    boolean isCollapsed = context.collapseMembers(), isComment = false;
+                    IMember method = new GroovyResolvedSourceMethod( // supplies name range
+                        (org.eclipse.jdt.internal.core.JavaElement) maybeTrait, traitMethod.getName(),
+                        GroovyUtils.getParameterTypeSignatures(traitMethod, true), "", "", traitMethod);
+                    context.addProjectionRange(new JavaProjectionAnnotation(isCollapsed, method, isComment), createMemberPosition(normalized, method));
                 }
             }
         });
@@ -177,16 +202,16 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
     }
 
     protected final boolean isMainType(final IJavaElement element) {
-        if (element instanceof IType) {
-            String typeName = ((IType) element).getFullyQualifiedName();
+        if (element instanceof IType type) {
+            String typeName = type.getFullyQualifiedName();
             return typeName.equals(editor.getModuleNode().getMainClassName());
         }
         return false;
     }
 
     protected final boolean isScriptMethod(final IJavaElement element) {
-        if (element instanceof IMethod && "run".equals(element.getElementName()) && ((IMethod) element).getNumberOfParameters() == 0) {
-            return findType(((IMethod) element).getDeclaringType()).filter(GroovyUtils::isScript).isPresent();
+        if (element instanceof IMethod method && "run".equals(method.getElementName()) && method.getNumberOfParameters() == 0) {
+            return findType(method.getDeclaringType()).filter(GroovyUtils::isScript).isPresent();
         }
         return false;
     }
@@ -196,8 +221,8 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
             new org.codehaus.groovy.eclipse.codebrowsing.requestor.Region(region.getOffset(), region.getLength()),
             FindSurroundingNode.VisitKind.SURROUNDING_NODE);
         IASTFragment astFragment = fsn.doVisitSurroundingNode(editor.getModuleNode());
-        if (astFragment.getAssociatedNode() instanceof MethodNode) {
-            return ((MethodNode) astFragment.getAssociatedNode()).isScriptBody();
+        if (astFragment.getAssociatedNode() instanceof MethodNode methodNode) {
+            return methodNode.isScriptBody();
         }
         if (astFragment.getAssociatedNode() instanceof ModuleNode) {
             return true;
@@ -207,5 +232,16 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
 
     protected static IDocument getDocument(final FoldingStructureComputationContext context) {
         return ReflectionUtils.executePrivateMethod(context.getClass(), "getDocument", context);
+    }
+
+    protected final IRegion alignRegion(final int offset, final int length, final FoldingStructureComputationContext context) {
+        try {
+            return ReflectionUtils.throwableExecutePrivateMethod(DefaultJavaFoldingStructureProvider.class, "alignRegion",
+                new  Class[]{IRegion.class, FoldingStructureComputationContext.class, boolean.class}, this,
+                new Object[]{new Region(offset, length), context, true});
+        } catch (Throwable t) {
+            ReflectionUtils.setPrivateField(DefaultJavaFoldingStructureProvider.class, "includelastLine", this, true);
+            return alignRegion(new Region(offset, length), context);
+        }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -670,8 +670,8 @@ public class GroovyEditor extends CompilationUnitEditor {
     public void dispose() {
         uninstallGroovySemanticHighlighting();
         ISourceViewer sourceViewer = getSourceViewer();
-        if (sourceViewer instanceof ITextViewerExtension) {
-            ((ITextViewerExtension) sourceViewer).removeVerifyKeyListener(groovyBracketInserter);
+        if (sourceViewer instanceof ITextViewerExtension extension) {
+            extension.removeVerifyKeyListener(groovyBracketInserter);
         }
         super.dispose();
     }
@@ -679,6 +679,27 @@ public class GroovyEditor extends CompilationUnitEditor {
     public int getCaretOffset() {
         ISourceViewer viewer = getSourceViewer();
         return viewer.getTextWidget().getCaretOffset();
+    }
+
+    @Override
+    public void resetProjection() {
+        withoutSpecialFolding(super::resetProjection);
+    }
+
+    void withoutSpecialFolding(Runnable runnable) {
+        var reset = false;
+        var prefs = org.eclipse.jdt.internal.ui.JavaPlugin.getDefault().getPreferenceStore();
+        if (prefs != null && prefs.getBoolean("editor_new_folding_enabled")) {
+            prefs.putValue("editor_new_folding_enabled", "false");
+            reset = true;
+        }
+        try {
+            runnable.run();
+        } finally {
+            if (reset) {
+                prefs.putValue("editor_new_folding_enabled", "true");
+            }
+        }
     }
 
     @Override
