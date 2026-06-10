@@ -3590,8 +3590,9 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    @SuppressWarnings("rawtypes")
     public void testTraits11985() {
-        for (List<String> tuple : (List<List<String>>) DefaultGroovyMethods.combinations(List.of(
+        for (List tuple : (List<List>) DefaultGroovyMethods.combinations(List.of(
             List.of("CompileDynamic", "CompileStatic"),
             List.of("public", "private"),
             List.of("", "this.")

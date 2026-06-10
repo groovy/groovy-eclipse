@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
+
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
+import static org.junit.Assume.assumeTrue
 
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.ui.PreferenceConstants
@@ -100,6 +104,44 @@ final class TypeCompletionTests extends CompletionTestSuite {
         String contents = 'class Foo implements HTMLAnchElem { }'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'HTMLAnchElem'))
         proposalExists(proposals, 'HTMLAnchorElement - org.w3c.dom.html', 1)
+    }
+
+    @Test
+    void testCompletionsTypesInThrows() {
+        String contents = 'def foo() throws MPE { }'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'MPE'))
+        proposalExists(proposals, 'MissingPropertyExceptionNoStack', 1, true)
+    }
+
+    @Test
+    void testCompletionsTypesInThrow() {
+        String contents = 'throw new MPE'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'MPE'))
+        // found twice: once as a type proposal and once as a constructor proposal
+        proposalExists(proposals, 'MissingPropertyExceptionNoStack', 2, true)
+    }
+
+    @Test
+    void testCompletionsTypesInCast1() {
+        String contents = 'def foo = (Lis) null'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'Lis'))
+        proposalExists(proposals, 'List - java.util', 1, true)
+    }
+
+    @Test
+    void testCompletionsTypesInCast2() {
+        String contents = 'def foo = null as Lis'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'Lis'))
+        proposalExists(proposals, 'List - java.util', 1, true)
+    }
+
+    @Test
+    void testCompletionsTypesInCast3() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String contents = 'def foo = null as (Object & Lis)'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'Lis'))
+        proposalExists(proposals, 'List - java.util', 1, true)
     }
 
     @Test
@@ -236,14 +278,6 @@ final class TypeCompletionTests extends CompletionTestSuite {
         String contents = 'class Foo { }\nFoo.class.getCom'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
         proposalExists(proposals, 'getComponentType', 1)
-    }
-
-    @Test
-    void testCompleteExceptionClass() {
-        String contents = 'throw new MPE'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'MPE'))
-        // found twice: once as a type proposal and once as a constructor proposal
-        proposalExists(proposals, 'MissingPropertyExceptionNoStack', 2, true)
     }
 
     @Test

@@ -287,14 +287,18 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testNoDups1() {
+        int count = 4 // (), (Map), (Closure), (Map,Closure)
+        if (isAtLeastGroovy(50)) count += 2 // (Function,Function), (Map,Function,Function)
+        if (isAtLeastGroovy(60)) count += 1 // (Function)
+
         ICompletionProposal[] proposals = createProposalsAtOffset('[].collectEnt', 13)
-        proposalExists(proposals, 'collectEntries', isAtLeastGroovy(50) ? 6 : 4) // (), (Map), (Closure), (Map,Closure), (Function,Function), (Map,Function,Function)
+        proposalExists(proposals, 'collectEntries', count)
     }
 
     @Test // GRECLIPSE-1422
     void testNoDups2() {
         ICompletionProposal[] proposals = createProposalsAtOffset('[].findA', getIndexOf('[].findA', 'findA'))
-        proposalExists(proposals, 'findAll', 2) // should find 2, not 4
+        proposalExists(proposals, 'findAll', isAtLeastGroovy(60) ? 4 : 2)
     }
 
     @Test

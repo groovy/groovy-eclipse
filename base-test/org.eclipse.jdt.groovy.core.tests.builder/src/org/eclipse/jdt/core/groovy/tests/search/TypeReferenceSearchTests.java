@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -274,6 +274,32 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
             "  def m() {\n" +
             "    return {->\n" +
             "    } as First\n" +
+            "  }\n" +
+            "}\n";
+
+        List<SearchMatch> matches = searchForFirst(firstContents, secondContents, "p", "p");
+        assertEquals(1, matches.size());
+
+        SearchMatch match = matches.get(0);
+        assertEquals("First".length(), match.getLength());
+        assertEquals(secondContents.indexOf("First"), match.getOffset());
+    }
+
+    @Test // GROOVY-11998
+    public void testCoercion2() throws Exception {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60));
+
+        String firstContents =
+            "package p\n" +
+            "interface First {\n" +
+            "  void meth();\n" +
+            "}\n";
+        String secondContents =
+            "package p\n" +
+            "class Second {\n" +
+            "  def m() {\n" +
+            "    return {->\n" +
+            "    } as (First & Serializable)\n" +
             "  }\n" +
             "}\n";
 

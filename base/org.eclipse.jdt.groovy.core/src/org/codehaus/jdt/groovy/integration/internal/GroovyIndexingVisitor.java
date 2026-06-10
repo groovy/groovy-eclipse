@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -175,10 +175,10 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     @Override
     public void visitCastExpression(final CastExpression expression) {
-        // NOTE: expression.getType() may refer to ClassNode behind "this" or "super"
-        if (expression.getEnd() > 0 && (/*cast:*/expression.getStart() == expression.getType().getStart() ||
-                                        /*coerce:*/expression.getEnd() == expression.getType().getEnd())) {
-            visitTypeReference(expression.getType(), false, true);
+        ClassNode type = expression.getType(); // may be "this" or "super" type
+        int start = expression.getNameStart(), until = expression.getNameEnd();
+        if (start <= type.getStart() && type.getEnd() <= until && until > 0) {
+            expression.forEachType((t) -> visitTypeReference(t, false, true));
         }
         super.visitCastExpression(expression);
     }

@@ -30,6 +30,7 @@
         <file-match-pattern match-pattern="groovy/ast/MethodNode.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/ModuleNode.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/Parameter.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/expr/CastExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/expr/ClassExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/expr/ConstantExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/expr/(Static)?MethodCallExpression.java" include-pattern="false" />

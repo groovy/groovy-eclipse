@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1093,7 +1093,9 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002
     public void testDGMDeclaring7() {
         String contents = "['x','y','z'].stream().toList()";
-        assertDeclType(contents, "toList", isAtLeastGroovy(40) ? "org.codehaus.groovy.runtime.StreamGroovyMethods" : "org.codehaus.groovy.vmplugin.v8.PluginDefaultGroovyMethods");
+        assertDeclType(contents, "toList", isAtLeastGroovy(60) ? "java.util.stream.Stream"
+            : isAtLeastGroovy(40) ? "org.codehaus.groovy.runtime.StreamGroovyMethods"
+            : "org.codehaus.groovy.vmplugin.v8.PluginDefaultGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002

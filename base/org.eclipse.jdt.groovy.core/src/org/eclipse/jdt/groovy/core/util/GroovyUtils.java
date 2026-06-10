@@ -231,10 +231,10 @@ public class GroovyUtils {
      */
     public static String getTypeSignature(ClassNode node, boolean qualified, boolean resolved) {
         ClassNode baseType = getBaseType(node);
-        if (baseType instanceof LowestUpperBoundClassNode) {
+        if (isAllOfType(baseType)) {
             return getUnionTypeSignature(node, type -> getTypeSignature(type, qualified, resolved));
         }
-        if (baseType instanceof IntersectionType) {
+        if (isAnyOfType(baseType)) {
             return getIntersectionTypeSignature(node, type -> getTypeSignature(type, qualified, resolved));
         }
 
@@ -267,10 +267,10 @@ public class GroovyUtils {
 
     public static String getTypeSignatureWithoutGenerics(ClassNode node, boolean qualified, boolean resolved) {
         ClassNode baseType = getBaseType(node);
-        if (baseType instanceof LowestUpperBoundClassNode) {
+        if (isAllOfType(baseType)) {
             return getUnionTypeSignature(node, type -> getTypeSignatureWithoutGenerics(type, qualified, resolved));
         }
-        if (baseType instanceof IntersectionType) {
+        if (isAnyOfType(baseType)) {
             return getIntersectionTypeSignature(node, type -> getTypeSignatureWithoutGenerics(type, qualified, resolved));
         }
 
@@ -312,29 +312,25 @@ public class GroovyUtils {
     }
 
     private static String getUnionTypeSignature(ClassNode node, java.util.function.Function<ClassNode, String> signer) {
-        StringBuilder builder = new StringBuilder();
-        while (node.isArray()) {
-            builder.append('[');
-            node = node.getComponentType();
+        ClassNode[] types;
+        if (node instanceof LowestUpperBoundClassNode) {
+            types = node.asGenericsType().getUpperBounds(); // non-Object super and interface(s)
+        } else {
+            types = ReflectionUtils.executePrivateMethod(node.getClass(), "getComponents", node); // 6.0.0-alpha-2+
         }
-
-        ClassNode[] types = node.asGenericsType().getUpperBounds(); // non-Object super and interface(s)
         String signature = Signature.createUnionTypeSignature(Stream.of(types).map(signer).toArray(String[]::new));
-
-        return builder.append(signature).toString();
+        return signature;
     }
 
     private static String getIntersectionTypeSignature(ClassNode node, java.util.function.Function<ClassNode, String> signer) {
-        StringBuilder builder = new StringBuilder();
-        while (node.isArray()) {
-            builder.append('[');
-            node = node.getComponentType();
+        ClassNode[] types;
+        if (node instanceof IntersectionType it) {
+            types = it.types.toArray(ClassNode[]::new);
+        } else {
+            types = ReflectionUtils.executePrivateMethod(node.getClass(), "getDelegates", node);
         }
-
-        Stream<ClassNode> types = ((IntersectionType) node).types.stream();
-        String signature = Signature.createIntersectionTypeSignature(types.map(signer).toArray(String[]::new));
-
-        return builder.append(signature).toString();
+        String signature = Signature.createIntersectionTypeSignature(Stream.of(types).map(signer).toArray(String[]::new));
+        return signature;
     }
 
     public static ClassNode getWrapperTypeIfPrimitive(ClassNode type) {
@@ -496,13 +492,29 @@ public class GroovyUtils {
 
         types = new ArrayList<>(flat);
         for (ClassNode type : types) {
-            if (type instanceof LowestUpperBoundClassNode) {
+            if (isAllOfType(type)) {
                 // reduce (Number & I) or (Number & J) to Number
                 return WideningCategories.lowestUpperBound(types);
             }
         }
 
         return new IntersectionType(types);
+    }
+
+    /**
+     * Determines if type represents a non-reifiable "any-of" relationship.
+     */
+    public static boolean isAnyOfType(ClassNode node) {
+        return node instanceof IntersectionType
+            || node.getName().startsWith("<UnionType:");
+    }
+
+    /**
+     * Determines if type represents a non-reifiable "all-of" relationship.
+     */
+    public static boolean isAllOfType(ClassNode node) {
+        return node instanceof LowestUpperBoundClassNode
+            || node.getName().equals("IntersectionType");
     }
 
     public static boolean isAnonymous(ClassNode node) {

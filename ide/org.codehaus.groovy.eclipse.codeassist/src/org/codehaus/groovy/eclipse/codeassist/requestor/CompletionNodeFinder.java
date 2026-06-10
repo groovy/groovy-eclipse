@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -516,9 +516,11 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitCastExpression(CastExpression expression) {
-        if (check(expression.getType())) {
-            createContext(expression.getType(), blockStack.getLast(), expressionOrStatement());
-        }
+        expression.forEachType((type) -> {
+            if (check(type)) {
+                createContext(type, blockStack.getLast(), expressionOrStatement());
+            }
+        });
         super.visitCastExpression(expression);
     }
 

@@ -35,14 +35,28 @@ import static org.codehaus.groovy.classgen.AsmClassGenerator.argumentSize;
 import static groovyjarjarasm.asm.Opcodes.ACC_PUBLIC;
 import static groovyjarjarasm.asm.Opcodes.ACC_SYNTHETIC;
 
+/**
+ * Rewrites method-call expressions that have dedicated static-compilation forms.
+ */
 class MethodCallExpressionTransformer {
 
     private final StaticCompilationTransformer scTransformer;
 
+    /**
+     * Creates a method-call transformer backed by the owning static compilation transformer.
+     *
+     * @param scTransformer the shared transformer context
+     */
     MethodCallExpressionTransformer(final StaticCompilationTransformer scTransformer) {
         this.scTransformer = scTransformer;
     }
 
+    /**
+     * Rewrites a method call when the static compiler can target a more direct form.
+     *
+     * @param mce the method call expression to transform
+     * @return the transformed expression
+     */
     Expression transformMethodCallExpression(final MethodCallExpression mce) {
         Expression arguments = mce.getArguments();
 

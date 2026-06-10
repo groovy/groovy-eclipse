@@ -75,6 +75,16 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
 
     private boolean inClosure;
 
+    /**
+     * Creates a transformer that rewrites trait receiver access against the woven receiver.
+     *
+     * @param thisObject the synthetic receiver expression used for rewritten calls
+     * @param unit the source unit that receives transformation errors
+     * @param traitClass the trait currently being transformed
+     * @param traitHelper the helper class generated for the trait
+     * @param fieldHelper the helper class generated for trait field access
+     * @param knownFields the trait field names that require remapping
+     */
     public TraitReceiverTransformer(final VariableExpression thisObject, final SourceUnit unit, final ClassNode traitClass,
                                     final ClassNode traitHelper, final ClassNode fieldHelper, final Collection<String> knownFields) {
         this.weaved = thisObject;
@@ -85,11 +95,22 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
         this.knownFields = knownFields;
     }
 
+    /**
+     * Returns the source unit used for diagnostics.
+     *
+     * @return the current source unit
+     */
     @Override
     protected SourceUnit getSourceUnit() {
         return unit;
     }
 
+    /**
+     * Rewrites trait expressions that reference {@code this}, {@code super}, or trait fields.
+     *
+     * @param exp the expression to transform
+     * @return the transformed expression
+     */
     @Override
     public Expression transform(final Expression exp) {
         if (exp instanceof BinaryExpression) {
@@ -288,9 +309,28 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
             // GROOVY-7213, GROOVY-7214, GROOVY-8282, GROOVY-8859, GROOVY-10106, GROOVY-10312
             MethodNode methodNode = findConcreteMethod(traitClass, call.getMethodAsString());
             if (methodNode != null) {
-                // this.m(x) --> (this or T$Trait$Helper).m($self or $static$self or (Class)$self.getClass(), x)
-                Expression selfClassOrObject = methodNode.isStatic() && !ClassHelper.isClassType(weaved.getOriginType()) ? castX(ClassHelper.CLASS_Type.getPlainNodeReference(), callX(weaved, "getClass")) : weaved;
-                MethodCallExpression newCall = callX(!inClosure ? thisExpr : classX(traitHelper), method, createArgumentList(selfClassOrObject, arguments));
+                MethodCallExpression newCall;
+                /* GRECLIPSE edit -- GROOVY-11985, GROOVY-12106
+                boolean anchored = !methodNode.getAnnotations(ANCHORED_TYPE).isEmpty();
+                if (methodNode.isStatic() && !methodNode.isPrivate() && !anchored && !inClosure) {
+                    // GROOVY-11985: dispatch unqualified/this-qualified calls to
+                    // public, non-@Anchored trait statics through the
+                    // implementing class so an override declared on the
+                    // implementer is visible from trait code. Annotating the
+                    // trait static with @Anchored opts out of this override
+                    // path and keeps dispatch declarer-bound through the trait
+                    // helper (Java/interface-static flavour); the matching
+                    // interface promotion is performed in TraitASTTransformation.
+                    Expression implClass = ClassHelper.isClassType(weaved.getOriginType()) ? varX(weaved) : castX(ClassHelper.CLASS_Type.getPlainNodeReference(), callX(varX(weaved), "getClass"));
+                    newCall = callX(implClass, method, transform(arguments));
+                    newCall.setImplicitThis(false);
+                    newCall.putNodeMetaData(TraitASTTransformation.DO_DYNAMIC, methodNode.getReturnType());
+                } else {
+                */
+                    // this.m(x) --> (this or T$Trait$Helper).m($self or $static$self or (Class)$self.getClass(), x)
+                    Expression selfClassOrObject = methodNode.isStatic() && !ClassHelper.isClassType(weaved.getOriginType()) ? castX(ClassHelper.CLASS_Type.getPlainNodeReference(), callX(weaved, "getClass")) : weaved;
+                    newCall = callX(!inClosure ? thisExpr : classX(traitHelper), method, createArgumentList(selfClassOrObject, arguments));
+                // GRECLIPSE end
                 newCall.setGenericsTypes(call.getGenericsTypes());
                 newCall.setSpreadSafe(call.isSpreadSafe());
                 newCall.setSourcePosition(call);

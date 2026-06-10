@@ -40,6 +40,9 @@ import static java.beans.Introspector.decapitalize;
  */
 public abstract class StaticPropertyAccessHelper {
 
+    /**
+     * Rewrites a property assignment into an equivalent setter call expression.
+     */
     public static Expression transformToSetterCall(
             final Expression receiver,
             final MethodNode setterMethod,

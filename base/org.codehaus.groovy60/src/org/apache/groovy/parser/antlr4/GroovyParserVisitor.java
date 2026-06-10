@@ -1067,6 +1067,18 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 */
 	Result visitCastParExpression(@NotNull GroovyParser.CastParExpressionContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link GroovyParser#intersectionType}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitIntersectionType(@NotNull GroovyParser.IntersectionTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link GroovyParser#coercionType}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitCoercionType(@NotNull GroovyParser.CoercionTypeContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link GroovyParser#parExpression}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

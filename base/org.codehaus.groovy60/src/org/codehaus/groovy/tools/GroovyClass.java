@@ -21,7 +21,13 @@ package org.codehaus.groovy.tools;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.SourceUnit;
 
+/**
+ * Holds the binary form of a compiled Groovy class.
+ */
 public class GroovyClass {
+    /**
+     * Shared empty array instance.
+     */
     public static final GroovyClass[] EMPTY_ARRAY = {};
 
     private final String name;
@@ -30,6 +36,12 @@ public class GroovyClass {
     private final ClassNode classNode;
     private final SourceUnit source;
 
+    /**
+     * Creates a compiled-class holder.
+     *
+     * @param name the binary class name
+     * @param bytes the compiled class bytes
+     */
     public GroovyClass(String name, byte[] bytes, ClassNode classNode, SourceUnit source) {
         this.name  = name;
         this.bytes = bytes;
@@ -46,10 +58,20 @@ public class GroovyClass {
     }
     // GRECLIPSE end
 
+    /**
+     * Returns the binary class name.
+     *
+     * @return the class name
+     */
     public String getName() {
         return this.name;
     }
 
+    /**
+     * Returns the compiled class bytes.
+     *
+     * @return the class bytes
+     */
     public byte[] getBytes() {
         return this.bytes;
     }

@@ -5128,6 +5128,28 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('String'), 6, CLASS))
     }
 
+    @Test // GROOVY-11998
+    void testCastAndCoerce2() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(40))
+
+        String contents = '''\
+            |def one = (Runnable & Serializable) () -> {}
+            |def two = String::length as (java.util.function.Function<String,Integer> & Serializable)
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('one'             ),  3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('Runnable'        ),  8, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('Serializable'    ), 12, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('two'             ),  3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('String'          ),  6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('length'          ),  6, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Function'        ),  8, INTERFACE),
+            new HighlightedTypedPosition(contents.lastIndexOf('String'      ),  6, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Integer'     ),  7, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Serializable'), 12, INTERFACE))
+    }
+
     @Test
     void testAliasType1() {
         String contents = '''\

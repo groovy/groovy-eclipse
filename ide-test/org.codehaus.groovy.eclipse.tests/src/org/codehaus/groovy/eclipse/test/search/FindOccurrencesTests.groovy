@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.test.search
+
+import static groovy.test.GroovyAssert.notYetImplemented
+
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 
 import groovy.test.NotYetImplemented
 
@@ -126,8 +130,10 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         doTest(contents, contents.indexOf('x'), 1, contents.indexOf('x'), 1, contents.lastIndexOf('x'), 1)
     }
 
-    @Test @NotYetImplemented // Not working now; see GROOVY-4620 and GRECLIPSE-951
+    @Test // see GROOVY-4620 and GRECLIPSE-951
     void testFindPrimitive() {
+        if (!isParrotParser() && notYetImplemented(this)) return // not working for antlr2 parser
+
         //@formatter:off
         String contents = '''\
             int x(int y) {

@@ -985,7 +985,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     @Override
     public void visitCastExpression(final CastExpression node) {
-        visitClassReference(node.getType());
+        node.forEachType(this::visitClassReference);
         visitUnaryExpression(node, node.getExpression(), "as");
     }
 
