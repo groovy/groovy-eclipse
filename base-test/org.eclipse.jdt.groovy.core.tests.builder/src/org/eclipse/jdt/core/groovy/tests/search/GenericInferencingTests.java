@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1957,29 +1957,68 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testCircularReference1() {
+        createJavaUnit("Abstract",
+            "abstract class Abstract<S,T extends Abstract<S,T>> {\n" +
+            "  T withStuff(Object stuff) {\n" +
+            "    return (T) this;\n" +
+            "  }\n" +
+            "}\n");
+
+        createJavaUnit("Concrete",
+            "class Concrete extends Abstract<Void,Concrete> {\n" +
+            "  Concrete withThing(Object thing) {\n" +
+            "    return this;\n" +
+            "  }\n" +
+            "}\n");
+
         String contents =
-            "abstract class Abstract<T extends Abstract<T>> {\n" +
-            "  T withStuff(value) {\n" +
-            "    return (T) this\n" +
-            "  }\n" +
-            "}\n" +
-            "class Concrete extends Abstract<Concrete> {\n" +
-            "  Concrete withThing(value) {\n" +
-            "    return this\n" +
-            "  }\n" +
-            "}\n" +
             "def x,y\n" +
             "new Concrete().withThing(x).withStuff(y)\n" +
             "new Concrete().withStuff(x).withThing(y)\n";
 
-        int offset = contents.lastIndexOf("withThing(x)");
-        assertType(contents, offset, offset + "withThing".length(), "Concrete");
-        /**/offset = contents.lastIndexOf("withStuff(x)");
-        assertType(contents, offset, offset + "withStuff".length(), "Concrete");
+        int offset = contents.indexOf("withThing(x)");
+        assertType(contents, offset, offset + 9, "Concrete");
+        /**/offset = contents.indexOf("withStuff(y)");
+        assertType(contents, offset, offset + 9, "Concrete");
+        /**/offset = contents.indexOf("withStuff(x)");
+        assertType(contents, offset, offset + 9, "Concrete");
+        /**/offset = contents.lastIndexOf("withThing(y)");
+        assertType(contents, offset, offset + 9, "Concrete");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1678
+    public void testCircularReference2() {
+        createJavaUnit("Abstract",
+            "abstract class Abstract<S,T extends Abstract<?,?>> {\n" +
+            "  T withStuff(Object stuff) {\n" +
+            "    return (T) this;\n" +
+            "  }\n" +
+            "}\n");
+
+        createJavaUnit("Concrete",
+            "class Concrete extends Abstract<Void,Concrete> {\n" +
+            "  Concrete withThing(Object thing) {\n" +
+            "    return this;\n" +
+            "  }\n" +
+            "}\n");
+
+        String contents =
+            "def x,y\n" +
+            "new Concrete().withThing(x).withStuff(y)\n" +
+            "new Concrete().withStuff(x).withThing(y)\n";
+
+        int offset = contents.indexOf("withThing(x)");
+        assertType(contents, offset, offset + 9, "Concrete");
+        /**/offset = contents.indexOf("withStuff(y)");
+        assertType(contents, offset, offset + 9, "Concrete");
+        /**/offset = contents.indexOf("withStuff(x)");
+        assertType(contents, offset, offset + 9, "Concrete");
+        /**/offset = contents.lastIndexOf("withThing(y)");
+        assertType(contents, offset, offset + 9, "Concrete");
     }
 
     @Test
-    public void testCircularReference2() {
+    public void testCircularReference3() {
         createJavaUnit("FeatureName",
             "enum FeatureName{\n" +
             "}\n");
@@ -2007,7 +2046,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test // GROOVY-10671
-    public void testCircularReference3() {
+    public void testCircularReference4() {
         createJavaUnit("p", "ObjectAssert",
             "package p;\n" +
             "abstract class ObjectAssert<SELF extends ObjectAssert<SELF>> {\n" +
@@ -2101,7 +2140,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "    if (htmlRenderer == null) {\n" +
             "      htmlRenderer = new DefaultRenderer(targetType)\n" +
             "    }\n" +
-            "    htmlRenderer.render(object, context)\n" + // Cannot call p2.Renderer#render(java.lang.Object<java.lang.Object>, java.lang.String) with arguments [T, java.lang.String]
+            "    htmlRenderer.render(object, context)\n" + // Cannot call p2.Renderer#render(Object<Object>,String) with arguments [T,String]
             "  }\n" +
             "}\n");
 

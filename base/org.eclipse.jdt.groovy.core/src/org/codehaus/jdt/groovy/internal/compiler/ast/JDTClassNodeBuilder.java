@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -165,7 +165,7 @@ class JDTClassNodeBuilder {
             cn.setGenericsTypes(new GenericsType[] {new GenericsType(cn2)});
 
             if (tv.firstBound != null && tv.firstBound.id != TypeIds.T_JavaLangObject) {
-                setRedirect(cn, configureType(tv.firstBound)); // GRECLIPSE-1563
+                setRedirect(cn, configureType(tv.firstBound)); // GRECLIPSE-1563, GROOVY-10756
             } else {
                 cn.setRedirect(ClassHelper.OBJECT_TYPE);
             }
@@ -180,19 +180,23 @@ class JDTClassNodeBuilder {
      * Based on Java5.configureTypeVariableDefinition()
      */
     private GenericsType configureTypeVariableDefinition(TypeVariableBinding tv) {
+        TypeBinding[] bounds = null;
+        if (tv.firstBound != null) { // allUpperBounds() includes implicit Object!
+            TypeBinding[] others = tv.otherUpperBounds();
+            bounds = new TypeBinding[1 + others.length];
+            bounds[0] = tv.firstBound;
+            System.arraycopy(others, 0, bounds, 1, others.length);
+        }
+
         ClassNode cn = configureTypeVariableReference(tv);
         ClassNode redirect = removeRedirect(cn);
-        TypeBinding[] tBounds = getBounds(tv);
-        GenericsType gt;
-        if (tBounds.length == 0) {
-            gt = new GenericsType(cn);
-        } else {
-            tv.enterRecursiveFunction(); // "T extends Foo<? super T>"
-            gt = new GenericsType(cn, configureTypes(tBounds), null);
-            tv.exitRecursiveFunction();
-            gt.setName(cn.getName());
-            gt.setPlaceholder(true);
-        }
+
+        tv.enterRecursiveFunction(); // in case of "Z extends Xy<Z>"
+        var gt = new GenericsType(cn, configureTypes(bounds), null);
+        tv.exitRecursiveFunction();
+        gt.setName(cn.getName());
+        gt.setPlaceholder(true);
+
         setRedirect(cn, redirect);
         return gt;
     }
@@ -229,21 +233,18 @@ class JDTClassNodeBuilder {
         ClassNode cn = configureType(rt);
         if (cn instanceof JDTClassNode) {
             ((JDTClassNode) cn).setJdtBinding(tb);
-            // the messing about in here is for a few reasons. Contrast it with the ClassHelper.makeWithoutCaching
-            // that code when called for Iterable will set the redirect to point to the generics. That is what
-            // we are trying to achieve here.
             setRedirect(cn, configureType(tb.genericType()));
         }
         GenericsType[] gts = configureTypeArguments(tb.arguments);
-        if (gts != null && cn.isRedirectNode()) {
-            for (int i = 0, n = gts.length; i < n; i += 1) { // GROOVY-10671
-                if (!gts[i].isWildcard() || gts[i].getUpperBounds() != null) continue;
-                if (tb.genericType().typeVariables()[i].enterRecursiveFunction()) { // GROOVY-10651
-                    ClassNode[] implicitBounds = cn.redirect().getGenericsTypes()[i].getUpperBounds();
-                    if (implicitBounds != null && !ClassHelper.OBJECT_TYPE.equals(implicitBounds[0])){
-                        gts[i].getType().setRedirect(implicitBounds[0]); // "?" erasure is not Object!
-                    }
-                    tb.genericType().typeVariables()[i].exitRecursiveFunction();
+        // GROOVY-10651, GROOVY-10671, et al.: unbounded wildcard + non-Object erasure
+        if (gts != null && cn.isRedirectNode() && tb.genericType().isValidBinding()) {
+            for (int i = 0, n = gts.length; i < n; i += 1) {
+                if (!tb.arguments[i].isUnboundWildcard()) continue;
+                TypeVariableBinding tv = tb.genericType().typeVariables()[i];
+                if (tv.erasure().id != TypeIds.T_JavaLangObject &&
+                    tv.enterRecursiveFunction()) {
+                     gts[i].getType().setRedirect(configureType(tv.firstBound));
+                    tv.exitRecursiveFunction();
                 }
             }
         }
@@ -344,18 +345,6 @@ class JDTClassNodeBuilder {
             return bounds;
         }
         return Binding.NO_TYPES;
-    }
-
-    private static TypeBinding[] getBounds(TypeVariableBinding tv) {
-        if (tv.firstBound == null) {
-            return new TypeBinding[] {tv.erasure()};
-        } else {
-            TypeBinding[] others = tv.otherUpperBounds();
-            TypeBinding[] bounds = new TypeBinding[1 + others.length];
-            System.arraycopy(others, 0, bounds, 1, others.length);
-            bounds[0] = tv.firstBound;
-            return bounds;
-        }
     }
 
     private static TypeBinding toRawType(TypeBinding tb) {
