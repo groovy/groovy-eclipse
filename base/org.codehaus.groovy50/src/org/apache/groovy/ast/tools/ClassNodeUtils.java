@@ -338,7 +338,9 @@ public class ClassNodeUtils {
     public static String getPropNameForAccessor(final String accessorName) {
         if (!isValidAccessorName(accessorName)) return accessorName;
         int prefixLength = accessorName.startsWith("is") ? 2 : 3;
-        return String.valueOf(accessorName.charAt(prefixLength)).toLowerCase() + accessorName.substring(prefixLength + 1);
+        // GROOVY-12055: use JavaBean decapitalization so acronyms are preserved (getURL -> URL, not uRL),
+        // matching the runtime property-name rule used by MetaClassImpl via BeanUtils.decapitalize
+        return BeanUtils.decapitalize(accessorName.substring(prefixLength));
     }
 
     /**

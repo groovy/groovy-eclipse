@@ -19,10 +19,13 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.control.CompilationUnit;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.junit.Test;
 
 public final class TraitsTests extends GroovyCompilerTestSuite {
@@ -3584,5 +3587,99 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, isAtLeastGroovy(40) ? "foo(o)foo(o)bar(o)bar(o)foo(o)foo(o)" : "foo(m)foo(m)bar(o)bar(o)foo(m)foo(m)");
+    }
+
+    @Test
+    public void testTraits11985() {
+        for (List<String> tuple : (List<List<String>>) DefaultGroovyMethods.combinations(List.of(
+            List.of("CompileDynamic", "CompileStatic"),
+            List.of("public", "private"),
+            List.of("", "this.")
+        ))) {
+            String compileMode = "@groovy.transform." + tuple.get(0) + "\n";
+            //@formatter:off
+            String[] sources = {
+                "Script.groovy",
+                compileMode +
+                "trait A {\n" +
+                "  " + tuple.get(1) + " static foo() {\n" +
+                "    'A'\n" +
+                "  }\n" +
+                "  static m() {\n" +
+                "    " + tuple.get(2) + "foo()\n" +
+                "  }\n" +
+                "}\n" +
+                compileMode +
+                "class B implements A {\n" +
+                "}\n" +
+                compileMode +
+                "class C implements A {\n" +
+                "  static foo() {\n" +
+                "    'C'\n" +
+                "  }\n" +
+                "}\n" +
+                compileMode +
+                "class D extends C {\n" +
+                "}\n" +
+                "print(B.m())\n" +
+                "print(C.m())\n" +
+                "print(D.m())\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, isAtLeastGroovy(50) || ("private".equals(tuple.get(1)) && isAtLeastGroovy(40)) ? "AAA" : "ACC");
+        }
+    }
+
+    @Test
+    public void testTraits12091() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait Foo<T extends Serializable> {\n" +
+            "  T foo\n" +
+            "}\n" +
+            "class Bar implements Serializable, Foo<Bar> {\n" +
+            "  String name\n" +
+            "  Bar() {\n" +
+            "    setFoo(this)\n" +
+            "  }\n" +
+            "}\n" +
+            "def bar = new Bar(name:'Frank Grimes')\n" +
+            "assert bar.name == 'Frank Grimes'\n" +
+            "assert bar.foo === bar\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTraits12106() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait A {\n" +
+            "  static void configure(Closure closure, Object object) {\n" +
+            "    if (closure != null) {\n" +
+            "      closure.resolveStrategy = Closure.DELEGATE_ONLY\n" +
+            "      closure.delegate = object\n" +
+            "      closure.call()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "trait B extends A {\n" +
+            "  void applyConfig(Closure closure, Object object) {\n" +
+            "    configure(closure, object)\n" +
+            "  }\n" +
+            "}\n" +
+            "class C implements B {\n" +
+            "}\n" +
+            "new C().applyConfig({ print length() }, 'hello')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "5");
     }
 }
