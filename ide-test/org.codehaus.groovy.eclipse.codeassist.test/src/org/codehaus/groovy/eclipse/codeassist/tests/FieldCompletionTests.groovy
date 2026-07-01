@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
+
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 
 import groovy.test.NotYetImplemented
 
@@ -1363,7 +1365,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
             proposalExists(proposals, 'T__field1', 1)
             proposalExists(proposals, 'T__field2', 1)
             proposalExists(proposals, 'field1', mods[0] ? 0 : 2)
-            proposalExists(proposals, 'field2', mods[0] ? 0 : 1)
+            proposalExists(proposals, 'field2', mods[0] ? 0 : (!isAtLeastGroovy(60) ? 1 : 2))
         }
     }
 

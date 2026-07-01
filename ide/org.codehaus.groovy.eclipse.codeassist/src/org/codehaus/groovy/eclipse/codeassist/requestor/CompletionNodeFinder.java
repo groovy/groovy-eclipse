@@ -270,8 +270,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
             int lparenOffset = node.getNameEnd() + 1;
             if (lparenOffset < completionOffset && completionOffset <= node.getEnd()) {
-                int rparenOffset = node.getNodeMetaData("rparen.offset");
-                if (completionOffset <= rparenOffset) {
+                Integer rparenOffset = node.getNodeMetaData("rparen.offset");
+                if (rparenOffset != null && completionOffset <= rparenOffset) {
                     createContext(null, node, ContentAssistLocation.PARAMETER);
                 } else if (body != null && check(body)) {
                     createContext(body, body, expressionOrStatement());

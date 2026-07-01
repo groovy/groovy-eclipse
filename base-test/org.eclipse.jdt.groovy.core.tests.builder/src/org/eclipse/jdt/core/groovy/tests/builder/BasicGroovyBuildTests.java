@@ -2984,9 +2984,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "}\n");
         //@formatter:on
 
-        incrementalBuild(paths[0]);
-        expectingCompiledClasses("p.Named", "p.Named$Trait$Helper");
+        fullBuild(paths[0]);
         expectingNoProblems();
+        expectingCompiledClasses("p.Named", "p.Named$Trait$Helper");
     }
 
     @Test // GROOVY-9678
@@ -3011,7 +3011,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         fullBuild(paths[0]);
         expectingNoProblems();
         assertEquals(Set.of(), ReconcilerUtils.reconcile(env.getUnit(c)));
-        expectingCompiledClasses("C", "T", "T$Trait$FieldHelper", "T$Trait$Helper", "T$Trait$StaticFieldHelper");
+
+        var compiledClasses = new java.util.ArrayList<String>();
+        compiledClasses.add("C");
+        compiledClasses.add("T");
+        compiledClasses.add("T$Trait$Helper");
+        compiledClasses.add("T$Trait$FieldHelper");
+        compiledClasses.add("T$Trait$StaticFieldHelper");
+        if (isAtLeastGroovy(60)) compiledClasses.add("T$4");
+        expectingCompiledClasses(compiledClasses.toArray(String[]::new));
     }
 
     @Test // GROOVY-10249

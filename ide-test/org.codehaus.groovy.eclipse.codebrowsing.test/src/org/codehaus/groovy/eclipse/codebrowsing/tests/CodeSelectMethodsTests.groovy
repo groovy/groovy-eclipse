@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
 import static org.eclipse.jdt.core.IJavaElement.TYPE
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
@@ -304,7 +305,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |  }
             |}
             |'''.stripMargin()
-        assertCodeSelect([contents], 'x', null)
+        assertCodeSelect([contents], 'x', isAtLeastGroovy(60) ? 'x' : null)
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/755

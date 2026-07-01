@@ -261,6 +261,18 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
             processField(field, initializer, staticInitializer, fieldHelper, helper, staticFieldHelper, cNode, fieldNames);
         }
 
+        // Reject misapplied @Virtual markers before we waste effort
+        // processing them. Errors are registered against the source unit but
+        // processing continues so that multiple violations can be reported
+        // in a single compilation.
+        validateVirtualAnnotations(cNode);
+
+        // Identify public static trait methods whose bodies the main loop
+        // will emit on the helper; each gets a JVM-native interface static
+        // method promoted onto the trait interface in a post-processing
+        // step after the originals are removed from the trait interface.
+        List<MethodNode> interfaceStatics = collectInterfaceStatics(cNode);
+
         // add methods
         List<MethodNode> nonPublicAPIMethods = new ArrayList<>();
         List<Statement> staticInitStatements = null;
@@ -294,6 +306,16 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         // GRECLIPSE add
         cNode.putNodeMetaData("trait.methods", nonPublicAPIMethods);
         // GRECLIPSE end
+
+        // Install a public-static method on the trait interface for each
+        // public static trait method identified above. The forwarder
+        // delegates to the helper so external `Trait.m()` and from-trait
+        // `T.m()` calls resolve at the JVM level. Done after the removal
+        // step so the original static method is no longer on cNode when
+        // the forwarder is added.
+        for (MethodNode m : interfaceStatics) {
+            cNode.addMethod(createInterfaceStaticForwarder(cNode, helper, m));
+        }
 
         // copy statements from static and instance init blocks
         if (staticInitStatements != null) {
@@ -643,6 +665,110 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         dummyField.setSynthetic(true);
         dummyField.addAnnotations(copy);
         fieldHelper.addField(dummyField);
+    }
+
+    /**
+     * Reports a compile error for any {@code @Virtual} annotation that is
+     * applied to something other than a public static non-abstract trait
+     * method. Without this check the misapplied annotation would be silently
+     * ignored, leaving the user with no signal that the marker had no effect.
+     */
+    private void validateVirtualAnnotations(final ClassNode traitClass) {
+        for (MethodNode methodNode : traitClass.getMethods()) {
+            /* GRECLIPSE edit
+            List<AnnotationNode> virtualAnns = methodNode.getAnnotations(VIRTUAL_TYPE);
+            if (virtualAnns.isEmpty()) continue;
+            String issue;
+            if (!methodNode.isStatic()) {
+                issue = "is not static";
+            } else if (methodNode.isPrivate()) {
+                issue = "is private";
+            } else {
+                continue; // valid (static implies non-abstract)
+            }
+            AnnotationNode at = virtualAnns.get(0);
+            sourceUnit.addError(new SyntaxException(
+                    "@Virtual can only be applied to public static trait methods; "
+                            + traitClass.getName() + "#" + methodNode.getTypeDescriptor() + " " + issue,
+                    at.getLineNumber(), at.getColumnNumber()));
+            */
+            if (methodNode.isPrivate() || !methodNode.isStatic()) {
+                methodNode.getAnnotations(new ClassNode(groovy.transform.Virtual.class)).stream().findFirst().ifPresent((virtual) ->
+                    sourceUnit.addError(new SyntaxException(
+                        "@Virtual can only be applied to public static trait methods; " + traitClass.getName() + "#" + methodNode.getTypeDescriptor() + " is not " + (methodNode.isPrivate() ? "public" : "static"),
+                        virtual.getLineNumber(), virtual.getColumnNumber()
+                    ))
+                );
+            }
+            // GRECLIPSE end
+        }
+    }
+
+    /**
+     * Returns the public {@code static} non-abstract trait methods that
+     * should be promoted onto the generated trait interface as JVM-native
+     * interface static methods. Excludes {@code @Virtual} methods, whose
+     * dispatch path requires the helper-based dynamic-dispatch mechanism;
+     * promoting them onto the interface as direct static methods would
+     * make {@code @CompileStatic} callers bind to the trait's copy
+     * statically and bypass the virtual-dispatch path entirely.
+     *
+     * <p>The returned list snapshots the trait's method set so the caller
+     * can iterate without being affected by later mutations to
+     * {@code traitClass.getMethods()}.
+     */
+    private static List<MethodNode> collectInterfaceStatics(final ClassNode traitClass) {
+        List<MethodNode> result = new ArrayList<>();
+        for (MethodNode methodNode : traitClass.getMethods()) {
+            if (methodNode.isStatic() && !methodNode.isPrivate() // static implies non-abstract
+                    && methodNode.getAnnotations(new ClassNode(groovy.transform.Virtual.class)).isEmpty()) {
+                result.add(methodNode);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Builds a public-static method on the trait interface that delegates to
+     * the corresponding helper method.
+     *
+     * <p>Emits {@code public static R m(args) { return T$Trait$Helper.m(T.class, args); }},
+     * preserving generics, exceptions and parameter list of the original
+     * trait static. The trait class itself is passed as the synthetic
+     * {@code $self} receiver expected by the helper, consistent with the
+     * declarer-bound dispatch model of trait static methods.
+     */
+    private static MethodNode createInterfaceStaticForwarder(final ClassNode traitClass, final ClassNode helper, final MethodNode original) {
+        Parameter[] params = original.getParameters();
+        Expression[] callArgs = new Expression[params.length + 1];
+        callArgs[0] = classX(traitClass);
+        for (int i = 0; i < params.length; i++) {
+            callArgs[i + 1] = varX(params[i]);
+        }
+        MethodCallExpression call = callX(classX(helper), original.getName(), args(callArgs));
+        Statement body = VOID_TYPE.equals(original.getReturnType()) ? stmt(call) : returnS(call);
+        MethodNode forwarder = new MethodNode(
+                original.getName(),
+                ACC_PUBLIC | ACC_STATIC,
+                original.getReturnType(),
+                params,
+                original.getExceptions(),
+                body);
+        forwarder.setGenericsTypes(original.getGenericsTypes());
+        /* GRECLIPSE edit
+        forwarder.setSynthetic(true);
+        */
+        forwarder.setOriginal(original);
+        // GRECLIPSE end
+        forwarder.setSourcePosition(original);
+        // Carry over the trait method's RUNTIME/CLASS-retention annotations (e.g.
+        // @Deprecated) so the promoted interface static behaves like the original,
+        // consistent with the forwarders generated by TraitComposer. The helper
+        // filters out SOURCE-retention/transform markers and closure-member ones.
+        List<AnnotationNode> copied = new ArrayList<>(), notCopied = new ArrayList<>();
+        GeneralUtils.copyAnnotatedNodeAnnotations(original, copied, notCopied);
+        forwarder.addAnnotations(copied);
+        return forwarder;
     }
 
     private MethodNode processMethod(final ClassNode traitClass, final ClassNode traitHelperClass, final MethodNode methodNode, final ClassNode fieldHelper, final Collection<String> knownFields) {

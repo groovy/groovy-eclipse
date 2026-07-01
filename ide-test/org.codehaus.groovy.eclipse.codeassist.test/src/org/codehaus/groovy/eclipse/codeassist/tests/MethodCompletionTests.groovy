@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1210,7 +1210,8 @@ final class MethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'm1', 2)
         proposalExists(proposals, 'm2', 0) // GROOVY-7213
-        proposalExists(proposals, 'm3', 1)
+        proposalExists(proposals, 'm3() : Object - C', 1)
+        proposalExists(proposals, 'm3() : Object - T', isAtLeastGroovy(60) ? 1 : 0)
         proposalExists(proposals, 'm4', isAtLeastGroovy(50) ? 0 : 1) // GROOVY-8859
     }
 
@@ -1261,7 +1262,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
-        proposalExists(proposals, 'm1', 0)
+        proposalExists(proposals, 'm1', isAtLeastGroovy(60) ? 1 : 0) // GROOVY-12111
     }
 
     @Test
@@ -1277,7 +1278,8 @@ final class MethodCompletionTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
-        proposalExists(proposals, 'm1', 1)
+        proposalExists(proposals, 'm1() : Object - C', 1)
+        proposalExists(proposals, 'm1() : Object - T', 0)
     }
 
     @Test
@@ -1289,11 +1291,17 @@ final class MethodCompletionTests extends CompletionTestSuite {
             |class C implements T {
             |  static m() {
             |    T.x
+            |    C.y
             |  }
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
-        proposalExists(proposals, 'm1', 0)
+        proposalExists(proposals, 'm1() : Object - T', isAtLeastGroovy(60) ? 1 : 0) // GROOVY-12111
+        proposalExists(proposals, 'm1() : Object - C', 0)
+
+        proposals = createProposalsAtOffset(contents.replace('y', ''), contents.indexOf('y'))
+        proposalExists(proposals, 'm1() : Object - C', 1)
+        proposalExists(proposals, 'm1() : Object - T', 0)
     }
 
     @Test

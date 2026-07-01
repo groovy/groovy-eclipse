@@ -1730,11 +1730,11 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "trait T {\n" +
             "  static m() { 'T' }\n" +
             "}\n" +
-            "print T.m()\n",
+            "print T.m()\n", // GROOVY-12111
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of " +
+        runConformTest(sources, isAtLeastGroovy(60) ? "T" : "", isAtLeastGroovy(60) ? "" : "groovy.lang.MissingMethodException: No signature of " +
             (isAtLeastGroovy(50) ? "static method: m for class: T" : "method: static T.m()") + " is applicable for argument types: () values: []");
     }
 
@@ -1745,22 +1745,24 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "Main.java",
             "public class Main {\n" +
             "  public static void main(String[] args) {\n" +
-            "    System.out.print(T.m());\n" +
+            "    System.out.print(T.m().toUpperCase());\n" +
             "  }\n" +
             "}\n",
 
             "T.groovy",
             "trait T {\n" +
-            "  static m() {}\n" +
+            "  static String m() {'t'}\n" +
             "}\n",
         };
         //@formatter:on
 
-        if (isAtLeastJava(JDK9)) {
+        if (isAtLeastGroovy(60)) {
+            runConformTest(sources, "T");
+        } else if (isAtLeastJava(JDK9)) {
             runNegativeTest(sources,
                 "----------\n" +
                 "1. ERROR in Main.java (at line 3)\n" +
-                "\tSystem.out.print(T.m());\n" +
+                "\tSystem.out.print(T.m().toUpperCase());\n" +
                 "\t                   ^\n" +
                 "The method m() from the type T is not visible\n" +
                 "----------\n");

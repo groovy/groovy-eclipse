@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -280,7 +280,8 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
 
         if (isClass) {
             ClassNode ofType = VariableScope.getFirstGenerics(completionType);
-            if (!(context.completionNode instanceof ClassExpression) || !isTrait(ofType))
+            if (!(context.completionNode instanceof ClassExpression) ||
+                    !isTrait(ofType) || GroovyUtils.getGroovyVersion().getMajor() >= 6) // GROOVY-12111
                 proposalCreatorInnerLoop(groovyProposals, creators, requestor, context, options, ofType, isStatic2, isPrimary);
         }
         if (!isClass || isStatic2 || (

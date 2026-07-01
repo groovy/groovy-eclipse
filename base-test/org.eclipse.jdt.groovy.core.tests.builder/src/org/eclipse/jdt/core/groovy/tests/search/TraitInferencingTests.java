@@ -925,6 +925,9 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         //@formatter:on
 
         int offset = source.indexOf("T.m()") + 2;
+        if (isAtLeastGroovy(60))
+            assertDeclaringType(source, offset, offset + 1, "T");
+        else
         assertUnknownConfidence(source, offset, offset + 1);
 
         /**/offset = source.lastIndexOf("m()");
@@ -945,6 +948,9 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         //@formatter:on
 
         int offset = source.indexOf("T.m()") + 2;
+        if (isAtLeastGroovy(60))
+            assertDeclaringType(source, offset, offset + 1, "T");
+        else
         assertUnknownConfidence(source, offset, offset + 1);
 
         /**/offset = source.lastIndexOf("m()");
@@ -968,6 +974,9 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         //@formatter:on
 
         int offset = source.indexOf("T.m()") + 2;
+        if (isAtLeastGroovy(60))
+            assertDeclaringType(source, offset, offset + 1, "T");
+        else
         assertUnknownConfidence(source, offset, offset + 1);
 
         /**/offset = source.indexOf("C.m()") + 2;
@@ -996,6 +1005,9 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         //@formatter:on
 
         int offset = source.indexOf("T.m()") + 2;
+        if (isAtLeastGroovy(60))
+            assertDeclaringType(source, offset, offset + 1, "T");
+        else
         assertUnknownConfidence(source, offset, offset + 1);
 
         /**/offset = source.indexOf("C.m()") + 2;
@@ -1019,6 +1031,9 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         //@formatter:on
 
         int offset = source.indexOf("T.m()") + 2;
+        if (isAtLeastGroovy(60))
+            assertDeclaringType(source, offset, offset + 1, "T");
+        else
         assertUnknownConfidence(source, offset, offset + 1);
 
         /**/offset = source.indexOf("C.m()") + 2;
@@ -1041,6 +1056,9 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         //@formatter:on
 
         int offset = source.indexOf("T.m()") + 2;
+        if (isAtLeastGroovy(60))
+            assertDeclaringType(source, offset, offset + 1, "T");
+        else
         assertUnknownConfidence(source, offset, offset + 1);
 
         /**/offset = source.indexOf("C.m()") + 2;
@@ -1120,6 +1138,9 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         //@formatter:on
 
         int offset = source.indexOf("T.x") + 2;
+        if (isAtLeastGroovy(60))
+            assertDeclaringType(source, offset, offset + 1, "T");
+        else
         assertUnknownConfidence(source, offset, offset + 1);
 
         /**/offset = source.indexOf("C.x") + 2;

@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
@@ -46,6 +47,9 @@ import org.codehaus.groovy.syntax.Types;
 
 import java.util.Collection;
 
+import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.hasAnnotation;
+import static org.apache.groovy.ast.tools.ExpressionUtils.isSuperExpression;
+import static org.apache.groovy.ast.tools.ExpressionUtils.isThisExpression;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
@@ -116,10 +120,47 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
         if (exp instanceof BinaryExpression) {
             return transformBinaryExpression((BinaryExpression) exp);
         } else if (exp instanceof MethodCallExpression mce) {
-            String obj = mce.getObjectExpression().getText();
-            if ("super".equals(obj)) {
+            // GROOVY-12104: T.this.m() inside trait code (where T is the
+            // enclosing trait) compiles successfully today but generates
+            // invalid or mis-typed bytecode that fails at runtime — Verify-
+            // Error on 4.x ("Class not assignable to Closure"), ClassCast-
+            // Exception on 5.x/6.x. T.this has no coherent meaning for
+            // traits anyway (per GEP-22 § this, super, and stackable traits
+            // item 1, this is the implementing instance, and the trait is
+            // not an enclosing scope of its implementer). Reject the
+            // qualifier at compile time pointing at the existing supported
+            // alternatives.
+            if (isTraitThisQualifier(mce.getObjectExpression())) {
+                unit.addError(new SyntaxException(
+                        "'" + traitClass.getNameWithoutPackage() + ".this' is not allowed inside trait code; use 'this." + mce.getMethodAsString() + "(...)' for normal dispatch, or '" + traitClass.getNameWithoutPackage() + ".super." + mce.getMethodAsString() + "(...)' for explicit trait-anchored dispatch",
+                        mce.getLineNumber(), mce.getColumnNumber()));
+                return mce;
+            }
+            // GROOVY-12105: in a static trait method, the parser/resolver
+            // rewrites `super.m(...)` to a static call on the trait's
+            // declared superclass (typically Object) before we see it. Reject
+            // that pattern at compile time, pointing at `T.super.m(...)` as
+            // the supported explicit form. The discriminator is
+            // `mce.isImplicitThis()`: the rewritten super call carries
+            // `isImplicitThis=true` (because the user wrote no explicit
+            // receiver — the ClassExpression was synthesised by the
+            // resolver), while an explicit `ClassName.m()` call from
+            // user source has `isImplicitThis=false`. The synthesised
+            // ClassExpression also has no source position (line=-1), an
+            // independent signal of the same fact.
+            if (ClassHelper.isClassType(weaved.getOriginType())
+                && mce.isImplicitThis()
+                && mce.getObjectExpression() instanceof ClassExpression ce
+                && traitClass.getSuperClass() != null
+                && ce.getType().equals(traitClass.getSuperClass())) {
+                unit.addError(new SyntaxException(
+                    "'super' is not allowed in a static trait method; use '" + traitClass.getNameWithoutPackage() + ".super." + mce.getMethodAsString() + "(...)' for explicit trait-anchored dispatch",
+                    mce.getLineNumber(), mce.getColumnNumber()));
+                return mce;
+            }
+            if (isSuperExpression(mce.getObjectExpression())) {
                 return transformSuperMethodCall(mce); // super.m(x) --> $self.Ttrait$super$m(x)
-            } else if ("this".equals(obj)) {
+            } else if (isThisExpression(mce.getObjectExpression())) {
                 return transformMethodCallOnThis(mce); // this.m(x) --> $self.m(x) or this.m($self, x)
             }
         } else if (exp instanceof FieldExpression) {
@@ -153,6 +194,14 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
             }
         } else if (exp instanceof PropertyExpression pexp) {
             String obj = pexp.getObjectExpression().getText();
+            // GROOVY-12104: T.this.field qualifier — same rejection rationale
+            // as the method-call form above. Reject at compile time.
+            if (isTraitThisQualifier(pexp.getObjectExpression())) {
+                unit.addError(new SyntaxException(
+                        "'" + traitClass.getNameWithoutPackage() + ".this' is not allowed inside trait code; use 'this." + pexp.getPropertyAsString() + "' for the field reference",
+                        pexp.getLineNumber(), pexp.getColumnNumber()));
+                return pexp;
+            }
             if (pexp.isImplicitThis() || "this".equals(obj)) {
                 String propName = pexp.getPropertyAsString();
                 if (knownFields.contains(propName)) {
@@ -269,6 +318,21 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
         unit.addError(new SyntaxException("Call to super is not allowed in a trait", node.getLineNumber(), node.getColumnNumber()));
     }
 
+    /**
+     * Returns {@code true} if the given expression has the shape
+     * {@code <traitClass>.this} — i.e. a {@link PropertyExpression} whose
+     * object is a {@link ClassExpression} of the enclosing trait class
+     * and whose property is the literal "this". Used by GROOVY-12104's
+     * compile-time rejection of {@code T.this.*} qualifier syntax in
+     * trait code.
+     */
+    private boolean isTraitThisQualifier(final Expression exp) {
+        if (!(exp instanceof PropertyExpression pe)) return false;
+        if (!"this".equals(pe.getPropertyAsString())) return false;
+        if (!(pe.getObjectExpression() instanceof ClassExpression ce)) return false;
+        return ce.getType().equals(traitClass);
+    }
+
     private Expression transformSuperMethodCall(final MethodCallExpression call) {
         String method = call.getMethodAsString();
         if (method == null) {
@@ -310,27 +374,17 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
             MethodNode methodNode = findConcreteMethod(traitClass, call.getMethodAsString());
             if (methodNode != null) {
                 MethodCallExpression newCall;
-                /* GRECLIPSE edit -- GROOVY-11985, GROOVY-12106
-                boolean anchored = !methodNode.getAnnotations(ANCHORED_TYPE).isEmpty();
-                if (methodNode.isStatic() && !methodNode.isPrivate() && !anchored && !inClosure) {
-                    // GROOVY-11985: dispatch unqualified/this-qualified calls to
-                    // public, non-@Anchored trait statics through the
-                    // implementing class so an override declared on the
-                    // implementer is visible from trait code. Annotating the
-                    // trait static with @Anchored opts out of this override
-                    // path and keeps dispatch declarer-bound through the trait
-                    // helper (Java/interface-static flavour); the matching
-                    // interface promotion is performed in TraitASTTransformation.
-                    Expression implClass = ClassHelper.isClassType(weaved.getOriginType()) ? varX(weaved) : castX(ClassHelper.CLASS_Type.getPlainNodeReference(), callX(varX(weaved), "getClass"));
-                    newCall = callX(implClass, method, transform(arguments));
+                if (methodNode.isStatic() && !methodNode.isPrivate() && !inClosure && hasAnnotation(methodNode, new ClassNode(groovy.transform.Virtual.class))) {
+                    // GROOVY-11985: this.m(x) --> ($static$self or (Class)$self.getClass()).m(x)
+                    Expression selfClass = ClassHelper.isClassType(weaved.getOriginType()) ? varX(weaved) : castX(ClassHelper.CLASS_Type.getPlainNodeReference(), callX(varX(weaved), "getClass"));
+                    newCall = callX(selfClass, method, transform(arguments));
                     newCall.setImplicitThis(false);
                     newCall.putNodeMetaData(TraitASTTransformation.DO_DYNAMIC, methodNode.getReturnType());
                 } else {
-                */
                     // this.m(x) --> (this or T$Trait$Helper).m($self or $static$self or (Class)$self.getClass(), x)
                     Expression selfClassOrObject = methodNode.isStatic() && !ClassHelper.isClassType(weaved.getOriginType()) ? castX(ClassHelper.CLASS_Type.getPlainNodeReference(), callX(weaved, "getClass")) : weaved;
                     newCall = callX(!inClosure ? thisExpr : classX(traitHelper), method, createArgumentList(selfClassOrObject, arguments));
-                // GRECLIPSE end
+                }
                 newCall.setGenericsTypes(call.getGenericsTypes());
                 newCall.setSpreadSafe(call.isSpreadSafe());
                 newCall.setSourcePosition(call);
@@ -338,7 +392,7 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
             }
         }
 
-        // this.m(x) --> ($self or $static$self).m(x)
+        // this.m(x) --> (this or $self or $static$self).m(x)
         MethodCallExpression newCall = callX(inClosure ? thisExpr : weaved, method, transform(arguments));
         newCall.setGenericsTypes(call.getGenericsTypes()); // GROOVY-11302: this.<T>m(x)
         newCall.setImplicitThis(inClosure ? call.isImplicitThis() : false);
@@ -364,6 +418,19 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
                 if (methodNode.isPublic() && methodNode.isStatic()
                         // exclude public method with body as it's included in trait interface
                         && ClassHelper.isClassType(methodNode.getParameters()[0].getType())) {
+                    return methodNode;
+                }
+            }
+            // GROOVY-12117: when a co-compiled super trait has not been transformed
+            // yet, its helper is still an empty GROOVY-7909 stub, so the lowered
+            // static above is not found. The original static is still declared on
+            // the trait node at this point, so resolve it there. This keeps the
+            // rewrite independent of the order in which sibling traits are
+            // transformed (GEP-22 P1' dispatch consistency); the helper resolves
+            // identically once every trait is lowered, so this only matters for
+            // the not-yet-lowered super trait.
+            for (MethodNode methodNode : superTrait.getDeclaredMethods(methodName)) {
+                if (methodNode.isPublic() && methodNode.isStatic()) {
                     return methodNode;
                 }
             }

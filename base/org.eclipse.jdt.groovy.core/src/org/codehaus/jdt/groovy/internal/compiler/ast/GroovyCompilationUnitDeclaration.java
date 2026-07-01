@@ -3276,6 +3276,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 methodDecl.modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
             } else if (methodNode.isStatic()) {
                 if (unitDeclaration.compilerOptions.targetJDK >= ClassFileConstants.JDK9) {
+                    if (GroovyUtils.getGroovyVersion().getMajor() < 6) // GROOVY-12111
                     methodDecl.modifiers ^= Flags.AccPublic | Flags.AccPrivate; // hide from JDT
                 } else if (unitDeclaration.compilerOptions.targetJDK < ClassFileConstants.JDK1_8) {
                     methodDecl.modifiers ^= Flags.AccStatic | ExtraCompilerModifiers.AccModifierProblem;

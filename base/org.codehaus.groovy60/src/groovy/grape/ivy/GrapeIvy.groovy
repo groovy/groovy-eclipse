@@ -27,6 +27,7 @@ import groovy.transform.CompileStatic
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.NamedParam
 import groovy.transform.NamedParams
+import groovy.transform.PackageScope
 
 import org.apache.ivy.Ivy
 import org.apache.ivy.core.IvyContext
@@ -43,6 +44,7 @@ import org.apache.ivy.core.module.id.ModuleId
 import org.apache.ivy.core.module.id.ModuleRevisionId
 import org.apache.ivy.core.report.ArtifactDownloadReport
 import org.apache.ivy.core.report.ResolveReport
+import org.apache.ivy.core.resolve.IvyNode
 import org.apache.ivy.core.resolve.ResolveOptions
 import org.apache.ivy.core.settings.IvySettings
 import org.apache.ivy.plugins.matcher.ExactPatternMatcher
@@ -50,6 +52,7 @@ import org.apache.ivy.plugins.matcher.PatternMatcher
 import org.apache.ivy.plugins.resolver.ChainResolver
 import org.apache.ivy.plugins.resolver.IBiblioResolver
 import org.apache.ivy.plugins.resolver.ResolverSettings
+import org.apache.ivy.util.Message
 import org.codehaus.groovy.reflection.ReflectionUtils
 
 import java.text.ParseException
@@ -99,17 +102,16 @@ class GrapeIvy implements GrapeEngine {
         Message.setDefaultLogger(new PlatformLoggingMessageLogger())
         */
         settings = new IvySettings()
-        settings.setVariable('user.home.url', new File(System.getProperty('user.home')).toURI().toURL() as String)
-        File grapeConfig = getLocalGrapeConfig()
-        if (grapeConfig.exists()) {
-            try {
-                settings.load(grapeConfig)
-            } catch (ParseException e) {
-                System.err.println("Local Ivy config file '${grapeConfig.getCanonicalPath()}' appears corrupt - ignoring it and using default config instead\nError was: ${e.getMessage()}")
-                settings.load(GrapeIvy.getResource('defaultGrapeConfig.xml'))
-            }
-        } else {
-            settings.load(GrapeIvy.getResource('defaultGrapeConfig.xml'))
+        def url = new File(System.getProperty('user.home')).toURI().toURL() as String
+        settings.setVariable('user.home.url', url.endsWith("/") ? url[0..-2] : url)
+        URL defaultConfig = GrapeIvy.getResource('defaultGrapeConfig.xml')
+        URL effective = resolveGrapeConfigUrl() ?: defaultConfig
+        try {
+            loadIvySettings(effective)
+        } catch (ParseException e) {
+            java.util.logging.Logger.getLogger('groovy.grape.ivy').log(java.util.logging.Level.WARNING,
+                "Ivy config '${effective}' appears corrupt - ignoring and using default config. Error: ${e.message}", e)
+            loadIvySettings(defaultConfig)
         }
         settings.setDefaultCache(getGrapeCacheDir())
         settings.setVariable('ivy.default.configuration.m2compatible', 'true')
@@ -176,7 +178,13 @@ class GrapeIvy implements GrapeEngine {
     /**
      * Returns the local Ivy grape configuration file.
      *
-     * @return the grape configuration file
+     * <p>Retained for backwards compatibility — only honors filesystem-path forms
+     * of {@code -Dgrape.config}. The runtime now resolves the active config
+     * through {@link #resolveGrapeConfigUrl}, which additionally accepts the
+     * {@code relaxed}, {@code default}, and {@code classpath:<resource>} shorthand
+     * forms.</p>
+     *
+     * @return the grape configuration file (may not exist on disk)
      */
     File getLocalGrapeConfig() {
         String grapeConfig = System.getProperty('grape.config')
@@ -184,6 +192,102 @@ class GrapeIvy implements GrapeEngine {
             new File(grapeConfig)
         } else {
             new File(getGrapeDir(), 'grapeConfig.xml')
+        }
+    }
+
+    /**
+     * Resolves the active Grape Ivy config URL.
+     *
+     * <p>Precedence:</p>
+     * <ol>
+     *   <li>{@code -Dgrape.config=<value>} — see {@link #resolveExplicitConfig}.
+     *       If the value is set but cannot be resolved, a {@code WARNING} is
+     *       logged and the method returns null so the caller falls back to
+     *       {@code defaultGrapeConfig.xml}. (This matches the existing semantics
+     *       where a missing sys-prop file bypasses {@code ~/.groovy/grapeConfig.xml}.)</li>
+     *   <li>{@code ~/.groovy/grapeConfig.xml} (or the configured grape dir).</li>
+     *   <li>{@code null} — caller is expected to fall back to {@code defaultGrapeConfig.xml}.</li>
+     * </ol>
+     *
+     * @return the resolved config URL, or null if no override was selected
+     */
+    URL resolveGrapeConfigUrl() {
+        String prop = System.getProperty('grape.config')
+        if (prop) {
+            URL fromProp = resolveExplicitConfig(prop)
+            if (fromProp != null) {
+                /* GRECLIPSE edit
+                LOGGER.log(Level.FINE, "Using grape.config='${prop}' (${fromProp})")
+                */
+                return fromProp
+            }
+            java.util.logging.Logger.getLogger('groovy.grape.ivy').log(java.util.logging.Level.WARNING,
+                "grape.config='${prop}' could not be resolved; falling back to defaultGrapeConfig.xml")
+            return null
+        }
+        File userConfig = new File(getGrapeDir(), 'grapeConfig.xml')
+        if (userConfig.exists()) {
+            return userConfig.toURI().toURL()
+        }
+        return null
+    }
+
+    /**
+     * Visible for testing: resolves a {@code -Dgrape.config=<value>} setting to a
+     * URL. Accepted forms:
+     * <ul>
+     *   <li>{@code relaxed} — packaged {@code relaxedGrapeConfig.xml} (plain
+     *       {@code <filesystem>} / {@code <ibiblio>} resolvers, no strictness).</li>
+     *   <li>{@code default} — packaged {@code defaultGrapeConfig.xml} (explicit
+     *       selection of the shipped default; useful for symmetry).</li>
+     *   <li>{@code classpath:<resource>} — arbitrary classpath resource looked up
+     *       via the GrapeIvy classloader, then the thread context classloader.</li>
+     *   <li>any other value — interpreted as a filesystem path.</li>
+     * </ul>
+     *
+     * @return the resolved URL, or null if the value could not be located
+     */
+    @PackageScope static URL resolveExplicitConfig(String prop) {
+        if (prop == 'relaxed') return GrapeIvy.getResource('relaxedGrapeConfig.xml')
+        if (prop == 'default') return GrapeIvy.getResource('defaultGrapeConfig.xml')
+        if (prop.startsWith('classpath:')) {
+            String name = prop.substring('classpath:'.length())
+            URL res = GrapeIvy.classLoader?.getResource(name)
+            if (res != null) return res
+            return Thread.currentThread().contextClassLoader?.getResource(name)
+        }
+        File f = new File(prop)
+        return f.exists() ? f.toURI().toURL() : null
+    }
+
+    /**
+     * Loads the given URL into the Ivy settings. For {@code file:} URLs backed
+     * by a real file we route through the {@code load(File)} overload, because
+     * {@code IvySettings.load(File)} sets {@code ivy.settings.dir} to a filesystem
+     * path while {@code IvySettings.load(URL)} sets it to a {@code file:}-prefixed
+     * URL string. User-supplied ivysettings.xml files commonly interpolate
+     * {@code ${ivy.settings.dir}} into resolver patterns expecting a path
+     * (e.g. {@code <filesystem>} {@code ivy} / {@code artifact} patterns), so
+     * the URL form silently breaks those resolvers. Classpath / jar / http
+     * resources go through the URL overload since {@code ivy.settings.dir}
+     * isn't meaningful as a filesystem path for them anyway.
+     */
+    private void loadIvySettings(URL url) throws ParseException, IOException {
+        File asFile = urlAsLocalFile(url)
+        if (asFile != null) {
+            settings.load(asFile)
+        } else {
+            settings.load(url)
+        }
+    }
+
+    @PackageScope static File urlAsLocalFile(URL url) {
+        if (url == null || url.protocol != 'file') return null
+        try {
+            File f = new File(url.toURI())
+            return f.isFile() ? f : null
+        } catch (Exception ignored) {
+            return null
         }
     }
 
@@ -259,13 +363,16 @@ class GrapeIvy implements GrapeEngine {
         dep.each { k, v ->
             if (v instanceof CharSequence) {
                 if (k.toString().contains('v')) { // revision, version, rev
-                    if (!(v ==~ '[^\\/:"<>|]*')) {
+                    if (!(v ==~ '[^\\\\/:"<>|]*')) {
                         throw new RuntimeException("Grab: invalid value of '$v' for $k: should not contain any of / \\ : \" < > |")
                     }
                 } else {
                     if (!(v ==~ '[-._a-zA-Z0-9]*')) {
                         throw new RuntimeException("Grab: invalid value of '$v' for $k: should only contain - . _ a-z A-Z 0-9")
                     }
+                }
+                if (v.toString().contains('..')) {
+                    throw new RuntimeException("Grab: invalid value of '$v' for $k: should not contain '..'")
                 }
             }
         }
@@ -450,7 +557,7 @@ class GrapeIvy implements GrapeEngine {
         }
 
         if (report.hasError()) {
-            throw new RuntimeException("Error grabbing Grapes -- ${report.getAllProblemMessages()}")
+            throw new RuntimeException("Error grabbing Grapes -- ${report.getAllProblemMessages()}${diagnoseHalfPopulatedLocalM2(report)}")
         }
         if (report.getDownloadSize() && reportDownloads) {
             System.err.println("Downloaded ${report.getDownloadSize() >> 10} Kbytes in ${report.getDownloadTime()}ms:\n  ${report.getAllArtifactsReports()*.toString().join('\n  ')}")
@@ -463,6 +570,66 @@ class GrapeIvy implements GrapeEngine {
         }
 
         report
+    }
+
+    /**
+     * When a download fails, check whether the local Maven cache has the POM but
+     * not the primary artifact for any failed dependency. Ivy binds artifact
+     * downloads to the resolver that resolved the descriptor, so a localm2 with
+     * only the POM blocks the chain from falling through to Maven Central.
+     */
+    private static String diagnoseHalfPopulatedLocalM2(ResolveReport report) {
+        File m2root = new File(System.getProperty('user.home'), '.m2/repository')
+        if (!m2root.isDirectory()) return ''
+        StringBuilder hint = new StringBuilder()
+        Set<String> seen = new LinkedHashSet<String>()
+        // Artifact-level failures ("download failed: g#a;v!a.jar") — primary half-population.
+        for (ArtifactDownloadReport adr : report.getFailedArtifactsReports()) {
+            String classifier = (String) adr.getArtifact().getExtraAttribute('classifier')
+            appendHintForCoord(adr.getArtifact().getModuleRevisionId(),
+                    adr.getArtifact().getName(),
+                    adr.getArtifact().getExt() ?: 'jar',
+                    classifier, m2root, hint, seen)
+        }
+        // Dependency-level failures ("unresolved dependency: g#a;v not found") — typical when
+        // the JAR-only-in-localm2 case combines with a transient Central descriptor lookup miss.
+        for (IvyNode node : report.getUnresolvedDependencies()) {
+            appendHintForCoord(node.getId(), node.getId().getName(), 'jar', null, m2root, hint, seen)
+        }
+        return hint.toString()
+    }
+
+    private static void appendHintForCoord(ModuleRevisionId mrid, String artName, String ext,
+                                           String classifier, File m2root, StringBuilder hint,
+                                           Set<String> seen) {
+        String org = mrid.getOrganisation()
+        String mod = mrid.getName()
+        String rev = mrid.getRevision()
+        String coord = "${org}:${mod}:${rev}".toString()
+        if (!seen.add(coord)) return
+        File dir = new File(m2root, "${org.replace('.', '/')}/${mod}/${rev}")
+        if (!dir.isDirectory()) return
+        File pom = new File(dir, "${mod}-${rev}.pom")
+        String suffix = classifier ? "-${classifier}" : ''
+        File primary = new File(dir, "${artName}-${rev}${suffix}.${ext}")
+        if (pom.exists() && !primary.exists()) {
+            File grapeIvyXml = new File(System.getProperty('user.home'),
+                    ".groovy/grapes/${org}/${mod}/ivy-${rev}.xml")
+            hint.append('\nHint: ').append(coord)
+                .append(' has a POM but no ').append(ext).append(' in your local Maven cache.\n')
+                .append('Either run:  mvn dependency:get -Dartifact=').append(coord).append('\n')
+                .append('or remove these so Grape can fetch from Maven Central:\n')
+                .append('  ').append(dir).append('\n')
+                .append('  ').append(grapeIvyXml).append(' (and ivy-')
+                .append(rev).append('.xml.original, ivydata-').append(rev).append('.properties)')
+        } else if (primary.exists() && !pom.exists()) {
+            hint.append('\nHint: ').append(coord)
+                .append(' has a ').append(ext).append(' but no POM in your local Maven cache.\n')
+                .append('Ivy needs the POM to resolve the descriptor; without it the chain falls through ')
+                .append('to Maven Central and any transient Central failure surfaces as "not found".\n')
+                .append('Either run:  mvn dependency:get -Dartifact=').append(coord).append('\n')
+                .append('or remove ').append(dir).append(' to force a clean fetch.')
+        }
     }
 
     private addIvyListener() {

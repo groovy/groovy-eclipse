@@ -204,9 +204,9 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "}\n",
 
             "Test.groovy",
-            "@GrabResolver(name='restlet', root='https://maven.restlet.talend.com')\n" +
-            "@Grab(group='org.restlet.jse', module='org.restlet', version='2.4.3', transitive=false)\n" +
-            "import org.restlet.Restlet\n",
+            "@GrabResolver(name='groovy', root='https://groovy.jfrog.io/artifactory/plugins-release-local')\n" +
+            "@Grab(group='org.codehaus.groovy', module='groovy-eclipse-batch', version='3.0.0-01', transitive=false)\n" +
+            "import org.eclipse.jdt.internal.compiler.batch.Main\n",
         };
         //@formatter:on
 
