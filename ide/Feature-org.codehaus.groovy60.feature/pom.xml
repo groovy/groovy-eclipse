@@ -4,10 +4,10 @@
     <relativePath>../../pom.xml</relativePath>
     <groupId>org.codehaus.groovy.eclipse</groupId>
     <artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
-    <version>6.2.0-SNAPSHOT</version>
+    <version>6.3.0-SNAPSHOT</version>
   </parent>
   <groupId>org.codehaus.groovy.eclipse</groupId>
   <artifactId>org.codehaus.groovy60.feature</artifactId>
-  <version>6.2.0-SNAPSHOT</version>
+  <version>6.3.0-SNAPSHOT</version>
   <packaging>eclipse-feature</packaging>
 </project>
