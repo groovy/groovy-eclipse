@@ -3629,6 +3629,10 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             //@formatter:on
 
             runConformTest(sources, isAtLeastGroovy(50) || ("private".equals(tuple.get(1)) && isAtLeastGroovy(40)) ? "AAA" : "ACC");
+            if (isAtLeastGroovy(50) && !"private".equals(tuple.get(1))) {
+                sources[1] = sources[1].replaceFirst("(public)? static foo", "@groovy.transform.Virtual $1 static foo");
+                runConformTest(sources, "ACC");
+            }
         }
     }
 
@@ -3660,8 +3664,9 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
             "trait A {\n" +
-            "  static void configure(Closure closure, Object object) {\n" +
+            "  static void apply(Closure closure, Object object) {\n" +
             "    if (closure != null) {\n" +
             "      closure.resolveStrategy = Closure.DELEGATE_ONLY\n" +
             "      closure.delegate = object\n" +
@@ -3669,12 +3674,13 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n" +
-            "@groovy.transform.TypeChecked\n" +
+            "@groovy.transform.CompileStatic\n" +
             "trait B extends A {\n" +
-            "  void applyConfig(Closure closure, Object object) {\n" +
-            "    configure(closure, object)\n" +
+            "  void applyConfig(@DelegatesTo(strategy=Closure.DELEGATE_ONLY) Closure<?> closure, @DelegatesTo.Target String string) {\n" +
+            "    apply(closure, (Object) string)\n" + // TraitTypeCheckingExtension#handleMissingMethod needs exact types
             "  }\n" +
             "}\n" +
+            "@groovy.transform.CompileStatic\n" +
             "class C implements B {\n" +
             "}\n" +
             "new C().applyConfig({ print length() }, 'hello')\n",

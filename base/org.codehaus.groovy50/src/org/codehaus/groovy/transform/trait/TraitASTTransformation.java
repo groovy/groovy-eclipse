@@ -244,6 +244,12 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
             processField(field, initializer, staticInitializer, fieldHelper, helper, staticFieldHelper, cNode, fieldNames);
         }
 
+        // Reject misapplied @Virtual markers before we waste effort
+        // processing them. Errors are registered against the source unit but
+        // processing continues so that multiple violations can be reported
+        // in a single compilation.
+        validateVirtualAnnotations(cNode);
+
         // add methods
         List<MethodNode> nonPublicAPIMethods = new ArrayList<>();
         List<Statement> staticInitStatements = null;
@@ -637,6 +643,45 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         dummyField.setSynthetic(true);
         dummyField.addAnnotations(copy);
         fieldHelper.addField(dummyField);
+    }
+
+    /**
+     * Reports a compile error for any {@code @Virtual} annotation that is
+     * applied to something other than a public static non-abstract trait
+     * method. Without this check the misapplied annotation would be silently
+     * ignored, leaving the user with no signal that the marker had no effect.
+     */
+    private void validateVirtualAnnotations(final ClassNode traitClass) {
+        for (MethodNode methodNode : traitClass.getMethods()) {
+            /* GRECLIPSE edit
+            List<AnnotationNode> virtualAnns = methodNode.getAnnotations(VIRTUAL_TYPE);
+            if (virtualAnns.isEmpty()) continue;
+            String issue;
+            if (!methodNode.isStatic()) {
+                issue = "is not static";
+            } else if (methodNode.isPrivate()) {
+                issue = "is private";
+            } else if (methodNode.isAbstract()) {
+                issue = "is abstract";
+            } else {
+                continue; // valid
+            }
+            AnnotationNode virtual = virtualAnns.get(0);
+            sourceUnit.addError(new SyntaxException(
+                    "@Virtual can only be applied to public static trait methods; "
+                            + traitClass.getName() + "#" + methodNode.getTypeDescriptor() + " " + issue,
+                    virtual.getLineNumber(), virtual.getColumnNumber()));
+            */
+            if (methodNode.isPrivate() || !methodNode.isStatic()) {
+                methodNode.getAnnotations(new ClassNode(groovy.transform.Virtual.class)).stream().findFirst().ifPresent((virtual) ->
+                    sourceUnit.addError(new SyntaxException(
+                        "@Virtual can only be applied to public static trait methods; " + traitClass.getName() + "#" + methodNode.getTypeDescriptor() + " is not " + (methodNode.isPrivate() ? "public" : "static"),
+                        virtual.getLineNumber(), virtual.getColumnNumber()
+                    ))
+                );
+            }
+            // GRECLIPSE end
+        }
     }
 
     private MethodNode processMethod(final ClassNode traitClass, final ClassNode traitHelperClass, final MethodNode methodNode, final ClassNode fieldHelper, final Collection<String> knownFields) {
