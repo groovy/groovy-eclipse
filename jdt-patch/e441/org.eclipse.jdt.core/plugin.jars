@@ -1,0 +1,7 @@
+jdtcore.jar=\
+	codeassist,\
+	eval,\
+	formatter,\
+	dom,\
+	model, \
+	search
