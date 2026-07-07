@@ -9687,19 +9687,18 @@ public void previewAPIUsed(Scope scope, int sourceStart, int sourceEnd, IBinaryA
 		}
 	}
 
-	int problemId = -1, severity = -1;
+	int problemId = -1;
+	int severity = -1;
 	if (!this.options.enablePreviewFeatures) {
-	//	if (this.options.complianceLevel < ClassFileConstants.getLatestJDKLevel()) {
-	//		problemId = IProblem.PreviewAPIUsed;
-	//		severity = ProblemSeverities.Warning;
-	//	} else {
+		if (this.options.complianceLevel < ClassFileConstants.getLatestJDKLevel()) {
+			problemId = IProblem.PreviewAPIUsed;
+		} else {
 			problemId = IProblem.PreviewAPIDisabled;
 			severity = isReflective ? ProblemSeverities.Warning : ProblemSeverities.Error;
-	//	}
+		}
 	} else {
 		this.referenceContext.compilationResult().usesPreview = true;
 		if (this.options.isAnyEnabled(IrritantSet.PREVIEW)) {
-			severity = ProblemSeverities.Warning;
 			problemId = IProblem.PreviewAPIUsed;
 		}
 	}
