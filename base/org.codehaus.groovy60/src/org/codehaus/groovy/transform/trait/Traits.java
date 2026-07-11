@@ -161,11 +161,13 @@ public abstract class Traits {
      * Prefix fragment used for remapped private trait fields.
      */
     static final String PRIVATE_FIELD_PREFIX = "$1";
-    // TODO decide if we should support VOLATILE
+
+    // TODO: decide if we should support VOLATILE
 //    def hex(s) {new BigInteger(s, 16).intValue()}
 //    def optionals = [[0, 1], [0, 1], [0, 1], [0, 1]].combinations{ a, b, c, d ->
 //            (a ? hex('80') : 0) + (b ? hex('10') : 0) + (c ? hex('8') : 0) + (d ? hex('2') : hex('1'))
 //    }.sort()
+
     /**
      * Supported modifier encodings used when remapping trait field names.
      */
@@ -331,20 +333,10 @@ public abstract class Traits {
         GenericsType[] typeArguments = trait.getGenericsTypes();
         if (helperClassNode != null) {
             helperClassNode = GenericsUtils.makeClassSafe0(helperClassNode, typeArguments);
-        } else { // GROOVY-7909: stub helper
-            /* GRECLIPSE edit
-            helperClassNode = new ClassNode(
-                Traits.helperClassName(trait),
-                ACC_PUBLIC | ACC_STATIC | ACC_ABSTRACT | ACC_SYNTHETIC,
-                ClassHelper.OBJECT_TYPE
-            ){{
-                isPrimaryNode = false;
-                setGenericsTypes(typeArguments);
-            }};
-            */
+        } else {
+            // GROOVY-7909, GROOVY-12117: stub the helper
             helperClassNode = new HelperClassStub(trait);
             helperClassNode.setGenericsTypes(typeArguments);
-            // GRECLIPSE end
         }
         if (fieldHelperClassNode != null) {
             fieldHelperClassNode = GenericsUtils.makeClassSafe0(fieldHelperClassNode, typeArguments);
@@ -353,7 +345,14 @@ public abstract class Traits {
         return new TraitHelpersTuple(helperClassNode, fieldHelperClassNode, staticFieldHelperClassNode);
     }
 
-    // GRECLIPSE add
+    /**
+     * GROOVY-7909, GROOVY-12117: When a co-compiled super trait hasn't yet been
+     * transformed, its helper is stubbed so the lowered static methods can be
+     * found. This keeps the rewrite independent of the order in which sibling
+     * traits are transformed (GEP-22 dispatch consistency); the helper resolves
+     * identically once every trait is lowered, so this only matters for the
+     * not-yet-lowered super trait.
+     */
     private static class HelperClassStub extends ClassNode {
 
         private final ClassNode trait;
@@ -384,17 +383,22 @@ public abstract class Traits {
             helperParams[0] = new Parameter(self, "traitImplementer");
             System.arraycopy(methodParams, 0, helperParams, 1, methodParams.length);
 
-            MethodNode m = new MethodNode(method.getName(), mods, method.getReturnType(), helperParams, method.getExceptions(), null);
+            var m = new MethodNode(method.getName(), mods, method.getReturnType(), helperParams, method.getExceptions(), null);
+            for (AnnotationNode annotation : method.getAnnotations()) {
+                if (!annotation.getClassNode().equals(ClassHelper.OVERRIDE_TYPE)) {
+                    m.addAnnotation(annotation);
+                }
+            }
             m.addAnnotation(Traits.IMPLEMENTED_CLASSNODE);
             m.setGenericsTypes(method.getGenericsTypes());
-            m.setOriginal(method);
+            m.setOriginal(method); // GRECLIPSE add
             return m;
         }
     }
-    // GRECLIPSE end
 
     /**
      * Returns true if the specified class node is a trait.
+     *
      * @param cNode a class node to test
      * @return true if the classnode represents a trait
      */
@@ -404,6 +408,7 @@ public abstract class Traits {
 
     /**
      * Returns true if the specified class is a trait.
+     *
      * @param clazz a class to test
      * @return true if the classnode represents a trait
      */
@@ -413,6 +418,7 @@ public abstract class Traits {
 
     /**
      * Returns true if the specified class node is annotated with the {@link Trait} interface.
+     *
      * @param cNode a class node
      * @return true if the specified class node is annotated with the {@link Trait} interface.
      */
@@ -423,6 +429,7 @@ public abstract class Traits {
 
     /**
      * Indicates whether a method in a trait interface has a default implementation.
+     *
      * @param method a method node
      * @return true if the method has a default implementation in the trait
      */
@@ -432,6 +439,7 @@ public abstract class Traits {
 
     /**
      * Indicates whether a method in a trait interface has a default implementation.
+     *
      * @param method a method node
      * @return true if the method has a default implementation in the trait
      */
@@ -477,13 +485,14 @@ public abstract class Traits {
      * Converts a class implementing some trait into a target class. If the trait is a dynamic proxy and
      * that the target class is assignable to the target object of the proxy, then the target object is
      * returned. Otherwise, falls back to {@link org.codehaus.groovy.runtime.DefaultGroovyMethods#asType(java.lang.Object, Class)}
+     *
      * @param self an object to be coerced to some class
      * @param clazz the class to be coerced to
      * @return the object coerced to the target class, or the proxy instance if it is compatible with the target class.
      */
     public static <T> T getAsType(Object self, Class<T> clazz) {
-        if (self instanceof GeneratedGroovyProxy) {
-            Object proxyTarget = ((GeneratedGroovyProxy)self).getProxyTarget();
+        if (self instanceof GeneratedGroovyProxy proxy) {
+            Object proxyTarget = proxy.getProxyTarget();
             if (clazz.isAssignableFrom(proxyTarget.getClass())) {
                 return (T) proxyTarget;
             }
@@ -511,6 +520,7 @@ public abstract class Traits {
      * Collects all interfaces of a class node, but reverses the order of the declaration of direct interfaces
      * of this class node. This is used to make sure a trait implementing A,B where both A and B have the same
      * method will take the method from B (latest), aligning the behavior with categories.
+     *
      * @param cNode a class node
      * @param interfaces ordered set of interfaces
      */
@@ -529,6 +539,7 @@ public abstract class Traits {
     /**
      * Collects all the self types that a type should extend or implement, given
      * the traits is implements. Collects from interfaces and superclasses too.
+     *
      * @param receiver a class node that may implement a trait
      * @param selfTypes a set where the self types will be put
      * @return the {@code selfTypes} collection
@@ -542,6 +553,7 @@ public abstract class Traits {
     /**
      * Collects all the self types that a type should extend or implement, given
      * the traits is implements.
+     *
      * @param receiver a class node that may implement a trait
      * @param selfTypes a set where the self types will be put
      * @param checkInterfaces should the interfaces that the node implements be collected too
@@ -601,7 +613,7 @@ public abstract class Traits {
     }
 
     /**
-     * Find all traits associated with the given type.
+     * Finds all traits associated with the given type.
      *
      * @param cNode the given classnode
      * @return the list of ordered trait classnodes
@@ -624,7 +636,8 @@ public abstract class Traits {
      */
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    public @interface Implemented {}
+    public @interface Implemented {
+    }
 
     /**
      * Internal annotation used to indicate that a method is a bridge method to a trait

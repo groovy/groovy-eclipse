@@ -220,7 +220,12 @@ public abstract class Traits {
             helperParams[0] = new Parameter(self, "traitImplementer");
             System.arraycopy(methodParams, 0, helperParams, 1, methodParams.length);
 
-            MethodNode m = new MethodNode(method.getName(), mods, method.getReturnType(), helperParams, method.getExceptions(), null);
+            var m = new MethodNode(method.getName(), mods, method.getReturnType(), helperParams, method.getExceptions(), null);
+            for (AnnotationNode annotation : method.getAnnotations()) {
+                if (!annotation.getClassNode().equals(ClassHelper.OVERRIDE_TYPE)) {
+                    m.addAnnotation(annotation);
+                }
+            }
             m.addAnnotation(Traits.IMPLEMENTED_CLASSNODE);
             m.setGenericsTypes(method.getGenericsTypes());
             m.setOriginal(method);

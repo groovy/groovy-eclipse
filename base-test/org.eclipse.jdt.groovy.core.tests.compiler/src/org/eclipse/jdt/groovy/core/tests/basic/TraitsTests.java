@@ -3691,4 +3691,32 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "5");
     }
+
+    @Test
+    public void testTraits12117() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait B extends A {\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  static String test() { impl() }\n" +
+            "}\n" +
+            "trait A {\n" +
+            (isAtLeastGroovy(50) ? "  @groovy.transform.Virtual\n" : "") +
+            "  static String impl() { 'A' }\n" +
+            "}\n" +
+
+            "class C implements B {\n" +
+            "}\n" +
+            "assert C.test() == 'A'\n" +
+
+            "class D implements B {\n" +
+            "  static String impl() { 'D' }\n" +
+            "}\n" +
+            "assert D.test() == 'D'\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
 }
