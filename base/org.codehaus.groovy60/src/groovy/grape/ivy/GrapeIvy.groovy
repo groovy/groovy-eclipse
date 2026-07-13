@@ -102,7 +102,7 @@ class GrapeIvy implements GrapeEngine {
         Message.setDefaultLogger(new PlatformLoggingMessageLogger())
         */
         settings = new IvySettings()
-        def url = new File(System.getProperty('user.home')).toURI().toURL() as String
+        String url = new File(System.getProperty('user.home')).toURI().toURL()
         settings.setVariable('user.home.url', url.endsWith("/") ? url[0..-2] : url)
         URL defaultConfig = GrapeIvy.getResource('defaultGrapeConfig.xml')
         URL effective = resolveGrapeConfigUrl() ?: defaultConfig
@@ -110,7 +110,7 @@ class GrapeIvy implements GrapeEngine {
             loadIvySettings(effective)
         } catch (ParseException e) {
             java.util.logging.Logger.getLogger('groovy.grape.ivy').log(java.util.logging.Level.WARNING,
-                "Ivy config '${effective}' appears corrupt - ignoring and using default config. Error: ${e.message}", e)
+                    "Ivy config '${effective}' appears corrupt; ignoring and using default config.", e)
             loadIvySettings(defaultConfig)
         }
         settings.setDefaultCache(getGrapeCacheDir())
@@ -252,9 +252,9 @@ class GrapeIvy implements GrapeEngine {
         if (prop == 'default') return GrapeIvy.getResource('defaultGrapeConfig.xml')
         if (prop.startsWith('classpath:')) {
             String name = prop.substring('classpath:'.length())
-            URL res = GrapeIvy.classLoader?.getResource(name)
+            URL res = GrapeIvy.getClassLoader()?.getResource(name)
             if (res != null) return res
-            return Thread.currentThread().contextClassLoader?.getResource(name)
+            return Thread.currentThread().getContextClassLoader()?.getResource(name)
         }
         File f = new File(prop)
         return f.exists() ? f.toURI().toURL() : null
@@ -282,7 +282,7 @@ class GrapeIvy implements GrapeEngine {
     }
 
     @PackageScope static File urlAsLocalFile(URL url) {
-        if (url == null || url.protocol != 'file') return null
+        if (url?.getProtocol() != 'file') return null
         try {
             File f = new File(url.toURI())
             return f.isFile() ? f : null
@@ -328,11 +328,12 @@ class GrapeIvy implements GrapeEngine {
             if (!isValidTargetClassLoader(loader)) {
                 loader = GrapeIvy.class.getClassLoader()
             }
-            /* GRECLIPSE edit -- removing this only affects the GrapeIvy used during compilation, where the ClassLoader doesn't matter
             if (!isValidTargetClassLoader(loader)) {
+                /* GRECLIPSE edit -- removing this only affects the GrapeIvy used during compilation, where the ClassLoader doesn't matter
                 throw new RuntimeException('No suitable ClassLoader found for grab')
+                */
+                loader = null
             }
-            */
         }
         loader
     }

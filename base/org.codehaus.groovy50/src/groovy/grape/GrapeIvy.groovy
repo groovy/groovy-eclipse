@@ -18,7 +18,12 @@
  */
 package groovy.grape
 
-import groovy.transform.*
+import groovy.transform.AutoFinal
+import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.NamedParam
+import groovy.transform.NamedParams
 import org.apache.groovy.plugin.GroovyRunner
 import org.apache.groovy.plugin.GroovyRunnerRegistry
 import org.apache.ivy.Ivy
@@ -178,11 +183,12 @@ class GrapeIvy implements GrapeEngine {
             if (!isValidTargetClassLoader(loader)) {
                 loader = GrapeIvy.getClass().getClassLoader()
             }*/
-            /* GRECLIPSE edit -- removing this only affects the GrapeIvy used during compilation, where the ClassLoader doesn't matter
             if (!isValidTargetClassLoader(loader)) {
+                /* GRECLIPSE edit -- removing this only affects the GrapeIvy used during compilation, where the ClassLoader doesn't matter
                 throw new RuntimeException('No suitable ClassLoader found for grab')
+                */
+                loader = null
             }
-            */
         }
         loader
     }
