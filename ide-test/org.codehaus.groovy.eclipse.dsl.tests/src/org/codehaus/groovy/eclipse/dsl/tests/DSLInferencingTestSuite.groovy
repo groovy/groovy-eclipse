@@ -15,11 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
+import static org.codehaus.groovy.eclipse.GroovyLogManager.manager as logManager
 import static org.junit.Assume.assumeTrue
 
-import org.codehaus.groovy.eclipse.GroovyLogManager
-import org.codehaus.groovy.eclipse.IGroovyLogger
-import org.codehaus.groovy.eclipse.TraceCategory
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
@@ -41,24 +39,13 @@ import org.osgi.framework.FrameworkUtil
 
 abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
 
-    private final IGroovyLogger logger = new IGroovyLogger() {
-        @Override
-        boolean isCategoryEnabled(TraceCategory category) {
-            true
-        }
-        @Override
-        void log(TraceCategory category, String message) {
-            println "$category.paddedLabel: $message"
-        }
-    }
-
     protected boolean doRemoveClasspathContainer = true
 
     @Before
     final void setUpDslTestCase() {
         assumeTrue(!GroovyDSLCoreActivator.default.isDSLDDisabled())
 
-        GroovyLogManager.manager.addLogger(logger)
+        logManager.useDefaultLogger = true
 
         def cpe = GroovyRuntime.findClasspathEntry(javaProject) {
             it.path == GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID
@@ -77,7 +64,7 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
 
     @After
     final void tearDownDslTestCase() {
-        GroovyLogManager.manager.removeLogger(logger)
+        logManager.useDefaultLogger = false
         for (member in project.members()) {
             if (member.name.endsWith('.dsld')) {
                 Util.delete(member)

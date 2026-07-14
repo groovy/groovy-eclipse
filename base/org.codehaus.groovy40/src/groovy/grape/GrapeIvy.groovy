@@ -42,7 +42,7 @@ import org.apache.ivy.plugins.matcher.PatternMatcher
 import org.apache.ivy.plugins.resolver.ChainResolver
 import org.apache.ivy.plugins.resolver.IBiblioResolver
 import org.apache.ivy.plugins.resolver.ResolverSettings
-import org.apache.ivy.util.DefaultMessageLogger
+import org.apache.ivy.util.AbstractMessageLogger
 import org.apache.ivy.util.Message
 import org.codehaus.groovy.reflection.CachedClass
 import org.codehaus.groovy.reflection.ClassInfo
@@ -91,8 +91,35 @@ class GrapeIvy implements GrapeEngine {
     final Set<IvyGrabRecord> grabRecordsForCurrDependencies = [] as LinkedHashSet
 
     GrapeIvy() {
+        /* GRECLIPSE edit
         Message.setDefaultLogger(new DefaultMessageLogger(System.getProperty('ivy.message.logger.level', '-1') as int))
-
+        */
+        Message.setDefaultLogger(new AbstractMessageLogger() {
+            final int loggingLevel = System.getProperty('ivy.message.logger.level', '2') as int
+            @Override
+            void log(String msg, int level) {
+                if (level <= loggingLevel && !msg.isBlank())
+                    org.codehaus.groovy.eclipse.GroovyLogManager.manager.log(
+                        org.codehaus.groovy.eclipse.TraceCategory.CLASSPATH, msg.replace('\n',''))
+            }
+            @Override
+            void rawlog(String msg, int level) {
+                if (level <= loggingLevel && !msg.isBlank())
+                    org.codehaus.groovy.eclipse.GroovyLogManager.manager.log(msg.stripTrailing())
+            }
+            @Override
+            protected void doProgress() {
+                if (Message.MSG_VERBOSE <= loggingLevel)
+                    org.codehaus.groovy.eclipse.GroovyLogManager.manager.logStart('ivy progress')
+            }
+            @Override
+            protected void doEndProgress(String msg) {
+                if (Message.MSG_VERBOSE <= loggingLevel)
+                    org.codehaus.groovy.eclipse.GroovyLogManager.manager.logEnd('ivy progress',
+                        org.codehaus.groovy.eclipse.TraceCategory.CLASSPATH, msg.stripTrailing())
+            }
+        })
+        // GRECLIPSE end
         settings = new IvySettings()
         settings.setVariable('user.home.url', new File(System.getProperty('user.home')).toURI().toURL() as String)
         File grapeConfig = getLocalGrapeConfig()
@@ -100,7 +127,7 @@ class GrapeIvy implements GrapeEngine {
             try {
                 settings.load(grapeConfig)
             } catch (java.text.ParseException e) {
-                System.err.println("Local Ivy config file '${grapeConfig.getCanonicalPath()}' appears corrupt - ignoring it and using default config instead\nError was: ${e.getMessage()}")
+                Message.warn("Local Ivy config file '${grapeConfig.getCanonicalPath()}' appears corrupt; ignoring it and using default config.", e)
                 settings.load(GrapeIvy.getResource('defaultGrapeConfig.xml'))
             }
         } else {

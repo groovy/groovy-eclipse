@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,13 +21,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Manages the current {@link IGroovyLogger} instance.
+ * Manages the current {@link IGroovyLogger} instances.
  *
  * NOTE: This class is a singleton.
  */
-// Some code here borrowed from org.eclipse.ajdt.core.AJLog under EPL license
-// See http://www.eclipse.org/legal/epl-v10.html
 public class GroovyLogManager {
+    // Some code here derived from org.eclipse.ajdt.core.AJLog under EPL license
+    // See http://www.eclipse.org/legal/epl-v10.html
+
     public static final GroovyLogManager manager = new GroovyLogManager();
 
     private GroovyLogManager() {
@@ -99,7 +100,7 @@ public class GroovyLogManager {
     }
 
     public void logStart(String event) {
-        timers.put(event, System.currentTimeMillis());
+        timers.computeIfAbsent(event, (e) -> System.currentTimeMillis());
     }
 
     public void logEnd(String event, TraceCategory category) {
@@ -107,18 +108,17 @@ public class GroovyLogManager {
     }
 
     public void logEnd(String event, TraceCategory category, String message) {
-        Long then = timers.get(event);
-        if (then != null) {
+        var start = timers.remove(event);
+        if (start != null) {
             if (hasLoggers()) {
                 long now = System.currentTimeMillis();
-                long elapsed = now - then.longValue();
-                if (message != null && !message.isEmpty()) {
+                long elapsed = now - start.longValue();
+                if (message != null && !message.isBlank()) {
                     log(category, "Event complete: " + elapsed + "ms: " + event + " (" + message + ")");
                 } else {
                     log(category, "Event complete: " + elapsed + "ms: " + event);
                 }
             }
-            timers.remove(event);
         }
     }
 
@@ -144,6 +144,15 @@ public class GroovyLogManager {
         }
     }
 
+    public void logException(TraceCategory cat, Throwable t) {
+        if (hasLoggers()) {
+            // only log if logger is available, otherwise, ignore
+            StringWriter writer = new StringWriter();
+            t.printStackTrace(new PrintWriter(writer));
+            log(cat, "Exception caught.\n" + writer.getBuffer());
+        }
+    }
+
     /**
      * Call this method to check if any loggers are currently
      * installed.  Doing so can help avoid creating costly
@@ -158,14 +167,5 @@ public class GroovyLogManager {
      */
     public void setUseDefaultLogger(boolean useDefaultLogger) {
         this.useDefaultLogger = useDefaultLogger;
-    }
-
-    public void logException(TraceCategory cat, Throwable t) {
-        if (hasLoggers()) {
-            // only log if logger is available, otherwise, ignore
-            StringWriter writer = new StringWriter();
-            t.printStackTrace(new PrintWriter(writer));
-            log(cat, "Exception caught.\n" + writer.getBuffer());
-        }
     }
 }

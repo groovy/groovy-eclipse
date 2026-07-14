@@ -52,6 +52,7 @@ import org.apache.ivy.plugins.matcher.PatternMatcher
 import org.apache.ivy.plugins.resolver.ChainResolver
 import org.apache.ivy.plugins.resolver.IBiblioResolver
 import org.apache.ivy.plugins.resolver.ResolverSettings
+import org.apache.ivy.util.AbstractMessageLogger
 import org.apache.ivy.util.Message
 import org.codehaus.groovy.reflection.ReflectionUtils
 
@@ -101,6 +102,31 @@ class GrapeIvy implements GrapeEngine {
         /* GRECLIPSE edit
         Message.setDefaultLogger(new PlatformLoggingMessageLogger())
         */
+        Message.setDefaultLogger(new AbstractMessageLogger() {
+            @Override
+            void log(String msg, int level) {
+                if (level <= loggingLevel && !msg.isBlank())
+                    org.codehaus.groovy.eclipse.GroovyLogManager.manager.log(
+                        org.codehaus.groovy.eclipse.TraceCategory.CLASSPATH, msg.replace('\n',''))
+            }
+            @Override
+            void rawlog(String msg, int level) {
+                if (level <= loggingLevel && !msg.isBlank())
+                    org.codehaus.groovy.eclipse.GroovyLogManager.manager.log(msg.stripTrailing())
+            }
+            @Override
+            protected void doProgress() {
+                if (Message.MSG_VERBOSE <= loggingLevel)
+                    org.codehaus.groovy.eclipse.GroovyLogManager.manager.logStart('ivy progress')
+            }
+            @Override
+            protected void doEndProgress(String msg) {
+                if (Message.MSG_VERBOSE <= loggingLevel)
+                    org.codehaus.groovy.eclipse.GroovyLogManager.manager.logEnd('ivy progress',
+                        org.codehaus.groovy.eclipse.TraceCategory.CLASSPATH, msg.stripTrailing())
+            }
+        })
+        // GRECLIPSE end
         settings = new IvySettings()
         String url = new File(System.getProperty('user.home')).toURI().toURL()
         settings.setVariable('user.home.url', url.endsWith("/") ? url[0..-2] : url)
@@ -109,8 +135,7 @@ class GrapeIvy implements GrapeEngine {
         try {
             loadIvySettings(effective)
         } catch (ParseException e) {
-            java.util.logging.Logger.getLogger('groovy.grape.ivy').log(java.util.logging.Level.WARNING,
-                    "Ivy config '${effective}' appears corrupt; ignoring and using default config.", e)
+            Message.warn("Ivy config '${effective}' appears corrupt; ignoring and using default config.", e)
             loadIvySettings(defaultConfig)
         }
         settings.setDefaultCache(getGrapeCacheDir())
@@ -216,13 +241,10 @@ class GrapeIvy implements GrapeEngine {
         if (prop) {
             URL fromProp = resolveExplicitConfig(prop)
             if (fromProp != null) {
-                /* GRECLIPSE edit
-                LOGGER.log(Level.FINE, "Using grape.config='${prop}' (${fromProp})")
-                */
+                Message.verbose("Using grape.config='${prop}' (${fromProp})")
                 return fromProp
             }
-            java.util.logging.Logger.getLogger('groovy.grape.ivy').log(java.util.logging.Level.WARNING,
-                "grape.config='${prop}' could not be resolved; falling back to defaultGrapeConfig.xml")
+            Message.warn("grape.config='${prop}' could not be resolved; falling back to defaultGrapeConfig.xml")
             return null
         }
         File userConfig = new File(getGrapeDir(), 'grapeConfig.xml')
@@ -948,12 +970,7 @@ class GrapeIvy implements GrapeEngine {
         [progress: c] as IvyListener
     }
 
-    /**
-     * Sets the Ivy logging verbosity.
-     *
-     * @param level the grape logging level
-     */
-    @Override
+    /* GRECLIPSE edit
     void setLoggingLevel(int level) {
         // Map numeric level (from grape -q/-w/-i/-V/-d flags) to JUL level
         // for the platform logging backed Ivy logger.
@@ -980,6 +997,8 @@ class GrapeIvy implements GrapeEngine {
         }
         java.util.logging.Logger.getLogger('groovy.grape.ivy').setLevel(julLevel)
     }
+    */
+    int loggingLevel = Message.MSG_INFO
 }
 
 /**

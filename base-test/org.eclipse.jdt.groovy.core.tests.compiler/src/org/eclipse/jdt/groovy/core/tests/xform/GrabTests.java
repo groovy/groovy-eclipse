@@ -15,13 +15,27 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
+import static org.codehaus.groovy.eclipse.GroovyLogManager.manager;
+
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
  * Test cases for {@link groovy.lang.Grab}, et al.
  */
 public final class GrabTests extends GroovyCompilerTestSuite {
+
+    @BeforeClass
+    public static void setUp() {
+        manager.setUseDefaultLogger(true);
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        manager.setUseDefaultLogger(false);
+    }
 
     @Test
     public void testGrab() {
@@ -35,7 +49,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "}\n",
 
             "Test.groovy",
-            "@Grab('joda-time:joda-time:2.14.1;transitive=false')\n" +
+            "@Grab('joda-time:joda-time:2.14.2;transitive=false')\n" +
             "import org.joda.time.DateTime\n" +
             "def now = new DateTime()\n",
         };
@@ -124,7 +138,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Test.groovy",
             "@Grapes([\n" +
-            "  @Grab('joda-time:joda-time:2.14.1;transitive=false'),\n" +
+            "  @Grab('joda-time:joda-time:2.14.2;transitive=false'),\n" +
             "  @Grab(group='org.aspectj', module='aspectjweaver', version='1.x')\n" +
             "])\n" +
             "class Test {\n" +
@@ -156,7 +170,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
-            "@Grab('org.apache.logging.log4j:log4j-core:2.25.4')\n" +
+            "@Grab('org.apache.logging.log4j:log4j-core:2.26.1')\n" +
             "org.apache.logging.log4j.core.async.AsyncLogger log\n",
         };
         //@formatter:on
@@ -183,7 +197,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
 
             "Test.groovy",
             "@GrabConfig(systemClassLoader=true)\n" +
-            "@Grab(group='mysql', module='mysql-connector-java', version='5.1.49', transitive=false)\n" +
+            "@Grab(group='mysql', module='mysql-connector-java', version='8.0.33', transitive=false)\n" +
             "class Test {\n" +
             "}\n",
         };

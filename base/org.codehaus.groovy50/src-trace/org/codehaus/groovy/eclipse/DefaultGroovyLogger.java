@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,13 @@
  */
 package org.codehaus.groovy.eclipse;
 
-import java.util.Date;
-
 /**
- * Default logger logs to sysout and includes a timestamp
+ * Default logger logs to sysout.
  */
 public class DefaultGroovyLogger implements IGroovyLogger {
 
     public void log(TraceCategory category, String message) {
-        System.out.println(category.label + " : " + new Date() + " : " + message);
+        System.out.println(category.label + ": " + message);
     }
 
     public boolean isCategoryEnabled(TraceCategory category) {
