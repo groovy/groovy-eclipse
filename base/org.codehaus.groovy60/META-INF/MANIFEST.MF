@@ -8,7 +8,7 @@ Bundle-Version: 6.0.0.qualifier
 Bundle-ClassPath: eclipse-trace.jar,
  groovy-eclipse.jar,
  groovy-parser2.jar,
- lib/ivy-2.5.3.jar,
+ lib/ivy-2.6.0.jar,
  lib/groovy-6.0.0.jar,
  lib/groovy-test-6.0.0.jar
 Export-Package: groovy.beans;version="6.0.0",
