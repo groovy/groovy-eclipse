@@ -1565,8 +1565,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     }
 
     public static long getTimestamp(final Class<?> clazz) {
-        if (clazz.getClassLoader() instanceof GroovyClassLoader.InnerLoader) {
-            GroovyClassLoader.InnerLoader innerLoader = (GroovyClassLoader.InnerLoader) clazz.getClassLoader();
+        if (clazz.getClassLoader() instanceof GroovyClassLoader.InnerLoader innerLoader) {
             return innerLoader.getTimeStamp();
         }
 

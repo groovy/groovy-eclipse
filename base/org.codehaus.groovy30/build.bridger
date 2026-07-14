@@ -19,20 +19,27 @@
 
     <target name="weave">
         <resolve-dependencies pathid="classpath.bridger" type="jar,maven-plugin">
-            <dependency org="org.jboss.bridger" name="bridger" rev="1.5.Final">
+            <dependency org="org.jboss.bridger" name="bridger" rev="1.6.Final">
                 <exclude org="org\.apache\.maven.*" matcher="regexp" />
                 <exclude org="org.codehaus.plexus" />
                 <exclude org="org.sonatype.plexus" />
             </dependency>
         </resolve-dependencies>
 
-        <java classname="org.jboss.bridger.Bridger" classpathref="classpath.bridger" dir="${basedir}" fork="true">
+        <local name="bridge.result" />
+        <java classname="org.jboss.bridger.Bridger" classpathref="classpath.bridger" dir="${basedir}" fork="true" outputproperty="bridge.result">
             <arg line="org/codehaus/groovy/classgen/Verifier.class" />
         </java>
+
+        <fail message="${bridge.result}">
+            <condition>
+                <contains string="${bridge.result}" substring="Failed" />
+            </condition>
+        </fail>
     </target>
 
     <target name="null">
-      <!-- no-op -->
+        <!-- no-op -->
     </target>
 
 </project>
