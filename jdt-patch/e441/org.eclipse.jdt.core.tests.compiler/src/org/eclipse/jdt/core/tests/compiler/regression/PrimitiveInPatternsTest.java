@@ -30,7 +30,7 @@ public class PrimitiveInPatternsTest extends AbstractRegressionTest9 {
 	static {
 //		TESTS_NUMBERS = new int [] { 1 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "testDominanceIssue4979_004" };
+//		TESTS_NAMES = new String[] { "testDominanceIssue4979_00" };
 	}
 	private String extraLibPath;
 	public static Class<?> testClass() {
@@ -7673,37 +7673,61 @@ public class PrimitiveInPatternsTest extends AbstractRegressionTest9 {
 			"----------\n");
 	}
 	public void testDominanceIssue4979_003() {
+		runConformTest(new String[] {
+				"X.java",
+				"""
+				@SuppressWarnings("preview")
+				public class X {
+					public static void foo() {
+						int j = 1;
+						switch(j) {
+							case byte b ->
+								System.out.println("A byte");
+							default ->
+								System.out.println("An int that cannot be represented as a byte exactly");
+						}
+					}
+					public static void main(String[] args) {
+						foo();
+					}
+				}
+				"""
+			},
+				"A byte"
+			);
+	}
+	public void testDominanceIssue4979_004() {
 		runNegativeTest(new String[] {
 				"X.java",
 				"""
 				@SuppressWarnings("preview")
 				public class X {
-					void foo() {
+					public static void foo() {
 						int j = 1;
 						switch(j) {
 							case byte b ->
 								System.out.println("A byte");
-							case 260 ->						// not dominated
+							case 2 -> // dominated
 								System.out.println("An int that can be represented as a byte exactly");
 							default ->
-								System.out.println("Integer that cannot be represented as a float exactly");
-						}
+								System.out.println("An int that cannot be represented as a byte exactly");
+						};
 					}
 					public static void main(String[] args) {
-						Zork();
+						foo();
 					}
 				}
 				"""
 			},
 				"----------\n" +
-				"1. ERROR in X.java (at line 15)\n" +
-				"	Zork();\n" +
-				"	^^^^\n" +
-				"The method Zork() is undefined for the type X\n" +
+				"1. ERROR in X.java (at line 8)\n" +
+				"	case 2 -> // dominated\n" +
+				"	     ^\n" +
+				"This case label is dominated by one of the preceding case labels\n" +
 				"----------\n"
 			);
 	}
-	public void testDominanceIssue4979_004() {
+	public void testDominanceIssue4979_005() {
 		runNegativeTest(new String[] {
 				"X.java",
 				"""

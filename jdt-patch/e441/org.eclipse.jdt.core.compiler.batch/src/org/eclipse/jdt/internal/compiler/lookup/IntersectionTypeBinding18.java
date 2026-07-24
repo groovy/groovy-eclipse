@@ -119,12 +119,7 @@ public class IntersectionTypeBinding18 extends ReferenceBinding {
 
 	@Override
 	public char[] constantPoolName() {
-		TypeBinding erasure = erasure();
-		if (erasure != this) //$IDENTITY-COMPARISON$
-			return erasure.constantPoolName();
-		if (this.intersectingTypes[0].id == TypeIds.T_JavaLangObject && this.intersectingTypes.length > 1)
-			return this.intersectingTypes[1].constantPoolName(); // improve stack map
-		return this.intersectingTypes[0].constantPoolName();
+		return erasure().constantPoolName();
 	}
 
 	@Override
@@ -243,20 +238,9 @@ public class IntersectionTypeBinding18 extends ReferenceBinding {
 
 	@Override
 	public TypeBinding erasure() {
-		int classIdx = -1;
-		for (int i = 0; i < this.intersectingTypes.length; i++) {
-			if (this.intersectingTypes[i].isClass() && this.intersectingTypes[i].id != TypeIds.T_JavaLangObject) { // ignore j.l.Object to improve stack map
-				if (classIdx == -1) {
-					classIdx = i;
-				} else {
-					classIdx = Integer.MAX_VALUE;
-					break;
-				}
-			}
-		}
-		if (classIdx > -1 && classIdx < Integer.MAX_VALUE)
-			return this.intersectingTypes[classIdx].erasure();
-		return this;
+		if (this.intersectingTypes.length > 1 && this.intersectingTypes[0].id == TypeIds.T_JavaLangObject)
+			return this.intersectingTypes[1].erasure();
+		return this.intersectingTypes[0].erasure();
 	}
 
 	@Override

@@ -252,7 +252,6 @@ public final class Messages {
 		}
 	}
 
-	@SuppressWarnings("resource") // GROOVY add
 	private static InputStream createInputStream(final ClassLoader loader, String variant) {
 		return (loader == null) ? ClassLoader.getSystemResourceAsStream(variant)
 				: loader.getResourceAsStream(variant);

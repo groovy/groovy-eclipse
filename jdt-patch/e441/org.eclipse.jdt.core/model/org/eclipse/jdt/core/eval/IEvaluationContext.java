@@ -89,7 +89,6 @@ import org.eclipse.jdt.core.WorkingCopyOwner;
  * @see IJavaProject#newEvaluationContext()
  * @noimplement This interface is not intended to be implemented by clients.
  */
-@SuppressWarnings("deprecation")
 public interface IEvaluationContext {
 	/**
 	 * Returns the global variables declared in this evaluation context.

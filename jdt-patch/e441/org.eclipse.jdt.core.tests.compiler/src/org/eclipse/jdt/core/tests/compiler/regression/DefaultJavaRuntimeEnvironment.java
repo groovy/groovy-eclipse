@@ -26,7 +26,7 @@ public class DefaultJavaRuntimeEnvironment extends FileSystem {
 		super(jreClasspaths, new String[] {} /* ignore initial file names */, null, release);
 	}
 	private DefaultJavaRuntimeEnvironment(Classpath[] jreClasspaths) {
-		super(jreClasspaths, new String[] {} /* ignore initial file names */, false);
+		super(jreClasspaths, new String[] {} /* ignore initial file names */, false, null);
 	}
 
 	private static INameEnvironment[] defaultJreClassLibs;

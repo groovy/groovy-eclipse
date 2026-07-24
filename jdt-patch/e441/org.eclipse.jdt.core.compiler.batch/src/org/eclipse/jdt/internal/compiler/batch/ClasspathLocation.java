@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -39,6 +39,7 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 	char[] normalizedPath;
 	public final AccessRuleSet accessRuleSet;
 	IModule module;
+	private PathKind kind = PathKind.CP;
 
 	public final String destinationPath;
 		// destination path for compilation units that are reached through this
@@ -55,6 +56,16 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 			String destinationPath) {
 		this.accessRuleSet = accessRuleSet;
 		this.destinationPath = destinationPath;
+	}
+
+	@Override
+	public PathKind getPathKind() {
+		return this.kind;
+	}
+
+	@Override
+	public void setPathKind(PathKind kind) {
+		this.kind = kind;
 	}
 
 	/**

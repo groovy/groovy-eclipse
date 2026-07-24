@@ -2213,7 +2213,9 @@ public void generateInlinedValue(short inlinedValue) {
 public void generateOuterAccess(Object[] mappingSequence, ASTNode invocationSite, Binding target, Scope scope) {
 	if (mappingSequence == null) {
 		if (target instanceof LocalVariableBinding) {
-			scope.problemReporter().needImplementation(invocationSite); //TODO (philippe) should improve local emulation failure reporting
+			// Safety net: report proper error for static reference to outer local variable
+			// This should have been caught during semantic analysis, but provide clear error as fallback
+			scope.problemReporter().recordStaticReferenceToOuterLocalVariable((LocalVariableBinding)target, invocationSite);
 		} else {
 			scope.problemReporter().noSuchEnclosingInstance((ReferenceBinding)target, invocationSite, false);
 		}

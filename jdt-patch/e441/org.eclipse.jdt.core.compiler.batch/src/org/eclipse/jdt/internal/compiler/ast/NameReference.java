@@ -20,16 +20,10 @@
 package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
-import org.eclipse.jdt.internal.compiler.lookup.Binding;
-import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
-import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
-import org.eclipse.jdt.internal.compiler.lookup.InferenceContext18;
-import org.eclipse.jdt.internal.compiler.lookup.InvocationSite;
-import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-import org.eclipse.jdt.internal.compiler.lookup.Scope;
-import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public abstract class NameReference extends Reference implements InvocationSite {
 
@@ -46,6 +40,36 @@ public abstract class NameReference extends Reference implements InvocationSite 
 	//no changeClass in java.
 public NameReference() {
 	this.bits |= Binding.TYPE | Binding.VARIABLE; // restrictiveFlag
+}
+
+protected void checkLocalStaticClassVariables(BlockScope scope, VariableBinding variable) {
+	// Only check for static methods accessing outer locals in Java 16+ (when static methods in local classes are allowed)
+	if (scope.compilerOptions().sourceLevel < ClassFileConstants.JDK16)
+		return;
+
+	// Compile-time constant variables are inlined and can be legally accessed from a static
+	// context (e.g. an annotation on a local class, or a static method of a local class), so
+	// they are not subject to the outer-local reference restriction of JLS 8.1.3.
+	if (variable.constant(scope) != Constant.NotAConstant)
+		return;
+	// Check if we're in a local type (either static local class OR non-static local class with static method)
+	if (this.actualReceiverType.isLocalType()) {
+		MethodScope currentMethodScope = scope instanceof MethodScope ? (MethodScope) scope : scope.enclosingMethodScope();
+		// Check if either the local class is static OR the current method is static
+		boolean inStaticContext = this.actualReceiverType.isStatic() || (currentMethodScope != null && currentMethodScope.isStatic);
+
+		if (inStaticContext &&
+				(variable.modifiers & ClassFileConstants.AccStatic) == 0 &&
+				(this.bits & ASTNode.IsCapturedOuterLocal) != 0) {
+			BlockScope declaringScope = ((LocalVariableBinding) this.binding).declaringScope;
+			MethodScope declaringMethodScope = declaringScope instanceof MethodScope ? (MethodScope)declaringScope :
+				declaringScope.enclosingMethodScope();
+			ClassScope declaringClassScope = declaringMethodScope != null ? declaringMethodScope.classScope() : null;
+			ClassScope currentClassScope = currentMethodScope != null ? currentMethodScope.classScope() : null;
+			if (declaringClassScope != currentClassScope)
+				scope.problemReporter().recordStaticReferenceToOuterLocalVariable((LocalVariableBinding)variable, this);
+		}
+	}
 }
 
 /**

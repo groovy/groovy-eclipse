@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.Map;
 import junit.framework.Test;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.JavacHasABug;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
@@ -5084,5 +5085,23 @@ public class RecordPatternTest extends AbstractRegressionTest9 {
 			"Record component with type Integer is not compatible with type String\n" +
 			"----------\n");
 	}
-
+	public void testJDK8383563() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] { "PairBox.java",
+			"""
+			interface PairI<A, B> {}
+			record PairBox<A, B>(A a, B b) implements PairI<A, B> {
+				int selfSuperInference(PairI<A, B> p) {
+					if (p instanceof PairBox(var a, var b)) {
+						A aa = a;
+						B bb = b;
+						return 1;
+					}
+					return -1;
+				}
+			}
+			"""};
+		runner.javacTestOptions = JavacHasABug.JavacBug8383563;
+		runner.runConformTest();
+	}
 }

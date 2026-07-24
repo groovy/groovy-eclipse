@@ -254,7 +254,7 @@ public class StaticImportTest extends AbstractComparableTest {
 		"1. ERROR in p\\X.java (at line 3)\n" +
 		"	import static p2.Z.Zint;\n" +
 		"	              ^^^^^^^^^\n" +
-		"The field Z.p2.Z.Zint is not visible\n" +
+		"The field Z.Zint is not visible\n" +
 		"----------\n" +
 		"2. ERROR in p\\X.java (at line 4)\n" +
 		"	import static p2.Z.ZMember;\n" +
@@ -1368,7 +1368,7 @@ public class StaticImportTest extends AbstractComparableTest {
 			"1. ERROR in X.java (at line 2)\n" +
 			"	import static p.A.CONSTANT_B;\n" +
 			"	              ^^^^^^^^^^^^^^\n" +
-			"The field B.p.A.CONSTANT_B is not visible\n" +
+			"The field B.CONSTANT_B is not visible\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 5)\n" +
 			"	static int j = p.A.CONSTANT_B;\n" +
@@ -2517,7 +2517,7 @@ public class StaticImportTest extends AbstractComparableTest {
 			"1. ERROR in test\\Outer.java (at line 2)\n" +
 			"	import static test.Outer.Inner.VALUE;\n" +
 			"	              ^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"The field Outer.Inner.test.Outer.Inner.VALUE is not visible\n" +
+			"The field Outer.Inner.VALUE is not visible\n" +
 			"----------\n" +
 			"2. ERROR in test\\Outer.java (at line 4)\n" +
 			"	int i = VALUE;\n" +
@@ -3559,4 +3559,37 @@ public class StaticImportTest extends AbstractComparableTest {
 		runner.expectedOutputString = "1";
 		runner.runConformTest();
 	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4986
+	// Test that error message for inaccessible static import field is correctly formatted
+	public void testBug4986() {
+		this.runNegativeTest(
+			new String[] {
+				"p/C.java",
+				"""
+				package p;
+				
+				import static p.C.f;
+				
+				public class C {
+					private static int f;
+				}
+				"""
+			},
+			"""
+			----------
+			1. ERROR in p\\C.java (at line 3)
+				import static p.C.f;
+				              ^^^^^
+			The field C.f is not visible
+			----------
+			2. WARNING in p\\C.java (at line 6)
+				private static int f;
+				                   ^
+			The value of the field C.f is not used
+			----------
+			"""
+		);
+	}
+
 }

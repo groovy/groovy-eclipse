@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2021 IBM Corporation and others.
+ * Copyright (c) 2020, 2026 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1730,5 +1730,87 @@ public class LocalStaticsTest extends AbstractRegressionTest {
 					"""
 				},
 			"OK!");
+	}
+	// JLS 16 8.1.3: an inner class (here an anonymous class) may declare static members.
+	public void testIssue2860StaticMembersInAnonymousClass() throws Exception {
+		runConformTest(
+			new String[] {
+					"X.java",
+					"""
+					public class X {
+					  public void m() {
+					    Object o = new Object() {
+					      private record Foo() {}
+					      private static class Foo2 {}
+					      private class Foo3 {}
+					      Foo f = new Foo();
+					      Foo2 f2 = new Foo2();
+					      Foo3 f3 = new Foo3();
+					    };
+					    System.out.println(o != null);
+					  }
+					  public static void main(String[] args) {
+					    new X().m();
+					  }
+					}
+					"""
+				},
+			"true");
+	}
+	// JLS 16 8.1.3: an inner class (here a named local class) may declare static members.
+	public void testIssue2860StaticMembersInLocalClass() throws Exception {
+		runConformTest(
+			new String[] {
+					"X.java",
+					"""
+					public class X {
+					  public void m() {
+					    class Local {
+					      private record Foo() {}
+					      private static class Foo2 {}
+					      private class Foo3 {}
+					      void use() {
+					        Foo f = new Foo();
+					        Foo2 f2 = new Foo2();
+					        Foo3 f3 = new Foo3();
+					        System.out.println(f != null && f2 != null && f3 != null);
+					      }
+					    }
+					    new Local().use();
+					  }
+					  public static void main(String[] args) {
+					    new X().m();
+					  }
+					}
+					"""
+				},
+			"true");
+	}
+	// A static class member of a local/anonymous class is illegal before source 16.
+	public void testIssue2860StaticMembersInLocalClassPre16() throws Exception {
+		Map<String, String> options = getCompilerOptions();
+		options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_15);
+		options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_15);
+		options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_15);
+		this.runNegativeTest(
+			new String[] {
+					"X.java",
+					"public class X {\n"+
+					"  public void m() {\n"+
+					"    class Local {\n"+
+					"      static class Foo2 {}\n"+
+					"    }\n"+
+					"  }\n"+
+					"}\n"
+				},
+			"----------\n" +
+			"1. ERROR in X.java (at line 4)\n" +
+			"	static class Foo2 {}\n" +
+			"	             ^^^^\n" +
+			"Illegal modifier for the local class Foo2; only abstract or final is permitted\n" +
+			"----------\n",
+			null,
+			true,
+			options);
 	}
 }

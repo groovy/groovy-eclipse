@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2024 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -1018,6 +1018,9 @@ public TypeBinding resolveType(BlockScope scope) {
 						// only complain if field reference (for local, its type got flagged already)
 						return null;
 					}
+
+					checkLocalStaticClassVariables(scope, local);
+
 					this.resolvedType = getOtherFieldBindings(scope);
 					if (this.resolvedType != null && (this.resolvedType.tagBits & TagBits.HasMissingType) != 0) {
 						FieldBinding lastField = this.otherBindings[this.otherBindings.length - 1];
@@ -1182,4 +1185,5 @@ public VariableBinding nullAnnotatedVariableBinding(boolean supportTypeAnnotatio
 	}
 	return null;
 }
+
 }

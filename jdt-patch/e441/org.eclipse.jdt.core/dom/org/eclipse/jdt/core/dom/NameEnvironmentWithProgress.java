@@ -35,7 +35,7 @@ class NameEnvironmentWithProgress extends FileSystem implements INameEnvironment
 	IProgressMonitor monitor;
 
 	public NameEnvironmentWithProgress(Classpath[] paths, String[] initialFileNames, IProgressMonitor monitor) {
-		super(paths, initialFileNames, false);
+		super(paths, initialFileNames, false, null);
 		setMonitor(monitor);
 	}
 	private void checkCanceled() {

@@ -10038,4 +10038,108 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"""
 			});
 	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5182
+	// ECJ accepts a non-exhaustive switch over nested sealed record patterns that javac rejects
+	public void testIssue5182() {
+		runNegativeTest(
+				new String[] {
+					"ExhaustivenessGap.java",
+					"""
+					public class ExhaustivenessGap {
+
+						sealed interface Position permits GlobalPosition, StartPosition {}
+						record GlobalPosition(long index) implements Position {}
+						record StartPosition() implements Position {}
+
+						sealed interface SourcingStrategy permits Absolute, Snapshot {}
+						record Absolute(Position position) implements SourcingStrategy {}
+						record Snapshot(Position maximumPosition) implements SourcingStrategy {}
+
+						// Absolute(GlobalPosition) does not cover Absolute(StartPosition)
+						static long toIndex(SourcingStrategy strategy) {
+							return switch (strategy) {
+								case Absolute(GlobalPosition p) -> p.index();
+								case Snapshot(Position p) -> p instanceof GlobalPosition g ? g.index() : -1;
+							};
+						}
+					}
+					"""
+				},
+				"----------\n" +
+				"1. ERROR in ExhaustivenessGap.java (at line 13)\n" +
+				"	return switch (strategy) {\n" +
+				"	               ^^^^^^^^\n" +
+				"A switch expression should have a default case\n" +
+				"----------\n");
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5182
+	// Nested sealed components are exhaustive when every permitted subtype is covered
+	public void testIssue5182_exhaustive() {
+		runConformTest(
+				new String[] {
+					"ExhaustivenessGap.java",
+					"""
+					public class ExhaustivenessGap {
+
+						sealed interface Position permits GlobalPosition, StartPosition {}
+						record GlobalPosition(long index) implements Position {}
+						record StartPosition() implements Position {}
+
+						sealed interface SourcingStrategy permits Absolute, Snapshot {}
+						record Absolute(Position position) implements SourcingStrategy {}
+						record Snapshot(Position maximumPosition) implements SourcingStrategy {}
+
+						static long toIndex(SourcingStrategy strategy) {
+							return switch (strategy) {
+								case Absolute(GlobalPosition p) -> p.index();
+								case Absolute(StartPosition s) -> -1;
+								case Snapshot(Position p) -> p instanceof GlobalPosition g ? g.index() : -1;
+							};
+						}
+
+						public static void main(String[] args) {
+							System.out.print(toIndex(new Absolute(new GlobalPosition(42))));
+							System.out.print(toIndex(new Absolute(new StartPosition())));
+							System.out.print(toIndex(new Snapshot(new StartPosition())));
+						}
+					}
+					"""
+				},
+				"42-1-1");
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5182
+	// Type pattern (no nested narrowing) still covers the permitted record
+	public void testIssue5182_typePatternCoversRecord() {
+		runConformTest(
+				new String[] {
+					"ExhaustivenessGap.java",
+					"""
+					public class ExhaustivenessGap {
+
+						sealed interface Position permits GlobalPosition, StartPosition {}
+						record GlobalPosition(long index) implements Position {}
+						record StartPosition() implements Position {}
+
+						sealed interface SourcingStrategy permits Absolute, Snapshot {}
+						record Absolute(Position position) implements SourcingStrategy {}
+						record Snapshot(Position maximumPosition) implements SourcingStrategy {}
+
+						static long toIndex(SourcingStrategy strategy) {
+							return switch (strategy) {
+								case Absolute a -> a.position() instanceof GlobalPosition g ? g.index() : -1;
+								case Snapshot(Position p) -> p instanceof GlobalPosition g ? g.index() : -1;
+							};
+						}
+
+						public static void main(String[] args) {
+							System.out.print(toIndex(new Absolute(new StartPosition())));
+						}
+					}
+					"""
+				},
+				"-1");
+	}
 }

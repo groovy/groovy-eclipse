@@ -1428,6 +1428,51 @@ public void test017c(){
         EMPTY_STRING_MATCHER,
         true);
 }
+// specific errors for unsuitable files on -bootclasspath, -endorseddirs etc.
+public void test017d(){
+	this.runTest(
+		true,
+		new String[] {
+			"X.java",
+			"/** */\n" +
+			"public class X {\n" +
+			"	// empty\n" +
+			"}",
+			"not.zip",
+			"not a zip archive\n",
+		},
+		"\"" + OUTPUT_DIR +  File.separator + "X.java\""
+		+ " -1.8 -g -preserveAllLocals"
+		+ " -bootclasspath \"" + OUTPUT_DIR + File.separator + "not.zip\""
+		+ File.pathSeparator + getLibraryClassesAsQuotedString()
+		+ " -endorseddirs \"" + OUTPUT_DIR + "\""
+		+ " -verbose -proceedOnError -referenceInfo"
+		+ " -d \"" + OUTPUT_DIR + "\"",
+		ONE_FILE_GENERATED_MATCHER,
+		new Matcher() {
+			@Override
+			boolean match(String effective) {
+				lines: for (String line : effective.replace("\r\n", "\n").split("\n")) {
+					if (line.startsWith("File provided via -endorseddirs is not a valid jar:")) {
+						for (String suffix : new String[] {"test017dout.txt", "test017derr.txt", "not.zip"} ) {
+							if (line.endsWith(suffix))
+								continue lines;
+						}
+					} else if (line.startsWith("File provided via -bootclasspath is not a valid jar:")) {
+						if (line.endsWith("not.zip"))
+							continue lines;
+					}
+					return false;
+				}
+				return true;
+			}
+			@Override
+			String expected() {
+				return "";
+			}
+		},
+		true);
+}
 // command line - unusual classpath (empty)
 // ok provided we explicit the sourcepath
 public void test018a(){

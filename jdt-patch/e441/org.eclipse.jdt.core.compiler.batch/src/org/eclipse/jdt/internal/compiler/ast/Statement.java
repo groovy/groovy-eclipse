@@ -340,6 +340,9 @@ public boolean breaksOut(final char[] label) {
 
 		@Override
 		public boolean visit(BreakStatement breakStatement, BlockScope skope) {
+			if (breakStatement.label != null && !CharOperation.equals(label, breakStatement.label)) {
+				return false;
+			}
 			if (label == null || CharOperation.equals(label,  breakStatement.label))
 				this.breaksOut = true;
 	    	return false;

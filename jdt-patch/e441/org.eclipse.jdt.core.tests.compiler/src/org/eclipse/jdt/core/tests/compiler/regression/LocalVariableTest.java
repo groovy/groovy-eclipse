@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2014 IBM Corporation and others.
+ * Copyright (c) 2005, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -23,7 +23,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 public class LocalVariableTest extends AbstractRegressionTest {
 
 static {
-//	TESTS_NAMES = new String[] { "testBug537033" };
+	TESTS_NAMES = new String[] { "testStaticInitializerInLocalClassAccessingOuterLocalVariable" };
 }
 public LocalVariableTest(String name) {
 	super(name);
@@ -909,6 +909,268 @@ public void testBug537033() {
 		"The local variable x may not have been initialized\n" +
 		"----------\n");
 }
+// Test for static method in non-static local class accessing outer local variable
+// Per JLS 8.1.3, static methods cannot reference local variables from enclosing methods
+// Note: static methods in local classes are only allowed in Java 16+
+public void testStaticMethodInLocalClassAccessingOuterLocal() {
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			public class X {
+			  public static void combine(Object parameter) {
+			    class Local {
+			      static void method() {
+			        System.out.println(parameter);
+			      }
+			    }
+			  }
+			}
+			"""
+		},
+		this.complianceLevel < ClassFileConstants.JDK16
+		?
+		"----------\n" +
+		"1. WARNING in X.java (at line 3)\n" +
+		"	class Local {\n" +
+		"	      ^^^^^\n" +
+		"The type Local is never used locally\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 4)\n" +
+		"	static void method() {\n" +
+		"	            ^^^^^^^^\n" +
+		"The method method cannot be declared static; static methods can only be declared in a static or top level type\n" +
+		"----------\n"
+		:
+		"----------\n" +
+		"1. WARNING in X.java (at line 3)\n" +
+		"	class Local {\n" +
+		"	      ^^^^^\n" +
+		"The type Local is never used locally\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 5)\n" +
+		"	System.out.println(parameter);\n" +
+		"	                   ^^^^^^^^^\n" +
+		"Cannot make a static reference to the non-static variable parameter\n" +
+		"----------\n");
+}
+// Test for static method in non-static local class accessing outer local variable (field reference)
+public void testStaticMethodInLocalClassAccessingOuterLocal2() {
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			public class X {
+			  public void test(String value) {
+			    class Local {
+			      static void staticMethod() {
+			        String s = value;
+			      }
+			    }
+			  }
+			}
+			"""
+		},
+		this.complianceLevel < ClassFileConstants.JDK16
+		?
+		"----------\n" +
+		"1. WARNING in X.java (at line 3)\n" +
+		"	class Local {\n" +
+		"	      ^^^^^\n" +
+		"The type Local is never used locally\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 4)\n" +
+		"	static void staticMethod() {\n" +
+		"	            ^^^^^^^^^^^^^^\n" +
+		"The method staticMethod cannot be declared static; static methods can only be declared in a static or top level type\n" +
+		"----------\n"
+		:
+		"----------\n" +
+		"1. WARNING in X.java (at line 3)\n" +
+		"	class Local {\n" +
+		"	      ^^^^^\n" +
+		"The type Local is never used locally\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 5)\n" +
+		"	String s = value;\n" +
+		"	           ^^^^^\n" +
+		"Cannot make a static reference to the non-static variable value\n" +
+		"----------\n");
+}
+// Test for QualifiedNameReference - static method accessing outer local variable with field access
+public void testStaticMethodInLocalClassAccessingOuterLocalQualified() {
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			public class X {
+			  static class Holder { public String data; }
+			  public void test(Holder holder) {
+			    class Local {
+			      static void staticMethod() {
+			        String s = holder.data;
+			      }
+			    }
+			  }
+			}
+			"""
+		},
+		this.complianceLevel < ClassFileConstants.JDK16
+		?
+		"----------\n" +
+		"1. WARNING in X.java (at line 4)\n" +
+		"	class Local {\n" +
+		"	      ^^^^^\n" +
+		"The type Local is never used locally\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 5)\n" +
+		"	static void staticMethod() {\n" +
+		"	            ^^^^^^^^^^^^^^\n" +
+		"The method staticMethod cannot be declared static; static methods can only be declared in a static or top level type\n" +
+		"----------\n"
+		:
+		"----------\n" +
+		"1. WARNING in X.java (at line 4)\n" +
+		"	class Local {\n" +
+		"	      ^^^^^\n" +
+		"The type Local is never used locally\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 6)\n" +
+		"	String s = holder.data;\n" +
+		"	           ^^^^^^^^^^^\n" +
+		"Cannot make a static reference to the non-static variable holder\n" +
+		"----------\n");
+}
+// Test for QualifiedNameReference - accessing multiple fields starting with outer local
+public void testStaticMethodInLocalClassAccessingOuterLocalQualified2() {
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			public class X {
+			  static class A { public B b; }
+			  static class B { public String value; }
+			  public void test(A a) {
+			    class Local {
+			      static void staticMethod() {
+			        String s = a.b.value;
+			      }
+			    }
+			  }
+			}
+			"""
+		},
+		this.complianceLevel < ClassFileConstants.JDK16
+		?
+		"----------\n" +
+		"1. WARNING in X.java (at line 5)\n" +
+		"	class Local {\n" +
+		"	      ^^^^^\n" +
+		"The type Local is never used locally\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 6)\n" +
+		"	static void staticMethod() {\n" +
+		"	            ^^^^^^^^^^^^^^\n" +
+		"The method staticMethod cannot be declared static; static methods can only be declared in a static or top level type\n" +
+		"----------\n"
+		:
+		"----------\n" +
+		"1. WARNING in X.java (at line 5)\n" +
+		"	class Local {\n" +
+		"	      ^^^^^\n" +
+		"The type Local is never used locally\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 7)\n" +
+		"	String s = a.b.value;\n" +
+		"	           ^^^^^^^^^\n" +
+		"Cannot make a static reference to the non-static variable a\n" +
+		"----------\n");
+}
+// Test that non-static methods can still access outer locals (to ensure we didn't break the normal case)
+public void testNonStaticMethodInLocalClassAccessingOuterLocal() {
+	runConformTest(
+		new String[] {
+			"X.java",
+			"""
+			public class X {
+			  public void test(String value) {
+			    class Local {
+			      void nonStaticMethod() {
+			        System.out.println(value);
+			      }
+			    }
+			    new Local().nonStaticMethod();
+			  }
+			  public static void main(String[] args) {
+			    new X().test("OK");
+			  }
+			}
+			"""
+		},
+		"OK");
+}
+// Test for static initializer block in local class accessing outer local variable.
+// This exercises the safety net in CodeStream.generateOuterAccess (line 2218)
+// where mappingSequence is null for a LocalVariableBinding target.
+public void testStaticInitializerInLocalClassAccessingOuterLocal() {
+	if (this.complianceLevel < ClassFileConstants.JDK16) return;
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			public class X {
+			  public static void combine(Object parameter) {
+			    class Local {
+			      static {
+			        System.out.println(parameter);
+			      }
+			    }
+			  }
+			}
+			"""
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	System.out.println(parameter);\n" +
+		"	                   ^^^^^^^^^\n" +
+		"Cannot make a static reference to the non-static variable parameter\n" +
+		"----------\n");
+}
+
+public void testStaticInitializerInLocalClassAccessingOuterLocalVariable() {
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"""
+			public class X {
+			    public static void main(String[] strArr) {
+			        int NUM = 10;
+			        class C {
+			            static {
+			                int a = NUM;
+			            }
+			        }
+			    }
+			}
+			"""
+		},
+		this.complianceLevel < ClassFileConstants.JDK16
+		?
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	static {\n" +
+		"	       ^\n" +
+		"Cannot define static initializer in inner type C\n" +
+		"----------\n"
+		:
+		"----------\n" +
+		"1. ERROR in X.java (at line 6)\n" +
+		"	int a = NUM;\n" +
+		"	        ^^^\n" +
+		"Cannot make a static reference to the non-static variable NUM\n" +
+		"----------\n");
+}
+
 public static Class testClass() {
 	return LocalVariableTest.class;
 }

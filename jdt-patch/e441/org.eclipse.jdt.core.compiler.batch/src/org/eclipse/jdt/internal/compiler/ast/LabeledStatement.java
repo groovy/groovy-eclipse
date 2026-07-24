@@ -21,6 +21,7 @@ import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jdt.internal.compiler.flow.LabelFlowContext;
 import org.eclipse.jdt.internal.compiler.flow.UnconditionalFlowInfo;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
+import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 
 public class LabeledStatement extends Statement {
 
@@ -152,6 +153,16 @@ public class LabeledStatement extends Statement {
 			if (this.statement != null) this.statement.traverse(visitor, blockScope);
 		}
 		visitor.endVisit(this, blockScope);
+	}
+
+	@Override
+	public LocalVariableBinding[] bindingsWhenComplete() {
+		// If control can reach past this labeled statement via a break to our own
+		// label, the pattern variable(s) may not be matched at that exit point,
+		// so nothing may be treated as definitely matched on completion.
+		if (this.statement.breaksOut(this.label))
+			return NO_VARIABLES;
+		return this.statement.bindingsWhenComplete();
 	}
 
 	@Override

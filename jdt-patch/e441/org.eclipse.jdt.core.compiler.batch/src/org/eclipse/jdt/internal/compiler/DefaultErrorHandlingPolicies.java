@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -35,6 +35,10 @@ public static IErrorHandlingPolicy exitAfterAllProblems() {
 		public boolean ignoreAllErrors() {
 			return false;
 		}
+		@Override
+		public String toString() {
+			return "ExitAfterAllProblems"; //$NON-NLS-1$
+		}
 	};
 }
 /*
@@ -55,6 +59,10 @@ public static IErrorHandlingPolicy exitOnFirstError() {
 		public boolean ignoreAllErrors() {
 			return false;
 		}
+		@Override
+		public String toString() {
+			return "ExitOnFirstError"; //$NON-NLS-1$
+		}
 	};
 }
 /*
@@ -73,6 +81,10 @@ public static IErrorHandlingPolicy proceedOnFirstError() {
 		@Override
 		public boolean ignoreAllErrors() {
 			return false;
+		}
+		@Override
+		public String toString() {
+			return "ProceedOnFirstError"; //$NON-NLS-1$
 		}
 	};
 }
@@ -93,6 +105,10 @@ public static IErrorHandlingPolicy proceedWithAllProblems() {
 		public boolean ignoreAllErrors() {
 			return false;
 		}
+		@Override
+		public String toString() {
+			return "ProceedWithAllProblems"; //$NON-NLS-1$
+		}
 	};
 }
 /*
@@ -111,6 +127,10 @@ public static IErrorHandlingPolicy ignoreAllProblems() {
 		@Override
 		public boolean ignoreAllErrors() {
 			return true;
+		}
+		@Override
+		public String toString() {
+			return "IgnoreAllProblems"; //$NON-NLS-1$
 		}
 	};
 }

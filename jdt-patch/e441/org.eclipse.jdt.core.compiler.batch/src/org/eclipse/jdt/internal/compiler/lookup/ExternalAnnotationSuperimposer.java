@@ -44,7 +44,7 @@ class ExternalAnnotationSuperimposer extends TypeBindingVisitor {
 					if (zipFile != null && zipEntry == null) {
 						return;
 					}
-					try (@SuppressWarnings("resource") InputStream input = (zipFile == null) // GROOVY add
+					try (InputStream input = (zipFile == null)
 							? new FileInputStream(externalAnnotationPath + '/' + relativeFileName)
 							: zipFile.getInputStream(zipEntry)) {
 						annotateType(typeBinding, new ExternalAnnotationProvider(input, binaryTypeName),

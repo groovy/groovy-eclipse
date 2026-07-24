@@ -630,7 +630,7 @@ public MethodBinding inferConstructorOfElidedParameterizedType(final Scope scope
 		if (cached != null)
 			return cached;
 	}
-	MethodBinding constructor = inferDiamondConstructor(scope, this, this.type.resolvedType, this.argumentTypes);
+	MethodBinding constructor = inferDiamondConstructor(scope, this, this.resolvedType, this.argumentTypes);
 	if (constructor != null) {
 		if (this.expressionContext == INVOCATION_CONTEXT && this.typeExpected == null) { // not ready for invocation type inference
 			if (constructor instanceof PolyParameterizedGenericMethodBinding) {
@@ -647,8 +647,10 @@ public MethodBinding inferConstructorOfElidedParameterizedType(final Scope scope
 }
 
 public static MethodBinding inferDiamondConstructor(Scope scope, InvocationSite site, TypeBinding type, TypeBinding[] argumentTypes) {
-	ReferenceBinding genericType = ((ParameterizedTypeBinding) type).genericType();
-	ReferenceBinding enclosingType = type.enclosingType();
+	if (!(type instanceof ParameterizedTypeBinding parameterizedTypeBinding))
+		return null;
+	ReferenceBinding genericType = parameterizedTypeBinding.genericType();
+	ReferenceBinding enclosingType = parameterizedTypeBinding.enclosingType();
 	ParameterizedTypeBinding allocationType = scope.environment().createParameterizedType(genericType, genericType.typeVariables(), enclosingType);
 
 	// Given the allocation type and the arguments to the constructor, see if we can infer the constructor of the elided parameterized type.

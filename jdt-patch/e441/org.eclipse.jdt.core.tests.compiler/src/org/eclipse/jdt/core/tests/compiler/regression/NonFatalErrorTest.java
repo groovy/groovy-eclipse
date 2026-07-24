@@ -518,7 +518,7 @@ public class NonFatalErrorTest extends AbstractRegressionTest {
 			"2. ERROR in X.java (at line 2)\n" +
 			"	import static p1.Y.f;\n" +
 			"	              ^^^^^^\n" +
-			"The field Y.p1.Y.f is not visible\n" +
+			"The field Y.f is not visible\n" +
 			"----------\n",
 			"OK",
 			"",

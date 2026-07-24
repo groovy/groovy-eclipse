@@ -4400,9 +4400,9 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 								 * 6.3.1.1 Conditional-And Operator &&
 								 *
 								 * It is a compile-time error if any of the following conditions hold:
-									â€¢ A pattern variable is both (i) introduced by a when true and (ii) introduced by
+									• A pattern variable is both (i) introduced by a when true and (ii) introduced by
 									b when true.
-									â€¢ A pattern variable is both (i) introduced by a when false and (ii) introduced by
+									• A pattern variable is both (i) introduced by a when false and (ii) introduced by
 									b when false.
 								 */
 								boolean b = o instanceof String a && o instanceof Double a;   // Error: correct
@@ -4412,9 +4412,9 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 								 * 6.3.1.2 Conditional-Or Operator ||
 								 *
 								 * It is a compile-time error if any of the following conditions hold:
-									â€¢ A pattern variable is both (i) introduced by a when true and (ii) introduced by
+									• A pattern variable is both (i) introduced by a when true and (ii) introduced by
 									b when true.
-									â€¢ A pattern variable is both (i) introduced by a when false and (ii) introduced by
+									• A pattern variable is both (i) introduced by a when false and (ii) introduced by
 									b when false.
 								 */
 								b =  o instanceof String a || o instanceof Double a;      // <<<----- Error NOT reported by ECJ. Javac complains
@@ -4424,17 +4424,17 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 								 * 6.3.1.4 Conditional Operator a ? b : c
 								 *
 								 * It is a compile-time error if any of the following conditions hold:
-									â€¢ A pattern variable is both (i) introduced by a when true and (ii) introduced by
+									• A pattern variable is both (i) introduced by a when true and (ii) introduced by
 									c when true.
-									â€¢ A pattern variable is both (i) introduced by a when true and (ii) introduced by
+									• A pattern variable is both (i) introduced by a when true and (ii) introduced by
 									c when false.
-									â€¢ A pattern variable is both (i) introduced by a when false and (ii) introduced by
+									• A pattern variable is both (i) introduced by a when false and (ii) introduced by
 									b when true.
-									â€¢ A pattern variable is both (i) introduced by a when false and (ii) introduced by
+									• A pattern variable is both (i) introduced by a when false and (ii) introduced by
 									b when false.
-									â€¢ A pattern variable is both (i) introduced by b when true and (ii) introduced by
+									• A pattern variable is both (i) introduced by b when true and (ii) introduced by
 									c when true.
-									â€¢ A pattern variable is both (i) introduced by b when false and (ii) introduced by
+									• A pattern variable is both (i) introduced by b when false and (ii) introduced by
 									c when false.
 								 */
 
@@ -4870,5 +4870,159 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 				+ "true\n"
 				+ "false\n"
 				+ "true");
+	}
+	// A pattern variable declared in a while-condition must remain in scope after the
+	// loop when the only exit from the loop body is a 'break' to an *enclosing* label
+	// (here 'break X' leaves the block X, not the while), so normal loop completion is
+	// the only way to reach 'a2 = s;' and 's' is definitely matched there.
+	public void testLabeledBreakOutOfEnclosingBlock() {
+		runConformTest(
+				new String[] {
+						"X.java",
+						"""
+						public class X {
+							public static void foo(Object obj) {
+								Object obj1 = obj;
+								Object obj2 = null;
+								X: {
+									while (!(obj1 instanceof String s)) {
+										break X;
+									}
+									obj2 = s;
+								}
+								System.out.println(obj2);
+							}
+							public static void main(String[] argv) {
+								foo("a");
+							}
+						}
+						""",
+				},
+				"a");
+	}
+	// A pattern variable from a labeled while-condition must be in scope after the loop
+	// when the body cannot break out at all (it always throws), so the loop can only be
+	// left by normal completion where the pattern is matched.
+	public void testLabeledWhileNoBreak() {
+		runConformTest(
+				new String[] {
+						"X.java",
+						"""
+						public class X {
+							public static void foo(Object obj) {
+								Object obj1 = obj;
+								Object obj2 = null;
+								X: while (!(obj1 instanceof String s)) {
+									throw new RuntimeException("no match");
+								}
+								obj2 = s;
+								System.out.println(obj2);
+							}
+							public static void main(String[] argv) {
+								foo("a");
+							}
+						}
+						""",
+				},
+				"a");
+	}
+	// When 'break X' targets the while loop's own label, the loop may be left with the
+	// pattern *unmatched*, so the pattern variable must NOT be in scope afterwards and a
+	// subsequent 'String s' is a legal fresh declaration (must not clash).
+	public void testLabeledWhileBreakThenRedeclare() {
+		runConformTest(
+				new String[] {
+						"X.java",
+						"""
+						public class X {
+							public static void foo(Object obj) {
+								Object obj1 = obj;
+								X: while (!(obj1 instanceof String s)) {
+									break X;
+								}
+								String s = "foo";
+								System.out.println(s);
+							}
+							public static void main(String[] argv) {
+								foo("a");
+							}
+						}
+						""",
+				},
+				"foo");
+	}
+	// When 'break X' targets the while loop's own label, the loop can complete with the
+	// pattern unmatched, so the pattern variable must not be resolvable after the loop.
+	public void testLabeledWhileBreakExitsLoop() {
+		Map<String, String> options = getCompilerOptions(true);
+		runNegativeTest(
+				new String[] {
+						"X.java",
+						"""
+						public class X {
+							public static void foo(Object obj) {
+								Object obj1 = obj;
+								Object obj2 = null;
+								X: while (!(obj1 instanceof String s)) {
+									break X;
+								}
+								obj2 = s;
+								System.out.println(obj2);
+							}
+							public static void main(String[] argv) {
+								foo("a");
+							}
+						}
+						""",
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 8)\n" +
+				"	obj2 = s;\n" +
+				"	       ^\n" +
+				"s cannot be resolved to a variable\n" +
+				"----------\n",
+				"",
+				null,
+				true,
+				options);
+	}
+	// An inner 'break' that targets the while loop (not the enclosing label X) can leave
+	// the loop with the pattern unmatched, so the pattern variable must not be resolvable
+	// after the loop even though control also reaches there via 'break X'.
+	public void testInnerBreakExitsWhile() {
+		Map<String, String> options = getCompilerOptions(true);
+		runNegativeTest(
+				new String[] {
+						"X.java",
+						"""
+						public class X {
+							public static void foo(Object obj) {
+								Object obj1 = obj;
+								Object obj2 = null;
+								X: {
+									while (!(obj1 instanceof String s)) {
+										if (obj1 == null) break;
+										break X;
+									}
+									obj2 = s;
+								}
+								System.out.println(obj2);
+							}
+							public static void main(String[] argv) {
+								foo("a");
+							}
+						}
+						""",
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 10)\n" +
+				"	obj2 = s;\n" +
+				"	       ^\n" +
+				"s cannot be resolved to a variable\n" +
+				"----------\n",
+				"",
+				null,
+				true,
+				options);
 	}
 }

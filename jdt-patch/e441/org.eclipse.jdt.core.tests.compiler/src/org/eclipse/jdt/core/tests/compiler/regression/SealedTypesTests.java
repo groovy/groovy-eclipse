@@ -6542,4 +6542,315 @@ public class SealedTypesTests extends AbstractRegressionTest9 {
 		runner.javacTestOptions = JavacHasABug.JavacBug8343306;
 		runner.runNegativeTest();
 	}
+
+	public void testNonSealedGenericLocalClassInRecord() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				record R(int x) {
+				    void m() {
+				        non-sealed class Local<T> {}
+				    }
+				}
+				public class X {}
+				"""};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in X.java (at line 3)
+					non-sealed class Local<T> {}
+					                 ^^^^^
+				Illegal modifier for the local class Local; only abstract or final is permitted
+				----------
+				""";
+		runner.runNegativeTest();
+	}
+
+	public void testNonSealedGenericMemberClassOfLocalInRecord() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				record R(int x) {
+				    void m() {
+				        class Outer {
+				            non-sealed class Local<T> {}
+				        }
+				    }
+				}
+				public class X {}
+				"""};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in X.java (at line 4)
+					non-sealed class Local<T> {}
+					                 ^^^^^
+				The non-sealed class Local must have a sealed direct supertype
+				----------
+				""";
+		runner.runNegativeTest();
+	}
+
+
+	// record + non-generic + direct-local
+	public void testNonSealedLocalClassInRecord() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				record R(int x) {
+				    void m() {
+				        non-sealed class Local {}
+				    }
+				}
+				public class X {}
+				"""};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in X.java (at line 3)
+					non-sealed class Local {}
+					                 ^^^^^
+				Illegal modifier for the local class Local; only abstract or final is permitted
+				----------
+				""";
+		runner.runNegativeTest();
+	}
+
+	// record + non-generic + member-of-local
+	public void testNonSealedMemberClassOfLocalInRecord() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				record R(int x) {
+				    void m() {
+				        class Outer {
+				            non-sealed class Local {}
+				        }
+				    }
+				}
+				public class X {}
+				"""};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in X.java (at line 4)
+					non-sealed class Local {}
+					                 ^^^^^
+				The non-sealed class Local must have a sealed direct supertype
+				----------
+				""";
+		runner.runNegativeTest();
+	}
+
+	// class + generic + direct-local
+	public void testNonSealedGenericLocalClassInClass() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				public class X {
+				    void m() {
+				        non-sealed class Local<T> {}
+				    }
+				}
+				"""};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in X.java (at line 3)
+					non-sealed class Local<T> {}
+					                 ^^^^^
+				Illegal modifier for the local class Local; only abstract or final is permitted
+				----------
+				""";
+		runner.runNegativeTest();
+	}
+
+	// class + non-generic + direct-local
+	public void testNonSealedLocalClassInClass() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				public class X {
+				    void m() {
+				        non-sealed class Local {}
+				    }
+				}
+				"""};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in X.java (at line 3)
+					non-sealed class Local {}
+					                 ^^^^^
+				Illegal modifier for the local class Local; only abstract or final is permitted
+				----------
+				""";
+		runner.runNegativeTest();
+	}
+
+	// class + generic + member-of-local
+	public void testNonSealedGenericMemberClassOfLocalInClass() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				public class X {
+				    void m() {
+				        class Outer {
+				            non-sealed class Local<T> {}
+				        }
+				    }
+				}
+				"""};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in X.java (at line 4)
+					non-sealed class Local<T> {}
+					                 ^^^^^
+				The non-sealed class Local must have a sealed direct supertype
+				----------
+				""";
+		runner.runNegativeTest();
+	}
+
+	// class + non-generic + member-of-local
+	public void testNonSealedMemberClassOfLocalInClass() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				public class X {
+				    void m() {
+				        class Outer {
+				            non-sealed class Local {}
+				        }
+				    }
+				}
+				"""};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in X.java (at line 4)
+					non-sealed class Local {}
+					                 ^^^^^
+				The non-sealed class Local must have a sealed direct supertype
+				----------
+				""";
+		runner.runNegativeTest();
+	}
+
+	// enum + generic + direct-local
+	public void testNonSealedGenericLocalClassInEnum() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				enum E {
+				    A, B;
+				    void m() {
+				        non-sealed class Local<T> {}
+				    }
+				}
+				public class X {}
+				"""};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in X.java (at line 4)
+					non-sealed class Local<T> {}
+					                 ^^^^^
+				Illegal modifier for the local class Local; only abstract or final is permitted
+				----------
+				""";
+		runner.runNegativeTest();
+	}
+
+	// enum + non-generic + direct-local
+	public void testNonSealedLocalClassInEnum() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				enum E {
+				    A, B;
+				    void m() {
+				        non-sealed class Local {}
+				    }
+				}
+				public class X {}
+				"""};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in X.java (at line 4)
+					non-sealed class Local {}
+					                 ^^^^^
+				Illegal modifier for the local class Local; only abstract or final is permitted
+				----------
+				""";
+		runner.runNegativeTest();
+	}
+
+	// enum + generic + member-of-local
+	public void testNonSealedGenericMemberClassOfLocalInEnum() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				enum E {
+				    A, B;
+				    void m() {
+				        class Outer {
+				            non-sealed class Local<T> {}
+				        }
+				    }
+				}
+				public class X {}
+				"""};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in X.java (at line 5)
+					non-sealed class Local<T> {}
+					                 ^^^^^
+				The non-sealed class Local must have a sealed direct supertype
+				----------
+				""";
+		runner.runNegativeTest();
+	}
+
+	// enum + non-generic + member-of-local
+	public void testNonSealedMemberClassOfLocalInEnum() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"X.java",
+				"""
+				enum E {
+				    A, B;
+				    void m() {
+				        class Outer {
+				            non-sealed class Local {}
+				        }
+				    }
+				}
+				public class X {}
+				"""};
+		runner.expectedCompilerLog =
+				"""
+				----------
+				1. ERROR in X.java (at line 5)
+					non-sealed class Local {}
+					                 ^^^^^
+				The non-sealed class Local must have a sealed direct supertype
+				----------
+				""";
+		runner.runNegativeTest();
+	}
 }

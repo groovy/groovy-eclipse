@@ -256,6 +256,12 @@ public class ClassScope extends Scope {
 		// build the binding or the local type
 		LocalTypeBinding localType = new LocalTypeBinding(this, enclosingType, enclosingSwitchLabel());
 		this.referenceContext.binding = localType;
+		// A local type declared as a member of another (local/anonymous) type is a member type (JLS 16 8.1.3);
+		// mark it as such up-front so that checkAndSetModifiers() classifies it correctly. From Java 16 such an
+		// inner class may declare and inherit static members even though it is not itself static. Restricted to
+		// 16+ so that the pre-16 diagnostics (which reject static members of inner classes) are preserved.
+		if (this.parent instanceof ClassScope && compilerOptions().sourceLevel >= ClassFileConstants.JDK16)
+			localType.setAsMemberType();
 		checkAndSetModifiers();
 		buildTypeVariables();
 
@@ -1367,7 +1373,12 @@ public class ClassScope extends Scope {
 			}
 		} finally {
 			if (sourceType.isNonSealed() && !hasSealedSupertype) {
-				if (!sourceType.isRecord() && !sourceType.isLocalType() && !sourceType.isEnum() && !sourceType.isSealed()) // avoid double jeopardy
+				// A genuine local type (declared in a block) already gets illegalModifierForLocalClass via the
+				// hierarchySealed handling in checkAndSetModifiers, so skip it here to avoid double jeopardy. A member
+				// type of a local/anonymous class (JLS 16 8.1.3) goes through the member-type path instead, so it must
+				// still be validated here just like any other member type.
+				boolean genuineLocalType = sourceType.isLocalType() && !sourceType.isMemberType();
+				if (!sourceType.isRecord() && !genuineLocalType && !sourceType.isEnum() && !sourceType.isSealed())
 					problemReporter().disallowedNonSealedModifier(sourceType, this.referenceContext);
 			}
 		}
