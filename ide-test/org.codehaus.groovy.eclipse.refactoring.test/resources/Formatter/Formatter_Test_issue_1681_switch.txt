@@ -1,0 +1,20 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+def swicher(String x) {
+switch(x) {
+case 'FOO'   :
+	println 'some code'
+	break
+}
+}
+###exp
+def swicher(String x) {
+	switch(x) {
+		case 'FOO':
+			println 'some code'
+			break
+	}
+}
+###end

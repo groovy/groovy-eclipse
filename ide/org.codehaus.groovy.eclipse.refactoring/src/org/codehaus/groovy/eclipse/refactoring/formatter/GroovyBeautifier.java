@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -419,13 +421,47 @@ public class GroovyBeautifier {
 
     private void removeUnnecessaryWhitespace(MultiTextEdit edits) {
         try {
+            // Tracks the type of each currently open bracket, innermost last, so
+            // we can tell whether a colon sits directly inside a map literal
+            // ("[k: v]") -- whose alignment we want to leave alone -- as opposed
+            // to a ternary, switch/case, or labeled-statement colon, which keep
+            // getting their whitespace collapsed as before.
+            Deque<Integer> openBrackets = new ArrayDeque<>();
+
             for (Token token : formatter.getTokens().getTokens(formatter.selection)) {
                 Token nextToken = formatter.getTokens().getNextToken(token);
                 int tokenType = token.getType();
                 int nextTokenType = nextToken.getType();
 
+                switch (tokenType) {
+                case GroovyTokenTypeBridge.LPAREN:
+                case GroovyTokenTypeBridge.LBRACK:
+                case GroovyTokenTypeBridge.LCURLY:
+                    openBrackets.push(tokenType);
+                    break;
+                case GroovyTokenTypeBridge.RPAREN:
+                case GroovyTokenTypeBridge.RBRACK:
+                case GroovyTokenTypeBridge.RCURLY:
+                    if (!openBrackets.isEmpty()) {
+                        openBrackets.pop();
+                    }
+                    break;
+                default:
+                    break;
+                }
+
                 boolean removeAllWhitespaces = false;
                 boolean collapseAllWhitespaces = true;
+
+                // preserve manual column alignment of map entries (e.g. "key   : 1")
+                // and Spock data tables (e.g. "a   | 1"); collapsing this whitespace
+                // to a single space defeats the purpose of the alignment.
+                boolean insideMapLiteral = !openBrackets.isEmpty() && openBrackets.peek() == GroovyTokenTypeBridge.LBRACK;
+                if ((nextTokenType == GroovyTokenTypeBridge.COLON && insideMapLiteral) ||
+                        nextTokenType == GroovyTokenTypeBridge.BOR ||
+                        tokenType == GroovyTokenTypeBridge.BOR) {
+                    collapseAllWhitespaces = false;
+                }
 
                 if (nextTokenType == GroovyTokenTypeBridge.COMMA) {
                     removeAllWhitespaces = true;

@@ -1,0 +1,28 @@
+###prop
+setPreferences=true
+bracesEnd=next
+###src
+class Example {
+
+    def foo() {
+        def x = a     ||   b
+        def y = b ? 1   :       2
+        def z = [
+            key     : 1,
+            otherKey: 2
+        ]
+    }
+}
+###exp
+class Example {
+
+	def foo() {
+		def x = a || b
+		def y = b ? 1 : 2
+		def z = [
+			key     : 1,
+			otherKey: 2
+		]
+	}
+}
+###end

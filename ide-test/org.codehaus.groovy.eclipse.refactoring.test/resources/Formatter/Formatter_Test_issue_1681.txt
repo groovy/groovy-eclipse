@@ -1,0 +1,42 @@
+###prop
+setPreferences=true
+bracesEnd=next
+###src
+class TestSpec extends Specification {
+
+    def "formatting is left intact"() {
+        given:
+        def m = [
+            key     : 1,
+            otherKey: 2
+        ]
+
+        expect:
+        m[key] == value
+
+        where:
+        key | value
+        a   | 1
+        b   | 2
+    }
+}
+###exp
+class TestSpec extends Specification {
+
+	def "formatting is left intact"() {
+		given:
+		def m = [
+			key     : 1,
+			otherKey: 2
+		]
+
+		expect:
+		m[key] == value
+
+		where:
+		key | value
+		a   | 1
+		b   | 2
+	}
+}
+###end

@@ -33,6 +33,7 @@ public class GroovyTokenTypeBridge {
     // More can be added on an as-needed basis.
 
     public static int ASSIGN               = GroovyTokenTypes.ASSIGN;
+    public static int BOR                   = GroovyTokenTypes.BOR;
     public static int CLOSABLE_BLOCK_OP    = GroovyTokenTypes.CLOSABLE_BLOCK_OP;
     public static int COLON                = GroovyTokenTypes.COLON;
     public static int COMMA                = GroovyTokenTypes.COMMA;
