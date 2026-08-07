@@ -247,38 +247,44 @@ public class GroovyIndentation {
     }
 
     // https://github.com/groovy/groovy-eclipse/issues/591
-    // Adds extra indentation for nested method-call argument lists whose
-    // contents start on a line after the opening paren. Each such paren pair
-    // that is itself contained within another paren (i.e. not the outermost
-    // paren of the statement) contributes one additional indentationMultiline
-    // to the lines it spans. The outermost wrap is already handled by the
-    // multiline-statement rule in getIndentationEdits.
+    // https://github.com/groovy/groovy-eclipse/issues/1682
+    // Adds extra indentation for a wrapped method-call argument list (one
+    // whose contents start on a line after the opening paren), when that
+    // paren isn't the top-level context of its statement: either nested
+    // inside another paren, or inside a closure/list. Nested-in-paren also
+    // indents the closing paren's own line (matches existing call-chain
+    // behavior); nested-in-closure/list instead lines the closer back up
+    // with the opening statement.
     private void handleNestedParenWraps() {
         int indentationMultiline = pref.getIndentationMultiline();
-        // Each entry: { openLine, isWrapOpen (1/0), enclosingDepth }
         Deque<int[]> parenStack = new ArrayDeque<>();
+        int blockDepth = 0;
 
         for (int i = 0, n = tokens.size(); i < n; i++) {
             Token token = tokens.get(i);
             int ttype = token.getType();
-            if (ttype == GroovyTokenTypeBridge.LPAREN) {
+            if (ttype == GroovyTokenTypeBridge.LCURLY || ttype == GroovyTokenTypeBridge.LBRACK) {
+                blockDepth += 1;
+            } else if (ttype == GroovyTokenTypeBridge.RCURLY || ttype == GroovyTokenTypeBridge.RBRACK) {
+                blockDepth -= 1;
+            } else if (ttype == GroovyTokenTypeBridge.LPAREN) {
                 Token nextNonNLS = formatter.getNextToken(i);
                 boolean isWrapOpen = (nextNonNLS != null && nextNonNLS.getLine() > token.getLine());
-                int enclosingDepth = parenStack.size();
-                parenStack.push(new int[] {token.getLine(), isWrapOpen ? 1 : 0, enclosingDepth});
-            } else if (ttype == GroovyTokenTypeBridge.RPAREN) {
-                if (!parenStack.isEmpty()) {
-                    int[] entry = parenStack.pop();
-                    int openLine = entry[0];
-                    boolean wasWrapOpen = entry[1] != 0;
-                    int enclosingDepth = entry[2];
-                    int closeLine = token.getLine();
+                boolean nestedInParen = !parenStack.isEmpty();
+                parenStack.push(new int[] {token.getLine(), isWrapOpen ? 1 : 0, nestedInParen ? 1 : 0, blockDepth});
+            } else if (ttype == GroovyTokenTypeBridge.RPAREN && !parenStack.isEmpty()) {
+                int[] entry = parenStack.pop();
+                int openLine = entry[0];
+                boolean wasWrapOpen = entry[1] != 0;
+                boolean nestedInParen = entry[2] != 0;
+                boolean nestedInBlock = entry[3] > 0;
+                int closeLine = token.getLine();
 
-                    if (wasWrapOpen && enclosingDepth > 0 && closeLine > openLine) {
-                        for (int line = openLine + 1; line <= closeLine; line++) {
-                            tempIndentation[line - 1] += indentationMultiline;
-                            lineInd.setMultilineIndentation(line, true);
-                        }
+                if (wasWrapOpen && closeLine > openLine && (nestedInParen || nestedInBlock)) {
+                    int lastLine = nestedInParen ? closeLine : closeLine - 1;
+                    for (int line = openLine + 1; line <= lastLine; line++) {
+                        tempIndentation[line - 1] += indentationMultiline;
+                        lineInd.setMultilineIndentation(line, true);
                     }
                 }
             }

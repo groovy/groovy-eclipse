@@ -1,0 +1,16 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+def c = {
+Map.copyOf(
+foo: 1
+)
+}
+###exp
+def c = {
+	Map.copyOf(
+			foo: 1
+	)
+}
+###end

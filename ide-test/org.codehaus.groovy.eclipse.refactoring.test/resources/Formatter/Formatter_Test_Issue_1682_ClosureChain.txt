@@ -1,0 +1,20 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+"foo".tap {
+it
+.toUpperCase()
+
+it
+.toUpperCase()
+}
+###exp
+"foo".tap {
+	it
+			.toUpperCase()
+
+	it
+			.toUpperCase()
+}
+###end
