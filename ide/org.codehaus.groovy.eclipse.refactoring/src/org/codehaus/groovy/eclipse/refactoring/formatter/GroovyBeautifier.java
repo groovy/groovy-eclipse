@@ -77,6 +77,23 @@ public class GroovyBeautifier {
     private void combineClosures(MultiTextEdit edits) throws BadLocationException {
         ASTScanner scanner = new ASTScanner(formatter.getProgressRootNode(), new ClosuresInCodePredicate(), formatter.getProgressDocument());
         scanner.startASTscan();
+
+        // A closure that is the sole element of a list literal (e.g.
+        // "[{ ... }]") should stay expanded even when short/single-line,
+        // since collapsing it fully onto one line (formatLists tightens the
+        // list's own brackets around a single element) reads poorly. Collect
+        // these up front so the "ignore short closures" rule below can make
+        // an exception for them.
+        Set<ClosureExpression> soleListClosures = new HashSet<>();
+        ASTScanner listScanner = new ASTScanner(formatter.getProgressRootNode(), new ListInCodePredicate(), formatter.getProgressDocument());
+        listScanner.startASTscan();
+        for (ASTNode listNode : listScanner.getMatchedNodes().keySet()) {
+            List<Expression> listElements = ((ListExpression) listNode).getExpressions();
+            if (listElements.size() == 1 && listElements.get(0) instanceof ClosureExpression) {
+                soleListClosures.add((ClosureExpression) listElements.get(0));
+            }
+        }
+
         for (ASTNode node : scanner.getMatchedNodes().keySet()) {
             ClosureExpression clExp = ((ClosureExpression) node);
 
@@ -95,7 +112,8 @@ public class GroovyBeautifier {
                 posCLEnd = positionLastTokenOfClosure;
             }
             // ignore closure on one line, unless that line exceeds the configured max length
-            if (clExp.getLineNumber() == clExp.getLastLineNumber()) {
+            // or it's the sole element of an enclosing list literal
+            if (clExp.getLineNumber() == clExp.getLastLineNumber() && !soleListClosures.contains(clExp)) {
                 if (!exceedsMaxLineLength(clExp.getLineNumber()) || !hasStatements(clExp)) {
                     ignoreToken.add(formatter.getTokens().get(posCLEnd));
                     continue;
@@ -427,6 +445,11 @@ public class GroovyBeautifier {
             // to a ternary, switch/case, or labeled-statement colon, which keep
             // getting their whitespace collapsed as before.
             Deque<Integer> openBrackets = new ArrayDeque<>();
+            // Tracks whether the scan is currently between a "case"/"default"
+            // keyword and its terminating colon, so that colon can be tightened
+            // to zero whitespace (e.g. "case 'FOO':") instead of collapsed to
+            // one space like a ternary's colon (e.g. "a ? b : c").
+            boolean inCaseLabel = false;
 
             for (Token token : formatter.getTokens().getTokens(formatter.selection)) {
                 Token nextToken = formatter.getTokens().getNextToken(token);
@@ -440,8 +463,17 @@ public class GroovyBeautifier {
                     openBrackets.pop();
                 }
 
+                if (tokenType == GroovyTokenTypeBridge.LITERAL_case || tokenType == GroovyTokenTypeBridge.LITERAL_default) {
+                    inCaseLabel = true;
+                }
+
                 boolean removeAllWhitespaces = false;
                 boolean collapseAllWhitespaces = true;
+
+                if (nextTokenType == GroovyTokenTypeBridge.COLON && inCaseLabel) {
+                    removeAllWhitespaces = true;
+                    inCaseLabel = false;
+                }
 
                 // preserve manual column alignment of map entries (e.g. "key   : 1")
                 // and Spock data tables (e.g. "a   | 1"); collapsing this whitespace

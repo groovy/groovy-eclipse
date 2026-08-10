@@ -45,6 +45,8 @@ public class GroovyTokenTypeBridge {
     public static int LBRACK               = GroovyTokenTypes.LBRACK;
     public static int LCURLY               = GroovyTokenTypes.LCURLY;
     public static int LE                   = GroovyTokenTypes.LE;
+    public static int LITERAL_case         = GroovyTokenTypes.LITERAL_case;
+    public static int LITERAL_default      = GroovyTokenTypes.LITERAL_default;
     public static int LITERAL_else         = GroovyTokenTypes.LITERAL_else;
     public static int LITERAL_enum         = GroovyTokenTypes.LITERAL_enum;
     public static int LITERAL_for          = GroovyTokenTypes.LITERAL_for;

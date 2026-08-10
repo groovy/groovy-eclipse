@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
@@ -240,11 +241,27 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
             }
         }
 
-        if (found != null) {
-            return found.getKey();
-        } else {
-            return null;
+        ASTNode node = (found != null) ? found.getKey() : null;
+
+        // The "longest node wins" rule above is usually right, but when t is
+        // the first statement of a block, the enclosing BlockStatement starts
+        // at that exact same position and is longer, so it wins the tie even
+        // though the actual statement there is what every caller means to
+        // find. Unwrap to it, matching what any other (non-first) statement
+        // in the block already resolves to (see issue #1682).
+        while (node instanceof BlockStatement) {
+            List<Statement> statements = ((BlockStatement) node).getStatements();
+            if (statements.isEmpty()) {
+                break;
+            }
+            Statement first = statements.get(0);
+            if (first.getLineNumber() != t.getLine() || first.getColumnNumber() != t.getColumn()) {
+                break;
+            }
+            node = first;
         }
+
+        return node;
     }
 
     /**

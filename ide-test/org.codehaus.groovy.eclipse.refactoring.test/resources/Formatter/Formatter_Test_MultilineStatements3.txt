@@ -12,5 +12,5 @@ println(
 		"hello".
 		toString().
 		toString()
-		)
+)
 ###end
