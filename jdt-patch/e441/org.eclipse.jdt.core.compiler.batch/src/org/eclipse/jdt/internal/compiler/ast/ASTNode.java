@@ -855,6 +855,10 @@ public abstract class ASTNode implements Location, TypeConstants, TypeIds {
 							// need to fill the instances array
 							for (int j = 0; j < length; j++) {
 								Annotation annot = sourceAnnotations[j];
+								if (annot.recipient == null || annot.resolvedType == null) {
+									annot.recipient = recipient;
+									annot.resolveType(scope);
+								}
 								annotations[j] = annot.getCompilerAnnotation();
 							}
 						}

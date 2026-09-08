@@ -20253,4 +20253,24 @@ public void testGH5249() {
 		getCompilerOptions(),
 		"");
 }
+public void testGH5316() throws Exception {
+	runConformTestWithLibs(new String[] {
+			"MyInnocentClass.java",
+			"""
+			import java.util.Map;
+
+			import org.eclipse.jdt.annotation.NonNullByDefault;
+			import org.eclipse.jdt.annotation.Nullable;
+
+			@SuppressWarnings("unused")
+			public class MyInnocentClass {
+				@NonNullByDefault
+				@Nullable
+				private Map<String, String> aTotallyNormalMap;
+			}
+			"""
+		},
+		getCompilerOptions(),
+		"");
+}
 }
