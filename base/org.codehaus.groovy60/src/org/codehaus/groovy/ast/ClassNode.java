@@ -118,6 +118,11 @@ import static groovyjarjarasm.asm.Opcodes.ACC_SYNTHETIC;
  * they describe the type signature used at the point of declaration or the
  * type signatures provided by the class. If the type signatures provided
  * by the class are needed, then a call to {@link #redirect()} will help.
+ * {@link #getOuterClassType()} / {@link #setOuterClassType(ClassNode)} are
+ * likewise not proxied: they record the parameterized enclosing type of a
+ * JLS 4.5 rare type <em>use</em> ({@code Outer<T>.Inner}), distinct from
+ * {@link #getOuterClass()} which is the enclosing class of a nested class
+ * declaration.
  *
  * @see org.codehaus.groovy.ast.ClassHelper
  */
@@ -197,6 +202,9 @@ public class ClassNode extends AnnotatedNode {
     protected Class<?> clazz;
     // if not null then this instance is an array
     private ClassNode componentType;
+    /* parameterized enclosing type of a JLS 4.5 rare type (Outer<T>.Inner)
+    private ClassNode outerClassType;
+    */
     // if not null then this instance is handled as proxy for the redirect
     private ClassNode redirect;
 
@@ -264,22 +272,19 @@ public class ClassNode extends AnnotatedNode {
     }
 
     /**
-     * Constructs a non-primary array {@code ClassNode} when no real array class is available.
-     * This internal constructor is used by {@code makeArray()} to create a synthetic array ClassNode.
-     * The resulting node represents an array type with appropriate interfaces and modifiers.
-     *
-     * @param componentType the {@link ClassNode} representing the element type of the array
+     * Synthetic array {@code ClassNode} used by {@link #makeArray()} when no real
+     * array class is available. {@code componentType} is the element type.
      */
-    private ClassNode(final ClassNode componentType) {
+    private static ClassNode syntheticArray(final ClassNode componentType) {
         /* GRECLIPSE edit
-        this(componentType.getName() + "[]", ACC_ABSTRACT | ACC_FINAL | ACC_PUBLIC, ClassHelper.OBJECT_TYPE,
-          new ClassNode[]{ClassHelper.CLONEABLE_TYPE, ClassHelper.SERIALIZABLE_TYPE}, MixinNode.EMPTY_ARRAY);
+        ClassNode node = new ClassNode(componentType.getName() + "[]", ACC_ABSTRACT | ACC_FINAL | ACC_PUBLIC, ClassHelper.OBJECT_TYPE,
         */
-        this(computeArrayName(componentType), ACC_ABSTRACT | ACC_FINAL | ACC_PUBLIC, ClassHelper.OBJECT_TYPE,
-          new ClassNode[]{ClassHelper.CLONEABLE_TYPE, ClassHelper.SERIALIZABLE_TYPE}, MixinNode.EMPTY_ARRAY);
+        ClassNode node = new ClassNode(computeArrayName(componentType), ACC_ABSTRACT | ACC_FINAL | ACC_PUBLIC, ClassHelper.OBJECT_TYPE,
         // GRECLIPSE end
-        this.componentType = componentType.redirect();
-        this.isPrimaryNode = false;
+          new ClassNode[]{ClassHelper.CLONEABLE_TYPE, ClassHelper.SERIALIZABLE_TYPE}, MixinNode.EMPTY_ARRAY);
+        node.componentType = componentType.redirect();
+        node.isPrimaryNode = false;
+        return node;
     }
 
     // GRECLIPSE add
@@ -385,6 +390,10 @@ public class ClassNode extends AnnotatedNode {
         n.setRedirect(redirect());
         if (isArray()) {
             n.componentType = redirect().getComponentType();
+        }
+        ClassNode outerType = getOuterClassType();
+        if (outerType != null) {
+            n.setOuterClassType(outerType);
         }
         return n;
     }
@@ -558,6 +567,7 @@ public class ClassNode extends AnnotatedNode {
      * @return the modifier flags as an integer bitmask
      * @see #setModifiers(int)
      * @see #isAbstract()
+     * @see #isStatic()
      * @see #isInterface()
      * @see #isEnum()
      */
@@ -1922,6 +1932,22 @@ faces:  if (method == null && asBoolean(getInterfaces())) { // GROOVY-11323
     }
 
     /**
+     * Returns whether this {@link ClassNode} represents a static class.
+     * A class is static if the {@code ACC_STATIC} modifier flag is set in its modifiers.
+     * Static nested classes have no enclosing instance; they can be used without an instance of the enclosing class.
+     * This method checks the actual modifier bits, independent of the source code syntax.
+     *
+     * @return {@code true} if this class has the static modifier set; {@code false} otherwise
+     * @see #getModifiers()
+     * @see #setModifiers(int)
+     *
+     * @since 6.0.0
+     */
+    public boolean isStatic() {
+        return (getModifiers() & ACC_STATIC) != 0;
+    }
+
+    /**
      * Returns whether this {@link ClassNode} represents an interface type.
      * A class is an interface if the {@code ACC_INTERFACE} modifier flag is set in its modifiers.
      * Interfaces define contracts for implementing classes without providing implementation details.
@@ -2040,7 +2066,7 @@ faces:  if (method == null && asBoolean(getInterfaces())) { // GROOVY-11323
             // don't use the ClassHelper here!
             node = new ClassNode(type, this);
         } else {
-            node = new ClassNode(this);
+            node = syntheticArray(this);
         }
         return node;
     }
@@ -2092,6 +2118,39 @@ faces:  if (method == null && asBoolean(getInterfaces())) { // GROOVY-11323
         } while ((outer = outer.getOuterClass()) != null);
 
         return result;
+    }
+
+    /**
+     * For a JLS 4.5 rare type {@code Outer<T>.Inner}, the parameterized enclosing
+     * type stored on this node (type-use, not declaration; not node metadata and
+     * not redirected). Distinct from {@link #getOuterClass()}, which is the
+     * enclosing class of a nested class <em>declaration</em>. Copied by
+     * {@link #getPlainNodeReference()}.
+     *
+     * @return the parameterized enclosing type, or {@code null} if this is not a rare type
+     * @since 6.0.0
+     */
+    public ClassNode getOuterClassType() {
+        /* GRECLIPSE edit
+        return outerClassType;
+        */
+        return getNodeMetaData("outer.class");
+        // GRECLIPSE end
+    }
+
+    /**
+     * Records the parameterized enclosing type of a JLS 4.5 rare type on this
+     * node. Does not write through {@link #redirect()}.
+     *
+     * @param outer the parameterized {@code Outer<T>} node; {@code null} clears it
+     * @since 6.0.0
+     */
+    public void setOuterClassType(final ClassNode outer) {
+        /* GRECLIPSE edit
+        this.outerClassType = outer;
+        */
+        putNodeMetaData("outer.class", outer);
+        // GRECLIPSE end
     }
 
     /**
@@ -2187,7 +2246,11 @@ faces:  if (method == null && asBoolean(getInterfaces())) { // GROOVY-11323
             return genericsTypes[0];
         } else {
             ClassNode upper = (redirect != null ? redirect : this);
-            return new GenericsType(this, new ClassNode[]{upper}, null);
+            GenericsType gt = new GenericsType(this, new ClassNode[]{upper}, null);
+            if (genericsTypes != null && genericsTypes[0] != null) {
+                gt.setGenericDeclaration(genericsTypes[0].getGenericDeclaration());
+            }
+            return gt;
         }
     }
 
@@ -2373,6 +2436,7 @@ faces:  if (method == null && asBoolean(getInterfaces())) { // GROOVY-11323
      *
      * @return {@code true} if this class is declared in a static method; {@code false} otherwise
      * @see #setStaticClass(boolean)
+     * @see #isStatic()
      * @see #isScriptBody()
      */
     public boolean isStaticClass() {
@@ -2391,6 +2455,7 @@ faces:  if (method == null && asBoolean(getInterfaces())) { // GROOVY-11323
      *
      * @param staticClass {@code true} to mark as defined in a static context; {@code false} otherwise
      * @see #isStaticClass()
+     * @see #isStatic()
      * @see #setScriptBody(boolean)
      */
     public void setStaticClass(boolean staticClass) {

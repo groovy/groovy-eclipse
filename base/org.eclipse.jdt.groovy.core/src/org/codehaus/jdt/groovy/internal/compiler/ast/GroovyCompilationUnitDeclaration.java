@@ -473,11 +473,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             i += 1;
         }
 
-        message = "Groovy:" + (i < 1 ? "" : " ") + message.substring(i).split("\n| (?:@|at) line\\b")[0];
-
-        if (message.endsWith(" Possible causes:")) {
-            message = message.substring(0, message.length() - 17);
-        }
+        message = (i < 1 ? "" : " ") + message.substring(i).split("\n| (?:@|at) line\\b| Possible causes:")[0];
+        if (!message.startsWith("Duplicate type parameter")) message = "Groovy:" + message;
         return message;
     }
 
@@ -2427,19 +2424,32 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     if (!checkGenerics) t.bits |= ASTNode.IgnoreRawTypeCheck;
                     return t;
                 } else {
-                    TypeReference[] typeRefs = typeArguments.toArray(new TypeReference[typeArguments.size()]);
-                    return new ParameterizedSingleTypeReference(compoundName[0], typeRefs, 0, toPos(sourceStart, sourceEnd - 1));
+                    TypeReference[] typeArgs = typeArguments.toArray(TypeReference[]::new);
+                    return new ParameterizedSingleTypeReference(compoundName[0], typeArgs, 0, toPos(sourceStart, sourceEnd - 1));
                 }
             } else {
+                long[] poss = positionsFor(compoundName, sourceStart, sourceEnd);
                 if (typeArguments == null) {
-                    TypeReference t = new QualifiedTypeReference(compoundName, positionsFor(compoundName, sourceStart, sourceEnd));
+                    TypeReference t = new QualifiedTypeReference(compoundName, poss);
                     if (!checkGenerics) t.bits |= ASTNode.IgnoreRawTypeCheck;
                     return t;
                 } else {
-                    // TODO: Support individual component parameterization: A<X>.B<Y>
                     TypeReference[][] types = new TypeReference[compoundName.length][];
-                    types[compoundName.length - 1] = typeArguments.toArray(new TypeReference[typeArguments.size()]);
-                    return new ParameterizedQualifiedTypeReference(compoundName, types, 0, positionsFor(compoundName, sourceStart, sourceEnd));
+                    if (classNode.getNodeMetaData("outer.class") instanceof ClassNode oc) {
+                        TypeReference ocr = createTypeReferenceForClassNode(oc, startOffset(oc), Math.max(endOffset(oc), -1));
+                        TypeReference[][] ta = ocr.getTypeArguments();
+                        if (ta != null) {
+                            System.arraycopy(ta, 0, types, 0, types.length - 1);
+                        }
+                        if (ocr instanceof QualifiedTypeReference outers) {
+                            System.arraycopy(outers.sourcePositions, 0, poss, 0, poss.length - 1);
+                        } else {
+                            poss[compoundName.length - 2] = toPos(ocr.sourceStart, ocr.sourceEnd);
+                        }
+                        poss[compoundName.length - 1] = toPos(sourceStart, sourceEnd - 1);
+                    }
+                    types[compoundName.length - 1] = typeArguments.toArray(TypeReference[]::new);
+                    return new ParameterizedQualifiedTypeReference(compoundName, types, 0, poss);
                 }
             }
         }

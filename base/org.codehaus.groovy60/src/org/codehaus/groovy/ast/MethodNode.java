@@ -29,6 +29,7 @@ import static org.apache.groovy.ast.tools.ClassNodeUtils.formatTypeName;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.methodDescriptor;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.toGenericTypesString;
 import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
+import static groovyjarjarasm.asm.Opcodes.ACC_BRIDGE;
 import static groovyjarjarasm.asm.Opcodes.ACC_FINAL;
 import static groovyjarjarasm.asm.Opcodes.ACC_PRIVATE;
 import static groovyjarjarasm.asm.Opcodes.ACC_PROTECTED;
@@ -333,6 +334,18 @@ public class MethodNode extends AnnotatedNode {
      */
     public boolean isPackageScope() {
         return (modifiers & (ACC_PUBLIC | ACC_PRIVATE | ACC_PROTECTED)) == 0;
+    }
+
+    /**
+     * Checks whether this method is a compiler-generated bridge.
+     * Bridge methods are adapters inserted for covariant overrides and
+     * generic type erasure.
+     *
+     * @return true if this method has the bridge modifier
+     * @since 6.0.0
+     */
+    public boolean isBridge() {
+        return (modifiers & ACC_BRIDGE) != 0;
     }
 
     /**

@@ -126,11 +126,15 @@ public class ErrorCollector implements Serializable {
      * Adds a non-fatal error to the message set, which may cause a failure if the error threshold is exceeded.
      * The message is not required to have a source line and column specified, but it is best practice to try
      * and include that information.
+     * <p>
+     * A {@link CompilerConfiguration#getTolerance() tolerance} of zero or less means unlimited:
+     * every error is collected and the threshold never triggers a failure (GROOVY-12306).
      */
     public void addError(final Message message) throws CompilationFailedException {
         addErrorAndContinue(message);
 
-        if (errors != null && errors.size() >= configuration.getTolerance()) {
+        int tolerance = configuration.getTolerance();
+        if (tolerance > 0 && errors != null && errors.size() >= tolerance) {
             failIfErrors();
         }
     }
@@ -341,30 +345,11 @@ public class ErrorCollector implements Serializable {
     //---------------------------------------------------------------------------
     // OUTPUT
 
-    private void write(final PrintWriter writer, final Janitor janitor, final List<? extends Message> messages, final String txt) {
-        if (messages == null || messages.isEmpty()) return;
-
-        for (Message message : messages) {
-            message.write(writer, janitor);
-            if (configuration.getDebug() && (message instanceof SyntaxErrorMessage)) {
-                ((SyntaxErrorMessage) message).getCause().printStackTrace(writer);
-            }
-            writer.println();
-        }
-
-        writer.print(messages.size());
-        writer.print(" " + txt);
-        if (messages.size() > 1) {
-            writer.print("s");
-        }
-        writer.println();
-    }
-
     /**
-     * Writes error messages to the specified PrintWriter.
+     * Writes the warnings, then the errors, to the specified PrintWriter in the
+     * configured {@link ErrorFormat}.
      */
     public void write(final PrintWriter writer, final Janitor janitor) {
-        write(writer, janitor, warnings, "warning");
-        write(writer, janitor, errors, "error");
+        configuration.getErrorFormat().write(writer, janitor, warnings, errors, configuration.getDebug());
     }
 }

@@ -1337,12 +1337,6 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 */
 	Result visitKeywords(@NotNull GroovyParser.KeywordsContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link GroovyParser#nls}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	Result visitNls(@NotNull GroovyParser.NlsContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link GroovyParser#sep}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

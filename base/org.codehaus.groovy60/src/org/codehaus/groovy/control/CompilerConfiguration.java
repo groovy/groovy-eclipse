@@ -184,6 +184,14 @@ public class CompilerConfiguration {
     public static final String DEFAULT_SOURCE_ENCODING = "UTF-8";
 
     /**
+     * The default number of non-fatal errors tolerated before compilation is aborted.
+     *
+     * @see #setTolerance(int)
+     * @since 6.0.0
+     */
+    public static final int DEFAULT_TOLERANCE = 10;
+
+    /**
      *  A convenience for getting a default configuration.  Do not modify it!
      *  See {@link #CompilerConfiguration(Properties)} for an example on how to
      *  make a suitable copy to modify.  But if you're really starting from a
@@ -328,6 +336,11 @@ public class CompilerConfiguration {
 
         @Override
         public void setTargetDirectory(final File directory) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setErrorFormat(final ErrorFormat errorFormat) {
             throw new UnsupportedOperationException();
         }
 
@@ -479,13 +492,24 @@ public class CompilerConfiguration {
 
     /**
      * The target compile phase: the last phase to be processed when
-     * {@link CompilationUnit#compile()} is called without an explicit phase
-     * (GROOVY-12204). Defaults to {@link Phases#ALL}. An earlier phase, such as
-     * {@link Phases#INSTRUCTION_SELECTION}, gives a check-only compilation
-     * which reports parse, resolution, and static type-checking errors without
-     * generating class files.
+     * {@link CompilationUnit#compile()} is called without an explicit phase.
+     * Defaults to {@link Phases#ALL}.
+     * <p>
+     * {@link Phases#CLASS_GENERATION} gives a check-only compilation: every check runs,
+     * but the class files are never written, because that happens in {@link Phases#OUTPUT}.
+     * This is what {@code groovyc --check} selects.
+     * <p>
+     * Earlier phases stop sooner and so report fewer errors. {@link Phases#INSTRUCTION_SELECTION}
+     * reports parse, resolution, and static type-checking errors, but not those raised
+     * during class verification or bytecode generation.
      */
     private int targetPhase = Phases.ALL;
+
+    /**
+     * How compilation errors and warnings are rendered (GROOVY-12312).
+     * Defaults to {@link ErrorFormat#FULL}.
+     */
+    private ErrorFormat errorFormat = ErrorFormat.FULL;
 
     private final List<CompilationCustomizer> compilationCustomizers = new LinkedList<>();
 
@@ -620,6 +644,7 @@ public class CompilerConfiguration {
         setMinimumRecompilationInterval(configuration.getMinimumRecompilationInterval());
         setTargetBytecode(configuration.getTargetBytecode());
         setTargetPhase(configuration.getTargetPhase());
+        setErrorFormat(configuration.getErrorFormat());
         setPreviewFeatures(configuration.isPreviewFeatures());
         setDefaultScriptExtension(configuration.getDefaultScriptExtension());
         setSourceEncoding(configuration.getSourceEncoding());
@@ -740,6 +765,9 @@ public class CompilerConfiguration {
         text = configuration.getProperty("groovy.parameters");
         if (text != null) setParameters(Boolean.parseBoolean(text));
 
+        text = configuration.getProperty("groovy.forin.per.iteration.capture");
+        if (text != null) setForInPerIterationCaptureEnabled(Boolean.parseBoolean(text));
+
         text = configuration.getProperty("groovy.preview.features");
         if (text != null) setPreviewFeatures(Boolean.parseBoolean(text));
 
@@ -752,8 +780,8 @@ public class CompilerConfiguration {
         text = configuration.getProperty("groovy.output.debug");
         if (text != null) setDebug(Boolean.parseBoolean(text));
 
-        numeric = 10;
-        text = configuration.getProperty("groovy.errors.tolerance", "10");
+        numeric = DEFAULT_TOLERANCE;
+        text = configuration.getProperty("groovy.errors.tolerance", Integer.toString(DEFAULT_TOLERANCE));
         try {
             numeric = Integer.parseInt(text);
         } catch (NumberFormatException e) {
@@ -939,7 +967,9 @@ public class CompilerConfiguration {
     }
 
     /**
-     * Returns the requested error tolerance.
+     * Returns the requested error tolerance. Zero or less means unlimited.
+     *
+     * @see #setTolerance(int)
      */
     public int getTolerance() {
         return this.tolerance;
@@ -948,7 +978,11 @@ public class CompilerConfiguration {
     /**
      * Sets the error tolerance, which is the number of
      * non-fatal errors (per unit) that should be tolerated before
-     * compilation is aborted.
+     * compilation is aborted. Defaults to {@value #DEFAULT_TOLERANCE}.
+     * <p>
+     * A value of zero or less means unlimited: every error is collected and
+     * reported, and compilation is never cut short by the error count alone
+     * (GROOVY-12306).
      */
     public void setTolerance(final int tolerance) {
         this.tolerance = tolerance;
@@ -1362,8 +1396,8 @@ public class CompilerConfiguration {
 
     /**
      * Gets the target compile phase: the last phase to be processed when
-     * {@link CompilationUnit#compile()} is called without an explicit phase
-     * (GROOVY-12204). Defaults to {@link Phases#ALL}.
+     * {@link CompilationUnit#compile()} is called without an explicit phase.
+     * Defaults to {@link Phases#ALL}.
      *
      * @return the target phase number, one of the {@link Phases} constants
      * @see #setTargetPhase(int)
@@ -1375,15 +1409,12 @@ public class CompilerConfiguration {
 
     /**
      * Sets the target compile phase: the last phase to be processed when
-     * {@link CompilationUnit#compile()} is called without an explicit phase
-     * (GROOVY-12204). Values outside
-     * the range of the {@link Phases} constants are clamped into range.
-     * Setting {@link Phases#INSTRUCTION_SELECTION} gives a check-only
-     * compilation, as used by the {@code groovyc --check} option: parse,
-     * resolution, and static type-checking errors are reported but no class
-     * files are generated. Callers that pass an explicit phase to
-     * {@link CompilationUnit#compile(int)}, such as the AST browser, are
-     * unaffected by this setting.
+     * {@link CompilationUnit#compile()} is called without an explicit phase.
+     * Values outside the range of the {@link Phases} constants are clamped into range.
+     * Setting {@link Phases#CLASS_GENERATION} gives a check-only
+     * compilation, as used by the {@code groovyc --check} option.
+     * Callers that pass an explicit phase to {@link CompilationUnit#compile(int)},
+     * such as the AST browser, are unaffected by this setting.
      *
      * @param targetPhase the target phase number, one of the {@link Phases} constants
      * @see #getTargetPhase()
@@ -1403,5 +1434,30 @@ public class CompilerConfiguration {
      */
     public void setTargetPhase(final CompilePhase targetPhase) {
         setTargetPhase(targetPhase.getPhaseNumber());
+    }
+
+    /**
+     * Returns how compilation errors and warnings are rendered.
+     *
+     * @return the error format, never {@code null}
+     * @see #setErrorFormat(ErrorFormat)
+     * @since 6.0.0
+     */
+    public ErrorFormat getErrorFormat() {
+        return this.errorFormat;
+    }
+
+    /**
+     * Sets how compilation errors and warnings are rendered. {@link ErrorFormat#FULL},
+     * the default, keeps the human-oriented rendering with the offending source line
+     * and a caret. {@link ErrorFormat#SHORT} emits one
+     * {@code file:line:column: severity: message} line per diagnostic, which suits
+     * editors, CI log parsers, and other tools (GROOVY-12312).
+     *
+     * @param errorFormat the error format; {@code null} selects the default
+     * @since 6.0.0
+     */
+    public void setErrorFormat(final ErrorFormat errorFormat) {
+        this.errorFormat = (errorFormat != null ? errorFormat : ErrorFormat.FULL);
     }
 }

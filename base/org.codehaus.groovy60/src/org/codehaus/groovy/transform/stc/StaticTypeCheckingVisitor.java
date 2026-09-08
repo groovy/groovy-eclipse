@@ -116,8 +116,10 @@ import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.ResolveVisitor;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.control.messages.WarningMessage;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.TokenUtil;
 import org.codehaus.groovy.transform.RecordTypeASTTransformation;
@@ -567,14 +569,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             typeCheckingContext.pushEnclosingClassNode(node);
             Set<MethodNode> oldSet = typeCheckingContext.alreadyVisitedMethods;
             typeCheckingContext.alreadyVisitedMethods = new LinkedHashSet<>();
-
-            doWithTypeCheckingExtensions(node, super::visitClass);
-            node.getInnerClasses().forEachRemaining(this::visitClass);
-
-            typeCheckingContext.alreadyVisitedMethods = oldSet;
-            typeCheckingContext.popEnclosingClassNode();
-            if (type != null) {
-                typeCheckingContext.popErrorCollector();
+            boolean oldStatic = typeCheckingContext.isInStaticContext;
+            if (node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous()) {
+                typeCheckingContext.isInStaticContext = false; // AIC body is an instance context
+            }
+            try {
+                doWithTypeCheckingExtensions(node, super::visitClass);
+                node.getInnerClasses().forEachRemaining(this::visitClass);
+            } finally {
+                typeCheckingContext.isInStaticContext = oldStatic;
+                typeCheckingContext.alreadyVisitedMethods = oldSet;
+                typeCheckingContext.popEnclosingClassNode();
+                if (type != null) {
+                    typeCheckingContext.popErrorCollector();
+                }
             }
 
             node.putNodeMetaData(INFERRED_TYPE, node);
@@ -861,6 +869,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         boolean readOnly = !typeCheckingContext.isTargetOfEnclosingAssignment(expression);
         if (existsProperty(expression, readOnly)
                 || extension.handleUnresolvedProperty(expression)) {
+            if (readOnly) { // GROOVY-12305: record narrowed type of instanceof-guarded receiver for later use
+                ClassNode temporaryType = getInferredTypeFromTempInfo(expression, expression.getNodeMetaData(INFERRED_TYPE));
+                if (temporaryType != null && !isObjectType(temporaryType)) {
+                    expression.putNodeMetaData(INFERRED_TYPE, temporaryType);
+                }
+            }
             return; // resolved or excused
         }
         recordMissingProperty(expression);
@@ -878,6 +892,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private void recordMissingProperty(final PropertyExpression expression) {
+        FieldNode inaccessibleField = expression.getNodeMetaData("inaccessible field");
+        if (inaccessibleField != null) { // GROOVY-12314: the property exists but Java access rules reject it
+            addStaticTypeError("Cannot access field: " + inaccessibleField.getName() + " of class: " + prettyPrintTypeName(inaccessibleField.getDeclaringClass())
+                    + " from class: " + prettyPrintTypeName(typeCheckingContext.getEnclosingClassNode()), expression.getLineNumber() > 0 ? expression : expression.getProperty());
+            return;
+        }
+
         var objectExpression = expression.getObjectExpression();
         var objectExpressionType = findCurrentInstanceOfClass(objectExpression, getType(objectExpression));
 
@@ -1412,10 +1433,18 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
      */
     protected void inferDiamondType(final ConstructorCallExpression cce, final ClassNode lType) {
         ClassNode cceType = cce.getType(), inferredType = lType;
+        boolean isAIC = cce.isUsingAnonymousInnerClass();
+        if (isAIC) {
+            ClassNode diamond = GenericsUtils.diamondTargetOfAnonymousClass(cce.getType());
+            if (diamond != null) cceType = diamond;
+        }
         // check if constructor call expression makes use of the diamond operator
         if (cceType.getGenericsTypes() != null && cceType.getGenericsTypes().length == 0) {
             ArgumentListExpression argumentList = InvocationWriter.makeArgumentList(cce.getArguments());
             ConstructorNode constructor = cce.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
+            if (isAIC && constructor != null && constructor.getDeclaringClass() != cceType.redirect()) {
+                constructor = matchingConstructor(cceType.redirect(), argumentList.getExpressions().size());
+            }
             if (!argumentList.getExpressions().isEmpty() && constructor != null) {
                 ClassNode type = GenericsUtils.parameterizeType(cceType, cceType);
                 type = inferReturnTypeGenerics(type, constructor, argumentList);
@@ -1442,8 +1471,16 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                 inferredType = getCombinedBoundType(inferredType.getGenericsTypes()[0]);
             }
             adjustGenerics(inferredType, cceType);
-            storeType(cce, cceType);
+            storeType(cce, isAIC ? cce.getType() : cceType);
         }
+    }
+
+    private static ConstructorNode matchingConstructor(final ClassNode type, final int argumentCount) {
+        if (type == null || type.isInterface()) return null;
+        for (ConstructorNode ctor : type.getDeclaredConstructors()) {
+            if (ctor.getParameters().length == argumentCount) return ctor;
+        }
+        return null;
     }
 
     private void adjustGenerics(final ClassNode source, final ClassNode target) {
@@ -1957,6 +1994,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
         if (leftExpressionType.isUsingGenerics()
                 && !missesGenericsTypes(rightExpressionType)
                 && !(rightExpression instanceof ClosureExpression) // GROOVY-10277
+                && !(rightExpression instanceof ConstructorCallExpression && ((ConstructorCallExpression) rightExpression).isUsingAnonymousInnerClass()) // GROOVY-12319: AIC type is the generated class, not the diamond super type
                 && !isNullConstant(rightExpression) && !UNKNOWN_PARAMETER_TYPE.equals(rightExpressionType)
                 && !GenericsUtils.buildWildcardType(leftExpressionType).isCompatibleWith(wrapTypeIfNecessary(rightExpressionType)))
             addStaticTypeError("Incompatible generic argument types. Cannot assign " + prettyPrintType(rightExpressionType) + " to: " + prettyPrintType(leftExpressionType), rightExpression);
@@ -2451,6 +2489,21 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
         return false;
     }
 
+    /**
+     * Determines if the given type itself may be referenced from the accessor
+     * (JLS 6.6.1): a member of an inaccessible type is out of reach no matter
+     * what the member's own modifiers say, because resolving any reference to
+     * the type fails first. A nested type is accessible when its enclosing
+     * type is and its own modifiers admit the accessor.
+     */
+    private static boolean hasAccessToClass(final ClassNode accessor, final ClassNode type) {
+        ClassNode outer = type.getOuterClass();
+        if (outer != null && !hasAccessToClass(accessor, outer)) {
+            return false;
+        }
+        return hasAccessToMember(accessor, outer != null ? outer : type, type.getModifiers());
+    }
+
     private ClassNode getTypeForMultiValueExpression(final ClassNode compositeType, final Expression prop) {
         GenericsType[] gts = compositeType.getGenericsTypes();
         ClassNode itemType = (gts != null && gts.length == 1 ? getCombinedBoundType(gts[0]) : OBJECT_TYPE);
@@ -2562,19 +2615,27 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
      * Determines if the field can back the given property (or attribute)
      * expression: accessible by Java rules, or admitted by the receiver-type
      * leniency (GROOVY-7300, GROOVY-11358) that models dynamic Groovy's
-     * permissive private access. Since GROOVY-12290 that leniency no longer
-     * admits plain property syntax to a private field of a foreign nest — a
+     * permissive private access. Since GROOVY-12290 (private) and GROOVY-12314
+     * (package-private, protected) that leniency no longer admits plain property
+     * syntax to a field of a foreign nest that Java rules would reject — a
      * direct field access that static compilation cannot honour (no access
      * bridge exists). The deliberate dynamic escape hatches remain: attribute
      * access (.@), and closure bodies (GROOVY-9195) — including delegate-resolved
      * access — whose property dispatch stays dynamic-capable under static compilation.
      */
     private boolean isFieldAccessible(final FieldNode field, final ClassNode receiver, final PropertyExpression expression, final String delegationData) {
+        // GROOVY-12310: when the qualifying type itself is out of reach (e.g. a public
+        // enum constant of a package-private nested enum), no static emission can name
+        // it -- the JVM rejects the class resolution before it looks at the member
+        if (!hasAccessToClass(typeCheckingContext.getEnclosingClassNode(), receiver)) {
+            return false;
+        }
         boolean superField = isSuperExpression(expression.getObjectExpression());
         boolean exactReceiver = (!superField && receiver.equals(field.getDeclaringClass()) && !field.getDeclaringClass().isAbstract()); // GROOVY-7300, GROOVY-11358
-        if (exactReceiver && field.isPrivate() && delegationData == null
+        if (exactReceiver && delegationData == null
                 && typeCheckingContext.getEnclosingClosure() == null
                 && !(expression instanceof AttributeExpression)
+                && !hasAccessToMember(typeCheckingContext.getEnclosingClassNode(), field.getDeclaringClass(), field.getModifiers()) // GROOVY-12314
                 && !inSameNest(field.getDeclaringClass(), typeCheckingContext.getEnclosingClassNode())) {
             exactReceiver = false; // GROOVY-12290
         }
@@ -2587,7 +2648,15 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
         if (!accessible) {
             if (expressionToStoreOn instanceof AttributeExpression) {
                 addStaticTypeError("Cannot access field: " + field.getName() + " of class: " + prettyPrintTypeName(field.getDeclaringClass()), expressionToStoreOn.getProperty());
-            } else if (!field.isProtected()) { // private or package-private
+            } else { // GROOVY-12314: fall through to accessor, extension or map/list resolution
+                // remember a rejected package-private or protected field declared by the
+                // receiver's own class: if nothing else resolves the property, the error
+                // reports the access violation rather than a missing property. A private
+                // field stays hidden (GROOVY-12290), and an inaccessible inherited field is
+                // not a member of the subclass (JLS 8.2; GROOVY-9093, GROOVY-9293).
+                if (!field.isPrivate() && receiver.equals(field.getDeclaringClass())) {
+                    expressionToStoreOn.putNodeMetaData("inaccessible field", field);
+                }
                 return false;
             }
         }
@@ -3082,65 +3151,95 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
             typeCheckingContext.getEnclosingClosure().addReturnType(returnType);
     }
 
-    /** {@inheritDoc} */
     @Override
     public void visitConstructorCallExpression(final ConstructorCallExpression call) {
-        if (!extension.beforeMethodCall(call)) {
-            ClassNode receiver;
-            if (call.isThisCall()) {
-                receiver = makeThis();
-            } else if (call.isSuperCall()) {
-                receiver = makeSuper();
-            } else {
-                receiver = call.getType();
-            }
-            Expression arguments = call.getArguments();
-            ArgumentListExpression argumentList = InvocationWriter.makeArgumentList(arguments);
-
-            // visit functional arguments *after* method has been chosen
-            visitMethodCallArguments(receiver, argumentList, false, null);
-            final ClassNode[] argumentTypes = getArgumentTypes(argumentList);
-
-            MethodNode ctor;
-            if (looksLikeNamedArgConstructor(receiver, argumentTypes)
-                    && findMethod(receiver, "<init>", argumentTypes).isEmpty()
-                    && findMethod(receiver, "<init>", init(argumentTypes)).size() == 1) {
-                ctor = typeCheckMapConstructor(call, receiver, arguments);
-            } else {
-                ctor = findMethodOrFail(call, receiver, "<init>", argumentTypes);
-                visitMethodCallArguments(receiver, argumentList, true, ctor);
-                if (ctor != null) {
-                    Parameter[] parameters = ctor.getParameters();
-                    GenericsType[] typeParameters = ctor.getDeclaringClass().getGenericsTypes();
-                    if (typeParameters != null) { // GROOVY-10283, GROOVY-10316, GROOVY-10482, GROOVY-10624, GROOVY-10698
-                        Map<GenericsTypeName, GenericsType> context = extractGenericsConnectionsFromArguments(typeParameters, parameters, argumentList, receiver.getGenericsTypes());
-                        if (!context.isEmpty()) parameters = Arrays.stream(parameters).map(p -> new Parameter(applyGenericsContext(context, p.getType()), p.getName())).toArray(Parameter[]::new);
-                    }
-                    resolvePlaceholdersFromImplicitTypeHints(argumentTypes, argumentList, parameters);
-                    typeCheckMethodsWithGenericsOrFail(receiver, argumentTypes, ctor, call);
-                    checkForbiddenSpreadArgument(argumentList, parameters);
+        typeCheckingContext.pushEnclosingMethodCall(call);
+        try {
+            if (!extension.beforeMethodCall(call)) {
+                ClassNode receiver;
+                if (call.isThisCall()) {
+                    receiver = makeThis();
+                } else if (call.isSuperCall()) {
+                    receiver = makeSuper();
                 } else {
-                    checkForbiddenSpreadArgument(argumentList);
+                    receiver = call.getType();
+                }
+                Expression arguments = call.getArguments();
+                ArgumentListExpression argumentList = InvocationWriter.makeArgumentList(arguments);
+
+                // visit functional arguments *after* method has been chosen
+                visitMethodCallArguments(receiver, argumentList, false, null);
+                final ClassNode[] argumentTypes = getArgumentTypes(argumentList);
+
+                MethodNode ctor;
+                if (looksLikeNamedArgConstructor(receiver, argumentTypes)
+                        && findMethod(receiver, "<init>", argumentTypes).isEmpty()
+                        && findMethod(receiver, "<init>", init(argumentTypes)).size() == 1) {
+                    ctor = typeCheckMapConstructor(call, receiver, arguments);
+                } else {
+                    ctor = findMethodOrFail(call, receiver, "<init>", argumentTypes);
+                    visitMethodCallArguments(receiver, argumentList, true, ctor);
+                    if (ctor != null) {
+                        Parameter[] parameters = ctor.getParameters();
+                        GenericsType[] typeParameters = ctor.getDeclaringClass().getGenericsTypes();
+                        if (typeParameters != null) { // GROOVY-10283, GROOVY-10316, GROOVY-10482, GROOVY-10624, GROOVY-10698
+                            Map<GenericsTypeName, GenericsType> context = extractGenericsConnectionsFromArguments(typeParameters, parameters, argumentList, receiver.getGenericsTypes());
+                            if (!context.isEmpty()) parameters = Arrays.stream(parameters).map(p -> new Parameter(applyGenericsContext(context, p.getType()), p.getName())).toArray(Parameter[]::new);
+                        }
+                        resolvePlaceholdersFromImplicitTypeHints(argumentTypes, argumentList, parameters);
+                        typeCheckMethodsWithGenericsOrFail(receiver, argumentTypes, ctor, call);
+                        checkForbiddenSpreadArgument(argumentList, parameters);
+                    } else {
+                        checkForbiddenSpreadArgument(argumentList);
+                    }
+                }
+                if (ctor != null) {
+                    storeTargetMethod(call, ctor);
+                    if (call.isUsingGenerics()) {
+                        GenericsType[] typeParameters = ctor.getGenericsTypes();
+                        if (typeParameters != null && typeParameters.length != call.getGenericsTypes().length) {
+                            addStaticTypeError("Incorrect number of constructor type arguments; required " + typeParameters.length, call);
+                        }
+                    }
                 }
             }
-            if (ctor != null) storeTargetMethod(call, ctor);
-        }
 
-        // GROOVY-9327: check for AIC in STC method with non-STC enclosing class
-        if (call.isUsingAnonymousInnerClass()) {
-            Set<MethodNode> methods = typeCheckingContext.methodsToBeVisited;
-            if (!methods.isEmpty()) { // indicates specific methods have STC
-                typeCheckingContext.methodsToBeVisited = Collections.emptySet();
-
+            // GROOVY-9327: check for AIC in STC method with non-STC enclosing class
+            if (call.isUsingAnonymousInnerClass()) {
                 ClassNode anonType = call.getType();
-                visitClass(anonType); // visit anon. inner class inline with method
-                anonType.putNodeMetaData(StaticTypeCheckingVisitor.class, Boolean.TRUE);
+                ClassNode diamondTarget = GenericsUtils.diamondTargetOfAnonymousClass(anonType);
+                if (diamondTarget != null && diamondTarget.getGenericsTypes() != null && diamondTarget.getGenericsTypes().length == 0) {
+                    BinaryExpression enclosingBinaryExpression = typeCheckingContext.getEnclosingBinaryExpression();
+                    ClassNode lType = null;
+                    if (enclosingBinaryExpression != null && isAssignment(enclosingBinaryExpression.getOperation().getType())) {
+                        lType = getType(enclosingBinaryExpression.getLeftExpression());
+                    }
+                    if (lType != null) { // assignment target type is the primary JLS 15.9.3 witness
+                        inferDiamondType(call, lType);
+                    }
+                    if (diamondTarget.getGenericsTypes() != null && diamondTarget.getGenericsTypes().length == 0) {
+                        // no target yet (or it was not enough): recover T from overrides so the AIC body is checked against a filled diamond
+                        Map<String, ClassNode> spec = GenericsUtils.inferGenericsSpecFromOverrides(anonType, diamondTarget, Collections.emptyMap());
+                        if (!spec.isEmpty()) {
+                            GenericsUtils.applyGenericsSpec(diamondTarget, spec);
+                        }
+                    }
+                }
+                Set<MethodNode> methods = typeCheckingContext.methodsToBeVisited;
+                if (!methods.isEmpty()) { // indicates specific methods have STC
+                    typeCheckingContext.methodsToBeVisited = Collections.emptySet();
 
-                typeCheckingContext.methodsToBeVisited = methods;
+                    visitClass(anonType); // visit anon. inner class inline with method
+                    anonType.putNodeMetaData(StaticTypeCheckingVisitor.class, Boolean.TRUE);
+
+                    typeCheckingContext.methodsToBeVisited = methods;
+                }
             }
-        }
 
-        extension.afterMethodCall(call);
+            extension.afterMethodCall(call);
+        } finally {
+            typeCheckingContext.popEnclosingMethodCall();
+        }
     }
 
     private boolean looksLikeNamedArgConstructor(final ClassNode receiver, final ClassNode[] argumentTypes) {
@@ -3933,7 +4032,22 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                 boolean typeParametersResolved = false;
                 // first check for explicit type arguments
                 if (isConstructor) {
-                    typeParametersResolved = hasTypeArguments;
+                    Expression emc = typeCheckingContext.getEnclosingMethodCall();
+                    if (emc instanceof ConstructorCallExpression cce) {
+                        GenericsType[] typeArguments = cce.getGenericsTypes();
+                        if (typeArguments != null) {
+                            GenericsType[] methodTypeParameters = method.getGenericsTypes();
+                            if (methodTypeParameters != null && methodTypeParameters.length == typeArguments.length) {
+                                typeParametersResolved = true;
+                                for (int i = 0; i < methodTypeParameters.length; i += 1) {
+                                    context.put(new GenericsTypeName(methodTypeParameters[i].getName()), typeArguments[i]);
+                                }
+                            }
+                        }
+                    }
+                    if (!typeParametersResolved) {
+                        typeParametersResolved = hasTypeArguments;
+                    }
                 } else {
                     Expression emc = typeCheckingContext.getEnclosingMethodCall();
                     if (emc instanceof MethodCallExpression mce) {
@@ -4165,6 +4279,10 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
         GenericsType[] typeArguments = null;
         Expression emc = typeCheckingContext.getEnclosingMethodCall(); // GROOVY-7789, GROOVY-11168
         if (emc instanceof MethodCallExpression call) {
+            if (arguments == call.getArguments() || InvocationWriter.makeArgumentList(arguments).getExpressions().stream().anyMatch(arg ->
+                    arg instanceof ClosureExpression && DefaultGroovyMethods.contains(InvocationWriter.makeArgumentList(call.getArguments()), arg)))
+                typeArguments = call.getGenericsTypes();
+        } else if (emc instanceof ConstructorCallExpression call) {
             if (arguments == call.getArguments() || InvocationWriter.makeArgumentList(arguments).getExpressions().stream().anyMatch(arg ->
                     arg instanceof ClosureExpression && DefaultGroovyMethods.contains(InvocationWriter.makeArgumentList(call.getArguments()), arg)))
                 typeArguments = call.getGenericsTypes();
@@ -4562,9 +4680,9 @@ out:                if (mn.size() != 1) {
                               case "getThisObject":
                                 returnType = makeThis();
                             }
-                        } else if (isUsingGenericsOrIsArrayUsingGenerics(returnType)) {
+                        } else if (returnType.isGenericsPlaceHolder() || isUsingGenericsOrIsArrayUsingGenerics(returnType)) {
                             ClassNode irtg = inferReturnTypeGenerics(chosenReceiver.getType(), targetMethod, callArguments, call.getGenericsTypes());
-                            if (irtg != null && implementsInterfaceOrIsSubclassOf(irtg, returnType))
+                            if (irtg != null && (returnType.isGenericsPlaceHolder() || implementsInterfaceOrIsSubclassOf(irtg, returnType)))
                                 returnType = irtg;
                         }
                         // GROOVY-7106, GROOVY-7274, GROOVY-8909, GROOVY-8961, GROOVY-9734, GROOVY-9844, GROOVY-9915, et al.
@@ -5646,6 +5764,8 @@ trying: for (ClassNode[] signature : signatures) {
             }
         }
 
+        cn = withRareTypeFromOrigin(exp, cn);
+
         ClassNode oldValue = (ClassNode) exp.putNodeMetaData(INFERRED_TYPE, cn);
         if (oldValue != null) {
             // this may happen when a variable declaration type is wider than the subsequent assignment values
@@ -5680,6 +5800,29 @@ trying: for (ClassNode[] signature : signatures) {
                 pushInstanceOfTypeInfo(var, classX(VOID_TYPE));
             }
         }
+    }
+
+    /**
+     * Rare types ({@code Outer<T>.Inner}) store the enclosing parameterization
+     * on the origin type. Inference often produces a redirect of {@code Inner}
+     * without that field; copy it at the {@link #storeType} write site so
+     * {@link #getType} does not have to reconstruct it.
+     */
+    private static ClassNode withRareTypeFromOrigin(final Expression exp, final ClassNode cn) {
+        if (cn == null || cn.getOuterClassType() != null) {
+            return cn;
+        }
+        ClassNode origin = null;
+        if (exp instanceof VariableExpression vexp) {
+            origin = vexp.getOriginType();
+        }
+        if (origin == null || origin.getOuterClassType() == null) {
+            return cn;
+        }
+        ClassNode copy = cn.getPlainNodeReference();
+        copy.setGenericsTypes(origin.getGenericsTypes());
+        copy.setOuterClassType(origin.getOuterClassType());
+        return copy;
     }
 
     /**
@@ -6089,7 +6232,7 @@ trying: for (ClassNode[] signature : signatures) {
      */
     protected boolean areCategoryMethodCalls(final List<MethodNode> foundMethods, final String name, final ClassNode[] args) {
         boolean category = false;
-        if ("use".equals(name) && args != null && args.length == 2 && args[1].equals(CLOSURE_TYPE)) {
+        if ("use".equals(name) && args != null && args.length >= 2 && args[args.length - 1].equals(CLOSURE_TYPE)) {
             category = true;
             for (MethodNode method : foundMethods) {
                 if (!isDefaultExtension(method)) {
@@ -7065,6 +7208,14 @@ out:    for (ClassNode type : todo) {
                 }
             }
             result = extractPlaceHolders(receiver, declaring);
+            ClassNode oc = receiver.getOuterClassType();
+            if (oc == null && argument instanceof VariableExpression vexp && vexp.getOriginType() != null) {
+                oc = vexp.getOriginType().getOuterClassType();
+            }
+            if (oc != null) {
+                Map<GenericsTypeName, GenericsType> outerPlaceHolders = extractPlaceHolders(oc, oc.redirect());
+                outerPlaceHolders.forEach(result::putIfAbsent); // inner type parameters win over outer
+            }
             if (!result.isEmpty()) Optional.ofNullable(method.getGenericsTypes()).ifPresent(methodGenerics ->
                 Arrays.stream(methodGenerics).map(gt -> new GenericsTypeName(gt.getName())).forEach(result::remove)); // GROOVY-10322
         }
@@ -7140,7 +7291,17 @@ out:    for (ClassNode type : todo) {
     public void addError(final String msg, final ASTNode node) {
         Long err = ((long) node.getLineNumber()) << 16 + node.getColumnNumber();
         if ((DEBUG_GENERATED_CODE && node.getLineNumber() < 0) || !typeCheckingContext.reportedErrors.contains(err)) {
-            typeCheckingContext.getErrorCollector().addErrorAndContinue(msg + '\n', node, getSourceUnit());
+            SourceUnit source = getSourceUnit();
+            ErrorCollector collector = typeCheckingContext.getErrorCollector();
+            Message message = Message.create(new SyntaxException(msg + '\n', node), source);
+            // GROOVY-12306: only the source unit's own collector enforces the error tolerance.
+            // The temporary collectors pushed for speculative checks must never bail out, as
+            // their errors are routinely discarded once a candidate is ruled in or out.
+            if (collector == source.getErrorCollector()) {
+                collector.addError(message);
+            } else {
+                collector.addErrorAndContinue(message);
+            }
             typeCheckingContext.reportedErrors.add(err);
         }
     }
@@ -7195,7 +7356,7 @@ out:    for (ClassNode type : todo) {
      * Reports that categories cannot be used under static type checking.
      */
     protected void addCategoryMethodCallError(final Expression call) {
-        addStaticTypeError("Due to their dynamic nature, usage of categories is not possible with static type checking active", call);
+        addStaticTypeError("Due to their dynamic nature, usage of categories is not possible with static type checking active. Consider using an extension module, which is compatible with static type checking", call);
     }
 
     /**
@@ -7438,7 +7599,7 @@ out:    for (ClassNode type : todo) {
     }
 
     private ClassNode getInferredTypeFromTempInfo(final Expression expression, final ClassNode expressionType) {
-        if (expression instanceof VariableExpression && !isPrimitiveType(expressionType)) {
+        if ((expression instanceof VariableExpression || expression instanceof PropertyExpression) && !isPrimitiveType(expressionType)) {
             List<ClassNode> tempTypes = getTemporaryTypesForExpression(expression);
             if (!tempTypes.isEmpty()) {
                 ClassNode   superclass;

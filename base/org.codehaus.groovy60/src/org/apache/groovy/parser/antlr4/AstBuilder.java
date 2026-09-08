@@ -33,8 +33,8 @@ import groovyjarjarantlr4.v4.runtime.misc.Interval;
 import groovyjarjarantlr4.v4.runtime.misc.ParseCancellationException;
 import groovyjarjarantlr4.v4.runtime.tree.ParseTree;
 import groovyjarjarantlr4.v4.runtime.tree.TerminalNode;
+import org.apache.groovy.ast.tools.TypeUseUtils;
 import org.apache.groovy.parser.antlr4.internal.DescriptiveErrorStrategy;
-import org.apache.groovy.parser.antlr4.internal.atnmanager.AtnManager;
 import org.apache.groovy.parser.antlr4.util.PositionConfigureUtils;
 import org.apache.groovy.parser.antlr4.util.StringUtils;
 import org.apache.groovy.util.Maps;
@@ -275,13 +275,36 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         GroovyParserRuleContext result;
 
         try {
-            // parsing have to wait util clearing is complete.
-            AtnManager.READ_LOCK.lock();
-            try {
+            /* GRECLIPSE edit
+            // an over-limit DFA cache is replaced rather than cleared in place, so parsing
+            // proceeds on its own ATN without coordinating with other parsers
+            final TokenStream tokenStream = parser.getInputStream();
+            if (errorRecovery) {
+                // Recovery needs LL + listeners so every syntax error is reported.
+                // Skip SLL: recovering under SLL can "succeed" with a degraded tree
+                // and never re-run LL.
+            */
                 result = buildCST(PredictionMode.LL);
-            } finally {
-                AtnManager.READ_LOCK.unlock();
+            /* GRECLIPSE edit
+            } else if (SLL_THRESHOLD >= 0 && tokenStream.size() > SLL_THRESHOLD) {
+                // The more tokens to parse, the more possibility SLL will fail and the more parsing time will waste.
+                // The option `groovy.antlr4.sll.threshold` could be tuned for better parsing performance, but it is disabled by default.
+                // If the token count is greater than `groovy.antlr4.sll.threshold`, use LL directly.
+                result = buildCST(PredictionMode.LL);
+            } else {
+                try {
+                    result = buildCST(PredictionMode.SLL);
+                } catch (Throwable t) {
+                    // if some syntax error occurred in the lexer, no need to retry the powerful LL mode
+                    if (t instanceof GroovySyntaxError && GroovySyntaxError.LEXER == ((GroovySyntaxError) t).getSource()) {
+                        throw t;
+                    }
+
+                    tokenStream.seek(0);
+                    result = buildCST(PredictionMode.LL);
+                }
             }
+            */
         } catch (Throwable t) {
             throw convertException(t);
         }
@@ -2209,12 +2232,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         // GRECLIPSE add
         ASTNode nameNode = configureAST(new ConstantExpression(methodName), ctx.methodName());
         methodNode.setNameStart(nameNode.getStart()); methodNode.setNameEnd(nameNode.getEnd() - 1);
-        // roll back stop for abstract/interface methods
+        /* roll back stop for abstract/interface methods
         if (ctx.getStop().getType() == GroovyParser.NL) {
             methodNode.setLastLineNumber(last(ctx.nls()).getStart().getLine());
             methodNode.setLastColumnNumber(last(ctx.nls()).getStart().getCharPositionInLine() + 1);
             methodNode.setEnd(locationSupport.findOffset(methodNode.getLastLineNumber(), methodNode.getLastColumnNumber()));
         }
+        */
         Token rparen = ctx.formalParameters().RPAREN().getSymbol();
         methodNode.putNodeMetaData("rparen.offset", locationSupport.findOffset(rparen.getLine(), rparen.getCharPositionInLine() + 1));
         // GRECLIPSE end
@@ -3209,6 +3233,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         } else if (asBoolean(ctx.creator())) {
             CreatorContext creatorContext = ctx.creator();
             creatorContext.putNodeMetaData(ENCLOSING_INSTANCE_EXPRESSION, baseExpr);
+            if (asBoolean(ctx.nonWildcardTypeArguments())) {
+                creatorContext.putNodeMetaData(PATH_EXPRESSION_BASE_EXPR_GENERICS_TYPES, this.visitNonWildcardTypeArguments(ctx.nonWildcardTypeArguments()));
+            }
             return configureAST(this.visitCreator(creatorContext), ctx);
         } else if (asBoolean(ctx.indexPropertyArgs())) { // e.g. list[1, 3, 5]
             Tuple2<Token, Expression> tuple = this.visitIndexPropertyArgs(ctx.indexPropertyArgs());
@@ -3259,7 +3286,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             /* GRECLIPSE edit
             configureAST(argumentsExpr, ctx);
             */
-
             if (isInsideParentheses(baseExpr)) { // e.g. (obj.x)(), (obj.@x)()
                 return configureAST(createCallMethodCallExpression(baseExpr, argumentsExpr), ctx);
             }
@@ -3302,22 +3328,18 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                                 ctx);
                     }
 
-                    /* GRECLIPSE edit
-                    return configureAST(
-                            new ConstructorCallExpression(
-                                    SUPER_STR.equals(baseExprText)
-                                            ? ClassNode.SUPER
-                                            : ClassNode.THIS,
-                                    argumentsExpr
-                            ),
-                            ctx);
-                    */
                     ConstructorCallExpression constructorCallExpression = new ConstructorCallExpression(
-                            SUPER_STR.equals(baseExprText) ? ClassNode.SUPER : ClassNode.THIS, argumentsExpr);
+                            SUPER_STR.equals(baseExprText)
+                                    ? ClassNode.SUPER
+                                    : ClassNode.THIS,
+                            argumentsExpr
+                    );
+                    constructorCallExpression.setGenericsTypes(baseExpr.getNodeMetaData(PATH_EXPRESSION_BASE_EXPR_GENERICS_TYPES));
+                    // GRECLIPSE add
                     constructorCallExpression.setNameStart(baseExpr.getStart());
                     constructorCallExpression.setNameEnd(baseExpr.getEnd() - 1);
-                    return configureAST(constructorCallExpression, ctx);
                     // GRECLIPSE end
+                    return configureAST(constructorCallExpression, ctx);
                 }
 
                 MethodCallExpression methodCallExpression = this.createMethodCallExpression(baseExpr, argumentsExpr);
@@ -4239,17 +4261,28 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     @Override
     public Expression visitNewPrmrAlt(final NewPrmrAltContext ctx) {
+        if (asBoolean(ctx.nonWildcardTypeArguments())) {
+            ctx.creator().putNodeMetaData(PATH_EXPRESSION_BASE_EXPR_GENERICS_TYPES, this.visitNonWildcardTypeArguments(ctx.nonWildcardTypeArguments()));
+        }
         return configureAST(this.visitCreator(ctx.creator()), ctx);
     }
 
     @Override
     public VariableExpression visitThisPrmrAlt(final ThisPrmrAltContext ctx) {
-        return configureAST(new VariableExpression(ctx.THIS().getText()), ctx);
+        VariableExpression varExpr = configureAST(new VariableExpression(ctx.THIS().getText()), ctx);
+        if (asBoolean(ctx.nonWildcardTypeArguments())) {
+            varExpr.putNodeMetaData(PATH_EXPRESSION_BASE_EXPR_GENERICS_TYPES, this.visitNonWildcardTypeArguments(ctx.nonWildcardTypeArguments()));
+        }
+        return varExpr;
     }
 
     @Override
     public VariableExpression visitSuperPrmrAlt(final SuperPrmrAltContext ctx) {
-        return configureAST(new VariableExpression(ctx.SUPER().getText()), ctx);
+        VariableExpression varExpr = configureAST(new VariableExpression(ctx.SUPER().getText()), ctx);
+        if (asBoolean(ctx.nonWildcardTypeArguments())) {
+            varExpr.putNodeMetaData(PATH_EXPRESSION_BASE_EXPR_GENERICS_TYPES, this.visitNonWildcardTypeArguments(ctx.nonWildcardTypeArguments()));
+        }
+        return varExpr;
     }
 
     // } primary ---------------------------------------------------------------
@@ -4261,6 +4294,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         if (asBoolean(ctx.arguments())) { // create instance of class
             Expression arguments = this.visitArguments(ctx.arguments());
             Expression enclosingInstanceExpression = ctx.getNodeMetaData(ENCLOSING_INSTANCE_EXPRESSION);
+            GenericsType[] constructorGenerics = ctx.getNodeMetaData(PATH_EXPRESSION_BASE_EXPR_GENERICS_TYPES);
 
             if (enclosingInstanceExpression != null) {
                 if (arguments instanceof ArgumentListExpression) {
@@ -4294,15 +4328,21 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 }
 
                 ConstructorCallExpression constructorCallExpression = new ConstructorCallExpression(anonymousInnerClassNode, arguments);
+                constructorCallExpression.setUsingAnonymousInnerClass(true);
+                if (constructorGenerics != null) {
+                    constructorCallExpression.setGenericsTypes(constructorGenerics);
+                }
                 // GRECLIPSE add
                 constructorCallExpression.setNameStart(anonymousInnerClassNode.getNameStart());
                 constructorCallExpression.setNameEnd(anonymousInnerClassNode.getNameEnd());
                 // GRECLIPSE end
-                constructorCallExpression.setUsingAnonymousInnerClass(true);
                 return configureAST(constructorCallExpression, ctx);
             }
 
             ConstructorCallExpression constructorCallExpression = new ConstructorCallExpression(classNode, arguments);
+            if (constructorGenerics != null) {
+                constructorCallExpression.setGenericsTypes(constructorGenerics);
+            }
             // GRECLIPSE add
             constructorCallExpression.setNameStart(classNode.getStart());
             constructorCallExpression.setNameEnd(classNode.getEnd() - 1);
@@ -4364,18 +4404,16 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     @Override
     public ClassNode visitCreatedName(final CreatedNameContext ctx) {
-        ClassNode classNode = null;
-        if (asBoolean(ctx.qualifiedClassName())) {
-            classNode = this.visitQualifiedClassName(ctx.qualifiedClassName());
-            if (asBoolean(ctx.typeArgumentsOrDiamond())) {
-                classNode.setGenericsTypes(
-                        this.visitTypeArgumentsOrDiamond(ctx.typeArgumentsOrDiamond()));
-                /* GRECLIPSE edit
-                configureAST(classNode, ctx);
-                */
-            }
-        } else if (asBoolean(ctx.primitiveType())) {
+        ClassNode classNode;
+        if (asBoolean(ctx.primitiveType())) {
             classNode = configureAST(this.visitPrimitiveType(ctx.primitiveType()), ctx);
+        } else {
+            classNode = this.visitParameterizedClassType(ctx, false);
+            /* GRECLIPSE edit
+            if (classNode != null) {
+                configureAST(classNode, ctx);
+            }
+            */
         }
         if (classNode == null) {
             throw createParsingFailedException("Unsupported created name: " + ctx.getText(), ctx);
@@ -5108,6 +5146,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             // GRECLIPSE end
         }
 
+        if (isTrue(ctx, IS_INSIDE_INSTANCEOF_EXPR)) {
+            rejectNonReifiableInstanceof(ctx, classNode);
+        }
+
         /* GRECLIPSE edit
         return configureAST(classNode, ctx);
         */
@@ -5122,33 +5164,106 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     @Override
     public ClassNode visitReferenceType(final ReferenceTypeContext ctx) {
-        ClassNode classNode;
-        if (asBoolean(ctx.qualifiedClassName())) {
-            if (isTrue(ctx, IS_INSIDE_INSTANCEOF_EXPR)) {
-                ctx.qualifiedClassName().putNodeMetaData(IS_INSIDE_INSTANCEOF_EXPR, Boolean.TRUE);
-            }
-            classNode = this.visitQualifiedClassName(ctx.qualifiedClassName());
-        } else {
-            if (isTrue(ctx, IS_INSIDE_INSTANCEOF_EXPR)) {
-                ctx.qualifiedStandardClassName().putNodeMetaData(IS_INSIDE_INSTANCEOF_EXPR, Boolean.TRUE);
-            }
-            classNode = this.visitQualifiedStandardClassName(ctx.qualifiedStandardClassName());
-        }
-
-        if (asBoolean(ctx.typeArguments())) {
-            GenericsType[] generics = this.visitTypeArguments(ctx.typeArguments());
-            classNode.setGenericsTypes(generics);
-            if (isTrue(ctx, IS_INSIDE_INSTANCEOF_EXPR) && Arrays.stream(generics).anyMatch(gt ->
-                    !gt.isWildcard() || asBoolean(gt.getLowerBound()) || asBoolean(gt.getUpperBounds()))) { // GROOVY-11585
-                throw this.createParsingFailedException("Cannot perform instanceof check against parameterized type " + classNode, ctx);
-            }
-        }
-
         /* GRECLIPSE edit
-        return configureAST(classNode, ctx);
+        return configureAST(this.visitParameterizedClassType(ctx, true), ctx);
         */
-        return classNode;
+        return this.visitParameterizedClassType(ctx, false);
         // GRECLIPSE end
+    }
+
+    /**
+     * Builds a class type that may include JLS 4.5 rare types ({@code Outer<T>.Inner<U>}).
+     * Shared by {@code referenceType} (type arguments only) and {@code createdName}
+     * (type arguments or diamond).
+     */
+    private ClassNode visitParameterizedClassType(final GroovyParserRuleContext ctx, final boolean attachRawEnclosing) {
+        ClassNode classNode = null;
+        for (int i = 0, n = ctx.getChildCount(); i < n; i += 1) {
+            ParseTree child = ctx.getChild(i);
+            if (child instanceof QualifiedClassNameContext qcn) {
+                if (isTrue(ctx, IS_INSIDE_INSTANCEOF_EXPR)) {
+                    qcn.putNodeMetaData(IS_INSIDE_INSTANCEOF_EXPR, Boolean.TRUE);
+                }
+                classNode = this.visitQualifiedClassName(qcn);
+            } else if (child instanceof QualifiedStandardClassNameContext qscn) {
+                if (isTrue(ctx, IS_INSIDE_INSTANCEOF_EXPR)) {
+                    qscn.putNodeMetaData(IS_INSIDE_INSTANCEOF_EXPR, Boolean.TRUE);
+                }
+                classNode = this.visitQualifiedStandardClassName(qscn);
+            } else if (child instanceof TypeArgumentsContext tac) {
+                GenericsType[] generics = this.visitTypeArguments(tac);
+                if (attachRawEnclosing) {
+                    attachRawEnclosingIfQualified(classNode);
+                }
+                classNode.setGenericsTypes(generics);
+                if (isTrue(ctx, IS_INSIDE_INSTANCEOF_EXPR) && isNonReifiableSourceArgs(generics)) {
+                    classNode.putNodeMetaData(NON_REIFIABLE_INSTANCEOF, Boolean.TRUE);
+                }
+            } else if (child instanceof TypeArgumentsOrDiamondContext tad) {
+                if (attachRawEnclosing) {
+                    attachRawEnclosingIfQualified(classNode);
+                }
+                classNode.setGenericsTypes(this.visitTypeArgumentsOrDiamond(tad));
+            } else if (child instanceof IdentifierContext || child instanceof ClassNameContext) {
+                ClassNode outer = classNode;
+                ClassNode inner = ClassHelper.makeWithoutCaching(outer.getName() + '.' + child.getText());
+                if (!isTrue(ctx, IS_INSIDE_INSTANCEOF_EXPR)) {
+                    inner = this.proxyClassNode(inner);
+                }
+                inner.setOuterClassType(outer); // GROOVY-10646, GROOVY-12319
+                classNode = configureAST(inner, (GroovyParserRuleContext) child);
+            }
+        }
+        return classNode;
+    }
+
+    /**
+     * {@code Outer.Inner<?>} is one qualified name plus type arguments, so the
+     * nested-type loop never runs. Record a raw enclosing type from the name
+     * prefix; {@code ResolveVisitor} drops it if that prefix is only a package.
+     */
+    private static void attachRawEnclosingIfQualified(final ClassNode classNode) {
+        if (classNode == null || classNode.getOuterClassType() != null) return;
+        String name = classNode.getName();
+        int sep = Math.max(name.lastIndexOf('.'), name.lastIndexOf('$'));
+        if (sep <= 0) return;
+        classNode.setOuterClassType(ClassHelper.makeWithoutCaching(name.substring(0, sep)));
+    }
+
+    /**
+     * {@code instanceof} type arguments are legal in the grammar so {@code List<?>}
+     * can parse (JLS 15.20.2 / 4.7). Non-reifiable uses such as
+     * {@code Map<String,Integer>}, {@code Outer<String>.Inner} and
+     * {@code List<String>[]} are rejected once the full type (nesting and
+     * array dimensions) is built.
+     */
+    private void rejectNonReifiableInstanceof(final GroovyParserRuleContext ctx, final ClassNode classNode) {
+        if (carriesNonReifiableInstanceofArg(classNode)) { // GROOVY-11585
+            throw this.createParsingFailedException(
+                    "Cannot perform instanceof check against parameterized type " + TypeUseUtils.describeTypeUse(classNode)
+                            + " since further generic type information will be erased at runtime", ctx);
+        }
+    }
+
+    /**
+     * True when the source wrote a non-reifiable type argument (not merely a
+     * resolved ClassNode still carrying declaration placeholders such as
+     * {@code List<E>}).
+     */
+    private static boolean isNonReifiableSourceArgs(final GenericsType[] generics) {
+        return Arrays.stream(generics).anyMatch(gt ->
+                !gt.isWildcard() || asBoolean(gt.getLowerBound()) || asBoolean(gt.getUpperBounds()));
+    }
+
+    private static boolean carriesNonReifiableInstanceofArg(ClassNode type) {
+        while (type.isArray()) {
+            type = type.getComponentType();
+        }
+        if (Boolean.TRUE.equals(type.getNodeMetaData(NON_REIFIABLE_INSTANCEOF))) {
+            return true;
+        }
+        ClassNode outer = type.getOuterClassType();
+        return outer != null && carriesNonReifiableInstanceofArg(outer);
     }
 
     @Override
@@ -5982,11 +6097,12 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     // GROOVY-10355: a cast whose operand is the binary-only keyword identifier "in" or "as"
     private static final String CAST_OF_BINARY_KEYWORD = "_CAST_OF_BINARY_KEYWORD";
 
-    private static final Pattern BARE_NAME_PATTERN = Pattern.compile("[A-Za-z_$][A-Za-z0-9_$]*(?:\\.[A-Za-z_$][A-Za-z0-9_$]*)*");
+    private static final Pattern BARE_NAME_PATTERN = Pattern.compile("[A-Za-z_$][A-Za-z0-9_$]*+(?:\\.[A-Za-z_$][A-Za-z0-9_$]*+)*+");
 
     private static final String CLASS_NAME = "_CLASS_NAME";
     private static final String INSIDE_PARENTHESES_LEVEL = "_INSIDE_PARENTHESES_LEVEL";
     private static final String IS_INSIDE_INSTANCEOF_EXPR = "_IS_INSIDE_INSTANCEOF_EXPR";
+    private static final String NON_REIFIABLE_INSTANCEOF = "_NON_REIFIABLE_INSTANCEOF";
     private static final String IS_SWITCH_DEFAULT = "_IS_SWITCH_DEFAULT";
     private static final String IS_NUMERIC = "_IS_NUMERIC";
     private static final String IS_STRING = "_IS_STRING";

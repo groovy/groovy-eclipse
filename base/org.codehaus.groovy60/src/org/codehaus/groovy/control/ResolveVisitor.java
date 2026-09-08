@@ -22,6 +22,7 @@ import groovy.lang.Tuple2;
 import groovy.transform.Internal;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -84,6 +85,7 @@ import java.util.function.Predicate;
 
 import static groovy.lang.Tuple.tuple;
 import static org.apache.groovy.ast.tools.ExpressionUtils.transformInlineConstants;
+import static org.apache.groovy.ast.tools.TypeUseUtils.isParameterizedTypeUsage;
 import static org.codehaus.groovy.ast.tools.ClosureUtils.getParametersSafe;
 
 /**
@@ -392,7 +394,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 canSeeTypeVars(node.getModifiers(), node.getDeclaringClass())
                     ? new HashMap<>(genericParameterNames) : new HashMap<>();
         try {
-            resolveGenericsHeader(node.getGenericsTypes());
+            resolveGenericsHeader(node.getGenericsTypes(), node);
 
             {
                 ClassNode t = node.getReturnType();
@@ -438,6 +440,18 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (type.isRedirectNode() || !type.isPrimaryClassNode()) {
             visitTypeAnnotations(type); // JSR 308 support
         }
+        ClassNode oc = type.getOuterClassType(); // GROOVY-10646, GROOVY-12319: Outer<T>.Inner
+        if (oc != null) {
+            if (oc.getGenericsTypes() != null) {
+                resolveOrFail(oc, msg, node, preferImports);
+                resolveGenericsTypes(oc.getGenericsTypes());
+            } else if (resolve(oc, true, true, true)) {
+                resolveGenericsTypes(oc.getGenericsTypes());
+            } else {
+                // Prefix of a dotted name was a package, not a class (List<?>).
+                type.setOuterClassType(null);
+            }
+        }
         if (preferImports && !type.isResolved() && !type.isPrimaryClassNode()) {
             resolveGenericsTypes(type.getGenericsTypes());
             if (resolveAliasFromModule(type)) return;
@@ -446,6 +460,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (resolve(type)) return;
         if (resolveToInner(type)) return;
 
+        if (!type.hasPackageName() && isTypeParameterHiddenByStatic(type.getUnresolvedName())) {
+            addError("The non-static type parameter " + type.getUnresolvedName() + " cannot be referenced from a static context", node);
+            return;
+        }
         addError("unable to resolve class " + type.toString(false) + msg, node);
         */
         ClassNode temp = type;
@@ -483,8 +501,33 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             }
         }
         temp.setName(name);
+        if (!type.hasPackageName() && isTypeParameterHiddenByStatic(type.getUnresolvedName())) {
+            addError("The non-static type parameter " + type.getUnresolvedName() + " cannot be referenced from a static context", node);
+            return;
+        }
         addError("unable to resolve class " + name + msg, temp.getEnd() > 0 ? temp : node);
         // GRECLIPSE end
+    }
+
+    /**
+     * True when {@code name} is a type parameter of {@code currentClass} or an
+     * enclosing class, but is not in {@link #genericParameterNames} because the
+     * current context is static (JLS 6.5.5.1).
+     */
+    private boolean isTypeParameterHiddenByStatic(final String name) {
+        if (genericParameterNames.containsKey(new GenericsTypeName(name))) {
+            return false;
+        }
+        for (ClassNode cn = currentClass; cn != null; cn = cn.getOuterClass()) {
+            GenericsType[] typeParameters = cn.getGenericsTypes();
+            if (typeParameters == null) continue;
+            for (GenericsType typeParameter : typeParameters) {
+                if (name.equals(typeParameter.getName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -546,6 +589,19 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected boolean resolve(final ClassNode type, final boolean testModuleImports, final boolean testDefaultImports, final boolean testStaticInnerClasses) {
         GenericsType[] genericsTypes = type.getGenericsTypes();
         resolveGenericsTypes(genericsTypes);
+        ClassNode oc = type.getOuterClassType();
+        if (oc != null) {
+            if (oc.getGenericsTypes() != null) {
+                if (!resolve(oc, testModuleImports, testDefaultImports, testStaticInnerClasses)) {
+                    return false;
+                }
+                resolveGenericsTypes(oc.getGenericsTypes());
+            } else if (resolve(oc, testModuleImports, testDefaultImports, testStaticInnerClasses)) {
+                resolveGenericsTypes(oc.getGenericsTypes());
+            } else {
+                type.setOuterClassType(null);
+            }
+        }
 
         if (type.isPrimaryClassNode()) return true;
         if (type.isArray()) {
@@ -1252,6 +1308,15 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 ClassNode type = new ConstructedNestedClass(propertyOwner, xe.getPropertyAsString());
                 if (resolve(type, false, false, false)) {
                     if (propertyOwner == objectExpression.getType() || isVisibleNestedClass(type, objectExpression.getType())) {
+                        // Preserve Outer<String>.Inner as a rare type use so
+                        // Outer<String>.Inner.class is a parameterized class
+                        // literal (JLS 15.8.2). Do not copy declaration formals
+                        // from Map onto Map.Entry — that is the generic type
+                        // name, not a parameterization.
+                        ClassNode owner = objectExpression.getType();
+                        if (isParameterizedTypeUsage(owner) || owner.getOuterClassType() != null) {
+                            type.setOuterClassType(owner);
+                        }
                         // GRECLIPSE add
                         type.setNameStart2(property.getStart());
                         // GRECLIPSE end
@@ -1479,6 +1544,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 addError("You cannot create an instance from the abstract " + getDescription(cceType) + ".", cce);
             }
         }
+        resolveGenericsTypes(cce.getGenericsTypes());
 
         return cce.transformExpression(this);
     }
@@ -1679,7 +1745,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             } else {
                 genericParameterNames.clear(); // outer class: new generic namespace
             }
-            resolveGenericsHeader(node.getGenericsTypes());
+            resolveGenericsHeader(node.getGenericsTypes(), node);
             switch (phase) { // GROOVY-9866, GROOVY-10466
               case 0:
               case 1:
@@ -1702,7 +1768,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     if (cn.isAnonymous()) {
                         MethodNode enclosingMethod = cn.getEnclosingMethod();
                         if (enclosingMethod != null) {
-                            resolveGenericsHeader(enclosingMethod.getGenericsTypes()); // GROOVY-6977
+                            resolveGenericsHeader(enclosingMethod.getGenericsTypes(), enclosingMethod); // GROOVY-6977
                         }
                         resolveOrFail(cn.getUnresolvedSuperClass(false), cn); // GROOVY-9642
                     }
@@ -1850,23 +1916,22 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return resolved;
     }
 
-    private void resolveGenericsHeader(final GenericsType[] types) {
-        if (types != null) resolveGenericsHeader(types, null, 0);
-    }
-
-    private void resolveGenericsHeader(final GenericsType[] types, final GenericsType rootType, final int level) {
+    /**
+     * Resolves a type-parameter section (class, method or constructor header).
+     * Bound type arguments such as {@code T} in {@code T extends Comparable<T>}
+     * are uses, not declarations, and go through {@link #resolveGenericsType}.
+     */
+    private void resolveGenericsHeader(final GenericsType[] types, final AnnotatedNode declaration) {
+        if (types == null) return;
         currentClass.setUsingGenerics(true);
         List<Tuple2<ClassNode, ClassNode>> upperBoundsToResolve = new LinkedList<>();
-        List<Tuple2<ClassNode, GenericsType>> upperBoundsWithGenerics = new LinkedList<>();
+        List<ClassNode> upperBoundsWithGenerics = new LinkedList<>();
         for (GenericsType type : types) {
-            if (level > 0 && type.getName().equals(rootType.getName())) continue; // cycle!
-
             String name = type.getName();
             ClassNode typeType = type.getType();
             visitTypeAnnotations(typeType); // JSR 308 support
             GenericsTypeName gtn = new GenericsTypeName(name);
             boolean isWildcardGT = QUESTION_MARK.equals(name);
-            boolean dealWithGenerics = (level == 0 || (level > 0 && genericParameterNames.get(gtn) != null));
 
             if (type.getUpperBounds() != null) {
                 boolean nameAdded = false;
@@ -1877,23 +1942,26 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     // GRECLIPSE end
                     if (!isWildcardGT) {
                         if (!nameAdded || !resolve(typeType)) {
-                            if (dealWithGenerics) {
-                                type.setPlaceholder(true);
-                                typeType.setRedirect(upperBound);
-                                genericParameterNames.put(gtn, type);
-                                nameAdded = true;
-                            }
+                            type.setPlaceholder(true);
+                            typeType.setRedirect(upperBound);
+                            genericParameterNames.put(gtn, type);
+                            type.setGenericDeclaration(declaration);
+                            nameAdded = true;
                         }
                         upperBoundsToResolve.add(tuple(upperBound, typeType));
                     }
                     if (upperBound.getGenericsTypes() != null) {
-                        upperBoundsWithGenerics.add(tuple(upperBound, type));
+                        upperBoundsWithGenerics.add(upperBound);
                     }
                 }
-            } else if (dealWithGenerics && !isWildcardGT) {
+            } else if (!isWildcardGT) {
                 type.setPlaceholder(true);
-                GenericsType last = genericParameterNames.put(gtn, type);
-                typeType.setRedirect(last != null ? last.getType().redirect() : ClassHelper.OBJECT_TYPE);
+                genericParameterNames.put(gtn, type);
+                // A new type-parameter declaration must not inherit a
+                // shadowed variable's erasure. Unbounded T erases to
+                // Object even when an enclosing T extends Number.
+                typeType.setRedirect(ClassHelper.OBJECT_TYPE);
+                type.setGenericDeclaration(declaration);
             }
         }
 
@@ -1906,9 +1974,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             }
         }
 
-        for (var tuple : upperBoundsWithGenerics) {
-            GenericsType[] bounds = tuple.getV1().getGenericsTypes();
-            resolveGenericsHeader(bounds, level == 0 ? tuple.getV2() : rootType, level + 1);
+        for (ClassNode upperBound : upperBoundsWithGenerics) {
+            resolveGenericsTypes(upperBound.getGenericsTypes());
         }
     }
 
@@ -1933,6 +2000,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 type.setRedirect(tp.getType());
             }
             genericsType.setPlaceholder(true);
+            genericsType.setGenericDeclaration(tp.getGenericDeclaration());
         } else {
             ClassNode[] upperBounds = genericsType.getUpperBounds();
             if (upperBounds != null) {

@@ -72,9 +72,9 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindLocalOccurrences1() {
         //@formatter:off
         String contents = '''\
-            def x
-            x
-            '''.stripIndent()
+            |def x
+            |x
+            |'''.stripMargin()
         //@formatter:on
         doTest(contents, contents.lastIndexOf('x'), 1, contents.indexOf('x'), 1, contents.lastIndexOf('x'), 1)
     }
@@ -83,10 +83,10 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindLocalOccurrences2() {
         //@formatter:off
         String contents = '''\
-            def x(x) {
-              x
-            }
-            '''.stripIndent()
+            |def x(x) {
+            |  x
+            |}
+            |'''.stripMargin()
         //@formatter:on
         doTest(contents, contents.lastIndexOf('x'), 1, contents.indexOf('(x') + 1, 1, contents.lastIndexOf('x'), 1)
     }
@@ -95,11 +95,11 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindLocalOccurrences3() {
         //@formatter:off
         String contents = '''\
-            nuthin
-            def x(int x) {
-            x
-            }
-            '''.stripIndent()
+            |nuthin
+            |def x(int x) {
+            |x
+            |}
+            |'''.stripMargin()
         //@formatter:on
         int afterParen = contents.indexOf('(')
         doTest(contents, contents.lastIndexOf('x'), 1, contents.indexOf('x', afterParen), 1, contents.lastIndexOf('x'), 1)
@@ -109,11 +109,11 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindLocalOccurrences4() {
         //@formatter:off
         String contents = '''\
-            nuthin
-            def x(int x) {
-              x
-            }
-            '''.stripIndent()
+            |nuthin
+            |def x(int x) {
+            |  x
+            |}
+            |'''.stripMargin()
         //@formatter:on
         doTest(contents, contents.indexOf('x'), 1, contents.indexOf('x'), 1)
     }
@@ -122,10 +122,10 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindForLoopOccurrences() {
         //@formatter:off
         String contents = '''\
-            for (x in []) {
-              x
-            }
-            '''.stripIndent()
+            |for (x in []) {
+            |  x
+            |}
+            |'''.stripMargin()
         //@formatter:on
         doTest(contents, contents.indexOf('x'), 1, contents.indexOf('x'), 1, contents.lastIndexOf('x'), 1)
     }
@@ -136,31 +136,30 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
         //@formatter:off
         String contents = '''\
-            int x(int y) {
-              int z
-            }
-            int a
-            '''.stripIndent()
+            |int v, w = 0
+            |int x(int y) {
+            |  int z
+            |}
+            |'''.stripMargin()
         //@formatter:on
 
-        int length = 'int'.length()
         int first  = contents.indexOf('int')
-        int second = contents.indexOf('int', first + 1)
+        int second = contents.indexOf('int', first  + 1)
         int third  = contents.indexOf('int', second + 1)
-        int fourth = contents.indexOf('int', third + 1)
-        doTest(contents, second, length, first, length, second, length, third, length, fourth, length)
+        int fourth = contents.indexOf('int', third  + 1)
+        doTest(contents, first, 3, first, 3, second, 3, third, 3, fourth, 3)
     }
 
     @Test
     void testFindField() {
         //@formatter:off
         String contents = '''\
-            class Foo {
-              public def bar
-            }
-            new Foo().bar
-            new Foo().bar()
-            '''.stripIndent()
+            |class Foo {
+            |  public def bar
+            |}
+            |new Foo().bar
+            |new Foo().bar()
+            |'''.stripMargin()
         //@formatter:on
 
         int length = 'bar'.length()
@@ -174,12 +173,12 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindProperty() {
         //@formatter:off
         String contents = '''\
-            class Foo {
-              def bar
-            }
-            new Foo().bar
-            new Foo().bar()
-            '''.stripIndent()
+            |class Foo {
+            |  def bar
+            |}
+            |new Foo().bar
+            |new Foo().bar()
+            |'''.stripMargin()
         //@formatter:on
 
         int length = 'foo'.length()
@@ -193,14 +192,14 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindPseudoProperty1() {
         //@formatter:off
         String contents = '''\
-            class Foo {
-              def getBar() {
-              }
-              void doBaz() {
-                bar
-              }
-            }
-            '''.stripIndent()
+            |class Foo {
+            |  def getBar() {
+            |  }
+            |  void doBaz() {
+            |    bar
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
 
         int first  = contents.indexOf('getBar')
@@ -212,15 +211,15 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindPseudoProperty1a() {
         //@formatter:off
         String contents = '''\
-            @groovy.transform.CompileStatic
-            class Foo {
-              def getBar() {
-              }
-              void doBaz() {
-                bar
-              }
-            }
-            '''.stripIndent()
+            |@groovy.transform.CompileStatic
+            |class Foo {
+            |  def getBar() {
+            |  }
+            |  void doBaz() {
+            |    bar
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
 
         int first  = contents.indexOf('getBar')
@@ -232,14 +231,14 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindPseudoProperty2() {
         //@formatter:off
         String contents = '''\
-            class Foo {
-              void setBar(value) {
-              }
-              void doBaz() {
-                bar = null
-              }
-            }
-            '''.stripIndent()
+            |class Foo {
+            |  void setBar(value) {
+            |  }
+            |  void doBaz() {
+            |    bar = null
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
 
         int first  = contents.indexOf('setBar')
@@ -251,15 +250,15 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindPseudoProperty2a() {
         //@formatter:off
         String contents = '''\
-            @groovy.transform.CompileStatic
-            class Foo {
-              void setBar(value) {
-              }
-              void doBaz() {
-                bar = null
-              }
-            }
-            '''.stripIndent()
+            |@groovy.transform.CompileStatic
+            |class Foo {
+            |  void setBar(value) {
+            |  }
+            |  void doBaz() {
+            |    bar = null
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
 
         int first  = contents.indexOf('setBar')
@@ -271,14 +270,14 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindPseudoProperty3() {
         //@formatter:off
         String contents = '''\
-            class Foo {
-              void setBar(value) {
-              }
-              void doBaz() {
-                bar // ambiguous reference
-              }
-            }
-            '''.stripIndent()
+            |class Foo {
+            |  void setBar(value) {
+            |  }
+            |  void doBaz() {
+            |    bar // ambiguous reference
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
 
         int first  = contents.indexOf('setBar')
@@ -290,15 +289,15 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindPseudoProperty3a() {
         //@formatter:off
         String contents = '''\
-            @groovy.transform.CompileStatic
-            class Foo {
-              void setBar(value) {
-              }
-              void doBaz() {
-                bar // ambiguous reference
-              }
-            }
-            '''.stripIndent()
+            |@groovy.transform.CompileStatic
+            |class Foo {
+            |  void setBar(value) {
+            |  }
+            |  void doBaz() {
+            |    bar // ambiguous reference
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
 
         int first  = contents.indexOf('setBar')
@@ -358,15 +357,15 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindGStringOccurrences3() {
         //@formatter:off
         String contents = '''\
-            @groovy.transform.CompileStatic
-            class Foo {
-              def getBar() {
-              }
-              String toString() {
-                return "$bar"
-              }
-            }
-            '''.stripIndent()
+            |@groovy.transform.CompileStatic
+            |class Foo {
+            |  def getBar() {
+            |  }
+            |  String toString() {
+            |    return "$bar"
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
 
         int first  = contents.indexOf('getBar')
@@ -378,19 +377,19 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindStaticMethods1() {
         //@formatter:off
         String contents = '''\
-            class Static {
-              static staticMethod()  { staticMethod() }
-              static { staticMethod() }
-              { staticMethod() }
-              def t = staticMethod()
-              def x() {
-                def a = staticMethod()
-                Static.&staticMethod
-                Static.staticMethod 1, 2, 3
-                Static.staticMethod(1, 2, 3)
-              }
-            }
-            '''.stripIndent()
+            |class Static {
+            |  static staticMethod()  { staticMethod() }
+            |  static { staticMethod() }
+            |  { staticMethod() }
+            |  def t = staticMethod()
+            |  def x() {
+            |    def a = staticMethod()
+            |    Static.&staticMethod
+            |    Static.staticMethod 1, 2, 3
+            |    Static.staticMethod(1, 2, 3)
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
 
         def target = 'staticMethod'
@@ -411,17 +410,17 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindStaticMethods2() {
         //@formatter:off
         String contents = '''\
-            class Static {
-              static staticMethod(... args)  { }
-              def x() {
-                def z = staticMethod
-                def a = staticMethod 1, 2, 3
-                def b = staticMethod(1, 2, 3)
-                def c = Static.staticMethod 1, 2, 3
-                def d = Static.staticMethod(1, 2, 3)
-              }
-            }
-            '''.stripIndent()
+            |class Static {
+            |  static staticMethod(... args)  { }
+            |  def x() {
+            |    def z = staticMethod
+            |    def a = staticMethod 1, 2, 3
+            |    def b = staticMethod(1, 2, 3)
+            |    def c = Static.staticMethod 1, 2, 3
+            |    def d = Static.staticMethod(1, 2, 3)
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
 
         def target = 'staticMethod'
@@ -439,12 +438,12 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testInnerClass() {
         //@formatter:off
         String contents = '''\
-            class Other2 {
-              class Inner { }
-              Other2.Inner f
-              Inner g
-            }
-            '''.stripIndent()
+            |class Other2 {
+            |  class Inner { }
+            |  Other2.Inner f
+            |  Inner g
+            |}
+            |'''.stripMargin()
         //@formatter:on
 
         String className = 'Inner'
@@ -460,12 +459,12 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testInnerClass2() {
         //@formatter:off
         String contents = '''\
-            class Other2 {
-              class Inner { }
-              Other2.Inner f
-              Inner g
-            }
-            '''.stripIndent()
+            |class Other2 {
+            |  class Inner { }
+            |  Other2.Inner f
+            |  Inner g
+            |}
+            |'''.stripMargin()
         //@formatter:on
 
         String className = 'Inner'
@@ -481,12 +480,12 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testInnerClass3() {
         //@formatter:off
         String contents = '''\
-            class Other2 {
-              class Inner { }
-              Other2.Inner f
-              Inner g
-            }
-            '''.stripIndent()
+            |class Other2 {
+            |  class Inner { }
+            |  Other2.Inner f
+            |  Inner g
+            |}
+            |'''.stripMargin()
         //@formatter:on
 
         String className = 'Inner'
@@ -503,9 +502,10 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         //@formatter:off
         addGroovySource '''\
             class Other {
-              class Inner { }
+                class Inner {
+                }
             }
-            '''.stripIndent(), 'Other'
+            ''', 'Other'
 
         String contents = '''\
             |import Other.Inner
@@ -637,15 +637,15 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testOverloaded1() {
         //@formatter:off
         String contents = '''\
-            class LotsOfMethods {
-              def meth() { }
-              def meth(int a) { }
-              def meth(String a, LotsOfMethods b) { }
-            }
-            new LotsOfMethods().meth(1)
-            new LotsOfMethods().meth('', null)
-            new LotsOfMethods().meth()
-            '''.stripIndent()
+            |class LotsOfMethods {
+            |  def meth() { }
+            |  def meth(int a) { }
+            |  def meth(String a, LotsOfMethods b) { }
+            |}
+            |new LotsOfMethods().meth(1)
+            |new LotsOfMethods().meth('', null)
+            |new LotsOfMethods().meth()
+            |'''.stripMargin()
         //@formatter:on
         int start = contents.indexOf('meth()')
         doTest(contents, start, 4, start, 4, contents.lastIndexOf('meth()'), 4)
@@ -655,15 +655,15 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testOverloaded2() {
         //@formatter:off
         String contents = '''\
-            class LotsOfMethods {
-              def meth() { }
-              def meth(int a) { }
-              def meth(String a, LotsOfMethods b) { }
-            }
-            new LotsOfMethods().meth()
-            new LotsOfMethods().meth('', null)
-            new LotsOfMethods().meth(1)
-            '''.stripIndent()
+            |class LotsOfMethods {
+            |  def meth() { }
+            |  def meth(int a) { }
+            |  def meth(String a, LotsOfMethods b) { }
+            |}
+            |new LotsOfMethods().meth()
+            |new LotsOfMethods().meth('', null)
+            |new LotsOfMethods().meth(1)
+            |'''.stripMargin()
         //@formatter:on
         int start = contents.indexOf('meth(int')
         doTest(contents, start, 4, start, 4, contents.indexOf('meth(1)'), 4)
@@ -673,15 +673,15 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testOverloaded3() {
         //@formatter:off
         String contents = '''\
-            class LotsOfMethods {
-              def meth() { }
-              def meth(int a) { }
-              def meth(String a, LotsOfMethods b) { }
-            }
-            new LotsOfMethods().meth(1)
-            new LotsOfMethods().meth()
-            new LotsOfMethods().meth('', null)
-            '''.stripIndent()
+            |class LotsOfMethods {
+            |  def meth() { }
+            |  def meth(int a) { }
+            |  def meth(String a, LotsOfMethods b) { }
+            |}
+            |new LotsOfMethods().meth(1)
+            |new LotsOfMethods().meth()
+            |new LotsOfMethods().meth('', null)
+            |'''.stripMargin()
         //@formatter:on
         int start = contents.indexOf('meth(S')
         doTest(contents, start, 4, start, 4, contents.lastIndexOf('meth'), 4)
@@ -691,15 +691,15 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testOverloaded4() {
         //@formatter:off
         String contents = '''\
-            class LotsOfMethods {
-              def meth() { }
-              def meth(int a) { }
-              def meth(String a) { }
-            }
-            new LotsOfMethods().meth(1)
-            new LotsOfMethods().meth()
-            new LotsOfMethods().meth('')
-            '''.stripIndent()
+            |class LotsOfMethods {
+            |  def meth() { }
+            |  def meth(int a) { }
+            |  def meth(String a) { }
+            |}
+            |new LotsOfMethods().meth(1)
+            |new LotsOfMethods().meth()
+            |new LotsOfMethods().meth('')
+            |'''.stripMargin()
         //@formatter:on
         int start = contents.lastIndexOf('meth')
         doTest(contents, start, 4, contents.indexOf('meth(S'), 4, start, 4)
@@ -709,15 +709,15 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testOverloaded5() {
         //@formatter:off
         String contents = '''\
-            class LotsOfMethods {
-              def meth() { }
-              def meth(int a) { }
-              def meth(String a) { }
-            }
-            new LotsOfMethods().meth(1)
-            new LotsOfMethods().meth()
-            new LotsOfMethods().meth(null)
-            '''.stripIndent()
+            |class LotsOfMethods {
+            |  def meth() { }
+            |  def meth(int a) { }
+            |  def meth(String a) { }
+            |}
+            |new LotsOfMethods().meth(1)
+            |new LotsOfMethods().meth()
+            |new LotsOfMethods().meth(null)
+            |'''.stripMargin()
         //@formatter:on
         int start = contents.lastIndexOf('meth')
         doTest(contents, start, 4, contents.indexOf('meth(S'), 4, start, 4)
@@ -727,15 +727,15 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testDefaultParameters1() {
         //@formatter:off
         String contents = '''\
-            class Default {
-              def meth(int a, b = 2, c = 3) { }
-            }
-            new Default().meth(1)
-            new Default().meth(1, 2)
-            new Default().meth(1, 2, 3)
-            new Default().meth(1, 2, 3, 4)
-            new Default().meth
-            '''.stripIndent()
+            |class Default {
+            |  def meth(int a, b = 2, c = 3) { }
+            |}
+            |new Default().meth(1)
+            |new Default().meth(1, 2)
+            |new Default().meth(1, 2, 3)
+            |new Default().meth(1, 2, 3, 4)
+            |new Default().meth
+            |'''.stripMargin()
         //@formatter:on
 
         // test the first method declaration
@@ -753,20 +753,20 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len/*, start5, len, start6, len*/)
     }
 
-    @Test @NotYetImplemented // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
+    @NotYetImplemented @Test // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
     void testDefaultParameters1a() {
         //@formatter:off
         String contents = '''\
-            class Default {
-              def meth(int a, b = 1, c = 2) { }
-              def meth(String a) { }
-            }
-            new Default().meth(1)
-            new Default().meth(1, 2)
-            new Default().meth(1, 2, 3)
-            new Default().meth(1, 2, 3, 4)
-            new Default().meth
-            '''.stripIndent()
+            |class Default {
+            |  def meth(int a, b = 1, c = 2) { }
+            |  def meth(String a) { }
+            |}
+            |new Default().meth(1)
+            |new Default().meth(1, 2)
+            |new Default().meth(1, 2, 3)
+            |new Default().meth(1, 2, 3, 4)
+            |new Default().meth
+            |'''.stripMargin()
         //@formatter:on
 
         // test the first method declaration
@@ -784,20 +784,20 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, start6, len)
     }
 
-    @Test @NotYetImplemented // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
+    @NotYetImplemented @Test // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
     void testDefaultParameters2() {
         //@formatter:off
         String contents = '''\
-            class Default {
-              def meth(int a, b = 1, c = 2) { }
-              def meth(String a) { }
-            }
-            new Default().meth(1)
-            new Default().meth(1, 2)
-            new Default().meth(1, 2, 3)
-            new Default().meth(1, 2, 3, 4)
-            new Default().meth
-            '''.stripIndent()
+            |class Default {
+            |  def meth(int a, b = 1, c = 2) { }
+            |  def meth(String a) { }
+            |}
+            |new Default().meth(1)
+            |new Default().meth(1, 2)
+            |new Default().meth(1, 2, 3)
+            |new Default().meth(1, 2, 3, 4)
+            |new Default().meth
+            |'''.stripMargin()
         //@formatter:on
 
         // test the second method declaration

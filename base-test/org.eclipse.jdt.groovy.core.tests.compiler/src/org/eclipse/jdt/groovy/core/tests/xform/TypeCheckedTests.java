@@ -5049,24 +5049,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "class C<X, Y> { }\n" +
             "@groovy.transform.TypeChecked\n" +
-            "def <X extends C<Number, String>> X[] m() {\n" +
-            "  new X[]{ new C<Number, String>() }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources);
-    }
-
-    @Test
-    public void testTypeChecked10111a() {
-        assumeTrue(isParrotParser());
-
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "class C<X, Y> { }\n" +
-            "@groovy.transform.TypeChecked\n" +
             "def String[] test() {\n" +
             "  new String[]{ 1, (long)2, (short)3 }\n" +
             "}\n" +

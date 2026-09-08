@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -235,13 +235,26 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tdef x = new Map<String>[0][0]\n" +
-            "\t            ^^^\n" +
-            "Groovy:The class java.util.Map<java.lang.String> (supplied with 1 type parameter) refers to the class java.util.Map<K, V> which takes 2 parameters\n" +
-            "----------\n");
+        runNegativeTest(sources, isAtLeastGroovy(60) ? """
+            ----------
+            1. ERROR in Foo.groovy (at line 1)
+            \tdef x = new Map<String>[0][0]
+            \t            ^^^
+            Groovy:generic array creation of Map<java.lang.String>
+            ----------
+            2. ERROR in Foo.groovy (at line 1)
+            \tdef x = new Map<String>[0][0]
+            \t            ^^^
+            Groovy:The class java.util.Map<java.lang.String> (supplied with 1 type parameter) refers to the class java.util.Map<K, V> which takes 2 parameters
+            ----------
+            """ : """
+            ----------
+            1. ERROR in Foo.groovy (at line 1)
+            \tdef x = new Map<String>[0][0]
+            \t            ^^^
+            Groovy:The class java.util.Map<java.lang.String> (supplied with 1 type parameter) refers to the class java.util.Map<K, V> which takes 2 parameters
+            ----------
+            """);
     }
 
     @Test
@@ -681,32 +694,32 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, !isParrotParser()
-            ?
-                "----------\n" +
-                "1. ERROR in X.groovy (at line 2)\n" +
-                "\tOne<String,Integer>.Two<Boolean> two\n" +
-                "\t^\n" +
-                "Groovy:unexpected token: One\n" +
-                "----------\n"
-            :
-                "----------\n" +
-                "1. ERROR in X.groovy (at line 0)\n" +
-                "\tclass X {\n" +
-                "\t^\n" +
-                "Groovy:General error during conversion: groovyjarjarantlr4.v4.runtime.NoViableAltException\n" +
-                "----------\n" +
-                "2. ERROR in X.groovy (at line 2)\n" +
-                "\tOne<String,Integer>.Two<Boolean> two\n" +
-                "\t                   ^\n" +
-                "Groovy:Unexpected input: 'One<String,Integer>.'\n" +
-                "----------\n"
-        );
-        /*TODO:
-        runWarningFreeTest(sources);
-        CompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(i>j)One<(i>j)String,(i>j)Integer>.(i>j)Two<(i>j)Boolean>", stringify(findField(decl, "two").type));
-        */
+        if (isParrotParser() && isAtLeastGroovy(60)) {
+            runWarningFreeTest(sources);
+            CompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
+            assertEquals("(12>34)(12>14)One<(16>21)String(23>29)Integer>.(32>34)Two<(36>42)Boolean>", stringify(findField(decl, "two").type));
+        } else {
+            runNegativeTest(sources, !isParrotParser() ? """
+                ----------
+                1. ERROR in X.groovy (at line 2)
+                \tOne<String,Integer>.Two<Boolean> two
+                \t^
+                Groovy:unexpected token: One
+                ----------
+                """ : """
+                ----------
+                1. ERROR in X.groovy (at line 0)
+                \tclass X {
+                \t^
+                Groovy:General error during conversion: groovyjarjarantlr4.v4.runtime.NoViableAltException
+                ----------
+                2. ERROR in X.groovy (at line 2)
+                \tOne<String,Integer>.Two<Boolean> two
+                \t                   ^
+                Groovy:Unexpected input: 'One<String,Integer>.'
+                ----------
+                """);
+        }
     }
 
     @Test

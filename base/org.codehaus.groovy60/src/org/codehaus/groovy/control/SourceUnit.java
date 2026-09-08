@@ -146,38 +146,16 @@ public class SourceUnit extends ProcessingUnit {
     }
 
     /**
-     * Convenience routine, primarily for use by the InteractiveShell,
-     * that returns true if parse() failed with an unexpected EOF.
+     * Legacy Antlr 2 error reporting method no longer in use.
+     * Similar in intent to {@code getErrorCollector().hasErrors()}, which should be used instead.
+     *
+     * @return true if any error was collected while parsing
+     * @deprecated since 6.0.0, use {@link #getErrorCollector()} and
+     *         {@link ErrorCollector#hasErrors()} instead.
      */
+    @Deprecated(since = "6.0.0")
     public boolean failedWithUnexpectedEOF() {
-        // Implementation note - there are several ways for the Groovy compiler
-        // to report an unexpected EOF. Perhaps this implementation misses some.
-        // If you find another way, please add it.
-        if (getErrorCollector().hasErrors()) {
-            Message last = (Message) getErrorCollector().getLastError();
-            Throwable cause = null;
-            if (last instanceof SyntaxErrorMessage) {
-                cause = ((SyntaxErrorMessage) last).getCause().getCause();
-            }
-            if (cause != null) {
-                if (cause instanceof groovyjarjarantlr.NoViableAltException) {
-                    return isEofToken(((groovyjarjarantlr.NoViableAltException) cause).token);
-                } else if (cause instanceof groovyjarjarantlr.NoViableAltForCharException) {
-                    char badChar = ((groovyjarjarantlr.NoViableAltForCharException) cause).foundChar;
-                    return badChar == groovyjarjarantlr.CharScanner.EOF_CHAR;
-                } else if (cause instanceof groovyjarjarantlr.MismatchedCharException) {
-                    char badChar = (char) ((groovyjarjarantlr.MismatchedCharException) cause).foundChar;
-                    return badChar == groovyjarjarantlr.CharScanner.EOF_CHAR;
-                } else if (cause instanceof groovyjarjarantlr.MismatchedTokenException) {
-                    return isEofToken(((groovyjarjarantlr.MismatchedTokenException) cause).token);
-                }
-            }
-        }
-        return false;
-    }
-
-    protected boolean isEofToken(groovyjarjarantlr.Token token) {
-        return token.getType() == groovyjarjarantlr.Token.EOF_TYPE;
+        return getErrorCollector().hasErrors();
     }
 
     //---------------------------------------------------------------------------
@@ -185,7 +163,7 @@ public class SourceUnit extends ProcessingUnit {
 
     /**
      * A convenience routine to create a standalone SourceUnit on a String
-     * with defaults for almost everything that is configurable.
+     * with defaults for almost everything that is configurable but with tolerance set to 1.
      */
     public static SourceUnit create(String name, String source) {
         CompilerConfiguration configuration = new CompilerConfiguration();
