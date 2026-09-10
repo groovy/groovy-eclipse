@@ -106,7 +106,7 @@ public class MetaInfExtensionModule extends SimpleExtensionModule {
                 }
             } catch (ClassNotFoundException | InaccessibleObjectException | LinkageError error) {
                 /* GRECLIPSE edit
-                var logger = java.util.logging.Logger.getLogger(MetaInfExtensionModule.class.getName());
+                var logger = Logger.getLogger(MetaInfExtensionModule.class.getName());
                 logger.log(WARNING, "Module [" + name + "] - Unable to load extension class: " + extensionClass, error);
                 */
                 String message = "Module [" + name + "] - Unable to load extension class: " + extensionClass;

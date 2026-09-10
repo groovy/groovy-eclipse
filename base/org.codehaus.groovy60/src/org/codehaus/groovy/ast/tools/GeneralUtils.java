@@ -80,7 +80,6 @@ import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.ast.stmt.YieldStatement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.control.io.ReaderSource;
-import org.codehaus.groovy.runtime.GeneratedClosure;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.AbstractASTTransformation;
@@ -94,7 +93,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
@@ -751,7 +749,8 @@ public class GeneralUtils {
      * @since 4.0.0
      */
     public static ConstantExpression defaultValueX(final ClassNode type) {
-        return Optional.ofNullable((ConstantExpression) getDefaultValueForPrimitive(type)).orElse(nullX());
+        ConstantExpression value = (ConstantExpression) getDefaultValueForPrimitive(type);
+        return value != null ? value : nullX();
     }
     /**
      * Creates an Elvis operator expression.
@@ -2022,7 +2021,7 @@ public class GeneralUtils {
 
             if (member.getValue() instanceof ClassExpression classExpression)  {
                 Class<?> typeClass = classExpression.getType().isResolved() ? classExpression.getType().redirect().getTypeClass() : null;
-                if (typeClass != null && GeneratedClosure.class.isAssignableFrom(typeClass)) return true;
+                if (typeClass != null && org.codehaus.groovy.runtime.GeneratedClosure.class.isAssignableFrom(typeClass)) return true;
             }
         }
         return false;

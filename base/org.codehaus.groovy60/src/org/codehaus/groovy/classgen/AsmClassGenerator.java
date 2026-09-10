@@ -19,6 +19,7 @@
 package org.codehaus.groovy.classgen;
 
 import groovy.lang.GroovyRuntimeException;
+import org.apache.groovy.ast.tools.ExpressionUtils;
 import org.apache.groovy.io.StringBuilderWriter;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
@@ -26,6 +27,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.CompileUnit;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
@@ -133,7 +135,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 import static org.apache.groovy.ast.tools.ClassNodeUtils.getField;
@@ -415,9 +416,10 @@ public class AsmClassGenerator extends ClassGenerator {
                 if (classNode.isInterface()) {
                     String outerClassName = classNode.getName();
                     String name = outerClassName + "$" + context.getNextInnerClassIdx();
+                    ClassNode outerClass = classNode.getOuterClass();
                     controller.setInterfaceClassLoadingClass(
                             new InterfaceHelperClassNode(
-                                    Optional.ofNullable(classNode.getOuterClass()).orElse(classNode),
+                                    outerClass != null ? outerClass : classNode,
                                     name, ACC_SUPER | ACC_STATIC | ACC_SYNTHETIC, ClassHelper.OBJECT_TYPE,
                                     controller.getCallSiteWriter().getCallSites()
                             )
@@ -602,8 +604,8 @@ public class AsmClassGenerator extends ClassGenerator {
             visitTypeAnnotations(receiver.getType(), mv, newTypeReference(METHOD_RECEIVER), "", true);
         }
         // add parameter names to the MethodVisitor (JDK8+)
-        if (Optional.ofNullable(controller.getClassNode().getCompileUnit())
-                .orElseGet(context::getCompileUnit).getConfig().getParameters()) {
+        CompileUnit compileUnit = controller.getClassNode().getCompileUnit();
+        if ((compileUnit != null ? compileUnit : context.getCompileUnit()).getConfig().getParameters()) {
             for (Parameter parameter : parameters) {
                 mv.visitParameter(parameter.getName(), parameter.getModifiers());
             }
@@ -1429,7 +1431,7 @@ public class AsmClassGenerator extends ClassGenerator {
         Expression objectExpression = expression.getObjectExpression();
         if (objectExpression instanceof ClassExpression) return false;
 
-        if (org.apache.groovy.ast.tools.ExpressionUtils.isThisExpression(objectExpression)
+        if (ExpressionUtils.isThisExpression(objectExpression)
                 && !(expression.isImplicitThis() && controller.isInGeneratedFunction())) {
             return !controller.isStaticContext(); // TODO: not @POJO
         }
@@ -1440,7 +1442,7 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     private boolean isThisExpression(final Expression expression) {
-        return org.apache.groovy.ast.tools.ExpressionUtils.isThisExpression(expression)
+        return ExpressionUtils.isThisExpression(expression)
             // GROOVY-10695: "Type.name" within body of Type should get explicit-this treatment
             || (expression instanceof ClassExpression && expression.getType().equals(controller.getClassNode()));
     }
@@ -2049,9 +2051,8 @@ public class AsmClassGenerator extends ClassGenerator {
             for (int i = 0; i < size; i += 1) {
                 mv.visitInsn(DUP); // array ref
                 BytecodeHelper.pushConstant(mv, i);
-                Optional.ofNullable(expression.getExpression(i))
-                        .orElse(ConstantExpression.NULL)
-                        .visit(this);
+                Expression element = expression.getExpression(i);
+                (element != null ? element : ConstantExpression.NULL).visit(this);
                 operandStack.doGroovyCast(elementType);
                 mv.visitInsn(storeIns);
                 operandStack.remove(1);

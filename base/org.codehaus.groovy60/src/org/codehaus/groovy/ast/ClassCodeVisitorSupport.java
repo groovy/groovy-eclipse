@@ -41,6 +41,7 @@ import org.codehaus.groovy.ast.stmt.TryCatchStatement;
 import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.ast.stmt.YieldStatement;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.transform.ErrorCollecting;
 
@@ -545,6 +546,12 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
     /**
      * Adds an error message associated with an AST node to the source unit.
      * Errors are accumulated and reported after visitation completes.
+     * <p>
+     * The error counts towards the configured
+     * {@link CompilerConfiguration#getTolerance() error tolerance},
+     * so visitation may be cut short once that many errors have been collected (GROOVY-12306).
+     * Use {@link ErrorCollector#addErrorAndContinue(Message)}
+     * directly to report an error which must never bail out.
      *
      * @param error the error message to report
      * @param node the AST node associated with the error location
@@ -552,8 +559,10 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
      */
     @Override
     public void addError(final String error, final ASTNode node) {
+        SourceUnit source = getSourceUnit();
         /* GRECLIPSE edit
-        getSourceUnit().addErrorAndContinue(new SyntaxException(error + '\n', node));
+        source.getErrorCollector().addError(
+                Message.create(new SyntaxException(error + '\n', node), source));
         */
         int start, end;
         if (node instanceof AnnotatedNode && ((AnnotatedNode) node).getNameEnd() > 0) {
@@ -575,9 +584,9 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
             start = node.getStart();
             end = node.getEnd() - 1;
         }
-        getSourceUnit().addErrorAndContinue(new PreciseSyntaxException(
+        source.getErrorCollector().addError(Message.create(new PreciseSyntaxException(
             error + '\n', node.getLineNumber(), node.getColumnNumber(), start, end
-        ));
+        ), source));
         // GRECLIPSE end
     }
 }

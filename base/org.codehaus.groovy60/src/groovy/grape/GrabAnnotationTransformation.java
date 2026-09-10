@@ -494,7 +494,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
         // Pass the class's own ClassLoader so chooseClassLoader doesn't have to walk the
         // call stack -- the stack-walk depth is tuned for the compile-time path, not the
         // generated static-initializer path, and would overshoot into java.lang.reflect frames.
-        basicArgs.addMapEntryExpression(constX("classLoader"), callX(classX(classNode), "getClassLoader"));
+        basicArgs.addMapEntryExpression(constX("classLoader"), callX(classX(classNode.getPlainNodeReference()), "getClassLoader"));
         if (autoDownload != null)  {
             basicArgs.addMapEntryExpression(constX(AUTO_DOWNLOAD_SETTING), constX(autoDownload));
         }

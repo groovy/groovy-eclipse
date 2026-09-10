@@ -44,6 +44,7 @@ import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.GenericsType.GenericsTypeName;
 import org.codehaus.groovy.ast.GroovyCodeVisitor;
 import org.codehaus.groovy.ast.InnerClassNode;
+import org.codehaus.groovy.ast.IntersectionTypeClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.MultipleAssignmentMetadata;
 import org.codehaus.groovy.ast.Parameter;
@@ -69,7 +70,6 @@ import org.codehaus.groovy.ast.expr.EmptyExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ExpressionTransformer;
 import org.codehaus.groovy.ast.expr.FieldExpression;
-import org.codehaus.groovy.ast.IntersectionTypeClassNode;
 import org.codehaus.groovy.ast.expr.LambdaExpression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
@@ -128,6 +128,7 @@ import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -410,7 +411,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     protected static final ClassNode ENUMERATION_TYPE = ClassHelper.make(Enumeration.class);
     /** Cached {@link CharSequence} type (GROOVY-9848: membership operator dispatch). */
     protected static final ClassNode CHAR_SEQUENCE_TYPE = ClassHelper.make(CharSequence.class);
-    /** Cached {@link java.util.Map.Entry} type. */
+    /** Cached {@link Map.Entry} type. */
     protected static final ClassNode MAP_ENTRY_TYPE = ClassHelper.make(Map.Entry.class);
     /** Cached {@link Iterable} type. */
     protected static final ClassNode ITERABLE_TYPE = ClassHelper.ITERABLE_TYPE;
@@ -910,7 +911,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             pattern = "No such {0,choice,1#attribute|2#property}: {1} for Class or static {0,choice,1#field|2#property} for class: {2}";
         }
 
-        String error = java.text.MessageFormat.format(pattern, expression instanceof AttributeExpression ? 1 : 2, expression.getPropertyAsString(), prettyPrintTypeName(wrapTypeIfNecessary(objectExpressionType)));
+        String error = MessageFormat.format(pattern, expression instanceof AttributeExpression ? 1 : 2, expression.getPropertyAsString(), prettyPrintTypeName(wrapTypeIfNecessary(objectExpressionType)));
         ASTNode node = expression.getLineNumber() > 0 ? expression : expression.getProperty(); // GROOVY-11663
         addStaticTypeError(error, node);
     }
@@ -935,8 +936,23 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     public void visitNotExpression(final NotExpression expression) {
         typeCheckingContext.pushTemporaryTypeInfo();
         super.visitNotExpression(expression);
+        var tti = typeCheckingContext.temporaryIfBranchTypeInformation.pop();
+        // GROOVY-12000: a negative ("!instanceof") entry may only be re-flipped into a positive
+        // smart-cast when the operand is itself a single negated check, or an "||" whose operands
+        // pin their negatives down; "!(L && R)" only guarantees "!L || !R", so drop them there
+        Expression operand = stripParentheses(expression.getExpression());
+        if (!(operand instanceof NotExpression) && !isBinaryOperation(operand, COMPARE_NOT_INSTANCEOF, LOGICAL_OR)) {
+            List<ClassNode> types = new ArrayList<>();
+            Object key = negatedInstanceOfConjunctionKey(operand, types);
+            if (key != null) { // !(x !instanceof A && x !instanceof B) is (x instanceof A || x instanceof B)
+                tti.clear();
+                typeCheckingContext.peekTemporaryTypeInfo(key).add(newUnionTypeClassNode(types));
+            } else {
+                tti.keySet().removeIf(k -> k instanceof Object[]);
+            }
+        }
         // GROOVY-9455: !(x instanceof T) shouldn't propagate T as inferred type
-        typeCheckingContext.temporaryIfBranchTypeInformation.pop().forEach(this::putNotInstanceOfTypeInfo);
+        tti.forEach(this::putNotInstanceOfTypeInfo);
     }
 
     /** {@inheritDoc} */
@@ -1035,7 +1051,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     rightExpression.visit(this);
 
                     var rhs = typeCheckingContext.temporaryIfBranchTypeInformation.pop();
-                    propagateTemporaryTypeInfo(lhs, rhs); // `instanceof` on either side?
+                    propagateTemporaryTypeInfo(lhs, rhs, leftExpression, rightExpression); // `instanceof` on either side?
                 }
             }
 
@@ -1122,7 +1138,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         resultType = originType; // TODO: Find accessible type in hierarchy of resultType?
                     } else if (GenericsUtils.hasUnresolvedGenerics(resultType)) { // GROOVY-9033, GROOVY-10089, et al.
                         Map<GenericsTypeName, GenericsType> enclosing = extractGenericsParameterMapOfThis(typeCheckingContext);
-                        resultType = fullyResolveType(resultType, Optional.ofNullable(enclosing).orElseGet(Collections::emptyMap));
+                        resultType = fullyResolveType(resultType, enclosing != null ? enclosing : Collections.emptyMap());
                     }
                 }
 
@@ -1159,6 +1175,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     boolean compatible = rType.isInterface();
                     for (int i = 0; !compatible && i < union.getDelegates().length; i += 1) {
                         ClassNode delegate = union.getDelegates()[i];
+                        if (delegate instanceof WideningCategories.LowestUpperBoundClassNode) delegate = delegate.getUnresolvedSuperClass(); // GROOVY-12000
                         compatible = delegate.isInterface() || delegate.isDerivedFrom(rType) || rType.isDerivedFrom(delegate);
                     }
                     if (!compatible) {
@@ -1185,11 +1202,30 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-    private void propagateTemporaryTypeInfo(final Map<Object, List<ClassNode>> lhs,
-                                            final Map<Object, List<ClassNode>> rhs) {
-        // TODO: deal with (x !instanceof T)
+    private void propagateTemporaryTypeInfo(final Map<Object, List<ClassNode>> lhs, final Map<Object, List<ClassNode>> rhs,
+                                            final Expression leftExpression, final Expression rightExpression) {
+        // GROOVY-12000: (x !instanceof A || x !instanceof B) narrows x to A & B in the else branch; keep the
+        // negative entries of each operand whose falsity pins them down, merged per key so that the else-branch
+        // sign-flip yields the intersection -- the entries are inert in the then branch (never read positively)
+        var negatives = new LinkedHashMap<Object, List<ClassNode>>();
+        if (canInvertNarrowingForElseBranch(leftExpression)) collectNegativeTypeInfo(lhs, negatives);
+        if (canInvertNarrowingForElseBranch(rightExpression)) collectNegativeTypeInfo(rhs, negatives);
         lhs.keySet().removeIf(k -> k instanceof Object[]);
         rhs.keySet().removeIf(k -> k instanceof Object[]);
+
+        // GROOVY-12393: VOID_TYPE is not an instanceof type; it marks a write to the
+        // variable (see storeType) that voids earlier instanceof guards. Carry the
+        // marker to the enclosing scope and keep it out of the union types below.
+        for (var map : List.of(lhs, rhs)) {
+            for (var it = map.entrySet().iterator(); it.hasNext(); ) {
+                var entry = it.next();
+                if (entry.getValue().removeIf(VOID_TYPE::equals)) {
+                    List<ClassNode> enclosing = typeCheckingContext.peekTemporaryTypeInfo(entry.getKey());
+                    if (!enclosing.contains(VOID_TYPE)) enclosing.add(VOID_TYPE);
+                    if (entry.getValue().isEmpty()) it.remove();
+                }
+            }
+        }
 
         for (var entry : lhs.entrySet()) {
             if (rhs.containsKey(entry.getKey())) {
@@ -1211,6 +1247,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 var types = new LinkedList<>(entry.getValue());
                 types.addFirst(v instanceof ASTNode n ? getType(n) : v.getType());
                 typeCheckingContext.peekTemporaryTypeInfo(v).add(newUnionTypeClassNode(types));
+            }
+        }
+
+        negatives.forEach(this::putNotInstanceOfTypeInfo);
+    }
+
+    private static void collectNegativeTypeInfo(final Map<Object, List<ClassNode>> tti, final Map<Object, List<ClassNode>> negatives) {
+        for (var entry : tti.entrySet()) {
+            if (entry.getKey() instanceof Object[] arr) {
+                negatives.computeIfAbsent(arr[1], k -> new ArrayList<>()).addAll(entry.getValue());
             }
         }
     }
@@ -1404,7 +1450,9 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
     }
 
     private static boolean isClosureWithType(final ClassNode type) {
-        return CLOSURE_TYPE.equals(type) && Optional.ofNullable(type.getGenericsTypes()).filter(gts -> gts != null && gts.length == 1).isPresent();
+        if (!CLOSURE_TYPE.equals(type)) return false;
+        GenericsType[] gts = type.getGenericsTypes();
+        return gts != null && gts.length == 1;
     }
 
     private static boolean isCompoundAssignment(final Expression exp) {
@@ -1535,7 +1583,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
 
     private boolean typeCheckMultipleAssignmentPositional(final Expression leftExpression, Expression rightExpression) {
         if (rightExpression instanceof VariableExpression || rightExpression instanceof PropertyExpression || rightExpression instanceof MethodCall) {
-            ClassNode inferredType = Optional.ofNullable(getType(rightExpression)).orElseGet(rightExpression::getType);
+            ClassNode inferredType = inferredOrDeclaredType(rightExpression);
             GenericsType[] genericsTypes = inferredType.getGenericsTypes();
             ListExpression listExpression = new ListExpression();
             listExpression.setSourcePosition(rightExpression);
@@ -1569,7 +1617,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
         // GString constants, closure-call results that didn't match Tuple1..16) — try the
         // indexable synthesis based on the RHS's static type.
         if (!(rightExpression instanceof ListExpression)) {
-            ClassNode rhsType = Optional.ofNullable(getType(rightExpression)).orElseGet(rightExpression::getType);
+            ClassNode rhsType = inferredOrDeclaredType(rightExpression);
             rightExpression = synthesizeIndexableRhs(leftExpression, rightExpression, rhsType);
         }
 
@@ -1702,7 +1750,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
     }
 
     private boolean typeCheckRestAgainstDeclaredType(final TupleExpression tuple, final Expression rightExpression) {
-        ClassNode rhsType = Optional.ofNullable(getType(rightExpression)).orElseGet(rightExpression::getType);
+        ClassNode rhsType = inferredOrDeclaredType(rightExpression);
         ClassNode elementType = inferComponentType(rhsType, int_TYPE);
         if (elementType == null) {
             // Non-indexable RHS — let positional surface the existing rejection.
@@ -1858,7 +1906,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
     }
 
     private boolean typeCheckMapStyleAgainstDeclaredType(final TupleExpression tuple, final Expression rightExpression) {
-        ClassNode rhsType = Optional.ofNullable(getType(rightExpression)).orElseGet(rightExpression::getType);
+        ClassNode rhsType = inferredOrDeclaredType(rightExpression);
 
         // Map<K, V> RHS: every binder resolves to V. STC won't complain about static "missing keys"
         // because Map keys aren't statically known.
@@ -4238,7 +4286,9 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
     }
 
     private ClassLoader getTransformLoader() {
-        return Optional.ofNullable(typeCheckingContext.getCompilationUnit()).map(CompilationUnit::getTransformLoader).orElseGet(() -> getSourceUnit().getClassLoader());
+        CompilationUnit compilationUnit = typeCheckingContext.getCompilationUnit();
+        ClassLoader loader = compilationUnit != null ? compilationUnit.getTransformLoader() : null;
+        return loader != null ? loader : getSourceUnit().getClassLoader();
     }
 
     /**
@@ -5222,8 +5272,9 @@ trying: for (ClassNode[] signature : signatures) {
     @Override
     public void visitYieldStatement(final YieldStatement statement) {
         super.visitYieldStatement(statement);
-        if (typeCheckingContext.getEnclosingSwitchExpression() != null) {
-            typeCheckingContext.getEnclosingSwitchExpressionYieldTypes().add(getType(statement.getExpression()));
+        List<ClassNode> yieldTypes = typeCheckingContext.peekEnclosingSwitchExpressionYieldTypes();
+        if (yieldTypes != null) {
+            yieldTypes.add(getType(statement.getExpression()));
         }
     }
 
@@ -5547,7 +5598,8 @@ trying: for (ClassNode[] signature : signatures) {
         }
         Expression trueExpression = expression.getTrueExpression();
         ClassNode typeOfTrue = findCurrentInstanceOfClass(trueExpression, null);
-        typeOfTrue = Optional.ofNullable(typeOfTrue).orElse(visitValueExpression(trueExpression));
+        ClassNode visitedType = visitValueExpression(trueExpression);
+        if (typeOfTrue == null) typeOfTrue = visitedType;
         Map<Object, List<ClassNode>> tti = typeCheckingContext.temporaryIfBranchTypeInformation.pop();
 
         typeCheckingContext.pushTemporaryTypeInfo();
@@ -6013,15 +6065,21 @@ trying: for (ClassNode[] signature : signatures) {
             switch (op) {
               case DIVIDE:
               case DIVIDE_EQUAL:
-                // divisions may produce different results depending on operand types
-                if (isFloatingCategory(leftRedirect) || isFloatingCategory(rightRedirect)) {
+                // divisions may produce different results depending on operand types;
+                // the runtime uses floating-point math when either operand is a Float
+                // or Double, wrapper or primitive, and BigDecimal math for integral,
+                // BigInteger and BigDecimal operands (GROOVY-12355)
+                if (isFloatingCategory(getUnwrapper(leftRedirect)) || isFloatingCategory(getUnwrapper(rightRedirect))) {
                     if (!isPrimitiveType(leftRedirect) || !isPrimitiveType(rightRedirect)) {
                         return Double_TYPE;
                     }
                     return double_TYPE;
                 }
                 if (DIVIDE == op) {
-                    return BigDecimal_TYPE;
+                    if (isBigDecCategory(getUnwrapper(leftRedirect)) && isBigDecCategory(getUnwrapper(rightRedirect))) {
+                        return BigDecimal_TYPE;
+                    }
+                    return Number_TYPE; // an operand of unknown category may be a Double or Float at runtime
                 }
                 // falls through
               case MOD:
@@ -6043,6 +6101,13 @@ trying: for (ClassNode[] signature : signatures) {
      * Returns the result type for grouped numeric operations such as addition.
      */
     protected static ClassNode getGroupOperationResultType(final ClassNode a, final ClassNode b) {
+        if (!isDoubleCategory(getUnwrapper(a)) || !isDoubleCategory(getUnwrapper(b))) {
+            // an operand typed as Number (or a Number subtype outside every category) may
+            // hold any category at runtime: a floating-point partner still decides the
+            // result, otherwise only Number is certain (GROOVY-12355)
+            if (isFloatingCategory(getUnwrapper(a)) || isFloatingCategory(getUnwrapper(b))) return Double_TYPE;
+            return Number_TYPE;
+        }
         if (isBigIntCategory(a) && isBigIntCategory(b)) return BigInteger_TYPE;
         if (isBigDecCategory(a) && isBigDecCategory(b)) return BigDecimal_TYPE;
         if (isBigDecimalType(a) || isBigDecimalType(b)) return BigDecimal_TYPE;
@@ -6137,10 +6202,11 @@ trying: for (ClassNode[] signature : signatures) {
                 componentType = getType(mce);
             } else {
                 ClassNode iteratorType = getType(mce);
-                if (isOrImplements(iteratorType, Iterator_TYPE) && (iteratorType.getGenericsTypes() != null
+                GenericsType[] iteratorGenerics = iteratorType.getGenericsTypes();
+                if (isOrImplements(iteratorType, Iterator_TYPE) && (iteratorGenerics != null
                         // ignore the iterator(Object) extension method, since it makes *everything* appear iterable
                         || !mce.<MethodNode>getNodeMetaData(DIRECT_METHOD_CALL_TARGET).getDeclaringClass().equals(OBJECT_TYPE))) {
-                    componentType = Optional.ofNullable(iteratorType.getGenericsTypes()).map(gt -> getCombinedBoundType(gt[0])).orElse(OBJECT_TYPE);
+                    componentType = iteratorGenerics != null ? getCombinedBoundType(iteratorGenerics[0]) : OBJECT_TYPE;
                 }
             }
         }
@@ -6444,6 +6510,14 @@ trying: for (ClassNode[] signature : signatures) {
     }
 
     /**
+     * Inferred type for the expression, or its declared type when inference produced nothing.
+     */
+    private ClassNode inferredOrDeclaredType(final Expression expression) {
+        ClassNode inferred = getType(expression);
+        return inferred != null ? inferred : expression.getType();
+    }
+
+    /**
      * Returns the inferred type for the supplied AST node.
      */
     protected ClassNode getType(final ASTNode node) {
@@ -6498,7 +6572,8 @@ trying: for (ClassNode[] signature : signatures) {
 
         if (node instanceof MethodNode) {
             type = ((MethodNode) node).getReturnType();
-            return Optional.ofNullable(getInferredReturnType(node)).orElse(type);
+            ClassNode inferred = getInferredReturnType(node);
+            return inferred != null ? inferred : type;
         }
 
         if (node instanceof MethodCall) {
@@ -7029,10 +7104,11 @@ trying: for (ClassNode[] signature : signatures) {
             for (GenericsType placeholder : aNode.getGenericsTypes()) {
                 for (Map.Entry<GenericsTypeName, GenericsType> e : source.entrySet()) {
                     if (e.getValue().getNodeMetaData(GenericsType.class) == placeholder) {
-                        Optional.ofNullable(target.get(e.getKey()))
-                            // skip "f(g())" for "f(T<String>)" and "<U extends Number> U g()"
-                            .filter(gt -> isAssignableTo(gt.getType(), placeholder.getType()))
-                            .ifPresent(gt -> linked.put(new GenericsTypeName(e.getValue().getName()), gt));
+                        GenericsType gt = target.get(e.getKey());
+                        // skip "f(g())" for "f(T<String>)" and "<U extends Number> U g()"
+                        if (gt != null && isAssignableTo(gt.getType(), placeholder.getType())) {
+                            linked.put(new GenericsTypeName(e.getValue().getName()), gt);
+                        }
                         break;
                     }
                 }
@@ -7216,8 +7292,12 @@ out:    for (ClassNode type : todo) {
                 Map<GenericsTypeName, GenericsType> outerPlaceHolders = extractPlaceHolders(oc, oc.redirect());
                 outerPlaceHolders.forEach(result::putIfAbsent); // inner type parameters win over outer
             }
-            if (!result.isEmpty()) Optional.ofNullable(method.getGenericsTypes()).ifPresent(methodGenerics ->
-                Arrays.stream(methodGenerics).map(gt -> new GenericsTypeName(gt.getName())).forEach(result::remove)); // GROOVY-10322
+            if (!result.isEmpty()) {
+                GenericsType[] methodGenerics = method.getGenericsTypes();
+                if (methodGenerics != null) {
+                    Arrays.stream(methodGenerics).map(gt -> new GenericsTypeName(gt.getName())).forEach(result::remove); // GROOVY-10322
+                }
+            }
         }
         return result;
     }
@@ -7292,12 +7372,19 @@ out:    for (ClassNode type : todo) {
         Long err = ((long) node.getLineNumber()) << 16 + node.getColumnNumber();
         if ((DEBUG_GENERATED_CODE && node.getLineNumber() < 0) || !typeCheckingContext.reportedErrors.contains(err)) {
             SourceUnit source = getSourceUnit();
+            ErrorCollector sourceCollector = source.getErrorCollector();
             ErrorCollector collector = typeCheckingContext.getErrorCollector();
+            if (collector == null) {
+                collector = sourceCollector;
+            }
+            if (collector == null) {
+                return;
+            }
             Message message = Message.create(new SyntaxException(msg + '\n', node), source);
             // GROOVY-12306: only the source unit's own collector enforces the error tolerance.
             // The temporary collectors pushed for speculative checks must never bail out, as
             // their errors are routinely discarded once a candidate is ruled in or out.
-            if (collector == source.getErrorCollector()) {
+            if (collector == sourceCollector) {
                 collector.addError(message);
             } else {
                 collector.addErrorAndContinue(message);
@@ -7560,6 +7647,47 @@ out:    for (ClassNode type : todo) {
         return true;
     }
 
+    private static Expression stripParentheses(Expression expression) {
+        while (expression instanceof BooleanExpression be && !(expression instanceof NotExpression)) {
+            expression = be.getExpression();
+        }
+        return expression;
+    }
+
+    private static boolean isBinaryOperation(final Expression expression, final int... operations) {
+        if (expression instanceof BinaryExpression be) {
+            int op = be.getOperation().getType();
+            for (int operation : operations) {
+                if (op == operation) return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * GROOVY-12000: If {@code expression} is a conjunction ({@code &&} or {@code &})
+     * of negated instanceof checks -- {@code !(x instanceof T)} or {@code x !instanceof T} --
+     * that all test the same variable or property, returns that variable's temporary type
+     * info key and adds the tested types to {@code types} in source order; otherwise returns
+     * null. Such a conjunction under a {@code !} is, by De Morgan, a disjunction of positive
+     * checks: {@code !(!(x instanceof A) && !(x instanceof B))} narrows {@code x} to {@code A | B}.
+     */
+    private Object negatedInstanceOfConjunctionKey(final Expression expression, final List<ClassNode> types) {
+        Expression expr = stripParentheses(expression);
+        if (expr instanceof NotExpression ne) {
+            expr = stripParentheses(ne.getExpression());
+            if (!isBinaryOperation(expr, KEYWORD_INSTANCEOF)) return null;
+        } else if (isBinaryOperation(expr, LOGICAL_AND, BITWISE_AND)) {
+            Object left = negatedInstanceOfConjunctionKey(((BinaryExpression) expr).getLeftExpression(), types);
+            return left != null && left.equals(negatedInstanceOfConjunctionKey(((BinaryExpression) expr).getRightExpression(), types)) ? left : null;
+        } else if (!isBinaryOperation(expr, COMPARE_NOT_INSTANCEOF)) {
+            return null;
+        }
+        BinaryExpression check = (BinaryExpression) expr;
+        types.add(check.getRightExpression().getType());
+        return extractTemporaryTypeInfoKey(check.getLeftExpression());
+    }
+
     /**
      * Computes the key to use for {@link TypeCheckingContext#temporaryIfBranchTypeInformation}.
      */
@@ -7650,7 +7778,25 @@ out:    for (ClassNode type : todo) {
     }
 
     private static ClassNode newIntersectionTypeClassNode(final Collection<ClassNode> types) {
-        Map<Boolean, List<ClassNode>> spec = types.stream().collect(Collectors.partitioningBy(ClassNode::isInterface));
+        int i = 0; // GROOVY-12000: distribute over a union so each alternative stands alone: T & (A | B) is (T & A) | (T & B)
+        for (ClassNode type : types) {
+            if (type instanceof UnionTypeClassNode union) {
+                List<ClassNode> alternatives = new ArrayList<>();
+                for (ClassNode delegate : union.getDelegates()) {
+                    List<ClassNode> copy = new ArrayList<>(types);
+                    copy.set(i, delegate);
+                    ClassNode alternative = newIntersectionTypeClassNode(copy);
+                    if (alternatives.stream().noneMatch(a -> implementsInterfaceOrIsSubclassOf(alternative, a))) {
+                        alternatives.removeIf(a -> implementsInterfaceOrIsSubclassOf(a, alternative)); // subsumed
+                        alternatives.add(alternative);
+                    }
+                }
+                return newUnionTypeClassNode(alternatives);
+            }
+            i += 1;
+        }
+        Map<Boolean, List<ClassNode>> spec = types.stream().filter(t -> types.stream().noneMatch(o -> o != t // drop members implied by another member
+                && implementsInterfaceOrIsSubclassOf(o, t) && !implementsInterfaceOrIsSubclassOf(t, o))).collect(Collectors.partitioningBy(ClassNode::isInterface));
         ClassNode[] interfaces = spec.get(Boolean.TRUE ).toArray(ClassNode[]::new);
         List<ClassNode> supers = spec.get(Boolean.FALSE);
         // GRECLIPSE add

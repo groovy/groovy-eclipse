@@ -44,7 +44,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -138,8 +137,11 @@ public class ClassNode extends AnnotatedNode {
         // GRECLIPSE end
 
         List<MethodNode> get(Object key) {
-            return Optional.ofNullable(map)
-                .map(m -> m.get(key)).orElseGet(Collections::emptyList);
+            if (map != null) {
+                List<MethodNode> result = map.get(key);
+                if (result != null) return result;
+            }
+            return Collections.EMPTY_LIST;
         }
 
         void put(Object key, MethodNode value) {
@@ -410,7 +412,8 @@ public class ClassNode extends AnnotatedNode {
 
     public CompileUnit getCompileUnit() {
         if (redirect != null) return redirect.getCompileUnit();
-        return Optional.ofNullable(getModule()).map(ModuleNode::getUnit).orElse(null);
+        ModuleNode module = getModule();
+        return module != null ? module.getUnit() : null;
     }
 
     @Deprecated(forRemoval = true, since = "5.0.0")
@@ -420,7 +423,8 @@ public class ClassNode extends AnnotatedNode {
     }
 
     public PackageNode getPackage() {
-        return Optional.ofNullable(getModule()).map(ModuleNode::getPackage).orElse(null);
+        ModuleNode module = getModule();
+        return module != null ? module.getPackage() : null;
     }
 
     public String  getPackageName() {

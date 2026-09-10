@@ -53,6 +53,7 @@ import groovyjarjarasm.asm.ClassReader;
 import groovyjarjarasm.asm.ClassVisitor;
 import groovyjarjarasm.asm.ClassWriter;
 
+import javax.tools.JavaFileObject;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
@@ -122,7 +123,7 @@ public class CompilationUnit extends ProcessingUnit {
     /** The AST transformations state data. */
     protected ASTTransformationsContext astTransformationsContext;
 
-    private Set<javax.tools.JavaFileObject> javaCompilationUnitSet = new HashSet<>();
+    private Set<JavaFileObject> javaCompilationUnitSet = new HashSet<>();
 
     /**
      * Initializes the CompilationUnit with defaults.
@@ -520,7 +521,7 @@ public class CompilationUnit extends ProcessingUnit {
      *
      * @return the tracked Java compilation units
      */
-    public Set<javax.tools.JavaFileObject> getJavaCompilationUnitSet() {
+    public Set<JavaFileObject> getJavaCompilationUnitSet() {
         return javaCompilationUnitSet;
     }
 
@@ -529,7 +530,7 @@ public class CompilationUnit extends ProcessingUnit {
      *
      * @param javaCompilationUnitSet the Java units to add
      */
-    public void addJavaCompilationUnits(final Set<javax.tools.JavaFileObject> javaCompilationUnitSet) {
+    public void addJavaCompilationUnits(final Set<JavaFileObject> javaCompilationUnitSet) {
         this.javaCompilationUnitSet.addAll(javaCompilationUnitSet);
     }
 
@@ -537,7 +538,8 @@ public class CompilationUnit extends ProcessingUnit {
      * Returns the class loader for loading AST transformations.
      */
     public GroovyClassLoader getTransformLoader() {
-        return Optional.ofNullable(getASTTransformationsContext().getTransformLoader()).orElseGet(this::getClassLoader);
+        GroovyClassLoader loader = getASTTransformationsContext().getTransformLoader();
+        return loader != null ? loader : getClassLoader();
     }
 
     //---------------------------------------------------------------------------
@@ -1149,7 +1151,9 @@ public class CompilationUnit extends ProcessingUnit {
                         unit.getErrorCollector().addCollectorContents(errorCollector);
                     } else {
                         if (e instanceof GroovyRuntimeException gre) {
-                            context = Optional.ofNullable(gre.getModule()).map(ModuleNode::getContext).orElse(context);
+                            ModuleNode module = gre.getModule();
+                            SourceUnit moduleContext = module != null ? module.getContext() : null;
+                            if (moduleContext != null) context = moduleContext;
                         }
                         if (context != null) {
                             if (e instanceof SyntaxException) {

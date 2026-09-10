@@ -4717,7 +4717,7 @@ public final class InferencingTests extends InferencingTestSuite {
         }
     }
 
-    @Test
+    @Test // GROOVY-12000
     public void testInstanceOf28() {
         for (String mode : List.of("CompileDynamic", "CompileStatic")) {
             String contents =
@@ -4736,11 +4736,12 @@ public final class InferencingTests extends InferencingTestSuite {
 
             offset = contents.lastIndexOf("object\n");
             assertType(contents, offset, offset + 6, "java.lang.Object");
-            assertType(contents.replace("&&", "||"), offset, offset + 6, "java.lang.Object");
+            boolean notYet = mode.endsWith("Dynamic") || !isAtLeastGroovy(60);
+            assertType(contents.replace("&&", "||"), offset, offset + 6, notYet ? "java.lang.Object" : "java.util.Map & java.util.Set");
         }
     }
 
-    @Test
+    @Test // GROOVY-12000
     public void testInstanceOf29() {
         assumeTrue(isParrotParser());
 
@@ -4761,11 +4762,12 @@ public final class InferencingTests extends InferencingTestSuite {
 
             offset = contents.lastIndexOf("object\n");
             assertType(contents, offset, offset + 6, "java.lang.Object");
-            assertType(contents.replace("&&", "||"), offset, offset + 6, "java.lang.Object");
+            boolean notYet = mode.endsWith("Dynamic") || !isAtLeastGroovy(60);
+            assertType(contents.replace("&&", "||"), offset, offset + 6, notYet ? "java.lang.Object" : "java.util.Map & java.util.Set");
         }
     }
 
-    @Test
+    @Test // GROOVY-12000
     public void testInstanceOf30() {
         for (String mode : List.of("CompileDynamic", "CompileStatic")) {
             String contents =
@@ -4784,11 +4786,12 @@ public final class InferencingTests extends InferencingTestSuite {
 
             offset = contents.lastIndexOf("number\n");
             assertType(contents, offset, offset + 6, "java.lang.Number");
-            assertType(contents.replace("&&", "||"), offset, offset + 6, "java.lang.Number");
+            boolean notYet = mode.endsWith("Dynamic") || !isAtLeastGroovy(60);
+            assertType(contents.replace("&&", "||"), offset, offset + 6, "java.lang.Number" + (notYet ? "" : " & java.io.Closeable & java.lang.Cloneable"));
         }
     }
 
-    @Test
+    @Test // GROOVY-12000
     public void testInstanceOf31() {
         assumeTrue(isParrotParser());
 
@@ -4809,11 +4812,12 @@ public final class InferencingTests extends InferencingTestSuite {
 
             offset = contents.lastIndexOf("number\n");
             assertType(contents, offset, offset + 6, "java.lang.Number");
-            assertType(contents.replace("&&", "||"), offset, offset + 6, "java.lang.Number");
+            boolean notYet = mode.endsWith("Dynamic") || !isAtLeastGroovy(60);
+            assertType(contents.replace("&&", "||"), offset, offset + 6, "java.lang.Number" + (notYet ? "" : " & java.io.Closeable & java.lang.Cloneable"));
         }
     }
 
-    @Test
+    @Test // GROOVY-12000
     public void testInstanceOf32() {
         for (String mode : List.of("CompileDynamic", "CompileStatic")) {
             String contents =
@@ -4830,8 +4834,8 @@ public final class InferencingTests extends InferencingTestSuite {
             assertType(contents, offset, offset + 6, "java.lang.Number");
 
             offset = contents.lastIndexOf("number\n");
-            assertType(contents, offset, offset + 6, "java.lang.Number" +
-                (mode.endsWith("Dynamic") || !isAtLeastGroovy(60) ? "" : " & (java.lang.Cloneable | java.io.Closeable)")); // GROOVY-12000
+            boolean notYet = mode.endsWith("Dynamic") || !isAtLeastGroovy(60);
+            assertType(contents, offset, offset + 6, notYet ? "java.lang.Number" : "(java.lang.Number & java.lang.Cloneable) | (java.lang.Number & java.io.Closeable)");
         }
     }
 

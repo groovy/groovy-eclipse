@@ -729,10 +729,39 @@ class GrapeIvy implements GrapeEngine {
             if (classifier) name += "-$classifier"
             name += ".${attrs.getNamedItem('ext').getTextContent()}"
             def jarfile = new File(jardir, name)
+            if (!isWithin(jardir, jarfile)) {
+                // the name comes from a cached descriptor; a value carrying a path separator or
+                // a ".." segment would otherwise delete a file outside the module's jars directory
+                System.err.println("Skipping ${name}: artifact path escapes the module cache directory")
+                continue
+            }
             if (jarfile.exists()) {
                 System.err.println("Deleting ${jarfile.getName()}")
                 jarfile.delete()
             }
+        }
+    }
+
+    /**
+     * Whether {@code file} resolves to a location inside {@code dir}. Uses canonical paths so a
+     * {@code ..} segment or a path separator in the name -- or a symbolic link along the way --
+     * cannot carry the resolved file out of the directory.
+     *
+     * @param dir the directory the file must stay within
+     * @param file the candidate file
+     * @return whether the file is contained in the directory
+     */
+    private static boolean isWithin(File dir, File file) {
+        try {
+            /* GRECLIPSE edit
+            Path root = dir.canonicalFile.toPath()
+            Path target = file.canonicalFile.toPath()
+            target.startsWith(root)
+            */
+            file.getCanonicalFile().toPath().startsWith(dir.getCanonicalFile().toPath())
+            // GRECLIPSE end
+        } catch (IOException ignored) {
+            false
         }
     }
 
@@ -975,27 +1004,27 @@ class GrapeIvy implements GrapeEngine {
         // Map numeric level (from grape -q/-w/-i/-V/-d flags) to JUL level
         // for the platform logging backed Ivy logger.
         // 0=quiet/errors only, 1=warn, 2=info, 3=verbose, 4=debug
-        java.util.logging.Level julLevel
+        Level julLevel
         switch (level) {
             case 0:
-                julLevel = java.util.logging.Level.SEVERE
+                julLevel = Level.SEVERE
                 break
             case 1:
-                julLevel = java.util.logging.Level.WARNING
+                julLevel = Level.WARNING
                 break
             case 2:
-                julLevel = java.util.logging.Level.INFO
+                julLevel = Level.INFO
                 break
             case 3:
-                julLevel = java.util.logging.Level.FINE
+                julLevel = Level.FINE
                 break
             case 4:
-                julLevel = java.util.logging.Level.FINEST
+                julLevel = Level.FINEST
                 break
             default:
-                julLevel = java.util.logging.Level.INFO
+                julLevel = Level.INFO
         }
-        java.util.logging.Logger.getLogger('groovy.grape.ivy').setLevel(julLevel)
+        Logger.getLogger('groovy.grape.ivy').setLevel(julLevel)
     }
     */
     int loggingLevel = Message.MSG_INFO

@@ -18,6 +18,7 @@
  */
 package org.apache.groovy.ast.tools;
 
+import groovy.transform.NonSealed;
 import org.apache.groovy.util.BeanUtils;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
@@ -42,7 +43,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -368,7 +368,7 @@ public class ClassNodeUtils {
             return false;
         }
         if (cn.isPrimaryClassNode()) {
-            if (Boolean.TRUE.equals(cn.getNodeMetaData(groovy.transform.NonSealed.class))) return true;
+            if (Boolean.TRUE.equals(cn.getNodeMetaData(NonSealed.class))) return true;
         } else {
             // GROOVY-11292, GROOVY-11750: check super class
             try {
@@ -600,8 +600,11 @@ public class ClassNodeUtils {
 
     private static boolean isPackagePrivate(final AnnotatedNode aNode) {
         return aNode.getAnnotations().stream().anyMatch(anno -> "groovy.transform.PackageScope".equals(anno.getClassNode().getName()))
-            || aNode.getDeclaringClass().getAnnotations().stream().anyMatch(anno -> "groovy.transform.PackageScope".equals(anno.getClassNode().getName())
-                                                                            && Optional.ofNullable(anno.getMember("value")).filter(expr -> expr.getText().contains("FIELDS")).isPresent());
+            || aNode.getDeclaringClass().getAnnotations().stream().anyMatch(anno -> {
+                if (!"groovy.transform.PackageScope".equals(anno.getClassNode().getName())) return false;
+                Expression value = anno.getMember("value");
+                return value != null && value.getText().contains("FIELDS");
+            });
     }
 
     private ClassNodeUtils() {}

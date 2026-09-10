@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -210,12 +209,14 @@ public class CompilerConfiguration {
 
         @Override
         public Set<String> getDisabledGlobalASTTransformations() {
-            return Optional.ofNullable(super.getDisabledGlobalASTTransformations()).map(Collections::unmodifiableSet).orElse(null);
+            Set<String> disabled = super.getDisabledGlobalASTTransformations();
+            return disabled != null ? Collections.unmodifiableSet(disabled) : null;
         }
 
         @Override
         public Map<String, Object> getJointCompilationOptions() {
-            return Optional.ofNullable(super.getJointCompilationOptions()).map(Collections::unmodifiableMap).orElse(null);
+            Map<String, Object> options = super.getJointCompilationOptions();
+            return options != null ? Collections.unmodifiableMap(options) : null;
         }
 
         @Override
@@ -560,7 +561,7 @@ public class CompilerConfiguration {
     public CompilerConfiguration() {
         classpath = new LinkedList<>();
 
-        tolerance = 10;
+        tolerance = DEFAULT_TOLERANCE;
         minimumRecompilationInterval = 100;
         warningLevel = WarningMessage.LIKELY_ERRORS;
         parameters = getBooleanSafe("groovy.parameters");
@@ -848,7 +849,7 @@ public class CompilerConfiguration {
      * Sets the encoding to be used when reading source files.
      */
     public void setSourceEncoding(final String encoding) {
-        this.sourceEncoding = Optional.ofNullable(encoding).orElse(DEFAULT_SOURCE_ENCODING);
+        this.sourceEncoding = Objects.requireNonNullElse(encoding, DEFAULT_SOURCE_ENCODING);
     }
 
     /**
@@ -1043,7 +1044,7 @@ public class CompilerConfiguration {
      * @param scriptExtensions the script extensions to use
      */
     public void setScriptExtensions(final Set<String> scriptExtensions) {
-        this.scriptExtensions = Optional.ofNullable(scriptExtensions).orElseGet(LinkedHashSet::new);
+        this.scriptExtensions = Objects.requireNonNullElseGet(scriptExtensions, LinkedHashSet::new);
     }
 
     /**
