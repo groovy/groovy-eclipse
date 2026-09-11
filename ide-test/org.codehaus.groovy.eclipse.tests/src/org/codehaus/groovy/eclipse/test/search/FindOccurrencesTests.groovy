@@ -15,8 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.test.search
 
-import static groovy.test.GroovyAssert.notYetImplemented
-
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 
 import groovy.test.NotYetImplemented
@@ -132,22 +131,32 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test // see GROOVY-4620 and GRECLIPSE-951
     void testFindPrimitive() {
-        if (!isParrotParser() && notYetImplemented(this)) return // not working for antlr2 parser
-
         //@formatter:off
-        String contents = '''\
+        String contents = """\
             |int v, w = 0
             |int x(int y) {
-            |  int z
+            |  int[][] z = ${!isParrotParser()?'null':'new int[][] {}'}
+            |  (new int[0]).length
             |}
-            |'''.stripMargin()
+            |""".stripMargin()
         //@formatter:on
 
-        int first  = contents.indexOf('int')
-        int second = contents.indexOf('int', first  + 1)
-        int third  = contents.indexOf('int', second + 1)
-        int fourth = contents.indexOf('int', third  + 1)
-        doTest(contents, first, 3, first, 3, second, 3, third, 3, fourth, 3)
+        int last = contents.lastIndexOf('int')
+        if (!isParrotParser()) {
+            doTest(contents, last, 3, last, 3)
+        } else {
+            int int1 = contents.indexOf('int')
+            int int2 = contents.indexOf('int', int1 + 1)
+            int int3 = contents.indexOf('int', int2 + 1)
+            int int4 = contents.indexOf('int', int3 + 1)
+            int int5 = contents.indexOf('int', int4 + 1)
+            int int6 = contents.indexOf('int', int5 + 1)
+            if (!isAtLeastGroovy(40)) {
+                doTest(contents, last, 3, int5, 3, int6, 3)
+            } else {
+                doTest(contents, last, 3, int1, 3, int2, 3, int3, 3, int4, 3, int5, 3, int6, 3)
+            }
+        }
     }
 
     @Test
@@ -754,7 +763,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     }
 
     @NotYetImplemented @Test // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
-    void testDefaultParameters1a() {
+    void testDefaultParameters2() {
         //@formatter:off
         String contents = '''\
             |class Default {
@@ -785,7 +794,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     }
 
     @NotYetImplemented @Test // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
-    void testDefaultParameters2() {
+    void testDefaultParameters3() {
         //@formatter:off
         String contents = '''\
             |class Default {

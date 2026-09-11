@@ -3945,9 +3945,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     protected static ClassNode makeClassNode(String name) {
         ClassNode node = ClassHelper.make(name);
         if (node instanceof ImmutableClassNode && !ClassHelper.isPrimitiveType(node)) {
-            ClassNode wrapper = ClassHelper.makeWithoutCaching(name);
-            wrapper.setRedirect(node);
-            node = wrapper;
+            ClassNode proxy = ClassHelper.makeWithoutCaching(name);
+            proxy.setRedirect(node);
+            node = proxy;
         }
         return node;
     }
