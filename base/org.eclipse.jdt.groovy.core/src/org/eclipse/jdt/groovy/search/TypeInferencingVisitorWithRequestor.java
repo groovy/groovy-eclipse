@@ -2704,7 +2704,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                                     }
                                 }
                             }
-                        } catch (Exception | LinkageError e) {
+                        } catch (Exception | LinkageError | AssertionError e) {
                             log(e, "Error processing @ClosureParams of %s#%s", methodNode.getDeclaringClass().getName(), methodNode.getName());
                         }
                     });

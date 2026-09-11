@@ -34,7 +34,6 @@ import org.eclipse.jdt.internal.compiler.impl.StringConstant;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
-import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
@@ -44,7 +43,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 public class JDTAnnotationNode extends AnnotationNode {
 
     private AnnotationBinding annotationBinding;
-    private volatile boolean membersInitialized;
+    private boolean membersInitialized;
     private JDTResolver resolver;
 
     public JDTAnnotationNode(AnnotationBinding annotationBinding, JDTResolver resolver) {
@@ -65,14 +64,20 @@ public class JDTAnnotationNode extends AnnotationNode {
 
     @Override
     public Expression getMember(String name) {
-        ensureMembersInitialized();
+        if (!membersInitialized) ensureMembersInitialized();
         return super.getMember(name);
     }
 
     @Override
     public Map<String, Expression> getMembers() {
-        ensureMembersInitialized();
+        if (!membersInitialized) ensureMembersInitialized();
         return super.getMembers();
+    }
+
+    @Override
+    public String getText() {
+        if (!membersInitialized) ensureMembersInitialized();
+        return super.getText();
     }
 
     @Override
@@ -90,30 +95,22 @@ public class JDTAnnotationNode extends AnnotationNode {
         return 0 != (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationSourceRetention);
     }
 
-    private void ensureMembersInitialized() {
+    private synchronized void ensureMembersInitialized() {
         if (membersInitialized) {
             return;
         }
-        membersInitialized = true;
-        ElementValuePair[] evpairs = annotationBinding.getElementValuePairs();
-        for (ElementValuePair evpair : evpairs) {
-            char[] name = evpair.getName();
-            MethodBinding mb = evpair.binding;
-            Expression valueExpression = null;
-            // FIXASC needs more cases considering
-            if (mb == null) {
-                if (evpair.value instanceof StringConstant) {
-                    String v = ((StringConstant) evpair.value).stringValue();
-                    valueExpression = new ConstantExpression(v);
-                } else {
-                    // GRECLIPSE-1587 fill in something here to avoid an NPE
-                    valueExpression = ConstantExpression.NULL;
-                }
-            } else {
-                valueExpression = createExpressionFor(mb.returnType, evpair.value);
+        for (ElementValuePair evp : annotationBinding.getElementValuePairs()) {
+            Expression value;
+            if (evp.binding != null) {
+                value = createExpressionFor(evp.binding.returnType, evp.value);
+            } else if (evp.value instanceof StringConstant sc) {
+                value = new ConstantExpression(sc.stringValue());
+            } else { // GRECLIPSE-1587 fill in to avoid a NPE
+                value = ConstantExpression.NULL;
             }
-            super.addMember(new String(name), valueExpression);
+            super.addMember(String.valueOf(evp.getName()), value);
         }
+        membersInitialized = true;
     }
 
     private Expression createExpressionFor(TypeBinding b, Object value) {
