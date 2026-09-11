@@ -371,6 +371,11 @@ public class GroovyBeautifier {
 
     private void addAdditionalSpacing(MultiTextEdit edits) {
         try {
+            // Tracks whether the previous token was the first colon of a
+            // split "::" method reference operator, so the second colon
+            // (whose own next token is not a colon) is also exempted from
+            // the COLON-triggers-a-trailing-space rule below.
+            boolean previousWasFirstHalfOfMethodReference = false;
             for (Token token : formatter.getTokens().getTokens(formatter.selection)) {
                 Token nextToken = formatter.getTokens().getNextToken(token);
                 int tokenType = token.getType();
@@ -413,7 +418,19 @@ public class GroovyBeautifier {
                     addSpaceAfter = true;
                 }
 
-                if (tokenType == GroovyTokenTypeBridge.COLON) {
+                boolean isSecondHalfOfMethodReference = previousWasFirstHalfOfMethodReference;
+                previousWasFirstHalfOfMethodReference = (tokenType == GroovyTokenTypeBridge.COLON && nextTokenType == GroovyTokenTypeBridge.COLON);
+
+                if (tokenType == GroovyTokenTypeBridge.COLON
+                        && nextTokenType != GroovyTokenTypeBridge.COLON
+                        && !isSecondHalfOfMethodReference) {
+                    // A COLON adjacent to another COLON (on either side) is
+                    // the method reference operator "::" (Groovy 3+), split
+                    // into two tokens because the legacy antlr2 grammar used
+                    // for formatting predates it and has no lookahead rule
+                    // for it. No legitimate Groovy construct produces two
+                    // adjacent colons, so this is always safe to assume.
+                    // Adding a space here would corrupt "::" (see spotless#3013).
                     addSpaceAfter = true;
                 }
 
@@ -486,6 +503,14 @@ public class GroovyBeautifier {
                 }
 
                 if (nextTokenType == GroovyTokenTypeBridge.COMMA) {
+                    removeAllWhitespaces = true;
+                }
+
+                if (tokenType == GroovyTokenTypeBridge.COLON && nextTokenType == GroovyTokenTypeBridge.COLON) {
+                    // Two adjacent colons are always the "::" method
+                    // reference operator split by the legacy grammar (see
+                    // spotless#3013); normalize any stray spacing back to
+                    // zero rather than collapsing it to one space.
                     removeAllWhitespaces = true;
                 }
 
