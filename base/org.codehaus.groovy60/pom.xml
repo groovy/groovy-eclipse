@@ -55,6 +55,7 @@
             <configuration>
               <outputDirectory>${project.build.directory}/groovy-eclipse.jar-classes</outputDirectory>
               <includes>
+                <include>org/codehaus/groovy/ast/tools/GeneralUtils.class</include>
                 <include>org/codehaus/groovy/classgen/Verifier.class</include>
               </includes>
             </configuration>

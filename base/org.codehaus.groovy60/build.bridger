@@ -28,7 +28,8 @@
 
         <local name="bridge.result" />
         <java classname="org.jboss.bridger.Bridger" classpathref="classpath.bridger" dir="${basedir}" fork="true" outputproperty="bridge.result">
-            <arg line="org/codehaus/groovy/classgen/Verifier.class" />
+            <arg value="org/codehaus/groovy/ast/tools/GeneralUtils.class" />
+            <arg value="org/codehaus/groovy/classgen/Verifier.class" />
         </java>
 
         <fail message="${bridge.result}">

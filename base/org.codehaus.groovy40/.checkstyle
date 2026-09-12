@@ -36,6 +36,7 @@
         <file-match-pattern match-pattern="groovy/ast/expr/ConstantExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/expr/(Static)?MethodCallExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/stmt/ForStatement.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/stmt/TryCatchStatement.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/tools/ExpressionUtils.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/tools/WideningCategories.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AnnotationVisitor.java" include-pattern="false" />

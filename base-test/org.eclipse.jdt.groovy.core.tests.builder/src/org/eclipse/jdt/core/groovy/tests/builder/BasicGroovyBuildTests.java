@@ -2013,13 +2013,35 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     @Test
+    public void testSpock_GH1697() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+        System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
+        env.addJar  (paths[0], "lib/spock-core-2.4-groovy-" + (isAtLeastGroovy(50) ? "4.0" : "5.0") + ".jar");
+        env.addEntry(paths[0], JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/5")));
+
+        //@formatter:off
+        env.addGroovyClass(paths[1], "MySpec",
+            "final class MySpec extends spock.lang.Specification {\n" +
+            "  def 'verify bridge method for addCatch'() {\n" +
+            "   expect:\n" +
+            "    'hello' != 'world'\n" +
+            "  }\n" +
+            "}\n");
+        //@formatter:on
+
+        fullBuild(paths[0]);
+        expectingNoProblems();
+        System.clearProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck");
+    }
+
+    @Test
     public void testSpock_GRE558() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
         addJUnitAndSpock(paths[0]);
 
         //@formatter:off
-        env.addGroovyClass(paths[1], "MyTest",
-            "final class MyTest extends spock.lang.Specification {\n" +
+        env.addGroovyClass(paths[1], "MySpec",
+            "final class MySpec extends spock.lang.Specification {\n" +
             "  def prop\n" +
             "  def meth() {\n" +
             "   expect:\n" +
@@ -2033,8 +2055,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
-        expectingCompiledClasses("MyTest");
-        executeClass(paths[0], "MyTest", "success", null);
+        expectingCompiledClasses("MySpec");
+        executeClass(paths[0], "MySpec", "success", null);
     }
 
     /**
