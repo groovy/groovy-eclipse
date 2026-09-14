@@ -34,7 +34,7 @@
         <file-match-pattern match-pattern="groovy/ast/expr/ClassExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/expr/ConstantExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/expr/(Static)?MethodCallExpression.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/ast/tools/(ClassNode|Expression|General)Utils.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/tools/(ClassNode|Expression)Utils.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AnnotationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AsmClassGenerator.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/EnumVisitor.java" include-pattern="false" />
@@ -60,7 +60,6 @@
         <file-match-pattern match-pattern="groovy/transform/(Category|Field|Log|NamedVariant|TupleConstructor)ASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/(Binary|MethodCall|Property|Variable)ExpressionTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingVisitor.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/transform/stc/UnionTypeClassNode.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/TraitASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/TraitComposer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/TraitReceiverTransformer.java" include-pattern="false" />

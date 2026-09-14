@@ -828,6 +828,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         ExpressionContext expressionCtx = ctx.expression();
         closureListExpression.addExpression(expressionCtx != null ? (Expression) this.visit(expressionCtx) : EmptyExpression.INSTANCE);
         closureListExpression.addExpression(this.visitForUpdate(ctx.forUpdate()));
+        // for-control span, including `;;`; empty init/cond/update slots stay at -1
+        configureAST(closureListExpression, ctx);
 
         return (body) -> new ForStatement(closureListExpression, body);
     }
@@ -1075,11 +1077,21 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             int defaultStatementListSize = defaultStatementList.size();
             if (defaultStatementListSize > 1) {
-                throw createParsingFailedException("a switch must only have one default branch", defaultStatementList.get(0));
+                Statement duplicate = defaultStatementList.get(1);
+                Token keyword = duplicate.getNodeMetaData(SWITCH_DEFAULT_KEYWORD);
+                if (keyword != null) {
+                    throw createParsingFailedException("A switch can have only one default branch", keyword);
+                }
+                throw createParsingFailedException("A switch can have only one default branch", duplicate);
             }
 
             if (defaultStatementListSize > 0 && last(statementList) instanceof CaseStatement) {
-                throw createParsingFailedException("a default branch must only appear as the last branch of a switch", defaultStatementList.get(0));
+                Statement deflt = defaultStatementList.get(0);
+                Token keyword = deflt.getNodeMetaData(SWITCH_DEFAULT_KEYWORD);
+                if (keyword != null) {
+                    throw createParsingFailedException("A default branch must appear as the last branch of a switch", keyword);
+                }
+                throw createParsingFailedException("A default branch must appear as the last branch of a switch", deflt);
             }
 
             return configureAST(
@@ -1120,6 +1132,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                       case DEFAULT:
                         statement = this.visitBlockStatements(ctx.blockStatements());
                         statement.putNodeMetaData(IS_SWITCH_DEFAULT, Boolean.TRUE);
+                        statement.putNodeMetaData(SWITCH_DEFAULT_KEYWORD, tuple.getV1());
                         statementList.add(statement);
                         break;
                     }
@@ -1342,7 +1355,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             return block;
         }
         if (statements.size() > 1) {
-            throw createParsingFailedException("Expect only 1 statement, but " + statements.size() + " statements found", ctx.blockStatements());
+            throw createParsingFailedException("Arrow switch cases must contain a single statement, but " + statements.size() + " were found", ctx.blockStatements());
         }
 
         Statement body = unwrapSingletonBlock(statements.get(0));
@@ -1400,24 +1413,20 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     /**
-     * True when this {@code switch} is a statement (value discarded), not the
-     * value of an enclosing switch-expression arm. Nested
-     * {@code case L -> switch (...)} is the latter: the inner switch is an
-     * expression even though the parser sees it as an expression-statement.
+     * True when the arms of this {@code switch} need not yield: it makes up a
+     * whole statement whose value is either discarded or an implicit return,
+     * so an incomplete arm rewrites it to a {@code SwitchStatement}. Nested
+     * {@code case L -> switch (...)} follows its own switch: the inner one is
+     * an expression only where the outer produces a value.
      */
     private boolean isSwitchUsedAsStatement(final SwitchExpressionContext ctx) {
-        ParserRuleContext p = ctx;
-        while (p != null && !(p instanceof CommandExprAltContext)) {
-            p = p.getParent();
-        }
-        if (!(p instanceof CommandExprAltContext command)
-                || !(command.getParent() instanceof ExpressionStmtAltContext stmtAlt)) {
-            return false;
-        }
-        ParserRuleContext blockStatement = stmtAlt.getParent();
-        ParserRuleContext blockStatements = blockStatement != null ? blockStatement.getParent() : null;
-        ParserRuleContext group = blockStatements != null ? blockStatements.getParent() : null;
-        return !(group instanceof SwitchBlockStatementExpressionGroupContext);
+        StatementContext statement = switchAsStatement(ctx);
+        return statement != null && !isSwitchValueUsed(statement);
+    }
+
+    /** Whether a switch-expression group uses arrow labels, making its sole statement the arm value. */
+    private static boolean isArrowGroup(final SwitchBlockStatementExpressionGroupContext group) {
+        return group.switchExpressionLabel(0).ac.getType() == ARROW;
     }
 
     private boolean isEnclosingSwitchUsedAsStatement() {
@@ -1635,7 +1644,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         boolean hasRecordHeader = asBoolean(ctx.formalParameters());
         if (isRecord) {
             if (!hasRecordHeader) {
-                throw createParsingFailedException("header declaration of record is expected", ctx.identifier());
+                throw createParsingFailedException("Record '" + className + "' is missing a header, for example: record " + className + "(...)", ctx.identifier());
             }
             if (asBoolean(ctx.EXTENDS())) {
                 throw createParsingFailedException("No extends clause allowed for record declaration", ctx.EXTENDS());
@@ -1648,7 +1657,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             }
         } else {
             if (hasRecordHeader) {
-                throw createParsingFailedException("header declaration is only allowed for record declaration", ctx.formalParameters());
+                throw createParsingFailedException("Only records can have a compact header, for example: record " + className + "(...)", ctx.formalParameters());
             }
         }
 
@@ -2147,7 +2156,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         // GRECLIPSE end
 
         if (classNode.getAnnotations().stream().noneMatch(a -> a.getClassNode().getName().equals(RECORD_TYPE_NAME))) {
-            throw createParsingFailedException("Only record can have compact constructor", ctx);
+            throw createParsingFailedException("Compact constructors are only allowed in records", ctx);
         }
 
         if (new ModifierManager(this, ctx.getNodeMetaData(COMPACT_CONSTRUCTOR_DECLARATION_MODIFIERS)).containsAny(VAL, VAR)) {
@@ -2266,7 +2275,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         if (2 == ctx.t) {
             if (asBoolean(ctx.methodBody())) {
-                throw createParsingFailedException("Abstract method should not have method body", ctx);
+                throw createParsingFailedException("Abstract method cannot have a body", ctx);
             }
         }
 
@@ -2277,28 +2286,28 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         if (9 == ctx.ct) { // script
             if (isAbstractMethod || !hasMethodBody) { // method should not be declared abstract in the script
-                throw createParsingFailedException("You cannot define " + (isAbstractMethod ? "an abstract" : "a") + " method[" + methodNode.getName() + "] " + (!hasMethodBody ? "without method body " : "") + "in the script. Try " + (isAbstractMethod ? "removing the 'abstract'" : "") + (isAbstractMethod && !hasMethodBody ? " and" : "") + (!hasMethodBody ? " adding a method body" : ""), methodNode);
+                throw createParsingFailedException(scriptMethodError(methodNode, isAbstractMethod, hasMethodBody), methodNode);
             }
         } else {
             if (4 == ctx.ct) { // trait
                 if (isAbstractMethod && hasMethodBody) {
-                    throw createParsingFailedException("Abstract method should not have method body", ctx);
+                    throw createParsingFailedException("Abstract method cannot have a body", ctx);
                 }
             }
 
             if (3 == ctx.ct) { // annotation
                 if (hasMethodBody) {
-                    throw createParsingFailedException("Annotation type element should not have body", ctx);
+                    throw createParsingFailedException("Annotation type elements cannot have a body", ctx);
                 }
             }
 
             if (!isAbstractMethod && !hasMethodBody) { // non-abstract method without body in the non-script(e.g. class, enum, trait) is not allowed!
-                throw createParsingFailedException("You defined a method[" + methodNode.getName() + "] without a body. Try adding a method body, or declare it abstract", methodNode);
+                throw createParsingFailedException("Method '" + methodNode.getName() + "' is missing a body. Add a method body, or declare it abstract", methodNode);
             }
 
             boolean isInterfaceOrAbstractClass = asBoolean(classNode) && classNode.isAbstract() && !classNode.isAnnotationDefinition();
             if (isInterfaceOrAbstractClass && !modifierManager.containsAny(DEFAULT, PRIVATE) && isAbstractMethod && hasMethodBody) {
-                throw createParsingFailedException("You defined an abstract method[" + methodNode.getName() + "] with a body. Try removing the method body" + (classNode.isInterface() ? ", or declare it default or private" : ""), methodNode);
+                throw createParsingFailedException("Abstract method '" + methodNode.getName() + "' cannot have a body. Remove the method body" + (classNode.isInterface() ? ", or declare it default or private" : ""), methodNode);
             }
         }
 
@@ -2307,6 +2316,46 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         if (methodNode instanceof ConstructorNode) {
             modifierManager.validate((ConstructorNode) methodNode);
         }
+    }
+
+    /**
+     * {@code new Super() { Super() {} }} — constructor-shaped member of an
+     * anonymous class. {@code new Super() { bar() {} }} is a method, not a
+     * constructor (anonymous {@code CLASS_NAME} is {@code Outer$1}).
+     */
+    private static boolean isAnonymousConstructorDeclaration(final ClassNode classNode, final String methodName) {
+        if (!(classNode instanceof InnerClassNode inner) || !inner.isAnonymous()) {
+            return false;
+        }
+        ClassNode superClass = inner.getUnresolvedSuperClass();
+        if (superClass != null && methodName.equals(superClass.getNameWithoutPackage())) {
+            return true;
+        }
+        ClassNode[] interfaces = inner.getInterfaces();
+        if (interfaces != null) {
+            for (ClassNode iface : interfaces) {
+                if (iface != null && methodName.equals(iface.getNameWithoutPackage())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Scripts cannot declare abstract methods or methods without a body.
+     * Wording follows javac's "missing method body, or declare abstract",
+     * adapted to script scope where {@code abstract} is never legal.
+     */
+    private static String scriptMethodError(final MethodNode methodNode, final boolean isAbstractMethod, final boolean hasMethodBody) {
+        String name = methodNode.getName();
+        if (isAbstractMethod && !hasMethodBody) {
+            return "Scripts cannot declare abstract method '" + name + "'. Remove 'abstract' and add a method body";
+        }
+        if (isAbstractMethod) {
+            return "Scripts cannot declare abstract method '" + name + "'. Remove 'abstract'";
+        }
+        return "Scripts cannot declare method '" + name + "' without a body. Add a method body";
     }
 
     private MethodNode createScriptMethodNode(final ModifierManager modifierManager, final String methodName, final ClassNode returnType, final Parameter[] parameters, final ClassNode[] exceptions, final Statement code) {
@@ -2334,6 +2383,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             methodNode = createConstructorNodeForClass(methodName, parameters, exceptions, code, classNode, modifiers);
         } else {
             if (!hasReturnType && hasMethodBody && (0 == modifierManager.getModifierCount())) {
+                if (isAnonymousConstructorDeclaration(classNode, methodName)) {
+                    throw createParsingFailedException("Anonymous classes cannot declare constructors", ctx);
+                }
                 throw createParsingFailedException("Invalid method declaration: " + methodName, ctx);
             }
             methodNode = createMethodNodeForClass(ctx, modifierManager, methodName, returnType, parameters, exceptions, code, classNode, modifiers);
@@ -2350,7 +2402,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             Expression defaultValue = this.visitElementValue(elementValue);
             if (returnType.isArray() && defaultValue instanceof ClosureExpression closure // GROOVY-11492
                     && ClosureUtils.hasImplicitParameter(closure) && closure.getCode() instanceof BlockStatement block) {
-                defaultValue = listX(block.getStatements().stream().map(s -> ((ExpressionStatement) s).getExpression()).toList());
+                // listX is unpositioned; copy the authored `{ }` / `{ "foo" }` span
+                defaultValue = configureAST(listX(block.getStatements().stream().map(s -> ((ExpressionStatement) s).getExpression()).toList()), closure);
             }
             code = configureAST(stmt(defaultValue), elementValue);
         }
@@ -2403,7 +2456,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         if (asBoolean(ctx.VOID())) {
             if (ctx.ct == 3) { // annotation
-                throw createParsingFailedException("annotation method cannot have void return type", ctx);
+                throw createParsingFailedException("Annotation type elements cannot have a void return type", ctx);
             }
 
             return configureAST(ClassHelper.VOID_TYPE.getPlainNodeReference(false), ctx.VOID());
@@ -2792,16 +2845,60 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     @Override
     public Statement visitCommandExprAlt(final CommandExprAltContext ctx) {
         Expression expr = this.visitCommandExpression(ctx.commandExpression());
-        // Statement-position `switch` with `->` is parsed as a SwitchExpression
-        // (switchStatement is colon-only). If an arrow block does not yield,
-        // rewrite it to SwitchStatement so the block need not yield (JEP 361
-        // statement rules). Expression-position incomplete arms already errored.
-        if (expr instanceof SwitchExpression se
-                && ctx.getParent() instanceof ExpressionStmtAltContext
-                && switchExpressionHasIncompleteArm(se)) {
+        // A `switch` with `->` is parsed as a SwitchExpression (switchStatement is
+        // colon-only), but as in Java (JEP 361) the arrow only decides fall-through;
+        // the position decides whether a value is produced. A switch whose value is
+        // not used, or whose arrow block arms do not yield, is a SwitchStatement,
+        // including where it is the last statement of a method or closure: the
+        // implicit return then applies to the statement, as it does to any other
+        // (GROOVY-12408).
+        if (expr instanceof SwitchExpression se && ctx.getParent() instanceof ExpressionStmtAltContext statement
+                && (switchExpressionHasIncompleteArm(se) || !isSwitchValueUsed(statement))) {
             return configureAST(switchExpressionAsStatement(se), ctx);
         }
         return configureAST(new ExpressionStatement(expr), ctx);
+    }
+
+    /**
+     * Whether the value of a switch expression statement is used, which it is
+     * only as the expression of an arrow arm whose own switch produces a value.
+     * An arm of a switch that is itself a statement produces nothing, so a
+     * switch nested there is a statement too.
+     */
+    private boolean isSwitchValueUsed(final StatementContext statement) {
+        SwitchExpressionContext arm = enclosingArrowArmSwitch(statement);
+        if (arm == null) {
+            return false;
+        }
+        StatementContext owner = switchAsStatement(arm);
+        return owner == null || isSwitchValueUsed(owner);
+    }
+
+    /** The switch expression whose arrow arm consists of {@code statement}, else null. */
+    private static SwitchExpressionContext enclosingArrowArmSwitch(final StatementContext statement) {
+        ParserRuleContext blockStatements = statement.getParent() instanceof BlockStatementContext bs ? bs.getParent() : null;
+        if (blockStatements == null || !(blockStatements.getParent() instanceof SwitchBlockStatementExpressionGroupContext group)
+                || !isArrowGroup(group)) {
+            return null;
+        }
+        for (ParserRuleContext p = group.getParent(); p != null; p = p.getParent()) {
+            if (p instanceof SwitchExpressionContext se) return se;
+        }
+        return null;
+    }
+
+    /**
+     * The statement that {@code ctx} alone makes up, or null when the switch is
+     * part of a larger expression such as {@code foo(switch (x) {...})}, whose
+     * value is used whatever the enclosing statement does with it.
+     */
+    private static StatementContext switchAsStatement(final SwitchExpressionContext ctx) {
+        ParserRuleContext p = ctx.getParent();
+        while (p != null && !(p instanceof StatementContext)) {
+            p = p.getParent();
+        }
+        return p instanceof ExpressionStmtAltContext statement
+                && statement.getStart() == ctx.getStart() && statement.getStop() == ctx.getStop() ? statement : null;
     }
 
     @Override
@@ -2837,7 +2934,15 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
 
         if ((hasArgumentList || hasCommandArgument) && !isInsideParentheses(baseExpr)
-                && baseExpr instanceof BinaryExpression && !"[".equals(((BinaryExpression) baseExpr).getOperation().getText())) {
+                && baseExpr instanceof BinaryExpression bin
+                && !"[".equals(bin.getOperation().getText())) {
+            // `List<Integer name` is parsed as the comparison `List < Integer` plus a
+            // command argument. javac: `'>' expected`.
+            if ("<".equals(bin.getOperation().getText())
+                    && looksLikeTypeName(bin.getLeftExpression())
+                    && looksLikeTypeName(bin.getRightExpression())) {
+                throw createParsingFailedException("Missing '>'", bin);
+            }
             throw createParsingFailedException("Unexpected input: '" + getOriginalText(ctx.expression()) + "'", ctx.expression());
         }
 
@@ -3640,7 +3745,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 ListExpression listExpression = new ListExpression(expressionList);
                 listExpression.setWrapped(false);
 
-                indexExpr = listExpression;
+                indexExpr = configureAST(listExpression, ctx);
             } else { // e.g. a[1]
                 indexExpr = expr;
             }
@@ -4231,7 +4336,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             ) {
 
-            throw createParsingFailedException("The LHS of an assignment should be a variable or a field accessing expression", ctx);
+            throw createParsingFailedException("The left-hand side of an assignment must be a variable or a field", ctx);
         }
 
         return configureAST(
@@ -4639,7 +4744,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             // statements like `foo(String a)` is invalid
             String methodName = methodCallExpression.getMethodAsString();
             if (methodCallExpression.isImplicitThis() && Character.isUpperCase(methodName.codePointAt(0)) || isPrimitiveType(methodName)) {
-                throw createParsingFailedException("Invalid method declaration", ctx);
+                throw createParsingFailedException("Invalid method declaration; a return type or 'def' is required", ctx);
             }
         }
     }
@@ -5114,7 +5219,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         if (asBoolean(ctx.VOID())) {
             /* GRECLIPSE edit -- JDT deals with void
-            throw this.createParsingFailedException("void is not allowed here", ctx);
+            throw this.createParsingFailedException("'void' type is not allowed here", ctx);
             */
             return configureAST(ClassHelper.VOID_TYPE.getPlainNodeReference(false), ctx);
             // GRECLIPSE end
@@ -5834,6 +5939,21 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         return (expression instanceof VariableExpression && isTrue(expression, IS_BUILT_IN_TYPE));
     }
 
+    /**
+     * Capitalized name or class literal — the left-hand side of {@code T < U}
+     * when {@code T<U name} was meant as a type argument list.
+     */
+    private static boolean looksLikeTypeName(final Expression expression) {
+        if (expression instanceof ClassExpression) {
+            return true;
+        }
+        if (expression instanceof VariableExpression ve) {
+            String name = ve.getName();
+            return name != null && !name.isEmpty() && Character.isUpperCase(name.codePointAt(0));
+        }
+        return false;
+    }
+
     private org.codehaus.groovy.syntax.Token createGroovyTokenByType(final Token token, final int type) {
         if (token == null) {
             throw new IllegalArgumentException("token should not be null");
@@ -6107,6 +6227,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     private static final String IS_INSIDE_INSTANCEOF_EXPR = "_IS_INSIDE_INSTANCEOF_EXPR";
     private static final String NON_REIFIABLE_INSTANCEOF = "_NON_REIFIABLE_INSTANCEOF";
     private static final String IS_SWITCH_DEFAULT = "_IS_SWITCH_DEFAULT";
+    private static final String SWITCH_DEFAULT_KEYWORD = "_SWITCH_DEFAULT_KEYWORD";
     private static final String IS_NUMERIC = "_IS_NUMERIC";
     private static final String IS_STRING = "_IS_STRING";
     private static final String IS_INTERFACE_WITH_DEFAULT_METHODS = "_IS_INTERFACE_WITH_DEFAULT_METHODS";

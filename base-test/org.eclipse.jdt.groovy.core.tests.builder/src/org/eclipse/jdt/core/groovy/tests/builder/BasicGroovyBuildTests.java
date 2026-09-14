@@ -3393,8 +3393,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         incrementalBuild(paths[0]);
         expectingProblemsFor(foo, List.of(
-            "Problem : Groovy:" + (!isParrotParser() ? "Abstract methods do not define a body."
-                : "You defined an abstract method[mx] with a body. Try removing the method body") +
+            "Problem : Groovy:" + (
+                !isParrotParser() ? "Abstract methods do not define a body."
+                : (isAtLeastGroovy(60) ? "Abstract method 'mx' cannot have a body. Remove"
+                : "You defined an abstract method[mx] with a body. Try removing") + " the method body") +
             " [ resource : </Project/src/test/Foo.groovy> range : <36,56> category : <60> severity : <2>]",
             "Problem : The declared package \"\" does not match the expected package \"test\"" +
             " [ resource : </Project/src/test/Foo.groovy> range : <0,1> category : <60> severity : <2>]"));

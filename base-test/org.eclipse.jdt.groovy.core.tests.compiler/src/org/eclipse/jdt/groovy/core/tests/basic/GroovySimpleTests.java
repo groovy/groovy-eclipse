@@ -491,8 +491,9 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\tabc()\n" +
             "\t^" + (!isParrotParser() ? "" : "^^^^") + "\n" +
             "Groovy:" + (!isParrotParser()
-                ? "unexpected token: abc\n"
-                : "You defined a method[abc] without a body. Try adding a method body, or declare it abstract\n") +
+                ? "unexpected token: abc"
+                : isAtLeastGroovy(60) ? "Method 'abc' is missing a body. Add a method body, or declare it abstract"
+                : "You defined a method[abc] without a body. Try adding a method body, or declare it abstract") + "\n" +
             "----------\n");
     }
 
@@ -1760,9 +1761,10 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 1)\n" +
             "\thttpClientControl.demand.generalConnection(1..1) = {->\n" +
             "\t" + (isParrotParser() ? "" : "                                                 ") + "^\n" +
-            "Groovy:" + (isParrotParser()
-                ? "The LHS of an assignment should be a variable or a field accessing expression\n"
-                : " \"httpClientControl.demand.generalConnection((1..1))\" is a method call expression, but it should be a variable expression\n") +
+            "Groovy:" + (isParrotParser() ? (isAtLeastGroovy(60)
+                ? "The left-hand side of an assignment must be a variable or a field"
+                : "The LHS of an assignment should be a variable or a field accessing expression")
+                : " \"httpClientControl.demand.generalConnection((1..1))\" is a method call expression, but it should be a variable expression") + "\n" +
             "----------\n");
     }
 
@@ -2736,8 +2738,9 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\tabstract def meth() {\n" +
             "\t^\n" +
             "Groovy:" + (!isParrotParser()
-                ? "Abstract methods do not define a body.\n"
-                : "You cannot define an abstract method[meth] in the script. Try removing the 'abstract'\n") +
+                ? "Abstract methods do not define a body."
+                : isAtLeastGroovy(60) ? "Scripts cannot declare abstract method 'meth'. Remove 'abstract'"
+                : "You cannot define an abstract method[meth] in the script. Try removing the 'abstract'") + "\n" +
             "----------\n");
     }
 

@@ -69,7 +69,6 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 
@@ -759,8 +758,8 @@ public class CompilationUnit extends ProcessingUnit {
             // Grab processing may have brought in new AST transforms into various phases, process them as well
             processNewPhaseOperations(phase);
 
-            Optional.ofNullable(getProgressCallback())
-                .ifPresent(callback -> callback.call(this, phase));
+            ProgressCallback callback = getProgressCallback();
+            if (callback != null) callback.call(this, phase);
             completePhase();
             mark();
 

@@ -20,7 +20,7 @@ package org.codehaus.groovy.ast;
 
 import org.codehaus.groovy.ast.expr.Expression;
 
-import static java.util.Objects.requireNonNull;
+import java.util.Objects;
 
 /**
  * Represents an import statement in Groovy source code, supporting single-type imports,
@@ -47,7 +47,7 @@ public class ImportNode extends AnnotatedNode {
      * @throws NullPointerException if type is null
      */
     public ImportNode(final ClassNode type, final String alias) {
-        this.type = requireNonNull(type);
+        this.type = Objects.requireNonNull(type);
         this.alias = alias;
         this.isStar = false;
         this.isStatic = false;
@@ -66,7 +66,7 @@ public class ImportNode extends AnnotatedNode {
         this.alias = null;
         this.isStar = true;
         this.isStatic = false;
-        this.packageName = requireNonNull(packageName);
+        this.packageName = Objects.requireNonNull(packageName);
         this.fieldName = null;
     }
 
@@ -77,7 +77,7 @@ public class ImportNode extends AnnotatedNode {
      * @throws NullPointerException if type is null
      */
     public ImportNode(final ClassNode type) {
-        this.type = requireNonNull(type);
+        this.type = Objects.requireNonNull(type);
         this.alias = null;
         this.isStar = true;
         this.isStatic = true;
@@ -95,12 +95,12 @@ public class ImportNode extends AnnotatedNode {
      * @throws NullPointerException if type or fieldName is null
      */
     public ImportNode(final ClassNode type, final String fieldName, final String alias) {
-        this.type = requireNonNull(type);
+        this.type = Objects.requireNonNull(type);
         this.alias = alias;
         this.isStar = false;
         this.isStatic = true;
         this.packageName = null;
-        this.fieldName = requireNonNull(fieldName);
+        this.fieldName = Objects.requireNonNull(fieldName);
     }
 
     // GRECLIPSE add
@@ -141,11 +141,11 @@ public class ImportNode extends AnnotatedNode {
 
         if (!isStatic()) {
             if (isStar()) {
-                // GRECLIPSE add
-                if (!getPackageName().endsWith("."))
+                if (getPackageName().endsWith(".")) {
+                    return "import " + getPackageName() + "*";
+                } else {
                     return "import module " + getPackageName();
-                // GRECLIPSE end
-                return "import " + getPackageName() + "*";
+                }
             } else if (simpleName == null || simpleName.isEmpty()
                     || simpleName.equals(getType().getNameWithoutPackage())) {
                 return "import " + getClassName();
@@ -225,7 +225,7 @@ public class ImportNode extends AnnotatedNode {
      * @throws NullPointerException if type is null
      */
     public void setType(final ClassNode type) {
-        this.type = requireNonNull(type);
+        this.type = Objects.requireNonNull(type);
     }
 
     @Override

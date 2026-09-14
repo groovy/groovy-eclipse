@@ -1285,8 +1285,8 @@ public class CompilerConfiguration {
      * transformations, that is to say transformations defined in a
      * META-INF/services/org.codehaus.groovy.transform.ASTTransformation file.
      * If you explicitly add a global AST transformation in your compilation process,
-     * for example using the {@link org.codehaus.groovy.control.customizers.ASTTransformationCustomizer} or
-     * using a {@link org.codehaus.groovy.control.CompilationUnit.IPrimaryClassNodeOperation},
+     * for example using the {@code ASTTransformationCustomizer} or
+     * using a {@link CompilationUnit.IPrimaryClassNodeOperation},
      * then nothing will prevent the transformation from being loaded.
      *
      * @param disabledGlobalASTTransformations a set of fully qualified class names of global AST transformations
@@ -1317,7 +1317,7 @@ public class CompilerConfiguration {
     /**
      * Checks if invoke dynamic is enabled.
      * <p>
-     * Enabled by default since Groovy 4. Can be disabled by setting
+     * Enabled by default since Groovy 4.0. Can be disabled by setting
      * the system property {@code groovy.target.indy} to {@code false}
      * or by setting the {@code indy} optimization option to {@code false}.
      * Disabling indy emits classic call-site bytecode that requires the
