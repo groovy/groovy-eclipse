@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1833,6 +1833,28 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         } finally {
             otherProject.dispose()
         }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1698
+    void testPrimitiveMatch() {
+        createDsls '''\
+            |contribute(inClosure() & isThisType()) {
+            |  property name:'any', type:'', declaringType:Script // a wildcard (like Spock's underscore)
+            |  delegatesTo 'Foo'
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            |class Foo {
+            |  int bar(int baz) {
+            |  }
+            |}
+            |def block = {
+            |  bar(any)
+            |}
+            |'''.stripMargin()
+
+        assert inferType(contents, 'bar').typeName == 'java.lang.Integer'
     }
 
     @Test

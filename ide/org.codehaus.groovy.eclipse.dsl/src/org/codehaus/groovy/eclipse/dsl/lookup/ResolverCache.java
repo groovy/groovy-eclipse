@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.dsl.lookup;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -48,10 +47,10 @@ public class ResolverCache {
      * using fully qualified names.
      */
     public ClassNode resolve(String name) {
-        if (name == null || (name = name.trim()).isEmpty()) {
-            return ClassHelper.dynamicType();
+        if (name == null || (name = name.trim()).isEmpty() || name.equals("null")) {
+            return VariableScope.NULL_TYPE; // matches better than dynamicType()
         }
-        if ("void".equals(name) || "java.lang.Void".equals(name)) {
+        if (name.equals("void") || name.equals("java.lang.Void")) {
             return VariableScope.VOID_CLASS_NODE;
         }
         ClassNode type = nameTypeCache.get(name);
@@ -121,10 +120,10 @@ public class ResolverCache {
         if (arrayStart < 0) {
             return 0;
         }
-        int cnt = 1;
+        int dims = 1;
         while ((arrayStart = qName.indexOf('[', arrayStart + 1)) > 0) {
-            cnt += 1;
+            dims += 1;
         }
-        return cnt;
+        return dims;
     }
 }
