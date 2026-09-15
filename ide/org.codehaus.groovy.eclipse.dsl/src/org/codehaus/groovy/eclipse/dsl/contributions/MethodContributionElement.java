@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 import static org.eclipse.jdt.groovy.core.util.ArrayUtils.concat;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,8 +119,7 @@ public class MethodContributionElement implements IContributionElement {
         if (name.equals(methodName)) {
             MethodNode decl = toMethod(declaringType, resolver);
             ClassNode  type = (decl instanceof ConstructorNode ? decl.getDeclaringClass() : decl.getReturnType());
-            if (!scope.isMethodCall() || scope.getWormhole().get("lhs") instanceof Variable &&
-                            (((Variable) scope.getWormhole().get("lhs")).getName().equals(name))) {
+            if (!scope.isMethodCall() || scope.getWormhole().get("lhs") instanceof Variable v && v.getName().equals(name)) {
                 return new TypeAndDeclaration(type, decl, decl.getDeclaringClass(), doc, TypeConfidence.LOOSELY_INFERRED);
             }
 
@@ -312,16 +310,20 @@ public class MethodContributionElement implements IContributionElement {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder(methodName);
 
-        sb.append("public ");
-        if (isStatic) sb.append("static ");
-        if (isDeprecated) sb.append("deprecated ");
-        sb.append(returnType).append(' ');
-        sb.append(declaringType);
-        sb.append('.').append(methodName);
-        sb.append('(').append(Arrays.toString(positionalParams)).append(')');
-        sb.append(' ').append('(').append(provider).append(')');
+        sb.append('(');
+        boolean first = true;
+        for (ParameterContribution pc : positionalParams) {
+            if (!first) sb.append(", ");
+            sb.append(pc);
+            first = false;
+        }
+        sb.append(')');
+
+        sb.append(" : ").append(returnType);
+        sb.append(" - ").append(declaringType);
+        sb.append(" (").append(provider).append(')');
 
         return sb.toString();
     }

@@ -176,15 +176,23 @@ public class DSLContributionGroup extends ContributionGroup {
     }
 
     /**
-     * Convert a {@link ClassNode} into a string that includes type parameters
+     * Converts a {@link ClassNode} into a string that includes type parameters.
      */
-    static String getTypeName(final ClassNode clazz) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(clazz.getName());
-        if (clazz.getGenericsTypes() != null && clazz.getGenericsTypes().length > 0) {
+    static String getTypeName(final ClassNode type) {
+        if (type.isArray()) {
+            return getTypeName(type.getComponentType()) + "[]";
+        }
+        var sb = new StringBuilder();
+        sb.append(type.getText()); // handles intersection/union
+        GenericsType[] gts = GroovyUtils.getGenericsTypes(type);
+        if (gts.length > 0) {
             sb.append('<');
-            for (GenericsType gt : clazz.getGenericsTypes()) {
-                sb.append(getTypeName(gt.getType()));
+            for (GenericsType gt : gts) {
+                if (!gt.isWildcard()) {
+                    sb.append(getTypeName(gt.getType()));
+                } else {
+                    sb.append('?');
+                }
                 sb.append(',');
             }
             sb.replace(sb.length() - 1, sb.length(), ">");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,17 +121,11 @@ public class PropertyContributionElement implements IContributionElement {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("public ");
-        if ((modifiers & Flags.AccStatic) != 0) sb.append("static ");
-        if ((modifiers & Flags.AccFinal) != 0) sb.append("final ");
-        sb.append(propType);
-        sb.append(' ');
-        sb.append(declaringType);
-        sb.append('.');
-        sb.append(propName);
-        sb.append(" (");
-        sb.append(provider);
-        sb.append(')');
+        var sb = new StringBuilder(propName);
+
+        sb.append(" : ").append(propType);
+        sb.append(" - ").append(declaringType);
+        sb.append(" (").append(provider).append(')');
 
         return sb.toString();
     }
