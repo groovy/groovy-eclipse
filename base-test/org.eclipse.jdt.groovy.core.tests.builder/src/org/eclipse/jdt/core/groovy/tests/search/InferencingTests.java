@@ -3595,6 +3595,113 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, "y", "java.lang.Double");
     }
 
+    @Test // GROOVY-11964
+    public void testMultiDecl17() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def (head, *tail) = [1,2,3]";
+        assertType(contents, "head", "java.lang.Integer");
+        assertType(contents, "tail", "java.util.List<java.lang.Integer>");
+    }
+
+    @Test // GROOVY-11964
+    public void testMultiDecl17a() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def list = [1,2,3]; def (head, *tail) = list";
+        assertType(contents, "head", "java.lang.Integer");
+        assertType(contents, "tail", "java.util.List<java.lang.Integer>");
+    }
+
+    @Test // GROOVY-11964
+    public void testMultiDecl18() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def (head, *tail) = ['1',2,3]";
+        assertType(contents, "head", "java.lang.String");
+        assertType(contents, "tail", "java.util.List<java.lang.Integer>");
+    }
+
+    @Test // GROOVY-11964
+    public void testMultiDecl19() {
+        assumeTrue(isAtLeastGroovy(60));
+        String types = "class A {}\nclass B extends A {}\nclass C extends A {}\n";
+        String contents = types + "def (head, *tail) = [1, new B(), new C()]";
+        assertType(contents, "head", "java.lang.Integer");
+        assertType(contents, "tail", "java.util.List<A>");
+    }
+
+    @Test // GROOVY-11964
+    public void testMultiDecl20() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def (*init, last) = [4,5,6]";
+        assertType(contents, "init", "java.util.List<java.lang.Integer>");
+        assertType(contents, "last", "java.lang.Integer");
+    }
+
+    @Test // GROOVY-11964
+    public void testMultiDecl20a() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def list = [4,5,6]; def (*init, last) = list";
+        assertType(contents, "init", "java.util.List<java.lang.Integer>");
+        assertType(contents, "last", "java.lang.Integer");
+    }
+
+    @Test // GROOVY-11964
+    public void testMultiDecl21() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def (*init, last) = [4,5,'6']";
+        assertType(contents, "init", "java.util.List<java.lang.Integer>");
+        assertType(contents, "last", "java.lang.String");
+    }
+
+    @Test // GROOVY-11964
+    public void testMultiDecl22() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def (prefix, *middle, suffix) = [7,8,9]";
+        assertType(contents, "prefix", "java.lang.Integer");
+        assertType(contents, "middle", "java.util.List<java.lang.Integer>");
+        assertType(contents, "suffix", "java.lang.Integer");
+    }
+
+    @Test // GROOVY-11964
+    public void testMultiDecl23() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def (c, String *s) = 'Hello'";
+        assertType(contents, "c", "java.lang.String");
+        assertType(contents, "s", "java.lang.String");
+    }
+
+    @Test // GROOVY-11964
+    public void testMultiDecl24() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def (h, List<Integer> *t) = [1,2,3,4]";
+        assertType(contents, "h", "java.lang.Integer");
+        assertType(contents, "t", "java.util.List<java.lang.Integer>");
+    }
+
+    @Test // GROOVY-11964
+    public void testMultiDecl25() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def (x, List<Integer> *y, z) = [1,2,3,4,'5']";
+        assertType(contents, "x", "java.lang.Integer");
+        assertType(contents, "y", "java.util.List<java.lang.Integer>");
+        assertType(contents, "z", "java.lang.String");
+    }
+
+    @Test // GROOVY-11964
+    public void testMultiDecl26() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def (head, *tail) = List.of(1,2,3).iterator()";
+        assertType(contents, "head", "java.lang.Integer");
+        assertType(contents, "tail", "java.util.Iterator<java.lang.Integer>");
+    }
+
+    @Test // GROOVY-11964
+    public void testMultiDecl27() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def (head, *tail) = java.util.stream.Stream.of(1,2,3)";
+        assertType(contents, "head", "java.lang.Integer");
+        assertType(contents, "tail", "java.util.stream.Stream<java.lang.Integer>");
+    }
+
     @Test // GRECLIPSE-1174 groovy casting
     public void testAsExpression1() {
         String contents = "(1 as int).intValue()";

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,6 @@ import java.util.stream.Stream;
 
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
-import groovy.lang.Tuple;
 import groovy.transform.stc.ClosureParams;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -109,7 +108,8 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode MAP_CLASS_NODE = ClassHelper.MAP_TYPE;
     public static final ClassNode ENTRY_CLASS_NODE = ClassHelper.make(Map.Entry.class);
     public static final ClassNode RANGE_CLASS_NODE = ClassHelper.RANGE_TYPE;
-    public static final ClassNode TUPLE_CLASS_NODE = ClassHelper.make(Tuple.class);
+    public static final ClassNode TUPLE_CLASS_NODE = ClassHelper.TUPLE_TYPE;
+    public static final ClassNode STREAM_CLASS_NODE = ClassHelper.make(Stream.class);
     public static final ClassNode BIG_DECIMAL_CLASS = ClassHelper.BigDecimal_TYPE;
     public static final ClassNode BIG_INTEGER_CLASS = ClassHelper.BigInteger_TYPE;
     public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.Number_TYPE;

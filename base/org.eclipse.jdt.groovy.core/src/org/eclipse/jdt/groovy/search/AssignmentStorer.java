@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,10 @@ package org.eclipse.jdt.groovy.search;
 
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
+import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe0;
+import static org.codehaus.groovy.ast.tools.WideningCategories.lowestUpperBound;
 import static org.eclipse.jdt.groovy.core.util.GroovyUtils.getGenericsTypes;
 
 import java.util.List;
@@ -132,21 +134,37 @@ public class AssignmentStorer {
         List<Expression> lhsExprs = lhs.getExpressions();
         List<ClassNode>  rhsTypes = rhs.getNodeMetaData("tuple.types");
 
-        if (rhs instanceof ListExpression) {
-            if (rhsTypes == null) rhsTypes = ((ListExpression) rhs).getExpressions().stream().map(e -> e.getType()).collect(toList());
+        if (rhs instanceof ListExpression rhsList) {
+            if (rhsTypes == null) rhsTypes = rhsList.getExpressions().stream().map(e -> e.getType()).toList();
         } else if (rhsListType.isDerivedFrom(VariableScope.TUPLE_CLASS_NODE) && !rhsListType.equals(VariableScope.TUPLE_CLASS_NODE)) {
-            rhsTypes = stream(getGenericsTypes(rhsListType)).map(gt -> gt.getType()).collect(toList());
+            rhsTypes = stream(getGenericsTypes(rhsListType)).map(gt -> gt.getType()).toList();
         } else {
             rhsTypes = emptyList();
         }
 
         // try to associate each tuple expression element with something on the right-hand side
-        for (int i = 0, lhsSize = lhsExprs.size(), rhsSize = rhsTypes.size(); i < lhsSize; i += 1) {
-            Expression lhsExpr = lhsExprs.get(i);
-            ClassNode  rhsType = (i < rhsSize ? rhsTypes.get(i) : findComponentType(rhsListType));
+        for (int i = 0, j = 0, lhsSize = lhsExprs.size(), rhsSize = rhsTypes.size(); i < lhsSize; i += 1, j += 1) {
+            if (lhsExprs.get(i) instanceof VariableExpression var) {
+                boolean collector = false;
+                for (var e : var.getNodeMetaData().entrySet()) {
+                    if (e.getKey().toString().equals("REST_BINDING")) {
+                        collector = true; // GROOVY-11964
+                        break;
+                    }
+                }
 
-            if (lhsExpr instanceof VariableExpression) {
-                VariableExpression var = (VariableExpression) lhsExpr;
+                ClassNode rhsType = findComponentType(rhsListType);
+
+                if (collector) {
+                    int n = (rhsSize - lhsSize) + 1;
+                    if (n > 0 && (j + n) <= rhsSize) {
+                        rhsType = lowestUpperBound(rhsTypes.subList(j, j + n)); j += (n - 1);
+                    }
+                    rhsType = makeClassSafe0(findContainerType(rhsListType), rhsType.asGenericsType());
+                } else if (j < rhsSize) {
+                    rhsType = rhsTypes.get(j);
+                }
+
                 scope.addVariable(var.getName(), findVariableType(var, rhsType), null);
             }
         }
@@ -186,6 +204,16 @@ public class AssignmentStorer {
 
     private static ClassNode findComponentType(final ClassNode type) {
         return (type == null ? VariableScope.OBJECT_CLASS_NODE : VariableScope.extractElementType(type));
+    }
+
+    private static ClassNode findContainerType(final ClassNode type) {
+        if (isOrImplements(type, VariableScope.STREAM_CLASS_NODE)) {
+            return VariableScope.STREAM_CLASS_NODE;
+        }
+        if (isOrImplements(type, VariableScope.ITERATOR_CLASS_NODE)) {
+            return VariableScope.ITERATOR_CLASS_NODE;
+        }
+        return VariableScope.LIST_CLASS_NODE;
     }
 
     /**

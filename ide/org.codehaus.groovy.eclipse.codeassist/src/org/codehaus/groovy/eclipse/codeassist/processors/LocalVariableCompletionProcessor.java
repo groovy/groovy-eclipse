@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -183,7 +183,13 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
             @Override
             public void visitDeclarationExpression(DeclarationExpression expression) {
                 if (expression.getStart() <= offset && offset <= expression.getEnd()) {
-                    nameTypeMap.remove(expression.getVariableExpression().getName());
+                    if (expression.isMultipleAssignmentDeclaration()) {
+                        for (var e : expression.getTupleExpression()) {
+                            nameTypeMap.remove(e.getText());
+                        }
+                    } else {
+                        nameTypeMap.remove(expression.getVariableExpression().getName());
+                    }
                 }
                 super.visitDeclarationExpression(expression);
             }
@@ -196,17 +202,17 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         if (node instanceof BlockStatement) {
             return (BlockStatement) node;
         }
-        if (node instanceof ReturnStatement) {
+        if (node instanceof ReturnStatement rs) {
             // empty or simple methods may collapse to return statement
-            if (getContext().containingDeclaration instanceof MethodNode) {
-                return new BlockStatement(
-                    Collections.singletonList((ReturnStatement) node),
-                    ((MethodNode) getContext().containingDeclaration).getVariableScope());
+            if (getContext().containingDeclaration instanceof MethodNode mn) {
+                return new BlockStatement(Collections.singletonList(rs), mn.getVariableScope());
             }
         }
-        if (node instanceof ClassNode && GroovyUtils.isScript((ClassNode) node)) {
-            for (MethodNode method : ((ClassNode) node).redirect().getMethods()) {
-                if (method.isScriptBody()) return (BlockStatement) method.getCode();
+        if (node instanceof ClassNode cn && GroovyUtils.isScript(cn)) {
+            for (MethodNode method : cn.redirect().getMethods()) {
+                if (method.isScriptBody()) {
+                    return (BlockStatement) method.getCode();
+                }
             }
         }
         return null;

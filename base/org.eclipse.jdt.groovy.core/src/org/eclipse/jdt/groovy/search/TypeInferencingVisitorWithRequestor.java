@@ -2072,8 +2072,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
 
         scopes.getLast().setCurrentNode(node);
-        if (node.getAccessedVariable() == node) {
-            // this is a local variable declaration
+        if (node == node.getAccessedVariable() && !node.isDynamicTyped()) {
+            // this is a local variable declaration with a type specified
             visitClassReference(node.getOriginType());
         }
         handleSimpleExpression(node);
