@@ -190,6 +190,10 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             if (result.declaration instanceof MethodNode) {
                 pos = handleMethodReference((Expression) node, result, false);
             } else {
+                ASTNode var = node.getNodeMetaData("reserved.type.name");
+                if (var != null) {
+                    typedPositions.add(new HighlightedTypedPosition(var.getStart(), var.getLength(), HighlightKind.RESERVED));
+                }
                 pos = handleVariableExpression((VariableExpression) node, result.scope, enclosingElement);
             }
         } else if (node instanceof ConstantExpression) {

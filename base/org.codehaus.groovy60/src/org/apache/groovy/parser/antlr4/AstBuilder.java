@@ -789,8 +789,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         ModifierManager modifierManager = new ModifierManager(this, this.visitVariableModifiersOpt(ctx.variableModifiersOpt()));
         modifierManager.processParameter(valueParameter);
         // GRECLIPSE add
-        modifierManager.get(VAL).ifPresent(val -> valueParameter.setNodeMetaData("reserved.type.name", val));
-        modifierManager.get(VAR).ifPresent(var -> valueParameter.setNodeMetaData("reserved.type.name", var));
+        modifierManager.get(VAL).ifPresent(val -> valueParameter.putNodeMetaData("reserved.type.name", val));
+        modifierManager.get(VAR).ifPresent(var -> valueParameter.putNodeMetaData("reserved.type.name", var));
 
         valueParameter.setNameStart(valueParameter.getStart());
         valueParameter.setNameEnd(valueParameter.getEnd() - 1);
@@ -2481,18 +2481,16 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     private DeclarationListStatement createMultiAssignmentDeclarationListStatement(final VariableDeclarationContext ctx, final ModifierManager modifierManager) {
         List<Expression> elist = this.visitTypeNamePairs(ctx.typeNamePairs());
-        for (Expression e : elist)
+        for (Expression e : elist) {
             modifierManager.processVariableExpression((VariableExpression) e);
-
+        }
         DeclarationExpression de = new DeclarationExpression(
                 configureAST(new TupleExpression(elist), ctx.typeNamePairs()),
                 createGroovyTokenByType(ctx.ASSIGN().getSymbol(), Types.ASSIGN),
                 visitVariableInitializer(ctx.variableInitializer())           );
         // GRECLIPSE add
-        modifierManager.get(VAL).ifPresent(val ->
-                de.setNodeMetaData("reserved.type.name", val));
-        modifierManager.get(VAR).ifPresent(var ->
-                de.setNodeMetaData("reserved.type.name", var));
+        modifierManager.get(VAL).ifPresent(val -> de.putNodeMetaData("reserved.type.name", val));
+        modifierManager.get(VAR).ifPresent(var -> de.putNodeMetaData("reserved.type.name", var));
         // GRECLIPSE end
         configureAST(modifierManager.attachAnnotations(de), ctx);
         return configureAST(new DeclarationListStatement(de), ctx);
@@ -2525,8 +2523,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         if (size > 0) {
             for (DeclarationExpression e : declarationExpressionList) {
                 // GRECLIPSE add
-                modifierManager.get(VAL).ifPresent(val -> e.setNodeMetaData("reserved.type.name", val));
-                modifierManager.get(VAR).ifPresent(var -> e.setNodeMetaData("reserved.type.name", var));
+                modifierManager.get(VAL).ifPresent(val -> e.putNodeMetaData("reserved.type.name", val));
+                modifierManager.get(VAR).ifPresent(var -> e.putNodeMetaData("reserved.type.name", var));
                 // GRECLIPSE end
                 modifierManager.processVariableExpression(e.getVariableExpression());
                 modifierManager.attachAnnotations(e);
@@ -2755,7 +2753,15 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 ctx.variableDeclaratorId());
         if (asBoolean(ctx.VAL())) {
             ve.setModifiers(ve.getModifiers() | Opcodes.ACC_FINAL);
+            // GRECLIPSE add
+            ve.putNodeMetaData("reserved.type.name", configureAST(new ModifierNode(VAL, ctx.VAL().getText()), ctx.VAL()));
+            // GRECLIPSE end
         }
+        // GRECLIPSE add
+        if (asBoolean(ctx.VAR())) {
+            ve.putNodeMetaData("reserved.type.name", configureAST(new ModifierNode(VAR, ctx.VAR().getText()), ctx.VAR()));
+        }
+        // GRECLIPSE end
         if (isRest) {
             ve.putNodeMetaData(MultipleAssignmentMetadata.REST_BINDING, Boolean.TRUE);
         }
