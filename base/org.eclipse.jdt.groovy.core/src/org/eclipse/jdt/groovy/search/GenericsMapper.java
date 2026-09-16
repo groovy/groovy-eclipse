@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -344,7 +344,10 @@ public class GenericsMapper {
     protected static void tryResolveMethodT(final GenericsType unresolved, final Map<String, ClassNode> resolved, final Parameter[] parameters, final List<ClassNode> argumentTypes) {
         for (int i = 0, n = isVargs(parameters) ? argumentTypes.size() : Math.min(argumentTypes.size(), parameters.length); i < n; i += 1) {
             ClassNode rbt = argumentTypes.get(i);
-            ClassNode ubt = parameters[Math.min(i, parameters.length - 1)].getType();
+            ClassNode ubt = parameters[Math.min(i, parameters.length-1)].getType();
+            if (ubt.isArray() && (i >= parameters.length || (i == parameters.length-1 && (n > parameters.length || !rbt.isArray())))) {
+                ubt = ubt.getComponentType(); // argument(s) form implicit array
+            }
             while (rbt.isArray() && ubt.isArray()) {
                 rbt = rbt.getComponentType();
                 ubt = ubt.getComponentType();

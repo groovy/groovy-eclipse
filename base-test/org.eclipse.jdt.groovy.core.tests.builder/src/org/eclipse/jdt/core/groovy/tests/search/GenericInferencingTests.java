@@ -192,8 +192,29 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, "xxx", "java.util.List<java.io.Serializable>");
     }
 
-    @Test // GROOVY-11615
+    @Test
     public void testList14() {
+        String contents = "def xxx = Arrays.asList()\n";
+        assertType(contents, "xxx", "java.util.List<java.lang.Object>");
+
+        contents = "def xxx = Arrays.asList(1)\n";
+        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
+
+        contents = "def xxx = Arrays.asList(1,2)\n";
+        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
+
+        contents = "def xxx = Arrays.asList(new int[0])\n";
+        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
+
+        contents = "def xxx = Arrays.asList(new int[0],new int[1])\n";
+        assertType(contents, "xxx", "java.util.List<int[]>");
+
+        contents = "def xxx = Arrays.asList((Serializable)1,2)\n";
+        assertType(contents, "xxx", "java.util.List<java.io.Serializable>");
+    }
+
+    @Test // GROOVY-11615
+    public void testList15() {
         String contents =
             "import java.util.stream.Collectors\n" +
             "List<String> list = ['foo','bar','baz']\n" +
