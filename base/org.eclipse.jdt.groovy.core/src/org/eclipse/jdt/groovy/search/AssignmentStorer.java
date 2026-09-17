@@ -32,7 +32,6 @@ import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
@@ -68,23 +67,11 @@ public class AssignmentStorer {
     public void storeAssignment(final BinaryExpression exp, final VariableScope scope, final ClassNode rhsType) {
         assert exp.getOperation().isA(Types.ASSIGNMENT_OPERATOR);
 
-        if (exp instanceof DeclarationExpression) {
-            DeclarationExpression decl = (DeclarationExpression) exp;
-            if (decl.isMultipleAssignmentDeclaration()) {
-                TupleExpression vars = decl.getTupleExpression();
-                handleMultiAssignment(vars, decl.getRightExpression(), scope, rhsType);
-            } else {
-                VariableExpression var = decl.getVariableExpression();
-                handleSingleAssignment(var, scope, rhsType);
-            }
+        var lhs = exp.getLeftExpression();
+        if (lhs instanceof TupleExpression vars) {
+            handleMultiAssignment(vars, exp.getRightExpression(), scope, rhsType);
         } else {
-            Expression lhs = exp.getLeftExpression();
-            if (lhs instanceof TupleExpression) {
-                TupleExpression tuple = (TupleExpression) lhs;
-                handleMultiAssignment(tuple, exp.getRightExpression(), scope, rhsType);
-            } else {
-                handleSingleAssignment(lhs, scope, rhsType);
-            }
+            handleSingleAssignment(lhs, scope, rhsType);
         }
     }
 
@@ -145,10 +132,13 @@ public class AssignmentStorer {
         // try to associate each tuple expression element with something on the right-hand side
         for (int i = 0, j = 0, lhsSize = lhsExprs.size(), rhsSize = rhsTypes.size(); i < lhsSize; i += 1, j += 1) {
             if (lhsExprs.get(i) instanceof VariableExpression var) {
-                boolean collector = false;
+                boolean collector = false, extractor = false; // GROOVY-11964
                 for (var e : var.getNodeMetaData().entrySet()) {
                     if (e.getKey().toString().equals("REST_BINDING")) {
-                        collector = true; // GROOVY-11964
+                        collector = true;
+                        break;
+                    } else if (e.getKey().toString().equals("MAP_KEY")) {
+                        extractor = true;
                         break;
                     }
                 }
@@ -161,6 +151,8 @@ public class AssignmentStorer {
                         rhsType = lowestUpperBound(rhsTypes.subList(j, j + n)); j += (n - 1);
                     }
                     rhsType = makeClassSafe0(findContainerType(rhsListType), rhsType.asGenericsType());
+                } else if (extractor) {
+                    rhsType = var.getNodeMetaData("rhsType");
                 } else if (j < rhsSize) {
                     rhsType = rhsTypes.get(j);
                 }

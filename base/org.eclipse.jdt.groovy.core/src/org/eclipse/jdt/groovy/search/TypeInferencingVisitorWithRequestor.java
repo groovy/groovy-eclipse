@@ -817,6 +817,26 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
             primaryExprType = primaryTypeStack.removeLast();
             if (isAssignment) {
+                if (toVisitDependent instanceof TupleExpression tuple) {
+                    for (Expression receiver : tuple.getExpressions()) {
+                        for (var entry : receiver.getNodeMetaData().entrySet()) {
+                            if (entry.getKey().toString().equals("MAP_KEY")) { // GROOVY-11964
+                                var extractor = new PropertyExpression(toVisitPrimary, entry.getValue().toString());
+                                VariableScope scope = scopes.getLast();
+                                scope.setPrimaryNode(false);
+                                scope.setCurrentNode(extractor);
+                                scope.setMethodCallArgumentTypes(null);
+                                scope.setCurrentNode(extractor.getProperty());
+                                boolean isStatic = VariableScope.CLASS_CLASS_NODE.equals(primaryExprType) || toVisitPrimary instanceof ClassExpression;
+                                TypeLookupResult result = lookupExpressionType(extractor.getProperty(), primaryExprType, isStatic, scope);
+                                receiver.putNodeMetaData("rhsType", result.type);
+                                scope.forgetCurrentNode();
+                                scope.forgetCurrentNode();
+                                break;
+                            }
+                        }
+                    }
+                }
                 assignmentStorer.storeAssignment(node, scopes.getLast(), primaryExprType);
             } else if (node.getOperation().isA(Types.LOGICAL_AND)) { // check for an instanceof guard
                 Map<String, ClassNode[]> types = inferInstanceOfType(toVisitPrimary, scopes.getLast());
@@ -1118,15 +1138,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             } else if (!node.isSpecialCall() && !type.isSynthetic()) {
                 visitClassReference(type);
             }
-            if (node.getArguments() instanceof TupleExpression) {
-                TupleExpression tuple = (TupleExpression) node.getArguments();
-                if (isNotEmpty(tuple.getExpressions())) {
-                    if ((tuple.getExpressions().size() == 1 && tuple.getExpression(0) instanceof MapExpression) ||
-                            DefaultGroovyMethods.last(tuple.getExpressions()) instanceof NamedArgumentListExpression) {
-                        // remember this is a map ctor call, so that field names can be inferred when visiting the map
-                        enclosingConstructorCall = node;
-                    }
-                }
+            if (node.getArguments() instanceof TupleExpression tuple && isNotEmpty(tuple.getExpressions()) &&
+                    ((tuple.getExpressions().size() == 1 && tuple.getExpression(0) instanceof MapExpression) ||
+                     DefaultGroovyMethods.last(tuple.getExpressions()) instanceof NamedArgumentListExpression)) {
+                // remember this is a map ctor call, so that field names can be inferred when visiting the map
+                enclosingConstructorCall = node;
             }
 
             VariableScope.CallAndType cat = new VariableScope.CallAndType(node, t.declaration, t.declaringType, enclosingModule);

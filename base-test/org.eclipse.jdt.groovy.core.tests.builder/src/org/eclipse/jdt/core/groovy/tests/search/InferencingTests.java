@@ -3702,6 +3702,30 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, "tail", "java.util.stream.Stream<java.lang.Integer>");
     }
 
+    @Test // GROOVY-11964
+    public void testMultiDecl28() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def (from: one, to: two) = 1..2";
+        assertType(contents, "one", "java.lang.Integer");
+        assertType(contents, "two", "java.lang.Integer");
+    }
+
+    @Test // GROOVY-11964
+    public void testMultiDecl29() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def (from: var one, to: val two) = 1..2";
+        assertType(contents, "one", "java.lang.Integer");
+        assertType(contents, "two", "java.lang.Integer");
+    }
+
+    @Test // GROOVY-11964
+    public void testMultiDecl30() {
+        assumeTrue(isAtLeastGroovy(60));
+        String contents = "def (from: Number one, to: String two) = 1..2";
+        assertType(contents, "one", "java.lang.Number");
+        assertType(contents, "two", "java.lang.String");
+    }
+
     @Test // GRECLIPSE-1174 groovy casting
     public void testAsExpression1() {
         String contents = "(1 as int).intValue()";

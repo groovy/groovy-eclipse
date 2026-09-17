@@ -1504,6 +1504,21 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testMultiAssign3() {
+        assumeTrue(isAtLeastGroovy(60))
+
+        String contents = 'def (from: var i, to: val j) = 1..3'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('i'  ), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('j'  ), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('1'  ), 1, NUMBER  ),
+            new HighlightedTypedPosition(contents.indexOf('3'  ), 1, NUMBER  ))
+    }
+
+    @Test
     void testCatchParams1() {
         // don't want PARAMETER
         String contents = '''\

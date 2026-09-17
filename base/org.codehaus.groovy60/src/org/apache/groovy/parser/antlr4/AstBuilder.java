@@ -2772,12 +2772,24 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     public VariableExpression visitKeyedPair(final KeyedPairContext ctx) {
         VariableExpression ve = configureAST(
                 new VariableExpression(
+                        /* GRECLIPSE edit
                         this.visitVariableDeclaratorId(ctx.variableDeclaratorId()).getName(),
+                        */
+                        visitIdentifier(ctx.variableDeclaratorId().identifier()),
+                        // GRECLIPSE end
                         binderType(ctx.DEF(), ctx.VAL(), ctx.VAR(), ctx.type())),
-                ctx);
+                ctx.variableDeclaratorId());
         if (asBoolean(ctx.VAL())) {
             ve.setModifiers(ve.getModifiers() | Opcodes.ACC_FINAL);
+            // GRECLIPSE add
+            ve.putNodeMetaData("reserved.type.name", configureAST(new ModifierNode(VAL, ctx.VAL().getText()), ctx.VAL()));
+            // GRECLIPSE end
         }
+        // GRECLIPSE add
+        if (asBoolean(ctx.VAR())) {
+            ve.putNodeMetaData("reserved.type.name", configureAST(new ModifierNode(VAR, ctx.VAR().getText()), ctx.VAR()));
+        }
+        // GRECLIPSE end
         ve.putNodeMetaData(MultipleAssignmentMetadata.MAP_KEY, this.visitIdentifier(ctx.key));
         return ve;
     }
