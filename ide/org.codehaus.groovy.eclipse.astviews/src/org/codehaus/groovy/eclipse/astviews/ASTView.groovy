@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -239,7 +239,8 @@ class ASTView extends ViewPart {
                     return null
                 }
                 if (nodeValue instanceof ModuleNode) {
-                    results << new TreeNode(label: 'imports', value: GroovyUtils.getAllImportNodes(nodeValue), parent: treeNode)
+                    List importNodes = GroovyUtils.getAllImportNodes((ModuleNode) nodeValue)
+                    results << new TreeNode(label: 'imports', value: importNodes, parent: treeNode)
                 }
                 return results.toArray().sort(true) { ((TreeNode) it).label }
             }

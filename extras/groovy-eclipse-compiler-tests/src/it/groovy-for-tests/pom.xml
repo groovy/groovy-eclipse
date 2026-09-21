@@ -86,6 +86,9 @@
             </goals>
             <configuration>
               <compilerId>groovy-eclipse-compiler</compilerId>
+              <compilerArgs>
+                <arg>-J-Dspock.iKnowWhatImDoing.disableGroovyVersionCheck=true</arg>
+              </compilerArgs>
             </configuration>
           </execution>
         </executions>

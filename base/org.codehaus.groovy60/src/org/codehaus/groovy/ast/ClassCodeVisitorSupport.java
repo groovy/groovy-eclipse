@@ -499,7 +499,6 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
      * Visits a {@link YieldStatement}, invoking the statement hook before parent traversal.
      *
      * @param statement the yield statement to visit
-     * @see GROOVY-12255
      * @since 6.0.0
      */
     @Override
