@@ -20,7 +20,7 @@ package org.codehaus.groovy.ast;
 
 import org.codehaus.groovy.ast.expr.Expression;
 
-import static java.util.Objects.requireNonNull;
+import java.util.Objects;
 
 /**
  * Represents an import statement.
@@ -41,7 +41,7 @@ public class ImportNode extends AnnotatedNode {
      * @param alias optional alias
      */
     public ImportNode(final ClassNode type, final String alias) {
-        this.type = requireNonNull(type);
+        this.type = Objects.requireNonNull(type);
         this.alias = alias;
         this.isStar = false;
         this.isStatic = false;
@@ -59,7 +59,7 @@ public class ImportNode extends AnnotatedNode {
         this.alias = null;
         this.isStar = true;
         this.isStatic = false;
-        this.packageName = requireNonNull(packageName);
+        this.packageName = Objects.requireNonNull(packageName);
         this.fieldName = null;
     }
 
@@ -69,7 +69,7 @@ public class ImportNode extends AnnotatedNode {
      * @param type the type reference
      */
     public ImportNode(final ClassNode type) {
-        this.type = requireNonNull(type);
+        this.type = Objects.requireNonNull(type);
         this.alias = null;
         this.isStar = true;
         this.isStatic = true;
@@ -85,12 +85,12 @@ public class ImportNode extends AnnotatedNode {
      * @param alias     optional alias
      */
     public ImportNode(final ClassNode type, final String fieldName, final String alias) {
-        this.type = requireNonNull(type);
+        this.type = Objects.requireNonNull(type);
         this.alias = alias;
         this.isStar = false;
         this.isStatic = true;
         this.packageName = null;
-        this.fieldName = requireNonNull(fieldName);
+        this.fieldName = Objects.requireNonNull(fieldName);
     }
 
     // GRECLIPSE add
@@ -175,7 +175,7 @@ public class ImportNode extends AnnotatedNode {
     }
 
     public void setType(final ClassNode type) {
-        this.type = requireNonNull(type);
+        this.type = Objects.requireNonNull(type);
     }
 
     @Override

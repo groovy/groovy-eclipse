@@ -1536,7 +1536,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 constructorDecl.annotations = createAnnotations(constructorNode.getAnnotations());
                 constructorDecl.arguments = createArguments(constructorNode.getParameters());
                 if (constructorDecl.arguments != null && constructorDecl.arguments.length > 0) {
-                    if (new String(constructorDecl.arguments[0].name).equals("__namedArgs")) {
+                    if (constructorDecl.arguments[0].name.length == 11 &&
+                            new String(constructorDecl.arguments[0].name).equals("__namedArgs")) {
                         constructorDecl.arguments[0].type.bits |= ASTNode.IgnoreRawTypeCheck;
                     }
                     for (Argument argument : constructorDecl.arguments) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -371,5 +371,44 @@ public final class TupleConstructorTests extends GroovyCompilerTestSuite {
                 "  }\n" +
                 "}\n");
         }
+    }
+
+    @Test
+    public void testTupleConstructor14() {
+        assumeTrue(isAtLeastGroovy(51));
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "def member = Bar.getDeclaredField('foo')\n" +
+            "assert member.annotatedType.annotations.length == 1\n" +
+            "assert member.annotatedType.annotations[0].annotationType() == Baz\n" +
+            "\n" +
+            "member = Bar.getDeclaredMethod('getFoo')\n" +
+            "assert member.annotatedReturnType.annotations.length == 1\n" +
+            "assert member.annotatedReturnType.annotations[0].annotationType() == Baz\n" +
+            "\n" +
+            "member = Bar.getDeclaredMethod('setFoo', int)\n" +
+            "assert member.annotatedParameterTypes[0].annotations.length == 1\n" +
+            "assert member.annotatedParameterTypes[0].annotations[0].annotationType() == Baz\n" +
+            "\n" +
+            "member = Bar.getDeclaredConstructor(int)\n" +
+            "assert member.annotatedParameterTypes[0].annotations.length == 0\n", // GROOVY-12413
+
+            "Bar.groovy",
+            "@groovy.transform.TupleConstructor\n" +
+            "class Bar {\n" +
+            "  @Baz int foo\n" +
+            "}\n",
+
+            "Baz.groovy",
+            "import java.lang.annotation.*\n" +
+            "@Target(ElementType.TYPE_USE)\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Baz {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 }
