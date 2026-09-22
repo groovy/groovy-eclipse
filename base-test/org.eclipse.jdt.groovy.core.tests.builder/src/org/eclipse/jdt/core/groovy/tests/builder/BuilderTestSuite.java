@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
+import static org.eclipse.jdt.launching.JavaRuntime.computeDefaultRuntimeClassPath;
+
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -160,24 +162,15 @@ public abstract class BuilderTestSuite {
     }
 
     protected void executeClass(final IPath projectPath, final String className, final String expectingOutput, final String expectedError) {
-        List<String> classpath = new ArrayList<>();
-        IPath workspacePath = env.getWorkspaceRootPath();
-        classpath.add(workspacePath.append(env.getOutputLocation(projectPath)).toOSString());
-        IClasspathEntry[] cp = env.getClasspath(projectPath);
-        for (IClasspathEntry cpe : cp) {
-            IPath c = cpe.getPath();
-            if ("jar".equals(c.getFileExtension()) || "zip".equals(c.getFileExtension())) {
-                // this will work as long as the jar is contained in the same project
-                if (projectPath.isPrefixOf(c)) {
-                    classpath.add(workspacePath.append(c).toOSString());
-                } else {
-                    classpath.add(c.toOSString());
-                }
-            }
+        String[] classPaths;
+        try {
+            classPaths = computeDefaultRuntimeClassPath(env.getJavaProject(projectPath));
+        } catch (CoreException e) {
+            throw new RuntimeException(e);
         }
 
         TestVerifier verifier = new TestVerifier(false);
-        verifier.execute(className, classpath.toArray(new String[classpath.size()]));
+        verifier.execute(className, classPaths);
 
         String actualError = StringGroovyMethods.normalize(verifier.getExecutionError());
         if (expectedError == null && actualError.length() != 0) {

@@ -66,7 +66,7 @@ import org.junit.Test;
 import org.osgi.framework.Version;
 
 /**
- * Basic tests for the builder - compiling and running some very simple java and groovy code
+ * Basic tests for the builder - compiling and running some very simple java and groovy code.
  */
 public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
@@ -3741,7 +3741,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     @Test
-    public void testMultiProjectDependenciesMainAndTest() throws Exception {
+    public void testMultiProjectDependenciesMainAndTest1() throws Exception {
         IPath[] paths = createSimpleProject("ProjectA", true);
         IPath projectA = paths[0];
 
@@ -3800,6 +3800,41 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "Problem : The project cannot be built until build path errors are resolved " +
                 "[ resource : </ProjectB> range : <-1,-1> category : <10> severity : <2>]"
         ));
+    }
+
+    @Test
+    public void testMultiProjectDependenciesMainAndTest3() throws Exception {
+        IPath[] paths = createSimpleProject("ProjectA", false);
+        IPath projectA = paths[0];
+
+        env.addJar(projectA, "lib/binGroovySearch.jar");
+        env.addClass(paths[1], "p", "Main",
+            "package p;\n" +
+            "import pack.AGroovyClass;\n" +
+            "class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.println(AGroovyClass.class.getSimpleName());\n" +
+            "  }\n" +
+            "}\n");
+
+        fullBuild(projectA);
+        expectingNoProblemsFor(projectA);
+        expectingCompiledClasses("p.Main");
+
+        //
+
+        paths = createSimpleProject("ProjectB", true);
+        IPath projectB = paths[0];
+
+        // ProjectB:test requires ProjectA:main
+        env.addRequiredTestProjectWithoutTestCode(projectB, projectA);
+        IPath test = env.addTestPackageFragmentRoot(projectB, "test");
+        env.addGroovyClass(test, "q", "Test", "package q\np.Main.main()\n");
+
+        fullBuild(projectB);
+        expectingNoProblemsFor(projectB);
+        expectingCompiledClasses("q.Test");
+        executeClass(projectB, "q.Test", "AGroovyClass", "");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/744

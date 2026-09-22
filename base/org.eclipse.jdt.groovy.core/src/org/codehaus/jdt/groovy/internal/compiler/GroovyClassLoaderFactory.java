@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -180,11 +180,11 @@ public final class GroovyClassLoaderFactory {
                 }
                 classLoader = newClassLoader(xformPaths, classLoader);
 
-                values.add(0, new EclipseGroovyClassLoader(project, classLoader, compilerConfiguration)); // "test" and "main" and "eclipse" loader chain
+                values.add(0, new EclipseGroovyClassLoader(project, classLoader, compilerConfiguration)); // "test", "main" and "eclipse" loader chain
 
                 values.add(0, new GrapeAwareGroovyClassLoader(project, newClassLoader(classPaths, ClassLoader.getSystemClassLoader()), compilerConfiguration));
 
-                return new java.util.AbstractMap.SimpleEntry<>(classpathEntries, values.toArray(new GroovyClassLoader[0]));
+                return Map.entry(classpathEntries, values.toArray(GroovyClassLoader[]::new));
             });
 
             if (Arrays.equals(classpathEntries, entry.getKey())) {
@@ -222,11 +222,14 @@ public final class GroovyClassLoaderFactory {
 
     private static void calculateClasspath(IJavaProject javaProject, boolean mainOnly, Set<String> classPaths, Set<String> xformPaths) {
         try {
-            IRuntimeClasspathEntry[] entries = JavaRuntime.computeUnresolvedRuntimeClasspath(javaProject);
-            Arrays.sort(entries, Comparator.comparing(IRuntimeClasspathEntry::getType));
-            for (IRuntimeClasspathEntry unresolved : entries) {
-                Set<String> paths = (unresolved.getType() == IRuntimeClasspathEntry.CONTAINER ? classPaths : xformPaths);
-                for (IRuntimeClasspathEntry resolved : resolveRuntimeClasspathEntry(unresolved, mainOnly)) {
+            IRuntimeClasspathEntry[] allUnresolved = JavaRuntime.computeUnresolvedRuntimeClasspath(javaProject);
+            Arrays.sort(allUnresolved, Comparator.comparing(IRuntimeClasspathEntry::getType));
+            for (IRuntimeClasspathEntry unresolved : allUnresolved) {
+                Set<String> paths = unresolved.getType() == IRuntimeClasspathEntry.CONTAINER ? classPaths : xformPaths;
+                IRuntimeClasspathEntry[] allResolved = JavaRuntime.resolveRuntimeClasspathEntry(unresolved, javaProject, mainOnly);
+                for (IRuntimeClasspathEntry resolved : allResolved) {
+                    // https://github.com/eclipse-jdt/eclipse.jdt.debug/issues/1024
+                    if (mainOnly && resolved.getClasspathEntry().isTest()) continue;
                     String path = getAbsoluteLocation(resolved);
                     if (path != null) paths.add(path);
                 }
@@ -236,11 +239,6 @@ public final class GroovyClassLoaderFactory {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private static IRuntimeClasspathEntry[] resolveRuntimeClasspathEntry(IRuntimeClasspathEntry classpathEntry, boolean excludeTestCode) throws ReflectiveOperationException {
-        //return JavaRuntime.resolveRuntimeClasspathEntry(classpathEntry, javaProject, excludeTestCode); // indirect dependency on org.eclipse.debug.core.ILaunchConfiguration
-        return (IRuntimeClasspathEntry[]) JavaRuntime.class.getDeclaredMethod("resolveRuntimeClasspathEntry", IRuntimeClasspathEntry.class, IJavaProject.class, boolean.class).invoke(JavaRuntime.class, classpathEntry, classpathEntry.getJavaProject(), excludeTestCode);
     }
 
     private static String getAbsoluteLocation(IRuntimeClasspathEntry classpathEntry) throws Exception {
