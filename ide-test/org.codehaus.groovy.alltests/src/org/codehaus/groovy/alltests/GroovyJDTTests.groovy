@@ -71,6 +71,7 @@ import org.junit.runners.Suite
     org.eclipse.jdt.core.groovy.tests.builder.BasicGroovyBuildTests,
     org.eclipse.jdt.core.groovy.tests.builder.BuildAccessRulesTests,
     org.eclipse.jdt.core.groovy.tests.builder.FullProjectTests,
+    org.eclipse.jdt.core.groovy.tests.builder.GradleBuildTests,
     org.eclipse.jdt.core.groovy.tests.builder.STCScriptsTests,
     org.eclipse.jdt.core.groovy.tests.builder.ScriptFolderTests,
 

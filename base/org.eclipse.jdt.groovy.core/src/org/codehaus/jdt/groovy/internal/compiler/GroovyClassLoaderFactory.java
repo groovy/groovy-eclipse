@@ -232,6 +232,15 @@ public final class GroovyClassLoaderFactory {
                     if (mainOnly && resolved.getClasspathEntry().isTest()) continue;
                     String path = getAbsoluteLocation(resolved);
                     if (path != null) paths.add(path);
+                    // https://github.com/groovy/groovy-eclipse/issues/1700
+                    // https://github.com/eclipse-buildship/buildship/issues/1383
+                    if (mainOnly && resolved.getType() == IRuntimeClasspathEntry.PROJECT &&
+                            resolved.getResource() instanceof IProject rr && rr.isOpen()) {
+                        IJavaProject jp = JavaCore.create(rr);
+                        if (jp.exists()) {
+                            calculateClasspath(jp, true, new LinkedHashSet<>(), paths);
+                        }
+                    }
                 }
             }
             classPaths.addAll(xformPaths);

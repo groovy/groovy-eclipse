@@ -13,5 +13,6 @@ Export-Package: org.eclipse.jdt.core.groovy.tests,
 Import-Package: org.eclipse.jdt.launching
 Require-Bundle: org.eclipse.jdt.core.tests.builder;visibility:=reexport,
  org.eclipse.jdt.groovy.core.tests.compiler;visibility:=reexport,
- org.codehaus.groovy.eclipse.core;visibility:=reexport
+ org.codehaus.groovy.eclipse.core;visibility:=reexport,
+ org.eclipse.buildship.core;resolution:=optional
 Eclipse-BundleShape: dir
