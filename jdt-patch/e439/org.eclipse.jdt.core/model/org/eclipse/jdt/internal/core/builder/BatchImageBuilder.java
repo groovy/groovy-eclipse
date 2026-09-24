@@ -239,7 +239,8 @@ protected void cleanOutputFolders(boolean copyBack) throws CoreException {
 		}
 	}
 	// GROOVY add
-	LanguageSupportFactory.getEventHandler().handle(this.javaBuilder.javaProject, "cleanOutputFolders"); //$NON-NLS-1$
+	if (this.compilationGroup != CompilationGroup.TEST)
+		LanguageSupportFactory.getEventHandler().handle(this.javaBuilder.javaProject, "cleanOutputFolders"); //$NON-NLS-1$
 	// GROOVY end
 }
 
@@ -284,7 +285,7 @@ protected void copyExtraResourcesBack(ClasspathMultiDirectory sourceLocation, fi
 						*/
 						// copy groovy files if not in a groovy project
 						// Also, must keep the call to 'isJavaLikeFileName' to keep Scala plugin happy: GRECLIPSE-404
-						// here it is the same test as above, except 
+						// here it is the same test as above, except
 						if ((LanguageSupportFactory.isSourceFile(proxy.getName(), isInterestingProject) && org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName())) ||
 								org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(proxy.getName()))
 							return false;
