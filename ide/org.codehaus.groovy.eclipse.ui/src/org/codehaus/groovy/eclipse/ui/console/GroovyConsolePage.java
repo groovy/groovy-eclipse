@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,8 @@ import org.codehaus.groovy.eclipse.TraceCategory;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.console.IConsoleConstants;
 import org.eclipse.ui.console.IConsoleView;
@@ -44,17 +46,23 @@ public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger 
         super(console, view);
     }
 
-    private String twodigit(int i) {
+    private static String twoDigit(int i) {
         String number = Integer.toString(i);
         if (number.length() < 2) {
-            return new StringBuffer("0").append(number).toString();
+            return "0" + number;
         } else {
-            return number.toString();
+            return number;
         }
     }
 
     @Override
     public void log(final TraceCategory category, String message) {
+        Control control = getControl();
+        if (control == null) return;
+
+        Display display = control.getDisplay();
+        if (display == null) return;
+
         /*
          * This code no longer dependent on either java.util.DateFormat, nor its ICU4J
          * version, while avoiding the deprecated methods in java.util.Date, hence the
@@ -65,18 +73,19 @@ public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
 
-        StringBuilder time = new StringBuilder();
-        time.append(twodigit(calendar.get(Calendar.HOUR_OF_DAY))).append(":");
-        time.append(twodigit(calendar.get(Calendar.MINUTE))).append(":");
-        time.append(twodigit(calendar.get(Calendar.SECOND)));
-        time.append(" ").append(message).append("\n");
-        final String txt = time.toString();
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(category.getPaddedLabel()).append(" : ");
+        buffer.append(twoDigit(calendar.get(Calendar.HOUR_OF_DAY))).append(":");
+        buffer.append(twoDigit(calendar.get(Calendar.MINUTE))).append(":");
+        buffer.append(twoDigit(calendar.get(Calendar.SECOND)));
+        buffer.append(" ").append(message).append("\n");
+        String string = buffer.toString();
 
-        this.getControl().getDisplay().asyncExec(() -> {
+        display.asyncExec(() -> {
             TextConsoleViewer viewer = getViewer();
             if (viewer != null) {
                 StyledText text = viewer.getTextWidget();
-                text.append(category.getPaddedLabel() + " : " + txt);
+                text.append(string);
                 if (!fScrollLockAction.isChecked()) {
                     text.setTopIndex(text.getLineCount() - 1);
                 }
