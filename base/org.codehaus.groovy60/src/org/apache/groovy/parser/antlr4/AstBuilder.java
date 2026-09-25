@@ -588,12 +588,17 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
 
         // GRECLIPSE add
-        ASTNode nameNode = configureAST(new AnnotatedNode(), ctx.qualifiedName());
-        importNode.setNameStart(nameNode.getStart());
-        importNode.setNameEnd(nameNode.getEnd() - 1);
+        setNameRange(importNode, configureAST(new ASTNode(), ctx.qualifiedName()));
         // GRECLIPSE end
         return configureAST(importNode, ctx);
     }
+
+    // GRECLIPSE add
+    private static void setNameRange(final AnnotatedNode node, final ASTNode nameNode) {
+        node.setNameStart(nameNode.getStart());
+        node.setNameEnd(nameNode.getEnd() - 1);
+    }
+    // GRECLIPSE end
 
     /**
      * Expands {@code import module java.base} into star imports for all
@@ -649,11 +654,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         return configureAST(lastImport, ctx);
         */
         ImportNode importNode = configureAST(new ImportNode(moduleName), ctx);
+        setNameRange(importNode, configureAST(new ASTNode(), ctx.qualifiedName()));
         moduleNode.getNodeMetaData("import.module", x -> new LinkedList<>()).add(importNode);
         importNode.putNodeMetaData("module.offset", configureAST(new ASTNode(), ctx.MODULE()).getStart());
-        ASTNode name = configureAST(new ASTNode(), ctx.qualifiedName());
-        importNode.setNameStart(name.getStart());
-        importNode.setNameEnd(name.getEnd() - 1);
         importNode.addAnnotations(annotations);
         return importNode;
         // GRECLIPSE end
@@ -758,7 +761,19 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         visitAnnotationsOpt(ctx.annotationsOpt()).forEach(forStatement::addStatementAnnotation);
 
         if (isForAwait) {
+            /* GRECLIPSE edit
             return configureAST(AsyncTransformHelper.wrapForAwaitLoop(forStatement), ctx);
+            */
+            var stmt = (BlockStatement) AsyncTransformHelper.wrapForAwaitLoop(forStatement);
+            if (stmt.getStatements().get(0) instanceof ExpressionStatement iterableStatement
+                    && iterableStatement.getExpression() instanceof DeclarationExpression it) {
+                var await = configureAST(new ConstantExpression("await"), ctx.AWAIT());
+                var paren = configureAST(new ConstantExpression(null), ctx.RPAREN());
+                var callX = configureAST(it.getRightExpression(), await, paren);
+                setNameRange(callX, await);
+            }
+            return stmt;
+            // GRECLIPSE end
         }
 
         return forStatement;
@@ -792,8 +807,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         modifierManager.get(VAL).ifPresent(val -> valueParameter.putNodeMetaData("reserved.type.name", val));
         modifierManager.get(VAR).ifPresent(var -> valueParameter.putNodeMetaData("reserved.type.name", var));
 
-        valueParameter.setNameStart(valueParameter.getStart());
-        valueParameter.setNameEnd(valueParameter.getEnd() - 1);
+        setNameRange(valueParameter, valueParameter);
         valueParameter.setLineNumber(ctx.variableModifiersOpt().getStart().getLine());
         valueParameter.setColumnNumber(ctx.variableModifiersOpt().getStart().getCharPositionInLine() + 1);
         valueParameter.setStart(locationSupport.findOffset(valueParameter.getLineNumber(), valueParameter.getColumnNumber()));
@@ -812,8 +826,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         var indexParameter = configureAST(new Parameter(ClassHelper.int_TYPE, this.visitIdentifier(ctx.identifier())), ctx.identifier());
         indexParameter.setModifiers(Opcodes.ACC_FINAL);
         // GRECLIPSE add
-        indexParameter.setNameStart(indexParameter.getStart());
-        indexParameter.setNameEnd(indexParameter.getEnd() - 1);
+        setNameRange(indexParameter, indexParameter);
         indexParameter.setLineNumber(ctx.getStart().getLine());
         indexParameter.setColumnNumber(ctx.getStart().getCharPositionInLine() + 1);
         indexParameter.setStart(locationSupport.findOffset(indexParameter.getLineNumber(), indexParameter.getColumnNumber()));
@@ -1013,7 +1026,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         if (catchTypes.size() > 1) {
             return catchTypes.stream().map(e -> {
                 Parameter catchParameter = configureAST(new Parameter(e, this.visitIdentifier(ctx.identifier())), ctx.identifier());
-                catchParameter.setNameStart(catchParameter.getStart()); catchParameter.setNameEnd(catchParameter.getEnd() - 1);
+                setNameRange(catchParameter, catchParameter);
                 CatchStatement catchStatement = new CatchStatement(catchParameter, this.visitBlock(ctx.block()));
                 catchStatement.putNodeMetaData("catch.types", catchTypes);
                 return catchStatement;
@@ -1022,8 +1035,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             Parameter catchParameter = new Parameter(catchTypes.get(0), this.visitIdentifier(ctx.identifier()));
             ASTNode nameNode = configureAST(new ConstantExpression(catchParameter.getName()), ctx.identifier());
             configureAST(catchParameter, ctx.variableModifiersOpt(), nameNode);
-            catchParameter.setNameStart(nameNode.getStart());
-            catchParameter.setNameEnd(nameNode.getEnd() - 1);
+            setNameRange(catchParameter, nameNode);
             CatchStatement catchStatement = new CatchStatement(catchParameter, this.visitBlock(ctx.block()));
             return Collections.singletonList(configureAST(catchStatement, ctx));
         }
@@ -1209,7 +1221,14 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     @Override
     public Statement visitYieldReturnStmtAlt(final YieldReturnStmtAltContext ctx) {
         Expression expr = (Expression) this.visit(ctx.expression());
+        /* GRECLIPSE edit
         return configureAST(new ExpressionStatement(AsyncTransformHelper.buildYieldReturnCall(expr)), ctx);
+        */
+        Expression callX = AsyncTransformHelper.buildYieldReturnCall(expr);
+        setNameRange(callX, configureAST(new ConstantExpression("yield"), ctx.YIELD()));
+        configureAST(callX, ctx);
+        return stmt(callX);
+        // GRECLIPSE end
     }
 
     @Override
@@ -1223,7 +1242,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     @Override
-    public ExpressionStatement visitDeferStmtAlt(final DeferStmtAltContext ctx) {
+    public Statement visitDeferStmtAlt(final DeferStmtAltContext ctx) {
         if (!Boolean.TRUE.equals(asyncClosureStack.peek())) {
             throw createParsingFailedException(
                     asyncClosureStack.contains(Boolean.TRUE)
@@ -1241,7 +1260,14 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             wrapper.setSourcePosition(stmtExprStmt);
             action = wrapper;
         }
+        /* GRECLIPSE edit
         return configureAST(new ExpressionStatement(AsyncTransformHelper.buildDeferCall(action)), ctx);
+        */
+        Expression callX = AsyncTransformHelper.buildDeferCall(action);
+        setNameRange(callX, configureAST(new ConstantExpression("defer"), ctx.DEFER()));
+        configureAST(callX, ctx);
+        return stmt(callX);
+        // GRECLIPSE end
     }
 
     @Override
@@ -1710,8 +1736,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         configureAST(classNode, ctx);
         // GRECLIPSE add
-        ASTNode nameNode = configureAST(new ConstantExpression(className), ctx.identifier());
-        classNode.setNameStart(nameNode.getStart()); classNode.setNameEnd(nameNode.getEnd()-1);
+        setNameRange(classNode, configureAST(new ConstantExpression(className), ctx.identifier()));
         // keep track of restricted identifiers for highlighting
         if (isRecord || isSealed || isNonSealed || hasPermits) {
             List<ASTNode> list = new ArrayList<>(4);
@@ -1923,8 +1948,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         groovydocManager.handle(enumConstant, ctx);
 
         // GRECLIPSE add
-        ASTNode nameNode = configureAST(new ConstantExpression(enumConstant.getName()), ctx.identifier());
-        enumConstant.setNameStart(nameNode.getStart()); enumConstant.setNameEnd(nameNode.getEnd() - 1);
+        setNameRange(enumConstant, configureAST(new ConstantExpression(enumConstant.getName()), ctx.identifier()));
         if (anonymousInnerClassNode != null) {
             anonymousInnerClassNode.setNameStart(enumConstant.getNameStart());
             anonymousInnerClassNode.setNameEnd(enumConstant.getNameEnd());
@@ -2148,11 +2172,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     public MethodNode visitCompactConstructorDeclaration(final CompactConstructorDeclarationContext ctx) {
         ClassNode classNode = ctx.getNodeMetaData(CLASS_DECLARATION_CLASS_NODE);
         // GRECLIPSE add
-        AnnotatedNode name = configureAST(new AnnotatedNode(),ctx.methodName());
-        AnnotatedNode node = configureAST(new AnnotatedNode(),ctx);
-        classNode.putNodeMetaData("compact.constructor",node);
-        node.setNameStart(name.getStart());
-        node.setNameEnd(name.getEnd() - 1);
+        var node = configureAST(new AnnotatedNode(), ctx);
+        classNode.putNodeMetaData("compact.constructor", node);
+        setNameRange(node, configureAST(new ASTNode(), ctx.methodName()));
         // GRECLIPSE end
 
         if (classNode.getAnnotations().stream().noneMatch(a -> a.getClassNode().getName().equals(RECORD_TYPE_NAME))) {
@@ -2240,8 +2262,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         configureAST(methodNode, ctx);
         // GRECLIPSE add
-        ASTNode nameNode = configureAST(new ConstantExpression(methodName), ctx.methodName());
-        methodNode.setNameStart(nameNode.getStart()); methodNode.setNameEnd(nameNode.getEnd() - 1);
+        setNameRange(methodNode, configureAST(new ConstantExpression(methodName), ctx.methodName()));
         /* roll back stop for abstract/interface methods
         if (ctx.getStop().getType() == GroovyParser.NL) {
             methodNode.setLastLineNumber(last(ctx.nls()).getStart().getLine());
@@ -2637,8 +2658,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             } else {
                 configureAST(fieldNode, ctx, startNode);
             }
-            fieldNode.setNameStart(startNode instanceof Parameter ? ((Parameter)startNode).getNameStart() : startNode.getStart());
-            fieldNode.setNameEnd(startNode instanceof Parameter ? ((Parameter)startNode).getNameEnd() : startNode.getEnd() - 1);
+            fieldNode.setNameStart(startNode instanceof Parameter p ? p.getNameStart() : startNode.getStart());
+            fieldNode.setNameEnd  (startNode instanceof Parameter p ? p.getNameEnd() : startNode.getEnd() - 1);
             // GRECLIPSE end
         }
 
@@ -2657,8 +2678,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         } else {
             configureAST(propertyNode, ctx, startNode);
         }
-        propertyNode.setNameStart(startNode instanceof Parameter ? ((Parameter)startNode).getNameStart() : startNode.getStart());
-        propertyNode.setNameEnd(startNode instanceof Parameter ? ((Parameter)startNode).getNameEnd() : startNode.getEnd() - 1);
+        propertyNode.setNameStart(startNode instanceof Parameter p ? p.getNameStart() : startNode.getStart());
+        propertyNode.setNameEnd  (startNode instanceof Parameter p ? p.getNameEnd() : startNode.getEnd() - 1);
         // GRECLIPSE end
         return propertyNode;
     }
@@ -2706,8 +2727,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         } else {
             configureAST(fieldNode, ctx, variableExpression);
         }
-        fieldNode.setNameStart(variableExpression.getStart());
-        fieldNode.setNameEnd(variableExpression.getEnd() - 1);
+        setNameRange(fieldNode, variableExpression);
         // GRECLIPSE end
     }
 
@@ -2992,10 +3012,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             methodCallExpression.putNodeMetaData(IS_COMMAND_EXPRESSION, Boolean.TRUE);
             // GRECLIPSE add
-            if (methodCallExpression.getMethod() instanceof ConstantExpression) {
-                Expression nameExpr = methodCallExpression.getMethod();
-                methodCallExpression.setNameStart(nameExpr.getStart());
-                methodCallExpression.setNameEnd(nameExpr.getEnd() - 1);
+            if (methodCallExpression.getMethod() instanceof ConstantExpression name) {
+                setNameRange(methodCallExpression, name);
             }
             // GRECLIPSE end
             if (!hasCommandArgument) {
@@ -3460,8 +3478,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     );
                     constructorCallExpression.setGenericsTypes(baseExpr.getNodeMetaData(PATH_EXPRESSION_BASE_EXPR_GENERICS_TYPES));
                     // GRECLIPSE add
-                    constructorCallExpression.setNameStart(baseExpr.getStart());
-                    constructorCallExpression.setNameEnd(baseExpr.getEnd() - 1);
+                    setNameRange(constructorCallExpression, baseExpr);
                     // GRECLIPSE end
                     return configureAST(constructorCallExpression, ctx);
                 }
@@ -3931,7 +3948,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             cast.putNodeMetaData(ResolveVisitor.CAST_RESOLVE_HINT, hint);
         }
         // GRECLIPSE add
-        Expression name = configureAST(new ConstantExpression(null), ctx.castParExpression().intersectionType());
+        ASTNode name = configureAST(new ASTNode(), ctx.castParExpression().intersectionType());
         cast.setNameStart(name.getStart());
         cast.setNameEnd(name.getEnd());
         // GRECLIPSE end
@@ -4037,24 +4054,41 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         List<? extends ExpressionContext> exprCtxs = ctx.expression();
         if (exprCtxs.size() == 1) {
             Expression expr = (Expression) this.visit(exprCtxs.get(0));
+            /* GRECLIPSE edit
             return configureAST(
                     AsyncTransformHelper.buildAwaitCall(expr),
                     ctx);
+            */
+            Expression callX = AsyncTransformHelper.buildAwaitCall(expr);
+            setNameRange(callX, configureAST(new ConstantExpression("await"), ctx.AWAIT()));
+            return callX;
+            // GRECLIPSE end
         }
         // Multi-arg: await(p1, p2, ..., pn) or await p1, p2, ..., pn
         List<Expression> exprs = exprCtxs.stream()
                                             .map(ec -> (Expression) this.visit(ec))
                                             .collect(Collectors.toList());
+        /* GRECLIPSE edit
         return configureAST(
             AsyncTransformHelper.buildAwaitCall(new ArgumentListExpression(exprs)),
             ctx);
+        */
+        Expression callX = AsyncTransformHelper.buildAwaitCall(new ArgumentListExpression(exprs));
+        setNameRange(callX, configureAST(new ConstantExpression("await"), ctx.AWAIT()));
+        return callX;
+        // GRECLIPSE end
     }
 
     @Override
     public Expression visitAsyncClosureExprAlt(final AsyncClosureExprAltContext ctx) {
         nextClosureIsAsync = true;
         ClosureExpression closure = this.visitClosureOrLambdaExpression(ctx.closureOrLambdaExpression());
+        /* GRECLIPSE edit
         return configureAST(AsyncTransformHelper.transformAsyncClosure(closure), ctx);
+        */
+        Expression callX = AsyncTransformHelper.transformAsyncClosure(closure);
+        setNameRange(callX, configureAST(new ConstantExpression("async"), ctx.ASYNC()));
+        return callX;
     }
 
     @Override
@@ -4180,7 +4214,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             }
             Expression cast = CastExpression.asExpression(this.visitCoercionType(ctx.coercionType()), expr);
             // GRECLIPSE add
-            Expression name = configureAST(new ConstantExpression(null), ctx.coercionType());
+            ASTNode name = configureAST(new ASTNode(), ctx.coercionType());
             cast.setNameStart(name.getStart());
             cast.setNameEnd(name.getEnd());
             // GRECLIPSE end
@@ -4468,8 +4502,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 constructorCallExpression.setGenericsTypes(constructorGenerics);
             }
             // GRECLIPSE add
-            constructorCallExpression.setNameStart(classNode.getStart());
-            constructorCallExpression.setNameEnd(classNode.getEnd() - 1);
+            setNameRange(constructorCallExpression, classNode);
             // GRECLIPSE end
             return configureAST(constructorCallExpression, ctx);
         }
@@ -4489,8 +4522,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             ArrayExpression arrayExpression = new ArrayExpression(classNode, null, sizeExpressions);
             // GRECLIPSE add
-            arrayExpression.setNameStart(classNode.getStart());
-            arrayExpression.setNameEnd(classNode.getEnd() - 1);
+            setNameRange(arrayExpression, classNode);
             // GRECLIPSE end
             ClassNode arrayType = arrayExpression.getType();
             int i = 0; // annotations apply to array then component(s)
@@ -4517,8 +4549,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             ArrayExpression arrayExpression = new ArrayExpression(elementType, initExpressions);
             arrayExpression.getType().addTypeAnnotations(typeAnnotations.get(0));
             // GRECLIPSE add
-            arrayExpression.setNameStart(classNode.getStart());
-            arrayExpression.setNameEnd(classNode.getEnd() - 1);
+            setNameRange(arrayExpression, classNode);
             // GRECLIPSE end
             return configureAST(arrayExpression, ctx);
         }
@@ -5001,8 +5032,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             VariableExpression variable = this.visitVariableDeclaratorId(ctx.variableDeclaratorId());
             Parameter parameter = new Parameter(ClassHelper.dynamicType(), variable.getName());
             // GRECLIPSE add
-            parameter.setNameStart(variable.getStart());
-            parameter.setNameEnd(variable.getEnd() - 1);
+            setNameRange(parameter, variable);
             // GRECLIPSE end
             configureAST(parameter, variable);
             return new Parameter[]{parameter};
@@ -5088,9 +5118,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                             */
                             .map(formalParameterContext -> {
                                 Parameter parameter = this.visitFormalParameter(formalParameterContext);
-                                ASTNode nameNode = configureAST(new ConstantExpression(parameter.getName()), formalParameterContext.variableDeclaratorId());
-                                parameter.setNameStart(nameNode.getStart());
-                                parameter.setNameEnd(nameNode.getEnd() - 1);
+                                setNameRange(parameter, configureAST(new ConstantExpression(parameter.getName()), formalParameterContext.variableDeclaratorId()));
                                 return parameter;
                             })
                             // GRECLIPSE end
@@ -5817,8 +5845,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                             expression.setLineNumber(base.getLineNumber());
                             expression.setStart(base.getStart());
                             if (expression instanceof MethodCallExpression call && call.getMethod() instanceof ConstantExpression name) {
-                                expression.setNameStart(name.getStart());
-                                expression.setNameEnd(name.getEnd() - 1);
+                                setNameRange(expression, name);
                             }
                             // GRECLIPSE end
                             if (isTrue((Expression) r, PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN)) {

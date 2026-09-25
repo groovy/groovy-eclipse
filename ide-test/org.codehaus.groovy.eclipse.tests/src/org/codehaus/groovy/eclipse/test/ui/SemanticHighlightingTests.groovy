@@ -1921,7 +1921,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = '''\
             |int _;
             |int non;
+            |int val;
             |int var;
+            |int async;
+            |int await;
+            |int defer;
             |int yield;
             |int record;
             |int sealed;
@@ -1932,7 +1936,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('_'),          1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('non'),        3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('val'),        3, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('var'),        3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('async'),      5, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('await'),      5, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('defer'),      5, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('yield'),      5, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('record'),     6, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('sealed'),     6, VARIABLE),
@@ -6005,6 +6013,80 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('I.'),    1, isAtLeastGroovy(50) ? INTERFACE : TRAIT),
           //new HighlightedTypedPosition(contents.lastIndexOf('super'), 5, UNKNOWN),
             new HighlightedTypedPosition(contents.lastIndexOf('foo'),   3, METHOD_CALL))
+    }
+
+    @Test
+    void testAsyncAwait1() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String contents = '''\
+            |def task = async {
+            |  def item = create()
+            |  defer item.destroy()
+            |  item.consume(target)
+            |}
+            |await task
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('task'   ), 4, VARIABLE   ),
+            new HighlightedTypedPosition(contents.indexOf('async'  ), 5, STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('item'   ), 4, VARIABLE   ),
+            new HighlightedTypedPosition(contents.indexOf('create' ), 6, UNKNOWN    ),
+            new HighlightedTypedPosition(contents.indexOf('defer'  ), 5, STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('item.d' ), 4, VARIABLE   ),
+            new HighlightedTypedPosition(contents.indexOf('destroy'), 7, UNKNOWN    ),
+            new HighlightedTypedPosition(contents.indexOf('item.c' ), 4, VARIABLE   ),
+            new HighlightedTypedPosition(contents.indexOf('consume'), 7, UNKNOWN    ),
+            new HighlightedTypedPosition(contents.indexOf('target' ), 6, UNKNOWN    ),
+            new HighlightedTypedPosition(contents.indexOf('await'  ), 5, STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('task'), 4, VARIABLE  ))
+    }
+
+    @Test
+    void testAsyncAwait2() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String contents = '''\
+            |async {
+            |  int i = 0
+            |  while (i < 10) {
+            |    yield return i++
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('async'), 5, STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('i ='  ), 1, VARIABLE   ),
+            new HighlightedTypedPosition(contents.indexOf('0'    ), 1, NUMBER     ),
+            new HighlightedTypedPosition(contents.indexOf('i <'  ), 1, VARIABLE   ),
+            new HighlightedTypedPosition(contents.indexOf('10'   ), 2, NUMBER     ),
+            new HighlightedTypedPosition(contents.indexOf('yield'), 5, STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('i++'  ), 1, VARIABLE   ))
+    }
+
+    @Test
+    void testAsyncAwait3() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60))
+
+        String contents = '''\
+            |for await (wave in waves(locale)) {
+            |  wave.each { enemy -> hero.fight(enemy) }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('await' ), 5, STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('wave'  ), 4, VARIABLE   ),
+            new HighlightedTypedPosition(contents.indexOf('waves' ), 5, UNKNOWN    ),
+            new HighlightedTypedPosition(contents.indexOf('locale'), 6, UNKNOWN    ),
+            new HighlightedTypedPosition(contents.indexOf('wave.' ), 4, VARIABLE   ),
+            new HighlightedTypedPosition(contents.indexOf('each'  ), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('enemy' ), 5, PARAMETER  ),
+            new HighlightedTypedPosition(contents.indexOf('hero'  ), 4, UNKNOWN    ),
+            new HighlightedTypedPosition(contents.indexOf('fight' ), 5, UNKNOWN    ),
+            new HighlightedTypedPosition(contents.indexOf('enemy)'), 5, PARAMETER  ))
     }
 
     //
