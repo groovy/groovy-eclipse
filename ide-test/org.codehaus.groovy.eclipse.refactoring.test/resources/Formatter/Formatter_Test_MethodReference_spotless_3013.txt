@@ -1,0 +1,8 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+s.write(tests, TestFQNSerializer::serialize)
+###exp
+s.write(tests, TestFQNSerializer::serialize)
+###end
