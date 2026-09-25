@@ -207,7 +207,8 @@ public class CompilerChooser implements BundleActivator {
                 specifiedVersion = getVersionFromPrefenences();
             }
 
-            System.out.println("Starting Groovy-Eclipse compiler resolver. Specified compiler level: " + specifiedVersion.toReadableVersionString());
+            debug("Starting Groovy-Eclipse compiler resolver. Specified compiler level: " +
+                specifiedVersion.toReadableVersionString());
 
             Bundle[] bundles = Platform.getBundles(GROOVY_PLUGIN_ID, null);
             if (bundles == null || bundles.length == 0) {
@@ -235,9 +236,9 @@ public class CompilerChooser implements BundleActivator {
                 for (int i = 0, n = bundles.length; i < n; i += 1) {
                     Bundle bundle = bundles[i];
                     if (i == skip) {
-                        System.out.println("Skipped bundle version " + bundle.getVersion());
+                        debug("Skipped bundle version " + bundle.getVersion());
                     } else {
-                        System.out.println("Stopped bundle version " + bundle.getVersion());
+                        debug("Stopped bundle version " + bundle.getVersion());
                         bundle.uninstall();
                         dirty.add(bundle);
                     }
@@ -248,31 +249,24 @@ public class CompilerChooser implements BundleActivator {
         return this;
     }
 
-    private void dump(Collection<Bundle> bundles) {
-        for (Bundle b : bundles) {
-            System.out.printf("%3d %s_%s %s%n", b.getBundleId(), b.getSymbolicName(), b.getVersion(), stateString(b.getState()));
+    private static void debug(String message) {
+        if (Platform.inDebugMode()) {
+            System.out.println(message);
         }
     }
 
-    /*private void logMessage(String s) {
-        ILog log = Platform.getLog(bundleContext.getBundle());
-        log.log(new Status(IStatus.INFO, PLUGIN_ID, "GroovyCompilerChooser: " + s));
+    private void dump(Collection<Bundle> bundles) {
+        if (Platform.inDebugMode()) {
+            for (Bundle b : bundles) {
+                System.out.printf("%3d %s_%s %s%n", b.getBundleId(), b.getSymbolicName(), b.getVersion(), stateString(b.getState()));
+            }
+        }
     }
-
-    private void logWarning(String s) {
-        ILog log = Platform.getLog(bundleContext.getBundle());
-        log.log(new Status(IStatus.WARNING, PLUGIN_ID, "GroovyCompilerChooser: " + s));
-    }
-
-    private void logError(Throwable t) {
-        ILog log = Platform.getLog(bundleContext.getBundle());
-        log.log(new Status(IStatus.ERROR, PLUGIN_ID, "GroovyCompilerChooser: " + t.getMessage(), t));
-    }*/
 
     private void refreshPackages(Collection<Bundle> bundles) {
         FrameworkWiring wiring = bundleContext.getBundle(0).adapt(FrameworkWiring.class);
 
-        System.out.println("Refresh bundles:");
+        debug("Refresh bundles:");
         dump(wiring.getDependencyClosure(bundles));
 
         final CountDownLatch latch = new CountDownLatch(1);
