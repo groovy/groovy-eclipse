@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,7 +94,7 @@ public class CompilerChooser implements BundleActivator {
         }
     }
 
-    public Version getAssociatedVersion(SpecifiedVersion specifiedVersion) {
+    public Version getAssociatedVersion(final SpecifiedVersion specifiedVersion) {
         for (int i = 0, n = allSpecifiedVersions.length; i < n; i += 1) {
             if (allSpecifiedVersions[i] == specifiedVersion) {
                 return allVersions[i];
@@ -148,7 +148,7 @@ public class CompilerChooser implements BundleActivator {
     /**
      * Stores the {@link SpecifiedVersion} in Eclipse preferences.
      */
-    public void storeVersion(SpecifiedVersion version) throws BackingStoreException {
+    public void storeVersion(final SpecifiedVersion version) throws BackingStoreException {
         IEclipsePreferences node = InstanceScope.INSTANCE.getNode(PLUGIN_ID);
         node.put(GROOVY_COMPILER_LEVEL, version.versionName);
         node.flush();
@@ -161,7 +161,7 @@ public class CompilerChooser implements BundleActivator {
     private ServiceListener serviceListener;
 
     @Override
-    public void start(BundleContext bundleContext) throws Exception {
+    public void start(final BundleContext bundleContext) throws Exception {
         this.bundleContext = bundleContext;
 
         // There is a small window where the chooser can be initialized. It has
@@ -171,7 +171,7 @@ public class CompilerChooser implements BundleActivator {
 
         // the service listener is called synchronously as the resources bundle is started
         String filter = "(" + Constants.OBJECTCLASS + "=org.eclipse.core.resources.IWorkspace)";
-        serviceListener = event -> {
+        serviceListener = (ServiceEvent event) -> {
             if (event.getType() == ServiceEvent.REGISTERED) {
                 this.bundleContext.removeServiceListener(serviceListener);
                 serviceListener = null;
@@ -183,7 +183,7 @@ public class CompilerChooser implements BundleActivator {
     }
 
     @Override
-    public void stop(BundleContext bundleContext) throws Exception {
+    public void stop(final BundleContext bundleContext) throws Exception {
         if (serviceListener != null) {
             bundleContext.removeServiceListener(serviceListener);
         }
@@ -207,14 +207,15 @@ public class CompilerChooser implements BundleActivator {
                 specifiedVersion = getVersionFromPrefenences();
             }
 
-            debug("Starting Groovy-Eclipse compiler resolver. Specified compiler level: " +
-                specifiedVersion.toReadableVersionString());
+            boolean isDebug = Platform.inDebugMode();
+            if (isDebug) System.out.println("Starting Groovy-Eclipse compiler resolver." +
+                " Specified compiler level: " + specifiedVersion.toReadableVersionString());
 
             Bundle[] bundles = Platform.getBundles(GROOVY_PLUGIN_ID, null);
             if (bundles == null || bundles.length == 0) {
-                System.out.println("No Groovy bundles found...this will cause some problems.");
+                if (isDebug) System.out.println("No Groovy bundles found; this will cause some problems.");
                 bundles = new Bundle[0];
-            } else {
+            } else if (isDebug) {
                 // print debug infos about the bundles to debug screwy behavior
                 dump(Arrays.asList(bundles));
             }
@@ -236,9 +237,9 @@ public class CompilerChooser implements BundleActivator {
                 for (int i = 0, n = bundles.length; i < n; i += 1) {
                     Bundle bundle = bundles[i];
                     if (i == skip) {
-                        debug("Skipped bundle version " + bundle.getVersion());
+                        if (isDebug) System.out.println("Skipped bundle version " + bundle.getVersion());
                     } else {
-                        debug("Stopped bundle version " + bundle.getVersion());
+                        if (isDebug) System.out.println("Stopped bundle version " + bundle.getVersion());
                         bundle.uninstall();
                         dirty.add(bundle);
                     }
@@ -249,28 +250,23 @@ public class CompilerChooser implements BundleActivator {
         return this;
     }
 
-    private static void debug(String message) {
-        if (Platform.inDebugMode()) {
-            System.out.println(message);
+    private void dump(final Collection<Bundle> bundles) {
+        for (Bundle b : bundles) {
+            System.out.printf("%3d %s_%s %s%n", b.getBundleId(), b.getSymbolicName(), b.getVersion(), stateString(b.getState()));
         }
     }
 
-    private void dump(Collection<Bundle> bundles) {
-        if (Platform.inDebugMode()) {
-            for (Bundle b : bundles) {
-                System.out.printf("%3d %s_%s %s%n", b.getBundleId(), b.getSymbolicName(), b.getVersion(), stateString(b.getState()));
-            }
-        }
-    }
-
-    private void refreshPackages(Collection<Bundle> bundles) {
+    private void refreshPackages(final Collection<Bundle> bundles) {
         FrameworkWiring wiring = bundleContext.getBundle(0).adapt(FrameworkWiring.class);
 
-        debug("Refresh bundles:");
-        dump(wiring.getDependencyClosure(bundles));
+        boolean isDebug = Platform.inDebugMode();
+        if (isDebug) {
+            System.out.println("Refresh bundles:");
+            dump(wiring.getDependencyClosure(bundles));
+        }
 
-        final CountDownLatch latch = new CountDownLatch(1);
-        wiring.refreshBundles(bundles, event -> {
+        var latch = new CountDownLatch(1);
+        wiring.refreshBundles(bundles, (FrameworkEvent event) -> {
             if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
                 latch.countDown();
             }
@@ -278,11 +274,11 @@ public class CompilerChooser implements BundleActivator {
         try {
             latch.await(5, TimeUnit.SECONDS);
         } catch (Exception e) {
-            e.printStackTrace();
+            if (isDebug) e.printStackTrace();
         }
     }
 
-    private static String stateString(int bundleState) {
+    private static String stateString(final int bundleState) {
         switch (bundleState) {
         case Bundle.UNINSTALLED:
             return "UNINSTALLED";
