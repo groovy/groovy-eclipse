@@ -15,7 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
-import static org.eclipse.jdt.groovy.core.util.ReflectionUtils.executePrivateMethod;
+import static org.eclipse.jdt.groovy.core.util.ReflectionUtils.throwableExecutePrivateMethod;
 import static org.junit.Assume.assumeNoException;
 
 import java.util.Arrays;
@@ -34,7 +34,7 @@ import org.junit.Test;
  */
 public final class GradleBuildTests extends BuilderTestSuite {
 
-    private static IPath[] createGradleProject(final String name, final boolean isGroovy) throws Exception {
+    private static IPath[] createGradleProject(String name, boolean isGroovy) throws Exception {
         IPath root = env.addProject(name);
 
         if (!isGroovy) env.removeGroovyNature(name);
@@ -76,12 +76,12 @@ public final class GradleBuildTests extends BuilderTestSuite {
         }
     }
 
-    private void refreshGradleProject(final IPath path) {
+    private void refreshGradleProject(IPath path) throws Exception {
         //GradleCore.getWorkspace().getBuild(project).get().synchronize(new NullProgressMonitor());
-        var workspace = executePrivateMethod(gradlePlugin, "getWorkspace", null);
-        var build = executePrivateMethod(workspace.getClass(), "getBuild", new Class[]{IProject.class}, workspace, new Object[]{env.getProject(path)});
-        build = executePrivateMethod(Optional.class, "get", build);
-        executePrivateMethod(build.getClass(), "synchronize", new Class[]{IProgressMonitor.class}, build, new Object[]{new NullProgressMonitor()});
+        var workspace = throwableExecutePrivateMethod(gradlePlugin, "getWorkspace", new Class[]{}, null, new Object[]{});
+        var build = throwableExecutePrivateMethod(workspace.getClass(), "getBuild", new Class[]{IProject.class}, workspace, new Object[]{env.getProject(path)});
+        build = throwableExecutePrivateMethod(Optional.class, "get", new Class[]{}, build, new Object[]{});
+        throwableExecutePrivateMethod(build.getClass(), "synchronize", new Class[]{IProgressMonitor.class}, build, new Object[]{new NullProgressMonitor()});
 
         fullBuild(path);
     }
@@ -100,7 +100,7 @@ public final class GradleBuildTests extends BuilderTestSuite {
     //--------------------------------------------------------------------------
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1700
-    public void testMultiProjectDependenciesMainAndTest() throws Exception {
+    public void testMultiProjectDependenciesMainAndTest1() throws Exception {
         IPath[] pathsA = createGradleProject("ProjectA", false);
 
         env.addFile(pathsA[0], "build.gradle", """
@@ -166,6 +166,82 @@ public final class GradleBuildTests extends BuilderTestSuite {
         expectingNoProblemsFor(pathsB[0]);
         expectingCompiledClasses("q.Test");
 
+        executeClass(pathsB[0], "q.Test", "works", "");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1699
+    public void testMultiProjectDependenciesMainAndTest2() throws Exception {
+        IPath[] pathsA = createGradleProject("ProjectA", false);
+
+        env.addFile(pathsA[0], "build.gradle", """
+            plugins {
+                id 'java'
+            }
+            repositories {
+                mavenCentral()
+            }
+            dependencies {
+                implementation 'org.codehaus.groovy:groovy:3.0.25'
+            }
+            """);
+
+        env.addClass(pathsA[1], "p", "Transform",
+            "package p;\n" +
+            "import groovyjarjarasm.asm.*;\n" +
+            "import org.codehaus.groovy.ast.ASTNode;\n" +
+            "import org.codehaus.groovy.control.SourceUnit;\n" +
+            "import org.codehaus.groovy.classgen.BytecodeExpression;\n" +
+            "import org.codehaus.groovy.transform.ASTTransformation;\n" +
+            "import org.codehaus.groovy.transform.GroovyASTTransformation;\n" +
+            "@GroovyASTTransformation\n" +
+            "public class Transform extends BytecodeExpression implements ASTTransformation {\n" +
+            "  public void visit(ASTNode[] nodes, SourceUnit unit) {\n" +
+            "    MethodVisitor.class.getName();\n" + // load it up
+            "    System.err.println(unit.getName());\n" +
+            "  }\n" +
+            "  public void visit(MethodVisitor visitor) {\n" +
+            "  }\n" +
+            "}\n");
+
+        env.addFile(
+            env.addFolder(env.addFolder(pathsA[1], "META-INF"), "services"),
+            "org.codehaus.groovy.transform.ASTTransformation", "p.Transform");
+
+        refreshGradleProject(pathsA[0]);
+        expectingNoProblemsFor(pathsA[0]);
+        expectingCompiledClasses("p.Transform");
+
+        //
+
+        IPath[] pathsB = createGradleProject("ProjectB", true);
+
+        env.addFile(pathsB[0], "build.gradle", """
+            plugins {
+                id 'groovy'
+            }
+            repositories {
+                mavenCentral()
+            }
+            dependencies {
+                implementation 'org.codehaus.groovy:groovy:3.0.25'
+                testImplementation project(':ProjectA') // ProjectB:test requires ProjectA:main
+            }
+            """);
+
+        env.addFile(pathsB[0], "settings.gradle", """
+            include(':ProjectA')
+            project(':ProjectA').projectDir = file('../ProjectA')
+            """);
+
+        env.addGroovyClass(pathsB[1], "q", "Main", "package q\nprint 'works'\n");
+        // global transform from ProjectA should be applied to this groovy script
+        env.addGroovyClass(pathsB[2], "q", "Test", "package q\nprint 'works'\n");
+
+        refreshGradleProject(pathsB[0]);
+        expectingNoProblemsFor(pathsB[0]);
+        expectingCompiledClasses("q.Main", "q.Test");
+
+        executeClass(pathsB[0], "q.Main", "works", "");
         executeClass(pathsB[0], "q.Test", "works", "");
     }
 }

@@ -165,7 +165,8 @@ public final class GroovyClassLoaderFactory {
 
                 List<GroovyClassLoader> values = new ArrayList<>(3);
 
-                ClassLoader classLoader = getClass().getClassLoader();
+                // https://github.com/groovy/groovy-eclipse/issues/1699
+                ClassLoader classLoader = GroovyLogManager.class.getClassLoader();
                 if (javaProject.exists()) {
                     Set<String> dontCare = new LinkedHashSet<>();
                     Set<String> mainOnly = new LinkedHashSet<>();
