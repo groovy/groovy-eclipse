@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -419,8 +419,12 @@ public class GroovyCompilationUnit extends CompilationUnit {
                 }
             }
         } catch (JavaModelException e) {
-            // can ignore situations when trying to find types that are not on the classpath
-            if (e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH) {
+            switch (e.getStatus().getCode()) {
+            case IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST:
+            case IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH:
+                // can ignore when finding types not on the classpath
+                break;
+            default:
                 Util.log(e, "Error finding all types of " + this.name);
             }
         }
