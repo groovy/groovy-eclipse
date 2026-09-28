@@ -2532,9 +2532,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         types.add(createParameterizedClosure(((MethodPointerExpression) expression).getExpression().getType()));
                     } else if (expression instanceof NamedArgumentListExpression) {
                         types.add(createParameterizedMap(VariableScope.STRING_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE));
-                    } else if (expression instanceof SpreadExpression) {
-                        Expression sub = ((SpreadExpression) expression).getExpression();
-                        ClassNode type = lookupExpressionType(sub, null, false, scopes.getLast()).type;
+                    } else if (expression instanceof SpreadExpression outer) {
+                        VariableScope scope = scopes.getLast();
+                        scope.setMethodCallArgumentTypes(null);
+                        Expression sub = outer.getExpression();
+                        scope.setCurrentNode(sub);
+                        ClassNode type = lookupExpressionType(sub, null, false, scope).type;
+                        scope.forgetCurrentNode();
                         if (type.isDerivedFrom(VariableScope.TUPLE_CLASS_NODE)) { // Tuple[0..16]
                             GenericsType[] spec = GroovyUtils.getGenericsTypes(type);
                             for (GenericsType elem : spec) types.add(elem.getType());

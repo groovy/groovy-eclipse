@@ -1838,8 +1838,11 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/1698
     void testPrimitiveMatch() {
         createDsls '''\
+            |import org.codehaus.groovy.ast.expr.*
             |contribute(inClosure() & isThisType()) {
-            |  property name:'any', type:'', declaringType:Script // a wildcard (like Spock's underscore)
+            |  if (currentNode instanceof VariableExpression && currentNode.name == 'any') {
+            |    property name:'any', type:'', declaringType:Script // a wildcard (like Spock's underscore)
+            |  }
             |  delegatesTo 'Foo'
             |}
             |'''.stripMargin()
@@ -1855,6 +1858,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         assert inferType(contents, 'bar').typeName == 'java.lang.Integer'
+        assert inferType(contents.replace('any', '*any'), 'bar').typeName == 'java.lang.Integer'
     }
 
     @Test
