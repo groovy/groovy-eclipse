@@ -326,7 +326,8 @@ public final class GroovyClassLoaderFactory {
         public Enumeration<URL> getResources(final String name) throws IOException {
             Enumeration<URL> resources = super.getResources(name);
             // GRECLIPSE-1762: exclude project's own extension definitions
-            if (project != null && resources.hasMoreElements() && (name.startsWith("META-INF/groovy/") || name.startsWith("META-INF/services/"))) {
+            if (resources.hasMoreElements() && project != null && project.exists() &&
+                    (name.startsWith("META-INF/groovy/") || name.startsWith("META-INF/services/"))) {
                 String exclude = project.getLocationURI().getPath();
 
                 List<URL> list = new ArrayList<>();
