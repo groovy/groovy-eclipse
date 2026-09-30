@@ -180,7 +180,7 @@
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
-        url="https://groovy.jfrog.io/artifactory/plugins-snapshot/e4.37"/>
+        url="https://groovy.jfrog.io/artifactory/plugins-release/e4.37"/>
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
