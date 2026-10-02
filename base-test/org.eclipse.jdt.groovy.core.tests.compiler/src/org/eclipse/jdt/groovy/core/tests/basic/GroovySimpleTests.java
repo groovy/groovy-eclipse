@@ -7503,6 +7503,29 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testLineEndingDetection() {
+        //@formatter:off
+        String[] sources = {
+            "p/Foo.groovy",
+            "package p\n" +            // line 1 (end:10)
+            "\r" +                     // line 2 (end:11)
+            "import java.lang.*\r\n" + // line 3 (end:31)
+            "/* */\n" +                // line 4 (end:37)
+            "println 'hello world'\r", // line 5 (end:59)
+        };
+        //@formatter:on
+
+        runConformTest(sources, "hello world");
+
+        var moduleNode = getModuleNode("Foo.groovy");
+        assertEquals(1, moduleNode.getPackage().getLineNumber());
+        assertEquals(3, moduleNode.getStarImports().get(0).getLineNumber());
+        assertEquals(4, moduleNode.getContext().getComments().get(0).sline);
+        assertEquals(4, moduleNode.getContext().getComments().get(0).eline);
+        assertEquals(5, moduleNode.getStatementBlock().getStatements().get(0).getLineNumber());
+    }
+
+    @Test
     public void testSecondaryTypeTagging() {
         //@formatter:off
         String[] sources = {

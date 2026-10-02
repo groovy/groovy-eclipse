@@ -9,6 +9,7 @@
         <!-- Exclude files imported from Groovy -->
         <file-match-pattern match-pattern="grape/GrabAnnotationTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="grape/ivy/GrapeIvy.groovy" include-pattern="false" />
+        <file-match-pattern match-pattern="groovyjarjarantlr4/v4/runtime/atn/LexerATNSimulator.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/parser/antlr4/AstBuilder.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/parser/antlr4/GroovyLexer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/parser/antlr4/GroovyParser.java" include-pattern="false" />

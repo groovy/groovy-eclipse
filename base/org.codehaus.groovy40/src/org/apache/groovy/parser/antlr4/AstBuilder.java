@@ -184,10 +184,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         // GRECLIPSE add
         try (BufferedReader reader = new BufferedReader(sourceUnit.getSource().getReader())) {
             // TODO: Can this be done without boxing/unboxing offsets or juggling temp arrays?
-            int chr, off = 0; List<Integer> ends = new ArrayList<>(32); ends.add(0);
-            while ((chr = reader.read()) != -1) { off += 1;
-                if (chr == '\n') ends.add(off);
+            int c, p = -1, off = 0; List<Integer> ends = new ArrayList<>(32); ends.add(0);
+            while ((c = reader.read()) != -1) { off += 1;
+                if (c == '\n') ends.add(off);
+                else if (p == '\r') ends.add(off - 1);
+                p = c;
             }
+            if (p == '\r') ends.add(off - 1);
             ends.add(off);
 
             int[] arr = new int[ends.size()];

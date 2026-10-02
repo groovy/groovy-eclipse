@@ -34,7 +34,10 @@
 
     <target name="clean">
         <delete quiet="true">
-            <fileset dir="org/apache/groovy/parser/antlr4" excludes="AstBuilder.java" />
+            <fileset dir="org/apache/groovy/parser/antlr4">
+                <exclude name="AstBuilder.java" />
+                <exclude name="GroovyLangLexer.java" />
+            </fileset>
         </delete>
     </target>
 

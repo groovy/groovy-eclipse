@@ -10,7 +10,7 @@
         <file-match-pattern match-pattern="grape/GrabAnnotationTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="grape/GrapeIvy.groovy" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/parser/antlr4/AstBuilder.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/parser/antlr4/GroovyLexer.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/parser/antlr4/Groovy(Lang)?Lexer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/parser/antlr4/GroovyParser.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/parser/antlr4/GroovyParserBaseVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/parser/antlr4/GroovyParserVisitor.java" include-pattern="false" />
