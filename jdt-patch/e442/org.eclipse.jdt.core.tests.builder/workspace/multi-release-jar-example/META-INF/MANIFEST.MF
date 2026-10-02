@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Multi-Release: true
+Created-By: Multi-Release JAR Example
+

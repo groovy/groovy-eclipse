@@ -1,0 +1,18 @@
+@charset "iso-8859-1";
+TD.title1
+{
+font-family: "Verdana", "Arial", "Helvetica";
+}												
+B.title1
+{
+font-family:"Times New Roman";
+}
+TD.title2
+{
+font-family: "Arial", "Helvetica", "sans-serif";   
+color: #8080ff
+}
+TD.title3
+{
+font-family: "Arial", "Helvetica", "sans-serif";
+}
