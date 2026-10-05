@@ -33,6 +33,7 @@ import org.eclipse.core.resources.ProjectScope
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.Platform
+import org.eclipse.core.runtime.preferences.IEclipsePreferences
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaProject
@@ -46,6 +47,8 @@ import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.dialogs.ErrorDialog
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.preference.ScopedPreferenceStore
 import org.eclipse.jface.util.SafeRunnable
 import org.junit.After
 import org.junit.AfterClass
@@ -70,21 +73,23 @@ abstract class GroovyEclipseTestSuite {
 
     @AfterClass
     static final void tearDownTestSuite() {
-        def defaults = {
-            storePreferences.keys().each { k ->
-                if (!isDefault(k)) {
-                    println "Resetting '$k' to its default"
-                    setToDefault(k)
-                }
-            }
-        }
-
         JavaCore.setOptions(JavaCore.getDefaultOptions())
-        groovyPlugin.preferenceStore.with(defaults)
-        javaPlugin.preferenceStore.with(defaults)
+        restoreDefaults(groovyPlugin.preferenceStore)
+        restoreDefaults(javaPlugin.preferenceStore)
 
         testProject?.dispose()
         testProject = null
+    }
+
+    protected static void restoreDefaults(IPreferenceStore prefsStore) {
+        IEclipsePreferences storePrefs = org.eclipse.jdt.groovy.core.util.ReflectionUtils.
+            throwableExecutePrivateMethod(ScopedPreferenceStore, 'getStorePreferences', new Class[0], prefsStore)
+        for (key in storePrefs.keys()) {
+            if (!prefsStore.isDefault(key)) {
+                println "Resetting '$key' to its default"
+                prefsStore. setToDefault(key)
+            }
+        }
     }
 
     @Rule

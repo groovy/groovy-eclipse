@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,14 +70,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
     @AfterClass
     static final void tearDownCompletionTestSuite() {
-        GroovyContentAssist.getDefault().preferenceStore.with {
-            storePreferences.keys().each { k ->
-                if (!isDefault(k)) {
-                    println "Resetting '$k' to its default"
-                    setToDefault(k)
-                }
-            }
-        }
+        restoreDefaults(GroovyContentAssist.getDefault().getPreferenceStore())
     }
 
     //--------------------------------------------------------------------------
