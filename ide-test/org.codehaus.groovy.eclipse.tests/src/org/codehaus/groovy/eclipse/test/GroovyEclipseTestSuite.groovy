@@ -48,7 +48,6 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.dialogs.ErrorDialog
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.preference.ScopedPreferenceStore
 import org.eclipse.jface.util.SafeRunnable
 import org.junit.After
 import org.junit.AfterClass
@@ -82,8 +81,14 @@ abstract class GroovyEclipseTestSuite {
     }
 
     protected static void restoreDefaults(IPreferenceStore prefsStore) {
+        def prefsStoreClass = prefsStore.getClass()
+        try {
+            prefsStoreClass.getDeclaredMethod('getStorePreferences')
+        } catch (ReflectiveOperationException e) {
+            prefsStoreClass = prefsStoreClass.getSuperclass()
+        }
         IEclipsePreferences storePrefs = org.eclipse.jdt.groovy.core.util.ReflectionUtils.
-            throwableExecutePrivateMethod(ScopedPreferenceStore, 'getStorePreferences', new Class[0], prefsStore)
+            throwableExecutePrivateMethod(prefsStoreClass, 'getStorePreferences', new Class[0], prefsStore)
         for (key in storePrefs.keys()) {
             if (!prefsStore.isDefault(key)) {
                 println "Resetting '$key' to its default"
