@@ -419,7 +419,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 List<Statement> statements = scriptBlockNode.getStatements();
                 if (!statements.isEmpty()) {
                     Statement firstStatement = statements.get(0);
-                    Statement lastStatement  = statements.get(statements.size() - 1);
+                    Statement  lastStatement = statements.get(statements.size() - 1);
                     /* GRECLIPSE edit
                     scriptClassNode.setSourcePosition(firstStatement);
                     scriptClassNode.setLastLineNumber(lastStatement.getLastLineNumber());
@@ -1188,7 +1188,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         configureAST(exception, node);
         // GRECLIPSE add
         if (isType(DOT, node)) {
-            GroovySourceAST type = (GroovySourceAST) node.getFirstChild().getNextSibling();
+            var type = (GroovySourceAST) node.getFirstChild().getNextSibling();
             exception.setNameStart2(locations.findOffset(type.getLine(), type.getColumn()));
             exception.setEnd(locations.findOffset(type.getLineLast(), type.getColumnLast()));
             exception.setLastLineNumber(type.getLineLast()); exception.setLastColumnNumber(type.getColumnLast());
@@ -2999,24 +2999,44 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     // GRECLIPSE add
-    private PropertyExpression chomp(PropertyExpression propertyExpression) {
-        if (propertyExpression.getEnd() > propertyExpression.getProperty().getEnd() && getController() != null) {
-            char[] sourceChars = getController().readSourceRange(propertyExpression.getStart(), propertyExpression.getLength());
-            if (sourceChars != null) {
-                int idx = (sourceChars.length - 1);
-                int off = propertyExpression.getEnd();
-                while (idx >= 0 && Character.isWhitespace(sourceChars[idx])) {
-                    idx -= 1; off -= 1;
+    private <E extends Expression> E chomp(E exp, Expression sub) {
+        if (exp.getEnd() > sub.getEnd() && getController() != null) {
+            var chars = getController().readSourceRange(exp.getStart(), exp.getLength());
+            if (chars != null) {
+                var comments = getController().getComments();
+                int idx = (chars.length - 1);
+                int off = exp.getEnd();
+            xx: while (idx >= 0) {
+                    if (Character.isWhitespace(chars[idx])) {
+                        idx -= 1; off -= 1; continue;
+                    }
+                    if (!comments.isEmpty()) {
+                        for (var comment : comments) {//TODO: binary search
+                            if (exp.getLineNumber() < comment.sline) continue;
+                            if (exp.getLastLineNumber() > comment.eline) continue;
+                            int start = locations.findOffset(comment.sline, comment.scol);
+                            if (start < off && off <= locations.findOffset(comment.eline, comment.ecol)) {
+                                idx -= (off - start);
+                                off = start;
+                                continue xx;
+                            }
+                        }
+                    }
+                    break;
                 }
-                if (off < propertyExpression.getEnd()) {
+                if (off < exp.getEnd()) {
                     int[] row_col = locations.getRowCol(off);
-                    propertyExpression.setEnd(off);
-                    propertyExpression.setLastLineNumber(row_col[0]);
-                    propertyExpression.setLastColumnNumber(row_col[1]);
+                    exp.setEnd(off);
+                    exp.setLastLineNumber(row_col[0]);
+                    exp.setLastColumnNumber(row_col[1]);
                 }
             }
         }
-        return propertyExpression;
+        return exp;
+    }
+
+    private PropertyExpression chomp(PropertyExpression propertyExpression) {
+        return chomp(propertyExpression, propertyExpression.getProperty());
     }
     // GRECLIPSE end
 
@@ -3327,7 +3347,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     protected Expression arguments(AST elist) {
         List expressionList = new ArrayList<>();
-        // FIXME: all labeled arguments should follow any unlabeled arguments
         boolean namedArguments = false;
         for (AST node = elist; node != null; node = node.getNextSibling()) {
             if (isType(ELIST, node)) {
@@ -3354,17 +3373,27 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     expressionList.removeAll(argumentList);
                     checkDuplicateNamedParams(elist, expressionList);
                     MapExpression mapExpression = new MapExpression(expressionList);
+                    /* GRECLIPSE edit
                     configureAST(mapExpression, elist);
+                    */
                     argumentList.add(0, mapExpression);
                     ArgumentListExpression argumentListExpression = new ArgumentListExpression(argumentList);
                     configureAST(argumentListExpression, elist);
+                    /* GRECLIPSE edit
                     return argumentListExpression;
+                    */
+                    return chomp(argumentListExpression, last(argumentList));
+                    // GRECLIPSE end
                 }
             }
             checkDuplicateNamedParams(elist, expressionList);
             NamedArgumentListExpression namedArgumentListExpression = new NamedArgumentListExpression(expressionList);
             configureAST(namedArgumentListExpression, elist);
+            /* GRECLIPSE edit
             return namedArgumentListExpression;
+            */
+            return chomp(namedArgumentListExpression, (Expression) last(expressionList));
+            // GRECLIPSE end
         } else {
             ArgumentListExpression argumentListExpression = new ArgumentListExpression(expressionList);
             // GRECLIPSE add
@@ -3374,6 +3403,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             if (elist != null)
             // GRECLIPSE end
             configureAST(argumentListExpression, elist);
+            // GRECLIPSE add
+            if (asBoolean(expressionList)) {
+                chomp(argumentListExpression, (Expression) last(expressionList));
+            }
+            // GRECLIPSE end
             return argumentListExpression;
         }
     }

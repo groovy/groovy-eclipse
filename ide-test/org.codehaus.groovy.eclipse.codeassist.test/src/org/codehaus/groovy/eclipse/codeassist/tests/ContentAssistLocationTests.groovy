@@ -884,89 +884,91 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodContext5() {
+    void testMethodContext4() {
         assertLocation('def x = { a.g(    c,#b) }', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext6() {
+    void testMethodContext5() {
         assertLocation('def x = { a.g(    c,\n#b) }', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext7() {
+    void testMethodContext6() {
         assertLocation('a.g #a, a.b', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext8() {
+    void testMethodContext7() {
         assertLocation('a.g a,# a.b', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext9() {
+    void testMethodContext8() {
         assertLocation('a.g a, #a.b', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext10() {
+    void testMethodContext9() {
         assertLocation('new ArrayList(#)', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext11() {
+    void testMethodContext10() {
         assertLocation('new ArrayList(#a)', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext12() {
+    void testMethodContext11() {
         assertLocation('new ArrayList(a,#b)', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext13() {
+    void testMethodContext12() {
         assertLocation('new ArrayList<String>(#)', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext14() {
+    void testMethodContext13() {
         assertLocation('new ArrayList<String>(#a)', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext15() {
+    void testMethodContext14() {
         assertLocation('new ArrayList<String>(a,#b)', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
+    void testMethodContext15() {
+        assertLocation('foo #\nh', isParrotParser() ? ContentAssistLocation.STATEMENT : ContentAssistLocation.METHOD_CONTEXT)
+    }
+
+    @Test
     void testMethodContext16() {
-        assertLocation('foo #\nh', !isParrotParser() ? ContentAssistLocation.METHOD_CONTEXT : ContentAssistLocation.STATEMENT)
+        assertLocation('foo a,# \nh', ContentAssistLocation.METHOD_CONTEXT)
+        assertLocation('foo a, #\nh', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext17() {
-        assertLocation('foo a,# \nh', ContentAssistLocation.METHOD_CONTEXT)
+        assumeTrue(isRecoveryParser())
+
+        assertLocation('foo (a,# )\nh', ContentAssistLocation.METHOD_CONTEXT)
+        assertLocation('foo (a, #)\nh', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext18() {
-        assertLocation('foo a, b #\nh', !isParrotParser() ? ContentAssistLocation.METHOD_CONTEXT : ContentAssistLocation.STATEMENT)
+        assertLocation('foo (a, b #)\nh', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext19() {
-        assertLocation('foo (a, b #)\nh', !isParrotParser() ? ContentAssistLocation.METHOD_CONTEXT : ContentAssistLocation.STATEMENT)
+        assertLocation('foo(a, (b+c)#)\nh', ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext20() {
-        assumeTrue(isRecoveryParser())
-
-        assertLocation('foo (a,# )\nh', ContentAssistLocation.METHOD_CONTEXT)
-    }
-
-    @Test
-    void testMethodContext21() {
         String contents = '''\
             |import static java.util.regex.Pattern.compile
             |compile(#)
@@ -975,7 +977,7 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodContext22() {
+    void testMethodContext21() {
         String contents = '''\
             |import static java.util.regex.Pattern.compile
             |compile(#/[a-z0-9]/)
@@ -984,7 +986,7 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodContext23() {
+    void testMethodContext22() {
         String contents = '''\
             |import static java.util.regex.Pattern.compile
             |def regexp = /[a-z0-9]/
@@ -994,7 +996,7 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodContext24() {
+    void testMethodContext23() {
         assumeTrue(isRecoveryParser())
 
         String contents = '''\
@@ -1006,7 +1008,7 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodContext25() {
+    void testMethodContext24() {
         String contents = '''\
             |import static java.util.regex.Pattern.compile
             |def regexp = /[a-z0-9]/

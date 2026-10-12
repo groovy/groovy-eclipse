@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,44 +74,82 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
 
     @Test
     void testSetterToProperty2() {
+        convertToProperty "new Date().set${CARET}Time( 1234L )"
+        assertEditorContents 'new Date().time = 1234L ' // TODO
+    }
+
+    @Test
+    void testSetterToProperty3() {
+        convertToProperty "new Date().set${CARET}Time(1234L) //"
+        assertEditorContents 'new Date().time = 1234L //'
+    }
+
+    @Test
+    void testSetterToProperty4() {
+        convertToProperty "new Date().set${CARET}Time(1234L) /**/"
+        assertEditorContents 'new Date().time = 1234L /**/'
+    }
+
+    @Test
+    void testSetterToProperty5() {
+        convertToProperty "new Date().set${CARET}Time(/**/1234L/**/)"
+        assertEditorContents 'new Date().time = 1234L/**/' // TODO
+    }
+
+    @Test
+    void testSetterToProperty6() {
         addGroovySource 'class Foo { void setURL(url) {} }', 'Foo'
         convertToProperty "new Foo().set${CARET}URL(null)"
         assertEditorContents 'new Foo().URL = null'
     }
 
     @Test
-    void testSetterToProperty3() {
+    void testSetterToProperty7() {
         addGroovySource 'class Foo { void setURLEncoder(encoder) {} }', 'Foo'
         convertToProperty "new Foo().set${CARET}URLEncoder(null)"
         assertEditorContents 'new Foo().URLEncoder = null'
     }
 
     @Test
-    void testSetterToProperty4() {
+    void testSetterToProperty8() {
         addGroovySource 'class Foo { void setMap(Map map) {} }', 'Foo'
         convertToProperty "new Foo().set${CARET}Map(x: null)"
         assertEditorContents 'new Foo().map = [x: null]'
     }
 
     @Test
-    void testSetterToProperty5() {
+    void testSetterToProperty9() {
         addGroovySource 'class Foo { void setMap(Map map) {} }', 'Foo'
         convertToProperty "new Foo().set${CARET}Map('x' : null, y:1)"
         assertEditorContents 'new Foo().map = [\'x\' : null, y:1]'
     }
 
     @Test
-    void testSetterToProperty6() {
+    void testSetterToProperty10() {
         addGroovySource 'class Foo { void setMap(Map map) {} }', 'Foo'
         convertToProperty "new Foo().set${CARET}Map(['x' : null, y:1 ] )"
         assertEditorContents 'new Foo().map = [\'x\' : null, y:1 ] '
     }
 
     @Test
-    void testSetterToProperty7() {
+    void testSetterToProperty11() {
         addGroovySource 'class Foo { void setMap(Map map) {} }', 'Foo'
         convertToProperty "new Foo().set${CARET}Map x: null"
         assertEditorContents 'new Foo().map = [x: null]'
+    }
+
+    @Test
+    void testSetterToProperty12() {
+        addGroovySource 'class Foo { void setMap(Map map) {} }', 'Foo'
+        convertToProperty "new Foo().set${CARET}Map x: null // "
+        assertEditorContents 'new Foo().map = [x: null] // '
+    }
+
+    @Test
+    void testSetterToProperty13() {
+        addGroovySource 'class Foo { void setMap(Map map) {} }', 'Foo'
+        convertToProperty "new Foo().set${CARET}Map x: null /**/ "
+        assertEditorContents 'new Foo().map = [x: null] /**/ '
     }
 
     @Test

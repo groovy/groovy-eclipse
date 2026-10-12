@@ -270,8 +270,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
             int lparenOffset = node.getNameEnd() + 1;
             if (lparenOffset < completionOffset && completionOffset <= node.getEnd()) {
-                Integer rparenOffset = node.getNodeMetaData("rparen.offset");
-                if (rparenOffset != null && completionOffset <= rparenOffset) {
+                if (node.getNodeMetaData("rparen.offset") instanceof Integer specEnd && completionOffset <= specEnd) {
                     createContext(null, node, ContentAssistLocation.PARAMETER);
                 } else if (body != null && check(body)) {
                     createContext(body, body, expressionOrStatement());
@@ -598,7 +597,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         if (expression.isUsingAnonymousInnerClass()) {
             visitClass(expression.getType());
         }
-        if (completionEnd > expression.getArguments().getEnd()) {
+        if (completionEnd > rparenOffset(expression.getArguments().getEnd(), expression.getEnd())) {
             // completion for 'new Type()|'
             createContext(expression, blockStack.getLast(), ContentAssistLocation.STATEMENT);
         }
@@ -687,7 +686,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         methodExpression.visit(this);
 
         visitArguments(expression.getArguments(), expression);
-        if (completionEnd > expression.getArguments().getEnd()) {
+        if (completionEnd > rparenOffset(expression.getArguments().getEnd(), expression.getEnd())) {
             // completion for 'method()|'
             createContext(expression, blockStack.getLast(), ContentAssistLocation.STATEMENT);
         }
@@ -748,7 +747,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         }
 
         visitArguments(expression.getArguments(), expression);
-        if (completionEnd > expression.getArguments().getEnd()) {
+        if (completionEnd > rparenOffset(expression.getArguments().getEnd(), expression.getEnd())) {
             // completion for 'method()|'
             createContext(expression, blockStack.getLast(), ContentAssistLocation.STATEMENT);
         }
@@ -874,6 +873,20 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             }
         }
         return false;
+    }
+
+    private int rparenOffset(final int start, final int until) {
+        if (start < until) { char[] source = unit.getContents();
+            for (int index = start; index < source.length && index < until; index += 1) {
+                if (source[index] == ')') {
+                    return index;
+                }
+                if (source[index] == '/') {
+                    break;
+                }
+            }
+        }
+        return start;
     }
 
     //--------------------------------------------------------------------------
