@@ -818,20 +818,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             primaryExprType = primaryTypeStack.removeLast();
             if (isAssignment) {
                 if (toVisitDependent instanceof TupleExpression tuple) {
-                    for (Expression receiver : tuple.getExpressions()) {
-                        for (var entry : receiver.getNodeMetaData().entrySet()) {
-                            if (entry.getKey().toString().equals("MAP_KEY")) { // GROOVY-11964
+                    for (Expression variable : tuple.getExpressions()) {
+                        for (var entry : variable.getNodeMetaData().entrySet()) {
+                            if (entry.getKey().toString().equals("MAP_KEY")) { // GROOVY-11964: rhs.key --> variable
                                 var extractor = new PropertyExpression(toVisitPrimary, entry.getValue().toString());
-                                VariableScope scope = scopes.getLast();
-                                scope.setPrimaryNode(false);
-                                scope.setCurrentNode(extractor);
-                                scope.setMethodCallArgumentTypes(null);
-                                scope.setCurrentNode(extractor.getProperty());
-                                boolean isStatic = VariableScope.CLASS_CLASS_NODE.equals(primaryExprType) || toVisitPrimary instanceof ClassExpression;
-                                TypeLookupResult result = lookupExpressionType(extractor.getProperty(), primaryExprType, isStatic, scope);
-                                receiver.putNodeMetaData("rhsType", result.type);
-                                scope.forgetCurrentNode();
-                                scope.forgetCurrentNode();
+                                handleDestructureExpression(variable, extractor, primaryExprType);
                                 break;
                             }
                         }
@@ -2248,6 +2239,34 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         VariableScope scope = scopes.getLast();
         scope.setPrimaryNode(false);
         handleRequestor(node, declaringType, new TypeLookupResult(exprType, declaringType, node, TypeConfidence.EXACT, scope));
+    }
+
+    private void    handleDestructureExpression(final Expression variable, final PropertyExpression value, final ClassNode objectExprType) {
+        VariableScope scope = scopes.getLast();
+        scope.setCurrentNode(value);
+        scope.setPrimaryNode(false);
+        scope.setMethodCallArgumentTypes(null);
+        scope.setCurrentNode(value.getProperty());
+        boolean isStatic = VariableScope.CLASS_CLASS_NODE.equals(objectExprType) ||
+                            value.getObjectExpression() instanceof ClassExpression;
+        TypeLookupResult result = lookupExpressionType(value.getProperty(), objectExprType, isStatic, scope);
+
+        if (variable.getNodeMetaData(":") instanceof Expression propertyName) {
+            // visit the missing-from-AST "name: variable" expression
+            var mee = new MapEntryExpression(propertyName, variable);
+            mee.setStart(propertyName.getStart());
+            mee.setEnd(variable.getEnd());
+            scope.setCurrentNode(mee);
+            handleCompleteExpression(mee, createParameterizedMap(VariableScope.STRING_CLASS_NODE, result.type), null);
+            scope.forgetCurrentNode();
+
+            // visit the name expression
+            handleRequestor(propertyName, objectExprType, result);
+        }
+
+        variable.putNodeMetaData("rhsType", result.type); // for assignmentStorer.storeAssignment
+        scope.forgetCurrentNode();
+        scope.forgetCurrentNode();
     }
 
     private boolean handleRequestor(final Expression node, final ClassNode primaryType, final TypeLookupResult result) {

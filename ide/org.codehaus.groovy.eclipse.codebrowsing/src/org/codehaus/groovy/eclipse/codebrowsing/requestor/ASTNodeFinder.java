@@ -216,6 +216,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     public void visitVariableExpression(VariableExpression expression) {
         // check the annotations, generics, and type of variable declarations (including @Lazy fields)
         if (expression == expression.getAccessedVariable() || expression.getName().charAt(0) == '$') {
+            if (expression.getNodeMetaData(":") instanceof Expression label) label.visit(this);
             // expression start and end bound the variable name; guestimate the type positions
             int until = expression.getStart() - 1, // assume at least one space on either side
                 start = Math.max(0, until - expression.getOriginType().getName().length() - 1);

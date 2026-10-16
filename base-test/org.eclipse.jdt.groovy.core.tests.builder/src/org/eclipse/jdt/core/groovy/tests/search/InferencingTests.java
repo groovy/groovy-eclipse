@@ -3708,6 +3708,11 @@ public final class InferencingTests extends InferencingTestSuite {
         String contents = "def (from: one, to: two) = 1..2";
         assertType(contents, "one", "java.lang.Integer");
         assertType(contents, "two", "java.lang.Integer");
+
+        int offset = contents.indexOf("from");
+        assertDeclaration(contents, offset, offset + 4, "groovy.lang.Range", "getFrom", DeclarationKind.METHOD);
+        /**/offset = contents.indexOf("to: ");
+        assertDeclaration(contents, offset, offset + 2, "groovy.lang.Range", "getTo",   DeclarationKind.METHOD);
     }
 
     @Test // GROOVY-11964

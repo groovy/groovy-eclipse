@@ -1510,12 +1510,16 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = 'def (from: var i, to: val j) = 1..3'
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('var'), 3, RESERVED),
-            new HighlightedTypedPosition(contents.indexOf('i'  ), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('val'), 3, RESERVED),
-            new HighlightedTypedPosition(contents.indexOf('j'  ), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('1'  ), 1, NUMBER  ),
-            new HighlightedTypedPosition(contents.indexOf('3'  ), 1, NUMBER  ))
+            new HighlightedTypedPosition(contents.indexOf('from'), 4, MAP_KEY    ),
+            new HighlightedTypedPosition(contents.indexOf('from'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('var' ), 3, RESERVED   ),
+            new HighlightedTypedPosition(contents.indexOf('i'   ), 1, VARIABLE   ),
+            new HighlightedTypedPosition(contents.indexOf('to'  ), 2, MAP_KEY    ),
+            new HighlightedTypedPosition(contents.indexOf('to'  ), 2, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('val' ), 3, RESERVED   ),
+            new HighlightedTypedPosition(contents.indexOf('j'   ), 1, VARIABLE   ),
+            new HighlightedTypedPosition(contents.indexOf('1'   ), 1, NUMBER     ),
+            new HighlightedTypedPosition(contents.indexOf('3'   ), 1, NUMBER     ))
     }
 
     @Test

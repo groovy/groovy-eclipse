@@ -2812,6 +2812,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         if (asBoolean(ctx.VAR())) {
             ve.putNodeMetaData("reserved.type.name", configureAST(new ModifierNode(VAR, ctx.VAR().getText()), ctx.VAR()));
         }
+        ve.putNodeMetaData(":", configureAST(new ConstantExpression(visitIdentifier(ctx.key)), ctx.key));
         // GRECLIPSE end
         ve.putNodeMetaData(MultipleAssignmentMetadata.MAP_KEY, this.visitIdentifier(ctx.key));
         return ve;
