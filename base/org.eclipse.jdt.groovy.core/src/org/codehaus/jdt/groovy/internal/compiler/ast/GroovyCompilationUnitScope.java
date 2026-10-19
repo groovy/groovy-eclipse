@@ -25,6 +25,7 @@ import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory.GrapeAwareGroovyClassLoader;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -35,8 +36,11 @@ import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodVerifier;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemFieldBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
@@ -47,8 +51,8 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 
 /**
  * A subtype of CompilationUnitScope that allows us to override some methods and
- * prevents JDT doing some checks that groovy will be doing anyway (or that JDT
- * should be prevented from doing on groovy type declarations).
+ * prevents JDT doing some checks that Groovy will be doing anyway (or that JDT
+ * should be prevented from doing on Groovy type declarations).
  */
 public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
@@ -146,8 +150,8 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
             }
         }
 
-        Binding binding = super.findImport(compoundName, length); // normal import resolve
-        if (!binding.isValidBinding() && binding.problemId() == ProblemReasons.NotFound) {
+        var binding = super.findImport(compoundName, length);
+        if (binding.problemId() == ProblemReasons.NotFound) {
             var sourceUnit = ((GroovyCompilationUnitDeclaration) referenceContext).getSourceUnit();
             if (sourceUnit.getClassLoader() instanceof GrapeAwareGroovyClassLoader loader && loader.grabbed) {
                 String typeName = CharOperation.toString(CharOperation.subarray(compoundName, 0, length));
@@ -181,6 +185,23 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
                 binding = new ProblemReferenceBinding(compoundName, null, ProblemReasons.NotFound);
         } else {
             binding = super.findSingleImport(compoundName, mask, staticImport);
+            if (staticImport && binding != null && binding.problemId() == ProblemReasons.NotVisible) {
+                // Groovy < 5 allows; Groovy 5+: limit to properties
+                if (GroovyUtils.getGroovyVersion().getMajor() < 5) {
+                    if (binding instanceof ProblemFieldBinding pb) {
+                        binding = pb.closestMatch;
+                    } else if (binding instanceof ProblemMethodBinding pb) {
+                        binding = pb.closestMatch;
+                    } else if (binding instanceof ProblemReferenceBinding pb) {
+                        binding = pb.closestMatch();
+                    }
+                } else if (binding.kind() == Binding.FIELD) {
+                    char[][] accessor = compoundName.clone();
+                    accessor[accessor.length - 1] = ("get" + org.apache.groovy.util.BeanUtils.capitalize(String.valueOf(accessor[accessor.length - 1]))).toCharArray();
+                    if (super.findSingleImport(accessor, Binding.METHOD, staticImport) instanceof MethodBinding method && method.isPublic() && method.isValidBinding())
+                        binding = method; // GROOVY-8389
+                }
+            }
         }
         return binding;
     }
@@ -222,7 +243,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     }
 
     @Override
-    protected boolean canBeSeenBy(ReferenceBinding type, PackageBinding fPackage) {
+    protected boolean canBeSeenBy(ReferenceBinding type, PackageBinding pack) {
         return true;
     }
 
