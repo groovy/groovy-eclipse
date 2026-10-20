@@ -819,6 +819,35 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
+            "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE\n" +
+            "class A {}\n" +
+            "class B {}\n" +
+            "class C extends B {}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(x) {\n" +
+            "  if (x instanceof A || x instanceof B) {\n" +
+            "    if (x instanceof C) {\n" + // supersedes (A | B)
+            "      @groovy.transform.ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "        def type = node.rightExpression.getNodeMetaData(INFERRED_TYPE)\n" +
+            "        assert type.toString(false) == 'C'\n" +
+            "        type = node.leftExpression.getNodeMetaData(INFERRED_TYPE)\n" +
+            "        assert type.toString(false) == 'C'\n" +
+            "      })\n" +
+            "      def c = x\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked35() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
             "import static org.codehaus.groovy.ast.ClassHelper.*\n" +
             "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*\n" +
             "interface ArrayMaker<ElementType> {\n" +
@@ -7935,6 +7964,127 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "def pogo = new Pogo()\n" +
             "proc([ pogo ])\n" +
             "assert pogo.list[0] == 42L\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked11889() {
+        assumeTrue(isAtLeastGroovy(60));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Object x) {\n" +
+            "  if (x instanceof Short) {\n" +
+            "    x.intValue()\n" +
+            "    if (x instanceof Long) {\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\tif (x instanceof Long) {\n" +
+            "\t    ^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Incompatible instanceof types: java.lang.Short and java.lang.Long\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked11889a() {
+        assumeTrue(isAtLeastGroovy(60));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Object x) {\n" +
+            "  if (x instanceof Integer || x instanceof Short) {\n" +
+            "    x.intValue()\n" +
+            "    if (x instanceof Long) {\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\tif (x instanceof Long) {\n" +
+            "\t    ^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Incompatible instanceof types: (java.lang.Integer | java.lang.Short) and java.lang.Long\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked12000() {
+        assumeTrue(isAtLeastGroovy(60));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "int f(Object x, boolean cond) {\n" +
+            "  if (!(cond && !(x instanceof String))) {\n" +
+            "    x.length()\n" +
+            "  }\n" +
+            "}\n" +
+            "''\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tx.length()\n" +
+            "\t^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#length()\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testTypeChecked12393() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "List one(Collection val, Class type) {\n" +
+            "  List result = []\n" +
+            "  val.each { item ->\n" +
+            "    if (item == null || type.isAssignableFrom(item.getClass())) {\n" +
+            "      result << item\n" +
+            "    }\n" +
+            "  }\n" +
+            "  result\n" +
+            "}\n" +
+            "Map two(Map val, Class type) {\n" +
+            "  Map result = [:]\n" +
+            "  val.each { key, item ->\n" +
+            "    if (item == null || type.isAssignableFrom(item.getClass())) {\n" +
+            "      result[key] = item\n" +
+            "    }\n" +
+            "  }\n" +
+            "  result\n" +
+            "}\n" +
+            "List three(Collection val) {\n" +
+            "  List result = []\n" +
+            "  for (item in val) {\n" +
+            "    if (item == null || item.hashCode() > 0) {\n" +
+            "      result << item\n" +
+            "    }\n" +
+            "  }\n" +
+            "  result\n" +
+            "}\n" +
+            "assert one(['a', null, 1], String) == ['a', null]\n" +
+            "assert two([a: 'a', b: null, c: 1], String) == [a: 'a', b: null]\n" +
+            "assert three(['a', null]) == ['a', null]\n",
         };
         //@formatter:on
 

@@ -8672,7 +8672,51 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked12166() {
+    public void testCompileStatic12000() {
+        assumeTrue(isAtLeastGroovy(60));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "int f(Object x, boolean cond) {\n" +
+            "  if (!(cond && !(x instanceof String))) {\n" +
+            "    return x.hashCode()\n" + // no checkcast
+            "  } else {\n" +
+            "    return -1\n" +
+            "  }\n" +
+            "}\n" +
+            "assert f(123, false) == 123.hashCode()\n" +
+            "assert f('s', false) == 's'.hashCode()\n" +
+            "assert f('s', true ) == 's'.hashCode()\n" +
+            "assert f(123, true ) == -1\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic12000a() {
+        assumeTrue(isAtLeastGroovy(60));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "int f(Object x, boolean cond) {\n" +
+            "  return !(cond && !(x instanceof String)) ? x.hashCode() : -1\n" +
+            "}\n" +
+            "assert f(123, false) == 123.hashCode()\n" +
+            "assert f(123, true ) == -1\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic12166() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",

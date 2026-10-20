@@ -1170,6 +1170,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             } else if (op == KEYWORD_INSTANCEOF) {
                 rType = rightExpression.getType();
+                /* GRECLIPSE edit
                 if (lType instanceof WideningCategories.LowestUpperBoundClassNode) lType = lType.getUnresolvedSuperClass();
                 if (lType instanceof UnionTypeClassNode union) {
                     boolean compatible = rType.isInterface();
@@ -1184,6 +1185,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else if (!lType.isInterface() && !rType.isInterface() && !(lType.isDerivedFrom(rType) || rType.isDerivedFrom(lType))) {
                     addError("Incompatible instanceof types: " + prettyPrintTypeName(lType) + " and " + prettyPrintTypeName(rType), expression);
                 }
+                */
+                if (!rType.isInterface()) {
+                    ClassNode instanceofClass = rType;
+                    java.util.function.Predicate<ClassNode> compatible = (leftType) -> {
+                        if (leftType instanceof WideningCategories.LowestUpperBoundClassNode) leftType = leftType.getUnresolvedSuperClass();
+                        return leftType.isInterface() || leftType.isDerivedFrom(instanceofClass) || instanceofClass.isDerivedFrom(leftType);
+                    };
+                    if (!(lType instanceof UnionTypeClassNode union ? Arrays.stream(union.getDelegates()).anyMatch(compatible) : compatible.test(lType))) {
+                        addStaticTypeError("Incompatible instanceof types: " + prettyPrintTypeName(lType) + " and " + prettyPrintTypeName(rType), expression);
+                    }
+                }
+                // GRECLIPSE end
                 pushInstanceOfTypeInfo(leftExpression, rightExpression);
             } else if (op == COMPARE_NOT_INSTANCEOF) { // GROOVY-6429, GROOVY-8321, GROOVY-8412, GROOVY-8523, GROOVY-9931
                 putNotInstanceOfTypeInfo(extractTemporaryTypeInfoKey(leftExpression), Set.of(rightExpression.getType()));
@@ -7805,6 +7818,9 @@ out:    for (ClassNode type : todo) {
                         alternatives.add(alternative);
                     }
                 }
+                // GRECLIPSE add
+                alternatives.remove(VOID_TYPE);
+                // GRECLIPSE end
                 return newUnionTypeClassNode(alternatives);
             }
             i += 1;
