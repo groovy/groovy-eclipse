@@ -464,7 +464,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                 source.addException(re);
             }
             */
-            // grab one thing at a time (so the errors are discovered individually)
+            // grab one thing at a time so the errors are discovered individually
             Map<String,Object>[] grabMapsAsMapArray = grabMaps.toArray(Map[]::new);
             for (int i = 0, n = grabMapsAsMapArray.length; i < n; i += 1) {
                 try {
@@ -473,13 +473,13 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                     if (compilationUnit != null) {
                         ASTTransformationVisitor.addGlobalTransformsAfterGrab(compilationUnit.getASTTransformationsContext());
                     }
-                } catch (RuntimeException re) {
-                    // Error grabbing Grapes -- [unresolved dependency: joda-timxxe#joda-time;1.6: not found]
-                    String msg = re.getMessage();
+                } catch (RuntimeException e) {
+                    // Error grabbing Grapes -- [unresolved dependency: bad.org#joda-time;1.6: not found]
+                    String msg = e.getMessage();
                     if (grabAnnotations.size() > i) {
                         addError(msg, grabAnnotations.get(i));
                     } else {
-                        source.addException(re);
+                        source.addException(e);
                     }
                 }
             }

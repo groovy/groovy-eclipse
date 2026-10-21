@@ -141,10 +141,10 @@ public class AnnotationVisitor {
         for (MethodNode mn : classNode.getMethods()) {
             String methodName = mn.getName();
             /* GRECLIPSE edit
-            if (mn.getCode() == null && !attributes.containsKey(methodName)) {
+            if (mn.getCode() == null && !node.getMembers().containsKey(methodName)) {
             */
-            if (!mn.hasAnnotationDefault() && !node.getMembers().containsKey(methodName) && !"dataVariableNames".equals(methodName)) {
-            // TODO: https://github.com/spockframework/spock/issues/1549                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            if (!mn.hasAnnotationDefault() && !mn.isStatic() && !node.getMembers().containsKey(methodName) && !"dataVariableNames".equals(methodName)) {
+            // TODO: https://github.com/spockframework/spock/issues/1549                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             // GRECLIPSE end
                 addError("No explicit/default value found for annotation attribute '" + methodName + "'", node);
                 ok = false;

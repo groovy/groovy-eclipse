@@ -58,17 +58,15 @@ public final class GrabTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test
+    @Test // GROOVY-11900
     public void testGrab2() {
         //@formatter:off
         String[] sources = {
             "A.groovy",
-            "@interface A { String value() }\n",
-
-            "C.groovy",
-            "@Grab('org.apache.commons:commons-lang3:3.20.0')\n" +
+            "@Grab('org.apache.commons:commons-lang3:3.21.0')\n" +
             "import org.apache.commons.lang3.StringUtils\n" +
-            "@A(StringUtils.SPACE) class C {}\n",
+            "@interface A { String value() }\n" +
+            "@A(' ') class C {}\n",
         };
         //@formatter:on
 
@@ -83,9 +81,9 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "@interface A { String value() }\n",
 
             "C.groovy",
-            "@Grab('org.apache.commons:commons-lang3:3.20.0')\n" +
-            "import static org.apache.commons.lang3.StringUtils.SPACE\n" +
-            "@A(SPACE) class C {}\n",
+            "@Grab('org.apache.commons:commons-lang3:3.21.0')\n" +
+            "import org.apache.commons.lang3.StringUtils\n" +
+            "@A(StringUtils.SPACE) class C {}\n",
         };
         //@formatter:on
 
@@ -100,9 +98,9 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "@interface A { String value() }\n",
 
             "C.groovy",
-            "@Grab('org.apache.commons:commons-lang3:3.20.0')\n" +
-            "import static org.apache.commons.lang3.StringUtils.SPACE as BLANK\n" +
-            "@A(BLANK) class C {}\n",
+            "@Grab('org.apache.commons:commons-lang3:3.21.0')\n" +
+            "import static org.apache.commons.lang3.StringUtils.SPACE\n" +
+            "@A(SPACE) class C {}\n",
         };
         //@formatter:on
 
@@ -117,7 +115,24 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "@interface A { String value() }\n",
 
             "C.groovy",
-            "@Grab('org.apache.commons:commons-lang3:3.20.0')\n" +
+            "@Grab('org.apache.commons:commons-lang3:3.21.0')\n" +
+            "import static org.apache.commons.lang3.StringUtils.SPACE as BLANK\n" +
+            "@A(BLANK) class C {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testGrab6() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "@interface A { String value() }\n",
+
+            "C.groovy",
+            "@Grab('org.apache.commons:commons-lang3:3.21.0')\n" +
             "import static org.apache.commons.lang3.StringUtils.*\n" +
             "@A(SPACE) class C {}\n",
         };

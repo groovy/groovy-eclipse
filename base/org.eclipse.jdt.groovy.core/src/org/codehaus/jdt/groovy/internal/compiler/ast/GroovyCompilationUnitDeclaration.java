@@ -1087,8 +1087,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     ref.annotations = createAnnotations(importNode.getAnnotations());
 
                     ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
-                    if (ref.sourceEnd < 0) {
-                        // synthetic node; set all source positions to "unknown"
+                    if (ref.sourceEnd < 0) { ref.bits |= ASTNode.IsSynthetic;
+                        // set all source positions to "unknown"
                         ref.declarationSourceStart = -1;
                         ref.modifiersSourceStart = -1;
                         ref.declarationSourceEnd = -2;
@@ -1682,7 +1682,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * Creates a JDT {@link MethodDeclaration} that represents a Groovy {@link MethodNode}.
          */
         private AbstractMethodDeclaration createMethodDeclaration(ClassNode classNode, MethodNode methodNode) {
-            if (classNode.isAnnotationDefinition()) {
+            if (classNode.isAnnotationDefinition() && !methodNode.isStatic()) { // GROOVY-11900
                 AnnotationMethodDeclaration methodDeclaration = new AnnotationMethodDeclaration(unitDeclaration.compilationResult);
                 methodDeclaration.annotations = createAnnotations(methodNode.getAnnotations());
                 methodDeclaration.selector = methodNode.getName().toCharArray();
