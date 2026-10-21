@@ -38,34 +38,19 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
     public void testPackageScope1() {
         //@formatter:off
         String[] sources = {
-            "Goo.groovy",
-            "class Goo {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    q.Run.main(argv);\n" +
-            "  }\n" +
-            "}\n",
+            "Main.groovy",
+            "print Pogo.getDeclaredField('one').getModifiers()\n" +
+            "print Pogo.getDeclaredField('two').getModifiers()\n",
 
-            "q/Run.groovy",
-            "package q;\n" +
-            "import q.Wibble;\n" +
-            "public class Run {\n" +
-            "  public static void main(String[] argv) throws Exception {\n" +
-            "    Wibble w = new Wibble();\n" +
-            "    System.out.print(Wibble.class.getDeclaredField(\"field\").getModifiers());\n" +
-            "    System.out.print(Wibble.class.getDeclaredField(\"field2\").getModifiers());\n" +
-            "  }\n" +
-            "}\n",
-
-            "q/Wibble.groovy",
-            "package q\n" +
-            "class Wibble {" +
-            "  String field = 'abcd';\n" +
-            "  @groovy.transform.PackageScope String field2 = 'abcd';\n" + // adjust the visibility of property
+            "Pogo.groovy",
+            "class Pogo {" +
+            "  Object one\n" +
+            "  @groovy.transform.PackageScope Object two\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "20"); // 0x2 = private, 0x0 = default (so field2 has had private vis removed by annotation)
+        runConformTest(sources, "20"); // 0x2 = private, 0x0 = default (private removed by transform)
     }
 
     @Test
@@ -86,8 +71,27 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
         assertTrue("Expected package-private but was: " + Modifier.toString(field.modifiers), isPackagePrivate(field.modifiers));
     }
 
-    @Test
+    @Test(expected = AssertionError.class) // https://issues.apache.org/jira/browse/GROOVY-12475
     public void testPackageScope3() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "import groovy.transform.*\n" +
+            "class Foo {\n" +
+            "  def field\n" + // property
+            "  @PackageScope Object field\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        FieldDeclaration field = findField(getCUDeclFor("Foo.groovy"), "field");
+        assertTrue("Expected package-private but was: " + Modifier.toString(field.modifiers), isPackagePrivate(field.modifiers));
+    }
+
+    @Test
+    public void testPackageScope4() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -109,35 +113,12 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testPackageScope4() {
-        //@formatter:off
-        String[] sources = {
-            "Foo.groovy",
-            "import groovy.transform.*\n" +
-            "import static groovy.transform.PackageScopeTarget.*\n" +
-            "@PackageScope(FIELDS)\n" +
-            "class Foo {\n" +
-            "  Object field\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "");
-
-        TypeDeclaration type = getCUDeclFor("Foo.groovy").types[0];
-        assertTrue("Expected public but was: " + Modifier.toString(type.modifiers), Modifier.isPublic(type.modifiers));
-
-        FieldDeclaration field = findField(getCUDeclFor("Foo.groovy"), "field");
-        assertTrue("Expected package-private but was: " + Modifier.toString(field.modifiers), isPackagePrivate(field.modifiers));
-    }
-
-    @Test
     public void testPackageScope5() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.*\n" +
-            "import static groovy.transform.PackageScopeTarget.FIELDS\n" +
+            "import static groovy.transform.PackageScopeTarget.*\n" +
             "@PackageScope(FIELDS)\n" +
             "class Foo {\n" +
             "  Object field\n" +
@@ -160,6 +141,29 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.*\n" +
+            "import static groovy.transform.PackageScopeTarget.FIELDS\n" +
+            "@PackageScope(FIELDS)\n" +
+            "class Foo {\n" +
+            "  Object field\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        TypeDeclaration type = getCUDeclFor("Foo.groovy").types[0];
+        assertTrue("Expected public but was: " + Modifier.toString(type.modifiers), Modifier.isPublic(type.modifiers));
+
+        FieldDeclaration field = findField(getCUDeclFor("Foo.groovy"), "field");
+        assertTrue("Expected package-private but was: " + Modifier.toString(field.modifiers), isPackagePrivate(field.modifiers));
+    }
+
+    @Test
+    public void testPackageScope7() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "import groovy.transform.*\n" +
             "class Foo {\n" +
             "  @PackageScope Object method() {}\n" +
             "}\n",
@@ -173,7 +177,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testPackageScope7() {
+    public void testPackageScope8() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -195,35 +199,12 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testPackageScope8() {
-        //@formatter:off
-        String[] sources = {
-            "Foo.groovy",
-            "import groovy.transform.*\n" +
-            "import static groovy.transform.PackageScopeTarget.*\n" +
-            "@PackageScope(METHODS)\n" +
-            "class Foo {\n" +
-            "  Object method() {}\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "");
-
-        TypeDeclaration type = getCUDeclFor("Foo.groovy").types[0];
-        assertTrue("Expected public but was: " + Modifier.toString(type.modifiers), Modifier.isPublic(type.modifiers));
-
-        MethodDeclaration method = findMethod(getCUDeclFor("Foo.groovy"), "method");
-        assertTrue("Expected package-private but was: " + Modifier.toString(method.modifiers), isPackagePrivate(method.modifiers));
-    }
-
-    @Test
     public void testPackageScope9() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.*\n" +
-            "import static groovy.transform.PackageScopeTarget.METHODS\n" +
+            "import static groovy.transform.PackageScopeTarget.*\n" +
             "@PackageScope(METHODS)\n" +
             "class Foo {\n" +
             "  Object method() {}\n" +
@@ -246,6 +227,29 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.*\n" +
+            "import static groovy.transform.PackageScopeTarget.METHODS\n" +
+            "@PackageScope(METHODS)\n" +
+            "class Foo {\n" +
+            "  Object method() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        TypeDeclaration type = getCUDeclFor("Foo.groovy").types[0];
+        assertTrue("Expected public but was: " + Modifier.toString(type.modifiers), Modifier.isPublic(type.modifiers));
+
+        MethodDeclaration method = findMethod(getCUDeclFor("Foo.groovy"), "method");
+        assertTrue("Expected package-private but was: " + Modifier.toString(method.modifiers), isPackagePrivate(method.modifiers));
+    }
+
+    @Test
+    public void testPackageScope11() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "import groovy.transform.*\n" +
             "import static groovy.transform.PackageScopeTarget.*\n" +
             "@PackageScope([CLASS, FIELDS, METHODS])\n" +
             "class Foo {\n" +
@@ -264,7 +268,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
     }
 
     @Test // @PackageScope only applies to synthetic public members
-    public void testPackageScope11() {
+    public void testPackageScope12() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -291,7 +295,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
     }
 
     @Test // @PackageScope only applies to synthetic public members
-    public void testPackageScope12() {
+    public void testPackageScope13() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -318,7 +322,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-8940
-    public void testPackageScope13() {
+    public void testPackageScope14() {
         //@formatter:off
         String[] sources = {
             "Tag.groovy",
@@ -332,7 +336,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1658
-    public void testPackageScope14() {
+    public void testPackageScope15() {
         //@formatter:off
         String[] sources = {
             "Tag.groovy",
@@ -354,7 +358,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1658
-    public void testPackageScope15() {
+    public void testPackageScope16() {
         //@formatter:off
         String[] sources = {
             "Tag.groovy",

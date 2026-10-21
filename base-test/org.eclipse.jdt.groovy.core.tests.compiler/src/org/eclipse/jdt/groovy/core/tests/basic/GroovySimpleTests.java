@@ -275,7 +275,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "0f1f2f3f4f");
     }
 
-    @Test // GROOVY-4235
+    @Test // https://issues.apache.org/jira/browse/GROOVY-4235
     public void testClosureScope3() {
         //@formatter:off
         String[] sources = {
@@ -317,7 +317,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "p");
     }
 
-    @Test // GROOVY-2849
+    @Test // https://issues.apache.org/jira/browse/GROOVY-2849
     public void testClosureScope5() {
         //@formatter:off
         String[] sources = {
@@ -349,7 +349,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "11 11");
     }
 
-    @Test // GROOVY-7701
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7701
     public void testClosureScope6() {
         //@formatter:off
         String[] sources = {
@@ -380,7 +380,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
-    @Test // GROOVY-7973
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7973
     public void testClosureScope7() {
         //@formatter:off
         String[] sources = {
@@ -417,7 +417,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
-    @Test // GROOVY-8881
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8881
     public void testClosureScope8() {
         //@formatter:off
         String[] sources = {
@@ -451,7 +451,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "Outer");
     }
 
-    @Test // GROOVY-10188
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10188
     public void testClosureScope9() {
         //@formatter:off
         String[] sources = {
@@ -497,7 +497,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // GROOVY-3831
+    @Test // https://issues.apache.org/jira/browse/GROOVY-3831
     public void testClosureConstructorArgument() {
         //@formatter:off
         String[] sources = {
@@ -517,7 +517,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // GROOVY-10717
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10717
     public void testClosureMapAsType() {
         //@formatter:off
         String[] sources = {
@@ -561,7 +561,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "hello world");
     }
 
-    @Test // GROOVY-9333
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9333
     public void testLambdaScope1() {
         assumeTrue(isParrotParser());
 
@@ -590,7 +590,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "1f2f3f4f");
     }
 
-    @Test // GROOVY-9333
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9333
     public void testLambdaScope2() {
         assumeTrue(isParrotParser());
 
@@ -643,7 +643,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "foo");
     }
 
-    @Test // GROOVY-3421
+    @Test // https://issues.apache.org/jira/browse/GROOVY-3421
     public void testSpreadMap() {
         //@formatter:off
         String[] sources = {
@@ -669,7 +669,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "truefalse");
     }
 
-    @Test // GROOVY-11238
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11238
     public void testLogicalImplication2() {
         assumeTrue(isParrotParser() && isAtLeastGroovy(50));
 
@@ -684,7 +684,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "truefalse");
     }
 
-    @Test // GROOVY-5245
+    @Test // https://issues.apache.org/jira/browse/GROOVY-5245
     public void testBooleanCategoryMethod1() {
         //@formatter:off
         String[] sources = {
@@ -705,7 +705,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         }
     }
 
-    @Test // GROOVY-10133
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10133
     public void testBooleanCategoryMethod2() {
         //@formatter:off
         String[] sources = {
@@ -723,7 +723,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, isAtLeastGroovy(40) ? "true" : "false");
     }
 
-    @Test // GROOVY-5609 (STC of extensions)
+    @Test // https://issues.apache.org/jira/browse/GROOVY-5609 (STC of extensions)
     public void testVariadicCategoryMethods() {
         //@formatter:off
         String[] sources = {
@@ -754,7 +754,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "66436643");
     }
 
-    @Test // GROOVY-10743
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10743
     public void testInterfaceCategoryMethods() {
         assumeTrue(isAtLeastGroovy(40) && isAtLeastJava(JDK9));
 
@@ -810,6 +810,186 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testSplitProperty1() {
+        for (String vis : new String[] {"public", "private", "protected"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "print new C().getFoo()\n",
+
+                "Pogo.groovy",
+                "class C {\n" +
+                "  String foo\n" +
+                "  " + vis + " String foo = 'x'\n" +
+                "}\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "x");
+
+            checkGCUDeclaration("Pogo.groovy",
+                "public class C {\n" +
+                "  " + vis + " String foo;\n" +
+                "  public @groovy.transform.Generated C() {\n" +
+                "  }\n" +
+                (!isAtLeastGroovy(40) ? ""
+                :
+                "  public @groovy.transform.CompileStatic String getFoo() {\n" +
+                "  }\n" +
+                "  public @groovy.transform.CompileStatic void setFoo(String value) {\n" +
+                "  }\n"
+                ) +
+                "}\n"
+            );
+        }
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11675
+    public void testSplitProperty2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "print new C().getFoo()\n",
+
+            "Pogo.groovy",
+            "class C {\n" +
+            "  final String foo\n" +
+            "  private String foo = 'x'\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "x");
+
+        checkGCUDeclaration("Pogo.groovy",
+            "public class C {\n" +
+            "  private String foo;\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+            (!isAtLeastGroovy(40) ? ""
+            :
+            "  public final @groovy.transform.CompileStatic String getFoo() {\n" +
+            "  }\n"
+            ) +
+            "}\n"
+        );
+    }
+
+    @Test
+    public void testSplitProperty3() {
+        assumeTrue(isAtLeastGroovy(40));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "print new C().getFoo()\n",
+
+            "Pogo.groovy",
+            "class C {\n" +
+            "  private String foo = 'x'\n" +
+            "  @groovy.transform.Synchronized String foo\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "x");
+
+        checkGCUDeclaration("Pogo.groovy",
+            "public class C {\n" +
+            "  private String foo;\n" +
+            "  public @groovy.transform.Generated C() {\n" +
+            "  }\n" +
+            "  public @groovy.transform.Synchronized @groovy.transform.CompileStatic String getFoo() {\n" +
+            "  }\n" +
+            "  public @groovy.transform.Synchronized @groovy.transform.CompileStatic void setFoo(String value) {\n" +
+            "  }\n" +
+            "}\n"
+        );
+    }
+
+    @Test
+    public void testSplitProperty4() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "  def foo='x'\n" +
+            "  private foo\n" +
+            "}\n" +
+            "print new C().foo\n" +
+            "print new C().@foo\n" +
+            "print new C().getFoo()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, isAtLeastGroovy(40) ? "xxx" : "nullnullnull");
+    }
+
+    @Test
+    public void testSplitProperty5() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "  def foo\n" +
+            "  private foo='x'\n" +
+            "}\n" +
+            "print new C().foo\n" +
+            "print new C().@foo\n" +
+            "print new C().getFoo()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "xxx");
+    }
+
+    @Test
+    public void testSplitProperty6() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "  private foo\n" +
+            "  def foo='x'\n" +
+            "}\n" +
+            "print new C().foo\n" +
+            "print new C().@foo\n" +
+            "print new C().getFoo()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, isAtLeastGroovy(40) ? "xxx" : "nullnullnull");
+    }
+
+    @Test
+    public void testSplitProperty7() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class C {\n" +
+            "  def foo='x'\n" +
+            "  private foo='y'\n" +
+            "}\n" +
+            "print new C().foo\n" +
+            "print new C().@foo\n" +
+            "print new C().getFoo()\n",
+        };
+        //@formatter:on
+
+        if (!isAtLeastGroovy(40)) {
+            runConformTest(sources, "yyy");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 3)\n" +
+                "\tprivate foo='y'\n" +
+                "\t^^^^^^^^^^^^^^^\n" +
+                "Groovy:The split property definition named 'foo' must not have an initial value for both the field and the property\n" +
+                "----------\n");
+        }
+    }
+
+    @Test
     public void testStaticProperty1() {
         //@formatter:off
         String[] sources = {
@@ -826,7 +1006,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "42");
     }
 
-    @Test // GROOVY-6183
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6183
     public void testStaticProperty2() {
         //@formatter:off
         String[] sources = {
@@ -874,7 +1054,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             : "java.lang.IncompatibleClassChangeError: Class java.lang.Class does not implement the requested interface groovy.lang.GroovyObject");
     }
 
-    @Test // GROOVY-8385
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8385
     public void testStaticProperty3() {
         //@formatter:off
         String[] sources = {
@@ -994,7 +1174,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "abc123");
     }
 
-    @Test // GROOVY-8327
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8327
     public void testStaticProperty8() {
         //@formatter:off
         String[] sources = {
@@ -1016,7 +1196,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "abc123");
     }
 
-    @Test // GROOVY-9591: "b" is not static...this variation of "8" should also work
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9591: "b" is not static...this variation of "8" should also work
     public void testStaticProperty8a() {
         //@formatter:off
         String[] sources = {
@@ -1041,7 +1221,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "A(42)");
     }
 
-    @Test // GROOVY-9591: "b" is not static...this variation of "8" should also work
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9591: "b" is not static...this variation of "8" should also work
     public void testStaticProperty8b() {
         //@formatter:off
         String[] sources = {
@@ -1066,7 +1246,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "A(42)");
     }
 
-    @Test // GROOVY-9587
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9587
     public void testStaticProperty9() {
         //@formatter:off
         String[] sources = {
@@ -1093,7 +1273,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "foo");
     }
 
-    @Test // GROOVY-9825
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9825
     public void testStaticProperty10() {
         //@formatter:off
         String[] sources = {
@@ -1118,7 +1298,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "3");
     }
 
-    @Test // GROOVY-5364
+    @Test // https://issues.apache.org/jira/browse/GROOVY-5364
     public void testStaticProperty11() {
         //@formatter:off
         String[] sources = {
@@ -1204,7 +1384,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // GROOVY-10159
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10159
     public void testStaticProperty15() {
         //@formatter:off
         String[] sources = {
@@ -1332,7 +1512,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // GROOVY-10124
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10124
     public void testCyclicReference4() {
         //@formatter:off
         String[] sources = {
@@ -1353,7 +1533,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // GROOVY-10113
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10113
     public void testCyclicReference5() {
         //@formatter:off
         String[] sources = {
@@ -1558,7 +1738,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // GROOVY-10125
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10125
     public void testNonCyclicReference3() {
         //@formatter:off
         String[] sources = {
@@ -2255,7 +2435,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // GROOVY-8659
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8659
     public void testOverriding_FinalMethod2() {
         //@formatter:off
         String[] sources = {
@@ -2281,7 +2461,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // GROOVY-11548
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11548
     public void testOverriding_FinalMethod3() {
         //@formatter:off
         String[] sources = {
@@ -2310,7 +2490,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // GROOVY-11548
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11548
     public void testOverriding_FinalMethod4() {
         //@formatter:off
         String[] sources = {
@@ -2336,7 +2516,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "Bar");
     }
 
-    @Test // GROOVY-12203
+    @Test // https://issues.apache.org/jira/browse/GROOVY-12203
     public void testOverriding_GenericMethod() {
         //@formatter:off
         String[] sources = {
@@ -2530,7 +2710,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // GROOVY-11830
+    @Test // https://issues.apache.org/jira/browse/GROOVY-11830
     public void testOverriding_ReducedVisibility8() {
         for (String spec : new String[] {"protected", "", "private"}) {
             //@formatter:off
@@ -3278,7 +3458,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "acdd");
     }
 
-    @Test // GROOVY-9896
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9896
     public void testSwitchCases2() {
         //@formatter:off
         String[] sources = {
@@ -3305,7 +3485,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "abcnull");
     }
 
-    @Test // GROOVY-4727
+    @Test // https://issues.apache.org/jira/browse/GROOVY-4727
     public void testSwitchCases3() {
         //@formatter:off
         String[] sources = {
@@ -3331,7 +3511,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "r1");
     }
 
-    @Test // GROOVY-9272
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9272
     public void testSwitchCases4() {
         assumeTrue(isParrotParser() && isAtLeastGroovy(40));
 
@@ -3356,7 +3536,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "23");
     }
 
-    @Test // GROOVY-9272
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9272
     public void testSwitchCases5() {
         assumeTrue(isParrotParser() && isAtLeastGroovy(40));
 
@@ -3383,7 +3563,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "9");
     }
 
-    @Test // GROOVY-9272
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9272
     public void testSwitchCases6() {
         assumeTrue(isParrotParser() && isAtLeastGroovy(40));
 
@@ -3410,7 +3590,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "9");
     }
 
-    @Test // GROOVY-9272
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9272
     public void testSwitchCases7() {
         assumeTrue(isParrotParser() && isAtLeastGroovy(40));
 
@@ -3435,7 +3615,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "weekend work day");
     }
 
-    @Test // GROOVY-9880
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9880
     public void testBreakAfterIf() {
         //@formatter:off
         String[] sources = {
@@ -4532,7 +4712,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    @Test // GROOVY-5106
+    @Test // https://issues.apache.org/jira/browse/GROOVY-5106
     public void testImplementingInterface7() {
         //@formatter:off
         String[] sources = {
@@ -4561,7 +4741,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // GROOVY-5106
+    @Test // https://issues.apache.org/jira/browse/GROOVY-5106
     public void testImplementingInterface8() {
         //@formatter:off
         String[] sources = {
@@ -4590,7 +4770,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // GROOVY-5687
+    @Test // https://issues.apache.org/jira/browse/GROOVY-5687
     public void testImplementingInterface9() {
         //@formatter:off
         String[] sources = {
@@ -4615,7 +4795,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "8:30pm");
     }
 
-    @Test // GROOVY-8164
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8164
     public void testImplementingInterface10() {
         //@formatter:off
         String[] sources = {
@@ -4645,7 +4825,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of " + (isAtLeastGroovy(50) ? "static method: m for class: C" : "method: static C.m()") + " is applicable for argument types: () values: []");
     }
 
-    @Test // GROOVY-9259
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9259
     public void testImplementingInterface11() {
         assumeTrue(isParrotParser()); // TODO: support default in antlr2 parser?
 
@@ -4678,7 +4858,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "CB");
     }
 
-    @Test // GROOVY-8299
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8299
     public void testImplementingInterface12() {
         assumeTrue(isParrotParser() && isAtLeastGroovy(50));
 
@@ -5426,7 +5606,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         }
     }
 
-    @Test // GROOVY-8648
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8648
     public void testReferencingFields_DirectAccess8() {
         //@formatter:off
         String[] sources = {
@@ -5453,7 +5633,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "42");
     }
 
-    @Test // GROOVY-6183
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6183
     public void testReferencingFields_DirectAccess9() {
         //@formatter:off
         String[] sources = {
@@ -5484,7 +5664,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // GROOVY-9982
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9982
     public void testReferencingFields_ThisClassPropertyVsSuperClassMethod() {
         //@formatter:off
         String[] sources = {
@@ -7177,7 +7357,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "012012");
     }
 
-    @Test // GROOVY-9851
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9851
     public void testSuperDotPrivateMethod() {
         //@formatter:off
         String[] sources = {
@@ -7204,7 +7384,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         }
     }
 
-    @Test // GROOVY-10747
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10747
     public void testSuperDotClone() {
         //@formatter:off
         String[] sources = {
@@ -7224,7 +7404,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    @Test // GROOVY-10733
+    @Test // https://issues.apache.org/jira/browse/GROOVY-10733
     public void testArrayDotClone() {
         //@formatter:off
         String[] sources = {

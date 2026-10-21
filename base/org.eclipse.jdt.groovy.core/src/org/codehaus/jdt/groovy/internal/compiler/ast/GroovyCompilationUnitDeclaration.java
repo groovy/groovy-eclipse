@@ -2724,8 +2724,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } else if (hasAnnotation(node, "groovy.transform.Final")) {
                 modifiers |= Flags.AccFinal;
             }
-            if (type.getProperty(node.getName()) != null && hasPackageScopeXform(node, PackageScopeTarget.FIELDS)) {
-                modifiers &= ~Flags.AccPrivate;
+            if (node.isSynthetic()) { // backing field for property
+                modifiers |= ExtraCompilerModifiers.AccImplicitlyDeclared;
+                if (hasPackageScopeXform(node, PackageScopeTarget.FIELDS)) {
+                    modifiers &= ~Flags.AccPrivate;
+                }
             }
             return modifiers;
         }
