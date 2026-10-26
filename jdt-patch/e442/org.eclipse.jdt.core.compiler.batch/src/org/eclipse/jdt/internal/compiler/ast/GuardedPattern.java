@@ -93,6 +93,11 @@ public class GuardedPattern extends Pattern {
 	}
 
 	@Override
+	public boolean nestsPattern() {
+		return this.primaryPattern.nestsPattern();
+	}
+
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		if (this.resolvedType != null || this.primaryPattern == null)
 			return this.resolvedType;

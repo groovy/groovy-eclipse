@@ -52,6 +52,7 @@ protected Openable(JavaElement parent) {
  */
 @Override
 public void bufferChanged(BufferChangedEvent event) {
+	JavaModelManager.sourceEnvironmentChanged();
 	if (event.getBuffer().isClosed()) {
 		JavaModelManager.getJavaModelManager().getElementsOutOfSynchWithBuffers().remove(this);
 		getBufferManager().removeBuffer(event.getBuffer());

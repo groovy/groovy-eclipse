@@ -468,8 +468,11 @@ private NameEnvironmentAnswer[] askForTypeFromModules(ModuleBinding clientModule
 {
 	if (clientModule != null && clientModule.nameForLookup().length == 0) {
 		NameEnvironmentAnswer answer = oracle.apply(clientModule);
-		if (answer != null)
+		if (answer != null) {
 			answer.moduleBinding = this.root.getModuleFromAnswer(answer);
+			if (answer.moduleName() != null && answer.moduleBinding == null)
+				return null; // type found in an "inexistent" module => inconsistent answer
+		}
 		return new NameEnvironmentAnswer[] { answer };
 	} else {
 		boolean found = false;
@@ -531,14 +534,13 @@ private ModuleBinding getModuleFromAnswer(NameEnvironmentAnswer answer) {
 			moduleBinding = this.knownModules.get(moduleName);
 			if (moduleBinding == null && this.nameEnvironment instanceof IModuleAwareNameEnvironment) {
 				IModule iModule = ((IModuleAwareNameEnvironment) this.nameEnvironment).getModule(moduleName);
-				try {
-					this.typeRequestor.accept(iModule, this);
-					moduleBinding = this.knownModules.get(moduleName);
-				} catch (NullPointerException e) {
-					System.err.println("Bug 529367: moduleName: " + new String(moduleName) + "iModule null" +  //$NON-NLS-1$ //$NON-NLS-2$
-							(iModule == null ? "true" : "false")); //$NON-NLS-1$ //$NON-NLS-2$]
-					throw e;
+				if (iModule == null) {
+					// inconsistent answer, likely:
+					// * type found from ctsym in a module that is not present in the JRT
+					return null;
 				}
+				this.typeRequestor.accept(iModule, this);
+				moduleBinding = this.knownModules.get(moduleName);
 			}
 		}
 		return moduleBinding;
@@ -1182,6 +1184,23 @@ public MissingTypeBinding createMissingType(PackageBinding packageBinding, char[
 	return missingType;
 }
 
+/**
+ * Answers whether a type was not found in this environment or in the environment of a module, so that a missing
+ * type was created in place.
+ */
+public boolean hasMissingTypes() {
+	LookupEnvironment rootEnv = this.root;
+	if (rootEnv.missingTypes != null) {
+		return true;
+	}
+	for (ModuleBinding knownModule : rootEnv.knownModules.valueTable) {
+		if (knownModule != null && knownModule.environment.missingTypes != null) {
+			return true;
+		}
+	}
+	return false;
+}
+
 /*
  * 1. Connect the type hierarchy for the type bindings created for parsedUnits.
  * 2. Create the field bindings
@@ -1487,8 +1506,12 @@ public TypeBinding createAnnotatedType(TypeBinding type, AnnotationBinding[] new
 	AnnotationBinding [] oldies = type.getTypeAnnotations();
 	final int oldLength = oldies == null ? 0 : oldies.length;
 	if (oldLength > 0) {
-		System.arraycopy(newbies, 0, newbies = new AnnotationBinding[newLength + oldLength], 0, newLength);
-		System.arraycopy(oldies, 0, newbies, newLength, oldLength);
+		if (type instanceof ArrayBinding array) {
+			newbies = mergeAnnotationsPerDimension(array.dimensions, oldies, newbies);
+		} else {
+			System.arraycopy(newbies, 0, newbies = new AnnotationBinding[newLength + oldLength], 0, newLength);
+			System.arraycopy(oldies, 0, newbies, newLength, oldLength);
+		}
 	}
 	if (this.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
 		// filter duplicate null annotations
@@ -1518,6 +1541,23 @@ public TypeBinding createAnnotatedType(TypeBinding type, AnnotationBinding[] new
 			System.arraycopy(filtered, 0, newbies = new AnnotationBinding[count], 0, count);
 	}
 	return this.typeSystem.getAnnotatedType(type, new AnnotationBinding [][] { newbies });
+}
+
+private AnnotationBinding[] mergeAnnotationsPerDimension(int dimensions, AnnotationBinding[] oldies, AnnotationBinding[] newbies) {
+	List<AnnotationBinding> annotsPerDim = new ArrayList<>();
+	int newbieIdx = 0, oldieIdx = 0;
+	for (int dim = 0; dim < dimensions; dim++) {
+		for (; newbieIdx < newbies.length && newbies[newbieIdx] != null; newbieIdx++) {
+			annotsPerDim.add(newbies[newbieIdx]);
+		}
+		for (; oldieIdx < oldies.length && oldies[oldieIdx] != null; oldieIdx++) {
+			annotsPerDim.add(oldies[oldieIdx]);
+		}
+		annotsPerDim.add(null);
+		newbieIdx++;
+		oldieIdx++;
+	}
+	return annotsPerDim.toArray(AnnotationBinding[]::new);
 }
 
 // convenience:

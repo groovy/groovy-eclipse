@@ -73,6 +73,10 @@ public abstract class Pattern extends Expression {
 		return false;
 	}
 
+	public boolean nestsPattern() {
+		return false;
+	}
+
 	/**
 	 * Implement the rules in the spec under 14.11.1.1 Exhaustive Switch Blocks
 	 *

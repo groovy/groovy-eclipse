@@ -12,19 +12,30 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import junit.framework.Test;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.Excuse;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
+import org.eclipse.jdt.internal.compiler.ASTVisitor;
+import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.Compiler;
+import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
+import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.SwitchStatement;
+import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 
 public class SwitchPatternTest extends AbstractRegressionTest9 {
 
 	static {
 //		TESTS_NUMBERS = new int [] { 40 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "testIssue5080_040"};
+//		TESTS_NAMES = new String[] { "testIssue5080_041"};
 	}
 
 	private static String previewLevel = "23";
@@ -97,6 +108,20 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 		runner.customOptions = customOptions;
 		runner.vmArguments = new String[] {};
 		runner.runWarningTest();
+	}
+
+	/**
+	 * From compliance 27 on, the exhaustiveness diagnostics additionally spell out the record
+	 * patterns that are missing, so that the user can just add them. Below 27 the plain message
+	 * is reported.
+	 *
+	 * @param message the base diagnostic, e.g. "A switch expression should have a default case"
+	 * @param missingPatterns the comma separated patterns expected from compliance 27 on
+	 */
+	private String withMissingPatterns(String message, String missingPatterns) {
+		if (this.complianceLevel < ClassFileConstants.JDK27)
+			return message;
+		return message + ", or add the missing case patterns: " + missingPatterns;
 	}
 
 	public void testIssue57_001() {
@@ -2793,7 +2818,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 			"1. ERROR in X.java (at line 7)\n" +
 			"	return switch (i) {\n" +
 			"	               ^\n" +
-			"A switch expression should have a default case\n" +
+			withMissingPatterns("A switch expression should have a default case", "C _") + "\n" +
 			"----------\n");
 	}
 	public void testBug575048_01() {
@@ -4169,7 +4194,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 9)\n" +
 				"	return switch (ji) { // Exhaustive!\n" +
 				"	               ^^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "F _") + "\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 16)\n" +
 				"	Zork();\n" +
@@ -4220,7 +4245,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 			"1. ERROR in X.java (at line 5)\n" +
 			"	switch (ji) { // non-exhaustive\n" +
 			"	        ^^\n" +
-			"An enhanced switch statement should be exhaustive; a default label expected\n" +
+			withMissingPatterns("An enhanced switch statement should be exhaustive; a default label expected", "C _") + "\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 11)\n" +
 			"	Zork();\n" +
@@ -6128,7 +6153,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 10)\n" +
 				"	return switch (i) {\n" +
 				"	               ^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "R _") + "\n" +
 				"----------\n" +
 				"2. ERROR in X.java (at line 16)\n" +
 				"	Zork();\n" +
@@ -7863,7 +7888,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				+ "1. ERROR in X.java (at line 9)\n"
 				+ "	System.out.println(switch((I) new J()) {\n"
 				+ "	                          ^^^^^^^^^^^\n"
-				+ "A switch expression should have a default case\n"
+				+ withMissingPatterns("A switch expression should have a default case", "J _") + "\n"
 				+ "----------\n");
 	}
 	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2503
@@ -7892,7 +7917,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				+ "1. ERROR in X.java (at line 9)\n"
 				+ "	System.out.println(switch((I) new J() {}) {\n"
 				+ "	                          ^^^^^^^^^^^^^^\n"
-				+ "A switch expression should have a default case\n"
+				+ withMissingPatterns("A switch expression should have a default case", "J _") + "\n"
 				+ "----------\n");
 	}
 	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2503
@@ -7928,7 +7953,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 11)\n" +
 				"	String test = switch(element) {\n" +
 				"	                     ^^^^^^^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "Foo _") + "\n" +
 				"----------\n");
 	}
 
@@ -7958,7 +7983,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				+ "1. ERROR in X.java (at line 8)\n"
 				+ "	System.out.println(switch((I) new B()) {\n"
 				+ "	                          ^^^^^^^^^^^\n"
-				+ "A switch expression should have a default case\n"
+				+ withMissingPatterns("A switch expression should have a default case", "B _") + "\n"
 				+ "----------\n");
 	}
 	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/2508
@@ -8699,7 +8724,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				+ "1. ERROR in X.java (at line 10)\n"
 				+ "	return switch (ji) { // Exhaustive!\n"
 				+ "	               ^^\n"
-				+ "A switch expression should have a default case\n"
+				+ withMissingPatterns("A switch expression should have a default case", "S _") + "\n"
 				+ "----------\n");
 	}
 	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3031
@@ -8999,7 +9024,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 44)\n" +
 				"	switch (i) {\n" +
 				"	        ^\n" +
-				"An enhanced switch statement should be exhaustive; a default label expected\n" +
+				withMissingPatterns("An enhanced switch statement should be exhaustive; a default label expected", "K _") + "\n" +
 				"----------\n");
 	}
 
@@ -9479,7 +9504,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 12)\n" +
 				"	switch (r) {\n" +
 				"	        ^\n" +
-				"An enhanced switch statement should be exhaustive; a default label expected\n" +
+				withMissingPatterns("An enhanced switch statement should be exhaustive; a default label expected", "R(C1 _)") + "\n" +
 				"----------\n");
 	}
 
@@ -10065,7 +10090,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in ExhaustivenessGap.java (at line 13)\n" +
 				"	return switch (strategy) {\n" +
 				"	               ^^^^^^^^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "Absolute(StartPosition _)") + "\n" +
 				"----------\n");
 	}
 
@@ -10195,7 +10220,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 9)\n" + //$NON-NLS-1$
 				"	return switch (s) {\n" + //$NON-NLS-1$
 				"	               ^\n" + //$NON-NLS-1$
-				"A switch expression should have a default case\n" + //$NON-NLS-1$
+				withMissingPatterns("A switch expression should have a default case", "Triangle _") + "\n" + //$NON-NLS-1$
 				"----------\n"); //$NON-NLS-1$
 	}
 
@@ -10427,7 +10452,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 11)\n" +
 				"	return switch (p) { //AB missing\n" +
 				"	               ^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "Pair(A _, B _)") + "\n" +
 				"----------\n"); //$NON-NLS-1$
 	}
 
@@ -10461,7 +10486,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 13)\n" +
 				"	return switch (b) { //Box(Pair(A,B)) missing\n" +
 				"	               ^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "Box(Pair(A _, B _))") + "\n" +
 				"----------\n"); //$NON-NLS-1$
 	}
 
@@ -10624,7 +10649,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 9)\n" +
 				"	return switch (i) { // guarded pattern is not unconditional\n" +
 				"	               ^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "A _, B _") + "\n" +
 				"----------\n"); //$NON-NLS-1$
 	}
 
@@ -10683,7 +10708,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 9)\n" +
 				"	return switch (x) { // bound I not fully covered (B missing)\n" +
 				"	               ^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "B _") + "\n" +
 				"----------\n"); //$NON-NLS-1$
 	}
 
@@ -10766,7 +10791,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 10)\n" +
 				"	return switch (x) { // bound I not fully covered (B missing)\n" +
 				"	               ^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "B _") + "\n" +
 				"----------\n"); //$NON-NLS-1$
 	}
 
@@ -10875,7 +10900,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 8)\n" +
 				"	return switch (i) { // A<Integer> is possible but not covered\n" +
 				"	               ^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "A _") + "\n" +
 				"----------\n"); //$NON-NLS-1$
 	}
 
@@ -11079,7 +11104,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 19)\n" +
 				"	return switch(r) {\n" +
 				"	              ^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "R2(R(B1 _, B2 _, C3 _))") + "\n" +
 				"----------\n");
 	}
 	public void testIssue5080_030() {
@@ -11300,7 +11325,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 13)\n" +
 				"	return switch (r) {\n" +
 				"	               ^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "R(C(B _), C _)") + "\n" +
 				"----------\n"); //$NON-NLS-1$
 	}
 	public void testIssue5080_035() {
@@ -11335,7 +11360,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 3)\n" +
 				"	return switch (r) {\n" +
 				"	               ^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "Root(R2(R1 _), R2 _, R2(R1 _))") + "\n" +
 				"----------\n"); //$NON-NLS-1$
 	}
 	public void testIssue5080_036() {
@@ -11370,7 +11395,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 3)\n" +
 				"	return switch (r) {\n" +
 				"	               ^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "Root(R2(R1 _), R2 _, R2(R2 _))") + "\n" +
 				"----------\n"); //$NON-NLS-1$
 	}
 	public void testIssue5080_037() {
@@ -11405,7 +11430,7 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				"1. ERROR in X.java (at line 3)\n" +
 				"	return switch (r) {\n" +
 				"	               ^\n" +
-				"A switch expression should have a default case\n" +
+				withMissingPatterns("A switch expression should have a default case", "Root(R2(R2 _), R2 _, R2 _)") + "\n" +
 				"----------\n"); //$NON-NLS-1$
 	}
 	public void testIssue5080_038() {
@@ -11504,4 +11529,590 @@ public class SwitchPatternTest extends AbstractRegressionTest9 {
 				},
 				"0"); //$NON-NLS-1$
 	}
+	public void testIssue5080_041() {
+		if (this.complianceLevel < ClassFileConstants.JDK22) {
+			return;
+		}
+		runNegativeTest(
+				new String[] {
+					"X.java",
+					"""
+					sealed interface I permits A, B {}
+
+					final class A implements I {}
+					final class B implements I {}
+
+					record R2(I x) {}
+
+					public class X {
+
+					    public static int foo(R2 r) {
+					        return switch (r) {
+					            case R2(A _) -> 1;
+					        };
+					    }
+
+					    public static void main(String argv[]) {
+					        System.out.println(X.foo(new R2(new B())));
+					    }
+					}
+            		"""
+				},
+				"----------\n" + //$NON-NLS-1$
+				"1. ERROR in X.java (at line 11)\n" +
+				"	return switch (r) {\n" +
+				"	               ^\n" +
+				withMissingPatterns("A switch expression should have a default case", "R2(B _)") + "\n" +
+				"----------\n"); //$NON-NLS-1$
+	}
+
+	// ---------------------------------------------------------------------------------------------
+	// Enumeration of the *missing* case patterns that would be needed to make a pattern switch
+	// exhaustive, both for a record selector (nested record patterns, see
+	// SwitchStatement.MissingPatternCollector) and for a sealed selector (the uncovered permitted
+	// subtypes, see SwitchStatement#findMissingSealedCasePatterns); the result is stored in
+	// SwitchStatement#missingCasePatterns.
+	//
+	// The assertMissingPatterns(..) tests compile a (deliberately non-exhaustive) switch, walk the
+	// resolved AST and assert the exact, ordered list of reconstructed missing patterns. The
+	// assertCompilerLog(..) tests additionally verify the rendered diagnostic end to end.
+	// ---------------------------------------------------------------------------------------------
+
+	/**
+	 * Compiles the given files and returns the {@link SwitchStatement#missingCasePatterns} collected
+	 * from the first switch statement found in the resolved AST. The compiler problem log is
+	 * intentionally ignored (the test sources are non-exhaustive on purpose).
+	 */
+	private List<String> collectMissingPatterns(String[] testFiles) {
+		final List<List<String>> collected = new ArrayList<>();
+		ASTVisitor visitor = new ASTVisitor() {
+			@Override
+			public boolean visit(SwitchStatement switchStatement, BlockScope scope) {
+				collected.add(switchStatement.missingCasePatterns);
+				return true;
+			}
+		};
+
+		Map<String, String> options = getCompilerOptions();
+		CompilerOptions compilerOptions = new CompilerOptions(options);
+		INameEnvironment nameEnvironment = getNameEnvironment(new String[] {}, null, options);
+		ICompilerRequestor requestor = new ICompilerRequestor() {
+			@Override
+			public void acceptResult(CompilationResult result) {
+				// ignore - these sources are non-exhaustive on purpose.
+			}
+		};
+		Compiler batchCompiler = new Compiler(
+				nameEnvironment,
+				getErrorHandlingPolicy(),
+				compilerOptions,
+				requestor,
+				getProblemFactory()) {
+			@Override
+			public void process(CompilationUnitDeclaration unit, int i) {
+				super.process(unit, i);
+				unit.traverse(visitor, unit.scope);
+			}
+		};
+		try {
+			CompilationUnit[] units = getCompilationUnits(testFiles);
+			batchCompiler.compile(units);
+		} finally {
+			nameEnvironment.cleanup();
+		}
+		assertFalse("no switch statement was visited", collected.isEmpty());
+		return collected.get(0);
+	}
+
+	private void assertMissingPatterns(String[] testFiles, String... expected) {
+		List<String> actual = collectMissingPatterns(testFiles);
+		List<String> expectedList = List.of(expected);
+		assertEquals("Unexpected missing patterns", expectedList.toString(), actual.toString());
+	}
+
+	/**
+	 * Compiles at the given compliance and asserts the full compiler problem log, so that the
+	 * rendered diagnostic message (which from compliance 27 on spells out the missing patterns)
+	 * is verified end to end.
+	 */
+	private void assertCompilerLog(String[] testFiles, String compliance, String expectedCompilerLog) {
+		Map<String, String> options = getCompilerOptions();
+		options.put(CompilerOptions.OPTION_Compliance, compliance);
+		options.put(CompilerOptions.OPTION_Source, compliance);
+		options.put(CompilerOptions.OPTION_TargetPlatform, compliance);
+		Runner runner = new Runner();
+		runner.testFiles = testFiles;
+		runner.expectedCompilerLog = expectedCompilerLog;
+		runner.customOptions = options;
+		runner.vmArguments = null;
+		runner.javacTestOptions = JavacTestOptions.SKIP;
+		runner.runNegativeTest();
+	}
+
+	// Single component record whose component is a sealed type: one alternative uncovered.
+	public void testSingleComponentSealed() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"sealed interface I permits A, B {}\n" +
+			"record A() implements I {}\n" +
+			"record B() implements I {}\n" +
+			"record Box(I i) {}\n" +
+			"public class X {\n" +
+			"  static void foo(Box b) {\n" +
+			"    switch (b) {\n" +
+			"      case Box(A a) -> {}\n" +
+			"    }\n" +
+			"  }\n" +
+			"}\n"
+		}, "Box(B _)");
+	}
+
+	// Single component record, two of three sealed alternatives uncovered (sorted output).
+	public void testSingleComponentSealedTwoMissing() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"sealed interface I permits A, B, C {}\n" +
+			"record A() implements I {}\n" +
+			"record B() implements I {}\n" +
+			"record C() implements I {}\n" +
+			"record Box(I i) {}\n" +
+			"public class X {\n" +
+			"  static void foo(Box b) {\n" +
+			"    switch (b) {\n" +
+			"      case Box(A a) -> {}\n" +
+			"    }\n" +
+			"  }\n" +
+			"}\n"
+		}, "Box(B _)", "Box(C _)");
+	}
+
+	// Two component record, partial coverage -> cartesian enumeration across columns.
+	public void testTwoComponentPartial() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"sealed interface I permits A, B {}\n" +
+			"record A() implements I {}\n" +
+			"record B() implements I {}\n" +
+			"record Pair(I a, I b) {}\n" +
+			"public class X {\n" +
+			"  static void foo(Pair p) {\n" +
+			"    switch (p) {\n" +
+			"      case Pair(A x, A y) -> {}\n" +
+			"    }\n" +
+			"  }\n" +
+			"}\n"
+		}, "Pair(A _, B _)", "Pair(B _, I _)");
+	}
+
+	// Nested record pattern with an uncovered inner component.
+	public void testNestedRecord() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"sealed interface I permits A, B {}\n" +
+			"record A() implements I {}\n" +
+			"record B() implements I {}\n" +
+			"record Pair(I a, I b) {}\n" +
+			"record Box(Pair p) {}\n" +
+			"public class X {\n" +
+			"  static void foo(Box b) {\n" +
+			"    switch (b) {\n" +
+			"      case Box(Pair(A x, A y)) -> {}\n" +
+			"    }\n" +
+			"  }\n" +
+			"}\n"
+		}, "Box(Pair(A _, B _))", "Box(Pair(B _, I _))");
+	}
+
+	// Exhaustive switch -> no missing patterns reported.
+	public void testExhaustiveNoMissing() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"sealed interface I permits A, B {}\n" +
+			"record A() implements I {}\n" +
+			"record B() implements I {}\n" +
+			"record Box(I i) {}\n" +
+			"public class X {\n" +
+			"  static void foo(Box b) {\n" +
+			"    switch (b) {\n" +
+			"      case Box(A a) -> {}\n" +
+			"      case Box(B b2) -> {}\n" +
+			"    }\n" +
+			"  }\n" +
+			"}\n"
+		} /* no expected patterns */);
+	}
+
+	// Deeply nested record patterns: the continuation to the enclosing record's next component is
+	// threaded onto the *nested leaf* nodes, so the missing pattern must retain the nested details.
+	public void testExhaustiveNestedRecords_001() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"""
+			public class X {
+			    public int test1(Root r) {
+			        return switch (r) {
+			            case Root(R2(R1 _), R2(R1 _)) -> 0;
+			//          case Root(R2(R1 _), R2(R2 _)) -> 0;
+			            case Root(R2(R2 _), R2(R1 _)) -> 0;
+			            case Root(R2(R2 _), R2 _) -> 0;
+			        };
+			    }
+			    sealed interface Base {}
+			    record R1() implements Base {}
+			    record R2(Base b1) implements Base {}
+			    record Root(R2 b2, R2 b3) {}
+			}
+			"""
+		}, "Root(R2(R1 _), R2(R2 _))");
+	}
+
+	// Same shape, but with the commented-out case restored -> exhaustive, nothing missing.
+	public void testExhaustiveNestedRecords_002() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"""
+			public class X {
+			    public int test1(Root r) {
+			        return switch (r) {
+			            case Root(R2(R1 _), R2(R1 _)) -> 0;
+			            case Root(R2(R1 _), R2(R2 _)) -> 0;
+			            case Root(R2(R2 _), R2(R1 _)) -> 0;
+			            case Root(R2(R2 _), R2 _) -> 0;
+			        };
+			    }
+			    sealed interface Base {}
+			    record R1() implements Base {}
+			    record R2(Base b1) implements Base {}
+			    record Root(R2 b2, R2 b3) {}
+			}
+			"""
+		} /* no expected patterns */);
+	}
+
+	private static final String[] NON_EXHAUSTIVE_SWITCH_EXPRESSION = new String[] {
+		"X.java",
+		"""
+		public class X {
+		    public int test1(Root r) {
+		        return switch (r) {
+		            case Root(R2(R1 _), R2(R1 _)) -> 0;
+		            case Root(R2(R2 _), R2(R1 _)) -> 0;
+		            case Root(R2(R2 _), R2 _) -> 0;
+		        };
+		    }
+		    sealed interface Base {}
+		    record R1() implements Base {}
+		    record R2(Base b1) implements Base {}
+		    record Root(R2 b2, R2 b3) {}
+		}
+		"""
+	};
+
+	/**
+	 * Same shape as {@link #NON_EXHAUSTIVE_SWITCH_EXPRESSION} but with named pattern variables, so
+	 * that it is also valid below release 22 (where '_' is not yet available as an unnamed pattern).
+	 */
+	private static final String[] NON_EXHAUSTIVE_SWITCH_EXPRESSION_NAMED_VARS = new String[] {
+		"X.java",
+		"""
+		public class X {
+		    public int test1(Root r) {
+		        return switch (r) {
+		            case Root(R2(R1 p), R2(R1 q)) -> 0;
+		            case Root(R2(R2 p), R2(R1 q)) -> 0;
+		            case Root(R2(R2 p), R2 q) -> 0;
+		        };
+		    }
+		    sealed interface Base {}
+		    record R1() implements Base {}
+		    record R2(Base b1) implements Base {}
+		    record Root(R2 b2, R2 b3) {}
+		}
+		"""
+	};
+
+	// From compliance 27 on, the diagnostic spells out the patterns that are missing.
+	public void testMissingPatternsInMessage_27() {
+		if (this.complianceLevel < ClassFileConstants.JDK27)
+			return; // needs a 27 capable setup (system libraries included)
+		assertCompilerLog(NON_EXHAUSTIVE_SWITCH_EXPRESSION, CompilerOptions.VERSION_27,
+				"""
+				----------
+				1. ERROR in X.java (at line 3)
+					return switch (r) {
+					               ^
+				A switch expression should have a default case, or add the missing case patterns: Root(R2(R1 _), R2(R2 _))
+				----------
+				""");
+	}
+
+	// Below compliance 27 the message is unchanged (no pattern listing).
+	public void testMissingPatternsInMessage_below27() {
+		assertCompilerLog(NON_EXHAUSTIVE_SWITCH_EXPRESSION_NAMED_VARS, CompilerOptions.VERSION_21,
+				"""
+				----------
+				1. ERROR in X.java (at line 3)
+					return switch (r) {
+					               ^
+				A switch expression should have a default case
+				----------
+				""");
+	}
+
+	// ---------------------------------------------------------------------------------------------
+	// Sealed selector types: the permitted subtypes that no case label covers are spelled out.
+	// ---------------------------------------------------------------------------------------------
+
+	// Plain sealed selector: the uncovered permitted subtypes are listed as type patterns.
+	public void testSealedSelectorMissingSubtypes() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"sealed interface I permits A, B, C {}\n" +
+			"record A() implements I {}\n" +
+			"record B() implements I {}\n" +
+			"record C() implements I {}\n" +
+			"public class X {\n" +
+			"  static void foo(I i) {\n" +
+			"    switch (i) {\n" +
+			"      case A a -> {}\n" +
+			"    }\n" +
+			"  }\n" +
+			"}\n"
+		}, "B _", "C _");
+	}
+
+	// A sealed permitted subtype is covered transitively: only the *leaves* are reported.
+	public void testSealedSelectorNestedSealedHierarchy() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"sealed interface P permits Q, R {}\n" +
+			"record Q() implements P {}\n" +
+			"sealed interface R extends P permits S, T {}\n" +
+			"record S() implements R {}\n" +
+			"record T() implements R {}\n" +
+			"public class X {\n" +
+			"  static void foo(P p) {\n" +
+			"    switch (p) {\n" +
+			"      case Q q -> {}\n" +
+			"    }\n" +
+			"  }\n" +
+			"}\n"
+		}, "S _", "T _");
+	}
+
+	// A permitted subtype that is a record only partially covered by a record pattern is reported in
+	// its precise, nested form ("M(L _)"), not coarsely as "M _"; plain subtypes still get "N _".
+	public void testSealedSelectorRecordPermittedSubtypeDetail() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"sealed interface J permits K, L {}\n" +
+			"record K() implements J {}\n" +
+			"record L() implements J {}\n" +
+			"sealed interface I permits M, N {}\n" +
+			"record M(J j) implements I {}\n" +
+			"record N() implements I {}\n" +
+			"public class X {\n" +
+			"  static int foo(I i) {\n" +
+			"    return switch (i) {\n" +
+			"      case M(K k) -> 0;\n" +
+			"    };\n" +
+			"  }\n" +
+			"}\n"
+		}, "M(L _)", "N _");
+	}
+
+	// A permitted subtype that is a (non-record) final class.
+	public void testSealedSelectorFinalClassPermittedSubtype() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"sealed interface I permits A, B {}\n" +
+			"record A() implements I {}\n" +
+			"final class B implements I {}\n" +
+			"public class X {\n" +
+			"  static void foo(I i) {\n" +
+			"    switch (i) {\n" +
+			"      case A a -> {}\n" +
+			"    }\n" +
+			"  }\n" +
+			"}\n"
+		}, "B _");
+	}
+
+	// A generic sealed hierarchy: the simple (erased) name is used for the suggested pattern.
+	public void testSealedSelectorGeneric() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"sealed interface G<T> permits GA, GB {}\n" +
+			"record GA<T>() implements G<T> {}\n" +
+			"final class GB<T> implements G<T> {}\n" +
+			"public class X {\n" +
+			"  static int foo(G<String> g) {\n" +
+			"    return switch (g) {\n" +
+			"      case GA<String> a -> 1;\n" +
+			"    };\n" +
+			"  }\n" +
+			"}\n"
+		}, "GB _");
+	}
+
+	// An enum implementing the sealed interface is reported as a type pattern when not all of its
+	// constants are enumerated.
+	public void testSealedSelectorEnumPermittedSubtype() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"sealed interface H permits HE, HC {}\n" +
+			"enum HE implements H { X1, Y1 }\n" +
+			"record HC() implements H {}\n" +
+			"public class X {\n" +
+			"  static int foo(H h) {\n" +
+			"    return switch (h) {\n" +
+			"      case HC c -> 1;\n" +
+			"    };\n" +
+			"  }\n" +
+			"}\n"
+		}, "HE _");
+	}
+
+	// A guarded pattern does not cover the subtype, so it is still reported as missing.
+	public void testSealedSelectorGuardedPatternDoesNotCover() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"sealed interface I permits A, B {}\n" +
+			"record A(int i) implements I {}\n" +
+			"record B() implements I {}\n" +
+			"public class X {\n" +
+			"  static void foo(I i) {\n" +
+			"    switch (i) {\n" +
+			"      case A a when a.i() > 0 -> {}\n" +
+			"    }\n" +
+			"  }\n" +
+			"}\n"
+		}, "A _", "B _");
+	}
+
+	// Exhaustive sealed switch -> nothing reported.
+	public void testSealedSelectorExhaustive() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"sealed interface I permits A, B {}\n" +
+			"record A() implements I {}\n" +
+			"record B() implements I {}\n" +
+			"public class X {\n" +
+			"  static int foo(I i) {\n" +
+			"    return switch (i) {\n" +
+			"      case A a -> 1;\n" +
+			"      case B b -> 2;\n" +
+			"    };\n" +
+			"  }\n" +
+			"}\n"
+		} /* no expected patterns */);
+	}
+
+	// A default label makes the switch exhaustive, so nothing is collected.
+	public void testSealedSelectorWithDefaultNoMissingPatterns() {
+		assertMissingPatterns(new String[] {
+			"X.java",
+			"sealed interface I permits A, B {}\n" +
+			"record A() implements I {}\n" +
+			"record B() implements I {}\n" +
+			"public class X {\n" +
+			"  static int foo(I i) {\n" +
+			"    return switch (i) {\n" +
+			"      case A a -> 1;\n" +
+			"      default -> 2;\n" +
+			"    };\n" +
+			"  }\n" +
+			"}\n"
+		} /* no expected patterns */);
+	}
+
+	private static final String[] NON_EXHAUSTIVE_SEALED_SWITCH_STATEMENT = new String[] {
+		"X.java",
+		"""
+		sealed interface I permits A, B, C {}
+		record A() implements I {}
+		record B() implements I {}
+		record C() implements I {}
+		public class X {
+		  static void foo(I i) {
+		    switch (i) {
+		      case A a -> {}
+		    }
+		  }
+		}
+		"""
+	};
+
+	private static final String[] NON_EXHAUSTIVE_SEALED_SWITCH_EXPRESSION = new String[] {
+		"X.java",
+		"""
+		sealed interface I permits A, B {}
+		record A() implements I {}
+		record B() implements I {}
+		public class X {
+		  static int foo(I i) {
+		    return switch (i) {
+		      case A a -> 1;
+		    };
+		  }
+		}
+		"""
+	};
+
+	// From compliance 27 on, the enhanced switch *statement* diagnostic lists the missing subtypes.
+	public void testSealedMissingPatternsInMessage_27() {
+		if (this.complianceLevel < ClassFileConstants.JDK27)
+			return; // needs a 27 capable setup (system libraries included)
+		assertCompilerLog(NON_EXHAUSTIVE_SEALED_SWITCH_STATEMENT, CompilerOptions.VERSION_27,
+				"""
+				----------
+				1. ERROR in X.java (at line 7)
+					switch (i) {
+					        ^
+				An enhanced switch statement should be exhaustive; a default label expected, or add the missing case patterns: B _, C _
+				----------
+				""");
+	}
+
+	// Below compliance 27 the enhanced switch statement message is unchanged.
+	public void testSealedMissingPatternsInMessage_below27() {
+		assertCompilerLog(NON_EXHAUSTIVE_SEALED_SWITCH_STATEMENT, CompilerOptions.VERSION_21,
+				"""
+				----------
+				1. ERROR in X.java (at line 7)
+					switch (i) {
+					        ^
+				An enhanced switch statement should be exhaustive; a default label expected
+				----------
+				""");
+	}
+
+	// From compliance 27 on, the switch *expression* diagnostic lists the missing subtypes.
+	public void testSealedMissingPatternsInSwitchExpressionMessage_27() {
+		if (this.complianceLevel < ClassFileConstants.JDK27)
+			return; // needs a 27 capable setup (system libraries included)
+		assertCompilerLog(NON_EXHAUSTIVE_SEALED_SWITCH_EXPRESSION, CompilerOptions.VERSION_27,
+				"""
+				----------
+				1. ERROR in X.java (at line 6)
+					return switch (i) {
+					               ^
+				A switch expression should have a default case, or add the missing case patterns: B _
+				----------
+				""");
+	}
+
+	// Below compliance 27 the switch expression message is unchanged.
+	public void testSealedMissingPatternsInSwitchExpressionMessage_below27() {
+		assertCompilerLog(NON_EXHAUSTIVE_SEALED_SWITCH_EXPRESSION, CompilerOptions.VERSION_21,
+				"""
+				----------
+				1. ERROR in X.java (at line 6)
+					return switch (i) {
+					               ^
+				A switch expression should have a default case
+				----------
+				""");
+	}
+
 }

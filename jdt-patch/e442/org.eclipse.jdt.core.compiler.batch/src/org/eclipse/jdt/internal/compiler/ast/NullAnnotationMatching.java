@@ -832,11 +832,13 @@ public class NullAnnotationMatching {
 			ParameterizedTypeBinding ptb = (ParameterizedTypeBinding) type, otherPTB = (ParameterizedTypeBinding) otherType;
 			TypeBinding[] typeArguments = ptb.arguments;
 			TypeBinding[] otherTypeArguments = otherPTB.arguments;
-			TypeBinding[] newTypeArguments = new TypeBinding[typeArguments.length];
-			for (int i = 0; i < typeArguments.length; i++) {
-				newTypeArguments[i] = mergeTypeAnnotations(typeArguments[i], otherTypeArguments[i], false, environment, shouldReplace);
+			if (typeArguments != null && otherTypeArguments != null) { // null if parameterized only via enclosing type
+				TypeBinding[] newTypeArguments = new TypeBinding[typeArguments.length];
+				for (int i = 0; i < typeArguments.length; i++) {
+					newTypeArguments[i] = mergeTypeAnnotations(typeArguments[i], otherTypeArguments[i], false, environment, shouldReplace);
+				}
+				return environment.createParameterizedType(ptb.genericType(), newTypeArguments, ptb.enclosingType());
 			}
-			return environment.createParameterizedType(ptb.genericType(), newTypeArguments, ptb.enclosingType());
 		}
 		return mainType;
 	}

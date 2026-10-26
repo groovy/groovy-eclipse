@@ -11861,4 +11861,224 @@ public void testIssue4835() throws Exception {
 	            },
 		"OK!");
 }
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5428
+// [Switch Expression] Matching nested records always succeeds if inner record has no fields
+public void testIssue5428() throws Exception {
+	if (this.complianceLevel < ClassFileConstants.JDK21)
+		return;
+
+	this.runConformTest(
+		new String[] {
+					"X.java",
+					"""
+					public class X {
+					    public sealed interface I {}
+
+					    public record A() implements I {}
+
+					    public record B(int i) implements I {}
+
+					    public record R(I abc) implements I {}
+
+					    public static String stringify(R xy) {
+					        return switch (xy) {
+					            case R(A()) -> "X(A)";
+					            case R(B(var i)) -> "X(B(" + i + "))";
+					            default -> "Default";
+					        };
+					    }
+
+					    public static void main(String[] args) {
+					        String result = X.stringify(new R(new B(42)));
+					        if (!result.equals("X(B(42))"))
+					            System.out.println("Expected: " + "X(B(42))" + ", but got: " + result);
+					        else
+					            System.out.println("All well!");
+					    }
+					}
+					""",
+	            },
+		"All well!");
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5428
+// [Switch Expression] Matching nested records always succeeds if inner record has no fields
+public void testIssue5428_full() throws Exception {
+	if (this.complianceLevel < ClassFileConstants.JDK21)
+		return;
+
+	this.runConformTest(
+		new String[] {
+					"test/NestedMatchingTest.java",
+					"""
+					package test;
+
+					import java.util.Objects;
+					import java.util.function.Function;
+
+					import test.NestedMatchingTest.ABC.A;
+					import test.NestedMatchingTest.ABC.B;
+					import test.NestedMatchingTest.ABC.C;
+					import test.NestedMatchingTest.XY.X;
+					import test.NestedMatchingTest.XY.Y;
+
+					public class NestedMatchingTest {
+					  public sealed interface ABC {
+					    public record A() implements ABC {}
+					    public record B(int i) implements ABC {}
+					    public record C(int i) implements ABC {}
+					  }
+
+					  public sealed interface XY {
+					    public record X(ABC abc) implements XY {}
+					    public record Y(ABC abc) implements XY {}
+					  }
+
+					  public static String stringify0(XY xy) {
+					    return switch (xy) {
+					      case X(A()) -> "X(A)";
+					      case X(B(var i)) -> "X(B(" + i + "))";
+					      case X(C(var i)) -> "X(C(" + i + "))";
+					      case Y(A()) -> "Y(A)";
+					      case Y(B(var i)) -> "Y(B(" + i + "))";
+					      case Y(C(var i)) -> "Y(C(" + i + "))";
+					    };
+					  }
+
+					  public static String stringify1(XY xy) {
+					    return switch (xy) {
+					      case X(B(var i)) -> "X(B(" + i + "))";
+					      case X(A()) -> "X(A)";
+					      case X(C(var i)) -> "X(C(" + i + "))";
+					      case Y(B(var i)) -> "Y(B(" + i + "))";
+					      case Y(A()) -> "Y(A)";
+					      case Y(C(var i)) -> "Y(C(" + i + "))";
+					    };
+					  }
+
+					  public static String stringify2(XY xy) {
+					    return switch (xy) {
+					      case X(B(var i)) -> "X(B(" + i + "))";
+					      case X(C(var i)) -> "X(C(" + i + "))";
+					      case X(A()) -> "X(A)";
+					      case Y(B(var i)) -> "Y(B(" + i + "))";
+					      case Y(C(var i)) -> "Y(C(" + i + "))";
+					      case Y(A()) -> "Y(A)";
+					    };
+					  }
+
+					  public static void main(String[] args) {
+					    print(NestedMatchingTest::stringify0);
+					    print(NestedMatchingTest::stringify1);
+					    print(NestedMatchingTest::stringify2);
+					  }
+
+					  private static void print(Function<XY, String> stringify) {
+					    printEquals("X(A)", stringify.apply(new X(new A())));
+					    printEquals("X(B(42))", stringify.apply(new X(new B(42))));
+					    printEquals("X(C(42))", stringify.apply(new X(new C(42))));
+					    printEquals("Y(A)", stringify.apply(new Y(new A())));
+					    printEquals("Y(B(42))", stringify.apply(new Y(new B(42))));
+					    printEquals("Y(C(42))", stringify.apply(new Y(new C(42))));
+					    System.out.println();
+					  }
+
+					  public static void printEquals(String expected, String actual) {
+					    if (Objects.equals(expected, actual)) {
+					      System.out.println("Matched: " + expected);
+					    } else {
+					      System.out.println("Expected: " + expected + ", but got: " + actual);
+					    }
+					  }
+					}
+					""",
+	            },
+				"Matched: X(A)\n" +
+				"Matched: X(B(42))\n" +
+				"Matched: X(C(42))\n" +
+				"Matched: Y(A)\n" +
+				"Matched: Y(B(42))\n" +
+				"Matched: Y(C(42))\n" +
+				"\n" +
+				"Matched: X(A)\n" +
+				"Matched: X(B(42))\n" +
+				"Matched: X(C(42))\n" +
+				"Matched: Y(A)\n" +
+				"Matched: Y(B(42))\n" +
+				"Matched: Y(C(42))\n" +
+				"\n" +
+				"Matched: X(A)\n" +
+				"Matched: X(B(42))\n" +
+				"Matched: X(C(42))\n" +
+				"Matched: Y(A)\n" +
+				"Matched: Y(B(42))\n" +
+				"Matched: Y(C(42))");
+}
+
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5428
+// [Switch Expression] Matching nested records always succeeds if inner record has no fields
+public void testIssue5428_additional() throws Exception {
+	if (this.complianceLevel <= ClassFileConstants.JDK21)
+		return;
+
+	this.runConformTest(
+		new String[] {
+					"X.java",
+					"""
+					public class X {
+					    public sealed interface I {}
+
+					    public record A() implements I {}
+
+					    public record B(int i) implements I {}
+
+					    public record R(I abc) implements I {}
+
+					    public static String stringify(R xy) {
+					        return switch (xy) {
+					            case R(B(var _)) -> "R(B(int i))";
+					            default -> "Default";
+					        };
+					    }
+
+					    public static void main(String[] args) {
+					        String result = X.stringify(new R(new A()));
+					        if (!result.equals("Default"))
+					            System.out.println("Expected: " + "X(B(42))" + ", but got: " + result);
+					        else
+					            System.out.println("All well!");
+					    }
+					}
+					""",
+	            },
+				"All well!");
+}
+
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5604
+// [Enhanced switch] Incorrect Illegal fall-through from a case label pattern diagnostic from recent builds of ECJ
+public void testIssue5604() {
+	if (this.complianceLevel <= ClassFileConstants.JDK21)
+		return;
+	runConformTest(new String[] {
+			"X.java",
+			"""
+			record Record(Integer a) {}
+			public class X {
+			    int fod(Object param) {
+			        int i = switch (param) {
+			        case Record(Integer _):
+			        default:
+			            yield 42;
+			        };
+			        return i;
+			    }
+
+			    public static void main(String [] args) {
+			        System.out.println(new X().fod("Hello"));
+			    }
+			}
+			"""
+	},
+	"42");
+}
+
 }

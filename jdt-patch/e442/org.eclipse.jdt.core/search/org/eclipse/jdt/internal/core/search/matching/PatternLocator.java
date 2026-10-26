@@ -829,11 +829,14 @@ protected int resolveLevelForType(char[] qualifiedPattern, TypeBinding type) {
 	// Type variable cannot be specified through pattern => this kind of binding cannot match it (see bug 79803)
 	if (type.isTypeVariable()) return IMPOSSIBLE_MATCH;
 
-	if (type instanceof IntersectionTypeBinding18) {
+	// also covers arrays of intersection types, e.g. an inferred varargs parameter type: match each intersecting type with the same dimensions
+	if (type.leafComponentType() instanceof IntersectionTypeBinding18) {
 		int result = IMPOSSIBLE_MATCH, prev = IMPOSSIBLE_MATCH;
-		IntersectionTypeBinding18 i18 = (IntersectionTypeBinding18) type;
+		IntersectionTypeBinding18 i18 = (IntersectionTypeBinding18) type.leafComponentType();
+		int dimensions = type.dimensions();
 		for (ReferenceBinding ref : i18.intersectingTypes) {
-			result = resolveLevelForType(qualifiedPattern, ref);
+			TypeBinding intersectingType = dimensions == 0 ? ref : ((ArrayBinding) type).environment().createArrayType(ref, dimensions);
+			result = resolveLevelForType(qualifiedPattern, intersectingType);
 			if (result == ACCURATE_MATCH) return result;
 			if (result == IMPOSSIBLE_MATCH) continue;
 			if (prev == IMPOSSIBLE_MATCH) prev = result;

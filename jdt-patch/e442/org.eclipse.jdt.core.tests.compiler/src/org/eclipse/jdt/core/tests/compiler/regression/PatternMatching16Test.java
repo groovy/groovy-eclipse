@@ -38,6 +38,20 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 	public PatternMatching16Test(String testName){
 		super(testName);
 	}
+
+	/**
+	 * From compliance 27 on, the exhaustiveness diagnostics additionally spell out the case
+	 * patterns that are missing, so that the user can just add them. Below 27 the plain message
+	 * is reported.
+	 *
+	 * @param message the base diagnostic, e.g. "A switch expression should have a default case"
+	 * @param missingPatterns the comma separated patterns expected from compliance 27 on
+	 */
+	private String withMissingPatterns(String message, String missingPatterns) {
+		if (this.complianceLevel < ClassFileConstants.JDK27)
+			return message;
+		return message + ", or add the missing case patterns: " + missingPatterns;
+	}
 	// Enables the tests to run individually
 	protected Map<String, String> getCompilerOptions(boolean preview) {
 		Map<String, String> defaultOptions = super.getCompilerOptions();
@@ -4266,7 +4280,9 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 				1. ERROR in X.java (at line 15)
 					return switch (a) {
 					               ^
-				A switch expression should have a default case
+				"""
+				+ withMissingPatterns("A switch expression should have a default case", "B _") + "\n"
+				+ """
 				----------
 				""",
 				false);
@@ -4400,9 +4416,9 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 								 * 6.3.1.1 Conditional-And Operator &&
 								 *
 								 * It is a compile-time error if any of the following conditions hold:
-									• A pattern variable is both (i) introduced by a when true and (ii) introduced by
+									â€¢ A pattern variable is both (i) introduced by a when true and (ii) introduced by
 									b when true.
-									• A pattern variable is both (i) introduced by a when false and (ii) introduced by
+									â€¢ A pattern variable is both (i) introduced by a when false and (ii) introduced by
 									b when false.
 								 */
 								boolean b = o instanceof String a && o instanceof Double a;   // Error: correct
@@ -4412,9 +4428,9 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 								 * 6.3.1.2 Conditional-Or Operator ||
 								 *
 								 * It is a compile-time error if any of the following conditions hold:
-									• A pattern variable is both (i) introduced by a when true and (ii) introduced by
+									â€¢ A pattern variable is both (i) introduced by a when true and (ii) introduced by
 									b when true.
-									• A pattern variable is both (i) introduced by a when false and (ii) introduced by
+									â€¢ A pattern variable is both (i) introduced by a when false and (ii) introduced by
 									b when false.
 								 */
 								b =  o instanceof String a || o instanceof Double a;      // <<<----- Error NOT reported by ECJ. Javac complains
@@ -4424,17 +4440,17 @@ public class PatternMatching16Test extends AbstractRegressionTest {
 								 * 6.3.1.4 Conditional Operator a ? b : c
 								 *
 								 * It is a compile-time error if any of the following conditions hold:
-									• A pattern variable is both (i) introduced by a when true and (ii) introduced by
+									â€¢ A pattern variable is both (i) introduced by a when true and (ii) introduced by
 									c when true.
-									• A pattern variable is both (i) introduced by a when true and (ii) introduced by
+									â€¢ A pattern variable is both (i) introduced by a when true and (ii) introduced by
 									c when false.
-									• A pattern variable is both (i) introduced by a when false and (ii) introduced by
+									â€¢ A pattern variable is both (i) introduced by a when false and (ii) introduced by
 									b when true.
-									• A pattern variable is both (i) introduced by a when false and (ii) introduced by
+									â€¢ A pattern variable is both (i) introduced by a when false and (ii) introduced by
 									b when false.
-									• A pattern variable is both (i) introduced by b when true and (ii) introduced by
+									â€¢ A pattern variable is both (i) introduced by b when true and (ii) introduced by
 									c when true.
-									• A pattern variable is both (i) introduced by b when false and (ii) introduced by
+									â€¢ A pattern variable is both (i) introduced by b when false and (ii) introduced by
 									c when false.
 								 */
 

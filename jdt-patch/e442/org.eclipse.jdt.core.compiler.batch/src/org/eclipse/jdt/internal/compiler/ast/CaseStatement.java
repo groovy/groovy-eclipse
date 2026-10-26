@@ -331,8 +331,14 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	int pc = codeStream.position;
 	this.targetLabel.place();
 
-	if (this.constantExpressions.length > 0 && this.constantExpressions[0] instanceof Pattern pattern && (!pattern.isUnguarded() || pattern.containsPatternVariable(true))) {
+	/* If we reached `pc` via an indy typeswitch, we may still need additional "code" to be emitted for the CaseStatement itself.
+	   Such code may have duties such as binding pattern variables, ascertaining the guard expression evaluates to true and (if not
+	   restart the indy typeswitch at the right index) and for record patterns ensure the deconstruction is valid etc
+	*/
+	if (this.constantExpressions.length > 0 && this.constantExpressions[0] instanceof Pattern pattern &&
+				(!pattern.isUnguarded() || pattern.containsPatternVariable(true) || pattern.nestsPattern())) {
 
+		// Case statement calls for additional code generation. In fact we may be entirely in the wrong case!
 		BranchLabel patternMatchLabel = new BranchLabel(codeStream);
 		BranchLabel matchFailLabel = new BranchLabel(codeStream);
 

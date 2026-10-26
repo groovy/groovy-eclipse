@@ -111,12 +111,18 @@ public class UnaryExpression extends OperatorExpression {
 							if (this.trueInitStateIndex != -1) {
 								codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.trueInitStateIndex);
 							}
-							codeStream.iconst_0();
+							Constant cst = this.expression.optimizedBooleanConstant();
+							boolean justNotTrue = cst != Constant.NotAConstant && cst.booleanValue() == false;
+							if (!justNotTrue)
+								codeStream.iconst_0();
 							if (falseLabel.forwardReferenceCount() > 0) {
-								codeStream.goto_(endifLabel = new BranchLabel(codeStream));
+								endifLabel = null;
+								if (!justNotTrue)
+									codeStream.goto_(endifLabel = new BranchLabel(codeStream));
 								falseLabel.place();
 								codeStream.iconst_1();
-								endifLabel.place();
+								if (endifLabel != null)
+									endifLabel.place();
 							}
 						} else { // 6596: if (!(a && b)){} - must still place falseLabel
 							falseLabel.place();

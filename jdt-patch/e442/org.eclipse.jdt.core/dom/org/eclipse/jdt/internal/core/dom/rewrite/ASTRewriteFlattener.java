@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2024 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -1211,12 +1211,12 @@ public class ASTRewriteFlattener extends ASTVisitor {
 
 	@Override
 	public boolean visit(ImplicitTypeDeclaration node) {
-		ASTNode javadoc= getChildNode(node, TypeDeclaration.JAVADOC_PROPERTY);
+		ASTNode javadoc= getChildNode(node, ImplicitTypeDeclaration.JAVADOC_PROPERTY);
 		if (javadoc != null) {
 			javadoc.accept(this);
 		}
 
-		visitList(node, TypeDeclaration.BODY_DECLARATIONS_PROPERTY, null);
+		visitList(node, ImplicitTypeDeclaration.BODY_DECLARATIONS_PROPERTY, null);
 		return false;
 	}
 

@@ -5210,7 +5210,9 @@ protected void consumeMethodHeaderRightParen() {
 	AbstractMethodDeclaration md = (AbstractMethodDeclaration) this.astStack[this.astPtr];
 	md.sourceEnd = 	this.rParenPos;
 	//arguments
-	if (length != 0) {
+	//issue 3278: we must explicitly check for instance type, to avoid ClassCastException.
+	//in very specific cases, preventing the proposal list to be correctly completed.
+	if (length != 0 && (this.astStack[this.astPtr + 1]) instanceof Argument) {
 		Argument arg = (Argument) this.astStack[this.astPtr + 1];
 		if (arg.isReceiver()) {
 			md.receiver = (Receiver) arg;

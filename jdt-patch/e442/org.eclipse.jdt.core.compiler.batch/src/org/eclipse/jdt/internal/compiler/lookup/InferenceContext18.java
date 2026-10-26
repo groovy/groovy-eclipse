@@ -1157,59 +1157,61 @@ public class InferenceContext18 {
 			InferenceVariable[] toResolve,
 			boolean isRecordPatternTypeInference) throws InferenceFailureException {
 		this.captureId = 0;
-		BoundSet result = resolve(toResolve, isRecordPatternTypeInference, true);
-		if (result == FAIL_AFTER_USING_LOWER_BOUNDS && SHOULD_WORKAROUND_BUG_JDK_6573446) {
-			result = resolve(toResolve, isRecordPatternTypeInference, false);
-		}
-		return result;
-	}
-	/** Marker Object for a failed resolution where lower bounds have been used. */
-	private static BoundSet FAIL_AFTER_USING_LOWER_BOUNDS = new BoundSet();
-	private /*@Nullable*/ BoundSet resolve(InferenceVariable[] toResolve, boolean isRecordPatternTypeInference, boolean useLowerBounds)
-			throws InferenceFailureException
-	{
 		// NOTE: 18.5.2 ...
 		// "(While it was necessary to demonstrate that the inference variables in B1 could be resolved
 		//   in order to establish applicability, the resulting instantiations are not considered part of B1.)
 		// For this reason, resolve works on a temporary copy of the bound set.
 		BoundSet tmpBoundSet = this.currentBounds.copy();
-		boolean lowerBoundUsed = false;
 		if (this.inferenceVariables != null) {
 			Set<InferenceVariable> toResolveSet = new LinkedHashSet<>(Arrays.asList(toResolve));
 			// find a minimal set of dependent variables:
 			Set<InferenceVariable> variableSet;
 			while ((variableSet = getSmallestVariableSet(tmpBoundSet, toResolveSet)) != null) {
 				int oldNumUninstantiated = tmpBoundSet.numUninstantiatedVariables(this.inferenceVariables);
-				List<InferenceVariable> ofRank;
-				while ((ofRank = pickIvarsByRank(variableSet, tmpBoundSet)) != null) {
-					final int numVars = ofRank.size();
-					if (numVars == 0)
-						continue;
-					if (DEBUG) {
-						System.out.println("Resolving ivars: "+ofRank); //$NON-NLS-1$
-					}
-					final InferenceVariable[] variables = ofRank.toArray(new InferenceVariable[numVars]);
-					if (!isRecordPatternTypeInference && !tmpBoundSet.hasCaptureBound(variableSet)) {
-						// try to instantiate this set of variables in tmpBoundSet, but keep a copy for roll-back
-						BoundSet prevBoundSet = tmpBoundSet.copy();
-						ResolveOutcome firstAttempt = resolveFirstAttempt(tmpBoundSet, toResolveSet, variableSet, variables, useLowerBounds);
-						lowerBoundUsed |= firstAttempt.lowerBoundUsed;
-						if (firstAttempt.success) {
-							continue;
-						}
-						// roll back for second attempt:
-						tmpBoundSet = prevBoundSet;
-					}
-					if (resolveSecondAttempt(tmpBoundSet, toResolveSet, variableSet, numVars, variables)) {
-						if (tmpBoundSet.incorporate(this)) {
-							continue;
-						}
-					}
-					return lowerBoundUsed ? FAIL_AFTER_USING_LOWER_BOUNDS : null;
+				BoundSet attempt = resolve(tmpBoundSet.copy(), new LinkedHashSet<>(variableSet), toResolveSet, isRecordPatternTypeInference, true);
+				if (attempt == FAIL_AFTER_USING_LOWER_BOUNDS && SHOULD_WORKAROUND_BUG_JDK_6573446) {
+					attempt = resolve(tmpBoundSet.copy(), new LinkedHashSet<>(variableSet), toResolveSet, isRecordPatternTypeInference, false);
 				}
-				if (tmpBoundSet.numUninstantiatedVariables(this.inferenceVariables) == oldNumUninstantiated && oldNumUninstantiated != 0)
-					return null; // abort because we made no progress
+				tmpBoundSet = attempt;
+				if (tmpBoundSet == null
+						|| tmpBoundSet.numUninstantiatedVariables(this.inferenceVariables) == oldNumUninstantiated && oldNumUninstantiated != 0)
+					return null; // abort because we made no progress or failed to resolve
 			}
+		}
+		return tmpBoundSet;
+	}
+	/** Marker Object for a failed resolution where lower bounds have been used. */
+	private static BoundSet FAIL_AFTER_USING_LOWER_BOUNDS = new BoundSet();
+	private /* @Nullable */ BoundSet resolve(BoundSet tmpBoundSet, Set<InferenceVariable> variableSet,
+			Set<InferenceVariable> toResolveSet, boolean isRecordPatternTypeInference, boolean useLowerBounds)
+			throws InferenceFailureException {
+		boolean lowerBoundUsed = false;
+		List<InferenceVariable> ofRank;
+		while ((ofRank = pickIvarsByRank(variableSet, tmpBoundSet)) != null) {
+			final int numVars = ofRank.size();
+			if (numVars == 0)
+				continue;
+			if (DEBUG) {
+				System.out.println("Resolving ivars: "+ofRank); //$NON-NLS-1$
+			}
+			final InferenceVariable[] variables = ofRank.toArray(new InferenceVariable[numVars]);
+			if (!isRecordPatternTypeInference && !tmpBoundSet.hasCaptureBound(variableSet)) {
+				// try to instantiate this set of variables in tmpBoundSet, but keep a copy for roll-back
+				BoundSet prevBoundSet = tmpBoundSet.copy();
+				ResolveOutcome firstAttempt = resolveFirstAttempt(tmpBoundSet, toResolveSet, variableSet, variables, useLowerBounds);
+				lowerBoundUsed |= firstAttempt.lowerBoundUsed;
+				if (firstAttempt.success) {
+					continue;
+				}
+				// roll back for second attempt:
+				tmpBoundSet = prevBoundSet;
+			}
+			if (resolveSecondAttempt(tmpBoundSet, toResolveSet, variableSet, numVars, variables)) {
+				if (tmpBoundSet.incorporate(this)) {
+					continue;
+				}
+			}
+			return lowerBoundUsed ? FAIL_AFTER_USING_LOWER_BOUNDS : null;
 		}
 		return tmpBoundSet;
 	}
@@ -1517,7 +1519,7 @@ public class InferenceContext18 {
 		// apply the ranking of ivars according to their bounds as explained in
 		// https://mail.openjdk.org/archives/list/compiler-dev@openjdk.org/message/GN6RTCGMME6I5JVLSFZRIR32XY6QKOI2/
 		Map<Integer, List<InferenceVariable>> byRank = variableSet.stream().collect(Collectors.groupingBy(tmpBoundSet::rankIVar));
-		for (int rank = 0; rank < 4; rank++) {
+		for (int rank = 0; rank < BoundSet.RANK_COUNT; rank++) {
 			List<InferenceVariable> ofRank = byRank.get(rank);
 			if (ofRank == null)
 				continue;

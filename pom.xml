@@ -112,7 +112,7 @@
 				<repository>
 					<id>milestone</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.42-I-builds/I20261001-2300</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.42-I-builds/I20261025-2300</url>
 				</repository>
 			</repositories>
 			<modules>

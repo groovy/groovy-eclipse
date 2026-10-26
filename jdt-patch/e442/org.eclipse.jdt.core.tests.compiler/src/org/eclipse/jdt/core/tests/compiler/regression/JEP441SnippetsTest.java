@@ -35,6 +35,20 @@ public class JEP441SnippetsTest extends AbstractRegressionTest9 {
 		super(testName);
 	}
 
+	/**
+	 * From compliance 27 on, the exhaustiveness diagnostics additionally spell out the case
+	 * patterns that are missing, so that the user can just add them. Below 27 the plain message
+	 * is reported.
+	 *
+	 * @param message the base diagnostic, e.g. "A switch expression should have a default case"
+	 * @param missingPatterns the comma separated patterns expected from compliance 27 on
+	 */
+	private String withMissingPatterns(String message, String missingPatterns) {
+		if (this.complianceLevel < ClassFileConstants.JDK27)
+			return message;
+		return message + ", or add the missing case patterns: " + missingPatterns;
+	}
+
 	public void test01() {
 		runConformTest(
 				new String[] {
@@ -1008,7 +1022,7 @@ public class JEP441SnippetsTest extends AbstractRegressionTest9 {
 			"1. ERROR in X.java (at line 8)\r\n" +
 			"	return switch (s) {\r\n" +
 			"	               ^\n" +
-			"A switch expression should have a default case\n" +
+			withMissingPatterns("A switch expression should have a default case", "C _") + "\n" +
 			"----------\n");
 	}
 
@@ -1082,7 +1096,7 @@ public class JEP441SnippetsTest extends AbstractRegressionTest9 {
 			"1. ERROR in X.java (at line 9)\n" +
 			"	switch (s) {                   // Error - not exhaustive;\n" +
 			"	        ^\n" +
-			"An enhanced switch statement should be exhaustive; a default label expected\n" +
+			withMissingPatterns("An enhanced switch statement should be exhaustive; a default label expected", "B _") + "\n" +
 			"----------\n");
 	}
 

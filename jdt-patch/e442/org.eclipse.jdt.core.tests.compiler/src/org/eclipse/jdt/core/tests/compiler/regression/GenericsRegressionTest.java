@@ -7201,5 +7201,43 @@ public void testIssue4900() {
 	};
 	runner.runConformTest();
 }
+
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5394
+// ECJ cannot find method due to using upperbounds
+public void testGHIssue5394() {
+	if (this.complianceLevel < ClassFileConstants.JDK17)
+		return;
+	runConformTest(new String[] {
+			"Test.java",
+			"""
+			import java.util.List;
+			import java.util.function.Consumer;
+
+			public class Test {
+
+				public Z<C> test() {
+					return new Z<>(List.of(a(c -> c.error()), b()));
+				}
+
+				public <T extends B> Y<T> a(Consumer<T> c) {
+					return null;
+				}
+
+				public Y<B> b() {
+					return null;
+				}
+
+				public class A {}
+				public class B extends A {}
+				public class C extends B {
+					public void error() {}
+				}
+
+				public record Z<T>(List<? extends Y<? super T>> l) {}
+				public record Y<T>(Consumer<T> c) {}
+			}
+			"""
+	});
+}
 }
 

@@ -317,7 +317,7 @@
         <repository
             url="https://download.eclipse.org/eclipse/updates/4.42"/>
         <repository
-            url="https://download.eclipse.org/eclipse/updates/4.42-I-builds/I20261001-2300"/>
+            url="https://download.eclipse.org/eclipse/updates/4.42-I-builds/I20261025-2300"/>
       </repositoryList>
       <repositoryList
           name="2026-09">

@@ -833,6 +833,7 @@ public void test011_problem_categories() {
 		expectedProblemAttributes.put("MisplacedTypeAnnotations", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 		expectedProblemAttributes.put("MissingArgumentsForParameterizedMemberType", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
 		expectedProblemAttributes.put("MissingDefaultCase", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
+		expectedProblemAttributes.put("MissingDefaultCaseWithPatterns", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
 		expectedProblemAttributes.put("MissingEnclosingInstance", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
 		expectedProblemAttributes.put("MissingEnclosingInstanceForConstructorCall", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
 		expectedProblemAttributes.put("MissingEnumConstantCase", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
@@ -1269,6 +1270,7 @@ public void test011_problem_categories() {
 	    expectedProblemAttributes.put("SwitchExpressionsYieldTrailingSwitchLabels", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
 		expectedProblemAttributes.put("SwitchPreviewMixedCase", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 	    expectedProblemAttributes.put("SwitchExpressionsYieldMissingDefaultCase", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
+	    expectedProblemAttributes.put("SwitchExpressionsYieldMissingDefaultCaseWithPatterns", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 	    expectedProblemAttributes.put("SwitchExpressionsYieldMissingValue", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 	    expectedProblemAttributes.put("SwitchExpressionsYieldMissingEnumConstantCase", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 	    expectedProblemAttributes.put("SwitchExpressionsYieldIllegalLastStatement", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
@@ -1352,6 +1354,7 @@ public void test011_problem_categories() {
 	    expectedProblemAttributes.put("PatternDominated", new ProblemAttributes(true));
 	    expectedProblemAttributes.put("IllegalTotalPatternWithDefault", new ProblemAttributes(true));
 	    expectedProblemAttributes.put("EnhancedSwitchMissingDefault", new ProblemAttributes(true));
+	    expectedProblemAttributes.put("EnhancedSwitchMissingDefaultWithPatterns", new ProblemAttributes(true));
 	    expectedProblemAttributes.put("UnexpectedTypeinSwitchPattern", new ProblemAttributes(true));
 	    expectedProblemAttributes.put("UnexpectedTypeinRecordPattern", new ProblemAttributes(true));
 	    expectedProblemAttributes.put("RecordPatternMismatch", new ProblemAttributes(true));
@@ -1986,6 +1989,7 @@ public void test012_compiler_problems_tuning() {
 		expectedProblemAttributes.put("MisplacedTypeAnnotations", SKIP);
 		expectedProblemAttributes.put("MissingArgumentsForParameterizedMemberType", SKIP);
 		expectedProblemAttributes.put("MissingDefaultCase", new ProblemAttributes(JavaCore.COMPILER_PB_SWITCH_MISSING_DEFAULT_CASE));
+		expectedProblemAttributes.put("MissingDefaultCaseWithPatterns", new ProblemAttributes(JavaCore.COMPILER_PB_SWITCH_MISSING_DEFAULT_CASE));
 		expectedProblemAttributes.put("MissingEnclosingInstance", SKIP);
 		expectedProblemAttributes.put("MissingEnclosingInstanceForConstructorCall", SKIP);
 		expectedProblemAttributes.put("MissingEnumConstantCase", new ProblemAttributes(JavaCore.COMPILER_PB_INCOMPLETE_ENUM_SWITCH));
@@ -2422,6 +2426,7 @@ public void test012_compiler_problems_tuning() {
 	    expectedProblemAttributes.put("SwitchExpressionsYieldTrailingSwitchLabels", SKIP);
 	    expectedProblemAttributes.put("SwitchPreviewMixedCase", SKIP);
 	    expectedProblemAttributes.put("SwitchExpressionsYieldMissingDefaultCase", SKIP);
+	    expectedProblemAttributes.put("SwitchExpressionsYieldMissingDefaultCaseWithPatterns", SKIP);
 	    expectedProblemAttributes.put("SwitchExpressionsYieldMissingValue", SKIP);
 	    expectedProblemAttributes.put("SwitchExpressionsYieldMissingEnumConstantCase", SKIP);
 	    expectedProblemAttributes.put("SwitchExpressionsYieldIllegalLastStatement", SKIP);
@@ -2505,7 +2510,8 @@ public void test012_compiler_problems_tuning() {
 	    expectedProblemAttributes.put("CannotMixNullAndNonTypePattern", SKIP);
 	    expectedProblemAttributes.put("PatternDominated", SKIP);
 	    expectedProblemAttributes.put("IllegalTotalPatternWithDefault", SKIP);
-	    expectedProblemAttributes.put("EnhancedSwitchMissingDefault", SKIP);
+		expectedProblemAttributes.put("EnhancedSwitchMissingDefault", SKIP);
+		expectedProblemAttributes.put("EnhancedSwitchMissingDefaultWithPatterns", SKIP);
 	    expectedProblemAttributes.put("UnexpectedTypeinSwitchPattern", SKIP);
 	    expectedProblemAttributes.put("UnexpectedTypeinRecordPattern", SKIP);
 	    expectedProblemAttributes.put("RecordPatternMismatch", SKIP);

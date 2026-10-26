@@ -718,6 +718,21 @@ public void resolve(ClassScope upperScope) {
 	}
 	super.resolve(upperScope);
 }
+
+private void normalizeConstructor() {
+	// We know `this.constructorCall != null && (this.statements == null || this.statements.length == 0 || this.constructorCall != this.statements[0])`
+	for (int i = 1, length = this.statements != null ? this.statements.length : 0; i < length; i++) {
+		if (this.constructorCall == this.statements[i])
+			return; // Already normalized. We have a constructor with a prologue with the chaining constructor invocation past the prologue.
+	}
+	// We are likely here with a constructor that is synthesized by a tool such as Lombok that still uses bifurcated body (see https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5349)
+	Statement [] oldBody = this.statements;
+	int oldLength = oldBody != null ? oldBody.length : 0;
+	this.statements = new Statement[oldLength + 1];
+	this.statements[0] = this.constructorCall;
+	if (oldLength > 0)
+		System.arraycopy(oldBody, 0, this.statements, 1, oldLength);
+}
 /*
  * Type checking for constructor, just another method, except for special check
  * for recursive constructor invocations.
@@ -735,6 +750,9 @@ public void resolveStatements() {
 	if ((this.modifiers & ExtraCompilerModifiers.AccSemicolonBody) != 0) {
 		this.scope.problemReporter().methodNeedBody(this);
 	}
+	if (this.constructorCall != null)
+		if (this.statements == null || this.statements.length == 0 || this.constructorCall != this.statements[0])
+			normalizeConstructor(); // https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5489
 	this.scope.enterEarlyConstructionContext();
 	super.resolveStatements();
 	this.scope.leaveEarlyConstructionContext(); // code completion may work with diet mode constructors! These don't have ecc to issue leave!

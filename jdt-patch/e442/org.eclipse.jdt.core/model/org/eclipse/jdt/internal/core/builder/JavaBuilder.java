@@ -19,15 +19,8 @@ import static org.eclipse.jdt.internal.core.JavaModelManager.trace;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IMarker;
@@ -857,28 +850,65 @@ private boolean isWorthBuilding() throws CoreException {
 
 /*
  * Instruct the build manager that this project is involved in a cycle and
- * needs to propagate structural changes to the other projects in the cycle.
+ * needs to propagate structural changes to the projects depending on it,
+ * either in the cycle or outside of it, which were already built.
  */
 void mustPropagateStructuralChanges() {
-	LinkedHashSet<IPath> cycleParticipants = new LinkedHashSet<>(3);
-	this.javaProject.updateCycleParticipants(new ArrayList<>(), cycleParticipants, new HashMap<>(), this.workspaceRoot, new HashSet<>(3), null);
-	IPath currentPath = this.javaProject.getPath();
+	Set<IProject> dependents = collectDependents();
 	Set<IProject> toRebuild = new HashSet<>();
-	for (IPath participantPath : cycleParticipants) {
-		if (participantPath != currentPath) {
-			IProject project = this.workspaceRoot.getProject(participantPath.segment(0));
-			if (hasBeenBuilt(project)) {
-				if (DEBUG) {
-					trace("JavaBuilder: Requesting another build iteration since cycle participant " + project.getName() //$NON-NLS-1$
-						+ " has not yet seen some structural changes"); //$NON-NLS-1$
-				}
-				toRebuild.add(project);
+	for (IProject project : dependents) {
+		if (!project.equals(this.currentProject) && hasBeenBuilt(project)) {
+			if (DEBUG) {
+				trace("JavaBuilder: Requesting another build iteration since dependent project " + project.getName() //$NON-NLS-1$
+					+ " has not yet seen some structural changes"); //$NON-NLS-1$
 			}
+			toRebuild.add(project);
 		}
 	}
 	if (!toRebuild.isEmpty()) {
 		requestProjectsRebuild(toRebuild);
 	}
+}
+
+/*
+ * Computes all Java projects which directly or indirectly depend on the current project.
+ * Uses the same input as cycle detection (see JavaProject#validateCycles()), i.e. the
+ * project entries of the resolved classpath, and not IProject#getReferencingProjects(),
+ * which would also include references recorded in .project / build configurations.
+ */
+private Set<IProject> collectDependents() {
+	IWorkspaceRoot root = this.currentProject.getWorkspace().getRoot();
+	// required project -> projects directly requiring it
+	Map<IProject, List<IProject>> directDependents = new HashMap<>();
+	for (IProject project : root.getProjects()) {
+		if (!JavaProject.hasJavaNature(project)) {
+			continue;
+		}
+		var jProject = (JavaProject) JavaCore.create(project);
+		try {
+			for (IClasspathEntry entry : jProject.getResolvedClasspath()) {
+				if (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
+					IProject required = root.getProject(entry.getPath().lastSegment());
+					directDependents.computeIfAbsent(required, k -> new ArrayList<>()).add(project);
+				}
+			}
+		} catch (JavaModelException e) {
+			// ignore projects with unresolvable classpath, like cycle detection does
+		}
+	}
+
+	Set<IProject> dependents = new LinkedHashSet<>();
+	Deque<IProject> pending = new ArrayDeque<>();
+	pending.add(this.currentProject);
+	while (!pending.isEmpty()) {
+		IProject required = pending.poll();
+		for (IProject dependent : directDependents.getOrDefault(required, Collections.emptyList())) {
+			if (dependents.add(dependent)) {
+				pending.add(dependent);
+			}
+		}
+	}
+	return dependents;
 }
 
 private void printLocations(ClasspathLocation[] newLocations, ClasspathLocation[] oldLocations) {

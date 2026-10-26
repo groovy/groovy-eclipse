@@ -1117,6 +1117,8 @@ public abstract class Scope {
 	}
 
 	public ClassScope enclosingInstanceScope() {
+		if (this instanceof ClassScope classScope && classScope.referenceContext.isStatic())
+			return null;
 		Scope scope = this;
 		while (true) {
 			scope = scope.parent;
@@ -1745,6 +1747,9 @@ public abstract class Scope {
 		int candidatesCount = 0;
 		MethodBinding problemMethod = null;
 		if (foundSize > 0) {
+			// first eliminate overridden mehods:
+			found = withoutOverriddenMethods(found, verifier);
+			foundSize = found.size;
 			// argument type compatibility check
 			for (int i = 0; i < foundSize; i++) {
 				MethodBinding methodBinding = (MethodBinding) found.elementAt(i);
@@ -1908,6 +1913,40 @@ public abstract class Scope {
 		if (visiblesCount != candidates.length)
 			System.arraycopy(candidates, 0, candidates = new MethodBinding[visiblesCount], 0, visiblesCount);
 		return findDefaultAbstractMethod(receiverType, selector, argumentTypes, invocationSite, classHierarchyStart, found, candidates);
+	}
+
+	private ObjectVector withoutOverriddenMethods(ObjectVector methods, MethodVerifier verifier) {
+		int foundSize = methods.size;
+		boolean[] skip = new boolean[foundSize];
+		boolean changed = false;
+		for (int i = 0; i < foundSize; i++) {
+			if (skip[i]) continue;
+			MethodBinding methodI = (MethodBinding) methods.elementAt(i);
+			for (int j = i+1; j < foundSize; j++) {
+				if (skip[j]) continue;
+				MethodBinding methodJ = (MethodBinding) methods.elementAt(j);
+				if (TypeBinding.notEquals(methodI.declaringClass, methodJ.declaringClass)) {
+					if (methodI.declaringClass.isCompatibleWith(methodJ.declaringClass)
+							&& verifier.doesMethodOverride(methodI, methodJ)) {
+						skip[j] = true;
+						changed = true;
+					} else if (methodJ.declaringClass.isCompatibleWith(methodI.declaringClass)
+							&& verifier.doesMethodOverride(methodJ, methodI)) {
+						skip[i] = true;
+						changed = true;
+					}
+				}
+			}
+		}
+		if (!changed)
+			return methods;
+
+		ObjectVector reduced = new ObjectVector(foundSize);
+		for (int i = 0; i < foundSize; i++) {
+			if (!skip[i])
+				reduced.add(methods.elementAt(i));
+		}
+		return reduced;
 	}
 
 	// Internal use only
@@ -4122,7 +4161,7 @@ public abstract class Scope {
 						// ? super U
 					case Wildcard.SUPER :
 						// ? super U, ? super V
-						if (wildU.boundKind == Wildcard.SUPER) {
+						if (wildV.boundKind == Wildcard.SUPER) {
 							TypeBinding[] glb = greaterLowerBound(new TypeBinding[]{wildU.bound,wildV.bound}, this, this.environment());
 							if (glb == null) return null;
 							return environment().createWildcard(genericType, rank, glb[0], null /*no extra bound*/, Wildcard.SUPER);	// TODO (philippe) need to capture entire bounds

@@ -459,6 +459,7 @@ public static int getIrritant(int problemID) {
 			return CompilerOptions.MissingEnumConstantCase;
 
 		case IProblem.MissingDefaultCase :
+		case IProblem.MissingDefaultCaseWithPatterns :
 		case IProblem.MissingEnumDefaultCase :
 			return CompilerOptions.MissingDefaultCase;
 
@@ -6747,6 +6748,18 @@ public void missingDefaultCase(SwitchStatement switchStatement, boolean isEnumSw
 				switchStatement.expression.sourceStart,
 				switchStatement.expression.sourceEnd);
 	} else {
+		String missingPatterns = missingCasePatterns(switchStatement);
+		if (missingPatterns != null) {
+			// From compliance 27 on we can be more helpful and spell out the patterns that are missing.
+			this.handle(
+					switchStatement instanceof SwitchExpression ?
+							IProblem.SwitchExpressionsYieldMissingDefaultCaseWithPatterns : IProblem.MissingDefaultCaseWithPatterns,
+					new String[] { missingPatterns },
+					new String[] { missingPatterns },
+					switchStatement.expression.sourceStart,
+					switchStatement.expression.sourceEnd);
+			return;
+		}
 		this.handle(
 				switchStatement instanceof SwitchExpression ?
 						IProblem.SwitchExpressionsYieldMissingDefaultCase : IProblem.MissingDefaultCase,
@@ -6755,6 +6768,19 @@ public void missingDefaultCase(SwitchStatement switchStatement, boolean isEnumSw
 				switchStatement.expression.sourceStart,
 				switchStatement.expression.sourceEnd);
 	}
+}
+/**
+ * The comma separated list of case patterns that are missing for {@code switchStatement} to be
+ * exhaustive, or null when they should not (or cannot) be spelled out in the diagnostic. Listing
+ * the missing patterns requires compliance 27 or above.
+ */
+private String missingCasePatterns(SwitchStatement switchStatement) {
+	if (this.options == null || this.options.complianceLevel < ClassFileConstants.JDK27)
+		return null;
+	List<String> patterns = switchStatement.missingCasePatterns;
+	if (patterns == null || patterns.isEmpty())
+		return null;
+	return String.join(", ", patterns); //$NON-NLS-1$
 }
 public void missingOverrideAnnotation(AbstractMethodDeclaration method) {
 	int severity = computeSeverity(IProblem.MissingOverrideAnnotation);
@@ -12364,6 +12390,23 @@ public void enhancedSwitchMissingDefaultCase(ASTNode element) {
 			IProblem.EnhancedSwitchMissingDefault,
 			NoArgument,
 			NoArgument,
+			element.sourceStart,
+			element.sourceEnd);
+}
+/**
+ * As {@link #enhancedSwitchMissingDefaultCase(ASTNode)}, but from compliance 27 on the diagnostic
+ * additionally spells out the case patterns that are missing for exhaustiveness.
+ */
+public void enhancedSwitchMissingDefaultCase(ASTNode element, SwitchStatement switchStatement) {
+	String missingPatterns = missingCasePatterns(switchStatement);
+	if (missingPatterns == null) {
+		enhancedSwitchMissingDefaultCase(element);
+		return;
+	}
+	this.handle(
+			IProblem.EnhancedSwitchMissingDefaultWithPatterns,
+			new String[] { missingPatterns },
+			new String[] { missingPatterns },
 			element.sourceStart,
 			element.sourceEnd);
 }

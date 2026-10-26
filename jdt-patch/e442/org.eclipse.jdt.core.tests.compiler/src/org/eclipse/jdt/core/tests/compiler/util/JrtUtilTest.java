@@ -23,6 +23,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.util.JRTUtil;
+import org.eclipse.jdt.internal.compiler.util.JrtFileSystem;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -72,6 +73,46 @@ public class JrtUtilTest extends TestCase {
 
 		Object jrtSystem3 = JRTUtil.getJrtSystem(this.image, null);
 		assertSame(jrtSystem, jrtSystem3);
+	}
+
+	/**
+	 * The JRT file system of a JDK and the file system used for an older release of the same JDK must not share the
+	 * entries of the class file cache, whichever is asked first.
+	 */
+	@Test
+	public void testClassCacheNotSharedWithOlderRelease() throws Exception {
+		int majorVersionSegment = getMajorVersionSegment(this.jdkRelease);
+		String olderRelease = String.valueOf(majorVersionSegment - 2);
+		try {
+			JRTUtil.reset();
+			JrtFileSystem olderSystem = JRTUtil.getJrtSystem(this.image, olderRelease);
+			JrtFileSystem system = JRTUtil.getJrtSystem(this.image, null);
+			assertNotSame(system, olderSystem);
+
+			byte[] olderContent = getObjectClassContent(olderSystem);
+			byte[] content = getObjectClassContent(system);
+			assertNotNull("Lookup with an older release must not hide the class of the JDK", content);
+			assertNotSame("Older release must not answer the class of the JDK", content, olderContent);
+
+			JRTUtil.reset();
+			olderSystem = JRTUtil.getJrtSystem(this.image, olderRelease);
+			system = JRTUtil.getJrtSystem(this.image, null);
+			content = getObjectClassContent(system);
+			assertNotNull(content);
+			assertNotSame("Older release must not answer the class of the JDK", content, getObjectClassContent(olderSystem));
+			assertSame("Class of the JDK must still be answered from the cache", content, getObjectClassContent(system));
+		} finally {
+			JRTUtil.reset();
+		}
+	}
+
+	private static byte[] getObjectClassContent(JrtFileSystem system) throws IOException {
+		try {
+			return JRTUtil.getClassfileContent(system, "java/lang/Object.class", "java.base");
+		} catch (NullPointerException e) {
+			// the system of an older release has no file system if the release is not found in ct.sym
+			return null;
+		}
 	}
 
 	@Test

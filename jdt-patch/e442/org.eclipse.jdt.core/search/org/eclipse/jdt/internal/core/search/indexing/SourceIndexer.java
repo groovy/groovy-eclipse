@@ -25,44 +25,23 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.search.SearchDocument;
-import org.eclipse.jdt.internal.compiler.CompilationResult;
-import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FunctionalExpression;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
-import org.eclipse.jdt.internal.compiler.env.IBinaryType;
-import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
-import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
-import org.eclipse.jdt.internal.compiler.env.ISourceType;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.compiler.impl.ITypeRequestor;
-import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
-import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
-import org.eclipse.jdt.internal.compiler.parser.Parser;
-import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
-import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.JavaModel;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.JavaProject;
-import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
 import org.eclipse.jdt.internal.core.jdom.CompilationUnit;
 import org.eclipse.jdt.internal.core.search.JavaSearchDocument;
-import org.eclipse.jdt.internal.core.search.matching.JavaSearchNameEnvironment;
 import org.eclipse.jdt.internal.core.search.matching.MethodPattern;
 import org.eclipse.jdt.internal.core.search.processing.JobManager;
 
@@ -80,12 +59,11 @@ import org.eclipse.jdt.internal.core.search.processing.JobManager;
  * - Types;<br>
  * - Constructors.
  */
-public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, SuffixConstants {
+public class SourceIndexer extends AbstractIndexer implements SuffixConstants {
 
-	private LookupEnvironment lookupEnvironment;
-	private CompilerOptions options;
+	/** The environment that resolved the document, until it is given back, see {@link #releaseResolvedDocument()} */
+	private SourceIndexerEnvironment environment;
 	public ISourceElementRequestor requestor;
-	private Parser basicParser;
 	private CompilationUnit compilationUnit;
 	private CompilationUnitDeclaration cud;
 	private org.eclipse.jdt.core.dom.ASTNode dom;
@@ -141,30 +119,6 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 		}
 	}
 
-	@Override
-	public void accept(IBinaryType binaryType, PackageBinding packageBinding, AccessRestriction accessRestriction) {
-		this.lookupEnvironment.createBinaryTypeFrom(binaryType, packageBinding, accessRestriction);
-	}
-
-	@Override
-	public void accept(ICompilationUnit unit, AccessRestriction accessRestriction) {
-		CompilationResult unitResult = new CompilationResult(unit, 1, 1, this.options.maxProblemsPerUnit);
-		CompilationUnitDeclaration parsedUnit = this.basicParser.dietParse(unit, unitResult);
-		this.lookupEnvironment.buildTypeBindings(parsedUnit, accessRestriction);
-		this.lookupEnvironment.completeTypeBindings(parsedUnit, true);
-	}
-
-	@Override
-	public void accept(ISourceType[] sourceTypes, PackageBinding packageBinding, AccessRestriction accessRestriction) {
-		ISourceType sourceType = sourceTypes[0];
-		while (sourceType.getEnclosingType() != null)
-			sourceType = sourceType.getEnclosingType();
-		SourceTypeElementInfo elementInfo = (SourceTypeElementInfo) sourceType;
-		IType type = elementInfo.getHandle();
-		ICompilationUnit sourceUnit = (ICompilationUnit) type.getCompilationUnit();
-		accept(sourceUnit, accessRestriction);
-	}
-
 	public void resolveDocument() {
 		if (usedDomBasedIndexing() && this.dom != null && getUnit() instanceof org.eclipse.jdt.internal.core.CompilationUnit unit) {
 			resolveDocumentDomImpl(unit);
@@ -175,26 +129,10 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 				JavaModel model = JavaModelManager.getJavaModelManager().getJavaModel();
 				JavaProject javaProject = (JavaProject) model.getJavaProject(project);
 
-				this.options = new CompilerOptions(javaProject.getOptions(true));
-				ProblemReporter problemReporter =
-						new ProblemReporter(
-								DefaultErrorHandlingPolicies.proceedWithAllProblems(),
-								this.options,
-								new DefaultProblemFactory());
-
-				// Re-parse using normal parser, IndexingParser swallows several nodes, see comment above class.
-				this.basicParser = new Parser(problemReporter, false);
-				this.basicParser.reportOnlyOneSyntaxError = true;
-				this.basicParser.scanner.taskTags = null;
-				this.cud = this.basicParser.parse(this.compilationUnit, new CompilationResult(this.compilationUnit, 0, 0, this.options.maxProblemsPerUnit));
-				// Use a non model name environment to avoid locks, monitors and such.
-				INameEnvironment nameEnvironment = new JavaSearchNameEnvironment(javaProject, JavaModelManager.getJavaModelManager().getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY, true/*add primary WCs*/));
-				this.lookupEnvironment = new LookupEnvironment(this, this.options, problemReporter, nameEnvironment);
-				reduceParseTree(this.cud);
-				this.lookupEnvironment.buildTypeBindings(this.cud, null);
-				this.lookupEnvironment.completeTypeBindings();
-				this.cud.scope.faultInTypes();
-				this.cud.resolve();
+				IndexManager manager = JavaModelManager.getIndexManager();
+				SourceIndexerEnvironment acquired = manager.acquireSourceIndexerEnvironment(javaProject);
+				this.environment = acquired;
+				this.cud = acquired.resolve(this.compilationUnit);
 			} catch (Exception e) {
 				if (JobManager.VERBOSE) {
 					trace("", e); //$NON-NLS-1$
@@ -288,38 +226,6 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 		});
 		return domParam.toString();
 	}
-	/**
-	 * Called prior to the unit being resolved. Reduce the parse tree where possible.
-	 */
-	private void reduceParseTree(CompilationUnitDeclaration unit) {
-		// remove statements from methods that have no functional interface types.
-		TypeDeclaration[] types = unit.types;
-		for (int i = 0, l = types == null ? 0 : types.length; i < l; i++)
-			purgeMethodStatements(types[i]);
-	}
-
-	private void purgeMethodStatements(TypeDeclaration type) {
-		AbstractMethodDeclaration[] methods = type.methods;
-		for (int j = 0, length = methods == null ? 0 : methods.length; j < length; j++) {
-			AbstractMethodDeclaration method = methods[j];
-			/*
-			 * In case the method defines a local type, skip purging the method body.
-			 * We don't know if the local type defines a method that uses a method reference or a lambda.
-			 * See:
-			 *   https://github.com/eclipse-jdt/eclipse.jdt.core/issues/432
-			 *   https://bugs.eclipse.org/bugs/show_bug.cgi?id=566435
-			 */
-			if (method != null && (method.bits & (ASTNode.HasFunctionalInterfaceTypes | ASTNode.HasLocalType)) == 0) {
-				method.statements = null;
-				method.javadoc = null;
-			}
-		}
-
-		TypeDeclaration[] memberTypes = type.memberTypes;
-		if (memberTypes != null)
-			for (TypeDeclaration memberType : memberTypes)
-				purgeMethodStatements(memberType);
-	}
 
 	@Override
 	public void indexResolvedDocument() {
@@ -385,6 +291,22 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 		} catch (Exception e) {
 			if (JobManager.VERBOSE) {
 				trace("", e); //$NON-NLS-1$
+			}
+		}
+	}
+
+	/**
+	 * Gives back to the index manager what {@link #resolveDocument()} took from it and keeps for
+	 * {@link #indexResolvedDocument()}: to be called once the resolved document is indexed, or if it is not to be.
+	 */
+	public void releaseResolvedDocument() {
+		this.cud = null;
+		SourceIndexerEnvironment acquired = this.environment;
+		if (acquired != null) {
+			this.environment = null;
+			IndexManager manager = JavaModelManager.getIndexManager();
+			if (manager != null) {
+				manager.releaseSourceIndexerEnvironment(acquired);
 			}
 		}
 	}

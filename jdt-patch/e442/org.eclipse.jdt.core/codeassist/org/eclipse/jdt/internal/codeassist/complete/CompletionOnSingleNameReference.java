@@ -34,6 +34,7 @@ package org.eclipse.jdt.internal.codeassist.complete;
  * which should be replaced by the completion.
  */
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
+import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemBinding;
@@ -76,6 +77,8 @@ public class CompletionOnSingleNameReference extends SingleNameReference impleme
 		}
 		return exception.throwOrDeferAndReturn(() -> {
 			// probably not in the position to do useful resolution, just provide some bindings
+			// but perform minimal setup so downstream resolving doesn't throw exceptions:
+			this.constant = Constant.NotAConstant;
 			char[][] compoundName = new char[][] { this.token };
 			this.binding = new ProblemBinding(compoundName, ProblemReasons.NotFound);
 			return new ProblemReferenceBinding(compoundName, null, ProblemReasons.NotFound);

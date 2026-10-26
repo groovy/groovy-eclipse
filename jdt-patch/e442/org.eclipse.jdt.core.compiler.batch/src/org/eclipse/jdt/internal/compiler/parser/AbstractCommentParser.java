@@ -344,7 +344,8 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 							if (isFormatterParser && !ScannerHelper.isWhitespace(previousChar)) {
 								textEndPosition = previousPosition;
 							}
-							if (this.textStart != -1 && this.textStart < textEndPosition) {
+							if (this.textStart != -1 && this.textStart < textEndPosition
+									&& !(this.markdown && isAllWhitespace(this.textStart, textEndPosition))) {
 								pushText(annotationAtSymbolHandling ? this.textStart - 1 : this.textStart, textEndPosition);
 							}
 						}
@@ -2007,6 +2008,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 		boolean valid = true;
 		boolean markdownSnippetIsValid = false;
 		int closingBracePosition = -1;
+		int openBraces = 0;
 		if (!parsingJava23Plus) {
 			throw Scanner.invalidInput();
 		}
@@ -2048,6 +2050,8 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 					break;
 				}
 				boolean closingBraceFound = false;
+				// state[0] = openBraces, state[1] = closingBracePosition
+				int[] state = { openBraces, closingBracePosition };
 				switch (token) {
 					case TokenNameCOMMENT_LINE:
 						// JavadocParser path: each "/// ..." line is a separate COMMENT_LINE token.
@@ -2065,19 +2069,10 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 								else break;
 							}
 							lineContent = lineContent.substring(0, lineContentEnd);
-							if (lineContent.stripLeading().startsWith("}")) { //$NON-NLS-1$
-								markdownSnippetIsValid = true;
-								// Record the position of '}' so commentParse() can see it
-								int tokenStart = this.scanner.getCurrentTokenStartPosition();
-								closingBracePosition = tokenStart + slashPos + 3
-										+ lineContent.indexOf('}');
-								closingBraceFound = true;
-								break;
-							}
-							markdownSnippetIsValid = true;
 							int contentStart = this.scanner.getCurrentTokenStartPosition() + slashPos + 3;
 							int contentEnd = contentStart + lineContentEnd;
-							processMarkdownSnippetLine(lineContent, contentStart, contentEnd, snippetTag);
+							closingBraceFound = processSnippetLine(lineContent, contentStart, contentEnd, snippetTag, state);
+							markdownSnippetIsValid = true;
 						} catch (Exception e) {
 							markdownSnippetIsValid = false;
 						}
@@ -2104,19 +2099,13 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 									continue;
 								}
 								String lineContent = rawLine.substring(slashPos + 3);
-								if (lineContent.stripLeading().startsWith("}")) { //$NON-NLS-1$
-									markdownSnippetIsValid = true;
-									// Record the position of '}' so commentParse() can see it
-									closingBracePosition = lineStart + slashPos + 3
-											+ lineContent.indexOf('}');
-									closingBraceFound = true;
+								int contentStart = lineStart + slashPos + 3;
+								int contentEnd = lineStart + rawLine.length();
+								closingBraceFound = processSnippetLine(lineContent, contentStart, contentEnd, snippetTag, state);
+								markdownSnippetIsValid = true;
+								if (closingBraceFound) {
 									break;
 								}
-								markdownSnippetIsValid = true;
-								processMarkdownSnippetLine(lineContent,
-										lineStart + slashPos + 3,
-										lineStart + rawLine.length(),
-										snippetTag);
 							}
 						} catch (Exception e) {
 							markdownSnippetIsValid = false;
@@ -2126,10 +2115,19 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 					default:
 						break;
 				}
+				openBraces = state[0];
+				closingBracePosition = state[1];
 				consumeToken();
 				if (closingBraceFound) {
 					break;
 				}
+			}
+			if (closingBracePosition < 0) {
+				markdownSnippetIsValid = false;
+				if (this.reportProblems) {
+					this.sourceParser.problemReporter().javadocInvalidSnippet(this.index, this.lineEnd);
+				}
+
 			}
 		} finally {
 			if (!areRegionsClosed()) {
@@ -2214,6 +2212,42 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 				break;
 		}
 		return filePath;
+	}
+
+	private boolean processSnippetLine(String lineContent, int contentStart, int contentEnd,
+			Object snippetTag, int[] state) {
+		int closeIdx = findSnippetClosingBrace(lineContent, state[0]);
+		if (closeIdx >= 0) {
+			// If there is non-blank content before the closing '}', it is still part of the snippet.
+			String beforeBrace = lineContent.substring(0, closeIdx);
+			if (!beforeBrace.isBlank()) {
+				processMarkdownSnippetLine(beforeBrace, contentStart, contentStart + closeIdx, snippetTag);
+			}
+			// Record the absolute position of '}' so commentParse() can close the inline tag naturally.
+			state[1] = contentStart + closeIdx;
+			return true;
+		}
+		state[0] = updateBraceDepth(state[0], lineContent);
+		processMarkdownSnippetLine(lineContent, contentStart, contentEnd, snippetTag);
+		return false;
+	}
+
+	private static int findSnippetClosingBrace(String line, int depth) {
+		for (int i = 0; i < line.length(); i++) {
+			char ch = line.charAt(i);
+			if (ch == '{') depth++;
+			else if (ch == '}' && --depth < 0) return i;
+		}
+		return -1;
+	}
+
+	private static int updateBraceDepth(int depth, String line) {
+	    for (int i = 0; i < line.length(); i++) {
+	        char ch = line.charAt(i);
+	        if (ch == '{') depth++;
+	        else if (ch == '}') depth--;
+	    }
+	    return depth;
 	}
 
 	private boolean readFileWithRegions(int start, String regionName, Path filePath, Object snippetTag) throws IOException {
@@ -3358,6 +3392,15 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 			typeRef = reference;
 		}
 		return typeRef;
+	}
+
+	private boolean isAllWhitespace(int start, int end) {
+		for (int i = start; i < end; i++) {
+			if (!ScannerHelper.isWhitespace(this.source[i])) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private boolean containsNewLine(String str) {

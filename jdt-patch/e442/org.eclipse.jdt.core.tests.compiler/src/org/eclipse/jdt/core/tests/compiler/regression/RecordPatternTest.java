@@ -41,6 +41,11 @@ public class RecordPatternTest extends AbstractRegressionTest9 {
 	public RecordPatternTest(String testName){
 		super(testName);
 	}
+
+	// NOTE: getCompilerOptions() below pins compliance/source/target to 21 for this whole class,
+	// so the exhaustiveness diagnostics never spell out the missing case patterns here (that part
+	// of the message requires compliance 27). See SwitchPatternTest for those.
+
 	// Enables the tests to run individually
 	protected Map<String, String> getCompilerOptions(boolean preview) {
 		Map<String, String> defaultOptions = super.getCompilerOptions();

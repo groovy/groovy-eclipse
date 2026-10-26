@@ -99,6 +99,11 @@ public class RecordPattern extends Pattern {
 	}
 
 	@Override
+	public boolean nestsPattern() {
+		return this.patterns.length > 0;
+	}
+
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 
 		this.constant = Constant.NotAConstant;

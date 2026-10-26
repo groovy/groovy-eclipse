@@ -108,11 +108,29 @@ public class JavaSearchParticipant extends SearchParticipant implements IParalle
 		if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(documentPath)) {
 			SourceIndexer indexer = this.sourceIndexer;
 			if (indexer != null) {
-				indexer.indexResolvedDocument();
-				// Cleanup reference, it is not more needed by the IndexManager
-				// See org.eclipse.jdt.internal.core.search.indexing.IndexManager.scheduleDocumentIndexing()
-				this.sourceIndexer = null;
+				try {
+					indexer.indexResolvedDocument();
+				} finally {
+					// Cleanup reference, it is not more needed by the IndexManager
+					// See org.eclipse.jdt.internal.core.search.indexing.IndexManager.scheduleDocumentIndexing()
+					discardResolvedDocument();
+				}
 			}
+		}
+	}
+
+	/**
+	 * Gives back what {@link #resolveDocument(SearchDocument)} keeps for
+	 * {@link #indexResolvedDocument(SearchDocument, IPath)}, such as the environment that resolved the document, which
+	 * the index manager then reuses. The latter gives it back once the document is indexed: to be called after a
+	 * document was resolved in case it is then not indexed, because its index was deleted meanwhile or something
+	 * failed. Does nothing if nothing is kept.
+	 */
+	public void discardResolvedDocument() {
+		SourceIndexer indexer = this.sourceIndexer;
+		if (indexer != null) {
+			this.sourceIndexer = null;
+			indexer.releaseResolvedDocument();
 		}
 	}
 

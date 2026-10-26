@@ -853,7 +853,7 @@ public abstract class Annotation extends Expression {
 					}
 				} else {
 					Constant cst = value.constant;
-					if (cst != Constant.NotAConstant && cst.typeID() == T_JavaLangString) {
+					if (cst != null && cst != Constant.NotAConstant && cst.typeID() == T_JavaLangString) {
 						IrritantSet irritants = CompilerOptions.warningTokenToIrritants(cst.stringValue());
 						if (irritants != null) {
 							suppressWarningIrritants = new IrritantSet(irritants);

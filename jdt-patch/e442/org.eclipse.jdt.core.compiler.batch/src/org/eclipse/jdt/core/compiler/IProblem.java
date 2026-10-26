@@ -2897,4 +2897,25 @@ void setSourceStart(int sourceStart);
 
 	/** @since 3.45 */
 	int CyclicStructureNonNullByDefault = Internal + 2104;
+
+	/**
+	 * Variant of {@link #EnhancedSwitchMissingDefault} that additionally lists the record patterns
+	 * which are missing for the switch to be exhaustive. Reported from compliance 27 onwards.
+	 * @since 3.47
+	 */
+	int EnhancedSwitchMissingDefaultWithPatterns = PreviewRelated + 2105;
+
+	/**
+	 * Variant of {@link #MissingDefaultCase} that additionally lists the record patterns which are
+	 * missing for the switch to be exhaustive. Reported from compliance 27 onwards.
+	 * @since 3.47
+	 */
+	int MissingDefaultCaseWithPatterns = Internal + 2106;
+
+	/**
+	 * Variant of {@link #SwitchExpressionsYieldMissingDefaultCase} that additionally lists the record
+	 * patterns which are missing for the switch to be exhaustive. Reported from compliance 27 onwards.
+	 * @since 3.47
+	 */
+	int SwitchExpressionsYieldMissingDefaultCaseWithPatterns = Syntax + 2107;
 }

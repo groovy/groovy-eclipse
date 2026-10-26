@@ -1424,6 +1424,9 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				this.javadocCache = new LRUCache<>(JAVADOC_CACHE_INITIAL_SIZE);
 			}
 
+			// e.g. entries only reordered, which no request to index follows
+			sourceEnvironmentChanged();
+
 			return classpathChange;
 		}
 
@@ -2222,6 +2225,18 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 	public static IndexManager getIndexManager() {
 		return MANAGER.indexManager;
+	}
+
+	/**
+	 * Tells the index manager that the sources it resolves to index them may resolve differently from now on, see
+	 * {@link IndexManager#sourceEnvironmentChanged()}. To be called once the change is done: once a classpath is set,
+	 * a buffer has changed, a working copy was reconciled, or the Java model was updated after a resource change.
+	 */
+	public static void sourceEnvironmentChanged() {
+		IndexManager indexManager = MANAGER.indexManager;
+		if (indexManager != null) {
+			indexManager.sourceEnvironmentChanged();
+		}
 	}
 
 	/**

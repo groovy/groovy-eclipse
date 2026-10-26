@@ -1277,6 +1277,8 @@ public org.eclipse.jdt.core.dom.CompilationUnit makeConsistent(int astLevel, boo
 		}
 	} finally {
 		JavaModelManager.getJavaModelManager().abortOnMissingSource.remove();
+		// a working copy is found by the package that its structure declares
+		JavaModelManager.sourceEnvironmentChanged();
 	}
 }
 /**

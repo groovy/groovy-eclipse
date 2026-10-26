@@ -20482,4 +20482,152 @@ public void testGH5340() throws Exception {
 		getCompilerOptions(),
 		"");
 }
+public void testIssue5391() throws Exception {
+	runConformTestWithLibs(new String[] {
+			"Repro.java",
+			"""
+			import java.util.ArrayList;
+			import java.util.List;
+
+			public class Repro<T> {
+				class Node {}
+
+				void m(Node start) {
+					List<Node> list = new ArrayList<>();
+					list.add(start);
+				}
+			}
+			"""
+		},
+		getCompilerOptions(),
+		"");
+}
+public void testIssue5391a() throws Exception {
+	runConformTestWithLibs(new String[] {
+			"Repro.java",
+			"""
+			import java.util.List;
+			import org.eclipse.jdt.annotation.*;
+
+			interface MyList<X> extends List<X> {
+				@Override
+				boolean add(@Nullable X x);
+			}
+			public class Repro<T> {
+				class Node {}
+
+				void m(Node start, MyList<Node> list) {
+					list.add(start);
+				}
+			}
+			"""
+		},
+		getCompilerOptions(),
+		"");
+}
+public void testIssue5387_orig() throws Exception {
+	runConformTestWithLibs(new String[] {
+			"Repro.java",
+			"""
+			interface JavaxQuery {}
+			interface TypedQuery<X> extends JavaxQuery {}
+			interface HibernateQuery<S>  extends TypedQuery<S>{}
+			interface QueryProducer {
+				<R> HibernateQuery<R> createNamedQuery(String name, Class<R> resultClass);
+			}
+			interface EntityManager {
+			    <T> TypedQuery<T> createNamedQuery(String name, Class<T> resultClass);
+			}
+			interface HibernateEntityManager extends EntityManager, QueryProducer {}
+
+			interface Session extends EntityManager, HibernateEntityManager {
+				<T> HibernateQuery<T> createNamedQuery(String name, Class<T> resultType);
+			}
+			public class Repro {
+			    void test(Session session) {
+			        HibernateQuery<Object[]> query = session.createNamedQuery("x", Object[].class);
+			    }
+			}
+			"""
+		},
+		getCompilerOptions(),
+		"");
+}
+public void testIssue5387_tweaked() throws Exception {
+	// + avoid inference problem regarding different return types
+	// + add problematic null annotation so that weakerTypes() has annotations to merge
+	runNegativeTestWithLibs(new String[] {
+			"Repro.java",
+			"""
+			import org.eclipse.jdt.annotation.*;
+			interface JavaxQuery {}
+			interface TypedQuery<X> extends JavaxQuery {}
+			interface HibernateQuery<S>  extends TypedQuery<S>{}
+			interface QueryProducer {
+				<R> HibernateQuery<R> createNamedQuery(String name, Class<R> resultClass);
+			}
+			interface EntityManager {
+			    <T> HibernateQuery<T> createNamedQuery(String name, Class<@Nullable T> resultClass);
+			}
+			interface I2 {
+				<T> HibernateQuery<T> createNamedQuery(String name, Class<T> resultType);
+			}
+			interface Session extends EntityManager, I2 {
+			}
+			public class Repro {
+			    void test(Session session) {
+			        HibernateQuery<Object[]> query = session.createNamedQuery("x", Object[].class);
+			    }
+			}
+			"""
+		},
+		getCompilerOptions(),
+		"""
+		----------
+		1. INFO in Repro.java (at line 18)
+			HibernateQuery<Object[]> query = session.createNamedQuery("x", Object[].class);
+			                                                               ^^^^^^^^^^^^^^
+		Unsafe null type conversion (type annotations): The value of type 'Class<Object @NonNull[]>' is made accessible using the less-annotated type 'Class<Object @NonNull[]>'
+		----------
+		""");
+}
+public void testIssue5387_tweaked2() throws Exception {
+	// + avoid inference problem regarding different return types
+	// + add problematic null annotation so that weakerTypes() has annotations to merge
+	// + one more array dimension
+	runNegativeTestWithLibs(new String[] {
+			"Repro.java",
+			"""
+			import org.eclipse.jdt.annotation.*;
+			interface JavaxQuery {}
+			interface TypedQuery<X> extends JavaxQuery {}
+			interface HibernateQuery<S>  extends TypedQuery<S>{}
+			interface QueryProducer {
+				<R> HibernateQuery<R> createNamedQuery(String name, Class<R> resultClass);
+			}
+			interface EntityManager {
+			    <T> HibernateQuery<T> createNamedQuery(String name, Class<@Nullable T> resultClass);
+			}
+			interface I2 {
+				<T> HibernateQuery<T> createNamedQuery(String name, Class<T> resultType);
+			}
+			interface Session extends EntityManager, I2 {
+			}
+			public class Repro {
+			    void test(Session session, Class<Object[]@NonNull[]> clazz) {
+			        HibernateQuery<Object[][]> query = session.createNamedQuery("x", clazz);
+			    }
+			}
+			"""
+		},
+		getCompilerOptions(),
+		"""
+		----------
+		1. WARNING in Repro.java (at line 18)
+			HibernateQuery<Object[][]> query = session.createNamedQuery("x", clazz);
+			                                                                 ^^^^^
+		Null type safety (type annotations): The expression of type 'Class<Object [] @NonNull[]>' needs unchecked conversion to conform to 'Class<Object @Nullable[] @NonNull[]>'
+		----------
+		""");
+}
 }

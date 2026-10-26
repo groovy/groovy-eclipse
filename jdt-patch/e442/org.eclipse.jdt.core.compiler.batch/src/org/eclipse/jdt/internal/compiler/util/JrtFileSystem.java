@@ -16,6 +16,7 @@ package org.eclipse.jdt.internal.compiler.util;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileVisitResult;
@@ -181,24 +182,31 @@ public class JrtFileSystem {
 	}
 
 	private byte[] getFileBytes(String fileName, String module) throws IOException {
-		Path path = this.fs.getPath(JRTUtil.MODULES_SUBDIR, module, fileName);
 		if(JRTUtil.DISABLE_CACHE) {
-			return JRTUtil.safeReadBytes(path);
+			return JRTUtil.safeReadBytes(this.fs.getPath(JRTUtil.MODULES_SUBDIR, module, fileName));
 		} else {
-			return JRTUtil.classCache.getClassBytes(this.jdk, path);
+			return JRTUtil.classCache.getClassBytes(this.fs, this.jdk.path, module, fileName).getBytes();
 		}
 	}
 
 	ClassFileReader getClassfileFromModule(String fileName, String module) throws IOException, ClassFormatException {
-		Path path = this.fs.getPath(JRTUtil.MODULES_SUBDIR, module, fileName);
+		URI uri = null;
 		byte[] content = null;
 		if(JRTUtil.DISABLE_CACHE) {
+			Path path = this.fs.getPath(JRTUtil.MODULES_SUBDIR, module, fileName);
 			content = JRTUtil.safeReadBytes(path);
+			if (content != null) {
+				uri = path.toUri();
+			}
 		} else {
-			content = JRTUtil.classCache.getClassBytes(this.jdk, path);
+			SoftClassCache.ClassBytes classBytes = JRTUtil.classCache.getClassBytes(this.fs, this.jdk.path, module, fileName);
+			content = classBytes.getBytes();
+			if (content != null) {
+				uri = classBytes.getUri();
+			}
 		}
 		if (content != null) {
-			ClassFileReader reader = new ClassFileReader(path.toUri(), content, fileName.toCharArray());
+			ClassFileReader reader = new ClassFileReader(uri, content, fileName.toCharArray());
 			reader.moduleName = module.toCharArray();
 			return reader;
 		} else {

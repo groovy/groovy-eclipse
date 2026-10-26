@@ -2100,6 +2100,8 @@ public class DeltaProcessor {
 				if (isAffectedBy(delta) // avoid populating for SYNC or MARKER deltas
 						|| elementsToRefresh != null) {
 					try {
+						// whether the change may matter to the sources that are resolved to index them
+						boolean javaChange = true;
 						try {
 							stopDeltas();
 							checkProjectsAndClasspathChanges(delta);
@@ -2147,9 +2149,16 @@ public class DeltaProcessor {
 							if (translatedDelta != null) {
 								registerJavaModelDelta(translatedDelta);
 							}
+							// no Java delta, e.g. for what a builder writes in an output folder, unless the Java model
+							// could not be opened to tell
+							javaChange = translatedDelta != null || !this.manager.getJavaModel().isOpen();
 						} finally {
 							this.sourceElementParserCache = null; // don't hold onto parser longer than necessary
 							startDeltas();
+							if (javaChange) {
+								// e.g. a project closed, which no request to index follows
+								JavaModelManager.sourceEnvironmentChanged();
+							}
 						}
 						notifyAndFire(null);
 					} finally {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -2842,6 +2842,16 @@ public void test069() {
 		"	interface B extends A { X<? extends A> foo(); }\n" +
 		"	                        ^^^^^^^^^^^^^^\n" +
 		"The return type is incompatible with A.foo()\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 7)\n" +
+		"	X<? extends B> c_b = c.foo();\n" +
+		"	                     ^^^^^^^\n" +
+		"Type mismatch: cannot convert from X<capture#1-of ? extends A> to X<? extends B>\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 8)\n" +
+		"	X<? extends B> d_b = d.foo();\n" +
+		"	                     ^^^^^^^\n" +
+		"Type mismatch: cannot convert from X<capture#2-of ? extends A> to X<? extends B>\n" +
 		"----------\n"
 	);
 }

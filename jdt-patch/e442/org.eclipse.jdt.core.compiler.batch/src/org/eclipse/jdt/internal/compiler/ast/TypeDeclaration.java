@@ -923,6 +923,13 @@ public final static int kind(int flags) {
 public boolean isRecord() {
 	return (this.modifiers & ExtraCompilerModifiers.AccRecord) != 0;
 }
+
+public boolean isStatic () {
+	if (this.binding != null)
+		return this.binding.isStatic();
+	return (this.modifiers & ClassFileConstants.AccStatic) != 0;
+}
+
 public boolean isImplicitType() {
 	return false;
 }

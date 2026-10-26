@@ -15,6 +15,8 @@ package org.eclipse.jdt.internal.compiler.util;
 
 import java.io.IOException;
 import java.lang.ref.SoftReference;
+import java.net.URI;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -22,46 +24,97 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Implements a soft cache for reading class files from disk, as these caches can grow quite large but data can be
  * recovered afterwards we only hold a soft reference to the bytes itself.
+ * <p>
+ * Entries are keyed by file system, module and file name rather than by {@link Path}, so that a lookup answered from
+ * the cache does not have to create a path in the file system first.
  */
 class SoftClassCache {
 
-	private final ConcurrentMap<Path, JdkClasses> jdks = new ConcurrentHashMap<>();
+	private final ConcurrentMap<FileSystem, FileSystemClasses> fileSystems = new ConcurrentHashMap<>();
 
 	void clear() {
-		this.jdks.clear();
+		this.fileSystems.clear();
 	}
 
-	public byte[] getClassBytes(Jdk jdk, Path path) throws IOException {
-		return this.jdks.computeIfAbsent(jdk.path, JdkClasses::new).get(path);
+	/**
+	 * Answers the cache entry for the given class file of the given module in the given file system.
+	 * <p>
+	 * Entries are grouped by file system and not by JDK home: the JRT file system of a JDK and the file system of its
+	 * <code>ct.sym</code> (used with <code>--release</code>) must not share entries.
+	 *
+	 * @param fs
+	 *            the file system the class file is read from, must not be <code>null</code>
+	 * @param jdkPath
+	 *            the home of the JDK the file system belongs to, only used to describe the cache
+	 * @param module
+	 *            the name of the module
+	 * @param fileName
+	 *            the name of the class file relative to the module root, like {@code java/lang/Object.class}
+	 * @return the cache entry, never <code>null</code>
+	 */
+	ClassBytes getClassBytes(FileSystem fs, Path jdkPath, String module, String fileName) {
+		// get() first: computeIfAbsent() may lock even if the key is present
+		FileSystemClasses classes = this.fileSystems.get(fs);
+		if (classes == null) {
+			classes = this.fileSystems.computeIfAbsent(fs, f -> new FileSystemClasses(f, jdkPath));
+		}
+		return classes.get(module, fileName);
 	}
 
-	private static final class JdkClasses {
-		private final ConcurrentMap<Path, ClassBytes> classes = new ConcurrentHashMap<>(10007);
+	private static final class FileSystemClasses {
+		private final ConcurrentMap<String, ConcurrentMap<String, ClassBytes>> modules = new ConcurrentHashMap<>();
+		private final FileSystem fs;
 		private final Path jdkPath;
 
-		public JdkClasses(Path jdkPath) {
+		public FileSystemClasses(FileSystem fs, Path jdkPath) {
+			this.fs = fs;
 			this.jdkPath = jdkPath;
 		}
 
-		public byte[] get(Path path) throws IOException {
-			return this.classes.computeIfAbsent(path, ClassBytes::new).getBytes();
+		public ClassBytes get(String module, String fileName) {
+			ConcurrentMap<String, ClassBytes> classes = this.modules.get(module);
+			if (classes == null) {
+				classes = this.modules.computeIfAbsent(module, m -> new ConcurrentHashMap<>());
+			}
+			ClassBytes classBytes = classes.get(fileName);
+			if (classBytes == null) {
+				// a new entry is read right away, so its path is needed anyway
+				classBytes = classes.computeIfAbsent(fileName,
+						f -> new ClassBytes(this.fs.getPath(JRTUtil.MODULES_SUBDIR, module, f)));
+			}
+			return classBytes;
 		}
 
 		@Override
 		public String toString() {
-			return "Class Cache for " + this.jdkPath; //$NON-NLS-1$
+			return "Class Cache for " + this.jdkPath + " (" + this.fs + ")"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 	}
 
-	private static final class ClassBytes {
+	static final class ClassBytes {
 		private final Path path;
+		private volatile URI uri;
 		private volatile boolean empty;
 		private volatile SoftReference<byte[]> bytes;
 
-		public ClassBytes(Path path) {
+		ClassBytes(Path path) {
 			this.path = path;
 		}
 
+		/**
+		 * @return the URI of the class file, created on first use
+		 */
+		public URI getUri() {
+			URI u = this.uri;
+			if (u == null) {
+				this.uri = u = this.path.toUri();
+			}
+			return u;
+		}
+
+		/**
+		 * @return the content of the class file, or <code>null</code> if it does not exist
+		 */
 		public byte[] getBytes() throws IOException {
 			if (this.empty) {
 				return null;

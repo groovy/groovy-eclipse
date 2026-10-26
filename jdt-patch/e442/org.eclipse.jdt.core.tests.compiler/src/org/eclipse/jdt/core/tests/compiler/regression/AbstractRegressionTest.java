@@ -601,7 +601,7 @@ static class JavacCompiler {
 					return 0000;
 				case "26.0.1":
 					return 0100;
-				case "26.0.2":
+				case "26.0.2", "26.0.2.1":
 					return 0200;
 			}
 		}

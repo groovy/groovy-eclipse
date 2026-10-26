@@ -53,9 +53,9 @@ class BoundSet {
 	 * These are internally stored in three sets, one for each of the relations.
 	 */
 	private static class ThreeSets {
-		Set<TypeBound> superBounds;
+		Set<TypeBound> lowerBounds;
 		Set<TypeBound> sameBounds;
-		Set<TypeBound> subBounds;
+		Set<TypeBound> upperBounds;
 		TypeBinding	instantiation;
 		Set<InferenceVariable> dependencies;
 		public ThreeSets() {
@@ -75,25 +75,25 @@ class BoundSet {
 		}
 		private boolean addBound1(TypeBound bound) {
 			switch (bound.relation) {
-				case ReductionResult.SUPERTYPE:
-					if (this.superBounds == null) this.superBounds = new LinkedHashSet<>();
-					return this.superBounds.add(bound);
+				case ReductionResult.SUPERTYPE: // α :> T defines a lower bound for α
+					if (this.lowerBounds == null) this.lowerBounds = new LinkedHashSet<>();
+					return this.lowerBounds.add(bound);
 				case ReductionResult.SAME:
 					if (this.sameBounds == null) this.sameBounds = new LinkedHashSet<>();
 					return this.sameBounds.add(bound);
-				case ReductionResult.SUBTYPE:
-					if (this.subBounds == null) this.subBounds = new LinkedHashSet<>();
-					return this.subBounds.add(bound);
+				case ReductionResult.SUBTYPE: // α <: T defines an upper bound for α
+					if (this.upperBounds == null) this.upperBounds = new LinkedHashSet<>();
+					return this.upperBounds.add(bound);
 				default:
 					throw new IllegalArgumentException("Unexpected bound relation in : " + bound); //$NON-NLS-1$
 			}
 		}
-		// pre: this.superBounds != null
+		// pre: this.lowerBounds != null
 		public TypeBinding[] lowerBounds(boolean onlyProper, InferenceVariable variable) {
-			TypeBinding[] boundTypes = new TypeBinding[this.superBounds.size()];
+			TypeBinding[] boundTypes = new TypeBinding[this.lowerBounds.size()];
 			long nullHints = variable.nullHints;
 			int i = 0;
-			for (TypeBound current : this.superBounds) {
+			for (TypeBound current : this.lowerBounds) {
 				TypeBinding boundType = current.right;
 				if (!onlyProper || boundType.isProperType(true)) {
 					boundTypes[i++] = boundType;
@@ -108,10 +108,10 @@ class BoundSet {
 			InferenceContext18.sortTypes(boundTypes);
 			return boundTypes;
 		}
-		// pre: this.subBounds != null
+		// pre: this.upperBounds != null
 		public TypeBinding[] upperBounds(boolean onlyProper, InferenceVariable variable) {
-			TypeBinding[] rights = new TypeBinding[this.subBounds.size()];
-			Iterator<TypeBound> it = this.subBounds.iterator();
+			TypeBinding[] rights = new TypeBinding[this.upperBounds.size()];
+			Iterator<TypeBound> it = this.upperBounds.iterator();
 			long nullHints = variable.nullHints;
 			int i = 0;
 			while(it.hasNext()) {
@@ -132,18 +132,18 @@ class BoundSet {
 		/** Total number of type bounds in this container. */
 		public int size() {
 			int size = 0;
-			if (this.superBounds != null)
-				size += this.superBounds.size();
+			if (this.lowerBounds != null)
+				size += this.lowerBounds.size();
 			if (this.sameBounds != null)
 				size += this.sameBounds.size();
-			if (this.subBounds != null)
-				size += this.subBounds.size();
+			if (this.upperBounds != null)
+				size += this.upperBounds.size();
 			return size;
 		}
 		public int flattenInto(TypeBound[] collected, int idx) {
-			if (this.superBounds != null) {
-				int len = this.superBounds.size();
-				System.arraycopy(this.superBounds.toArray(), 0, collected, idx, len);
+			if (this.lowerBounds != null) {
+				int len = this.lowerBounds.size();
+				System.arraycopy(this.lowerBounds.toArray(), 0, collected, idx, len);
 				idx += len;
 			}
 			if (this.sameBounds != null) {
@@ -151,21 +151,21 @@ class BoundSet {
 				System.arraycopy(this.sameBounds.toArray(), 0, collected, idx, len);
 				idx += len;
 			}
-			if (this.subBounds != null) {
-				int len = this.subBounds.size();
-				System.arraycopy(this.subBounds.toArray(), 0, collected, idx, len);
+			if (this.upperBounds != null) {
+				int len = this.upperBounds.size();
+				System.arraycopy(this.upperBounds.toArray(), 0, collected, idx, len);
 				idx += len;
 			}
 			return idx;
 		}
 		public ThreeSets copy() {
 			ThreeSets copy = new ThreeSets();
-			if (this.superBounds != null)
-				copy.superBounds = new LinkedHashSet<>(this.superBounds);
+			if (this.lowerBounds != null)
+				copy.lowerBounds = new LinkedHashSet<>(this.lowerBounds);
 			if (this.sameBounds != null)
 				copy.sameBounds = new LinkedHashSet<>(this.sameBounds);
-			if (this.subBounds != null)
-				copy.subBounds = new LinkedHashSet<>(this.subBounds);
+			if (this.upperBounds != null)
+				copy.upperBounds = new LinkedHashSet<>(this.upperBounds);
 			copy.instantiation = this.instantiation;
 			if (this.dependencies != null) {
 				copy.dependencies = new LinkedHashSet<>(this.dependencies);
@@ -188,8 +188,8 @@ class BoundSet {
 					}
 				}
 			}
-			if (this.subBounds != null) {
-				Iterator<TypeBound> it = this.subBounds.iterator();
+			if (this.upperBounds != null) {
+				Iterator<TypeBound> it = this.upperBounds.iterator();
 				while(it.hasNext()) {
 					TypeBinding boundType = it.next().right;
 					if ((boundType).isProperType(true)) {
@@ -207,8 +207,8 @@ class BoundSet {
 					}
 				}
 			}
-			if (this.superBounds != null) {
-				Iterator<TypeBound> it = this.superBounds.iterator();
+			if (this.lowerBounds != null) {
+				Iterator<TypeBound> it = this.lowerBounds.iterator();
 				while(it.hasNext()) {
 					TypeBinding boundType = it.next().right;
 					if ((boundType).isProperType(true)) {
@@ -256,12 +256,12 @@ class BoundSet {
 				for (TypeBound bound : this.sameBounds)
 					nullHints |= bound.nullHints;
 			}
-			if (this.superBounds != null) {
-				for (TypeBound bound : this.superBounds)
+			if (this.lowerBounds != null) {
+				for (TypeBound bound : this.lowerBounds)
 					nullHints |= bound.nullHints;
 			}
-			if (this.subBounds != null) {
-				for (TypeBound bound : this.subBounds)
+			if (this.upperBounds != null) {
+				for (TypeBound bound : this.upperBounds)
 					nullHints |= bound.nullHints;
 			}
 			if (nullHints == TagBits.AnnotationNullMASK) // on contradiction remove null type annotations
@@ -671,14 +671,14 @@ class BoundSet {
 									return false;
 							}
 						}
-						if (three.subBounds != null) {
+						if (three.upperBounds != null) {
 							TypeBinding bi1 = pi.firstBound;
 							if (bi1 == null) {
 								bi1 = context.object; // implicit bound
 							}
 							// If Bi is Object, α <: R implies ⟨T <: R⟩	(extends wildcard)
 							// α <: R implies ⟨θ Bi <: R⟩				(else)
-							it = three.subBounds.iterator();
+							it = three.upperBounds.iterator();
 							while (it.hasNext()) {
 								TypeBound bound = it.next();
 								if (!(bound.right instanceof InferenceVariable)) {
@@ -702,10 +702,10 @@ class BoundSet {
 								}
 							}
 						}
-						if (three.superBounds != null) {
+						if (three.lowerBounds != null) {
 							//  R <: α implies ⟨R <: T⟩  (super wildcard)
 							//  R <: α implies false	 (else)
-							it = three.superBounds.iterator();
+							it = three.lowerBounds.iterator();
 							while (it.hasNext()) {
 								TypeBound bound = it.next();
 								if (!(bound.right instanceof InferenceVariable)) {
@@ -1085,14 +1085,20 @@ class BoundSet {
 		return true;
 	}
 
+	/** Ranks returned by {@link #rankIVar(InferenceVariable)} are 0 .. {@code RANK_COUNT - 1}. */
+	static final int RANK_COUNT = 5;
+
 	public int rankIVar(InferenceVariable ivar) {
 		// implements the ranking of ivars according to their bounds as explained in
 		// https://mail.openjdk.org/archives/list/compiler-dev@openjdk.org/message/GN6RTCGMME6I5JVLSFZRIR32XY6QKOI2/
 		ThreeSets three = this.boundsPerVariable.get(ivar.prototype());
 		if (three != null) {
-			if (three.sameBounds != null)
-				if (!three.sameBounds.isEmpty())
-					return 1;
+			// like javac, ranks 1 and 2 only consider proper bounds (bounds with another ivar don't qualify):
+			if (three.sameBounds != null) {
+				for (TypeBound b : three.sameBounds)
+					if (b.right.isProperType(true))
+						return 1;
+			}
 			if (this.isRecordPatternInference) {
 				// workaround for not having inverse bounds of type SAME (see addBound(TypeBound, LookupEnvironment)):
 				for (ThreeSets dep3 : this.boundsPerVariable.values()) {
@@ -1104,11 +1110,17 @@ class BoundSet {
 					}
 				}
 			}
-			if (three.superBounds != null)
-				if (!three.superBounds.isEmpty())
+			if (three.lowerBounds != null) {
+				for (TypeBound b : three.lowerBounds)
+					if (b.right.isProperType(true))
 						return 2;
+				// the following part deviates from what javac does, but it is needed to establish congruence
+				// regarding org.eclipse.jdt.core.tests.compiler.regression.GenericsRegressionTest_9.testGH4937()
+				if (!three.lowerBounds.isEmpty())
+					return 3; // only ivar lower bounds, resolve before ivars without any lower/same bounds
+			}
 		}
-		return 3;
+		return RANK_COUNT - 1;
 	}
 
 	/**
@@ -1117,7 +1129,7 @@ class BoundSet {
 	 */
 	public TypeBinding[] upperBounds(InferenceVariable variable, boolean onlyProper) {
 		ThreeSets three = this.boundsPerVariable.get(variable.prototype());
-		if (three == null || three.subBounds == null)
+		if (three == null || three.upperBounds == null)
 			return Binding.NO_TYPES;
 		return three.upperBounds(onlyProper, variable);
 		// TODO: if !onlyProper: should we also consider ThreeSets.inverseBounds,
@@ -1130,7 +1142,7 @@ class BoundSet {
 	 */
 	TypeBinding[] lowerBounds(InferenceVariable variable, boolean onlyProper) {
 		ThreeSets three = this.boundsPerVariable.get(variable.prototype());
-		if (three == null || three.superBounds == null)
+		if (three == null || three.lowerBounds == null)
 			return Binding.NO_TYPES;
 		return three.lowerBounds(onlyProper, variable);
 		// bounds where 'variable' appears at the RHS are not relevant because
@@ -1201,21 +1213,21 @@ class BoundSet {
 					return true;
 			}
 		}
-		if (ts.superBounds != null) {
-			for (TypeBound bound : ts.superBounds) {
+		if (ts.lowerBounds != null) {
+			for (TypeBound bound : ts.lowerBounds) {
 				if (InferenceContext18.parameterizedWithWildcard(bound.right) != null)
 					return true;
 			}
 		}
 		// ii) B2 contains two bounds of the forms S1 <: α and S2 <: α, where
 		//     S1 and S2 have supertypes (4.10) that are two different parameterizations of the same generic class or interface.
-		if (ts.superBounds != null) {
-			ArrayList<TypeBound> superBounds = new ArrayList<>(ts.superBounds);
-			int len = superBounds.size();
+		if (ts.lowerBounds != null) {
+			ArrayList<TypeBound> lowerBounds = new ArrayList<>(ts.lowerBounds);
+			int len = lowerBounds.size();
 			for (int i=0; i<len; i++) {
-				TypeBinding s1 = superBounds.get(i).right;
+				TypeBinding s1 = lowerBounds.get(i).right;
 				for (int j=i+1; j<len; j++) {
-					TypeBinding s2 = superBounds.get(j).right;
+					TypeBinding s2 = lowerBounds.get(j).right;
 					List<Pair<TypeBinding>> pairs = allSuperPairsWithCommonGenericType(s1, s2);
 					for (Pair<TypeBinding> pair : pairs) {
 						/* HashMap<K#8,V#9> and HashMap<K#8,ArrayList<T>> with an instantiation for V9 = ArrayList<T> already in the
@@ -1250,8 +1262,8 @@ class BoundSet {
 					return true;
 			}
 		}
-		if (ts.superBounds != null) {
-			boundIterator = ts.superBounds.iterator();
+		if (ts.lowerBounds != null) {
+			boundIterator = ts.lowerBounds.iterator();
 			while (boundIterator.hasNext()) {
 				TypeBound b = boundIterator.next();
 				if (superOnlyRaw(g, b.right, ctx18.environment))

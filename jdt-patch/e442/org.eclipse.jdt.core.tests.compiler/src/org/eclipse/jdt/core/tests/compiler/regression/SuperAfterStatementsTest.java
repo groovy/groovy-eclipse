@@ -4410,6 +4410,7 @@ public class SuperAfterStatementsTest extends AbstractRegressionTest9 {
 				"	^^^^^^^^^^^^^^^^^^^^\n" +
 				"Dead code\n" +
 				"----------\n";
+        runner.javacTestOptions = JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
         runner.runNegativeTest();
     }
 
@@ -4447,6 +4448,7 @@ public class SuperAfterStatementsTest extends AbstractRegressionTest9 {
 				"	^^^^^^^^^^^^^^^^^^^^\n" +
 				"Dead code\n" +
 				"----------\n";
+        runner.javacTestOptions = JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
         runner.runNegativeTest();
     }
 
@@ -4475,5 +4477,66 @@ public class SuperAfterStatementsTest extends AbstractRegressionTest9 {
            """
        }, "42\n99\n42");
    }
+
+    // https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5532
+    // [Flexible constructors] Instantiation of local class inside constructor prologue is problematic
+    public void testIssue5532() {
+        runConformTest(new String[] {
+            "X.java",
+            """
+			public class X {
+				static class Y {
+					Y() {
+						class YLocalClass {
+							YLocalClass() {
+								super();
+							}
+							public String toString() {
+							    return "Y local";
+							}
+						}
+						YLocalClass ylocal = new YLocalClass();
+						System.out.println(ylocal);
+						super();
+					}
+				}
+				public static void main(String [] args) {
+					new X.Y();
+				}
+			}
+            """
+        }, "Y local");
+    }
+
+    // https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5532
+    // [Flexible constructors] Instantiation of local class inside constructor prologue is problematic
+    public void testIssue5532_2() {
+        runConformTest(new String[] {
+            "X.java",
+            """
+			public class X {
+		        class Y {
+					Y() {
+						class YLocalClass {
+							YLocalClass() {
+								super();
+							}
+							public String toString() {
+							    return "Y local";
+							}
+						}
+						YLocalClass ylocal = new YLocalClass();
+						System.out.println(ylocal);
+						super();
+					}
+				}
+				public static void main(String [] args) {
+					new X().new Y();
+				}
+			}
+            """
+        }, "Y local");
+    }
+
 }
 

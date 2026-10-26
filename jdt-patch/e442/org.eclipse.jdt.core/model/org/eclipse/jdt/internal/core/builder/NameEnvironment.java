@@ -22,6 +22,7 @@ package org.eclipse.jdt.internal.core.builder;
 import java.io.File;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -599,7 +600,6 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 	String qBinaryFileName = qualifiedTypeName + SUFFIX_STRING_class;
 	String qPackageName =  (qualifiedTypeName.length() == typeName.length) ? Util.EMPTY_STRING :
 		qBinaryFileName.substring(0, qBinaryFileName.length() - typeName.length - 7);
-	char[] binaryFileName = CharOperation.concat(typeName, SUFFIX_class);
 
 	ClasspathLocation[] relevantLocations;
 	if (moduleName != null && this.modulePathEntries != null) {
@@ -615,13 +615,16 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 	} else {
 		relevantLocations = this.binaryLocations;
 	}
+	// converted once here rather than by ClasspathLocation.findClass(char[], ...) for every classpath entry
+	String binaryFileName = new String(CharOperation.concat(typeName, SUFFIX_class));
+	Predicate<String> moduleNameFilter = this.modulePathEntries != null ? this.modulePathEntries::containsKey : null;
 	NameEnvironmentAnswer suggestedAnswer = null;
 	for (ClasspathLocation classpathLocation : relevantLocations) {
 		if (!strategy.matches(classpathLocation, ClasspathLocation::hasModule)) {
 			continue;
 		}
 		NameEnvironmentAnswer answer = classpathLocation.findClass(binaryFileName, qPackageName, moduleName, qBinaryFileName, false,
-																	this.modulePathEntries != null ? this.modulePathEntries::containsKey : null);
+																	moduleNameFilter);
 		if (answer != null) {
 			char[] answerMod = answer.moduleName();
 			if (answerMod != null && this.modulePathEntries != null) {

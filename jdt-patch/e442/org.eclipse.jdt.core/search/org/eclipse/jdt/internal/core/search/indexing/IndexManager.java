@@ -22,10 +22,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.CRC32;
@@ -71,6 +74,7 @@ import org.eclipse.jdt.internal.core.index.IndexLocation;
 import org.eclipse.jdt.internal.core.index.IndexQualifier;
 import org.eclipse.jdt.internal.core.index.MetaIndex;
 import org.eclipse.jdt.internal.core.search.BasicSearchEngine;
+import org.eclipse.jdt.internal.core.search.JavaSearchParticipant;
 import org.eclipse.jdt.internal.core.search.PatternSearchJob;
 import org.eclipse.jdt.internal.core.search.indexing.QualifierQuery.QueryCategory;
 import org.eclipse.jdt.internal.core.search.processing.IJob;
@@ -106,6 +110,19 @@ public class IndexManager extends JobManager implements IIndexConstants {
 
 	/* need to save ? */
 	private volatile boolean needToSave;
+
+	/**
+	 * The environment that resolved the last document, kept to resolve the next ones, see
+	 * {@link #acquireSourceIndexerEnvironment(JavaProject)}. Softly referenced, as it retains the types it resolved:
+	 * it is dropped under memory pressure, and when the index manager is idle.
+	 */
+	private final AtomicReference<SoftReference<SourceIndexerEnvironment>> sourceIndexerEnvironment = new AtomicReference<>();
+	/**
+	 * The number of changes that may make a source resolve differently: a kept environment is only reused if there
+	 * was none since it was created. Each request to index counts as one, except a request to save an index, since a
+	 * request follows most changes; {@link #sourceEnvironmentChanged()} counts the others.
+	 */
+	private final AtomicInteger changeCount = new AtomicInteger();
 	private IPath javaPluginLocation = null;
 
 	/**
@@ -687,17 +704,25 @@ public void indexDocument(SearchDocument searchDocument, SearchParticipant searc
 	}
 }
 public void indexResolvedDocument(SearchDocument searchDocument, SearchParticipant searchParticipant, Index index, IPath indexLocation) {
-	searchParticipant.resolveDocument(searchDocument);
-	ReadWriteMonitor monitor = index.monitor;
-	if (monitor == null)
-		return; // index got deleted since acquired
 	try {
-		monitor.enterWrite(); // ask permission to write
-		searchDocument.setIndex(index);
-		searchParticipant.indexResolvedDocument(searchDocument, indexLocation);
+		searchParticipant.resolveDocument(searchDocument);
+		ReadWriteMonitor monitor = index.monitor;
+		if (monitor == null)
+			return; // index got deleted since acquired
+		try {
+			monitor.enterWrite(); // ask permission to write
+			searchDocument.setIndex(index);
+			searchParticipant.indexResolvedDocument(searchDocument, indexLocation);
+		} finally {
+			searchDocument.setIndex(null);
+			monitor.exitWrite();
+		}
 	} finally {
-		searchDocument.setIndex(null);
-		monitor.exitWrite();
+		if (searchParticipant instanceof JavaSearchParticipant javaSearchParticipant) {
+			// The participant holds the environment that resolved the document until it is indexed: it is given
+			// back here also when the document is not indexed, as its index was deleted, or when indexing failed.
+			javaSearchParticipant.discardResolvedDocument();
+		}
 	}
 }
 /**
@@ -835,10 +860,60 @@ protected synchronized void moveToNextJob() {
 	super.moveToNextJob();
 }
 /**
+ * Counts a change that may make a source resolve differently, so that an environment kept to resolve the documents
+ * is not reused: a change of the resources of a Java project, of a classpath, of the contents of a working copy or
+ * of its structure, which tells its package. Most changes are followed by a request to index, which counts too, but
+ * not all: a project closed, or the entries of a classpath only reordered. To be called once the change is done.
+ */
+public void sourceEnvironmentChanged() {
+	this.changeCount.incrementAndGet();
+}
+/**
+ * Returns the environment to resolve a document of the given project: the one that resolved the last document if it
+ * is still up to date, else a new one. To be given back with {@link #releaseSourceIndexerEnvironment} once done with
+ * the document; it is used by one indexer at a time.
+ */
+SourceIndexerEnvironment acquireSourceIndexerEnvironment(JavaProject project) throws JavaModelException {
+	SourceIndexerEnvironment.Snapshot snapshot = SourceIndexerEnvironment.snapshot(project, this.changeCount::get);
+	SoftReference<SourceIndexerEnvironment> reference = this.sourceIndexerEnvironment.getAndSet(null);
+	SourceIndexerEnvironment kept = reference == null ? null : reference.get();
+	return kept != null && kept.isUpToDate(snapshot) ? kept : new SourceIndexerEnvironment(snapshot);
+}
+/**
+ * Takes back an environment acquired with {@link #acquireSourceIndexerEnvironment}, and keeps it to resolve the next
+ * documents, unless it cannot be reused.
+ */
+void releaseSourceIndexerEnvironment(SourceIndexerEnvironment environment) {
+	if (SourceIndexerEnvironment.KEEP && environment.prepareForReuse()) {
+		this.sourceIndexerEnvironment.set(new SoftReference<>(environment));
+	}
+}
+/**
+ * Returns whether an environment is kept to resolve the next documents. For testing purposes.
+ */
+public boolean isSourceIndexerEnvironmentKept() {
+	SoftReference<SourceIndexerEnvironment> reference = this.sourceIndexerEnvironment.get();
+	return reference != null && reference.get() != null;
+}
+/**
+ * Returns the number of changes that may make a source resolve differently. For testing purposes.
+ */
+public int getSourceEnvironmentChangeCount() {
+	return this.changeCount.get();
+}
+@Override
+public synchronized void request(IJob job) {
+	if (!(job instanceof SaveIndex || job instanceof MetaIndexUpdateRequest)) {
+		this.changeCount.incrementAndGet();
+	}
+	super.request(job);
+}
+/**
  * No more job awaiting.
  */
 @Override
 protected void notifyIdle(long idlingMilliSeconds){
+	this.sourceIndexerEnvironment.set(null);
 	if (idlingMilliSeconds > INDEX_MANAGER_NOTIFY_IDLE_WAIT && this.needToSave) saveIndexes();
 }
 /**

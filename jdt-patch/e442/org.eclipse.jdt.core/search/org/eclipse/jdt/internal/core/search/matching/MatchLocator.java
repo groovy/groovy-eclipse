@@ -3332,7 +3332,8 @@ protected void reportMatching(TypeDeclaration type, IJavaElement parent, int acc
 		for (AbstractMethodDeclaration method : methods) {
 			Integer level = nodeSet.matchingNodes.remove(method);
 			int value = (level != null && matchedClassContainer) ? level.intValue() : -1;
-			if (!method.isDefaultConstructor() || !typeReported) {
+			boolean ignoreClinit = type.isImplicitType() && method.isClinit();
+			if ((!method.isDefaultConstructor() || !typeReported) && !ignoreClinit) {
 				reportMatching(method, type, enclosingElement, value, typeInHierarchy, nodeSet);
 			}
 		}

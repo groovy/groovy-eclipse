@@ -1244,6 +1244,68 @@ public void testCycle7() throws JavaModelException {
 		}
 	}
 
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5494
+	public void testGH5494() throws JavaModelException {
+		Hashtable options = JavaCore.getOptions();
+		Hashtable newOptions = JavaCore.getOptions();
+		newOptions.put(JavaCore.CORE_CIRCULAR_CLASSPATH, JavaCore.WARNING);
+
+		JavaCore.setOptions(newOptions);
+
+		IPath p1 = env.addProject("P1");
+		env.addExternalJars(p1, Util.getJavaClassLibs());
+		env.removePackageFragmentRoot(p1, "");
+		IPath root1 = env.addPackageFragmentRoot(p1, "src");
+		env.setOutputFolder(p1, "bin");
+		env.addClass(root1, "p1", "X",
+			"package p1;\n" +
+			"public class X implements p2.I {\n" +
+			"}\n"
+			);
+
+		IPath p2 = env.addProject("P2");
+		env.addExternalJars(p2, Util.getJavaClassLibs());
+		env.removePackageFragmentRoot(p2, "");
+		IPath root2 = env.addPackageFragmentRoot(p2, "src");
+		env.setOutputFolder(p2, "bin");
+		env.addClass(root2, "p2", "I",
+			"package p2;\n" +
+			"public interface I {\n" +
+			"}\n"
+			);
+
+		IPath p3 = env.addProject("P3");
+		env.addExternalJars(p3, Util.getJavaClassLibs());
+		env.removePackageFragmentRoot(p3, "");
+		IPath root3 = env.addPackageFragmentRoot(p3, "src");
+		env.setOutputFolder(p3, "bin");
+		env.addClass(root3, "p3", "Z",
+			"package p3;\n" +
+			"public class Z {\n" +
+			"  p2.I i = new p1.X();\n" +
+			"}\n"
+			);
+
+		env.addRequiredProject(p1, p2);
+		env.addRequiredProject(p2, p1);
+		env.addRequiredProject(p3, p1);
+		env.addRequiredProject(p3, p2);
+
+		try {
+			env.setBuildOrder(new String[] { "P1", "P2", "P3" });
+			env.waitForManualRefresh();
+			fullBuild();
+			env.waitForAutoBuild();
+			expectingNoProblemsFor(new IPath[] { root1, root2, root3 });
+		} finally {
+			JavaCore.setOptions(options);
+			env.setBuildOrder(null);
+			env.removeProject(p1);
+			env.removeProject(p2);
+			env.removeProject(p3);
+		}
+	}
+
 	/*
 	 * Full buid case
 	 */

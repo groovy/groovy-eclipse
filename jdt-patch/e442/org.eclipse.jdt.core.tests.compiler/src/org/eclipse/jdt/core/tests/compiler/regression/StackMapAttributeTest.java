@@ -5578,4 +5578,75 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 			},
 			"pkg.Derived2");
 	}
+
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=5478
+	// Regression test for VerifyError "Inconsistent stackmap frames" for !(x && false)
+	public void testIssue5478_minimal() {
+		this.runConformTest(
+			new String[] {
+				"X.java",
+				"public class X {\n" +
+				"    public static void main(String[] args) {\n" +
+				"        boolean b = args.length == 0;\n" +
+				"        take2(\"x\", !(b && false));\n" +
+				"    }\n" +
+				"    static void take2(Object o, boolean v) { System.out.println(v); }\n" +
+				"}",
+			},
+			"true");
+	}
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=5478
+	// Regression test for VerifyError "Inconsistent stackmap frames" for !(x && false)
+	public void testIssue5478_full() {
+		this.runConformTest(
+			new String[] {
+				"Repro.java",
+				"public class Repro {\n" +
+				"    static void take1(boolean v) {}\n" +
+				"    static void take2(Object o, boolean v) {}\n" +
+				"    \n" +
+				"    static class Obj {\n" +
+				"        public void set(Boolean b) {}\n" +
+				"    }\n" +
+				"    \n" +
+				"    public static void main(String[] args) {\n" +
+				"        boolean b = args.length == 0;\n" +
+				"        \n" +
+				"        take2(\"x\", !(b && false));\n" +
+				"        System.out.println(\"variant1:pass\");\n" +
+				"        \n" +
+				"        take2(\"x\", !(false && b));\n" +
+				"        System.out.println(\"variant2:pass\");\n" +
+				"        \n" +
+				"        Obj obj = new Obj();\n" +
+				"        obj.set(Boolean.valueOf(!(b && false)));\n" +
+				"        System.out.println(\"variant3:pass\");\n" +
+				"        \n" +
+				"        take1(!(b && false));\n" +
+				"        System.out.println(\"variant4:pass\");\n" +
+				"        \n" +
+				"        take2(\"x\", b && false);\n" +
+				"        System.out.println(\"variant5:pass\");\n" +
+				"        \n" +
+				"        take2(\"x\", !(b && true));\n" +
+				"        System.out.println(\"variant6:pass\");\n" +
+				"        \n" +
+				"        take2(\"x\", !(b || true));\n" +
+				"        System.out.println(\"variant7:pass\");\n" +
+				"        \n" +
+				"        boolean r = !(b && false);\n" +
+				"        take1(r);\n" +
+				"        System.out.println(\"variant8:pass\");\n" +
+				"    }\n" +
+				"}",
+			},
+			"variant1:pass\n" +
+			"variant2:pass\n" +
+			"variant3:pass\n" +
+			"variant4:pass\n" +
+			"variant5:pass\n" +
+			"variant6:pass\n" +
+			"variant7:pass\n" +
+			"variant8:pass");
+	}
 }
