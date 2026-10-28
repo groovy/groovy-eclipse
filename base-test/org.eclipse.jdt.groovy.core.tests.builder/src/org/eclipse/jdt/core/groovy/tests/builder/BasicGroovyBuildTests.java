@@ -100,10 +100,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     private void addJUnitAndSpock(final IPath projectPath) throws Exception {
-        addJUnitAndSpock(projectPath, false);
-    }
-
-    private void addJUnitAndSpock(final IPath projectPath, final boolean isJUnitTestOnly) throws Exception {
         String spockCorePath;
         if (!isAtLeastGroovy(40)) {
             spockCorePath = "lib/spock-core-2.4-groovy-3.0.jar";
@@ -114,9 +110,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         }
         env.addJar(projectPath, spockCorePath);
         if (isAtLeastGroovy(60)) System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
-        IClasspathAttribute[] attributes = isJUnitTestOnly
-            ? new IClasspathAttribute[] {JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, "true")} : new IClasspathAttribute[0];
-        env.addEntry(projectPath, JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/5"), null, attributes, false));
+        env.addEntry(projectPath, JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/5")));
     }
 
     // check whether these are identical (in everything except name!)
@@ -2042,6 +2036,29 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     @Test
+    public void testSpock_GH1708() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        addJUnitAndSpock(paths[0]);
+        var classpath = env.getRawClasspath(paths[0]);
+        // spock-core is on the main classpath, but its dependency opentest4j (via JUnit) is test-only
+        classpath[classpath.length - 1] = JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/5"),
+            null, new IClasspathAttribute[] { JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, "true") }, false);
+
+        env.addGroovyClass(env.addTestPackageFragmentRoot(paths[0], "tst"), "MySpec",
+            "final class MySpec extends spock.lang.Specification {\n" +
+            "  def 'verify test transform loader'() {\n" +
+            "   expect:\n" +
+            "    'hello' != 'world'\n" +
+            "  }\n" +
+            "}\n");
+
+        fullBuild(paths[0]);
+        expectingNoProblemsFor(paths[0]);
+        expectingCompiledClasses("MySpec");
+    }
+
+    @Test
     public void testSpock_GRE558() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
         addJUnitAndSpock(paths[0]);
@@ -3842,28 +3859,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingNoProblemsFor(projectB);
         expectingCompiledClasses("q.Test");
         executeClass(projectB, "q.Test", "AGroovyClass", "");
-    }
-
-    @Test
-    public void testMultiProjectDependenciesMainAndTest4() throws Exception {
-        IPath[] paths = createSimpleProject("Project", true);
-        IPath project = paths[0];
-
-        // spock-core is on the main classpath, but its dependency opentest4j (via JUnit) is test-only
-        addJUnitAndSpock(project, true);
-        IPath test = env.addTestPackageFragmentRoot(project, "test");
-        env.addGroovyClass(test, "q", "MySpec",
-            "package q\n" +
-            "final class MySpec extends spock.lang.Specification {\n" +
-            "  def meth() {\n" +
-            "   expect:\n" +
-            "    'hello' != 'world'\n" +
-            "  }\n" +
-            "}\n");
-
-        fullBuild(project);
-        expectingNoProblemsFor(project);
-        expectingCompiledClasses("q.MySpec");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/744
