@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -29,15 +30,22 @@ public final class SpockInferencingTests extends InferencingTestSuite {
     public void setUp() throws Exception {
         String spockCorePath;
         if (!isAtLeastGroovy(40)) {
-            spockCorePath = "lib/spock-core-2.4-groovy-3.0.jar";
+            spockCorePath = "lib/spock-core-2.5-groovy-3.0.jar";
         } else if (!isAtLeastGroovy(50)) {
-            spockCorePath = "lib/spock-core-2.4-groovy-4.0.jar";
+            spockCorePath = "lib/spock-core-2.5-groovy-4.0.jar";
+        } else if (!isAtLeastGroovy(60)) {
+            spockCorePath = "lib/spock-core-2.5-groovy-5.0.jar";
         } else {
-            spockCorePath = "lib/spock-core-2.4-groovy-5.0.jar";
+            spockCorePath = "lib/spock-core-2.5-groovy-6.0.jar";
         }
         env.addJar(project.getFullPath(), spockCorePath);
-        if (isAtLeastGroovy(60)) System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
+        if (isAtLeastGroovy(70)) System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
         env.addEntry(project.getFullPath(), JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/5")));
+    }
+
+    @After
+    public void tearDown() {
+        System.clearProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck");
     }
 
     @Test

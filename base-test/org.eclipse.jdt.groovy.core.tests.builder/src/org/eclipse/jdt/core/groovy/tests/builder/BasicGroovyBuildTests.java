@@ -102,14 +102,16 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     private void addJUnitAndSpock(final IPath projectPath) throws Exception {
         String spockCorePath;
         if (!isAtLeastGroovy(40)) {
-            spockCorePath = "lib/spock-core-2.4-groovy-3.0.jar";
+            spockCorePath = "lib/spock-core-2.5-groovy-3.0.jar";
         } else if (!isAtLeastGroovy(50)) {
-            spockCorePath = "lib/spock-core-2.4-groovy-4.0.jar";
+            spockCorePath = "lib/spock-core-2.5-groovy-4.0.jar";
+        } else if (!isAtLeastGroovy(60)) {
+            spockCorePath = "lib/spock-core-2.5-groovy-5.0.jar";
         } else {
-            spockCorePath = "lib/spock-core-2.4-groovy-5.0.jar";
+            spockCorePath = "lib/spock-core-2.5-groovy-6.0.jar";
         }
         env.addJar(projectPath, spockCorePath);
-        if (isAtLeastGroovy(60)) System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
+        if (isAtLeastGroovy(70)) System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
         env.addEntry(projectPath, JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/5")));
     }
 
@@ -181,6 +183,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     @After
     public void tearDown() {
         JDTResolver.recordInstances = false;
+        System.clearProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck");
     }
 
     //--------------------------------------------------------------------------
@@ -2017,7 +2020,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testSpock_GH1697() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
         System.setProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck", "true");
-        env.addJar  (paths[0], "lib/spock-core-2.4-groovy-" + (isAtLeastGroovy(50) ? "4.0" : "5.0") + ".jar");
+        env.addJar  (paths[0], "lib/spock-core-2.5-groovy-" + (isAtLeastGroovy(50) ? "4.0" : "5.0") + ".jar");
         env.addEntry(paths[0], JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/5")));
 
         //@formatter:off
@@ -2032,7 +2035,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         fullBuild(paths[0]);
         expectingNoProblems();
-        System.clearProperty("spock.iKnowWhatImDoing.disableGroovyVersionCheck");
     }
 
     @Test
