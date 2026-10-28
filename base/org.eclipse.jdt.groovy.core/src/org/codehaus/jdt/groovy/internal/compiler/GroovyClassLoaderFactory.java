@@ -166,22 +166,18 @@ public final class GroovyClassLoaderFactory {
                 List<GroovyClassLoader> values = new ArrayList<>(3);
 
                 // https://github.com/groovy/groovy-eclipse/issues/1699
-                ClassLoader classLoader = GroovyLogManager.class.getClassLoader();
+                ClassLoader parentLoader = GroovyLogManager.class.getClassLoader();
                 if (javaProject.exists()) {
                     Set<String> dontCare = new LinkedHashSet<>();
                     Set<String> mainOnly = new LinkedHashSet<>();
                     calculateClasspath(javaProject, true, dontCare, mainOnly);
 
                     if (!mainOnly.equals(xformPaths)) {
-                        classLoader = newClassLoader(mainOnly, classLoader);
-                        xformPaths.removeAll(mainOnly); // retain test paths
-
-                        values.add(0, new EclipseGroovyClassLoader(project, classLoader, compilerConfiguration)); // "main" and "eclipse" loader chain
+                        values.add(0, new EclipseGroovyClassLoader(project, newClassLoader(mainOnly, parentLoader), compilerConfiguration)); // "main" and "eclipse" loader chain
                     }
                 }
-                classLoader = newClassLoader(xformPaths, classLoader);
-
-                values.add(0, new EclipseGroovyClassLoader(project, classLoader, compilerConfiguration)); // "test", "main" and "eclipse" loader chain
+                // not chained to the "main" loader: a transform found on the main paths must still see its test-only dependencies
+                values.add(0, new EclipseGroovyClassLoader(project, newClassLoader(xformPaths, parentLoader), compilerConfiguration)); // "test" and "eclipse" loader chain
 
                 values.add(0, new GrapeAwareGroovyClassLoader(project, newClassLoader(classPaths, ClassLoader.getSystemClassLoader()), compilerConfiguration));
 
