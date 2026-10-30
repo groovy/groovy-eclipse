@@ -2848,7 +2848,16 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         } else {
             token = new org.codehaus.groovy.syntax.Token(Types.ASSIGN, ASSIGN_STR, ctx.start.getLine(), 1);
         }
-
+        // GRECLIPSE add
+        Expression init;
+        if (ctx.arrayInitializer() != null) {
+            ClassNode elementType = variableType.getComponentType();
+            ctx.arrayInitializer().putNodeMetaData("elementType", elementType);
+            init = configureAST(new ArrayExpression(elementType, this.visitArrayInitializer(ctx.arrayInitializer())), ctx.arrayInitializer());
+        } else {
+            init = this.visitVariableInitializer(ctx.variableInitializer());
+        }
+        // GRECLIPSE end
         return configureAST(
                 new DeclarationExpression(
                         configureAST(
@@ -2858,7 +2867,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                                 ),
                                 ctx.variableDeclaratorId()),
                         token,
-                        this.visitVariableInitializer(ctx.variableInitializer())),
+                        init),
                 ctx);
     }
 

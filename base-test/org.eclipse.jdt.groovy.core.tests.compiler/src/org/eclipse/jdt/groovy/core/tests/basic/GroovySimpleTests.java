@@ -89,6 +89,23 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[I");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8561
+    public void testArrayBasic4() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "int[] array = {123}\n" +
+            "assert array.length == 1\n" +
+            "assert array[0] == 123\n" +
+            "print array.class.name\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[I");
+    }
+
     @Test
     public void testArrayMulti1() {
         //@formatter:off
@@ -137,8 +154,44 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[[I");
     }
 
-    @Test
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8551
     public void testArrayMulti4() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(50));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "int[][] array = new int[][]{ {1}, {2} }\n" +
+            "assert array.length == 2\n" +
+            "assert array[0][0] == 1\n" +
+            "assert array[1][0] == 2\n" +
+            "print array.class.name\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[[I");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8561
+    public void testArrayMulti5() {
+        assumeTrue(isParrotParser() && isAtLeastGroovy(60));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "int[][] array = { {1}, {2} }\n" +
+            "assert array.length == 2\n" +
+            "assert array[0][0] == 1\n" +
+            "assert array[1][0] == 2\n" +
+            "print array.class.name\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[[I");
+    }
+
+    @Test
+    public void testArrayMulti6() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -154,7 +207,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testArrayMulti5() {
+    public void testArrayMulti7() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -170,7 +223,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testArrayMulti6() {
+    public void testArrayMulti8() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -188,7 +241,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testArrayMulti7() {
+    public void testArrayMulti9() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
