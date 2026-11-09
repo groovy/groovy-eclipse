@@ -730,6 +730,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
             return true;
         }
+        // GRECLIPSE add -- GROOVY-12745
+        var v = vexp.getAccessedVariable();
+        if (v instanceof FieldNode || v instanceof PropertyNode)
+            vexp.setAccessedVariable(new DynamicVariable(dynName, false));
+        // GRECLIPSE end
         return false;
     }
 

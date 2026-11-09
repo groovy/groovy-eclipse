@@ -123,54 +123,104 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/876
     void testFields2() {
         addGroovySource '''\
-            |import groovy.transform.PackageScope
-            |class Pogo {
-            |  @PackageScope String string
+            |class B {
+            |  @groovy.transform.PackageScope String string
             |}
             |'''.stripMargin()
 
-        String contents = '''\
-            |class C extends Pogo {{
-            |    string
-            |    getString()
-            |    setString('value')
-            |}}
-            |'''.stripMargin()
+        for (mode in ['CompileDynamic','CompileStatic','TypeChecked']) {
+            String contents = """\
+                |@groovy.transform.$mode
+                |class C extends B {{
+                |    string
+                |    string = ""
+                |    getString()
+                |    setString('value')
+                |}}
+                |""".stripMargin()
 
-        assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('Pogo'), 4, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('string'), 6, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('getString'), 9, UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('setString'), 9, UNKNOWN))
+            assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf('C '), 1, CLASS),
+                new HighlightedTypedPosition(contents.indexOf('B '), 1, CLASS),
+                new HighlightedTypedPosition(contents.indexOf('string'), 6, FIELD),
+                new HighlightedTypedPosition(contents.indexOf('string ='), 6, FIELD),
+                new HighlightedTypedPosition(contents.indexOf('getString'), 9, UNKNOWN),
+                new HighlightedTypedPosition(contents.indexOf('setString'), 9, UNKNOWN))
+        }
+    }
+
+    @Test // GROOVY-9043, GROOVY-9093, GROOVY-12745
+    void testFields3() {
+        addGroovySource '''\
+            |package p
+            |class B {
+            |  @groovy.transform.PackageScope static String field = ""
+            |}
+            |'''.stripMargin(), 'B', 'p'
+
+        for (mode in ['CompileDynamic','CompileStatic','TypeChecked']) {
+            String contents = """\
+                |@groovy.transform.$mode
+                |class C extends p.B {
+                |  static {
+                |    def x = field
+                |    field = null;
+                |  }
+                |  def m() {
+                |    def x = field
+                |    field = null;
+                |  }
+                |}
+                |""".stripMargin()
+
+            int staticBlock = contents.indexOf('static {') + 7
+            int methodBlock = contents.indexOf('def m() {') + 8
+
+            assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf('C ' ), 1, CLASS),
+                new HighlightedTypedPosition(contents.indexOf('B ' ), 1, CLASS),
+                new HighlightedTypedPosition(contents.indexOf('m()'), 1, METHOD),
+                new HighlightedTypedPosition(contents.indexOf('x ='    , staticBlock), 1, VARIABLE),
+                new HighlightedTypedPosition(contents.indexOf('field'  , staticBlock), 5, UNKNOWN ),
+                new HighlightedTypedPosition(contents.indexOf('field =', staticBlock), 5, UNKNOWN ),
+                new HighlightedTypedPosition(contents.indexOf('x ='    , methodBlock), 1, VARIABLE),
+                new HighlightedTypedPosition(contents.indexOf('field'  , methodBlock), 5, UNKNOWN ),
+                new HighlightedTypedPosition(contents.indexOf('field =', methodBlock), 5, UNKNOWN ))
+        }
     }
 
     @Test
-    void testFields3() {
+    void testFields4() {
         addGroovySource '''\
             |abstract class A {
             |  private getF() { 'A' }
             |}
             |'''.stripMargin()
 
-        String contents = '''\
-            |class C extends A {
-            |  public f = 'C'
-            |}
-            |'C' == new C().f
-            |'''.stripMargin()
+        for (mode in ['CompileDynamic','CompileStatic','TypeChecked']) {
+            String contents = """\
+                |class C extends A {
+                |  public f = 'C'
+                |}
+                |@groovy.transform.$mode
+                |void test() {
+                |  assert 'C' == new C().f
+                |}
+                |""".stripMargin()
 
-        assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
-            new HighlightedTypedPosition(contents.indexOf('f'), 1, FIELD),
-            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CTOR_CALL),
-            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
-            new HighlightedTypedPosition(contents.lastIndexOf('f'), 1, FIELD))
+            assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+                new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+                new HighlightedTypedPosition(contents.indexOf('f'), 1, FIELD),
+                new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+                new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CTOR_CALL),
+                new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
+                new HighlightedTypedPosition(contents.lastIndexOf('f'), 1, FIELD))
+        }
     }
 
     @Test
-    void testFields4() {
+    void testFields5() {
         String contents = '''\
             |class C {
             |  final x
@@ -193,7 +243,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testFields5() {
+    void testFields6() {
         String contents = '''\
             |@groovy.transform.Immutable
             |class C {
@@ -4742,7 +4792,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test
     void testLazyInitExpr3() {
         String contents = '''\
-            |package p
             |class X {
             |  @Lazy static Map values = new HashMap().tap {
             |    it.put('foo','bar')
