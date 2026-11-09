@@ -37,8 +37,10 @@ public final class GrabTests extends GroovyCompilerTestSuite {
         manager.setUseDefaultLogger(false);
     }
 
+    //--------------------------------------------------------------------------
+
     @Test
-    public void testGrab() {
+    public void testGrab1() {
         //@formatter:off
         String[] sources = {
             "Main.java",
@@ -49,7 +51,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "}\n",
 
             "Test.groovy",
-            "@Grab('joda-time:joda-time:2.14.2;transitive=false')\n" +
+            "@Grab('joda-time:joda-time:2.15.1;transitive=false')\n" +
             "import org.joda.time.DateTime\n" +
             "def now = new DateTime()\n",
         };
@@ -148,12 +150,12 @@ public final class GrabTests extends GroovyCompilerTestSuite {
      * With grab improvements we get two errors: the missing dependency and the missing type (which is at the right version of that dependency!)
      */
     @Test // GRECLIPSE-1669
-    public void testGrabError() {
+    public void testGrabError1() {
         //@formatter:off
         String[] sources = {
             "Test.groovy",
             "@Grapes([\n" +
-            "  @Grab('joda-time:joda-time:2.14.2;transitive=false'),\n" +
+            "  @Grab('joda-time:joda-time:2.15.1;transitive=false'),\n" +
             "  @Grab(group='org.aspectj', module='aspectjweaver', version='1.x')\n" +
             "])\n" +
             "class Test {\n" +

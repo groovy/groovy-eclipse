@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -267,21 +267,21 @@ public final class LocationSupportTests {
         assertEquals(content.length(), module.getStarImports().get(1).getEnd());
 
         // now test against the compilation unit declaration
-        GroovyCompilationUnitDeclaration cud = new GroovyCompilationUnitDeclaration(null, null, -1, null, null, null) {
+        var cud = new GroovyCompilationUnitDeclaration(null, null, -1, null, sourceUnit, null) {
             {
-                GroovyCompilationUnitDeclaration.UnitPopulator cup = new GroovyCompilationUnitDeclaration.UnitPopulator();
+                var cup = new GroovyCompilationUnitDeclaration.UnitPopulator();
                 ReflectionUtils.setPrivateField(cup.getClass(), "unitDeclaration", cup, this);
                 ReflectionUtils.executePrivateMethod(cup.getClass(), "createImportDeclarations", new Class[] {ModuleNode.class}, cup, new Object[] {module});
             }
         };
 
-        assertEquals(module.getImport("List").getStart(), cud.imports[0].declarationSourceStart);
-        assertEquals(module.getImport("List").getEnd() - 1, cud.imports[0].declarationSourceEnd);
-        assertEquals(module.getStarImports().get(0).getStart(), cud.imports[1].declarationSourceStart);
+        assertEquals(module.getImport("List").getStart(),         cud.imports[0].declarationSourceStart);
+        assertEquals(module.getImport("List").getEnd() - 1,       cud.imports[0].declarationSourceEnd);
+        assertEquals(module.getStarImports().get(0).getStart(),   cud.imports[1].declarationSourceStart);
         assertEquals(module.getStarImports().get(0).getEnd() - 1, cud.imports[1].declarationSourceEnd);
-        assertEquals(module.getImport("A").getStart(), cud.imports[2].declarationSourceStart);
-        assertEquals(module.getImport("A").getEnd() - 1, cud.imports[2].declarationSourceEnd);
-        assertEquals(module.getStarImports().get(1).getStart(), cud.imports[3].declarationSourceStart);
+        assertEquals(module.getImport("A").getStart(),            cud.imports[2].declarationSourceStart);
+        assertEquals(module.getImport("A").getEnd() - 1,          cud.imports[2].declarationSourceEnd);
+        assertEquals(module.getStarImports().get(1).getStart(),   cud.imports[3].declarationSourceStart);
         assertEquals(module.getStarImports().get(1).getEnd() - 1, cud.imports[3].declarationSourceEnd);
     }
 

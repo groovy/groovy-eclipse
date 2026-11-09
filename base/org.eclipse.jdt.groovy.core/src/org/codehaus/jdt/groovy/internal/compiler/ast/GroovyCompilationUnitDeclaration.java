@@ -15,6 +15,7 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import static java.util.Objects.requireNonNull;
 import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.*;
 import static org.codehaus.groovy.runtime.StringGroovyMethods.find;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.plus;
@@ -203,7 +204,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
     private final CompilerOptions compilerOptions;
 
-    private final SourceUnit groovySourceUnit;
+    private final /*NonNull*/ SourceUnit groovySourceUnit;
 
     private final TraitHelper traitHelper = new TraitHelper();
 
@@ -214,7 +215,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             CompilationUnit compilationUnit, SourceUnit groovySourceUnit, CompilerOptions compilerOptions) {
         super(problemReporter, compilationResult, sourceLength);
         this.compilationUnit = compilationUnit;
-        this.groovySourceUnit = groovySourceUnit;
+        this.groovySourceUnit = requireNonNull(groovySourceUnit);
         this.compilerOptions = compilerOptions;
         bits |= ASTNode.HasAllMethodBodies;
     }
@@ -229,8 +230,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
      * @return true if clean processing, false otherwise
      */
     public boolean processToPhase(int phase) {
-        if (phase == Phases.CANONICALIZATION && groovySourceUnit instanceof EclipseSourceUnit) {
-            IFile file = ((EclipseSourceUnit) groovySourceUnit).getEclipseFile(); if (file != null) {
+        if (phase == Phases.CANONICALIZATION && groovySourceUnit instanceof EclipseSourceUnit esu) {
+            IFile file = esu.getEclipseFile(); if (file != null) {
                 // TODO: Surgically remove about-to-be-compiled class(es) from transform loader cache
             }
         }
@@ -255,21 +256,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
 
             ErrorCollector collector = e.getErrorCollector();
-            if (collector.getErrorCount() == 1 && collector.getError(0) instanceof ExceptionMessage) {
-                Exception cause = ((ExceptionMessage) collector.getError(0)).getCause();
-                if (cause instanceof AbortCompilation) {
-                    throw (AbortCompilation) cause;
-                }
+            if (collector.getErrorCount() == 1 && collector.getError(0) instanceof ExceptionMessage error &&
+                    error.getCause() instanceof AbortCompilation abort) {
+                throw abort;
             }
             recordProblems(collector.getErrors(), collector.getWarnings());
         } catch (GroovyBugError e) {
             if (GroovyLogManager.manager.hasLoggers()) {
                 GroovyLogManager.manager.log(TraceCategory.COMPILER, e.getBugText());
             }
-            if (e.getCause() instanceof OperationCanceledException) {
-                throw (OperationCanceledException) e.getCause();
-            } else if (e.getCause() instanceof AbortCompilation) {
-                AbortCompilation abort = (AbortCompilation) e.getCause();
+            if (e.getCause() instanceof OperationCanceledException cancel) {
+                throw cancel;
+            } else if (e.getCause() instanceof AbortCompilation abort) {
                 if (!abort.isSilent) {
                     if (abort.problem != null) {
                         problemReporter.record(abort.problem, compilationResult, this, true);
@@ -405,12 +403,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                     boolean isScript = false;
                     // suppress class file output if it is a script; a null binding implies a synthetic type, which we assume cannot be a script
-                    if (binding != null && binding.scope != null && (binding.scope.parent instanceof GroovyCompilationUnitScope)) {
-                        GroovyCompilationUnitScope gcuScope = (GroovyCompilationUnitScope) binding.scope.parent;
-                        isScript = gcuScope.isScript();
+                    if (binding != null && binding.scope != null && binding.scope.parent instanceof GroovyCompilationUnitScope unitScope) {
+                        isScript = unitScope.isScript();
                     }
                     if (!isScript) {
-                        GroovyClassFile groovyClassFile = new GroovyClassFile(groovyClass.getName(), groovyClass.getBytes(), binding, groovyClass.getName().replace('.', '/'));
+                        var groovyClassFile = new GroovyClassFile(groovyClass.getName(), groovyClass.getBytes(), binding, groovyClass.getName().replace('.', '/'));
                         if (binding == null) {
                             // GRECLIPSE-1653: this type is synthetic -- likely added by an AST transform
                             Map<char[], ClassFile> compiledTypes = Map.class.cast(compilationResult.compiledTypes);
@@ -611,13 +608,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
     @Override
     public CompilationUnitScope buildCompilationUnitScope(LookupEnvironment lookupEnvironment) {
-        GroovyCompilationUnitScope gcus = new GroovyCompilationUnitScope(this, lookupEnvironment);
-        gcus.setIsScript(isScript);
-        return gcus;
+        var scope = new GroovyCompilationUnitScope(this, lookupEnvironment);
+        scope.setIsScript(isScript);
+        return scope;
     }
 
     public ModuleNode getModuleNode() {
-        return java.util.Optional.ofNullable(getSourceUnit()).map(SourceUnit::getAST).orElse(null);
+        return groovySourceUnit.getAST();
     }
 
     public SourceUnit getSourceUnit() {
@@ -736,9 +733,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
     @Override
     public void cleanUp() {
-        super.cleanUp();
-        if (groovySourceUnit instanceof EclipseSourceUnit) {
-            ((EclipseSourceUnit) groovySourceUnit).resolver.cleanUp();
+        try {
+            if (groovySourceUnit instanceof EclipseSourceUnit esu) {
+                esu.resolver.cleanUp();
+            }
+        } finally {
+            super.cleanUp();
         }
     }
 
@@ -933,7 +933,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private boolean checkGenerics = defaultCheckGenerics;
 
         void populate(GroovyCompilationUnitDeclaration unit) {
-            sourceUnit = unit.getSourceUnit();
+            this.sourceUnit = unit.groovySourceUnit;
             unitDeclaration = unit;
 
             unit.sourceEnds = new HashtableOfObjectToInt();
