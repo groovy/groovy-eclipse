@@ -533,6 +533,47 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
+    @Test // GROOVY-12544
+    public void testInnerClass15() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "assert new C().m() != null\n",
+
+            "A.groovy",
+            "class A { static class B {} }\n",
+
+            "C.groovy",
+            "class C { def m() { new A.B() } }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+        // GROOVY-4649, GROOVY-6750, GROOVY-6808
+        checkInnerClassTable("A.class", "A$B,A,B,9");
+        if (isAtLeastGroovy(40)) checkInnerClassTable("C.class", "A$B,A,B,9");
+    }
+
+    @Test // GROOVY-12544
+    public void testInnerClass16() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "assert new C().m([1:2].entrySet().first()) instanceof Map.Entry\n",
+
+            "C.groovy",
+            "class C { def m(Map.Entry e) { new AbstractMap.SimpleEntry(1, 2) } }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+        if (isAtLeastGroovy(40)) {
+            checkInnerClassTable("C.class",
+                "java/util/Map$Entry,java/util/Map,Entry,1545",
+                "java/util/AbstractMap$SimpleEntry,java/util/AbstractMap,SimpleEntry,9");
+        }
+    }
+
     @Test
     public void testAnonymousInnerClass1() {
         //@formatter:off

@@ -89,12 +89,13 @@ public abstract class GroovyCompilerTestSuite {
     protected static final long JDK24 = (68L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK25 = (69L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK26 = (70L << 16) + ClassFileConstants.MINOR_VERSION_0;
+    protected static final long JDK27 = (71L << 16) + ClassFileConstants.MINOR_VERSION_0;
 
     @Parameters(name = "Java {1}")
     public static Iterable<Object[]> params() {
         long javaSpec = CompilerOptions.versionToJdkLevel(System.getProperty("java.specification.version"));
         List<Object[]> params = new ArrayList<>();
-        for (long jdk : new long[] {JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14, JDK15, JDK16, JDK17, JDK18, JDK19, JDK20, JDK21, JDK22, JDK23, JDK24, JDK25, JDK26}) {
+        for (long jdk : new long[] {JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14, JDK15, JDK16, JDK17, JDK18, JDK19, JDK20, JDK21, JDK22, JDK23, JDK24, JDK25, JDK26, JDK27}) {
             if (jdk == javaSpec || (jdk < javaSpec && ( // current and LTS
                     (jdk == JDK8  && !GroovyBundle.isAtLeastGroovy(50)) ||
                     (jdk == JDK11 && !GroovyBundle.isAtLeastGroovy(60)) ||
@@ -328,18 +329,23 @@ public abstract class GroovyCompilerTestSuite {
         }
     }
 
+    /**
+     * Checks the disassembly of a {@code .class} file for a particular piece of text.
+     */
     protected static void checkDisassemblyFor(final String filename, final String expectedOutput) {
         checkDisassemblyFor(filename, expectedOutput, ClassFileBytesDisassembler.DETAILED);
     }
 
     /**
      * Checks the disassembly of a {@code .class} file for a particular piece of text.
+     *
+     * @param mode see {@link ClassFileBytesDisassembler}
      */
     protected static void checkDisassemblyFor(final String filename, final String expectedOutput, final int mode) {
         String disassembly = disassemble(getOutputFile(filename), mode);
         int index = disassembly.indexOf(expectedOutput);
-        if (index == -1 || expectedOutput.length() == 0) {
-            System.out.println(Util.displayString(disassembly, 3));
+        if (index == -1 || expectedOutput.isEmpty()) {
+            System.out.println(Util.displayString(disassembly, 2));
         }
         if (index == -1) {
             Assert.assertEquals("Wrong contents", expectedOutput, disassembly);
@@ -349,11 +355,28 @@ public abstract class GroovyCompilerTestSuite {
     protected static void checkGCUDeclaration(final String filename, final String expectedOutput) {
         GroovyCompilationUnitDeclaration decl = getCUDeclFor(filename);
         String declarationContents = decl.print();
-        if (expectedOutput == null || expectedOutput.length() == 0) {
+        if (expectedOutput == null || expectedOutput.isEmpty()) {
             System.out.println(Util.displayString(declarationContents, 2));
-        } else {
-            if (declarationContents.indexOf(expectedOutput) == -1) {
-                Assert.assertEquals("Did not find expected output", expectedOutput, declarationContents);
+        } else if (declarationContents.indexOf(expectedOutput) == -1) {
+            Assert.assertEquals("Did not find expected output", expectedOutput, declarationContents);
+        }
+    }
+
+    protected static void checkInnerClassTable(final String filename, final String... expectedEntries) {
+        String disassembly = disassemble(getOutputFile(filename), ClassFileBytesDisassembler.DETAILED);
+        int index = disassembly.indexOf("\n  Inner classes:\n");
+        if (index == -1) {
+            if (expectedEntries.length == 0) return;
+            Assert.fail("No inner class table found");
+        }
+        String table = disassembly.substring(index + 18);
+
+        for (String entry : expectedEntries) {
+            String[] tokens = entry.replace("$","\\$").split(",");
+            String spec = "inner class info: #\\d+ " + tokens[0] + ", outer class info: #\\d+ " +
+                tokens[1] + "\\s+inner name: #\\d+ " + tokens[2] + ", accessflags: " + tokens[3];
+            if (!java.util.regex.Pattern.compile("\\b" + spec + " ").matcher(table).find()) {
+                Assert.assertEquals("Did not find expected inner class entry", spec, table);
             }
         }
     }
