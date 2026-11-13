@@ -1350,13 +1350,13 @@ protected IBuffer openBuffer(IProgressMonitor pm, IElementInfo info) throws Java
 				}
 			}
 
+			// listen to buffer changes before publishing it
+			buffer.addBufferChangedListener(this);
+
 			// add buffer to buffer cache
 			// note this may cause existing buffers to be removed from the buffer cache, but only primary compilation unit's buffer
 			// can be closed, thus no call to a client's IBuffer#close() can be done in this synchronized block.
 			bufManager.addBuffer(buffer);
-
-			// listen to buffer changes
-			buffer.addBufferChangedListener(this);
 		}
 	}
 	if(existingBuffer != null) {

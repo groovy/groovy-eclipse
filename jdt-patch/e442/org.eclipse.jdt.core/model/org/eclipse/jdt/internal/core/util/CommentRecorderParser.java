@@ -121,6 +121,12 @@ public class CommentRecorderParser extends Parser {
 	}
 
 	@Override
+	protected void consumeEnumConstantNoClassBody() {
+		pushOnCommentsStack(0, this.scanner.commentPtr);
+		super.consumeEnumConstantNoClassBody();
+	}
+
+	@Override
 	protected void consumeInterfaceHeader() {
 		pushOnCommentsStack(0, this.scanner.commentPtr);
 		super.consumeInterfaceHeader();

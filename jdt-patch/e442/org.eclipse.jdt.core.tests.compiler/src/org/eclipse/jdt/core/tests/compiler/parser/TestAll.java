@@ -92,8 +92,8 @@ public static TestSuite getTestSuite(boolean addComplianceDiagnoseTest) {
 	testAdditionsList.add(new TestsAddition(AbstractCompilerTest.F_11, ClassFileConstants.JDK11, (list) -> {addJava10Tests(list);}));
 	testAdditionsList.add(new TestsAddition(AbstractCompilerTest.F_12, ClassFileConstants.JDK12, (list) -> {addJava12Tests(list);}));
 	testAdditionsList.add(new TestsAddition(AbstractCompilerTest.F_13, ClassFileConstants.JDK13, (list) -> {addJava12Tests(list);}));
-	testAdditionsList.add(new TestsAddition(AbstractCompilerTest.F_14, ClassFileConstants.JDK14, (list) -> {addJava12Tests(list);addJava14Tests(list);}));
-	testAdditionsList.add(new TestsAddition(AbstractCompilerTest.F_15, ClassFileConstants.JDK15, (list) -> {addJava12Tests(list);}));
+	testAdditionsList.add(new TestsAddition(AbstractCompilerTest.F_14, ClassFileConstants.JDK14, (list) -> {addJava14Tests(list);}));
+	testAdditionsList.add(new TestsAddition(AbstractCompilerTest.F_15, ClassFileConstants.JDK15, (list) -> {addJava14Tests(list);}));
 	testAdditionsList.add(new TestsAddition(AbstractCompilerTest.F_16, ClassFileConstants.JDK16, (list) -> {addJava16Tests(list);}));
 	testAdditionsList.add(new TestsAddition(AbstractCompilerTest.F_17, ClassFileConstants.JDK17, (list) -> {addJava16Tests(list);}));
 	testAdditionsList.add(new TestsAddition(AbstractCompilerTest.F_18, ClassFileConstants.JDK18, (list) -> {addJava16Tests(list);}));
@@ -133,10 +133,11 @@ private static void addJava23Tests(ArrayList tests_23) {
 	tests_23.add(SelectionMarkdownTest.class);
 }
 private static void addJava16Tests(ArrayList tests_16) {
-	addJava1_8Tests(tests_16);
+	addJava14Tests(tests_16);
 	tests_16.add(PatternMatchingSelectionTest.class);
 }
 private static void addJava14Tests(ArrayList tests_14) {
+	addJava12Tests(tests_14);
 	tests_14.add(SelectionParserTest14.class);
 }
 private static void addJava12Tests(ArrayList tests_12) {

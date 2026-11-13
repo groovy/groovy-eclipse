@@ -23,15 +23,7 @@ import org.eclipse.jdt.internal.compiler.codegen.Opcodes;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
-import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
-import org.eclipse.jdt.internal.compiler.lookup.InferenceContext18;
-import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
-import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
-import org.eclipse.jdt.internal.compiler.lookup.RecordComponentBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-import org.eclipse.jdt.internal.compiler.lookup.Scope;
-import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
+import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public class RecordPattern extends Pattern {
 
@@ -155,6 +147,7 @@ public class RecordPattern extends Pattern {
 				if (tp.getType() == null || tp.getType().isTypeNameVar(scope)) {
 					if (tp.local.binding != null) // rewrite with the inferred type
 						tp.local.binding.type = componentBinding.type;
+					tp.resolvedType = componentBinding.type;
 				}
 			}
 			TypeBinding componentType = componentBinding.type;
@@ -172,7 +165,7 @@ public class RecordPattern extends Pattern {
 
 
 	private ReferenceBinding inferRecordParameterization(BlockScope scope, ReferenceBinding proposedMatchingType) {
-		InferenceContext18 freshInferenceContext = new InferenceContext18(scope);
+		InferenceContext18 freshInferenceContext = new InferenceContext18(scope, new InvocationSite.EmptyWithAstNode(this));
 		try {
 			return freshInferenceContext.inferRecordPatternParameterization(this, scope, proposedMatchingType);
 		} finally {

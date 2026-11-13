@@ -74,6 +74,7 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 			// check if final blank field
 			if (lastFieldBinding.isBlankFinal()
 				    && this.otherBindings != null // the last field binding is only assigned
+				    && this.indexOfFirstFieldBinding == 1 // JLS 16: Type.field is not checked, only a simple name
 	 				&& currentScope.needBlankFinalFieldInitializationCheck(lastFieldBinding)) {
 				FlowInfo fieldInits = flowContext.getInitsForFinalBlankInitializationCheck(lastFieldBinding.declaringClass.original(), flowInfo);
 				if (!fieldInits.isDefinitelyAssigned(lastFieldBinding)) {
@@ -119,14 +120,8 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 	}
 
 	if (isCompound) {
-		if (otherBindingsCount == 0
-				&& lastFieldBinding.isBlankFinal()
-				&& currentScope.needBlankFinalFieldInitializationCheck(lastFieldBinding)) {
-			FlowInfo fieldInits = flowContext.getInitsForFinalBlankInitializationCheck(lastFieldBinding.declaringClass, flowInfo);
-			if (!fieldInits.isDefinitelyAssigned(lastFieldBinding)) {
-				currentScope.problemReporter().uninitializedBlankFinalField(lastFieldBinding, this);
-			}
-		}
+		// no definite assignment check: the compound assignment reads a field through a qualified name, such as
+		// Type.field, and JLS 16 only checks a simple name (or this.field)
 		manageSyntheticAccessIfNecessary(currentScope, lastFieldBinding, otherBindingsCount, flowInfo);
 	}
 

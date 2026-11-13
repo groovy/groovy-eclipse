@@ -848,12 +848,6 @@ public final boolean isDefault() {
 	return !isPublic() && !isProtected() && !isPrivate();
 }
 
-/* Answer true if the receiver is a system generated default abstract method
-*/
-public final boolean isDefaultAbstract() {
-	return (this.modifiers & ExtraCompilerModifiers.AccDefaultAbstract) != 0;
-}
-
 /* Answer true if the receiver is a default method (Java 8 feature) */
 public boolean isDefaultMethod() {
 	return (this.modifiers & ExtraCompilerModifiers.AccDefaultMethod) != 0;

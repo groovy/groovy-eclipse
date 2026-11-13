@@ -62,6 +62,7 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 	if (isCompound) { // check the variable part is initialized if blank final
 		if (this.binding.isBlankFinal()
 			&& this.receiver.isThis()
+			&& !(this.receiver instanceof QualifiedThisReference) // JLS 16 checks x, this.x and (this).x, not a qualified this (C.this.x)
 			&& currentScope.needBlankFinalFieldInitializationCheck(this.binding)) {
 			FlowInfo fieldInits = flowContext.getInitsForFinalBlankInitializationCheck(this.binding.declaringClass.original(), flowInfo);
 			if (!fieldInits.isDefinitelyAssigned(this.binding)) {
@@ -140,7 +141,10 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 
 	manageSyntheticAccessIfNecessary(currentScope, flowInfo, true /*read-access*/);
 	FieldBinding fieldBinding = this.binding;
-	if (this.receiver.isThis() && fieldBinding.isBlankFinal() && currentScope.needBlankFinalFieldInitializationCheck(fieldBinding)) {
+	if (this.receiver.isThis()
+			&& !(this.receiver instanceof QualifiedThisReference) // JLS 16 checks x, this.x and (this).x, not a qualified this (C.this.x)
+			&& fieldBinding.isBlankFinal()
+			&& currentScope.needBlankFinalFieldInitializationCheck(fieldBinding)) {
 		FlowInfo fieldInits = flowContext.getInitsForFinalBlankInitializationCheck(fieldBinding.declaringClass.original(), flowInfo);
 		if (!fieldInits.isDefinitelyAssigned(fieldBinding)) {
 			currentScope.problemReporter().uninitializedBlankFinalField(fieldBinding, this);

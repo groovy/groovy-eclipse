@@ -29,6 +29,7 @@ import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.IClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.core.builder.ClasspathLocation;
 
 public class MultiReleaseTests extends BuilderTests {
 
@@ -45,6 +46,25 @@ public class MultiReleaseTests extends BuilderTests {
 
 	public static Test suite() {
 		return buildTestSuite(MultiReleaseTests.class);
+	}
+
+	public void testPlainAndMultiReleaseJarEqualsIsSymmetric() throws IOException {
+		File jar = File.createTempFile("mrjar", ".jar");
+		try {
+			String path = jar.getAbsolutePath();
+			ClasspathLocation plain = ClasspathLocation.forLibrary(path, null, null, false, "8");
+			ClasspathLocation mr9 = ClasspathLocation.forLibrary(path, null, null, false, "9");
+			ClasspathLocation mr9Again = ClasspathLocation.forLibrary(path, null, null, false, "9");
+			ClasspathLocation mr11 = ClasspathLocation.forLibrary(path, null, null, false, "11");
+			assertFalse(plain.equals(mr9));
+			assertFalse(mr9.equals(plain));
+			assertFalse(mr9.equals(mr11));
+			assertFalse(mr9.hashCode() == mr11.hashCode());
+			assertTrue(mr9.equals(mr9Again));
+			assertEquals(mr9.hashCode(), mr9Again.hashCode());
+		} finally {
+			jar.delete();
+		}
 	}
 
 	public void testMultiReleaseCompile() throws JavaModelException, IOException {

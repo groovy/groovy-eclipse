@@ -21,9 +21,13 @@ import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 public class ClasspathMultiReleaseJar extends ClasspathJar {
+	private static final int VERSIONS_PREFIX_LENGTH = Util.METAINF_VERSIONS.length();
+
 	/** Applicable META-INF/versions directory names, sorted in descending order. */
 	private List<String> releaseVersions;
 	private final int releaseVersion;
+	/** Whether the manifest declares this JAR as multi-release, <code>null</code> until read from the archive. */
+	private Boolean multiRelease;
 
 	public ClasspathMultiReleaseJar(File file, boolean closeZipFileAtEnd,
 			AccessRuleSet accessRuleSet, String destinationPath, String compliance) {
@@ -50,34 +54,17 @@ public class ClasspathMultiReleaseJar extends ClasspathJar {
 	private void initializeMultiReleaseIndex() {
 		this.packageCache = new HashSet<>(41);
 		this.packageCache.add(Util.EMPTY_STRING);
-		int prefixLength = Util.METAINF_VERSIONS.length();
 		Set<Integer> versions = new HashSet<>();
-		boolean multiRelease = Util.isMultiRelease(this.zipFile);
 		for (Enumeration<? extends ZipEntry> entries = this.zipFile.entries(); entries.hasMoreElements();) {
-			String fileName = entries.nextElement().getName();
-			if (multiRelease && fileName.startsWith(Util.METAINF_VERSIONS)) {
-				int separator = fileName.indexOf('/', prefixLength);
-				if (separator == -1) {
-					continue;
-				}
-				String versionSegment = fileName.substring(prefixLength, separator);
-				try {
-					int version = Integer.parseInt(versionSegment);
-					if (version < 9 || version > this.releaseVersion) {
-						continue;
-					}
-					// The JAR specification requires N to match {1-9}{0-9}*, excluding signs and leading zeroes.
-					if (!Integer.toString(version).equals(versionSegment)) {
-						continue;
-					}
-					versions.add(version);
-					fileName = fileName.substring(separator + 1);
-				} catch (NumberFormatException e) {
-					// Ignore malformed version directories as required by the JAR specification.
-					continue;
-				}
+			String entryName = entries.nextElement().getName();
+			int prefixLength = versionedPrefixLength(entryName);
+			if (prefixLength == -1) {
+				continue;
 			}
-			addToPackageCache(fileName, false);
+			if (prefixLength > 0) {
+				versions.add(Integer.valueOf(entryName.substring(VERSIONS_PREFIX_LENGTH, prefixLength - 1)));
+			}
+			addToPackageCache(entryName.substring(prefixLength), false);
 		}
 		List<Integer> sortedVersions = new ArrayList<>(versions);
 		sortedVersions.sort(Comparator.reverseOrder());
@@ -86,6 +73,71 @@ public class ClasspathMultiReleaseJar extends ClasspathJar {
 			result.add(version.toString());
 		}
 		this.releaseVersions = result;
+	}
+
+	private boolean isMultiRelease() {
+		Boolean result = this.multiRelease;
+		if (result == null) {
+			this.multiRelease = result = Boolean.valueOf(Util.isMultiRelease(this.zipFile));
+		}
+		return result.booleanValue();
+	}
+
+	/**
+	 * Answers the length of the <code>META-INF/versions/N/</code> prefix of an entry when <code>N</code> applies to
+	 * the release, <code>0</code> when the entry is not below a version directory of a multi-release JAR, or
+	 * <code>-1</code> when the entry is below a version directory which does not apply and must be ignored.
+	 */
+	private int versionedPrefixLength(String entryName) {
+		if (!entryName.startsWith(Util.METAINF_VERSIONS) || !isMultiRelease()) {
+			return 0;
+		}
+		int separator = entryName.indexOf('/', VERSIONS_PREFIX_LENGTH);
+		if (separator == -1) {
+			return -1;
+		}
+		String versionSegment = entryName.substring(VERSIONS_PREFIX_LENGTH, separator);
+		try {
+			int version = Integer.parseInt(versionSegment);
+			if (version < 9 || version > this.releaseVersion) {
+				return -1;
+			}
+			// The JAR specification requires N to match {1-9}{0-9}*, excluding signs and leading zeroes.
+			if (!Integer.toString(version).equals(versionSegment)) {
+				return -1;
+			}
+		} catch (NumberFormatException e) {
+			// Ignore malformed version directories as required by the JAR specification.
+			return -1;
+		}
+		return separator + 1;
+	}
+
+	/**
+	 * The class files of a multi-release JAR are at its root and in the <code>META-INF/versions/N/</code> folders
+	 * whose <code>N</code> applies to the release. Entries in other version folders are ignored.
+	 */
+	@Override
+	protected String toClassRootRelativeName(String entryName) {
+		int prefixLength = versionedPrefixLength(entryName);
+		return prefixLength == -1 ? null : entryName.substring(prefixLength);
+	}
+
+	@Override
+	public char[][][] findTypeNames(String qualifiedPackageName, String moduleName) {
+		char[][][] typeNames = super.findTypeNames(qualifiedPackageName, moduleName);
+		if (typeNames == null || this.releaseVersions.isEmpty()) {
+			return typeNames;
+		}
+		// a type can be both at the root and in version folders, answer it once
+		Set<String> simpleNames = new HashSet<>();
+		List<char[][]> result = new ArrayList<>(typeNames.length);
+		for (char[][] typeName : typeNames) {
+			if (simpleNames.add(new String(typeName[typeName.length - 1]))) {
+				result.add(typeName);
+			}
+		}
+		return result.size() == typeNames.length ? typeNames : result.toArray(new char[result.size()][][]);
 	}
 
 	@Override
@@ -149,5 +201,6 @@ public class ClasspathMultiReleaseJar extends ClasspathJar {
 	public void reset() {
 		super.reset();
 		this.releaseVersions = Collections.emptyList();
+		this.multiRelease = null;
 	}
 }

@@ -54,27 +54,6 @@
 		</executions>
 	  </plugin>
       <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>copy-batch-compiler-source</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/scripts/source</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>${project.basedir}/scripts/source</directory>
-                  <filtering>true</filtering>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.eclipse.tycho.extras</groupId>
         <artifactId>tycho-custom-bundle-plugin</artifactId>
         <version>${tycho.version}</version>

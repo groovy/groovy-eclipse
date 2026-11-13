@@ -4983,7 +4983,7 @@ public void test447119b() {
 				"        SerializableFunction<List<String>, List<String>> f = i -> { return i; };\n" +
 				"        Method[] methods = X.class.getDeclaredMethods();\n" +
 				"        for (Method m : methods) {\n" +
-				"        	if (m.getName().contains(\"lambda\")) {\n" +
+				"        	if (m.getName().startsWith(\"lambda\")) {\n" +
 				"        		System.out.println(\"- \" + m.getGenericReturnType() + \" \" + m.getName() + \"(\" + Arrays.asList(m.getGenericParameterTypes()) + \")\");\n" +
 				"        	}\n" +
 				"        }\n" +
@@ -5014,7 +5014,7 @@ public void test447119c() {
 				"        SerializableFunction<List<String>, List<String>> f = X::foo;\n" +
 				"        Method[] methods = X.class.getDeclaredMethods();\n" +
 				"        for (Method m : methods) {\n" +
-				"        	if (m.getName().contains(\"foo\")) {\n" +
+				"        	if (m.getName().equals(\"foo\")) {\n" +
 				"        		System.out.println(\"- \" + m.getGenericReturnType() + \" \" + m.getName() + \"(\" + Arrays.asList(m.getGenericParameterTypes()) + \")\");\n" +
 				"        	}\n" +
 				"        }\n" +

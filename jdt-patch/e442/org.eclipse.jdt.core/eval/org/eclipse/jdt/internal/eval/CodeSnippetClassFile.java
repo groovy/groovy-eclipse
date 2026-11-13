@@ -198,8 +198,6 @@ public static void createProblemType(TypeDeclaration typeDeclaration, Compilatio
 				classFile.addProblemMethod(methodDecl, method, problemsCopy);
 			}
 		}
-		// add abstract methods
-		classFile.addDefaultAbstractMethods();
 	}
 	// propagate generation of (problem) member types
 	if (typeDeclaration.memberTypes != null) {

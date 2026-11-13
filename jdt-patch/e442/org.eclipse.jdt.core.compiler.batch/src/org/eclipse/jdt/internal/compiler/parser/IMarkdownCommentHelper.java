@@ -110,6 +110,9 @@ class MarkdownCommentHelper implements IMarkdownCommentHelper {
 	public MarkdownCommentHelper(int lineStart, int commonIndent) {
 		this.markdownLineStart = lineStart;
 		this.commonIndent = commonIndent;
+		// the first line's '///' is consumed before any slash is recorded:
+		// a slash in its text must not count as part of the marker
+		this.slashCount = 3;
 	}
 
 	@Override

@@ -1274,23 +1274,6 @@ public boolean isReadyForAnnotations() {
 	}
 	return false;
 }
-public MethodBinding[] getDefaultAbstractMethods() {
-	if (!isPrototype())
-		return this.prototype.getDefaultAbstractMethods();
-
-	int count = 0;
-	for (int i = this.methods.length; --i >= 0;)
-		if (this.methods[i].isDefaultAbstract())
-			count++;
-	if (count == 0) return Binding.NO_METHODS;
-
-	MethodBinding[] result = new MethodBinding[count];
-	count = 0;
-	for (int i = this.methods.length; --i >= 0;)
-		if (this.methods[i].isDefaultAbstract())
-			result[count++] = this.methods[i];
-	return result;
-}
 
 // NOTE: the return type, arg & exception types of each method of a source type are resolved when needed
 @Override

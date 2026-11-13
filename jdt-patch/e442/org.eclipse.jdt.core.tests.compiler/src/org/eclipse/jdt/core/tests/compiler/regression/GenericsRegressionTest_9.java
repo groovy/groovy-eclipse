@@ -2752,6 +2752,115 @@ public void testIssue5567() {
 	});
 	assertTrue("Test should take less than a second, certainly not a minute", System.currentTimeMillis() < (start + 60000));
 }
+public void testIssue4866() {
+	runNegativeTest(new String[] {
+			"X.java",
+			"""
+			import java.util.function.Function;
+			interface C<A> { }
+			interface S<T> {
+				<A> A m1(C<A> c);
+			}
+			public abstract class X {
+				void foo2(S<String> s) {
+					s.m1(m2(String::toUpperCase, xyz -> "NODATA"));
+				}
+				public abstract <T, K, U>
+					C<?> m2(Function<? super T, ? extends K> keyMapper,
+							Function<? super T, ? extends U> valueMapper);
+			}
+			"""
+		},
+		"""
+		----------
+		1. ERROR in X.java (at line 8)
+			s.m1(m2(String::toUpperCase, xyz -> "NODATA"));
+			     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+		Cannot infer type argument(s) for <T, K, U> m2(Function<? super T,? extends K>, Function<? super T,? extends U>)
+		----------
+		2. ERROR in X.java (at line 8)
+			s.m1(m2(String::toUpperCase, xyz -> "NODATA"));
+			        ^^^^^^^^^^^^^^^^^^^
+		The type String does not define toUpperCase(Object) that is applicable here
+		----------
+		""");
+}
+public void testNonPolyGenericCallAsArgument() {
+	runConformTest(new String[] {
+		"X.java",
+		"""
+		import java.util.function.Function;
+		public class X {
+			// return type does not mention T => call is NOT a poly expression
+			static <T> String inner(Function<? super T, String> f) { return ":x-"+f.apply(null); }
+			static <U> U outer(U u) { System.out.print(u); return u; }
+			public static void main(String... args) {
+				String s = outer(inner(t -> "a"));
+				outer(inner(String::valueOf));
+			}
+		}
+		"""
+	}, ":x-a:x-null");
+}
+
+public void testIssue4866_followup() {
+	runNegativeTest(new String[] {
+		"X.java",
+		"""
+		import java.util.List;
+
+		public class X {
+		    static <T extends List<String>> String inner(T value) {
+		        return "";
+		    }
+
+		    static <U> U outer(U value) {
+		        return value;
+		    }
+
+		    @SuppressWarnings("rawtypes")
+		    static void test(List raw) {
+		        String s = outer(inner(raw));
+		    }
+		}
+		"""
+	},
+	"----------\n" +
+	"1. WARNING in X.java (at line 14)\n" +
+	"	String s = outer(inner(raw));\n" +
+	"	                 ^^^^^^^^^^\n" +
+	"Type safety: Unchecked invocation inner(List) of the generic method inner(T) of type X\n" +
+	"----------\n");
+}
+
+public void testIssue5705() {
+	runConformTest(new String[] {
+		"R.java",
+		"""
+		import java.util.Comparator;
+		import java.util.List;
+		import java.util.Map;
+		import java.util.Optional;
+
+		public class R {
+			void a(Optional<String> o) {
+				use(o.orElseThrow(AssertionError::new));
+			}
+			void b(List<Map.Entry<String, Integer>> l) {
+				l.sort(Comparator.<Map.Entry<String, Integer>>comparingInt(Map.Entry::getValue).reversed()
+						.thenComparing(Map.Entry::getKey));
+			}
+			interface FailableConsumer<T, E extends Throwable> { void accept(T t) throws E; }
+			interface FailableRunnable<E extends Throwable> { void run() throws E; }
+			static <E extends Throwable> String now(FailableRunnable<E> r) throws E { return null; }
+			static <E extends Throwable> void c(FailableConsumer<String, E> consumer) throws E {
+				use(now(() -> consumer.accept("")));
+			}
+			static void use(String s) { }
+		}
+		"""
+	});
+}
 public static Class<GenericsRegressionTest_9> testClass() {
 	return GenericsRegressionTest_9.class;
 }

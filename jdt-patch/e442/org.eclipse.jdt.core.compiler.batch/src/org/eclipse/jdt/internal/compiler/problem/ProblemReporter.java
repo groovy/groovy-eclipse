@@ -4660,7 +4660,7 @@ public void invalidMethod(MessageSend messageSend, MethodBinding method, Scope s
 			problemMethod = (ProblemMethodBinding) method;
 			shownMethod = problemMethod.closestMatch;
 			if (problemMethod.returnType == shownMethod.returnType) { //$IDENTITY-COMPARISON$
-				if (messageSend.expressionContext == ExpressionContext.VANILLA_CONTEXT) {
+				if (messageSend.expressionContext == ExpressionContext.VANILLA_CONTEXT || !messageSend.isPolyExpression()) {
 					TypeVariableBinding[] typeVariables = method.shallowOriginal().typeVariables;
 					String typeArguments = typesAsString(typeVariables, false);
 					this.handle(IProblem.CannotInferInvocationType,

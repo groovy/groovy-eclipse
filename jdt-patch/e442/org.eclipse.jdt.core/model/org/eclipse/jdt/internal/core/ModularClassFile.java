@@ -264,36 +264,34 @@ public class ModularClassFile extends AbstractClassFile implements IModularClass
 	/** Loads the buffer via SourceMapper, and maps it in SourceMapper */
 	private IBuffer mapSource(SourceMapper mapper) throws JavaModelException {
 		char[] contents = mapper.findSource(getModule());
-		if (contents != null) {
-			// create buffer
-			IBuffer buffer = BufferManager.createBuffer(this);
-			if (buffer == null) return null;
-			BufferManager bufManager = getBufferManager();
-			bufManager.addBuffer(buffer);
-
-			// set the buffer source
-			if (buffer.getCharacters() == null){
-				buffer.setContents(contents);
+		IBuffer buffer = contents != null
+				? BufferManager.createBuffer(this)
+				: BufferManager.createNullBuffer(this);
+		if (buffer == null) return null;
+		BufferManager bufManager = getBufferManager();
+		IBuffer existingBuffer;
+		// Recheck before publishing a competing source buffer or NullBuffer.
+		synchronized (bufManager) {
+			existingBuffer = bufManager.getBuffer(this);
+			if (existingBuffer == null) {
+				if (contents != null && buffer.getCharacters() == null) {
+					buffer.setContents(contents);
+				}
+				// Cached buffers must already have their contents and close listener.
+				buffer.addBufferChangedListener(this);
+				bufManager.addBuffer(buffer);
 			}
-
-			// listen to buffer changes
-			buffer.addBufferChangedListener(this);
-
-			// do the source mapping
-			mapper.mapSource((NamedMember) getModule(), contents, null);
-
-			return buffer;
-		} else {
-			// create buffer
-			IBuffer buffer = BufferManager.createNullBuffer(this);
-			if (buffer == null) return null;
-			BufferManager bufManager = getBufferManager();
-			bufManager.addBuffer(buffer);
-
-			// listen to buffer changes
-			buffer.addBufferChangedListener(this);
-			return buffer;
 		}
+		if (existingBuffer != null) {
+			// No listener was installed on this unpublished candidate.
+			buffer.close();
+			return existingBuffer;
+		}
+		if (contents != null) {
+			// Keep source mapping and Java-model access outside the manager lock.
+			mapper.mapSource((NamedMember) getModule(), contents, null);
+		}
+		return buffer;
 	}
 
 	@Override

@@ -51,6 +51,8 @@ protected ZipFile zipFile;
 protected ZipFile annotationZipFile;
 protected boolean closeZipFileAtEnd;
 protected Set<String> packageCache;
+/** The packages with a class file directly inside, as answered by {@link #hasCompilationUnit(String, String)} */
+protected Set<String> compilationUnitPackageCache;
 protected List<String> annotationPaths;
 
 public ClasspathJar(File file, boolean closeZipFileAtEnd,
@@ -162,7 +164,9 @@ public char[][][] findTypeNames(final String qualifiedPackageName, String module
 	final char[] packageArray = qualifiedPackageName.toCharArray();
 	final ArrayList answers = new ArrayList();
 	nextEntry : for (Enumeration<? extends ZipEntry> e = this.zipFile.entries(); e.hasMoreElements(); ) {
-		String fileName = e.nextElement().getName();
+		String fileName = toClassRootRelativeName(e.nextElement().getName());
+		if (fileName == null)
+			continue nextEntry;
 
 		// add the package name & all of its parent packages
 		int last = fileName.lastIndexOf('/');
@@ -214,6 +218,22 @@ void acceptModule(byte[] content) {
 		acceptModule(reader);
 	}
 }
+/**
+ * Answers the name of an entry of the archive relative to the root of the class files, that is the folder in which
+ * the folder of the package <code>a.b</code> is <code>a/b/</code>, or <code>null</code> if the entry is not below
+ * this root and must be ignored when looking for packages and types.
+ * <p>
+ * The class files of a JAR are at its root, so this answers the given name. Subclasses whose class files are in a
+ * folder of the archive (see {@link ClasspathJmod}) answer the name without the folder, those whose class files are
+ * in several folders (see {@link ClasspathMultiReleaseJar}) answer the name without the applicable folder.
+ * </p>
+ *
+ * @param entryName the name of an entry of the archive, as answered by {@link ZipEntry#getName()}
+ * @return the name of the entry relative to the root of the class files, or <code>null</code>
+ */
+protected String toClassRootRelativeName(String entryName) {
+	return entryName;
+}
 protected void addToPackageCache(String fileName, boolean endsWithSep) {
 	int last = endsWithSep ? fileName.length() : fileName.lastIndexOf('/');
 	while (last > 0) {
@@ -234,32 +254,38 @@ public synchronized char[][] getModulesDeclaringPackage(String qualifiedPackageN
 	this.packageCache.add(Util.EMPTY_STRING);
 
 	for (Enumeration<? extends ZipEntry> e = this.zipFile.entries(); e.hasMoreElements(); ) {
-		String fileName = e.nextElement().getName();
-		addToPackageCache(fileName, false);
+		String fileName = toClassRootRelativeName(e.nextElement().getName());
+		if (fileName != null)
+			addToPackageCache(fileName, false);
 	}
 	return singletonModuleNameIf(this.packageCache.contains(qualifiedPackageName));
 }
 @Override
-public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName) {
-	qualifiedPackageName += '/';
-	for (Enumeration<? extends ZipEntry> e = this.zipFile.entries(); e.hasMoreElements(); ) {
-		String fileName = e.nextElement().getName();
-		if (fileName.startsWith(qualifiedPackageName) && fileName.length() > qualifiedPackageName.length()) {
-			String tail = fileName.substring(qualifiedPackageName.length());
-			if (tail.indexOf('/') != -1)
+public synchronized boolean hasCompilationUnit(String qualifiedPackageName, String moduleName) {
+	Set<String> packages = this.compilationUnitPackageCache;
+	if (packages == null) {
+		// one pass over the entries instead of one per package asked for
+		packages = new HashSet<>();
+		for (Enumeration<? extends ZipEntry> e = this.zipFile.entries(); e.hasMoreElements(); ) {
+			String fileName = toClassRootRelativeName(e.nextElement().getName());
+			if (fileName == null)
 				continue;
-			if (tail.toLowerCase().endsWith(SUFFIX_STRING_class))
-				return true;
+			int last = fileName.lastIndexOf('/');
+			if (last != -1 && Util.isClassFileName(fileName))
+				packages.add(fileName.substring(0, last));
 		}
+		this.compilationUnitPackageCache = packages;
 	}
-	return false;
+	return packages.contains(qualifiedPackageName);
 }
 
 @Override
 public char[][] listPackages() {
 	Set<String> packageNames = new HashSet<>();
 	for (Enumeration<? extends ZipEntry> e = this.zipFile.entries(); e.hasMoreElements(); ) {
-		String fileName = e.nextElement().getName();
+		String fileName = toClassRootRelativeName(e.nextElement().getName());
+		if (fileName == null)
+			continue;
 		int lastSlash = fileName.lastIndexOf('/');
 		if (lastSlash != -1 && fileName.toLowerCase().endsWith(SUFFIX_STRING_class))
 			packageNames.add(fileName.substring(0, lastSlash).replace('/', '.'));
@@ -289,6 +315,7 @@ public void reset() {
 		}
 	}
 	this.packageCache = null;
+	this.compilationUnitPackageCache = null;
 	this.annotationPaths = null;
 }
 @Override

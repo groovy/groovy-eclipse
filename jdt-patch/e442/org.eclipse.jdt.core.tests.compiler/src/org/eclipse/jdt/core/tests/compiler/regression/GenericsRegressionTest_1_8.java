@@ -11127,5 +11127,146 @@ public void testBug508834_comment0() {
 				"""
 		});
 	}
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5586
+	public void testGH5586_direct() {
+		runConformTest(
+			new String[] {
+				"Scenario.java",
+				"""
+				public class Scenario {
+					static class Base {}
+					static class Box<E> extends Base {
+						final String tag;
+						Box(String tag) { this.tag = tag; }
+					}
+					interface Function2<R extends Base, A extends Base, S> { R apply(A a, S s); }
+					static <R extends Base, A extends Base, S> R convert(A a, S s, Function2<R, A, S> op) { return op.apply(a, s); }
+					static class Sub extends Base {
+						<F> Box<F> target(Class<F> c) { return new Box<>("target"); }
+						<F> Box<F> run(Class<F> c) { return convert(this, c, Sub::target); }
+					}
+					public static void main(String[] args) {
+						System.out.println(new Sub().run(Integer.class).tag);
+					}
+				}
+				"""
+			},
+			"target");
+	}
+	public void testGH5586_nested() {
+		runConformTest(
+			new String[] {
+				"Scenario.java",
+				"""
+				public class Scenario {
+					static class Base {}
+					static class Box<E> extends Base {
+						final String tag;
+						Box(String tag) { this.tag = tag; }
+					}
+					interface Function2<R extends Base, A extends Base, S> { R apply(A a, S s); }
+					static <R extends Base, A extends Base, S> R convert(A a, S s, Function2<R, A, S> op) { return op.apply(a, s); }
+					static <T> T id(T t) { return t; }
+					static class Sub extends Base {
+						<F> Box<F> target(Class<F> c) { return new Box<>("target"); }
+						<F> Box<F> run(Class<F> c) { return id(convert(this, c, Sub::target)); }
+					}
+					public static void main(String[] args) {
+						System.out.println(new Sub().run(Integer.class).tag);
+					}
+				}
+				"""
+			},
+			"target");
+	}
+	public void testGH5586_threeParameters() {
+		runConformTest(
+			new String[] {
+				"Scenario.java",
+				"""
+				public class Scenario {
+					static class Base {}
+					static class Box<E> extends Base {
+						final String tag;
+						Box(String tag) { this.tag = tag; }
+					}
+					interface Function3<R extends Base, A extends Base, S, T> { R apply(A a, S s, T t); }
+					static <R extends Base, A extends Base, S, T> R convert(A a, S s, T t, Function3<R, A, S, T> op) { return op.apply(a, s, t); }
+					static class Sub extends Base {
+						<F> Box<F> target(Class<F> c, String s) { return new Box<>("target"); }
+						<F> Box<F> run(Class<F> c) { return convert(this, c, "", Sub::target); }
+					}
+					public static void main(String[] args) {
+						System.out.println(new Sub().run(Integer.class).tag);
+					}
+				}
+				"""
+			},
+			"target");
+	}
+	public void testGH5586_boundReceiver() {
+		runConformTest(
+			new String[] {
+				"Scenario.java",
+				"""
+				public class Scenario {
+					static class Base {}
+					static class Box<E> extends Base {
+						final String tag;
+						Box(String tag) { this.tag = tag; }
+					}
+					interface Function1<R extends Base, A> { R apply(A a); }
+					static <R extends Base, A> R convert(A a, Function1<R, A> op) { return op.apply(a); }
+					static class Sub extends Base {
+						<F> Box<F> target(Class<F> c) { return new Box<>("target"); }
+						<F> Box<F> run(Class<F> c) { return convert(c, this::target); }
+					}
+					public static void main(String[] args) {
+						System.out.println(new Sub().run(Integer.class).tag);
+					}
+				}
+				"""
+			},
+			"target");
+	}
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5586
+	// errors must still be reported
+	public void testGH5586_negWrongReceiver() {
+		runNegativeTest(
+			new String[] {
+				"Scenario.java",
+				"""
+				public class Scenario {
+					static class Base {}
+					static class Box<E> extends Base {
+						final String tag;
+						Box(String tag) { this.tag = tag; }
+					}
+					interface Function2<R extends Base, A extends Base, S> { R apply(A a, S s); }
+					static <R extends Base, A extends Base, S> R convert(A a, S s, Function2<R, A, S> op) { return op.apply(a, s); }
+					static class Sub extends Base {
+						<F> Box<F> target(Class<F> c) { return new Box<>("target"); }
+						<F> Box<F> run(Class<F> c) { return convert("s", c, Sub::target); }
+					}
+					public static void main(String[] args) {
+						System.out.println(new Sub().run(Integer.class).tag);
+					}
+				}
+				"""
+			},
+			"""
+			----------
+			1. ERROR in Scenario.java (at line 11)
+				<F> Box<F> run(Class<F> c) { return convert("s", c, Sub::target); }
+				                                    ^^^^^^^
+			The method convert(A, S, Scenario.Function2<R,A,S>) in the type Scenario is not applicable for the arguments (String, Class<F>, Sub::target)
+			----------
+			2. ERROR in Scenario.java (at line 11)
+				<F> Box<F> run(Class<F> c) { return convert("s", c, Sub::target); }
+				                                                    ^^^^^^^^^^^
+			The type Scenario.Sub does not define target(A, S) that is applicable here
+			----------
+			""");
+	}
 
 }

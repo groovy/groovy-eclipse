@@ -497,6 +497,10 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 					case '/':
 						if (this.markdown) {
 							this.markdownHelper.recordSlash(this.index);
+							if (this.lineStarted) {
+								// a slash inside the text is text, also when it ends the text
+								textEndPosition = this.index;
+							}
 							break;
 						} else if (previousChar == '*') {
 							// End of javadoc

@@ -375,7 +375,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			// (the optimization of the constant propagation will be done later on)
 			// cast from constant actual type to variable type
 			this.binding.setConstant(
-				this.binding.isFinal()
+				this.binding.isFinal() && variableType != null
 					? this.initialization.constant.castTo((variableType.id << 4) + this.initialization.constant.typeID())
 					: Constant.NotAConstant);
 		} else if (!isPatternVariable && !isForeachElementVariable) {

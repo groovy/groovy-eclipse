@@ -283,7 +283,7 @@ class TypeBinding implements ITypeBinding {
 					IMethodBinding[] newMethods = new IMethodBinding[length];
 					for (int i = 0; i < length; i++) {
 						org.eclipse.jdt.internal.compiler.lookup.MethodBinding methodBinding = internalMethods[i];
-						if (methodBinding.isDefaultAbstract() || methodBinding.isSynthetic() || (methodBinding.isConstructor() && isInterface())) {
+						if (methodBinding.isSynthetic() || (methodBinding.isConstructor() && isInterface())) {
 							continue;
 						}
 						IMethodBinding methodBinding2 = this.resolver.getMethodBinding(methodBinding);

@@ -36,6 +36,35 @@ public static Class<UnnamedModuleTest> testClass() {
 	return UnnamedModuleTest.class;
 }
 
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5213
+public void testBug5213() {
+	this.runNegativeTest(
+		new String[] {
+			"java/lang/BootstrapType.java",
+			"package java.lang;\n" +
+			"public class BootstrapType {\n" +
+			"}\n",
+			"X.java",
+			"class X {\n" +
+			"	static {\n" +
+			"		final java.lang.BootstrapType[] values = {null};\n" +
+			"	}\n" +
+			"}\n"
+		},
+		"----------\n" +
+		"1. ERROR in java\\lang\\BootstrapType.java (at line 1)\n" +
+		"	package java.lang;\n" +
+		"	        ^^^^^^^^^\n" +
+		"The package java.lang conflicts with a package accessible from another module: java.base\n" +
+		"----------\n" +
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	final java.lang.BootstrapType[] values = {null};\n" +
+		"	      ^^^^^^^^^\n" +
+		"The package java.lang is accessible from more than one module: <unnamed>, java.base\n" +
+		"----------\n");
+}
+
 public void testBug522327() {
 	runConformTest(
 		new String[] {

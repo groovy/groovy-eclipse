@@ -32,51 +32,11 @@ package org.eclipse.jdt.internal.codeassist.select;
  */
 
 import org.eclipse.jdt.internal.compiler.ast.MessageSend;
-import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
-import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
-import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 public class SelectionOnMessageSend extends MessageSend {
-
-	/*
-	 * Cannot answer default abstract match, iterate in superinterfaces of declaring class
-	 * for a better match (default abstract match came from scope lookups).
-	 */
-	private MethodBinding findNonDefaultAbstractMethod(MethodBinding methodBinding) {
-
-		ReferenceBinding[] itsInterfaces = methodBinding.declaringClass.superInterfaces();
-		if (itsInterfaces != Binding.NO_SUPERINTERFACES) {
-			ReferenceBinding[] interfacesToVisit = itsInterfaces;
-			int nextPosition = interfacesToVisit.length;
-
-			for (int i = 0; i < nextPosition; i++) {
-				ReferenceBinding currentType = interfacesToVisit[i];
-				MethodBinding[] methods = currentType.getMethods(methodBinding.selector);
-				if(methods != null) {
-					for (MethodBinding method : methods) {
-						if(methodBinding.areParametersEqual(method))
-							return method;
-					}
-				}
-
-				if ((itsInterfaces = currentType.superInterfaces()) != Binding.NO_SUPERINTERFACES) {
-					int itsLength = itsInterfaces.length;
-					if (nextPosition + itsLength >= interfacesToVisit.length)
-						System.arraycopy(interfacesToVisit, 0, interfacesToVisit = new ReferenceBinding[nextPosition + itsLength + 5], 0, nextPosition);
-					nextInterface : for (int a = 0; a < itsLength; a++) {
-						ReferenceBinding next = itsInterfaces[a];
-						for (int b = 0; b < nextPosition; b++)
-							if (TypeBinding.equalsEquals(next, interfacesToVisit[b])) continue nextInterface;
-						interfacesToVisit[nextPosition++] = next;
-					}
-				}
-			}
-		}
-		return methodBinding;
-	}
 
 	@Override
 	public StringBuilder printExpression(int indent, StringBuilder output) {
@@ -109,11 +69,7 @@ public class SelectionOnMessageSend extends MessageSend {
 						|| this.binding.problemId() == ProblemReasons.NonStaticReferenceInStaticContext)) {
 			throw new SelectionNodeFound();
 		} else {
-			if(this.binding.isDefaultAbstract()) {
-				throw new SelectionNodeFound(findNonDefaultAbstractMethod(this.binding)); // 23594
-			} else {
-				throw new SelectionNodeFound(this.binding);
-			}
+			throw new SelectionNodeFound(this.binding);
 		}
 	}
 }

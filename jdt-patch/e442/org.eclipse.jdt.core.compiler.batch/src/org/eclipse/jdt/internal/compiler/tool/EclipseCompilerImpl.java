@@ -18,7 +18,6 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.tool;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -457,10 +456,11 @@ public class EclipseCompilerImpl extends Main {
 						}
 					}
 
-					try (OutputStream openOutputStream = javaFileForOutput.openOutputStream(); BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(openOutputStream)) {
-						bufferedOutputStream.write(classFile.header, 0, classFile.headerOffset);
-						bufferedOutputStream.write(classFile.contents, 0, classFile.contentsOffset);
-						bufferedOutputStream.flush();
+					// the class file is already in two arrays: a buffer would only copy them
+					try (OutputStream openOutputStream = javaFileForOutput.openOutputStream()) {
+						openOutputStream.write(classFile.header, 0, classFile.headerOffset);
+						openOutputStream.write(classFile.contents, 0, classFile.contentsOffset);
+						openOutputStream.flush();
 					}
 				} catch (IOException e) {
 					this.logger.logNoClassFileCreated(currentDestinationPath, relativeStringName, e);

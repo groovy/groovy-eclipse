@@ -23,7 +23,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 public class LocalVariableTest extends AbstractRegressionTest {
 
 static {
-	TESTS_NAMES = new String[] { "testStaticInitializerInLocalClassAccessingOuterLocalVariable" };
+//	TESTS_NAMES = new String[] { "testBug537033" };
 }
 public LocalVariableTest(String name) {
 	super(name);

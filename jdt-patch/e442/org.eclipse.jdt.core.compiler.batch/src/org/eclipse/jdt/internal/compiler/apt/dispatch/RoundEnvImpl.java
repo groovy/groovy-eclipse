@@ -17,7 +17,7 @@ package org.eclipse.jdt.internal.compiler.apt.dispatch;
 
 import java.lang.annotation.Annotation;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
@@ -134,7 +134,7 @@ public class RoundEnvImpl implements RoundEnvironment
 		}
 		Binding annoBinding = ((TypeElementImpl)a)._binding;
 		if (0 != (annoBinding.getAnnotationTagBits() & TagBits.AnnotationInherited)) {
-			Set<Element> annotatedElements = new HashSet<>(this._annoToUnit.getValues(a));
+			Set<Element> annotatedElements = new LinkedHashSet<>(this._annoToUnit.getValues(a));
 			// For all other root elements that are TypeElements, and for their recursively enclosed
 			// types, add each element if it has a superclass are annotated with 'a'
 			ReferenceBinding annoTypeBinding = (ReferenceBinding) annoBinding;
@@ -210,7 +210,7 @@ public class RoundEnvImpl implements RoundEnvironment
 			return Collections.emptySet();
 		}
 		if (this._rootElements == null) {
-			Set<Element> elements = new HashSet<>(this._units.length);
+			Set<Element> elements = new LinkedHashSet<>(this._units.length);
 			for (CompilationUnitDeclaration unit : this._units) {
 				if (unit.moduleDeclaration != null && unit.moduleDeclaration.binding != null) {
 					Element m = this._factory.newElement(unit.moduleDeclaration.binding);

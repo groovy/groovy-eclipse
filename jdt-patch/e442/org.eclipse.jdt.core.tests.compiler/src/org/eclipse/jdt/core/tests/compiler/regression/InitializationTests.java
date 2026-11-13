@@ -697,6 +697,266 @@ public void testGH4865() {
 			"""
 	});
 }
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5644
+// Missing error: static blank final field read in an anonymous class initializer before it is assigned
+public void testIssue5644() {
+	runNegativeTest(new String[] {
+			"X.java",
+			"""
+			class S1 {
+			    static final int F;
+			    static final Object o = new Object() {
+			        { System.out.println(F); }      // javac: error
+			    };
+			    static { F = 1; }
+			}
+			class S2 {
+			    static final int F;
+			    static { Object o = new Object() { { int v = F; } }; F = 1; }   // javac: error
+			}
+			class S3 {
+			    static final int F;
+			    static final Object o = new Object() { int v = F; };   // javac: error
+			    static { F = 1; }
+			}
+			class S4 {
+			    interface I { int get(); }
+			    static final int F;
+			    static final Object o = new Object() {
+			        { I i = () -> F; }              // javac: error
+			    };
+			    static { F = 1; }
+			}
+			class S5 {
+			    interface I { Object get(); }
+			    static final int F;
+			    static final I i = () -> new Object() { int v = F; };   // javac: error
+			    static { F = 1; }
+			}
+			"""
+	},
+	"----------\n" +
+	"1. ERROR in X.java (at line 4)\n" +
+	"	{ System.out.println(F); }      // javac: error\n" +
+	"	                     ^\n" +
+	"The blank final field F may not have been initialized\n" +
+	"----------\n" +
+	"2. ERROR in X.java (at line 10)\n" +
+	"	static { Object o = new Object() { { int v = F; } }; F = 1; }   // javac: error\n" +
+	"	                                             ^\n" +
+	"The blank final field F may not have been initialized\n" +
+	"----------\n" +
+	"3. WARNING in X.java (at line 14)\n" +
+	"	static final Object o = new Object() { int v = F; };   // javac: error\n" +
+	"	                                           ^\n" +
+	"The value of the field new Object(){}.v is not used\n" +
+	"----------\n" +
+	"4. ERROR in X.java (at line 14)\n" +
+	"	static final Object o = new Object() { int v = F; };   // javac: error\n" +
+	"	                                               ^\n" +
+	"The blank final field F may not have been initialized\n" +
+	"----------\n" +
+	"5. ERROR in X.java (at line 21)\n" +
+	"	{ I i = () -> F; }              // javac: error\n" +
+	"	              ^\n" +
+	"The blank final field F may not have been initialized\n" +
+	"----------\n" +
+	"6. WARNING in X.java (at line 28)\n" +
+	"	static final I i = () -> new Object() { int v = F; };   // javac: error\n" +
+	"	                                            ^\n" +
+	"The value of the field new Object(){}.v is not used\n" +
+	"----------\n" +
+	"7. ERROR in X.java (at line 28)\n" +
+	"	static final I i = () -> new Object() { int v = F; };   // javac: error\n" +
+	"	                                                ^\n" +
+	"The blank final field F may not have been initialized\n" +
+	"----------\n");
+}
+
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5593
+// Bogus error: blank final field may not have been initialized for Outer.this.field in a lambda
+public void testIssue5593() {
+	runConformTest(new String[] {
+			"X.java",
+			"""
+			class P { int x; }
+			public class X {
+				final String store;
+				final P q;
+				final Runnable r = () -> {
+					System.out.print(X.this.store);
+					X.this.q.x = 1;
+					X.this.q.x += 1;
+					X.this.q.x++;
+				};
+				final Object o = new Object() {
+					String s = X.this.store;
+					{ System.out.print(this.s + " " + X.this.store + " "); }
+				};
+				X() {
+					System.out.print((X.this).store + " ");
+					X.this.q.x = 1;
+					this.store = "set";
+					this.q = new P();
+				}
+			}
+			"""
+		});
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5593
+// this.field, (this).field and the simple name of a blank final field are still checked
+public void testIssue5593_negative() {
+	runNegativeTest(new String[] {
+			"X.java",
+			"""
+			class P { int x; }
+			public class X {
+				private final int a;
+				private final int b;
+				private final P p;
+				private final P q;
+				final Runnable r = () -> System.out.print(this.a);
+				X(int c) {
+					System.out.print((this).b);
+					this.p.x += 1;
+					q.x++;
+					this.a = c;
+					this.b = c;
+					this.p = new P();
+					this.q = new P();
+				}
+			}
+			"""
+		},
+		"""
+		----------
+		1. ERROR in X.java (at line 7)
+			final Runnable r = () -> System.out.print(this.a);
+			                                               ^
+		The blank final field a may not have been initialized
+		----------
+		2. ERROR in X.java (at line 9)
+			System.out.print((this).b);
+			                        ^
+		The blank final field b may not have been initialized
+		----------
+		3. ERROR in X.java (at line 10)
+			this.p.x += 1;
+			     ^
+		The blank final field p may not have been initialized
+		----------
+		4. ERROR in X.java (at line 11)
+			q.x++;
+			^
+		The blank final field q may not have been initialized
+		----------
+		""");
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5593
+// a compound assignment through X.this or X only reports the final field
+public void testIssue5593_cannotAssign() {
+	runNegativeTest(new String[] {
+			"X.java",
+			"""
+			public class X {
+				private final int count;
+				static final int F;
+				final Runnable r = () -> X.this.count++;
+				static {
+					X.F += 1;
+				}
+				X(int c) {
+					X.this.count += 1;
+					X.this.count++;
+					this.count = c;
+				}
+			}
+			"""
+		},
+		"""
+		----------
+		1. ERROR in X.java (at line 4)
+			final Runnable r = () -> X.this.count++;
+			                                ^^^^^
+		The final field X.count cannot be assigned
+		----------
+		2. ERROR in X.java (at line 6)
+			X.F += 1;
+			  ^
+		The final field X.F cannot be assigned
+		----------
+		3. ERROR in X.java (at line 9)
+			X.this.count += 1;
+			       ^^^^^
+		The final field X.count cannot be assigned
+		----------
+		4. ERROR in X.java (at line 10)
+			X.this.count++;
+			       ^^^^^
+		The final field X.count cannot be assigned
+		----------
+		""");
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5593
+// a static field read through its type name (X.Q.x = 1) is not checked either
+public void testIssue5593_static() {
+	runConformTest(new String[] {
+			"X.java",
+			"""
+			class P { int x; }
+			public class X {
+				static final P Q;
+				static {
+					X.Q.x = 1;
+					X.Q.x += 1;
+					X.Q.x++;
+					Q = new P();
+				}
+			}
+			"""
+		});
+}
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5593
+// the simple name of a static blank final field is still checked
+public void testIssue5593_static_negative() {
+	runNegativeTest(new String[] {
+			"X.java",
+			"""
+			class P { int x; }
+			public class X {
+				static final P Q1;
+				static final P Q2;
+				static final P Q3;
+				static {
+					Q1.x = 1;
+					Q2.x += 1;
+					Q3.x++;
+					Q1 = new P();
+					Q2 = new P();
+					Q3 = new P();
+				}
+			}
+			"""
+		},
+		"""
+		----------
+		1. ERROR in X.java (at line 7)
+			Q1.x = 1;
+			^^
+		The blank final field Q1 may not have been initialized
+		----------
+		2. ERROR in X.java (at line 8)
+			Q2.x += 1;
+			^^
+		The blank final field Q2 may not have been initialized
+		----------
+		3. ERROR in X.java (at line 9)
+			Q3.x++;
+			^^
+		The blank final field Q3 may not have been initialized
+		----------
+		""");
+}
 public static Class testClass() {
 	return InitializationTests.class;
 }

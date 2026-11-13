@@ -91,7 +91,7 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 	MethodBinding syntheticAccessor;	// synthetic accessor for inner-emulation
 	private int depth;
 	private MethodBinding exactMethodBinding; // != null ==> exact method reference.
-	private boolean receiverPrecedesParameters = false;
+	public boolean receiverPrecedesParameters = false;
 	private TypeBinding[] freeParameters; // descriptor parameters as used for method lookup - may or may not include the receiver
 	private boolean checkingPotentialCompatibility;
 	private MethodBinding[] potentialMethods = Binding.NO_METHODS;

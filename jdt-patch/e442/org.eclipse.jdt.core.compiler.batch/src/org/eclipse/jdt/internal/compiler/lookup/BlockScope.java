@@ -1009,15 +1009,13 @@ public final boolean needBlankFinalFieldInitializationCheck(FieldBinding binding
 	// loop in enclosing context, until reaching the field declaring context
 	MethodScope methodScope = namedMethodScope();
 	while (methodScope != null) {
-		if (methodScope.isStatic != isStatic)
-			return false;
 		if (!methodScope.isInsideInitializer() // inside initializer
 				&& !((AbstractMethodDeclaration) methodScope.referenceContext).isInitializationMethod()) { // inside constructor or clinit
 			return false; // found some non-initializer context
 		}
 		ReferenceBinding enclosingType = methodScope.enclosingReceiverType();
 		if (TypeBinding.equalsEquals(enclosingType, fieldDeclaringClass)) {
-			return true; // found the field context, no need to check any further
+			return methodScope.isStatic == isStatic; // found the field context, no need to check any further
 		}
 		if (!enclosingType.erasure().isAnonymousType()) {
 			return false; // only check inside anonymous type

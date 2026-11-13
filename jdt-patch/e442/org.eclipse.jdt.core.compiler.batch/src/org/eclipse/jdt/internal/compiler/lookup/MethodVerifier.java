@@ -503,7 +503,7 @@ void checkPackagePrivateAbstractMethod(MethodBinding abstractMethod) {
 			MethodBinding[] methods = superType.getMethods(selector);
 			nextMethod : for (int m = methods.length; --m >= 0;) {
 				MethodBinding method = methods[m];
-				if (method.isPrivate() || method.isConstructor() || method.isDefaultAbstract())
+				if (method.isPrivate() || method.isConstructor())
 					continue nextMethod;
 				if (areMethodsCompatible(method, abstractMethod))
 					return; // found concrete implementation of abstract method in same package
@@ -554,7 +554,7 @@ void computeInheritedMethods(ReferenceBinding superclass, ReferenceBinding[] sup
 		MethodBinding[] methods = superType.unResolvedMethods();
 		nextMethod : for (int m = methods.length; --m >= 0;) {
 			MethodBinding inheritedMethod = methods[m];
-			if (inheritedMethod.isPrivate() || inheritedMethod.isConstructor() || inheritedMethod.isDefaultAbstract())
+			if (inheritedMethod.isPrivate() || inheritedMethod.isConstructor())
 				continue nextMethod;
 			MethodBinding[] existingMethods = (MethodBinding[]) this.inheritedMethods.get(inheritedMethod.selector);
 			if (existingMethods != null) {
@@ -703,7 +703,7 @@ void computeMethods() {
 	this.currentMethods = new HashtableOfObject(size == 0 ? 1 : size); // maps method selectors to an array of methods... must search to match paramaters & return type
 	for (int m = size; --m >= 0;) {
 		MethodBinding method = methods[m];
-		if (!(method.isConstructor() || method.isDefaultAbstract())) { // keep all methods which are NOT constructors or default abstract
+		if (!method.isConstructor()) { // keep all methods which are NOT constructors or default abstract
 			MethodBinding[] existingMethods = (MethodBinding[]) this.currentMethods.get(method.selector);
 			if (existingMethods == null)
 				existingMethods = new MethodBinding[1];
@@ -789,7 +789,7 @@ static boolean couldMethodOverride(MethodBinding method, MethodBinding inherited
 		if (inheritedMethod.isProtected() && !method.isProtected())
 			return false;
 	}
-	return true;
+	return method.parameters.length == inheritedMethod.parameters.length;
 }
 
 // Answer whether the method overrides the inheritedMethod

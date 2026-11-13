@@ -290,6 +290,8 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 	public static final char[] GetImplClassSignature = "()Ljava/lang/String;".toCharArray(); //$NON-NLS-1$
 	public static final char[] GetImplMethodSignature = "getImplMethodSignature".toCharArray(); //$NON-NLS-1$
 	public static final char[] GetImplMethodSignatureSignature = "()Ljava/lang/String;".toCharArray(); //$NON-NLS-1$
+	public static final char[] GetInstantiatedMethodType = "getInstantiatedMethodType".toCharArray(); //$NON-NLS-1$
+	public static final char[] GetInstantiatedMethodTypeSignature = "()Ljava/lang/String;".toCharArray(); //$NON-NLS-1$
 	public static final char[] GetCapturedArg = "getCapturedArg".toCharArray(); //$NON-NLS-1$
 	public static final char[] GetCapturedArgSignature = "(I)Ljava/lang/Object;".toCharArray(); //$NON-NLS-1$
 	// Java 8 repeatable annotation support
@@ -920,15 +922,19 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 		return index;
 	}
 	public int literalIndexForMethodHandle(MethodBinding binding) {
-		boolean isInterface = binding.declaringClass.isInterface();
-		int referenceKind =
-			isInterface ? binding.isStatic() ? MethodHandleRefKindInvokeStatic : binding.isPrivate() ? MethodHandleRefKindInvokeSpecial : MethodHandleRefKindInvokeInterface
+		return literalIndexForMethodHandle(methodHandleReferenceKind(binding), binding.declaringClass, binding.selector, binding.signature(), binding.declaringClass.isInterface());
+	}
+
+	/**
+	 * Answers the reference kind of the method handle of the given method.
+	 */
+	public static int methodHandleReferenceKind(MethodBinding binding) {
+		return binding.declaringClass.isInterface()
+			? binding.isStatic() ? MethodHandleRefKindInvokeStatic : binding.isPrivate() ? MethodHandleRefKindInvokeSpecial : MethodHandleRefKindInvokeInterface
 			: binding.isConstructor() ? MethodHandleRefKindNewInvokeSpecial
 			: binding.isStatic() ? MethodHandleRefKindInvokeStatic
 			: binding.isPrivate() ? MethodHandleRefKindInvokeSpecial
 			: MethodHandleRefKindInvokeVirtual;
-
-		return literalIndexForMethodHandle(referenceKind, binding.declaringClass, binding.selector, binding.signature(), isInterface);
 	}
 
 	public int literalIndexForMethodHandle(int referenceKind, TypeBinding declaringClass, char[] selector, char[] signature, boolean isInterface) {

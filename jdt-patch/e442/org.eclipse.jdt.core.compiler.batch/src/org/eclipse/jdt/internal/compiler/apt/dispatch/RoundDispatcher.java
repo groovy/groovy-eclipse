@@ -16,8 +16,8 @@
 package org.eclipse.jdt.internal.compiler.apt.dispatch;
 
 import java.io.PrintWriter;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.RoundEnvironment;
@@ -62,7 +62,7 @@ public class RoundDispatcher {
 		this._provider = provider;
 		this._processors = provider.getDiscoveredProcessors();
 		this._roundEnv = env;
-		this._unclaimedAnnotations = new HashSet<>(rootAnnotations);
+		this._unclaimedAnnotations = new LinkedHashSet<>(rootAnnotations);
 		this._traceProcessorInfo = traceProcessorInfo;
 		this._traceRounds = traceRounds;
 	}
@@ -136,7 +136,7 @@ public class RoundDispatcher {
 	private void handleProcessor(ProcessorInfo pi)
 	{
 		try {
-			Set<TypeElement> annotationsToProcess = new HashSet<>();
+			Set<TypeElement> annotationsToProcess = new LinkedHashSet<>();
 			boolean shouldCall = pi.computeSupportedAnnotations(
 					this._unclaimedAnnotations, annotationsToProcess);
 			if (shouldCall) {

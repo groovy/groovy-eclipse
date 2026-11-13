@@ -708,7 +708,8 @@ private void writeBinaryLocations(CompressedWriter out, ClasspathLocation[] loca
 			writeRestriction(jar.accessRuleSet, out);
 			writeNullablePath(jar.externalAnnotationPath, out);
 			out.writeBoolean(jar.isOnModulePath);
-			out.writeStringUsingDictionary(jar.compliance == null ? "" : jar.compliance); //$NON-NLS-1$
+			String compliance = jar instanceof ClasspathMultiReleaseJar mrJar && mrJar.compliance != null ? mrJar.compliance : ""; //$NON-NLS-1$
+			out.writeStringUsingDictionary(compliance);
 
 		} else if (c instanceof ClasspathJrt) {
 			ClasspathJrt jrt = (ClasspathJrt) c;

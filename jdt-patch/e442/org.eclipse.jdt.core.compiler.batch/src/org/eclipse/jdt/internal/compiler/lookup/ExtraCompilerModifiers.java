@@ -35,8 +35,6 @@ public interface ExtraCompilerModifiers { // modifier constant
 	final int AccCompactConstructor = ASTNode.Bit24;
 	// bit18 - use by ClassFileConstants.AccAnnotationDefault
 	final int AccRestrictedAccess = ASTNode.Bit19;
-	final int AccFromClassFile = ASTNode.Bit20;
-	final int AccDefaultAbstract = ASTNode.Bit20;
 	// bit21 - use by ClassFileConstants.AccDeprecated
 	// bit22 was used for AccDeprecatedImplicitly
 	final int AccAlternateModifierProblem = ASTNode.Bit23;

@@ -109,19 +109,7 @@ protected Set<String> readPackageNames() {
 IModule initializeModule() {
 	IModule mod = null;
 	try (ZipFile file = new ZipFile(this.zipFilename)) {
-		String releasePath = Util.METAINF_VERSIONS + this.compliance + '/' + IModule.MODULE_INFO_CLASS;
-		ClassFileReader classfile = null;
-		try {
-			classfile = ClassFileReader.read(file, releasePath);
-		} catch (Exception e) {
-			if (JavaModelManager.VERBOSE) {
-				trace("", e); //$NON-NLS-1$
-			}
-			// move on to the default
-		}
-		if (classfile == null) {
-			classfile = ClassFileReader.read(file, IModule.MODULE_INFO_CLASS); // FIXME: use jar cache
-		}
+		ClassFileReader classfile = ClassFileReader.read(file, IModule.MODULE_INFO_CLASS);
 		if (classfile != null) {
 			mod = classfile.getModuleDeclaration();
 		}
@@ -139,8 +127,6 @@ volatile long lastModified;
 volatile long fileSize;
 /** lazy initialized **/
 private volatile Set<String> knownPackageNames;
-// Meant for ClasspathMultiReleaseJar, not used in here
-String compliance;
 
 ClasspathJar(IFile resource, AccessRuleSet accessRuleSet, IPath externalAnnotationPath, boolean isOnModulePath) {
 	this.resource = resource;
@@ -214,14 +200,11 @@ public void cleanup() {
 @Override
 public boolean equals(Object o) {
 	if (this == o) return true;
-	if (!(o instanceof ClasspathJar)) return false;
+	if (o == null || getClass() != o.getClass()) return false;
 	ClasspathJar jar = (ClasspathJar) o;
 	if (this.accessRuleSet != jar.accessRuleSet)
 		if (this.accessRuleSet == null || !this.accessRuleSet.equals(jar.accessRuleSet))
 			return false;
-	if (!Util.equalOrNull(this.compliance, jar.compliance)) {
-		return false;
-	}
 	return this.zipFilename.equals(jar.zipFilename)
 			&& lastModified() == jar.lastModified()
 			&& this.isOnModulePath == jar.isOnModulePath

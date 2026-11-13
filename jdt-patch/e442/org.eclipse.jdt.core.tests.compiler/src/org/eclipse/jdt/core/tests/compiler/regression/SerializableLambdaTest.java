@@ -36,6 +36,7 @@ import org.eclipse.jdt.core.util.IConstantPoolConstant;
 import org.eclipse.jdt.core.util.IConstantPoolEntry;
 import org.eclipse.jdt.core.util.IConstantPoolEntry2;
 import org.eclipse.jdt.core.util.IMethodInfo;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.util.BootstrapMethodsAttribute;
 
@@ -2352,6 +2353,346 @@ public class SerializableLambdaTest extends AbstractRegressionTest {
 				"}"
 				},
 				"OK");
+	}
+	// Two method references to the same method that differ only by their instantiated method type
+	// https://bugs.openjdk.org/browse/JDK-8208752
+	public void testDeserializeLambdaInstantiatedMethodType() {
+		// javac before 27 throws a ClassCastException (JDK-8208752)
+		this.runConformTest(true /* skipJavac */, null, new String[] {
+				"X.java",
+				"import java.io.*;\n" +
+				"import java.util.function.Function;\n" +
+				"public class X {\n" +
+				"	static Object roundTrip(Object o) throws Exception {\n" +
+				"		ByteArrayOutputStream bytes = new ByteArrayOutputStream();\n" +
+				"		try (ObjectOutputStream out = new ObjectOutputStream(bytes)) {\n" +
+				"			out.writeObject(o);\n" +
+				"		}\n" +
+				"		try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {\n" +
+				"			return in.readObject();\n" +
+				"		}\n" +
+				"	}\n" +
+				"	@SuppressWarnings(\"unchecked\")\n" +
+				"	public static void main(String[] args) throws Exception {\n" +
+				"		Function<String, String> a = (Function<String, String> & Serializable) Object::toString;\n" +
+				"		Function<Object, String> b = (Function<Object, String> & Serializable) Object::toString;\n" +
+				"		Function<String, String> a2 = (Function<String, String>) roundTrip(a);\n" +
+				"		Function<Object, String> b2 = (Function<Object, String>) roundTrip(b);\n" +
+				"		System.out.println(a2.apply(\"a\") + \" \" + b2.apply(new Object() {\n" +
+				"			@Override\n" +
+				"			public String toString() {\n" +
+				"				return \"b\";\n" +
+				"			}\n" +
+				"		}));\n" +
+				"	}\n" +
+				"}\n"
+				},
+				"a b");
+	}
+	// $deserializeLambda$ calls a helper per implementation method name, which deserializes the lambdas and method
+	// references with this name
+	public void testDeserializeLambdaHelpers() {
+		// the names of the helpers depend on the names of the lambdas, javac before 27 has no helpers
+		this.runConformTest(true /* skipJavac */, null, new String[] {
+				"X.java",
+				"import java.io.*;\n" +
+				"import java.lang.reflect.Method;\n" +
+				"import java.util.*;\n" +
+				"import java.util.function.*;\n" +
+				"public class X implements Serializable {\n" +
+				"	interface SS<T> extends Supplier<T>, Serializable {}\n" +
+				"	interface SF<T, R> extends Function<T, R>, Serializable {}\n" +
+				"	interface I extends Serializable {\n" +
+				"		default SS<String> d() { return () -> \"default\"; }\n" +
+				"		static SS<String> s() { return I::name; }\n" +
+				"		static String name() { return \"static\"; }\n" +
+				"	}\n" +
+				"	static class C implements I {}\n" +
+				"	static class Foo implements Serializable {\n" +
+				"		final String s;\n" +
+				"		Foo() { this(\"-\"); }\n" +
+				"		Foo(String s) { this.s = s; }\n" +
+				"		@Override\n" +
+				"		public String toString() { return this.s; }\n" +
+				"	}\n" +
+				"	static String Aa() { return \"Aa\"; } // same hash code as BB\n" +
+				"	static String BB() { return \"BB\"; }\n" +
+				"	String field = \"f\";\n" +
+				"	String get() { return this.field; }\n" +
+				"	static Object roundTrip(Object o) throws Exception {\n" +
+				"		ByteArrayOutputStream bytes = new ByteArrayOutputStream();\n" +
+				"		try (ObjectOutputStream out = new ObjectOutputStream(bytes)) {\n" +
+				"			out.writeObject(o);\n" +
+				"		}\n" +
+				"		try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {\n" +
+				"			return in.readObject();\n" +
+				"		}\n" +
+				"	}\n" +
+				"	@SuppressWarnings(\"unchecked\")\n" +
+				"	public static void main(String[] args) throws Exception {\n" +
+				"		SS<Foo> c1 = Foo::new;\n" +
+				"		SF<String, Foo> c2 = Foo::new;\n" +
+				"		SF<Integer, int[]> c3 = int[]::new;\n" +
+				"		System.out.println(((SS<Foo>) roundTrip(c1)).get() + \" \" + ((SF<String, Foo>) roundTrip(c2)).apply(\"x\") + \" \"\n" +
+				"				+ ((SF<Integer, int[]>) roundTrip(c3)).apply(3).length);\n" +
+				"		SF<Object, String> v1 = String::valueOf;\n" +
+				"		SF<Integer, String> v2 = String::valueOf;\n" +
+				"		SF<char[], String> v3 = String::valueOf;\n" +
+				"		System.out.println(((SF<Object, String>) roundTrip(v1)).apply(1.5) + \" \" + ((SF<Integer, String>) roundTrip(v2)).apply(7) + \" \"\n" +
+				"				+ ((SF<char[], String>) roundTrip(v3)).apply(new char[] { 'c' }));\n" +
+				"		SS<String> h1 = X::Aa;\n" +
+				"		SS<String> h2 = X::BB;\n" +
+				"		System.out.println(((SS<String>) roundTrip(h1)).get() + \" \" + ((SS<String>) roundTrip(h2)).get());\n" +
+				"		X x = new X();\n" +
+				"		int i = 1;\n" +
+				"		long l = 2;\n" +
+				"		SS<String> b = x::get;\n" +
+				"		SS<String> cap = () -> x.field + i + l;\n" +
+				"		SS<SS<String>> nested = () -> () -> \"nested\" + i;\n" +
+				"		System.out.println(((SS<String>) roundTrip(b)).get() + \" \" + ((SS<String>) roundTrip(cap)).get() + \" \"\n" +
+				"				+ ((SS<String>) roundTrip(((SS<SS<String>>) roundTrip(nested)).get())).get());\n" +
+				"		System.out.println(((SS<String>) roundTrip(new C().d())).get() + \" \" + ((SS<String>) roundTrip(I.s())).get());\n" +
+				"		List<String> names = new ArrayList<>();\n" +
+				"		for (Method m : X.class.getDeclaredMethods())\n" +
+				"			if (m.getName().startsWith(\"$deserializeLambda$\"))\n" +
+				"				names.add(m.getName());\n" +
+				"		Collections.sort(names);\n" +
+				"		System.out.println(names);\n" +
+				"	}\n" +
+				"}\n"
+				},
+				"- x 3\n" +
+				"1.5 7 c\n" +
+				"Aa BB\n" +
+				"f f12 nested1\n" +
+				"default static\n" +
+				"[$deserializeLambda$, $deserializeLambda$$Aa, $deserializeLambda$$BB, $deserializeLambda$$get, $deserializeLambda$$lambda$10, " +
+				"$deserializeLambda$$lambda$11, $deserializeLambda$$lambda$2, $deserializeLambda$$lambda$9, $deserializeLambda$$valueOf, " +
+				"$deserializeLambda$init]");
+	}
+	public void testDeserializeLambdaInvalid() {
+		// javac before 27 does not check the instantiated method type (JDK-8208752)
+		this.runConformTest(true /* skipJavac */, null, new String[] {
+				"X.java",
+				"import java.io.Serializable;\n" +
+				"import java.lang.invoke.SerializedLambda;\n" +
+				"import java.lang.reflect.InvocationTargetException;\n" +
+				"import java.lang.reflect.Method;\n" +
+				"import java.util.function.Supplier;\n" +
+				"public class X {\n" +
+				"	static String Aa() { return \"Aa\"; } // \"Aa\", \"BB\" and \"C#\" have the same hash code\n" +
+				"	static String BB() { return \"BB\"; }\n" +
+				"	static void deserialize(SerializedLambda l, String implMethodName, String instantiatedMethodType) throws Exception {\n" +
+				"		SerializedLambda changed = new SerializedLambda(X.class, l.getFunctionalInterfaceClass(), l.getFunctionalInterfaceMethodName(),\n" +
+				"				l.getFunctionalInterfaceMethodSignature(), l.getImplMethodKind(), l.getImplClass(), implMethodName,\n" +
+				"				l.getImplMethodSignature(), instantiatedMethodType, new Object[0]);\n" +
+				"		Method deserializeLambda = X.class.getDeclaredMethod(\"$deserializeLambda$\", SerializedLambda.class);\n" +
+				"		deserializeLambda.setAccessible(true);\n" +
+				"		try {\n" +
+				"			System.out.println(((Supplier<?>) deserializeLambda.invoke(null, changed)).get());\n" +
+				"		} catch (InvocationTargetException e) {\n" +
+				"			System.out.println(e.getCause());\n" +
+				"		}\n" +
+				"	}\n" +
+				"	public static void main(String[] args) throws Exception {\n" +
+				"		Supplier<String> s = (Supplier<String> & Serializable) X::Aa;\n" +
+				"		Supplier<Object> o = (Supplier<Object> & Serializable) X::BB;\n" +
+				"		Method writeReplace = s.getClass().getDeclaredMethod(\"writeReplace\");\n" +
+				"		writeReplace.setAccessible(true);\n" +
+				"		SerializedLambda l = (SerializedLambda) writeReplace.invoke(s);\n" +
+				"		deserialize(l, \"Aa\", \"()Ljava/lang/String;\");\n" +
+				"		deserialize(l, \"BB\", \"()Ljava/lang/Object;\");\n" +
+				"		deserialize(l, \"BB\", \"()Ljava/lang/String;\");\n" +
+				"		deserialize(l, \"C#\", \"()Ljava/lang/String;\");\n" +
+				"		deserialize(l, \"unknown\", \"()Ljava/lang/String;\");\n" +
+				"	}\n" +
+				"}\n"
+				},
+				"Aa\n" +
+				"BB\n" +
+				"java.lang.IllegalArgumentException: Invalid lambda deserialization\n" +
+				"java.lang.IllegalArgumentException: Invalid lambda deserialization\n" +
+				"java.lang.IllegalArgumentException: Invalid lambda deserialization");
+	}
+	// The kind of the implementation method of a reference to a private constructor is newInvokeSpecial
+	public void testDeserializeLambdaPrivateConstructor() {
+		this.runConformTest(new String[] {
+				"X.java",
+				"import java.io.*;\n" +
+				"import java.util.function.*;\n" +
+				"public class X implements Serializable {\n" +
+				"	interface SS extends Supplier<Object>, Serializable {}\n" +
+				"	interface SF extends Function<String, Object>, Serializable {}\n" +
+				"	final String s;\n" +
+				"	private X() { this(\"private\"); }\n" +
+				"	private X(String s) { this.s = s; }\n" +
+				"	@Override\n" +
+				"	public String toString() { return this.s; }\n" +
+				"	static Object roundTrip(Object o) throws Exception {\n" +
+				"		ByteArrayOutputStream bytes = new ByteArrayOutputStream();\n" +
+				"		try (ObjectOutputStream out = new ObjectOutputStream(bytes)) {\n" +
+				"			out.writeObject(o);\n" +
+				"		}\n" +
+				"		try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {\n" +
+				"			return in.readObject();\n" +
+				"		}\n" +
+				"	}\n" +
+				"	public static void main(String[] args) throws Exception {\n" +
+				"		SS a = X::new;\n" +
+				"		SF b = X::new;\n" +
+				"		System.out.println(((SS) roundTrip(a)).get() + \" \" + ((SF) roundTrip(b)).apply(\"x\"));\n" +
+				"	}\n" +
+				"}\n"
+				},
+				"private x");
+	}
+	// A helper gets a suffix when a method of the type has its name and its descriptor
+	public void testDeserializeLambdaHelperNameClash() {
+		// the class file of javac 27 has duplicate methods, javac before 27 has no helpers
+		this.runConformTest(true /* skipJavac */, null, new String[] {
+				"X.java",
+				"import java.io.*;\n" +
+				"import java.lang.invoke.SerializedLambda;\n" +
+				"import java.lang.reflect.Method;\n" +
+				"import java.util.*;\n" +
+				"import java.util.function.Supplier;\n" +
+				"public class X {\n" +
+				"	interface SS extends Supplier<Object>, Serializable {}\n" +
+				"	static Object foo() { return \"foo\"; }\n" +
+				"	static Object foo$1() { return \"foo$1\"; }\n" +
+				"	static Object bar() { return \"bar\"; }\n" +
+				"	// methods with the name and the descriptor of a helper\n" +
+				"	static Object $deserializeLambda$$foo(SerializedLambda l) { return \"declared\"; }\n" +
+				"	static Object $deserializeLambda$$foo$1(SerializedLambda l) { return \"declared\"; }\n" +
+				"	static Object $deserializeLambda$init(SerializedLambda l) { return \"declared\"; }\n" +
+				"	// a method with the name of a helper and another descriptor\n" +
+				"	static String $deserializeLambda$$bar(String s) { return s; }\n" +
+				"	static Object roundTrip(Object o) throws Exception {\n" +
+				"		ByteArrayOutputStream bytes = new ByteArrayOutputStream();\n" +
+				"		try (ObjectOutputStream out = new ObjectOutputStream(bytes)) {\n" +
+				"			out.writeObject(o);\n" +
+				"		}\n" +
+				"		try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {\n" +
+				"			return in.readObject();\n" +
+				"		}\n" +
+				"	}\n" +
+				"	public static void main(String[] args) throws Exception {\n" +
+				"		SS a = X::foo;\n" +
+				"		SS b = X::foo$1;\n" +
+				"		SS c = X::bar;\n" +
+				"		SS d = Object::new;\n" +
+				"		System.out.println(((SS) roundTrip(a)).get() + \" \" + ((SS) roundTrip(b)).get() + \" \" + ((SS) roundTrip(c)).get() + \" \"\n" +
+				"				+ (((SS) roundTrip(d)).get() != null) + \" \" + $deserializeLambda$$foo(null) + \" \" + $deserializeLambda$$bar(\"s\"));\n" +
+				"		List<String> names = new ArrayList<>();\n" +
+				"		for (Method m : X.class.getDeclaredMethods())\n" +
+				"			if (m.getName().startsWith(\"$deserializeLambda$\"))\n" +
+				"				names.add(m.getName() + (m.isSynthetic() ? \" (synthetic)\" : \"\"));\n" +
+				"		Collections.sort(names);\n" +
+				"		System.out.println(names);\n" +
+				"	}\n" +
+				"}\n"
+				},
+				"foo foo$1 bar true declared s\n" +
+				"[$deserializeLambda$ (synthetic), $deserializeLambda$$bar, $deserializeLambda$$bar (synthetic), $deserializeLambda$$foo, " +
+				"$deserializeLambda$$foo$1, $deserializeLambda$$foo$1$1 (synthetic), $deserializeLambda$$foo$2 (synthetic), " +
+				"$deserializeLambda$init, $deserializeLambda$init$1 (synthetic)]");
+	}
+	// A helper also gets a suffix for a generic method, an instance method, a bridge method and an abstract method
+	public void testDeserializeLambdaHelperNameClash2() {
+		// the class file of javac 27 has duplicate methods, javac before 27 has no helpers
+		this.runConformTest(true /* skipJavac */, null, new String[] {
+				"X.java",
+				"import java.io.*;\n" +
+				"import java.lang.invoke.SerializedLambda;\n" +
+				"import java.lang.reflect.Method;\n" +
+				"import java.util.*;\n" +
+				"import java.util.function.Supplier;\n" +
+				"public class X implements J {\n" +
+				"	interface SS extends Supplier<Object>, Serializable {}\n" +
+				"	static Object foo() { return \"foo\"; }\n" +
+				"	static Object bar() { return \"bar\"; }\n" +
+				"	static Object baz() { return \"baz\"; }\n" +
+				"	// the erasure of a generic method\n" +
+				"	static <T> T $deserializeLambda$$foo(SerializedLambda l) { return null; }\n" +
+				"	// an instance method\n" +
+				"	Object $deserializeLambda$$bar(SerializedLambda l) { return null; }\n" +
+				"	// a covariant override, with the bridge method $deserializeLambda$$baz(SerializedLambda)Object\n" +
+				"	public String $deserializeLambda$$baz(SerializedLambda l) { return \"override\"; }\n" +
+				"	static Object roundTrip(Object o) throws Exception {\n" +
+				"		ByteArrayOutputStream bytes = new ByteArrayOutputStream();\n" +
+				"		try (ObjectOutputStream out = new ObjectOutputStream(bytes)) {\n" +
+				"			out.writeObject(o);\n" +
+				"		}\n" +
+				"		try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {\n" +
+				"			return in.readObject();\n" +
+				"		}\n" +
+				"	}\n" +
+				"	static List<String> helpers(Class<?> c) {\n" +
+				"		List<String> names = new ArrayList<>();\n" +
+				"		for (Method m : c.getDeclaredMethods())\n" +
+				"			if (m.getName().startsWith(\"$deserializeLambda$$\"))\n" +
+				"				names.add(m.getName() + (m.isSynthetic() ? \" (synthetic)\" : \"\"));\n" +
+				"		Collections.sort(names);\n" +
+				"		return names;\n" +
+				"	}\n" +
+				"	public static void main(String[] args) throws Exception {\n" +
+				"		SS a = X::foo;\n" +
+				"		SS b = X::bar;\n" +
+				"		SS c = X::baz;\n" +
+				"		System.out.println(((SS) roundTrip(a)).get() + \" \" + ((SS) roundTrip(b)).get() + \" \" + ((SS) roundTrip(c)).get() + \" \"\n" +
+				"				+ ((J) new X()).$deserializeLambda$$baz(null) + \" \" + ((SS) roundTrip(I.qux())).get());\n" +
+				"		System.out.println(helpers(X.class));\n" +
+				"		System.out.println(helpers(I.class));\n" +
+				"	}\n" +
+				"}\n" +
+				"interface J {\n" +
+				"	Object $deserializeLambda$$baz(SerializedLambda l);\n" +
+				"}\n" +
+				"interface I {\n" +
+				"	// an abstract method\n" +
+				"	Object $deserializeLambda$$name(SerializedLambda l);\n" +
+				"	static Object name() { return \"qux\"; }\n" +
+				"	static X.SS qux() { return I::name; }\n" +
+				"}\n"
+				},
+				"foo bar baz override qux\n" +
+				"[$deserializeLambda$$bar, $deserializeLambda$$bar$1 (synthetic), $deserializeLambda$$baz, $deserializeLambda$$baz (synthetic), " +
+				"$deserializeLambda$$baz$1 (synthetic), $deserializeLambda$$foo, $deserializeLambda$$foo$1 (synthetic)]\n" +
+				"[$deserializeLambda$$name, $deserializeLambda$$name$1 (synthetic)]");
+	}
+	// The size of $deserializeLambda$ does not depend on the checks of each lambda: more lambdas fit in a class
+	// (423 before), $deserializeLambda$ is then generated in wide mode
+	public void testDeserializeLambdaManyLambdas() {
+		if (this.complianceLevel > ClassFileConstants.JDK1_8)
+			return; // the options are the same at all compliance levels
+		// $deserializeLambda$ is generated in wide mode from 2185 lambdas and exceeds 64 KB from 2340
+		int count = 2260;
+		StringBuilder source = new StringBuilder(
+				"import java.io.*;\n" +
+				"public class X {\n" +
+				"	interface I extends Serializable {\n" +
+				"		int f(String s);\n" +
+				"	}\n");
+		for (int i = 0; i < count; i++) {
+			source.append("	static I m").append(i).append("() { return s -> s.length() + ").append(i).append("; }\n");
+		}
+		source.append(
+				"	public static void main(String[] args) throws Exception {\n" +
+				"		long sum = 0;\n" +
+				"		for (int i = 0; i < " + count + "; i++) {\n" +
+				"			ByteArrayOutputStream bytes = new ByteArrayOutputStream();\n" +
+				"			try (ObjectOutputStream out = new ObjectOutputStream(bytes)) {\n" +
+				"				out.writeObject(X.class.getDeclaredMethod(\"m\" + i).invoke(null));\n" +
+				"			}\n" +
+				"			try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {\n" +
+				"				sum += ((I) in.readObject()).f(\"ab\");\n" +
+				"			}\n" +
+				"		}\n" +
+				"		System.out.println(sum);\n" +
+				"	}\n" +
+				"}\n");
+		// javac does not support as many serializable lambdas in a class
+		this.runConformTest(true /* skipJavac */, null, new String[] { "X.java", source.toString() }, String.valueOf(2L * count + (long) count * (count - 1) / 2));
 	}
 	// ---
 

@@ -16,6 +16,7 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -317,6 +318,9 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 					argumentTypes = capturedFunctionType.parameters;
 				} else {
 					argumentTypes = functionType.parameters;
+				}
+				if (reference.receiverPrecedesParameters) {
+					argumentTypes = Arrays.copyOfRange(argumentTypes, 1, argumentTypes.length);
 				}
 				SuspendedInferenceRecord prevInvocation = inferenceContext.enterPolyInvocation(reference, reference.createPseudoExpressions(argumentTypes));
 

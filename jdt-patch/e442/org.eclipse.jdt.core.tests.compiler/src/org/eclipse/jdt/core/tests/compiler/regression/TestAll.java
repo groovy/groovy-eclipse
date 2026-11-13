@@ -29,6 +29,7 @@ import java.util.List;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.eclipse.jdt.core.tests.compiler.unicode.*;
+import org.eclipse.jdt.core.tests.compiler.util.ClasspathJarTest;
 import org.eclipse.jdt.core.tests.compiler.util.HashtableOfObjectTest;
 import org.eclipse.jdt.core.tests.compiler.util.JrtUtilTest;
 import org.eclipse.jdt.core.tests.dom.StandAloneASTParserTest;
@@ -147,6 +148,7 @@ public static Test suite() {
 	standardTests.add(ClassFileReaderTest_1_8.class);
 	standardTests.add(RepeatableAnnotationTest.class);
 	standardTests.add(GenericsRegressionTest_1_8.class);
+	standardTests.add(InferenceScalabilityTest.class);
 	standardTests.add(Unicode1_8Test.class);
 	standardTests.add(LambdaShapeTests.class);
 	standardTests.add(StringConcatTest.class);
@@ -274,6 +276,7 @@ public static Test suite() {
 	all.addTest(new TestSuite(StandAloneASTParserTest.class));
 	all.addTest(new TestSuite(HashtableOfObjectTest.class));
 	all.addTest(new TestSuite(JrtUtilTest.class));
+	all.addTest(new TestSuite(ClasspathJarTest.class));
 	all.addTest(new TestSuite(org.eclipse.jdt.core.tests.compiler.util.UtilTest.class));
 
 	int possibleComplianceLevels = AbstractCompilerTest.getPossibleComplianceLevels();

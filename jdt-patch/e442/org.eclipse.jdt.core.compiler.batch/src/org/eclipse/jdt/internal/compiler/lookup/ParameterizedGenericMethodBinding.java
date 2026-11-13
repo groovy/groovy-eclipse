@@ -145,7 +145,6 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 			return originalMethod;  // per parity with old F & G integration.
 		TypeBinding[] parameters = originalMethod.parameters;
 		CompilerOptions compilerOptions = scope.compilerOptions();
-		boolean invocationTypeInferred = false;
 		boolean requireBoxing = false;
 		boolean allArgumentsAreProper = true;
 
@@ -222,7 +221,6 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 				if (InferenceContext18.DEBUG) {
 					System.out.println("Result=\n"+result); //$NON-NLS-1$
 				}
-				invocationTypeInferred = infCtx18.stepCompleted == InferenceContext18.TYPE_INFERRED_FINAL;
 				hasReturnProblem |= result == null;
 				if (hasReturnProblem)
 					result = provisionalResult; // let's prefer a type error regarding the return type over reporting no match at all
@@ -254,7 +252,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 								return problemMethod;
 							}
 						}
-						if (invocationTypeInferred) {
+						if (infCtx18.stepCompleted == InferenceContext18.TYPE_INFERRED_FINAL) {
 							if (compilerOptions.isAnnotationBasedNullAnalysisEnabled)
 								NullAnnotationMatching.checkForContradictions(methodSubstitute, invocationSite, scope);
 							methodSubstitute.boundCheck18(scope, arguments, invocationSite); // detect unchecked type arguments

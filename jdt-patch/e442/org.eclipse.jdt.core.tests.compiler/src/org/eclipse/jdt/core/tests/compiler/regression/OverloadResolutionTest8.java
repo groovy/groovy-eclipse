@@ -2786,4 +2786,35 @@ public void testGH2941_b() {
 			"""
 		});
 }
+// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/4357
+// ECJ accepts ambiguous method call between concrete parameter and bounded type variable while javac rejects as ambiguous
+public void testIssue4357() {
+	this.runNegativeTest(
+		new String[] {
+			"Test.java",
+			"""
+			public class Test {
+			    public static void main(String[] args) {
+			        TemplateClass<String> instance = new TemplateClass<>();
+			        instance.specializedMethod("test");
+			    }
+			}
+
+			class TemplateClass<T> {
+
+			    public void specializedMethod(String value) {
+			    }
+
+			    public <U extends T> void specializedMethod(U value) {
+			    }
+			}
+			""",
+		},
+		"----------\n" +
+		"1. ERROR in Test.java (at line 4)\n" +
+		"	instance.specializedMethod(\"test\");\n" +
+		"	         ^^^^^^^^^^^^^^^^^\n" +
+		"The method specializedMethod(String) is ambiguous for the type TemplateClass<String>\n" +
+		"----------\n");
+}
 }

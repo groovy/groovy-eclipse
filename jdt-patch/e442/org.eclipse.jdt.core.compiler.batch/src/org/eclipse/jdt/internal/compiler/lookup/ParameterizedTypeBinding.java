@@ -675,9 +675,11 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 					foundNothing = false; // inner type lookups must know that a method with this name exists
 					if (method.parameters.length == argCount) {
 						TypeBinding[] toMatch = method.parameters;
+						TypeBinding[] typeVariables = method.typeVariables();
 						for (int iarg = 0; iarg < argCount; iarg++)
 							if (TypeBinding.notEquals(toMatch[iarg], argumentTypes[iarg]))
-								continue nextMethod;
+								if (!toMatch[iarg].mentionsAny(typeVariables, -1)) // can't conclusively rule out with type variables in the picture
+									continue nextMethod;
 						if (match != null) return null; // collision case
 						match = method;
 					}
@@ -689,10 +691,12 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 			nextMethod : for (int m = matchingMethods.length; --m >= 0;) {
 				MethodBinding method = matchingMethods[m];
 				TypeBinding[] toMatch = method.parameters;
+				TypeBinding[] typeVariables = method.typeVariables();
 				if (toMatch.length == argCount) {
 					for (int p = 0; p < argCount; p++)
 						if (TypeBinding.notEquals(toMatch[p], argumentTypes[p]))
-							continue nextMethod;
+							if (!toMatch[p].mentionsAny(typeVariables, -1)) // can't conclusively rule out with type variables in the picture
+								continue nextMethod;
 						if (match != null) return null; // collision case
 						match = method;
 				}

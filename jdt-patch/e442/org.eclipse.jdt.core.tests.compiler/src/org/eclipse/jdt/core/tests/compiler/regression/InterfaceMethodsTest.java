@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2025 GK Software AG, IBM Corporation and others.
+ * Copyright (c) 2013, 2026 GK Software AG, IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -3273,8 +3273,7 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 		runner.javacTestOptions = JavacHasABug.JavacBug8337980;
 		runner.runNegativeTest();
 	}
-	// disabled because https://github.com/eclipse-jdt/eclipse.jdt.core/pull/4727 had to be reverted
-	public void _testGH1600() {
+	public void testGH1600_original() {
 		runConformTest(new String[] {"TestField.java",
 			"""
 			public class TestField extends CustomField {
@@ -3300,6 +3299,46 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 				}
 			}
 			"""});
+	}
+	public void testGH1600_negative() {
+		runNegativeTest(new String[] {"X.java",
+			"""
+			public class X extends CustomField {
+				@Override
+				public void setReadOnly(boolean readOnly) {
+					super.setReadOnly(readOnly);
+				}
+
+				public static void main(String[] args) {
+					System.out.println("Done");
+				}
+			}
+
+			abstract class CustomField extends AbstractField implements HasValue {}
+
+			abstract class AbstractField implements HasValueAndElement {}
+
+			interface HasValue {
+				default void setReadOnly(boolean readOnly) {
+				}
+			}
+
+			interface HasValueAndElement extends HasValue {
+				void setReadOnly(boolean readOnly);
+			}
+			""",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 4)\n" +
+			"	super.setReadOnly(readOnly);\n" +
+			"	^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Cannot directly invoke the abstract method setReadOnly(boolean) for the type HasValueAndElement\n" +
+			"----------\n" +
+			"2. WARNING in X.java (at line 22)\n" +
+			"	void setReadOnly(boolean readOnly);\n" +
+			"	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"The method setReadOnly(boolean) of type HasValueAndElement should be tagged with @Override since it actually overrides a superinterface method\n" +
+			"----------\n");
 	}
 	public void testGH1600_2() {
 		runConformTest(new String[] {"Test.java",
@@ -3628,5 +3667,281 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 
 			},
 			"boxDtos contains 3 elements");
+	}
+
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/5573
+	// the abstract method comes first in the superinterfaces, the default method overriding it second
+	public void testGH5573() {
+		runConformTest(new String[] {"Sub.java",
+			"""
+			interface Startable extends AutoCloseable {
+				void stop();
+				@Override
+				default void close() {
+					stop();
+				}
+			}
+			class Generic implements AutoCloseable, Startable {
+				@Override
+				public void stop() {
+					System.out.print("stop ");
+				}
+			}
+			public class Sub extends Generic {
+				@Override
+				public void close() {
+					super.close();
+					Runnable r = super::close;
+					r.run();
+					new Generic().close();
+				}
+				public static void main(String... args) {
+					new Sub().close();
+				}
+			}
+			"""},
+			"stop stop stop");
+	}
+	public void testGH5573_generic() {
+		runConformTest(new String[] {"H.java",
+			"""
+			interface I<T> {
+				void m(T t) throws Exception;
+			}
+			interface J extends I<String> {
+				@Override
+				default void m(String s) {
+					System.out.print(s);
+				}
+			}
+			class G implements I<String>, J {}
+			public class H extends G {
+				@Override
+				public void m(String s) {
+					super.m(s);
+				}
+				public static void main(String... args) {
+					new H().m("J.m");
+				}
+			}
+			"""},
+			"J.m");
+	}
+	// the default method does not override the abstract one: both are still inherited
+	public void testGH5573_unrelated() {
+		runNegativeTest(new String[] {"L.java",
+			"""
+			interface I {
+				void m();
+			}
+			interface J {
+				default void m() {}
+			}
+			abstract class K implements I, J {}
+			public class L extends K {
+				@Override
+				public void m() {
+					super.m();
+				}
+			}
+			"""},
+			"----------\n" +
+			"1. ERROR in L.java (at line 7)\n" +
+			"	abstract class K implements I, J {}\n" +
+			"	               ^\n" +
+			"The default method m() inherited from J conflicts with another method inherited from I\n" +
+			"----------\n" +
+			"2. ERROR in L.java (at line 11)\n" +
+			"	super.m();\n" +
+			"	^^^^^^^^^\n" +
+			"Cannot directly invoke the abstract method m() for the type I\n" +
+			"----------\n");
+	}
+
+	// a subinterface makes the default method abstract again: only the abstract method is inherited
+	public void testGH5573_abstractAgain() {
+		runNegativeTest(new String[] {"H.java",
+			"""
+			interface I {
+				void m();
+			}
+			interface J extends I {
+				@Override
+				default void m() {}
+			}
+			interface K extends J {
+				@Override
+				void m();
+			}
+			abstract class G implements I, J, K {}
+			abstract class G2 implements J, K {}
+			public class H extends G {
+				@Override
+				public void m() {
+					super.m();
+				}
+			}
+			class H2 extends G2 {
+				@Override
+				public void m() {
+					super.m();
+				}
+			}
+			"""},
+			"----------\n" +
+			"1. ERROR in H.java (at line 17)\n" +
+			"	super.m();\n" +
+			"	^^^^^^^^^\n" +
+			"Cannot directly invoke the abstract method m() for the type K\n" +
+			"----------\n" +
+			"2. ERROR in H.java (at line 23)\n" +
+			"	super.m();\n" +
+			"	^^^^^^^^^\n" +
+			"Cannot directly invoke the abstract method m() for the type K\n" +
+			"----------\n");
+	}
+
+	// same as above, the abstract method overrides the default method after the substitution of a type variable
+	public void testGH5573_abstractAgain_generic() {
+		runNegativeTest(new String[] {"H.java",
+			"""
+			interface A<T> {
+				default void m(T t) {}
+			}
+			interface C extends A<String> {
+				@Override
+				void m(String s);
+			}
+			abstract class G implements A<String>, C {}
+			public class H extends G {
+				@Override
+				public void m(String s) {
+					super.m(s);
+				}
+			}
+			"""},
+			"----------\n" +
+			"1. ERROR in H.java (at line 12)\n" +
+			"	super.m(s);\n" +
+			"	^^^^^^^^^^\n" +
+			"Cannot directly invoke the abstract method m(String) for the type C\n" +
+			"----------\n");
+	}
+	// the default method of a subinterface overrides the abstract method after the substitution of a type variable
+	// and the class implements the interfaces in any order
+	public void testGH5573_overriddenAbstract_generic_anyOrder() {
+		runConformTest(new String[] {"H.java",
+			"""
+			interface A<T> {
+				void m(T t);
+			}
+			interface B extends A<String> {
+				@Override
+				default void m(String s) { System.out.print("B "); }
+			}
+			abstract class G1 implements A<String>, B {}
+			abstract class G2 implements B, A<String> {}
+			class H1 extends G1 { public void m(String s) { super.m(s); } }
+			class H2 extends G2 { public void m(String s) { super.m(s); } }
+			public class H {
+				public static void main(String... args) {
+					new H1().m("");
+					new H2().m("");
+				}
+			}
+			"""},
+			"B B");
+	}
+
+	// a chain of four interfaces alternating abstract and default declarations; the last one is a default method
+	public void testGH5573_deepChain() {
+		runConformTest(new String[] {"P.java",
+			"""
+			interface I {
+				void m();
+			}
+			interface J extends I {
+				@Override
+				default void m() { System.out.print("J "); }
+			}
+			interface K extends J {
+				@Override
+				void m();
+			}
+			interface L extends K {
+				@Override
+				default void m() { System.out.print("L "); }
+			}
+			abstract class G implements I, J, K, L {}
+			class Q implements I, J {
+				public void m() { J.super.m(); }
+			}
+			public class P extends G {
+				@Override
+				public void m() {
+					super.m();
+					Runnable r = super::m;
+					r.run();
+				}
+				public static void main(String... args) {
+					new P().m();
+					new Q().m();
+				}
+			}
+			"""},
+			"L L J");
+	}
+	// method reference and generic method, the default method is made abstract again by a subinterface
+	public void testGH5573_abstractAgain_methodReferenceAndGenericMethod() {
+		runNegativeTest(new String[] {"H.java",
+			"""
+			interface I {
+				void m();
+			}
+			interface J extends I {
+				@Override
+				default void m() {}
+			}
+			interface K extends J {
+				@Override
+				void m();
+			}
+			abstract class G1 implements I, J, K {}
+			public class H extends G1 {
+				@Override
+				public void m() {
+					Runnable r = super::m;
+				}
+			}
+			interface GI {
+				<U> void g(U u);
+			}
+			interface GJ extends GI {
+				@Override
+				default <U> void g(U u) {}
+			}
+			interface GK extends GJ {
+				@Override
+				<U> void g(U u);
+			}
+			abstract class G2 implements GI, GJ, GK {}
+			class H2 extends G2 {
+				@Override
+				public <U> void g(U u) {
+					super.g(u);
+				}
+			}
+			"""},
+			"----------\n" +
+			"1. ERROR in H.java (at line 16)\n" +
+			"	Runnable r = super::m;\n" +
+			"	             ^^^^^^^^\n" +
+			"Cannot directly invoke the abstract method m() for the type K\n" +
+			"----------\n" +
+			"2. ERROR in H.java (at line 34)\n" +
+			"	super.g(u);\n" +
+			"	^^^^^^^^^^\n" +
+			"Cannot directly invoke the abstract method g(U) for the type GK\n" +
+			"----------\n");
 	}
 }

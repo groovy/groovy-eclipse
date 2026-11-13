@@ -2506,60 +2506,66 @@ public void test015() throws Exception {
 			"    constant #41 name_and_type: #42.#43 equals (Ljava/lang/Object;)Z\n" +
 			"    constant #42 utf8: \"equals\"\n" +
 			"    constant #43 utf8: \"(Ljava/lang/Object;)Z\"\n" +
-			"    constant #44 method_ref: #28.#45 java/lang/invoke/SerializedLambda.getImplMethodKind ()I\n" +
-			"    constant #45 name_and_type: #46.#38 getImplMethodKind ()I\n" +
-			"    constant #46 utf8: \"getImplMethodKind\"\n" +
-			"    constant #47 method_ref: #28.#48 java/lang/invoke/SerializedLambda.getFunctionalInterfaceClass ()Ljava/lang/String;\n" +
-			"    constant #48 name_and_type: #49.#32 getFunctionalInterfaceClass ()Ljava/lang/String;\n" +
-			"    constant #49 utf8: \"getFunctionalInterfaceClass\"\n" +
-			"    constant #50 string: #51 \"I\"\n" +
-			"    constant #51 utf8: \"I\"\n" +
-			"    constant #52 method_ref: #3.#41 java/lang/Object.equals (Ljava/lang/Object;)Z\n" +
-			"    constant #53 method_ref: #28.#54 java/lang/invoke/SerializedLambda.getFunctionalInterfaceMethodName ()Ljava/lang/String;\n" +
-			"    constant #54 name_and_type: #55.#32 getFunctionalInterfaceMethodName ()Ljava/lang/String;\n" +
-			"    constant #55 utf8: \"getFunctionalInterfaceMethodName\"\n" +
-			"    constant #56 string: #18 \"foo\"\n" +
-			"    constant #57 method_ref: #28.#58 java/lang/invoke/SerializedLambda.getFunctionalInterfaceMethodSignature ()Ljava/lang/String;\n" +
-			"    constant #58 name_and_type: #59.#32 getFunctionalInterfaceMethodSignature ()Ljava/lang/String;\n" +
-			"    constant #59 utf8: \"getFunctionalInterfaceMethodSignature\"\n" +
-			"    constant #60 string: #6 \"()V\"\n" +
-			"    constant #61 method_ref: #28.#62 java/lang/invoke/SerializedLambda.getImplClass ()Ljava/lang/String;\n" +
-			"    constant #62 name_and_type: #63.#32 getImplClass ()Ljava/lang/String;\n" +
-			"    constant #63 utf8: \"getImplClass\"\n" +
-			"    constant #64 string: #2 \"X\"\n" +
-			"    constant #65 method_ref: #28.#66 java/lang/invoke/SerializedLambda.getImplMethodSignature ()Ljava/lang/String;\n" +
-			"    constant #66 name_and_type: #67.#32 getImplMethodSignature ()Ljava/lang/String;\n" +
-			"    constant #67 utf8: \"getImplMethodSignature\"\n" +
-			"    constant #68 class: #69 java/lang/IllegalArgumentException\n" +
-			"    constant #69 utf8: \"java/lang/IllegalArgumentException\"\n" +
-			"    constant #70 string: #71 \"Invalid lambda deserialization\"\n" +
-			"    constant #71 utf8: \"Invalid lambda deserialization\"\n" +
-			"    constant #72 method_ref: #68.#73 java/lang/IllegalArgumentException.<init> (Ljava/lang/String;)V\n" +
-			"    constant #73 name_and_type: #5.#74 <init> (Ljava/lang/String;)V\n" +
-			"    constant #74 utf8: \"(Ljava/lang/String;)V\"\n" +
-			"    constant #75 utf8: \"StackMapTable\"\n" +
-			"    constant #76 utf8: \"SourceFile\"\n" +
-			"    constant #77 utf8: \"X.java\"\n" +
-			"    constant #78 utf8: \"BootstrapMethods\"\n" +
-			"    constant #79 method_ref: #80.#82 java/lang/invoke/LambdaMetafactory.altMetafactory (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\n" +
-			"    constant #80 class: #81 java/lang/invoke/LambdaMetafactory\n" +
-			"    constant #81 utf8: \"java/lang/invoke/LambdaMetafactory\"\n" +
-			"    constant #82 name_and_type: #83.#84 altMetafactory (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\n" +
-			"    constant #83 utf8: \"altMetafactory\"\n" +
-			"    constant #84 utf8: \"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\"\n" +
-			"    constant #85 method handle: invokestatic (6) #79 \n" +
-			"    constant #86 method type: #6 ()V\n" +
-			"    constant #87 method_ref: #1.#88 X.lambda$0 ()V\n" +
-			"    constant #88 name_and_type: #24.#6 lambda$0 ()V\n" +
-			"    constant #89 method handle: invokestatic (6) #87 \n" +
-			"    constant #90 method type: #6 ()V\n" +
-			"    constant #91 integer: 1\n" +
-			"    constant #92 utf8: \"InnerClasses\"\n" +
-			"    constant #93 class: #94 java/lang/invoke/MethodHandles$Lookup\n" +
-			"    constant #94 utf8: \"java/lang/invoke/MethodHandles$Lookup\"\n" +
-			"    constant #95 class: #96 java/lang/invoke/MethodHandles\n" +
-			"    constant #96 utf8: \"java/lang/invoke/MethodHandles\"\n" +
-			"    constant #97 utf8: \"Lookup\"\n" +
+			"    constant #44 method_ref: #1.#45 X.$deserializeLambda$$lambda$0 (Ljava/lang/invoke/SerializedLambda;)Ljava/lang/Object;\n" +
+			"    constant #45 name_and_type: #46.#26 $deserializeLambda$$lambda$0 (Ljava/lang/invoke/SerializedLambda;)Ljava/lang/Object;\n" +
+			"    constant #46 utf8: \"$deserializeLambda$$lambda$0\"\n" +
+			"    constant #47 class: #48 java/lang/IllegalArgumentException\n" +
+			"    constant #48 utf8: \"java/lang/IllegalArgumentException\"\n" +
+			"    constant #49 string: #50 \"Invalid lambda deserialization\"\n" +
+			"    constant #50 utf8: \"Invalid lambda deserialization\"\n" +
+			"    constant #51 method_ref: #47.#52 java/lang/IllegalArgumentException.<init> (Ljava/lang/String;)V\n" +
+			"    constant #52 name_and_type: #5.#53 <init> (Ljava/lang/String;)V\n" +
+			"    constant #53 utf8: \"(Ljava/lang/String;)V\"\n" +
+			"    constant #54 utf8: \"StackMapTable\"\n" +
+			"    constant #55 method_ref: #28.#56 java/lang/invoke/SerializedLambda.getImplMethodKind ()I\n" +
+			"    constant #56 name_and_type: #57.#38 getImplMethodKind ()I\n" +
+			"    constant #57 utf8: \"getImplMethodKind\"\n" +
+			"    constant #58 method_ref: #28.#59 java/lang/invoke/SerializedLambda.getFunctionalInterfaceClass ()Ljava/lang/String;\n" +
+			"    constant #59 name_and_type: #60.#32 getFunctionalInterfaceClass ()Ljava/lang/String;\n" +
+			"    constant #60 utf8: \"getFunctionalInterfaceClass\"\n" +
+			"    constant #61 string: #62 \"I\"\n" +
+			"    constant #62 utf8: \"I\"\n" +
+			"    constant #63 method_ref: #3.#41 java/lang/Object.equals (Ljava/lang/Object;)Z\n" +
+			"    constant #64 method_ref: #28.#65 java/lang/invoke/SerializedLambda.getFunctionalInterfaceMethodName ()Ljava/lang/String;\n" +
+			"    constant #65 name_and_type: #66.#32 getFunctionalInterfaceMethodName ()Ljava/lang/String;\n" +
+			"    constant #66 utf8: \"getFunctionalInterfaceMethodName\"\n" +
+			"    constant #67 string: #18 \"foo\"\n" +
+			"    constant #68 method_ref: #28.#69 java/lang/invoke/SerializedLambda.getFunctionalInterfaceMethodSignature ()Ljava/lang/String;\n" +
+			"    constant #69 name_and_type: #70.#32 getFunctionalInterfaceMethodSignature ()Ljava/lang/String;\n" +
+			"    constant #70 utf8: \"getFunctionalInterfaceMethodSignature\"\n" +
+			"    constant #71 string: #6 \"()V\"\n" +
+			"    constant #72 method_ref: #28.#73 java/lang/invoke/SerializedLambda.getImplClass ()Ljava/lang/String;\n" +
+			"    constant #73 name_and_type: #74.#32 getImplClass ()Ljava/lang/String;\n" +
+			"    constant #74 utf8: \"getImplClass\"\n" +
+			"    constant #75 string: #2 \"X\"\n" +
+			"    constant #76 method_ref: #28.#77 java/lang/invoke/SerializedLambda.getImplMethodSignature ()Ljava/lang/String;\n" +
+			"    constant #77 name_and_type: #78.#32 getImplMethodSignature ()Ljava/lang/String;\n" +
+			"    constant #78 utf8: \"getImplMethodSignature\"\n" +
+			"    constant #79 method_ref: #28.#80 java/lang/invoke/SerializedLambda.getInstantiatedMethodType ()Ljava/lang/String;\n" +
+			"    constant #80 name_and_type: #81.#32 getInstantiatedMethodType ()Ljava/lang/String;\n" +
+			"    constant #81 utf8: \"getInstantiatedMethodType\"\n" +
+			"    constant #82 utf8: \"SourceFile\"\n" +
+			"    constant #83 utf8: \"X.java\"\n" +
+			"    constant #84 utf8: \"BootstrapMethods\"\n" +
+			"    constant #85 method_ref: #86.#88 java/lang/invoke/LambdaMetafactory.altMetafactory (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\n" +
+			"    constant #86 class: #87 java/lang/invoke/LambdaMetafactory\n" +
+			"    constant #87 utf8: \"java/lang/invoke/LambdaMetafactory\"\n" +
+			"    constant #88 name_and_type: #89.#90 altMetafactory (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\n" +
+			"    constant #89 utf8: \"altMetafactory\"\n" +
+			"    constant #90 utf8: \"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\"\n" +
+			"    constant #91 method handle: invokestatic (6) #85 \n" +
+			"    constant #92 method type: #6 ()V\n" +
+			"    constant #93 method_ref: #1.#94 X.lambda$0 ()V\n" +
+			"    constant #94 name_and_type: #24.#6 lambda$0 ()V\n" +
+			"    constant #95 method handle: invokestatic (6) #93 \n" +
+			"    constant #96 method type: #6 ()V\n" +
+			"    constant #97 integer: 1\n" +
+			"    constant #98 utf8: \"InnerClasses\"\n" +
+			"    constant #99 class: #100 java/lang/invoke/MethodHandles$Lookup\n" +
+			"    constant #100 utf8: \"java/lang/invoke/MethodHandles$Lookup\"\n" +
+			"    constant #101 class: #102 java/lang/invoke/MethodHandles\n" +
+			"    constant #102 utf8: \"java/lang/invoke/MethodHandles\"\n" +
+			"    constant #103 utf8: \"Lookup\"\n" +
 			"  \n" +
 			"  // Method descriptor #6 ()V\n" +
 			"  // Stack: 1, Locals: 1\n" +
@@ -2593,80 +2599,92 @@ public void test015() throws Exception {
 			"        [pc: 0, line: 6]\n" +
 			"  \n" +
 			"  // Method descriptor #26 (Ljava/lang/invoke/SerializedLambda;)Ljava/lang/Object;\n" +
-			"  // Stack: 3, Locals: 3\n" +
+			"  // Stack: 3, Locals: 2\n" +
 			"  private static synthetic java.lang.Object $deserializeLambda$(java.lang.invoke.SerializedLambda arg0);\n" +
-			"      0  aload_0 [arg0]\n" +
-			"      1  invokevirtual java.lang.invoke.SerializedLambda.getImplMethodName() : java.lang.String [27]\n" +
-			"      4  astore_1\n" +
-			"      5  iconst_m1\n" +
-			"      6  istore_2\n" +
-			"      7  aload_1\n" +
-			"      8  invokevirtual java.lang.String.hashCode() : int [33]\n" +
-			"     11  lookupswitch default: 39\n" +
+			"     0  aload_0 [arg0]\n" +
+			"     1  invokevirtual java.lang.invoke.SerializedLambda.getImplMethodName() : java.lang.String [27]\n" +
+			"     4  astore_1\n" +
+			"     5  aload_1\n" +
+			"     6  invokevirtual java.lang.String.hashCode() : int [33]\n" +
+			"     9  lookupswitch default: 42\n" +
 			"          case -1647345005: 28\n" +
-			"     28  aload_1\n" +
-			"     29  ldc <String \"lambda$0\"> [39]\n" +
-			"     31  invokevirtual java.lang.String.equals(java.lang.Object) : boolean [40]\n" +
-			"     34  ifeq 39\n" +
-			"     37  iconst_0\n" +
-			"     38  istore_2\n" +
-			"     39  iload_2\n" +
-			"     40  lookupswitch default: 135\n" +
-			"          case 0: 60\n" +
-			"     60  aload_0 [arg0]\n" +
-			"     61  invokevirtual java.lang.invoke.SerializedLambda.getImplMethodKind() : int [44]\n" +
-			"     64  bipush 6\n" +
-			"     66  if_icmpne 135\n" +
-			"     69  aload_0 [arg0]\n" +
-			"     70  invokevirtual java.lang.invoke.SerializedLambda.getFunctionalInterfaceClass() : java.lang.String [47]\n" +
-			"     73  ldc <String \"I\"> [50]\n" +
-			"     75  invokevirtual java.lang.Object.equals(java.lang.Object) : boolean [52]\n" +
-			"     78  ifeq 135\n" +
-			"     81  aload_0 [arg0]\n" +
-			"     82  invokevirtual java.lang.invoke.SerializedLambda.getFunctionalInterfaceMethodName() : java.lang.String [53]\n" +
-			"     85  ldc <String \"foo\"> [56]\n" +
-			"     87  invokevirtual java.lang.Object.equals(java.lang.Object) : boolean [52]\n" +
-			"     90  ifeq 135\n" +
-			"     93  aload_0 [arg0]\n" +
-			"     94  invokevirtual java.lang.invoke.SerializedLambda.getFunctionalInterfaceMethodSignature() : java.lang.String [57]\n" +
-			"     97  ldc <String \"()V\"> [60]\n" +
-			"     99  invokevirtual java.lang.Object.equals(java.lang.Object) : boolean [52]\n" +
-			"    102  ifeq 135\n" +
-			"    105  aload_0 [arg0]\n" +
-			"    106  invokevirtual java.lang.invoke.SerializedLambda.getImplClass() : java.lang.String [61]\n" +
-			"    109  ldc <String \"X\"> [64]\n" +
-			"    111  invokevirtual java.lang.Object.equals(java.lang.Object) : boolean [52]\n" +
-			"    114  ifeq 135\n" +
-			"    117  aload_0 [arg0]\n" +
-			"    118  invokevirtual java.lang.invoke.SerializedLambda.getImplMethodSignature() : java.lang.String [65]\n" +
-			"    121  ldc <String \"()V\"> [60]\n" +
-			"    123  invokevirtual java.lang.Object.equals(java.lang.Object) : boolean [52]\n" +
-			"    126  ifeq 135\n" +
-			"    129  invokedynamic 0 foo() : I [16]\n" +
-			"    134  areturn\n" +
-			"    135  new java.lang.IllegalArgumentException [68]\n" +
-			"    138  dup\n" +
-			"    139  ldc <String \"Invalid lambda deserialization\"> [70]\n" +
-			"    141  invokespecial java.lang.IllegalArgumentException(java.lang.String) [72]\n" +
-			"    144  athrow\n" +
+			"    28  aload_1\n" +
+			"    29  ldc <String \"lambda$0\"> [39]\n" +
+			"    31  invokevirtual java.lang.String.equals(java.lang.Object) : boolean [40]\n" +
+			"    34  ifeq 42\n" +
+			"    37  aload_0 [arg0]\n" +
+			"    38  invokestatic X.$deserializeLambda$$lambda$0(java.lang.invoke.SerializedLambda) : java.lang.Object [44]\n" +
+			"    41  areturn\n" +
+			"    42  new java.lang.IllegalArgumentException [47]\n" +
+			"    45  dup\n" +
+			"    46  ldc <String \"Invalid lambda deserialization\"> [49]\n" +
+			"    48  invokespecial java.lang.IllegalArgumentException(java.lang.String) [51]\n" +
+			"    51  athrow\n" +
 			"      Line numbers:\n" +
 			"        [pc: 0, line: 1]\n" +
-			"      Stack map table: number of frames 4\n" +
-			"        [pc: 28, append: {java.lang.String, int}]\n" +
-			"        [pc: 39, same]\n" +
-			"        [pc: 60, same]\n" +
-			"        [pc: 135, chop 2 local(s)]\n" +
+			"      Stack map table: number of frames 2\n" +
+			"        [pc: 28, append: {java.lang.String}]\n" +
+			"        [pc: 42, chop 1 local(s)]\n" +
+			"  \n" +
+			"  // Method descriptor #26 (Ljava/lang/invoke/SerializedLambda;)Ljava/lang/Object;\n" +
+			"  // Stack: 3, Locals: 1\n" +
+			"  private static synthetic java.lang.Object $deserializeLambda$$lambda$0(java.lang.invoke.SerializedLambda arg0);\n" +
+			"     0  aload_0 [arg0]\n" +
+			"     1  invokevirtual java.lang.invoke.SerializedLambda.getImplMethodKind() : int [55]\n" +
+			"     4  bipush 6\n" +
+			"     6  if_icmpne 87\n" +
+			"     9  aload_0 [arg0]\n" +
+			"    10  invokevirtual java.lang.invoke.SerializedLambda.getFunctionalInterfaceClass() : java.lang.String [58]\n" +
+			"    13  ldc <String \"I\"> [61]\n" +
+			"    15  invokevirtual java.lang.Object.equals(java.lang.Object) : boolean [63]\n" +
+			"    18  ifeq 87\n" +
+			"    21  aload_0 [arg0]\n" +
+			"    22  invokevirtual java.lang.invoke.SerializedLambda.getFunctionalInterfaceMethodName() : java.lang.String [64]\n" +
+			"    25  ldc <String \"foo\"> [67]\n" +
+			"    27  invokevirtual java.lang.Object.equals(java.lang.Object) : boolean [63]\n" +
+			"    30  ifeq 87\n" +
+			"    33  aload_0 [arg0]\n" +
+			"    34  invokevirtual java.lang.invoke.SerializedLambda.getFunctionalInterfaceMethodSignature() : java.lang.String [68]\n" +
+			"    37  ldc <String \"()V\"> [71]\n" +
+			"    39  invokevirtual java.lang.Object.equals(java.lang.Object) : boolean [63]\n" +
+			"    42  ifeq 87\n" +
+			"    45  aload_0 [arg0]\n" +
+			"    46  invokevirtual java.lang.invoke.SerializedLambda.getImplClass() : java.lang.String [72]\n" +
+			"    49  ldc <String \"X\"> [75]\n" +
+			"    51  invokevirtual java.lang.Object.equals(java.lang.Object) : boolean [63]\n" +
+			"    54  ifeq 87\n" +
+			"    57  aload_0 [arg0]\n" +
+			"    58  invokevirtual java.lang.invoke.SerializedLambda.getImplMethodSignature() : java.lang.String [76]\n" +
+			"    61  ldc <String \"()V\"> [71]\n" +
+			"    63  invokevirtual java.lang.Object.equals(java.lang.Object) : boolean [63]\n" +
+			"    66  ifeq 87\n" +
+			"    69  aload_0 [arg0]\n" +
+			"    70  invokevirtual java.lang.invoke.SerializedLambda.getInstantiatedMethodType() : java.lang.String [79]\n" +
+			"    73  ldc <String \"()V\"> [71]\n" +
+			"    75  invokevirtual java.lang.Object.equals(java.lang.Object) : boolean [63]\n" +
+			"    78  ifeq 87\n" +
+			"    81  invokedynamic 0 foo() : I [16]\n" +
+			"    86  areturn\n" +
+			"    87  new java.lang.IllegalArgumentException [47]\n" +
+			"    90  dup\n" +
+			"    91  ldc <String \"Invalid lambda deserialization\"> [49]\n" +
+			"    93  invokespecial java.lang.IllegalArgumentException(java.lang.String) [51]\n" +
+			"    96  athrow\n" +
+			"      Line numbers:\n" +
+			"        [pc: 0, line: 1]\n" +
+			"      Stack map table: number of frames 1\n" +
+			"        [pc: 87, same_extended]\n" +
 			"\n" +
 			"  Inner classes:\n" +
-			"    [inner class info: #93 java/lang/invoke/MethodHandles$Lookup, outer class info: #95 java/lang/invoke/MethodHandles\n" +
-			"     inner name: #97 Lookup, accessflags: 25 public static final]\n" +
+			"    [inner class info: #99 java/lang/invoke/MethodHandles$Lookup, outer class info: #101 java/lang/invoke/MethodHandles\n" +
+			"     inner name: #103 Lookup, accessflags: 25 public static final]\n" +
 			"Bootstrap methods:\n" +
-			"  0 : # 85 invokestatic java/lang/invoke/LambdaMetafactory.altMetafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\n" +
+			"  0 : # 91 invokestatic java/lang/invoke/LambdaMetafactory.altMetafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\n" +
 			"	Method arguments:\n" +
-			"		#86 ()V\n" +
-			"		#89 invokestatic X.lambda$0:()V\n" +
-			"		#90 ()V\n" +
-			"		#91 1\n" +
+			"		#92 ()V\n" +
+			"		#95 invokestatic X.lambda$0:()V\n" +
+			"		#96 ()V\n" +
+			"		#97 1\n" +
 			"}";
 
 	verifyClassFile(expectedOutput, "X.class", ClassFileBytesDisassembler.SYSTEM);

@@ -42,6 +42,33 @@ public interface Substitution {
 		}
 	}
 
+	public static class AdhocSubstituation implements Substitution {
+		private TypeVariableBinding[] as;
+		private TypeVariableBinding[] bs;
+		private LookupEnvironment environment;
+
+		public AdhocSubstituation(TypeVariableBinding[] as, TypeVariableBinding[] bs, LookupEnvironment environment) {
+			this.as = as;
+			this.bs = bs;
+			this.environment = environment;
+		}
+
+		@Override
+		public TypeBinding substitute(TypeVariableBinding typeVariable) {
+			return  (typeVariable == this.bs[typeVariable.rank]) ? this.as[typeVariable.rank] : typeVariable; //$IDENTITY-COMPARISON$
+		}
+
+		@Override
+		public boolean isRawSubstitution() {
+			return false;
+		}
+
+		@Override
+		public LookupEnvironment environment() {
+			return this.environment;
+		}
+	}
+
 	/**
 	 * Returns the type substitute for a given type variable, or itself
 	 * if no substitution got performed.

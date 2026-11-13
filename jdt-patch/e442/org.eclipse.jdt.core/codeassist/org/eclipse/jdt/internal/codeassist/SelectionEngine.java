@@ -1130,8 +1130,6 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 		next : for (MethodBinding method : methods) {
 			if (method.isSynthetic()) continue next;
 
-			if (method.isDefaultAbstract())	continue next;
-
 			if (method.isConstructor()) continue next;
 
 			if (!method.isStatic()) continue next;

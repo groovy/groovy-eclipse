@@ -162,7 +162,7 @@ public class ModuleLocationHandler {
 
 		public SystemLocationContainer(Location loc, JrtFileSystem jrt) throws IOException {
 			super(loc);
-			jrt.initialize();
+			// the modules of the image were collected when the JrtFileSystem was created
 			Set<String> keySet = jrt.modulePathMap.keySet();
 			for (String mod : keySet) {
 				Path path = jrt.file.toPath();

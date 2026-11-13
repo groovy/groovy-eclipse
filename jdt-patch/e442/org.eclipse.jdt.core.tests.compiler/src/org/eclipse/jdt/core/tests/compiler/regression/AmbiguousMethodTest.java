@@ -28,7 +28,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 public class AmbiguousMethodTest extends AbstractComparableTest {
 
 	static {
-//		TESTS_NAMES = new String [] { "test010a" };
+//		TESTS_NAMES = new String [] { "testScalaLikeHierarchy", "testJavaSrcGenuineAmbuigity" };
 	}
 	public AmbiguousMethodTest(String name) {
 		super(name);
@@ -3953,5 +3953,450 @@ public void testBug466730() {
 			"	}\n" +
 			"}\n"
 	});
+}
+/**
+ * Minimal distillation: the generic interface Ops is reached twice with
+ * different type arguments; head() has one single declaration and the same
+ * substituted signature on both paths, hence the call must resolve.
+ */
+public void testScalaLikeHierarchy_minimal() {
+	// step 1: produce the (Scala like) class files; the hierarchy error is expected
+	Runner producer = new Runner();
+	producer.testFiles = new String[] {
+		"Producer.java",
+		"public class Producer {\n" +
+		"	public interface Ops<A, CC> {\n" +
+		"		A head();\n" +
+		"	}\n" +
+		"	public interface Iter<A> extends Ops<A, Object> {\n" +
+		"	}\n" +
+		"	public interface SeqOps<A, CC> extends Ops<A, CC> {\n" +
+		"	}\n" +
+		"	public interface Seq<A> extends Iter<A>, SeqOps<A, String> {\n" +
+		"	}\n" +
+		"}\n"
+	};
+	producer.expectedCompilerLog =
+		"----------\n" +
+		"1. ERROR in Producer.java (at line 9)\n" +
+		"	public interface Seq<A> extends Iter<A>, SeqOps<A, String> {\n" +
+		"	                 ^^^\n" +
+		"The interface Ops cannot be implemented more than once with different arguments: Producer.Ops<A,String> and Producer.Ops<A,Object>\n" +
+		"----------\n";
+	producer.shouldFlushOutputDirectory = true;
+	producer.generateOutput = true; // the class files are the input of step 2
+	producer.runNegativeTest();
+
+	// step 2: compile the client against the class files only - must be clean
+	Runner consumer = new Runner();
+	consumer.testFiles = new String[] {
+		"Consumer.java",
+		"public class Consumer {\n" +
+		"	public String head(Producer.Seq<String> seq) {\n" +
+		"		return seq.head();\n" +
+		"	}\n" +
+		"	public static void main(String[] args) {\n" +
+		"		System.out.println(new Consumer().head(() -> \"head\"));\n" +
+		"	}\n" +
+		"}\n"
+	};
+	consumer.shouldFlushOutputDirectory = false; // keep Producer*.class
+	consumer.expectedOutputString = "head";
+	consumer.runConformTest();
+}
+/**
+ * Faithful replica of the scala.collection hierarchy (2.13), including the raw
+ * type arguments emitted by scalac, and the four methods that are reported as
+ * ambiguous for scala.collection.immutable.Seq: head(), contains(), length(),
+ * size().
+ */
+public void testScalaLikeHierarchy_collectionsReplica() {
+	// step 1: the "scalac" compilation
+	Runner producer = new Runner();
+	producer.testFiles = new String[] {
+		"Hierarchy.java",
+		"public class Hierarchy {\n" +
+		"	public interface IterableOnce<A> {}\n" +
+		"	public interface IterableOnceOps<A, CC, C> {\n" +
+		"		A head();\n" +
+		"		int size();\n" +
+		"	}\n" +
+		"	public interface IterableOps<A, CC, C> extends IterableOnce<A>, IterableOnceOps<A, CC, C> {\n" +
+		"		@Override A head();\n" +
+		"	}\n" +
+		"	public interface IterableFactoryDefaults<A, CC> extends IterableOps<A, CC, CC> {}\n" +
+		"	@SuppressWarnings(\"rawtypes\")\n" +
+		"	public interface Iterable<A> extends IterableFactoryDefaults<A, Iterable> {}\n" +
+		"	public interface SeqOps<A, CC, C> extends IterableOps<A, CC, C> {\n" +
+		"		int length();\n" +
+		"		<A1> boolean contains(A1 elem);\n" +
+		"	}\n" +
+		"	@SuppressWarnings(\"rawtypes\")\n" +
+		"	public interface Seq<A> extends Iterable<A>, SeqOps<A, Seq, Seq<A>> {}\n" +
+		"	public interface ImmutableIterable<A> extends Iterable<A> {}\n" +
+		"	public interface ImmutableSeqOps<A, CC, C> extends SeqOps<A, CC, C> {}\n" +
+		"	@SuppressWarnings(\"rawtypes\")\n" +
+		"	public interface ImmutableSeq<A> extends ImmutableIterable<A>, Seq<A>,\n" +
+		"			ImmutableSeqOps<A, ImmutableSeq, ImmutableSeq<A>> {}\n" +
+		"}\n"
+	};
+	producer.expectedCompilerLog =
+		"----------\n" +
+		"1. ERROR in Hierarchy.java (at line 18)\n" +
+		"	public interface Seq<A> extends Iterable<A>, SeqOps<A, Seq, Seq<A>> {}\n" +
+		"	                 ^^^\n" +
+		"The interface IterableOps cannot be implemented more than once with different arguments: Hierarchy.IterableOps<A,Hierarchy.Seq,Hierarchy.Seq<A>> and Hierarchy.IterableOps<A,Hierarchy.Iterable,Hierarchy.Iterable>\n" +
+		"----------\n" +
+		"2. ERROR in Hierarchy.java (at line 22)\n" +
+		"	public interface ImmutableSeq<A> extends ImmutableIterable<A>, Seq<A>,\n" +
+		"	                 ^^^^^^^^^^^^\n" +
+		"The interface IterableOps cannot be implemented more than once with different arguments: Hierarchy.IterableOps<A,Hierarchy.ImmutableSeq,Hierarchy.ImmutableSeq<A>> and Hierarchy.IterableOps<A,Hierarchy.Iterable,Hierarchy.Iterable>\n" +
+		"----------\n";
+	producer.shouldFlushOutputDirectory = true;
+	producer.generateOutput = true;
+	producer.runNegativeTest();
+
+	// step 2: the Java client of the "Scala" library - must compile like with javac
+	Runner consumer = new Runner();
+	consumer.testFiles = new String[] {
+		"Client.java",
+		"public class Client {\n" +
+		"	String head(final Hierarchy.ImmutableSeq<String> seq) {\n" +
+		"		return seq.head();\n" +
+		"	}\n" +
+		"	boolean contains(final Hierarchy.ImmutableSeq<String> seq) {\n" +
+		"		return seq.contains(\"a\");\n" +
+		"	}\n" +
+		"	int length(final Hierarchy.ImmutableSeq<String> seq) {\n" +
+		"		return seq.length();\n" +
+		"	}\n" +
+		"	int size(final Hierarchy.ImmutableSeq<String> seq) {\n" +
+		"		return seq.size();\n" +
+		"	}\n" +
+		"	public static void main(String[] args) {\n" +
+		"		System.out.println(\"ok\");\n" +
+		"	}\n" +
+		"}\n"
+	};
+	consumer.shouldFlushOutputDirectory = false;
+	consumer.expectedOutputString = "ok";
+	consumer.runConformTest();
+}
+/**
+ * Same as above, but the call site is a *class* which implements the generic
+ * interface Ops twice with different type arguments: size() has one single
+ * declaration and the same substituted signature on both paths, hence the call
+ * must resolve (cf. org.apache.pekko.util.ByteString).
+ */
+public void testScalaLikeHierarchy_classReceiver() {
+	// step 1: produce the (Scala like) class files; the hierarchy error is expected
+	Runner producer = new Runner();
+	producer.testFiles = new String[] {
+		"Pekko.java",
+		"""
+		public class Pekko {
+			public interface Ops<A, CC> {
+				int size();
+			}
+			public interface Seq<A> extends Ops<A, Object> {
+			}
+			public static abstract class ByteString implements Seq<Object>, Ops<Object, String> {
+			}
+		}
+		"""
+	};
+	producer.expectedCompilerLog =
+		"""
+		----------
+		1. ERROR in Pekko.java (at line 7)
+			public static abstract class ByteString implements Seq<Object>, Ops<Object, String> {
+			                             ^^^^^^^^^^
+		The interface Ops cannot be implemented more than once with different arguments: Pekko.Ops<Object,String> and Pekko.Ops<Object,Object>
+		----------
+		""";
+	producer.shouldFlushOutputDirectory = true;
+	producer.generateOutput = true; // the class files are the input of step 2
+	producer.runNegativeTest();
+
+	// step 2: compile the client against the class files only - must be clean
+	Runner consumer = new Runner();
+	consumer.testFiles = new String[] {
+		"Consumer.java",
+		"""
+		public class Consumer {
+			int size(Pekko.ByteString bytes) {
+				return bytes.size();
+			}
+			public static void main(String[] args) {
+				System.out.println("ok");
+			}
+		}
+		"""
+	};
+	consumer.shouldFlushOutputDirectory = false; // keep Pekko*.class
+	consumer.expectedOutputString = "ok";
+	consumer.runConformTest();
+}
+public void testJavaSrcGenuineAmbuigity() {
+	runNegativeTest(
+			new String[] {
+				"GenuineAmbiguity.java",
+				"""
+				public class GenuineAmbiguity {
+
+					interface I<T> {
+						void foo(T t);
+
+						void foo(String s);
+					}
+
+					void test(I<String> i) {
+						i.foo("a"); // expected: ambiguous in both compilers
+					}
+				}
+				"""
+			},
+			"----------\n" +
+			"1. ERROR in GenuineAmbiguity.java (at line 10)\n" +
+			"	i.foo(\"a\"); // expected: ambiguous in both compilers\n" +
+			"	  ^^^\n" +
+			"The method foo(String) is ambiguous for the type GenuineAmbiguity.I<String>\n" +
+			"----------\n");
+}
+public void testIssue2304_orig() {
+	runConformTest(new String[] {
+		"ServiceRegistry.java",
+		"""
+		import java.util.function.Consumer;
+		import java.util.function.Function;
+
+		public class ServiceRegistry {
+
+			static <R> void registerHandler(Class<R> type, Function<? super R, ?> handler) { // (1)
+				handler.apply(null);
+			}
+			static <R> void registerHandler(Class<R> type, Consumer<R> handler) {
+				handler.accept(null);
+			}
+
+			public static void main(String[] args) {
+				Service service = new Service() {
+					@Override public Object publish(Request request) {
+						System.out.println("Function");
+						return null;
+					}
+					@Override public void publish(Object message) {
+						System.out.println("Consumer");
+					}
+				};
+				registerHandler(Request.class, (Request r) -> service.publish(r)); // (2)
+			}
+		}
+
+		interface Request {}
+		interface Service {
+			void publish(Object message);
+			Object publish(Request request);
+		}
+		"""
+	});
+}
+//rs primitive, rt reference, all results standalone primitive -> true
+public void testIssue2304_lambdaPrimitiveVsGeneric() {
+	runConformTest(new String[] {
+		"X.java",
+		"""
+		public class X {
+			interface IS { int get(int x); }
+			interface GF<T> { T get(int x); }
+			static void a(IS f) { System.out.print("int"); }
+			static <T> void a(GF<T> f) { System.out.print("gen"); }
+			public static void main(String[] args) {
+				a((int i) -> 1);
+			}
+		}
+		"""
+	},
+	"int");
+}
+//rs primitive, rt reference, but a result is a poly expression -> falls through to rs <: rt, fails
+public void testIssue2304_lambdaPrimitivePolyResult() {
+	runNegativeTest(new String[] {
+		"X.java",
+		"""
+		public class X {
+			interface IS { int get(int x); }
+			interface GF<T> { T get(int x); }
+			static <T> T poly(T t) { return t; }
+			static void a(IS f) { System.out.print("int"); }
+			static <T> void a(GF<T> f) { System.out.print("gen"); }
+			public static void main(String[] args) {
+				a((int i) -> poly(1));
+			}
+		}
+		"""
+	},
+	"""
+	----------
+	1. ERROR in X.java (at line 8)
+		a((int i) -> poly(1));
+		^
+	The method a(X.IS) is ambiguous for the type X
+	----------
+	""");
+}
+
+//both result types are functional interfaces -> recursive moreSpecificSecondStep
+public void testIssue2304_lambdaFunctionalResult() {
+	runConformTest(new String[] {
+		"X.java",
+		"""
+		import java.util.function.Supplier;
+		public class X {
+			interface SS { Supplier<String> get(int x); }
+			interface GS<T> { Supplier<T> get(int x); }
+			static void d(SS f) { System.out.print("ss"); }
+			static <T> void d(GS<T> f) { System.out.print("gs"); }
+			public static void main(String[] args) {
+				d((int i) -> () -> "s");
+			}
+		}
+		"""
+	},
+	"ss");
+}
+
+//ConditionalExpression as the argument itself
+public void testIssue2304_conditionalArgument() {
+	runConformTest(new String[] {
+		"X.java",
+		"""
+		public class X {
+			interface IS { int get(int x); }
+			interface GF<T> { T get(int x); }
+			static void a(IS f) { System.out.print("int"); }
+			static <T> void a(GF<T> f) { System.out.print("gen"); }
+			public static void main(String[] args) {
+				a(args.length == 0 ? (int i) -> 1 : (int i) -> 2);
+			}
+		}
+		"""
+	},
+	"int");
+}
+//exact method reference: rs primitive & method returns primitive
+public void testIssue2304_exactMethodRefPrimitive() {
+	runConformTest(new String[] {
+		"X.java",
+		"""
+		public class X {
+			interface IS { int get(String x); }
+			interface GF<T> { T get(String x); }
+			static int len(String s) { return s.length(); }
+			static void a(IS f) { System.out.print("int"); }
+			static <T> void a(GF<T> f) { System.out.print("gen"); }
+			public static void main(String[] args) {
+				a(X::len);
+			}
+		}
+		"""
+	},
+	"int");
+}
+//exact method reference: rs reference & method returns reference
+public void testIssue2304_exactMethodRefReference() {
+	runConformTest(new String[] {
+		"X.java",
+		"""
+		public class X {
+			interface RS { Integer get(String x); }
+			interface GF<T> { T get(String x); }
+			static Integer lenB(String s) { return s.length(); }
+			static void b(RS f) { System.out.print("ref"); }
+			static <T> void b(GF<T> f) { System.out.print("gen"); }
+			public static void main(String[] args) {
+				b(X::lenB);
+			}
+		}
+		"""
+	},
+	"ref");
+}
+
+//exact method reference: rs primitive, method returns reference -> falls through to subtype constraint
+public void testIssue2304_exactMethodRefMismatch() {
+	runNegativeTest(new String[] {
+		"X.java",
+		"""
+		public class X {
+			interface IS { int get(String x); }
+			interface GF<T> { T get(String x); }
+			static Integer lenB(String s) { return s.length(); }
+			static void a(IS f) { System.out.print("int"); }
+			static <T> void a(GF<T> f) { System.out.print("gen"); }
+			public static void main(String[] args) {
+				a(X::lenB);
+			}
+		}
+		"""
+	},
+	"""
+	----------
+	1. ERROR in X.java (at line 8)
+		a(X::lenB);
+		^
+	The method a(X.IS) is ambiguous for the type X
+	----------
+	"""
+);
+}
+
+//implicitly typed lambda -> final else branch returns false
+public void testIssue2304_implicitLambdaAmbiguous() {
+	runNegativeTest(new String[] {
+		"X.java",
+		"""
+		public class X {
+			interface IS { int get(int x); }
+			interface GF<T> { T get(int x); }
+			static void a(IS f) { }
+			static <T> void a(GF<T> f) { }
+			public static void main(String[] args) {
+				a(i -> 1);
+			}
+		}
+		"""
+	},
+	"----------\n" +
+	"1. ERROR in X.java (at line 7)\n" +
+	"	a(i -> 1);\n" +
+	"	^\n" +
+	"The method a(X.IS) is ambiguous for the type X\n" +
+	"----------\n");
+}
+
+//rs mentions the method type variable of a generic function type, rt is not a proper type -> false
+public void testIssue2304_genericFunctionTypeAmbiguous() {
+	runNegativeTest(new String[] {
+		"X.java",
+		"""
+		public class X {
+			interface GM { <A> A get(A a); }
+			interface GM2<T> { <B> T get(B b); }
+			static <Y> Y id(Y y) { return y; }
+			static void e(GM f) { }
+			static <T> void e(GM2<T> f) { }
+			public static void main(String[] args) {
+				e(X::id);
+			}
+		}
+		"""
+	},
+	"----------\n" +
+	"1. ERROR in X.java (at line 8)\n" +
+	"	e(X::id);\n" +
+	"	^\n" +
+	"The method e(X.GM) is ambiguous for the type X\n" +
+	"----------\n");
 }
 }

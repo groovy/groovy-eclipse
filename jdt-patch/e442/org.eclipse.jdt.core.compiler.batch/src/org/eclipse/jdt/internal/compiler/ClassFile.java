@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -220,8 +221,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 					classFile.addProblemMethod(methodDecl, method, problemsCopy);
 				}
 			}
-			// add abstract methods
-			classFile.addDefaultAbstractMethods();
 		}
 
 		// propagate generation of (problem) member types
@@ -468,22 +467,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int constantPoolCount = this.constantPool.currentIndex;
 		this.header[this.constantPoolOffset++] = (byte) (constantPoolCount >> 8);
 		this.header[this.constantPoolOffset] = (byte) constantPoolCount;
-	}
-
-	/**
-	 * INTERNAL USE-ONLY
-	 * This methods generate all the default abstract method infos that correpond to
-	 * the abstract methods inherited from superinterfaces.
-	 */
-	public void addDefaultAbstractMethods() { // default abstract methods
-		MethodBinding[] defaultAbstractMethods =
-			this.referenceBinding.getDefaultAbstractMethods();
-		for (MethodBinding methodBinding : defaultAbstractMethods) {
-			generateMethodInfoHeader(methodBinding);
-			int methodAttributeOffset = this.contentsOffset;
-			int attributeNumber = generateMethodInfoAttributes(methodBinding);
-			completeMethodInfo(methodBinding, methodAttributeOffset, attributeNumber);
-		}
 	}
 
 	private int addFieldAttributes(FieldBinding fieldBinding, int fieldAttributeOffset) {
@@ -962,14 +945,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// default abstract methods
 		generateMissingAbstractMethods(this.referenceBinding.scope.referenceType().missingAbstractMethods, this.referenceBinding.scope.referenceCompilationUnit().compilationResult);
 
-		MethodBinding[] defaultAbstractMethods = this.referenceBinding.getDefaultAbstractMethods();
-		for (MethodBinding methodBinding : defaultAbstractMethods) {
-			generateMethodInfoHeader(methodBinding);
-			int methodAttributeOffset = this.contentsOffset;
-			int attributeNumber = generateMethodInfoAttributes(methodBinding);
-			completeMethodInfo(methodBinding, methodAttributeOffset, attributeNumber);
-		}
-
 		// add synthetic methods infos
 		int emittedSyntheticsCount = 0;
 		SyntheticMethodBinding deserializeLambdaMethod = null;
@@ -1053,28 +1028,67 @@ public class ClassFile implements TypeConstants, TypeIds {
 			}
 		}
 		if (deserializeLambdaMethod != null) {
-			int problemResetPC = 0;
-			this.codeStream.wideMode = false;
-			boolean restart = false;
-			do {
-				try {
-					problemResetPC = this.contentsOffset;
-					addSyntheticDeserializeLambda(deserializeLambdaMethod,this.referenceBinding.syntheticMethods());
-					restart = false;
-				} catch (AbortMethod e) {
-					// Restart code generation if possible ...
-					if (e.compilationResult == CodeStream.RESTART_IN_WIDE_MODE) {
-						// a branch target required a goto_w, restart code generation in wide mode.
-						this.contentsOffset = problemResetPC;
-						this.methodCount--;
-						this.codeStream.resetInWideMode(); // request wide mode
-						restart = true;
-					} else {
-						throw new AbortType(this.referenceBinding.scope.referenceContext.compilationResult, e.problem);
-					}
-				}
-			} while (restart);
+			SyntheticMethodBinding[] helpers = createDeserializeLambdaHelpers();
+			addSyntheticDeserializeLambda(deserializeLambdaMethod, helpers);
+			for (SyntheticMethodBinding helper : helpers) {
+				addSyntheticDeserializeLambdaHelper(helper);
+			}
 		}
+	}
+
+	/**
+	 * Creates the helpers called by $deserializeLambda$: one for each implementation method name, which deserializes
+	 * the serializable lambdas and method references with this name. When a method of the type already has the name and
+	 * the descriptor of a helper, the helper gets the first suffix $1, $2... that no method of the type and no other
+	 * helper has.
+	 */
+	private SyntheticMethodBinding[] createDeserializeLambdaHelpers() {
+		SyntheticMethodBinding[] syntheticMethods = this.referenceBinding.syntheticMethods();
+		Map<String, List<SyntheticMethodBinding>> serializableLambdas = new LinkedHashMap<>();
+		for (SyntheticMethodBinding syntheticMethod : syntheticMethods) {
+			if (syntheticMethod.lambda != null && syntheticMethod.lambda.isSerializable || syntheticMethod.serializableMethodRef != null) {
+				serializableLambdas.computeIfAbsent(new String(syntheticMethod.selector), name -> new ArrayList<>()).add(syntheticMethod);
+			}
+		}
+		SyntheticMethodBinding[] helpers = new SyntheticMethodBinding[serializableLambdas.size()];
+		Set<String> helperNames = new HashSet<>();
+		int index = 0;
+		for (List<SyntheticMethodBinding> lambdas : serializableLambdas.values()) {
+			SyntheticMethodBinding helper = new SyntheticMethodBinding(this.referenceBinding, lambdas.toArray(new SyntheticMethodBinding[lambdas.size()]));
+			helperNames.add(new String(helper.selector));
+			helpers[index++] = helper;
+		}
+		if (helpers.length == 0) {
+			return helpers;
+		}
+		// the methods of the class file with the name prefix and the descriptor of the helpers
+		char[] descriptor = helpers[0].signature();
+		Set<String> takenNames = new HashSet<>();
+		for (MethodBinding method : this.referenceBinding.methods()) {
+			if (CharOperation.prefixEquals(TypeConstants.DESERIALIZE_LAMBDA, method.selector) && CharOperation.equals(method.signature(), descriptor)) {
+				takenNames.add(new String(method.selector));
+			}
+		}
+		for (SyntheticMethodBinding method : syntheticMethods) {
+			// a serializable method reference is not a method of the class file
+			if (method.purpose != SyntheticMethodBinding.SerializableMethodReference
+					&& CharOperation.prefixEquals(TypeConstants.DESERIALIZE_LAMBDA, method.selector)
+					&& CharOperation.equals(method.signature(), descriptor)) {
+				takenNames.add(new String(method.selector));
+			}
+		}
+		for (SyntheticMethodBinding helper : helpers) {
+			String name = new String(helper.selector);
+			if (takenNames.contains(name)) {
+				String newName;
+				int suffix = 1;
+				do {
+					newName = name + '$' + suffix++;
+				} while (takenNames.contains(newName) || !helperNames.add(newName));
+				helper.selector = newName.toCharArray();
+			}
+		}
+		return helpers;
 	}
 
 	private void addSyntheticRecordCanonicalConstructor(TypeDeclaration typeDecl, SyntheticMethodBinding methodBinding) {
@@ -4410,32 +4424,69 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.contents[this.contentsOffset++] = (byte) descriptorIndex;
 	}
 
-	public void addSyntheticDeserializeLambda(SyntheticMethodBinding methodBinding, SyntheticMethodBinding[] syntheticMethodBindings ) {
-		generateMethodInfoHeader(methodBinding);
-		int methodAttributeOffset = this.contentsOffset;
-		// this will add exception attribute, synthetic attribute, deprecated attribute,...
-		int attributeNumber = generateMethodInfoAttributes(methodBinding);
-		// Code attribute
-		int codeAttributeOffset = this.contentsOffset;
-		attributeNumber++; // add code attribute
-		generateCodeAttributeHeader();
-		this.codeStream.reset(methodBinding, this);
-		this.codeStream.generateSyntheticBodyForDeserializeLambda(methodBinding, syntheticMethodBindings);
-		int code_length = this.codeStream.position;
-		if (code_length > 65535) {
-			this.referenceBinding.scope.problemReporter().bytecodeExceeds64KLimit(
-				methodBinding, this.referenceBinding.sourceStart(), this.referenceBinding.sourceEnd());
-		}
-		completeCodeAttributeForSyntheticMethod(
-			methodBinding,
-			codeAttributeOffset,
-			((SourceTypeBinding) methodBinding.declaringClass)
-				.scope
-				.referenceCompilationUnit()
-				.compilationResult
-				.getLineSeparatorPositions());
-		this.contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
-		this.contents[methodAttributeOffset] = (byte) attributeNumber;
+	/**
+	 * Generates $deserializeLambda$, which calls the given helpers.
+	 */
+	public void addSyntheticDeserializeLambda(SyntheticMethodBinding methodBinding, SyntheticMethodBinding[] helpers) {
+		addSyntheticDeserializeLambdaMethod(methodBinding,
+				() -> this.codeStream.generateSyntheticBodyForDeserializeLambda(methodBinding, helpers));
+	}
+
+	/**
+	 * Generates a helper called by $deserializeLambda$, which deserializes the serializable lambdas and method references
+	 * of an implementation method name.
+	 */
+	public void addSyntheticDeserializeLambdaHelper(SyntheticMethodBinding methodBinding) {
+		addSyntheticDeserializeLambdaMethod(methodBinding,
+				() -> this.codeStream.generateSyntheticBodyForDeserializeLambdaHelper(methodBinding));
+	}
+
+	private void addSyntheticDeserializeLambdaMethod(SyntheticMethodBinding methodBinding, Runnable bodyGenerator) {
+		int problemResetPC = 0;
+		this.codeStream.wideMode = false;
+		boolean restart = false;
+		do {
+			try {
+				problemResetPC = this.contentsOffset;
+				generateMethodInfoHeader(methodBinding);
+				int methodAttributeOffset = this.contentsOffset;
+				// this will add exception attribute, synthetic attribute, deprecated attribute,...
+				int attributeNumber = generateMethodInfoAttributes(methodBinding);
+				// Code attribute
+				int codeAttributeOffset = this.contentsOffset;
+				attributeNumber++; // add code attribute
+				generateCodeAttributeHeader();
+				this.codeStream.reset(methodBinding, this);
+				bodyGenerator.run();
+				int code_length = this.codeStream.position;
+				if (code_length > 65535) {
+					this.referenceBinding.scope.problemReporter().bytecodeExceeds64KLimit(
+						methodBinding, this.referenceBinding.sourceStart(), this.referenceBinding.sourceEnd());
+				}
+				completeCodeAttributeForSyntheticMethod(
+					methodBinding,
+					codeAttributeOffset,
+					((SourceTypeBinding) methodBinding.declaringClass)
+						.scope
+						.referenceCompilationUnit()
+						.compilationResult
+						.getLineSeparatorPositions());
+				this.contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
+				this.contents[methodAttributeOffset] = (byte) attributeNumber;
+				restart = false;
+			} catch (AbortMethod e) {
+				// Restart code generation if possible ...
+				if (e.compilationResult == CodeStream.RESTART_IN_WIDE_MODE) {
+					// a branch target required a goto_w, restart code generation in wide mode.
+					this.contentsOffset = problemResetPC;
+					this.methodCount--;
+					this.codeStream.resetInWideMode(); // request wide mode
+					restart = true;
+				} else {
+					throw new AbortType(this.referenceBinding.scope.referenceContext.compilationResult, e.problem);
+				}
+			}
+		} while (restart);
 	}
 
 	/**
@@ -5864,8 +5915,9 @@ public class ClassFile implements TypeConstants, TypeIds {
 					}
 				}
 			} else {
-				if (methodBinding instanceof SyntheticMethodBinding smb && smb.purpose == SyntheticMethodBinding.DeserializeLambda) {
-					// For the branching complexities in the generated $deserializeLambda$ we need the local variable
+				if (methodBinding instanceof SyntheticMethodBinding smb
+						&& (smb.purpose == SyntheticMethodBinding.DeserializeLambda || smb.purpose == SyntheticMethodBinding.DeserializeLambdaHelper)) {
+					// For the branching complexities in the generated $deserializeLambda$ and its helpers we need the local variable
 					LocalVariableBinding lvb = new LocalVariableBinding(" synthetic0".toCharArray(), this.referenceBinding.scope.getJavaLangInvokeSerializedLambda(), 0, true); //$NON-NLS-1$
 					lvb.resolvedPosition = 0;
 					this.codeStream.record(lvb);

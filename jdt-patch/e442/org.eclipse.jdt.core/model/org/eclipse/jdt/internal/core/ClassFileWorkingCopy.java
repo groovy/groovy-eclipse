@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -110,13 +110,21 @@ protected IBuffer openBuffer(IProgressMonitor pm, IElementInfo info) throws Java
 		buffer.setContents(contents);
 	}
 
-	// add buffer to buffer cache
 	BufferManager bufManager = getBufferManager();
-	bufManager.addBuffer(buffer);
-
-	// listen to buffer changes
-	buffer.addBufferChangedListener(this);
-
+	IBuffer existingBuffer;
+	// Recheck before publishing a competing working-copy buffer.
+	synchronized (bufManager) {
+		existingBuffer = bufManager.getBuffer(this);
+		if (existingBuffer == null) {
+			buffer.addBufferChangedListener(this);
+			bufManager.addBuffer(buffer);
+		}
+	}
+	if (existingBuffer != null) {
+		// No listener was installed on this unpublished candidate.
+		buffer.close();
+		return existingBuffer;
+	}
 	return buffer;
 }
 

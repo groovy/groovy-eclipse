@@ -49,6 +49,11 @@ public class SyntheticMethodBinding extends MethodBinding {
 	 * purpose is {@link #SerializableMethodReference}
 	 */
 	public ReferenceExpression serializableMethodRef;
+	/**
+	 * Serializable lambdas and method references that share an implementation method name. Set when
+	 * purpose is {@link #DeserializeLambdaHelper}
+	 */
+	public SyntheticMethodBinding[] serializableLambdas;
 	public int purpose;
 
 	// fields used to generate enum constants when too many
@@ -82,6 +87,7 @@ public class SyntheticMethodBinding extends MethodBinding {
     public static final int RecordOverrideEquals = 21;
     public static final int RecordCanonicalConstructor = 22;
     public final static int RecordComponentReadAccess = 23;
+    public static final int DeserializeLambdaHelper = 24; // Called by $deserializeLambda$ for an implementation method name.
 
 	public int sourceStart = 0; // start position of the matching declaration
 	public int index; // used for sorting access methods in the class file
@@ -349,6 +355,28 @@ public class SyntheticMethodBinding extends MethodBinding {
 	    this.parameters = new TypeBinding[]{declaringClass.scope.getJavaLangInvokeSerializedLambda()};
 	    this.purpose = SyntheticMethodBinding.DeserializeLambda;
 		this.index = nextSmbIndex();
+	}
+
+	/**
+	 * Construct the method called by $deserializeLambda$ to deserialize the given lambdas and method references,
+	 * which share an implementation method name. As in javac (JDK-8381812), it is named $deserializeLambda$init
+	 * for a constructor, else $deserializeLambda$$ followed by the implementation method name (ClassFile adds a suffix
+	 * when a method of the declaring class has this name). It is generated with $deserializeLambda$ and is not
+	 * registered in the declaring class.
+	 */
+	public SyntheticMethodBinding(SourceTypeBinding declaringClass, SyntheticMethodBinding[] serializableLambdas) {
+		this.declaringClass = declaringClass;
+		char[] implMethodName = serializableLambdas[0].selector;
+		this.selector = CharOperation.equals(implMethodName, TypeConstants.INIT)
+				? CharOperation.concat(TypeConstants.DESERIALIZE_LAMBDA, "init".toCharArray()) //$NON-NLS-1$
+				: CharOperation.concat(TypeConstants.DESERIALIZE_LAMBDA, implMethodName, '$');
+		this.modifiers = ClassFileConstants.AccPrivate | ClassFileConstants.AccStatic | ClassFileConstants.AccSynthetic;
+		this.extendedTagBits |= ExtendedTagBits.AllAnnotationsResolved;
+		this.thrownExceptions = Binding.NO_EXCEPTIONS;
+		this.returnType = declaringClass.scope.getJavaLangObject();
+		this.parameters = new TypeBinding[]{declaringClass.scope.getJavaLangInvokeSerializedLambda()};
+		this.serializableLambdas = serializableLambdas;
+		this.purpose = SyntheticMethodBinding.DeserializeLambdaHelper;
 	}
 
 	/**

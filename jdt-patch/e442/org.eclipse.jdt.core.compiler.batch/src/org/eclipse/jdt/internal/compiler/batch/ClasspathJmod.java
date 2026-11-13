@@ -15,11 +15,7 @@ package org.eclipse.jdt.internal.compiler.batch;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
-import java.util.zip.ZipEntry;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
@@ -32,12 +28,12 @@ import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.ExternalAnnotationStatus;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
-import org.eclipse.jdt.internal.compiler.util.Util;
 
 public class ClasspathJmod extends ClasspathJar {
 
 	public static char[] CLASSES = "classes".toCharArray(); //$NON-NLS-1$
 	public static char[] CLASSES_FOLDER = "classes/".toCharArray(); //$NON-NLS-1$
+	private static final String CLASSES_FOLDER_STRING = "classes/"; //$NON-NLS-1$
 
 public ClasspathJmod(File file, boolean closeZipFileAtEnd,
 		AccessRuleSet accessRuleSet, String destinationPath) {
@@ -98,84 +94,13 @@ public boolean hasAnnotationFileFor(String qualifiedTypeName) {
 	qualifiedTypeName = new String(CharOperation.append(CLASSES_FOLDER, qualifiedTypeName.toCharArray()));
 	return this.zipFile.getEntry(qualifiedTypeName+ExternalAnnotationProvider.ANNOTATION_FILE_SUFFIX) != null;
 }
-@SuppressWarnings({ "rawtypes", "unchecked" })
+/**
+ * The class files of a JMOD file are in its <code>classes/</code> folder, next to other folders like
+ * <code>bin/</code>, <code>conf/</code> or <code>lib/</code> which are ignored.
+ */
 @Override
-public char[][][] findTypeNames(final String qualifiedPackageName, String moduleName) {
-	if (!isPackage(qualifiedPackageName, moduleName))
-		return null; // most common case
-	final char[] packageArray = qualifiedPackageName.toCharArray();
-	final ArrayList answers = new ArrayList();
-	nextEntry : for (Enumeration<? extends ZipEntry> e = this.zipFile.entries(); e.hasMoreElements(); ) {
-		String fileName = e.nextElement().getName();
-
-		// add the package name & all of its parent packages
-		int first = CharOperation.indexOf(CLASSES_FOLDER, fileName.toCharArray(), false);
-		int last = fileName.lastIndexOf('/');
-		if (last > 0) {
-			// extract the package name
-			String packageName = fileName.substring(first + 1, last);
-			if (!qualifiedPackageName.equals(packageName))
-				continue nextEntry;
-			int indexOfDot = fileName.lastIndexOf('.');
-			if (indexOfDot != -1) {
-				String typeName = fileName.substring(last + 1, indexOfDot);
-				answers.add(
-					CharOperation.arrayConcat(
-						CharOperation.splitOn('/', packageArray),
-						typeName.toCharArray()));
-			}
-		}
-	}
-	int size = answers.size();
-	if (size != 0) {
-		char[][][] result = new char[size][][];
-		answers.toArray(result);
-		return result;
-	}
-	return null;
-}
-@Override
-public synchronized char[][] getModulesDeclaringPackage(String qualifiedPackageName, String moduleName) {
-	if (this.packageCache != null)
-		return singletonModuleNameIf(this.packageCache.contains(qualifiedPackageName));
-
-	this.packageCache = new HashSet<>(41);
-	this.packageCache.add(Util.EMPTY_STRING);
-
-	for (Enumeration<? extends ZipEntry> e = this.zipFile.entries(); e.hasMoreElements(); ) {
-		char[] entryName = e.nextElement().getName().toCharArray();
-		int index = CharOperation.indexOf('/', entryName);
-		if (index != -1) {
-			char[] folder = CharOperation.subarray(entryName, 0, index);
-			if (CharOperation.equals(CLASSES, folder)) {
-				char[] fileName = CharOperation.subarray(entryName, index + 1, entryName.length);
-				addToPackageCache(new String(fileName), false);
-			}
-		}
-	}
-	return singletonModuleNameIf(this.packageCache.contains(qualifiedPackageName));
-}
-@Override
-public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName) {
-	qualifiedPackageName += '/';
-	for (Enumeration<? extends ZipEntry> e = this.zipFile.entries(); e.hasMoreElements(); ) {
-		char[] entryName = e.nextElement().getName().toCharArray();
-		int index = CharOperation.indexOf('/', entryName);
-		if (index != -1) {
-			char[] folder = CharOperation.subarray(entryName, 0, index);
-			if (CharOperation.equals(CLASSES, folder)) {
-				String fileName = new String(CharOperation.subarray(entryName, index + 1, entryName.length));
-				if (fileName.startsWith(qualifiedPackageName) && fileName.length() > qualifiedPackageName.length()) {
-					String tail = fileName.substring(qualifiedPackageName.length());
-					if (tail.indexOf('/') != -1)
-						continue;
-					if (tail.toLowerCase().endsWith(SUFFIX_STRING_class))
-						return true;
-				}
-			}
-		}
-	}
-	return false;
+protected String toClassRootRelativeName(String entryName) {
+	return entryName.startsWith(CLASSES_FOLDER_STRING) ? entryName.substring(CLASSES_FOLDER_STRING.length()) : null;
 }
 @Override
 public String toString() {

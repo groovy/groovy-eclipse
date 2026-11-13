@@ -16,8 +16,8 @@
 package org.eclipse.jdt.internal.compiler.apt.util;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,8 +41,8 @@ import java.util.Set;
  */
 public class ManyToMany<T1, T2> {
 
-	private final Map<T1, Set<T2>> _forward = new HashMap<>();
-	private final Map<T2, Set<T1>> _reverse = new HashMap<>();
+	private final Map<T1, Set<T2>> _forward = new LinkedHashMap<>();
+	private final Map<T2, Set<T1>> _reverse = new LinkedHashMap<>();
 	private boolean _dirty = false;
 
 	/**
@@ -109,7 +109,7 @@ public class ManyToMany<T1, T2> {
 		if (null == keys) {
 			return Collections.emptySet();
 		}
-		return new HashSet<>(keys);
+		return new LinkedHashSet<>(keys);
 	}
 
 	/**
@@ -123,7 +123,7 @@ public class ManyToMany<T1, T2> {
 		if (null == values) {
 			return Collections.emptySet();
 		}
-		return new HashSet<>(values);
+		return new LinkedHashSet<>(values);
 	}
 
 	/**
@@ -133,7 +133,7 @@ public class ManyToMany<T1, T2> {
 	 * @see #getValueSet()
 	 */
 	public synchronized Set<T1> getKeySet() {
-		Set<T1> keys = new HashSet<>(this._forward.keySet());
+		Set<T1> keys = new LinkedHashSet<>(this._forward.keySet());
 		return keys;
 	}
 
@@ -144,7 +144,7 @@ public class ManyToMany<T1, T2> {
 	 * @see #getKeySet()
 	 */
 	public synchronized Set<T2> getValueSet() {
-		Set<T2> values = new HashSet<>(this._reverse.keySet());
+		Set<T2> values = new LinkedHashSet<>(this._reverse.keySet());
 		return values;
 	}
 
@@ -197,7 +197,7 @@ public class ManyToMany<T1, T2> {
 		// Add to forward map
 		Set<T2> values = this._forward.get(key);
 		if (null == values) {
-			values = new HashSet<>();
+			values = new LinkedHashSet<>();
 			this._forward.put(key, values);
 		}
 		boolean added = values.add(value);
@@ -206,7 +206,7 @@ public class ManyToMany<T1, T2> {
 		// Add to reverse map
 		Set<T1> keys = this._reverse.get(value);
 		if (null == keys) {
-			keys = new HashSet<>();
+			keys = new LinkedHashSet<>();
 			this._reverse.put(value, keys);
 		}
 		keys.add(key);

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-    Copyright (c) 2007, 2020 IBM Corporation and others.
+    Copyright (c) 2007, 2026 IBM Corporation and others.
 
     This program and the accompanying materials
     are made available under the terms of the Eclipse Public License 2.0
@@ -14,11 +14,26 @@
         IBM Corporation - initial API and implementation
  -->
 
-<!-- build script to create a batch compiler from org.eclipse.jdt.core -->
+<!--
+	Build script to create a batch compiler (ecj) from org.eclipse.jdt.core.compiler.batch.
+	The batch compiler (including the JSR 199 / JSR 269 implementations and the ant adapter)
+	must be compiled (e.g. by Eclipse into the "bin" folder) before running this script.
+-->
 <project name="Eclipse Batch Compiler" default="export-all" basedir="..">
 	<target name="init">
 		<tstamp/>
-		<property name="bundleVersion" value="3.10.0.qualifier"/>
+		<!-- Location of the batch compiler project (this project) -->
+		<property name="batch.project" location="${basedir}"/>
+		<property name="batch.src" location="${batch.project}/src"/>
+		<property name="batch.bin" location="${batch.project}/bin"/>
+		<fail message="Compiled classes of batch compiler not found at ${batch.bin}, please build org.eclipse.jdt.core.compiler.batch first">
+			<condition>
+				<not><available file="${batch.bin}/org/eclipse/jdt/internal/compiler/batch/messages.properties"/></not>
+			</condition>
+		</fail>
+		<!-- Default bundle version is taken from the batch compiler manifest, can be overridden by caller -->
+		<property file="${batch.project}/META-INF/MANIFEST.MF" prefix="batch.manifest"/>
+		<property name="bundleVersion" value="${batch.manifest.Bundle-Version}"/>
 		<fail unless="bundleVersion" message="Property 'bundleVersion' must be provided by caller"/>
 		<condition property="bundleVersionOK">
 			<matches pattern="\d+\.\d+\.\d+.*" string="${bundleVersion}"/>
@@ -63,11 +78,10 @@
 	</target>
 	
 	<target name="extract-batch-compiler" depends="init">
-		<property name="target.folder" value="${basedir}/bin"/>
-		<replace file="${target.folder}/org/eclipse/jdt/internal/compiler/batch/messages.properties" token="bundle_qualifier" value="${bundleVersionQualifer}"/>
-		<echo message="Extract .class file and properties for the batch compiler" />
+		<echo message="Extract .class file and properties for the batch compiler (incl. jsr199 and jsr269)" />
 		<copy todir="${ecj-temp-folder}">
-			<fileset dir="${basedir}/../org.eclipse.jdt.core.compiler.batch/target/classes">
+			<fileset dir="${batch.bin}">
+				<!-- includes org.eclipse.jdt.internal.compiler.apt (jsr269) and org.eclipse.jdt.internal.compiler.tool (jsr199) -->
 				<include name="org/eclipse/jdt/internal/compiler/**"/>
 				<include name="org/eclipse/jdt/core/compiler/**"/>
 				<exclude name="**/package.htm*"/>
@@ -84,37 +98,22 @@
 				<exclude name="org/eclipse/jdt/internal/compiler/SourceJavadocParser*.class"/>
 				<exclude name="org/eclipse/jdt/internal/compiler/parser/SourceTypeConverter*.class"/>
 			</fileset>
+			<!-- service registration for javax.tools.JavaCompiler (jsr199) -->
+			<fileset dir="${batch.project}">
+				<include name="META-INF/services/**"/>
+			</fileset>
 		</copy>
-	</target>
-
-	<target name="extract-_jsr199" depends="init">
-		<property name="target.folder" value="${basedir}/../org.eclipse.jdt.compiler.tool/bin"/>
-		<echo message="Extract .class file and properties for the jsr199" />
-		<copy todir="${ecj-temp-folder}" failonerror="false">
-			<fileset dir="${target.folder}"/>
-		</copy>
-	</target>
-	
-	<target name="extract-_jsr269" depends="init">
-		<property name="jsr_project" value="org.eclipse.jdt.compiler.apt"/>
-		<property name="target.folder" value="${basedir}/../org.eclipse.jdt.compiler.apt/bin"/>
-		<echo message="Extract .class file and properties for the jsr269" />
-		<copy todir="${ecj-temp-folder}" failonerror="false">
-			<fileset dir="${target.folder}"/>
-		</copy>
+		<!-- Patch the copied file only, so the project output folder stays untouched -->
+		<replace file="${ecj-temp-folder}/org/eclipse/jdt/internal/compiler/batch/messages.properties" token="bundle_qualifier," value="${bundleVersionQualifer},"/>
+		<replace file="${ecj-temp-folder}/org/eclipse/jdt/internal/compiler/batch/messages.properties" token="bundle_version" value="${bundleVersionMajor}.${bundleVersionMinor}.${bundleVersionService}"/>
 	</target>
 
 	<target name="extract-ant-adapter-compiler" depends="init">
-		<property name="target.folder" value="${basedir}/antbin"/>
 		<echo message="Extract .class file and properties for the ant adapter" />
-		<mkdir dir="${ecj-temp-folder}"/>
 		<copy todir="${ecj-temp-folder}">
-			<fileset dir="${target.folder}">
-				<exclude name="org/eclipse/jdt/core/CheckDebugAttributes*.*"/>
-				<exclude name="org/eclipse/jdt/core/BuildJarIndex*.*"/>
-			</fileset>
-			<fileset dir="${basedir}/../org.eclipse.jdt.core.compiler.batch/target/classes">
-				<include name="org/eclipse/jdt/internal/antadapter/*.*"/>
+			<fileset dir="${batch.bin}">
+				<include name="org/eclipse/jdt/core/JDTCompilerAdapter*.class"/>
+				<include name="org/eclipse/jdt/internal/antadapter/**"/>
 			</fileset>
 		</copy>
 	</target>
@@ -150,18 +149,17 @@
 		<replace file="${ecj-temp-src-folder}/META-INF/MANIFEST.MF" token="qualifier" value="${bundleVersionQualifer}"/>
 		<replace file="${ecj-temp-src-folder}/scripts/binary/META-INF/MANIFEST.MF" token="qualifier" value="${bundleVersionQualifer}"/>
 		<zip zipfile="${dest}/ecjsrc-${buildLabel}.jar">
-			<zipfileset dir="ecj-temp-src-folder" />
-			<zipfileset dir="batch">
+			<zipfileset dir="${ecj-temp-src-folder}" />
+			<zipfileset dir="${batch.src}">
 				<exclude name="org/eclipse/jdt/internal/compiler/batch/messages.properties"/>
+				<exclude name="**/README.md"/>
 			</zipfileset>
 			<fileset dir="${ecj-temp-folder}">
-				<include name="**/messages.properties"/>
+				<include name="org/eclipse/jdt/internal/compiler/batch/messages.properties"/>
 				<include name="ecj.1"/>
 			</fileset>
-			<zipfileset dir="compiler" />
-			<zipfileset dir="antadapter">
-				<exclude name="org/eclipse/jdt/core/CheckDebugAttributes.java"/>
-				<exclude name="org/eclipse/jdt/core/BuildJarIndex.java"/>
+			<zipfileset dir="${batch.project}">
+				<include name="META-INF/services/**"/>
 			</zipfileset>
 			<zipfileset dir="scripts">
 				<include name="about.html" />
@@ -171,7 +169,7 @@
 		<antcall target="cleanup"/>
 	</target>
 
-	<target name="export_src_bin">
+	<target name="export_src_bin" depends="init">
 		<property name="dest" value="../../ecj-export" />
 		<mkdir dir="${dest}" />
 		<echo message="UPDATE ecj_all.jar" />
@@ -184,11 +182,9 @@
 		<replace file="${ecj-temp-folder}/META-INF/MANIFEST.MF" token="qualifier" value="${bundleVersionQualifer}"/>
 
 		<copy todir="${ecj-temp-src-folder}/src">
-			<fileset dir="batch" />
-			<fileset dir="compiler" />
-			<fileset dir="antadapter">
-				<exclude name="org/eclipse/jdt/core/CheckDebugAttributes.java"/>
-				<exclude name="org/eclipse/jdt/core/BuildJarIndex.java"/>
+			<fileset dir="${batch.src}">
+				<exclude name="org/eclipse/jdt/internal/compiler/batch/messages.properties"/>
+				<exclude name="**/README.md"/>
 			</fileset>
 		</copy>
 
@@ -216,8 +212,6 @@
 	<target name="export-all" depends="init">
 		<antcall target="extract-batch-compiler"/>
 		<antcall target="extract-ant-adapter-compiler"/>
-		<antcall target="extract-_jsr199"/>
-		<antcall target="extract-_jsr269"/>
 		<antcall target="export_src_bin"/>
 		<antcall target="export"/>
 		<antcall target="cleanup"/>

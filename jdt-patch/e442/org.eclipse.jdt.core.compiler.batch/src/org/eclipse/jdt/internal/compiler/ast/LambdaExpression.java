@@ -147,6 +147,8 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 	}
 
 	public Expression[] resultExpressions() {
+		if (this.resultExpressions == NO_EXPRESSIONS && this.body instanceof Expression expr && expr.isTrulyExpression())
+			return new Expression[] { expr };
 		return this.resultExpressions;
 	}
 
@@ -982,7 +984,14 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 
 				copy.setExpressionContext(this.expressionContext);
 				copy.setExpectedType(targetType);
-				TypeBinding type = copy.resolveType(this.enclosingScope, true);
+				MethodScope outerMostMethodScope = this.enclosingScope.outerMostMethodScope();
+				int analysisIndex = outerMostMethodScope.analysisIndex;
+				TypeBinding type;
+				try {
+					type = copy.resolveType(this.enclosingScope, true);
+				} finally {
+					outerMostMethodScope.analysisIndex = analysisIndex;
+				}
 				if (type == null || !type.isValidBinding())
 					return null;
 
