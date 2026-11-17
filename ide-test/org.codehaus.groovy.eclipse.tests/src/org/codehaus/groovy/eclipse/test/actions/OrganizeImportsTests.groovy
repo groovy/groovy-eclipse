@@ -207,7 +207,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         String contents = '''\
             |[value: TimeUnit.SECONDS]
             |'''
-        doAddImportTest(contents, ['javax.util.concurrent.TimeUnit'])
+        doAddImportTest(contents, ['java.util.concurrent.TimeUnit'])
     }
 
     @Test

@@ -127,11 +127,12 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
             Assert.assertTrue("Found incorrect imports in text edit:\n$edit\nwith expected imports:\n$expectedImports", newChildren.empty)
         }
 
-        def notFound = ''
+        def notFound = new StringBuilder()
+        def expected = expectedImports?.collect { it.startsWith('import ') ? it : 'import ' + it }
         for (child in newChildren) {
-            if (!child instanceof InsertEdit) {
+            if (!(child instanceof InsertEdit)) {
                 notFound << "Found an invalid Edit: $child\n"
-            } else if (!contents.contains(child.text)) {
+            } else if (!expected.contains(child.text)) {
                 notFound << child.text << '\n'
             }
         }
