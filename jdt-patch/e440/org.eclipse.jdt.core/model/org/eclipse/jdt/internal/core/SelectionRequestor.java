@@ -418,9 +418,9 @@ public void acceptLocalVariable(LocalVariableBinding binding, org.eclipse.jdt.in
 	if(parent != null) {
 		String typeSig = null;
 		if (local.type == null || (local.type.isTypeNameVar(binding.declaringScope) && binding.type != null && !binding.type.isAnonymousType())) {
-			if (local.initialization instanceof CastExpression) {
-				typeSig = Util.typeSignature(((CastExpression) local.initialization).type);
-			} else {
+			if (local.initialization instanceof CastExpression cast) {
+				typeSig = Util.typeSignature(cast.type);
+			} else if (binding.type != null) { // GROOVY
 				typeSig = Signature.createTypeSignature(binding.type.signableName(), true);
 			}
 		} else {
