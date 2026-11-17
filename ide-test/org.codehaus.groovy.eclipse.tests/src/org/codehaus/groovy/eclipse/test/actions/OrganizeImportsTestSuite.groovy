@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,62 +93,42 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         def unit = addGroovySource(contents.stripMargin(), nextUnitName())
         ReconcilerUtils.reconcile(unit)
 
-        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, { TypeNameMatch[][] matches, ISourceRange[] range ->
-            Assert.fail("Should not have a choice, but found $matches[0][0] and $matches[0][1]")
+        def organizer = new OrganizeGroovyImports(unit, { TypeNameMatch[][] matches, ISourceRange[] range ->
+            Assert.fail("Should not have a choice, but found ${matches[0][0]} and ${matches[0][1]}")
         })
-        TextEdit edit = organize.calculateMissingImports()
+        TextEdit edit = organizer.calculateMissingImports()
         if (expectedImports == null) {
             Assert.assertNull('Expected null due to a compile error in the contents', edit)
         }
 
-        def actualContents = unit.contents
-        def children = edit?.children as List<TextEdit>
-        List<TextEdit> newChildren = []
-        children?.each {
-            if (it instanceof DeleteEdit) {
+        char[] unitContents = unit.contents
+        List<InsertEdit> inserts = []
+        edit?.children?.each {
+            if (it instanceof DeleteEdit) { def del = it as DeleteEdit
                 // check to see if the edit is whitespace only
-                def del = it as DeleteEdit
                 for (i in del.offset..del.inclusiveEnd) {
-                    if (!Character.isWhitespace(actualContents[i] as char)) {
-                        Assert.fail("Found unexpected DeleteEdit: $it [ ${actualContents[del.offset..del.inclusiveEnd]} ]")
+                    if (!Character.isWhitespace(unitContents[i])) {
+                        Assert.fail("Found unexpected DeleteEdit: $it [ ${unitContents[del.offset..del.inclusiveEnd]} ]")
                     }
                 }
-            }
-            if (it instanceof InsertEdit) {
-                def insert = it as InsertEdit
-                if (!insert.text.trim().empty && insert.text != '\n') {
-                    newChildren += insert
+            } else if (it instanceof InsertEdit) { def insert = it as InsertEdit
+                if (!insert.text.isBlank()) {
+                    inserts.add(insert)
                 }
             }
         }
-        if (expectedImports) {
-            Assert.assertEquals("Found incorrect imports in text edit:\n$edit\nwith expected imports:\n$expectedImports", expectedImports.size(), newChildren.size())
-        } else {
-            Assert.assertTrue("Found incorrect imports in text edit:\n$edit\nwith expected imports:\n$expectedImports", newChildren.empty)
-        }
 
-        def notFound = ''
-        for (child in newChildren) {
-            if (!child instanceof InsertEdit) {
-                notFound << "Found an invalid Edit: $child\n"
-            } else if (!contents.contains(child.text)) {
-                notFound << child.text << '\n'
-            }
-        }
-
-        if (notFound) {
-            Assert.fail("Did not find the following imports:\n$notFound")
-        }
+        Assert.assertEquals("Found incorrect imports in text edit:\n$edit", expectedImports.sort(), inserts*.text.sort())
     }
 
     protected void doContentsCompareTest(CharSequence originalContents, CharSequence expectedContents = originalContents) {
         def unit = addGroovySource(originalContents.stripMargin(), nextUnitName())
         ReconcilerUtils.reconcile(unit)
 
-        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, { TypeNameMatch[][] matches, ISourceRange[] range ->
-            Assert.fail("Should not have a choice, but found $matches[0][0] and $matches[0][1]")
+        def organizer = new OrganizeGroovyImports(unit, { TypeNameMatch[][] matches, ISourceRange[] range ->
+            Assert.fail("Should not have a choice, but found ${matches[0][0]} and ${matches[0][1]}")
         })
-        TextEdit edit = organize.calculateMissingImports()
+        TextEdit edit = organizer.calculateMissingImports()
 
         Document doc = new Document(originalContents.stripMargin())
         if (edit != null) edit.apply(doc)
@@ -168,12 +148,12 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         def unit = addGroovySource(contents.stripMargin(), nextUnitName())
         ReconcilerUtils.reconcile(unit)
 
-        List<String> choices
-        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, { TypeNameMatch[][] matches, ISourceRange[] range ->
+        List<String> choices = Collections.emptyList()
+        def organizer = new OrganizeGroovyImports(unit, { TypeNameMatch[][] matches, ISourceRange[] range ->
             choices = matches[0]*.type*.fullyQualifiedName
             return new TypeNameMatch[0]
         })
-        organize.calculateMissingImports()
+        organizer.calculateMissingImports()
         for (choice in expectedChoices) {
             Assert.assertTrue("Should have found $choice in choices", choices.contains(choice))
         }

@@ -207,7 +207,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         String contents = '''\
             |[value: TimeUnit.SECONDS]
             |'''
-        doAddImportTest(contents, ['javax.util.concurrent.TimeUnit'])
+        doAddImportTest(contents, ['import java.util.concurrent.TimeUnit'])
     }
 
     @Test
@@ -216,7 +216,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |class C extends FirstClass {
             |}
             |'''
-        doAddImportTest(contents, ['other.FirstClass'])
+        doAddImportTest(contents, ['import other.FirstClass'])
     }
 
     @Test
@@ -708,7 +708,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |  Foo(DateFormat arg) { }
             |}
             |'''
-        doAddImportTest(contents, ['java.text.DateFormat'])
+        doAddImportTest(contents, ['import java.text.DateFormat'])
     }
 
     @Test // GRECLIPSE-643
@@ -742,7 +742,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         String contents = '''\
             |new String(DateFormat.getDateInstance())
             |'''
-        doAddImportTest(contents, ['java.text.DateFormat'])
+        doAddImportTest(contents, ['import java.text.DateFormat'])
     }
 
     @Test
@@ -839,7 +839,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |)
             |class MyEntity {  }
             |'''
-        doAddImportTest(contents, ['anns.NamedQueries', 'anns.NamedQuery'])
+        doAddImportTest(contents, ['import anns.NamedQueries', 'import anns.NamedQuery'])
     }
 
     @Test // GRECLIPSE-600
@@ -881,7 +881,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |)
             |class MyEntity {  }
             |'''
-        doAddImportTest(contents, ['anns.NamedQueries', 'anns.NamedQuery'])
+        doAddImportTest(contents, ['import anns.NamedQueries', 'import anns.NamedQuery'])
     }
 
     @Test // GRECLIPSE-600
@@ -917,7 +917,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         String contents = '''\
             |InnerInner f
             |'''
-        doAddImportTest(contents, ['inner.HasInner.InnerInner'])
+        doAddImportTest(contents, ['import inner.HasInner.InnerInner'])
     }
 
     @Test
@@ -946,7 +946,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         String contents = '''\
             |HasInner.InnerInner f
             |'''
-        doAddImportTest(contents, ['inner.HasInner'])
+        doAddImportTest(contents, ['import inner.HasInner'])
     }
 
     @Test
@@ -1472,8 +1472,8 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test @NotYetImplemented // https://github.com/groovy/groovy-eclipse/issues/732
     void testRepeatStaticImport2() {
-        addJavaSource('class A { public static boolean isSomething(String s) { return true; } }', 'A', 'p')
-        addJavaSource('class B { public static boolean isSomething(Iterable i) { return true; } }', 'B', 'p')
+        addJavaSource('class A {\npublic static boolean isSomething(String s) { return true; }\n}', 'A', 'p')
+        addJavaSource('class B {\npublic static boolean isSomething(Iterable i) { return true; }\n}', 'B', 'p')
 
         String contents = '''\
             |import static p.A.isSomething
@@ -1726,7 +1726,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |@Field
             |def x = 0
             |'''
-        doAddImportTest(contents, ['groovy.transform.Field'])
+        doAddImportTest(contents, ['import groovy.transform.Field'])
     }
 
     @Test // GRECLIPSE-1692
@@ -1746,7 +1746,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |class Main {
             |}
             |'''
-        doAddImportTest(contents, ['groovy.transform.builder.Builder'])
+        doAddImportTest(contents, ['import groovy.transform.builder.Builder'])
     }
 
     @Test
@@ -1773,7 +1773,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             |public void x() {
             |}
             |'''
-        doAddImportTest(contents, ['groovy.transform.CompileDynamic'])
+        doAddImportTest(contents, ['import groovy.transform.CompileDynamic'])
     }
 
     @Test // GRECLIPSE-1794
