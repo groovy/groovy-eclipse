@@ -29,6 +29,7 @@ import groovyjarjarantlr4.v4.runtime.ParserRuleContext;
 import groovyjarjarantlr4.v4.runtime.RecognitionException;
 import groovyjarjarantlr4.v4.runtime.Recognizer;
 import groovyjarjarantlr4.v4.runtime.Token;
+import groovyjarjarantlr4.v4.runtime.TokenStream;
 import groovyjarjarantlr4.v4.runtime.atn.PredictionMode;
 import groovyjarjarantlr4.v4.runtime.misc.Interval;
 import groovyjarjarantlr4.v4.runtime.misc.ParseCancellationException;
@@ -255,7 +256,25 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             // parsing have to wait util clearing is complete.
             AtnManager.READ_LOCK.lock();
             try {
-                result = buildCST(PredictionMode.LL);
+                final TokenStream tokenStream = parser.getInputStream();
+                if (SLL_THRESHOLD >= 0 && tokenStream.size() > SLL_THRESHOLD) {
+                    // The more tokens to parse, the more possibility SLL will fail and the more parsing time will waste.
+                    // The option `groovy.antlr4.sll.threshold` could be tuned for better parsing performance, but it is disabled by default.
+                    // If the token count is greater than `groovy.antlr4.sll.threshold`, use LL directly.
+                    result = buildCST(PredictionMode.LL);
+                } else {
+                    try {
+                        result = buildCST(PredictionMode.SLL);
+                    } catch (Throwable t) {
+                        // if some syntax error occurred in the lexer, no need to retry the powerful LL mode
+                        if (t instanceof GroovySyntaxError && GroovySyntaxError.LEXER == ((GroovySyntaxError) t).getSource()) {
+                            throw t;
+                        }
+
+                        tokenStream.seek(0);
+                        result = buildCST(PredictionMode.LL);
+                    }
+                }
             } finally {
                 AtnManager.READ_LOCK.unlock();
             }
@@ -268,14 +287,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     private GroovyParserRuleContext buildCST(final PredictionMode predictionMode) {
         parser.getInterpreter().setPredictionMode(predictionMode);
-        /* GRECLIPSE edit
+
         if (PredictionMode.SLL.equals(predictionMode)) {
             this.removeErrorListeners();
         } else {
-        */
             this.addErrorListeners();
-        /*}*/
-        // GRECLIPSE end
+        }
+
         return parser.compilationUnit();
     }
 
@@ -4797,7 +4815,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         return new CompilationFailedException(
                 CompilePhase.PARSING.getPhaseNumber(),
-                this.sourceUnit,
+                sourceUnit,
                 t);
     }
 
@@ -4806,7 +4824,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     private void collectException(final Exception e) {
-        sourceUnit.getErrorCollector().addException(e, this.sourceUnit);
+        sourceUnit.getErrorCollector().addException(e, sourceUnit);
     }
 
     private ANTLRErrorListener createANTLRErrorListener() {
@@ -4818,7 +4836,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         };
     }
 
-    @SuppressWarnings("unused")
     private void removeErrorListeners() {
         lexer.removeErrorListeners();
         parser.removeErrorListeners();
@@ -4895,6 +4912,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     private int visitingSwitchStatementCount;
     private int visitingAssertStatementCount;
     private int visitingArrayInitializerCount;
+
+    private static final int SLL_THRESHOLD = Integer.getInteger("groovy.antlr4.sll.threshold", -1);
 
     private static final String QUESTION_STR = "?";
     private static final String DOT_STR = ".";
