@@ -1,0 +1,10 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+def a = [: ]
+def b = [:]
+###exp
+def a = [:]
+def b = [:]
+###end

@@ -1,0 +1,36 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+public class FormatterSpec extends Specification {
+	def "Data table"(testId, input, expectedResult) {
+		when:
+		boolean result = StringUtils.isBlank(input)
+
+		then:
+		result == expectedResult
+
+		where:
+		testId | input || expectedResult
+		1      | null  || true
+		2      | ''    || true
+		3      | 'abc' || false
+	}
+}
+###exp
+public class FormatterSpec extends Specification {
+	def "Data table"(testId, input, expectedResult) {
+		when:
+		boolean result = StringUtils.isBlank(input)
+
+		then:
+		result == expectedResult
+
+		where:
+		testId | input || expectedResult
+		1      | null  || true
+		2      | ''    || true
+		3      | 'abc' || false
+	}
+}
+###end
