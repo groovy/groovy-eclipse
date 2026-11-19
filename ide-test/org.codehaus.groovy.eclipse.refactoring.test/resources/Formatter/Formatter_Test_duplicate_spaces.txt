@@ -36,10 +36,10 @@ public abstract class EmailCommand extends Command implements Serializable,
 			println "test"
 		}
 
-		def a = i<2
-		def b = 1<2
+		def a = i < 2
+		def b = 1 < 2
 
-		return 1 <2 && 2 >= 1
+		return 1 < 2 && 2 >= 1
 	}
 }
 ###end

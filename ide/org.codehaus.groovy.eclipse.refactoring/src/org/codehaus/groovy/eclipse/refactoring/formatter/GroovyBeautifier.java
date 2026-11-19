@@ -51,6 +51,8 @@ public class GroovyBeautifier {
     public final DefaultGroovyFormatter formatter;
     private final IFormatterPreferences preferences;
     private final Set<Token> ignoreToken = new HashSet<>();
+    // angle brackets of type arguments, e.g. in "Map<String, List<Integer>>"
+    private Set<Token> typeArgumentBrackets;
 
     public GroovyBeautifier(DefaultGroovyFormatter formatter, IFormatterPreferences preferences) {
         this.formatter = formatter;
@@ -383,15 +385,15 @@ public class GroovyBeautifier {
 
                 boolean addSpaceAfter = false;
 
-                // TODO how to differentiate between Generics and 1 < 2?
+                if (isComparisonOperator(token) || isComparisonOperator(nextToken)) {
+                    addSpaceAfter = true;
+                }
 
                 if ((
                         isValueToken(token) ||
                         tokenType == GroovyTokenTypeBridge.IDENT ||
                         nextTokenType == GroovyTokenTypeBridge.STRING_LITERAL
                     ) && (
-                        //nextTokenType == GroovyTokenTypeBridge.GT ||
-                        //nextTokenType == GroovyTokenTypeBridge.LT ||
                         nextTokenType == GroovyTokenTypeBridge.GE ||
                         nextTokenType == GroovyTokenTypeBridge.LE ||
                         nextTokenType == GroovyTokenTypeBridge.NOT_EQUAL ||
@@ -403,8 +405,6 @@ public class GroovyBeautifier {
                 }
 
                 if ((
-                        //tokenType == GroovyTokenTypeBridge.GT ||
-                        //tokenType == GroovyTokenTypeBridge.LT ||
                         tokenType == GroovyTokenTypeBridge.GE ||
                         tokenType == GroovyTokenTypeBridge.LE ||
                         tokenType == GroovyTokenTypeBridge.NOT_EQUAL ||
@@ -423,6 +423,9 @@ public class GroovyBeautifier {
 
                 if (tokenType == GroovyTokenTypeBridge.COLON
                         && nextTokenType != GroovyTokenTypeBridge.COLON
+                        // removeUnnecessaryWhitespace removes all whitespace before "]",
+                        // so a space in the empty map "[:]" would be toggled on every run
+                        && nextTokenType != GroovyTokenTypeBridge.RBRACK
                         && !isSecondHalfOfMethodReference) {
                     // A COLON adjacent to another COLON (on either side) is
                     // the method reference operator "::" (Groovy 3+), split
@@ -467,6 +470,11 @@ public class GroovyBeautifier {
             // to zero whitespace (e.g. "case 'FOO':") instead of collapsed to
             // one space like a ternary's colon (e.g. "a ? b : c").
             boolean inCaseLabel = false;
+            // Bracket depth of the Spock "where:" block being scanned, or -1 outside of
+            // one. Its data tables may separate the input and output columns with "||"
+            // and align them like the columns separated by "|", while "||" elsewhere is
+            // the logical or, which gets its whitespace collapsed.
+            int whereBlockDepth = -1;
 
             for (Token token : formatter.getTokens().getTokens(formatter.selection)) {
                 Token nextToken = formatter.getTokens().getNextToken(token);
@@ -478,6 +486,12 @@ public class GroovyBeautifier {
                 } else if (!openBrackets.isEmpty() && (
                     tokenType == GroovyTokenTypeBridge.RPAREN || tokenType == GroovyTokenTypeBridge.RBRACK || tokenType == GroovyTokenTypeBridge.RCURLY)) {
                     openBrackets.pop();
+                }
+
+                if (whereBlockDepth >= 0 && openBrackets.size() < whereBlockDepth) {
+                    whereBlockDepth = -1;
+                } else if (tokenType == GroovyTokenTypeBridge.IDENT && nextTokenType == GroovyTokenTypeBridge.COLON && "where".equals(token.getText())) {
+                    whereBlockDepth = openBrackets.size();
                 }
 
                 if (tokenType == GroovyTokenTypeBridge.LITERAL_case || tokenType == GroovyTokenTypeBridge.LITERAL_default) {
@@ -497,6 +511,7 @@ public class GroovyBeautifier {
                 // to a single space defeats the purpose of the alignment.
                 if (tokenType == GroovyTokenTypeBridge.BOR ||
                     nextTokenType == GroovyTokenTypeBridge.BOR ||
+                    (whereBlockDepth >= 0 && ("||".equals(token.getText()) || "||".equals(nextToken.getText()))) ||
                     (nextTokenType == GroovyTokenTypeBridge.COLON &&
                         openBrackets.peek() == GroovyTokenTypeBridge.LBRACK)) {
                     collapseAllWhitespaces = false;
@@ -506,13 +521,9 @@ public class GroovyBeautifier {
                     removeAllWhitespaces = true;
                 }
 
-                // TODO: both Map<String, String> and 1 < 2 match here, how to differentiate them?
-                if (tokenType == GroovyTokenTypeBridge.IDENT && nextTokenType == GroovyTokenTypeBridge.LT) {
-                    //removeAllWhitespaces = true;
-                }
-
-                if ((tokenType == GroovyTokenTypeBridge.LT && nextTokenType == GroovyTokenTypeBridge.IDENT) ||
-                    (tokenType == GroovyTokenTypeBridge.IDENT && nextTokenType == GroovyTokenTypeBridge.GT)) {
+                // Map< String > -> Map<String>, but not a < b
+                if ((tokenType == GroovyTokenTypeBridge.LT && nextTokenType == GroovyTokenTypeBridge.IDENT && getTypeArgumentBrackets().contains(token)) ||
+                    (tokenType == GroovyTokenTypeBridge.IDENT && nextTokenType == GroovyTokenTypeBridge.GT && getTypeArgumentBrackets().contains(nextToken))) {
                     removeAllWhitespaces = true;
                 }
 
@@ -552,6 +563,71 @@ public class GroovyBeautifier {
         } catch (Exception e) {
             Util.log(e);
         }
+    }
+
+    private boolean isComparisonOperator(Token token) throws BadLocationException {
+        if (token.getType() != GroovyTokenTypeBridge.LT && token.getType() != GroovyTokenTypeBridge.GT) {
+            return false;
+        }
+        // The legacy lexer splits operators that it does not know, like "<..", "<..<" and "==>",
+        // into several tokens. A comparison operator is not attached to another operator.
+        int offset = formatter.getOffsetOfToken(token);
+        String operatorChars = "=!~+-*/%&|^.?:<>";
+        if (operatorChars.indexOf(charAt(offset - 1)) >= 0 || operatorChars.indexOf(charAt(offset + 1)) >= 0) {
+            return false;
+        }
+        return !getTypeArgumentBrackets().contains(token);
+    }
+
+    /**
+     * The legacy lexer does not tell the angle brackets of type arguments from the
+     * comparison operators "<" and ">". A "<" starts type arguments if only tokens
+     * that can be part of a type follow it up to a matching ">", like in
+     * "Map<String, List<Integer>>" but unlike in "a < b && c > d". A "<" with
+     * whitespace on both sides is always a comparison, like in "f(a < b, c > d)".
+     */
+    private Set<Token> getTypeArgumentBrackets() throws BadLocationException {
+        if (typeArgumentBrackets == null) {
+            Set<Token> brackets = new HashSet<>();
+            Deque<Token> lessThan = new ArrayDeque<>();
+            Token previous = null;
+            int annotationParens = 0; // nesting in the arguments of an annotation: List<@Size(min = 1) String>
+            for (Token token : formatter.getTokens().getTokens(formatter.selection)) {
+                String text = String.valueOf(token.getText());
+                if (token.getType() == GroovyTokenTypeBridge.LPAREN && (annotationParens > 0 || (!lessThan.isEmpty() && previous.getType() == GroovyTokenTypeBridge.IDENT))) {
+                    annotationParens += 1;
+                } else if (token.getType() == GroovyTokenTypeBridge.RPAREN && annotationParens > 0) {
+                    annotationParens -= 1;
+                } else if (token.getType() == GroovyTokenTypeBridge.LT) {
+                    int offset = formatter.getOffsetOfToken(token);
+                    if (!Character.isWhitespace(charAt(offset - 1)) || !Character.isWhitespace(charAt(offset + 1))) {
+                        lessThan.push(token);
+                    }
+                } else if (text.equals(">") || text.equals(">>") || text.equals(">>>")) {
+                    // ">>" and ">>>" close nested type arguments
+                    for (int i = 0; i < text.length() && !lessThan.isEmpty(); i += 1) {
+                        brackets.add(lessThan.pop());
+                        brackets.add(token);
+                    }
+                } else if (annotationParens == 0 && !isTypeToken(token)) {
+                    lessThan.clear();
+                }
+                previous = token;
+            }
+            typeArgumentBrackets = brackets;
+        }
+        return typeArgumentBrackets;
+    }
+
+    private boolean isTypeToken(Token token) {
+        String text = String.valueOf(token.getText());
+        return token.getType() != GroovyTokenTypeBridge.STRING_LITERAL && !text.isEmpty() &&
+            (Character.isJavaIdentifierStart(text.charAt(0)) || ".,?&@[]".contains(text));
+    }
+
+    private char charAt(int offset) throws BadLocationException {
+        IDocument document = formatter.getTokens().getDocument();
+        return (offset >= 0 && offset < document.getLength() ? document.getChar(offset) : ' ');
     }
 
     private boolean isValueToken(Token token) {

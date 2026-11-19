@@ -1,0 +1,22 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+a > b
+b < a
+a> b
+b <a
+c<2
+list.size()>0
+check(a < b, c > d)
+def r = a<b && c>d
+###exp
+a > b
+b < a
+a > b
+b < a
+c < 2
+list.size() > 0
+check(a < b, c > d)
+def r = a < b && c > d
+###end

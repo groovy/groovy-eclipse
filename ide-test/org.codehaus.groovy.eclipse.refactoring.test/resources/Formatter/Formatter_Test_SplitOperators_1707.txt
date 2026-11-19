@@ -1,0 +1,12 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+def left = (0<..5)
+def both = (0<..<5)
+def implication = a ==> b
+###exp
+def left = (0<..5)
+def both = (0<..<5)
+def implication = a ==> b
+###end

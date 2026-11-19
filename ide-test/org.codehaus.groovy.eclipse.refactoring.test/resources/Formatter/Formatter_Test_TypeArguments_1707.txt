@@ -1,0 +1,14 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+Map< String, List< Integer > > map = new HashMap<>()
+List< String > names = []
+List<@Size(min = 1, max = 5) String> sized = []
+def t = a<b ? foo(new ArrayList<String>()) : c
+###exp
+Map<String, List<Integer>> map = new HashMap<>()
+List<String> names = []
+List<@Size(min = 1, max = 5) String> sized = []
+def t = a < b ? foo(new ArrayList<String>()) : c
+###end
