@@ -1339,16 +1339,22 @@ public class GroovyEditor extends CompilationUnitEditor {
         ReflectionUtils.throwableExecutePrivateMethod(JavaEditor.class, "removeOccurrenceAnnotations", new Class[0], this, new Object[0]);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     protected void fOccurrencesFinderJob_new(IDocument document, Object locations, ISelection selection) throws Exception {
+        var ofjClass = Class.forName("org.eclipse.jdt.internal.ui.javaeditor.JavaEditor$OccurrencesFinderJob");
         //OccurrencesFinderJob ofj = new OccurrencesFinderJob(document, locations, selection);
-        java.lang.reflect.Constructor ctor = ReflectionUtils.getConstructor(
-            Class.forName("org.eclipse.jdt.internal.ui.javaeditor.JavaEditor$OccurrencesFinderJob"),
-            new Class[] {JavaEditor.class, IDocument.class, locations.getClass(), ISelection.class});
-        Job ofj = (Job) ReflectionUtils.invokeConstructor(ctor, new Object[] {this, document, locations, selection});
+        Job ofj;
+        try {
+            var ctor = ReflectionUtils.getConstructor(ofjClass, new Class[] {
+                JavaEditor.class, IDocument.class, locations.getClass(), ISelection.class});
+            ofj = (Job) ReflectionUtils.invokeConstructor(ctor, new Object[] {this, document, locations, selection});
+        } catch (RuntimeException e) {
+            var ctor = ReflectionUtils.getConstructor(ofjClass, new Class[] {
+                JavaEditor.class, IDocument.class, locations.getClass(), ISelection.class, IRegion.class, long.class});
+            ofj = (Job) ReflectionUtils.invokeConstructor(ctor, new Object[] {this, document, locations, selection, null, 0L});
+        }
         //fOccurrencesFinderJob = ofj;
         ReflectionUtils.setPrivateField(JavaEditor.class, "fOccurrencesFinderJob", this, ofj);
         //ofj.run(new NullProgressMonitor());
-        ReflectionUtils.throwableExecutePrivateMethod(ofj.getClass(), "run", new Class[] {IProgressMonitor.class}, ofj, new Object[] {new NullProgressMonitor()});
+        ReflectionUtils.throwableExecutePrivateMethod(ofjClass, "run", new Class[] {IProgressMonitor.class}, ofj, new Object[] {new NullProgressMonitor()});
     }
 }
