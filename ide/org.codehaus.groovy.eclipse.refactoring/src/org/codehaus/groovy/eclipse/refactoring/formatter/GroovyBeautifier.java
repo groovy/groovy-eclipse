@@ -513,7 +513,7 @@ public class GroovyBeautifier {
                     nextTokenType == GroovyTokenTypeBridge.BOR ||
                     (whereBlockDepth >= 0 && ("||".equals(token.getText()) || "||".equals(nextToken.getText()))) ||
                     (nextTokenType == GroovyTokenTypeBridge.COLON &&
-                        openBrackets.peek() == GroovyTokenTypeBridge.LBRACK)) {
+                        !openBrackets.isEmpty() && openBrackets.peek() == GroovyTokenTypeBridge.LBRACK)) {
                     collapseAllWhitespaces = false;
                 }
 
