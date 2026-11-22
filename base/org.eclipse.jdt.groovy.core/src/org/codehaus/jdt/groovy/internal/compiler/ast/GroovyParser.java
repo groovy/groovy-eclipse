@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.codehaus.jdt.groovy.integration.internal.GroovyLanguageSupport;
 import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
@@ -101,25 +102,23 @@ public class GroovyParser {
     }
 
     public static boolean isGroovyParserEligible(ICompilationUnit compilationUnit, /*@Nullable*/ ReadManager readManager) {
-        if (compilationUnit instanceof BasicCompilationUnit) {
-            if (ContentTypeUtils.isGroovyLikeFileName(
-                    ((BasicCompilationUnit) compilationUnit).sourceName)) {
+        if (compilationUnit instanceof BasicCompilationUnit cu) {
+            if (ContentTypeUtils.isGroovyLikeFileName(cu.sourceName)) {
                 return true;
             }
-        } else if (compilationUnit instanceof PossibleMatch) {
-            return ((PossibleMatch) compilationUnit).isInterestingSourceFile();
+        } else if (compilationUnit instanceof PossibleMatch pm) {
+            return pm.isInterestingSourceFile();
         }
 
         String fileName = CharOperation.charToString(compilationUnit.getFileName());
+
         if (ContentTypeUtils.isGroovyLikeFileName(fileName)) {
             return true;
         }
 
-        if (!ContentTypeUtils.isJavaLikeButNotGroovyLikeFileName(fileName)) {
-            final char[] contents = getContents(compilationUnit, readManager);
-            if (GROOVY_SOURCE_DISCRIMINATOR.matcher(new CharArraySequence(contents)).find()) {
-                return true;
-            }
+        if (!ContentTypeUtils.isJavaLikeButNotGroovyLikeFileName(fileName) &&
+                GROOVY_SOURCE_DISCRIMINATOR.matcher(new CharArraySequence(getContents(compilationUnit, readManager))).find()) {
+            return true;
         }
 
         return false;
@@ -140,7 +139,7 @@ public class GroovyParser {
         this.compilerOptions = compilerOptions;
         this.problemReporter = problemReporter;
 
-        GroovyClassLoaderFactory loaderFactory = new GroovyClassLoaderFactory(compilerOptions, requestor instanceof Compiler ? ((Compiler) requestor).lookupEnvironment : null);
+        var loaderFactory = new GroovyClassLoaderFactory(compilerOptions, requestor instanceof Compiler compiler ? compiler.lookupEnvironment : null);
 
         this.unitFactory = () -> {
             CompilerConfiguration compilerConfiguration = GroovyLanguageSupport.newCompilerConfiguration(compilerOptions, problemReporter);
@@ -157,7 +156,7 @@ public class GroovyParser {
                 compilerConfiguration.setDisabledGlobalASTTransformations(xforms);
             }
 
-            CompilationUnit unit = new CompilationUnit(
+            var unit = new CompilationUnit(
                 compilerConfiguration,
                 null, // CodeSource
                 classLoaders[0],
@@ -193,14 +192,14 @@ public class GroovyParser {
         if (!isInJar) {
             // try to convert fileName into an absolute filesystem reference
             IPath filePath = new Path(fileName);
-            // needs 2 segments (project and file names) or eclipse throws assertion failed
-            // GRECLIPSE-1269: ensure the workspace is available (i.e. not in batch mode)
+            // need 2 segments (project and file) or eclipse throws assertion error
+            // GRECLIPSE-1269: ensure the workspace is available (i.e. not batch mode)
             if (filePath.segmentCount() >= 2 && ResourcesPlugin.getPlugin() != null) {
                 eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(filePath);
                 IPath location = eclipseFile.getLocation();
                 if (location != null) {
                     fileName = location.toFile().getAbsolutePath();
-                    org.eclipse.core.resources.IProject project = eclipseFile.getProject();
+                    final IProject project = eclipseFile.getProject();
                     isScript = scriptFolderSelectorCache.computeIfAbsent(project.getName(), key -> new ScriptFolderSelector(project)).isScript(eclipseFile);
                 }
             }
@@ -220,52 +219,58 @@ public class GroovyParser {
             compilationUnit = unitFactory.get();
         }
 
-        SourceUnit sourceUnit = compilationUnit.addSource(new EclipseSourceUnit(eclipseFile, fileName, contents,
-            compilationUnit.getConfiguration(), null, new GroovyErrorCollectorForJDT(compilationUnit.getConfiguration()), resolver));
+        CompilerConfiguration configuration = compilationUnit.getConfiguration();
 
-        if (requestor instanceof Compiler) {
-            Compiler compiler = (Compiler) requestor;
-            if (compiler.requestor instanceof AbstractImageBuilder) {
-                AbstractImageBuilder builder = (AbstractImageBuilder) compiler.requestor;
+        if (isScript && compilationUnit.allowTransforms && compilationResult.totalUnitsKnown > 1) {
+            Set<String> xforms = new HashSet<>();
+            xforms.add("GrabAnnotationTransformation for scripts");
+            Optional.ofNullable(
+                configuration.getDisabledGlobalASTTransformations()
+            ).ifPresent(xforms::addAll);
+            configuration = new CompilerConfiguration(configuration);
+            configuration.setDisabledGlobalASTTransformations(xforms);
+            if (configuration.getCompilationCustomizers().size() == 0)
+                configuration.getCompilationCustomizers().addAll(compilationUnit
+                                .getConfiguration().getCompilationCustomizers());
+        }
+
+        SourceUnit sourceUnit = compilationUnit.addSource(new EclipseSourceUnit(eclipseFile, fileName, contents,
+            configuration, null, new GroovyErrorCollectorForJDT(compilationUnit.getConfiguration()), resolver));
+
+        if (requestor instanceof Compiler compiler) {
+            if (compiler.requestor instanceof AbstractImageBuilder builder) {
                 if (builder.notifier != null) {
                     compilationUnit.setProgressListener(newProgressListener(builder.notifier));
                 }
-                if (eclipseFile != null) {
-                    SourceFile sourceFile = (SourceFile) builder.fromIFile(eclipseFile);
-                    if (sourceFile != null) {
-                        compilationUnit.getConfiguration().setTargetDirectory(sourceFile.getOutputLocation().toFile());
-                    }
+                if (eclipseFile != null && builder.fromIFile(eclipseFile) instanceof SourceFile source) {
+                    compilationUnit.getConfiguration().setTargetDirectory(source.getOutputLocation().toFile());
                 }
-            } else if (compiler.requestor instanceof BatchCompilerRequestor) {
-                Main main = ReflectionUtils.getPrivateField(BatchCompilerRequestor.class, "compiler", compiler.requestor);
-                if (main != null && main.destinationPath != null && main.destinationPath != Main.NONE) {
-                    compilationUnit.getConfiguration().setTargetDirectory(main.destinationPath);
-                }
+            } else if (compiler.requestor instanceof BatchCompilerRequestor &&
+                    ReflectionUtils.getPrivateField(BatchCompilerRequestor.class,"compiler",compiler.requestor)
+                     instanceof Main main && main.destinationPath != null && main.destinationPath != Main.NONE) {
+                compilationUnit.getConfiguration().setTargetDirectory(main.destinationPath);
             }
         }
 
         compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(contents); // TODO: Get from Antlr
 
-        GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(
+        var unitDeclaration = new GroovyCompilationUnitDeclaration(
             problemReporter, compilationResult, contents.length, compilationUnit, sourceUnit, compilerOptions);
+        if (isScript) unitDeclaration.tagAsScript(); // remember scripts so class file output can be suppressed
 
-        gcuDeclaration.processToPhase(Phases.CONVERSION);
+        unitDeclaration.processToPhase(Phases.CONVERSION);
 
-        // if fatal error, then ModuleNode is null
-        if (gcuDeclaration.getModuleNode() != null) {
-            gcuDeclaration.populateCompilationUnitDeclaration();
-            for (TypeDeclaration decl : gcuDeclaration.types) {
-                resolver.record((GroovyTypeDeclaration) decl);
+        if (unitDeclaration.getModuleNode() != null) {
+            unitDeclaration.populateCompilationUnitDeclaration();
+            for (TypeDeclaration td : unitDeclaration.types) {
+                resolver.record((GroovyTypeDeclaration) td);
             }
         }
-        // remember scripts so that class file output can be suppressed
-        if (isScript) {
-            gcuDeclaration.tagAsScript();
-        }
         if (debugRequestor != null) {
-            debugRequestor.acceptCompilationUnitDeclaration(gcuDeclaration);
+            debugRequestor.acceptCompilationUnitDeclaration(unitDeclaration);
         }
-        return gcuDeclaration;
+
+        return unitDeclaration;
     }
 
     /**
@@ -319,10 +324,6 @@ public class GroovyParser {
         @Override
         public void tagAsHavingErrors() {
             hasErrors = true;
-        }
-
-        public void tagAsHavingIgnoredMandatoryErrors(final int problemId) {
-            // no-op
         }
 
         @Override

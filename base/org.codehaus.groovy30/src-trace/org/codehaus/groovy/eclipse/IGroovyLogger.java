@@ -15,12 +15,12 @@
  */
 package org.codehaus.groovy.eclipse;
 
-/**
- * A means to send log messages to a logger.
- */
+@FunctionalInterface
 public interface IGroovyLogger {
 
     void log(TraceCategory category, String message);
 
-    boolean isCategoryEnabled(TraceCategory category);
+    default boolean isCategoryEnabled(TraceCategory category) {
+        return true;
+    }
 }

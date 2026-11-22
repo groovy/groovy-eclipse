@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,18 +45,18 @@ import org.junit.After;
 import org.junit.Test;
 
 /**
- * Tests that the script folder handling works.
+ * Tests the script folder handling.
  */
 public final class ScriptFolderTests extends BuilderTestSuite {
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Activator.DEFAULT_SCRIPT_FILTERS_ENABLED);
         Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
     }
 
     @Test
-    public void testScriptFolderDisabled() throws Exception {
+    public void testScriptFolderDisabled() {
         ScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER, false);
         assertSource("scripts/f/g/Foo.groovy", selector);
         assertSource("src/main/resources/f/g/Foo.groovy", selector);
@@ -72,7 +72,7 @@ public final class ScriptFolderTests extends BuilderTestSuite {
     }
 
     @Test
-    public void testScriptFolderDefaultSettings() throws Exception {
+    public void testScriptFolderDefaultSettings() {
         ScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER, true);
         assertScript("some.dsld", selector);
         assertScriptNoCopy("build.gradle", selector);
@@ -92,7 +92,7 @@ public final class ScriptFolderTests extends BuilderTestSuite {
     }
 
     @Test
-    public void testScriptFolderCustomSettings() throws Exception {
+    public void testScriptFolderCustomSettings() {
         ScriptFolderSelector selector = new MockScriptFolderSelector("scri/**/*.groovy,y,scroo/**/*.groovy,n", true);
         assertScript("scri/f/g/Foo.groovy", selector);
         assertScriptNoCopy("scroo/main/resources/f/g/Foo.groovy", selector);
@@ -100,26 +100,62 @@ public final class ScriptFolderTests extends BuilderTestSuite {
     }
 
     @Test
-    public void testScriptFolderGarbledSettings() throws Exception {
+    public void testScriptFolderGarbledSettings() {
         ScriptFolderSelector selector = new MockScriptFolderSelector(",y, ,y,\t,n,tail", true);
         assertScript("tail", selector);
     }
 
     @Test // mostly ensure that nothing horrific happens
-    public void testScriptFolderInvalidSettings() throws Exception {
+    public void testScriptFolderInvalidSettings() {
         ScriptFolderSelector selector = new MockScriptFolderSelector("scri/**/*.groovy,scroo/**/*.groovy,n", true);
         assertScriptNoCopy("scri/f/g/Foo.groovy", selector);
         assertSource("scroo/main/resources/f/g/Foo.groovy", selector);
         assertSource("src/test/resources/Foo.java", selector);
     }
 
-    @Test // now that we have tested the settings, let's test that scripts are handled correctly
+    // now that we have tested the settings, test that scripts are handled correctly
+
+    @Test
     public void testScriptInProjectNotCompiled() throws Exception {
         Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
         Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "scripts/*.groovy,y");
         createScriptInGroovyProject("Script", "def x", true);
         assertNotExists("Project/bin/Script.class");
         assertExists("Project/bin/Script.groovy");
+    }
+
+    @Test
+    public void testScriptInProjectNotGrabbed() throws Exception {
+        int[] grabbed = new int[1];
+        org.codehaus.groovy.eclipse.IGroovyLogger logger = (kind, message) -> {
+            if (message.contains("resolving dependencies")) grabbed[0]++;
+        };
+        org.codehaus.groovy.eclipse.GroovyLogManager.manager.addLogger(logger);
+        try {
+            Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+            Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "**/scripts/*.groovy,y");
+
+            IPath project = env.addProject("Project");
+            env.addGroovyJars(project);
+
+            env.addGroovyClass(env.getPackageFragmentRootPath(project, "src"), "One",
+                "print(1)");
+
+            env.addGroovyClass(env.addPackage(env.getPackageFragmentRootPath(project, "src"), "scripts"), "Two",
+                "@Grab('org.apache.commons:commons-langX:3.21.0')\n" +
+                "import org.apache.commons.lang3.StringUtils\n" +
+                "print(2)");
+
+            fullBuild(project);
+            expectingNoProblems();
+            assertEquals(0, grabbed[0]);
+            assertExists("Project/bin/One.class");
+            assertNotExists("Project/bin/One.groovy");
+            assertExists("Project/bin/scripts/Two.groovy");
+            assertNotExists("Project/bin/scripts/Two.class");
+        } finally {
+            org.codehaus.groovy.eclipse.GroovyLogManager.manager.removeLogger(logger);
+        }
     }
 
     @Test

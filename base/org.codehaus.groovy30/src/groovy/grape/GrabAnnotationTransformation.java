@@ -160,22 +160,25 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
     }
 
     public void visit(ASTNode[] nodes, SourceUnit source) {
-        sourceUnit = source;
         loader = null;
+        // GRECLIPSE add
+        sourceUnit = null;
+        var x = source.getConfiguration().getDisabledGlobalASTTransformations();
+        if (x != null && x.contains("GrabAnnotationTransformation for scripts")) return;
+        // GRECLIPSE end
+        sourceUnit = source;
         initContextClassLoader = false;
-
-        ModuleNode mn = (ModuleNode) nodes[0];
-
-        allowShortGrab = true;
+        allowShortGrab         = true;
         allowShortGrabExcludes = true;
-        allowShortGrabConfig = true;
-        allowShortGrapes = true;
+        allowShortGrabConfig   = true;
+        allowShortGrapes       = true;
         allowShortGrabResolver = true;
-        grabAliases = new HashSet<String>();
-        grabExcludeAliases = new HashSet<String>();
-        grabConfigAliases = new HashSet<String>();
-        grapesAliases = new HashSet<String>();
-        grabResolverAliases = new HashSet<String>();
+        grabAliases         = new HashSet<>();
+        grabExcludeAliases  = new HashSet<>();
+        grabConfigAliases   = new HashSet<>();
+        grapesAliases       = new HashSet<>();
+        grabResolverAliases = new HashSet<>();
+        ModuleNode mn = (ModuleNode) nodes[0];
         for (ImportNode im : mn.getImports()) {
             String alias = im.getAlias();
             String className = im.getClassName();
@@ -405,7 +408,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                     if (grabAnnotations.size() > i) {
                         addError(msg, grabAnnotations.get(i));
                     } else {
-                        source.addException(e);
+                        sourceUnit.addException(e);
                     }
                 }
             }

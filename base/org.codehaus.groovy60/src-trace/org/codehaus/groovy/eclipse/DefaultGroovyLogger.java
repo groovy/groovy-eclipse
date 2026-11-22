@@ -23,8 +23,4 @@ public class DefaultGroovyLogger implements IGroovyLogger {
     public void log(TraceCategory category, String message) {
         System.out.println(category.label + ": " + message);
     }
-
-    public boolean isCategoryEnabled(TraceCategory category) {
-        return true;
-    }
 }

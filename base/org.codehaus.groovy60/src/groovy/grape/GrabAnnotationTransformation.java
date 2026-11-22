@@ -240,6 +240,11 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
     @Override
     public void visit(final ASTNode[] nodes, final SourceUnit source) {
         loader = null;
+        // GRECLIPSE add
+        sourceUnit = null;
+        var x = source.getConfiguration().getDisabledGlobalASTTransformations();
+        if (x != null && x.contains("GrabAnnotationTransformation for scripts")) return;
+        // GRECLIPSE end
         sourceUnit = source;
         initContextClassLoader = false;
         allowShortGrab         = true;
@@ -479,7 +484,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                     if (grabAnnotations.size() > i) {
                         addError(msg, grabAnnotations.get(i));
                     } else {
-                        source.addException(e);
+                        sourceUnit.addException(e);
                     }
                 }
             }

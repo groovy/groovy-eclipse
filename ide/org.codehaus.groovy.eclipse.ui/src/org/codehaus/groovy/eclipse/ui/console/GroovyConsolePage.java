@@ -93,15 +93,6 @@ public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger 
         });
     }
 
-    /**
-     * always returns true. Maybe later add capability to
-     * disable log categories
-     */
-    @Override
-    public boolean isCategoryEnabled(TraceCategory category) {
-        return true;
-    }
-
     @Override
     public void init(IPageSite pageSite) throws PartInitException {
         super.init(pageSite);
