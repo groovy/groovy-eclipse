@@ -106,6 +106,7 @@ import org.codehaus.groovy.tools.GroovyClass;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.codehaus.jdt.groovy.core.dom.GroovyCompilationUnit;
+import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory.GrapeAwareGroovyClassLoader;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -608,6 +609,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
     @Override
     public CompilationUnitScope buildCompilationUnitScope(LookupEnvironment lookupEnvironment) {
+        if (groovySourceUnit.getClassLoader() instanceof GrapeAwareGroovyClassLoader loader && loader.grabbed &&
+                !(lookupEnvironment.nameEnvironment instanceof CompositeNameEnvironment) // replace it only once
+        ) {
+            var baseNameEnvironment = lookupEnvironment.nameEnvironment;
+
+            var grabNameEnvironment = new org.eclipse.jdt.internal.compiler.batch.FileSystem(
+                Arrays.stream(loader.getURLs()).map(java.net.URL::getPath).toArray(String[]::new), /*initialFileNames:*/null, /*encoding:*/null,
+                lookupEnvironment.globalOptions.release ? CompilerOptions.versionFromJdkLevel(lookupEnvironment.globalOptions.targetJDK) : null);
+
+            lookupEnvironment.nameEnvironment = new CompositeNameEnvironment(baseNameEnvironment, grabNameEnvironment);
+        }
+
         var scope = new GroovyCompilationUnitScope(this, lookupEnvironment);
         scope.setIsScript(isScript);
         return scope;

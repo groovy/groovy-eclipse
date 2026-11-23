@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the original author or authors.
+ * Copyright 2009-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -40,6 +39,23 @@ public final class ASTTransformsTests extends BuilderTestSuite {
     }
 
     @Test
+    public void testFieldAndGrabFromScript() {
+        createUnit("TestUnit",
+            "import groovy.transform.Field\n" +
+            "@Grab('org.apache.commons:commons-lang3:3.21.0')\n" +
+            "import static org.apache.commons.lang3.StringUtils.*\n" +
+            "\n" +
+            "@Field String field = SPACE\n" +
+            "def m() {\n" +
+            "  field\n" +
+            "}\n" +
+            "m()");
+
+        env.fullBuild();
+        expectingNoProblems();
+    }
+
+    @Test
     public void testDelegateAnnotationFromOtherField() throws Exception {
         createUnit("Other",
             "class Other {\n" +
@@ -48,6 +64,7 @@ public final class ASTTransformsTests extends BuilderTestSuite {
             "}");
 
         GroovyCompilationUnit unit = createUnit("ThisUnit", "Other");
+
         env.fullBuild();
         expectingNoProblems();
         ClassNode clazz = getClassFromScript(unit);
@@ -65,9 +82,9 @@ public final class ASTTransformsTests extends BuilderTestSuite {
             "}");
 
         GroovyCompilationUnit unit = createUnit("ThisUnit", "Other");
+
         env.fullBuild();
         expectingNoProblems();
-
         MethodNode meth = getClassFromScript(unit).getMethods("compareTo").stream().filter(
             mn -> mn.getParameters()[0].getType().getName().equals("java.lang.Object")
         ).findFirst().get();
@@ -80,6 +97,7 @@ public final class ASTTransformsTests extends BuilderTestSuite {
             "@Singleton class Other {}");
 
         GroovyCompilationUnit unit = createUnit("ThisUnit", "Other");
+
         env.fullBuild();
         expectingNoProblems();
         ClassNode clazz = getClassFromScript(unit);
@@ -94,7 +112,8 @@ public final class ASTTransformsTests extends BuilderTestSuite {
     }
 
     private ClassNode getClassFromScript(GroovyCompilationUnit unit) {
-        return ((ClassExpression) ((ReturnStatement) unit.getModuleNode().getStatementBlock().getStatements().get(0)).getExpression()).getType();
+        var stmt = unit.getModuleNode().getStatementBlock().getStatements().get(0);
+        return ((ReturnStatement) stmt).getExpression().getType();
     }
 
     private GroovyCompilationUnit createUnit(String name, String contents) {

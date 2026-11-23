@@ -20,17 +20,12 @@ import static java.util.Collections.addAll;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.GroovyLogManager;
-import org.codehaus.groovy.eclipse.TraceCategory;
-import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory.GrapeAwareGroovyClassLoader;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
-import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
@@ -78,8 +73,8 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     /*   */ static final char[][] GROOVY_TRANSFORM_INTERNAL  = {GROOVY, TRANSFORM, "Internal".toCharArray()};
     /*   */ static final char[][] GROOVY_TRANSFORM_GENERATED = {GROOVY, TRANSFORM, "Generated".toCharArray()};
 
-    public GroovyCompilationUnitScope(GroovyCompilationUnitDeclaration compilationUnitDeclaration, LookupEnvironment lookupEnvironment) {
-        super(compilationUnitDeclaration, lookupEnvironment);
+    public GroovyCompilationUnitScope(GroovyCompilationUnitDeclaration unitDeclaration, LookupEnvironment lookupEnvironment) {
+        super(unitDeclaration, lookupEnvironment);
     }
 
     private boolean isScript;
@@ -115,7 +110,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
              *
              * @interface Anno { Class value() }
              *
-             * @Anno(value=Inner) // Inner cannot be resolved -- I think this is correct behavior; below enables resolution
+             * @Anno(value=Inner) // Inner cannot be resolved -- I think this is correct behavior; below enables resolution.
              * class Outer {
              *   static class Inner {}
              * }
@@ -149,30 +144,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
                 }
             }
         }
-
-        var binding = super.findImport(compoundName, length);
-        if (binding.problemId() == ProblemReasons.NotFound) {
-            var sourceUnit = ((GroovyCompilationUnitDeclaration) referenceContext).getSourceUnit();
-            if (sourceUnit.getClassLoader() instanceof GrapeAwareGroovyClassLoader loader && loader.grabbed) {
-                String typeName = CharOperation.toString(CharOperation.subarray(compoundName, 0, length));
-                try {
-                    Class<?> c = loader.loadClass(typeName, false, true, false);
-                    String fileName = c.getSimpleName() + ".class";
-                    try (var s = c.getResourceAsStream(fileName)) {
-                        IBinaryType bType = org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader.read(s, fileName);
-                        PackageBinding pBind = environment.createPackage(CharOperation.subarray(compoundName, 0, length - 1)); // TODO: inner class
-
-                        binding = environment.createBinaryTypeFrom(bType, pBind, null);
-                    }
-                } catch (ClassNotFoundException ignore) {
-                } catch (Exception | LinkageError nope) {
-                    if (GroovyLogManager.manager.hasLoggers()) {
-                        GroovyLogManager.manager.log(TraceCategory.CLASSPATH, "Failed to init " + typeName + "\n\t" + nope.getMessage());
-                    }
-                }
-            }
-        }
-        return binding;
+        return super.findImport(compoundName, length);
     }
 
     @Override
@@ -222,14 +194,14 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     }
 
     @Override
-    public boolean reportInvalidType(TypeReference typeReference, TypeBinding resolvedType) {
-        return (resolvedType.problemId() > ProblemReasons.NotFound);
+    public boolean reportInvalidType(TypeReference typeReference, TypeBinding typeBinding) {
+        return (typeBinding.problemId() > ProblemReasons.NotFound);
     }
 
     @Override
-    protected void reportImportProblem(ImportReference importReference, Binding importBinding) {
-        if (importBinding.problemId() != ProblemReasons.NotFound)
-            super.reportImportProblem(importReference, importBinding);
+    protected void reportImportProblem(ImportReference importReference, Binding nameBinding) {
+        if (nameBinding.problemId() > ProblemReasons.NotFound)
+            super.reportImportProblem(importReference, nameBinding);
     }
 
     @Override

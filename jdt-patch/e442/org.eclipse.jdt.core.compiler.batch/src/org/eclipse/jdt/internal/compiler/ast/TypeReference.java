@@ -579,9 +579,7 @@ protected void reportDeprecatedType(TypeBinding type, Scope scope) {
 
 protected void reportInvalidType(Scope scope) {
 	// GROOVY add -- don't report this, let groovy do it
-	if (!scope.compilationUnitScope().reportInvalidType(this, this.resolvedType)) {
-		return;
-	}
+	if (scope.compilationUnitScope().reportInvalidType(this, this.resolvedType))
 	// GROOVY end
 	scope.problemReporter().invalidType(this, this.resolvedType);
 }

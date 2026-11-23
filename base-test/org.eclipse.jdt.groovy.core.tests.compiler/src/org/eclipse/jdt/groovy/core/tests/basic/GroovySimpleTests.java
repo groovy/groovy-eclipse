@@ -830,17 +830,12 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Script.groovy",
             "int anInt = 10\n" +
+            "import java.lang.reflect.Method\n" +
             "Method[] methodArray = anInt.class.methods\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Script.groovy (at line 2)\n" +
-            "\tMethod[] methodArray = anInt.class.methods\n" +
-            "\t^^^^^^\n" +
-            "Groovy:unable to resolve class Method\n" +
-            "----------\n");
+        runConformTest(sources);
     }
 
     @Test
@@ -849,17 +844,12 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Script.groovy",
             "int anInt = 10\n" +
-            "Method[][] methodMethodArray = anInt.class.methods\n",
+            "import java.lang.reflect.Method\n" +
+            "Method[][] methodArrayArray = anInt.class.methods\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Script.groovy (at line 2)\n" +
-            "\tMethod[][] methodMethodArray = anInt.class.methods\n" +
-            "\t^^^^^^\n" +
-            "Groovy:unable to resolve class Method\n" +
-            "----------\n");
+        runConformTest(sources);
     }
 
     @Test

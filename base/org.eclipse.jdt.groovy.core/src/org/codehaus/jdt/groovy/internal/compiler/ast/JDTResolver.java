@@ -29,11 +29,9 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ResolveVisitor;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory.GrapeAwareGroovyClassLoader;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -43,7 +41,6 @@ import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
-import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
@@ -434,15 +431,8 @@ public class JDTResolver extends ResolveVisitor {
                     throw t;
                 }
             }
-            if (jdtBinding instanceof ProblemReferenceBinding) {
-                ProblemReferenceBinding prBinding = (ProblemReferenceBinding) jdtBinding;
-                if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
-                    jdtBinding = prBinding.closestMatch();
-                }/*else if (prBinding.problemId() == ProblemReasons.NotFound &&
-                        prBinding.closestMatch() instanceof MissingTypeBinding) {
-                    MissingTypeBinding mtBinding = (MissingTypeBinding) prBinding.closestMatch();
-                    mtBinding.fPackage.knownTypes.put(compoundName[compoundName.length - 1], null);
-                }*/
+            if (jdtBinding.problemId() == ProblemReasons.InternalNameProvided) {
+                jdtBinding = jdtBinding.closestMatch();
             }
 
             if ((jdtBinding instanceof BinaryTypeBinding || jdtBinding instanceof SourceTypeBinding) &&
@@ -450,17 +440,6 @@ public class JDTResolver extends ResolveVisitor {
                 if (DEBUG) log("resolveToOuter (jdt)", type, true);
                 type.setRedirect(convertToClassNode(jdtBinding));
                 return true;
-            }
-        }
-
-        // rudimentary grab support; if the compilation unit has grape-aware loader and a grab has occurred, try to find the class with it
-        if (compilationUnit.getClassLoader() instanceof GrapeAwareGroovyClassLoader loader && loader.grabbed) {
-            try {
-                Class<?> c = loader.loadClass(type.getName(), false, true);
-                if (DEBUG) log("resolveToOuter (grab)", type, true);
-                type.setRedirect(ClassHelper.make(c));
-                return true;
-            } catch (ClassNotFoundException | CompilationFailedException ignore) {
             }
         }
 

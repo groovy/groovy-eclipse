@@ -16,6 +16,7 @@
 package org.eclipse.jdt.groovy.core.tests.xform;
 
 import static org.codehaus.groovy.eclipse.GroovyLogManager.manager;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.junit.AfterClass;
@@ -143,6 +144,26 @@ public final class GrabTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
+    @Test
+    public void testGrab7() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "  }\n" +
+            "}\n",
+
+            "Test.groovy",
+            "@Grab('io.vavr:vavr:0.10.4;transitive=false')\n" +
+            "import io.vavr.control.Try\n" +
+            "Try<?> test() {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
     /**
      * This program has a broken grab. Without changes we get a 'general error' recorded on the first line of the source file:
      * <tt>General error during conversion: Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.x: not found]</tt>
@@ -187,18 +208,17 @@ public final class GrabTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
-            "@Grab('org.apache.logging.log4j:log4j-core:2.26.1')\n" +
-            "org.apache.logging.log4j.core.async.AsyncLogger log\n",
+            "@Grab('org.apache.logging.log4j:log4j-core:2.26.1')\n" + // com.lmax:disruptor is optional
+            "org.apache.logging.log4j.core.async.AsyncLogger log\n" +
+            "print ''\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 2)\n" +
-            "\torg.apache.logging.log4j.core.async.AsyncLogger log\n" +
-            "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:unable to define class org.apache.logging.log4j.core.async.AsyncLogger : com/lmax/disruptor/EventTranslatorVararg\n" +
-            "----------\n");
+        if (isAtLeastGroovy(60)) {
+          //runConformTest(sources, "", "WARNING: Grapes disabled" + System.lineSeparator());
+        } else {
+            runConformTest(sources, "", "java.lang.ExceptionInInitializerError");
+        }
     }
 
     @Test // GRECLIPSE-1432

@@ -1851,7 +1851,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
                 "Pogo.groovy",
                 "class Pogo {\n" +
                 "  static final WithCall callable_property = new WithCall()\n" +
-                "  static final Closure closure_property = { return it }\n" +
+                "  static final Closure<?> closure_property = { return it }\n" +
                 "}\n",
 
                 "WithCall.groovy",
