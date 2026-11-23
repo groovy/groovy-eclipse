@@ -1,0 +1,10 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+apply plugin: 'java'
+x   =   1
+###exp
+apply plugin: 'java'
+x = 1
+###end
