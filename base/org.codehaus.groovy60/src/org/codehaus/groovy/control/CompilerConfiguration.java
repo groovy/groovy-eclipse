@@ -24,6 +24,7 @@ import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.control.io.NullWriter;
 import org.codehaus.groovy.control.messages.WarningMessage;
+import org.codehaus.groovy.vmplugin.JavaFeatureVersion;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.io.File;
@@ -43,8 +44,9 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import static org.apache.groovy.util.SystemUtil.getBooleanSafe;
+import static org.apache.groovy.util.SystemUtil.getIntegerSafe;
+import static org.apache.groovy.util.SystemUtil.getLongSafe;
 import static org.apache.groovy.util.SystemUtil.getSystemPropertySafe;
-import static org.codehaus.groovy.vmplugin.VMPlugin.getJavaVersion;
 
 /**
  * Compilation control flags and coordination stuff.
@@ -61,6 +63,36 @@ public class CompilerConfiguration {
     public static final String RUNTIME_GROOVYDOC = "runtimeGroovydoc";
 
     /**
+     * Option for resolving a class of the default package that is on the class path, or on the source
+     * path of the Groovy class loader, before the default imports in a compilation unit of the default
+     * package, as a class of a named package is resolved for a compilation unit of the same package.
+     * Disabled by default, so the resolution order of 6.0.0 is unchanged. Enable it, or set the system
+     * property {@code groovy.resolve.default.package.first} to {@code true}, where a class or script next
+     * to a script, named like a default-import type such as {@code Node} or {@code Timer}, should take
+     * the place of that type. With this option alone, only compiled {@code .class} files are looked up
+     * before the default imports; sources are included only when {@link #DEFAULT_PACKAGE_SOURCES} is
+     * also {@code true}.
+     * Stored in {@link #getOptimizationOptions()} for consistency with other compiler feature flags.
+     *
+     * @since 6.0.1
+     */
+    public static final String DEFAULT_PACKAGE_FIRST = "defaultPackageFirst";
+
+    /**
+     * Option for including the {@code .groovy} sources on the source path of the Groovy class loader in the lookup
+     * that {@link #DEFAULT_PACKAGE_FIRST} enables, which then also takes in the classes the class loader has
+     * already compiled or loaded. Disabled by default, and ignored when {@link #DEFAULT_PACKAGE_FIRST} is not
+     * {@code true}. Enable it, or set the system property {@code groovy.resolve.default.package.sources} to
+     * {@code true}, to look those sources up before the default imports. When it is not {@code true}, only the
+     * {@code .class} files of the default package come before the default imports, and a source of the default
+     * package is still found after them.
+     * Stored in {@link #getOptimizationOptions()} for consistency with other compiler feature flags.
+     *
+     * @since 6.0.1
+     */
+    public static final String DEFAULT_PACKAGE_SOURCES = "defaultPackageSources";
+
+    /**
      * Option for enabling ANTLR parser error recovery on the Parrot parser.
      * <p>
      * Disabled by default. When enabled (typically for IDE editing), the parser
@@ -75,6 +107,30 @@ public class CompilerConfiguration {
      */
     @Incubating
     public static final String ERROR_RECOVERY = "errorRecovery";
+
+    /**
+     * Option for reporting, when a class is generated, what statically compiled
+     * code accesses in another run-time package, which is the package name and
+     * the class loader.
+     * <p>
+     * A {@code GroovyClassLoader} defines each compilation in memory
+     * with a class loader of its own. A protected or package-private constructor,
+     * method or field of a class of another compilation, or of a precompiled
+     * class, is therefore out of reach of the JVM even with the same package name,
+     * apart from what a subclass can do with a protected member. Such code fails
+     * at run time with {@code IllegalAccessError}.
+     * <p>
+     * Disabled by default, except that {@code GroovyShell} enables it
+     * for the class loader it creates unless this option is set. It has no effect
+     * on code compiled to class files, or on dynamic and {@code @TypeChecked} code,
+     * which reach such members through the meta-class. Set it through
+     * {@link #getOptimizationOptions()} or the {@code groovy.runtime.package.check}
+     * system property.
+     *
+     * @since 6.0.1
+     */
+    @Incubating
+    public static final String RUNTIME_PACKAGE_CHECK = "runtimePackageCheck";
 
     /** Joint Compilation Option for enabling generating stubs in memory. */
     public static final String MEM_STUB = "memStub";
@@ -101,31 +157,31 @@ public class CompilerConfiguration {
     @Incubating
     public static final String LAMBDA_HOISTING = "groovy.target.lambda.hoist";
 
-    /** This (<code>"1.4"</code>) is the value for targetBytecode to compile for a JDK 1.4. */
+    /** Historical bytecode level {@code "1.4"}. Not an accepted compilation target; accepted levels are 17 through 28. */
     @Deprecated public static final String JDK4 = "1.4";
-    /** This (<code>"1.5"</code>) is the value for targetBytecode to compile for a JDK 1.5. */
+    /** Historical bytecode level {@code "1.5"}. Not an accepted compilation target; accepted levels are 17 through 28. */
     @Deprecated public static final String JDK5 = "1.5";
-    /** This (<code>"1.6"</code>) is the value for targetBytecode to compile for a JDK 1.6. */
+    /** Historical bytecode level {@code "1.6"}. Not an accepted compilation target; accepted levels are 17 through 28. */
     @Deprecated public static final String JDK6 = "1.6";
-    /** This (<code>"1.7"</code>) is the value for targetBytecode to compile for a JDK 1.7. */
+    /** Historical bytecode level {@code "1.7"}. Not an accepted compilation target; accepted levels are 17 through 28. */
     @Deprecated public static final String JDK7 = "1.7";
-    /** This (<code>"1.8"</code>) is the value for targetBytecode to compile for a JDK 1.8. */
+    /** Historical bytecode level {@code "1.8"}. Not an accepted compilation target; accepted levels are 17 through 28. */
     @Deprecated public static final String JDK8 = "1.8";
-    /** This (<code>"9"</code>) is the value for targetBytecode to compile for a JDK 9. */
+    /** Historical bytecode level {@code "9"}. Not an accepted compilation target; accepted levels are 17 through 28. */
     @Deprecated public static final String JDK9 =   "9";
-    /** This (<code>"10"</code>) is the value for targetBytecode to compile for a JDK 10. */
+    /** Historical bytecode level {@code "10"}. Not an accepted compilation target; accepted levels are 17 through 28. */
     @Deprecated public static final String JDK10 = "10";
-    /** This (<code>"11"</code>) is the value for targetBytecode to compile for a JDK 11. */
+    /** Historical bytecode level {@code "11"}. Not an accepted compilation target; accepted levels are 17 through 28. */
     @Deprecated public static final String JDK11 = "11";
-    /** This (<code>"12"</code>) is the value for targetBytecode to compile for a JDK 12. */
+    /** Historical bytecode level {@code "12"}. Not an accepted compilation target; accepted levels are 17 through 28. */
     @Deprecated public static final String JDK12 = "12";
-    /** This (<code>"13"</code>) is the value for targetBytecode to compile for a JDK 13. */
+    /** Historical bytecode level {@code "13"}. Not an accepted compilation target; accepted levels are 17 through 28. */
     @Deprecated public static final String JDK13 = "13";
-    /** This (<code>"14"</code>) is the value for targetBytecode to compile for a JDK 14. */
+    /** Historical bytecode level {@code "14"}. Not an accepted compilation target; accepted levels are 17 through 28. */
     @Deprecated public static final String JDK14 = "14";
-    /** This (<code>"15"</code>) is the value for targetBytecode to compile for a JDK 15. */
+    /** Historical bytecode level {@code "15"}. Not an accepted compilation target; accepted levels are 17 through 28. */
     @Deprecated public static final String JDK15 = "15";
-    /** This (<code>"16"</code>) is the value for targetBytecode to compile for a JDK 16. */
+    /** Historical bytecode level {@code "16"}. Not an accepted compilation target; accepted levels are 17 through 28. */
     @Deprecated public static final String JDK16 = "16";
     /** This (<code>"17"</code>) is the value for targetBytecode to compile for a JDK 17. */
     public static final String JDK17 = "17";
@@ -149,6 +205,8 @@ public class CompilerConfiguration {
     public static final String JDK26 = "26";
     /** This (<code>"27"</code>) is the value for targetBytecode to compile for a JDK 27. */
     public static final String JDK27 = "27";
+    /** This (<code>"28"</code>) is the value for targetBytecode to compile for a JDK 28. */
+    public static final String JDK28 = "28";
 
     /**
      * JDK version to bytecode version mapping.
@@ -164,7 +222,8 @@ public class CompilerConfiguration {
             JDK24, Opcodes.V24,
             JDK25, Opcodes.V25,
             JDK26, Opcodes.V26,
-            JDK27, Opcodes.V27
+            JDK27, Opcodes.V27,
+            JDK28, Opcodes.V28
     );
 
     /**
@@ -374,6 +433,16 @@ public class CompilerConfiguration {
         public void setWarningLevel(final int level) {
             throw new UnsupportedOperationException();
         }
+
+        @Override
+        public void setFrameComputationMaxBytes(final int maxBytes) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setFrameComputationMaxOperations(final long maxOperations) {
+            throw new UnsupportedOperationException();
+        }
     };
 
     /**
@@ -470,6 +539,16 @@ public class CompilerConfiguration {
     private boolean previewFeatures;
 
     /**
+     * The maximum number of bytes ASM may allocate computing the stack map frames of one method.
+     */
+    private int frameComputationMaxBytes;
+
+    /**
+     * The maximum number of operations ASM may perform computing the stack map frames of one method.
+     */
+    private long frameComputationMaxOperations;
+
+    /**
      * Options for joint compilation (null by default == no joint compilation).
      */
     private Map<String, Object> jointCompilationOptions;
@@ -537,6 +616,8 @@ public class CompilerConfiguration {
      *   <tr><td><code>groovy.parameters</code></td><td>{@link #getParameters()}</td></tr>
      *   <tr><td><code>groovy.preview.features</code></td><td>{@link #isPreviewFeatures}</td></tr>
      *   <tr><td><code>groovy.default.scriptExtension</code></td><td>{@link #getDefaultScriptExtension}</td></tr>
+     *   <tr><td><code>groovy.frame.computation.max.bytes</code></td><td>{@link #getFrameComputationMaxBytes}</td></tr>
+     *   <tr><td><code>groovy.frame.computation.max.operations</code></td><td>{@link #getFrameComputationMaxOperations}</td></tr>
      * </table>
      * </blockquote>
      *
@@ -548,6 +629,8 @@ public class CompilerConfiguration {
      *   <tr><td><code>groovy.attach.groovydoc</code></td><td>{@link #getOptimizationOptions}</td></tr>
      *   <tr><td><code>groovy.attach.runtime.groovydoc</code></td><td>{@link #getOptimizationOptions}</td></tr>
      *   <tr><td><code>groovy.parser.error.recovery</code></td><td>{@link #getOptimizationOptions} / {@link #isErrorRecoveryEnabled}</td></tr>
+     *   <tr><td><code>groovy.resolve.default.package.first</code></td><td>{@link #getOptimizationOptions}</td></tr>
+     *   <tr><td><code>groovy.resolve.default.package.sources</code></td><td>{@link #getOptimizationOptions}</td></tr>
      * </table>
      * </blockquote>
      * Additional language-compatibility system properties (not optimization options):
@@ -566,12 +649,16 @@ public class CompilerConfiguration {
         warningLevel = WarningMessage.LIKELY_ERRORS;
         parameters = getBooleanSafe("groovy.parameters");
         previewFeatures = getBooleanSafe("groovy.preview.features");
+        frameComputationMaxBytes = getIntegerSafe("groovy.frame.computation.max.bytes", Integer.MAX_VALUE);
+        if (frameComputationMaxBytes < 1) frameComputationMaxBytes = Integer.MAX_VALUE;
+        frameComputationMaxOperations = getLongSafe("groovy.frame.computation.max.operations", Long.MAX_VALUE);
+        if (frameComputationMaxOperations < 1) frameComputationMaxOperations = Long.MAX_VALUE;
         sourceEncoding = getSystemPropertySafe("groovy.source.encoding",
                 getSystemPropertySafe("file.encoding", DEFAULT_SOURCE_ENCODING));
         setTargetDirectorySafe(getSystemPropertySafe("groovy.target.directory"));
-        setTargetBytecodeIfValid(getSystemPropertySafe("groovy.target.bytecode", getJavaVersion()));
+        setTargetBytecodeIfValid(getSystemPropertySafe("groovy.target.bytecode", Integer.toString(JavaFeatureVersion.current())));
         defaultScriptExtension = getSystemPropertySafe("groovy.default.scriptExtension", ".groovy");
-        forInPerIterationCapture = getBooleanSafe("groovy.forin.per.iteration.capture", true); // GROOVY-11792
+        forInPerIterationCapture = getBooleanSafe("groovy.forin.per.iteration.capture", true);
 
         optimizationOptions = new HashMap<>(4);
         /* GRECLIPSE edit
@@ -582,6 +669,9 @@ public class CompilerConfiguration {
         handleOptimizationOption(GROOVYDOC,         getSystemPropertySafe("groovy.attach.groovydoc"        ));
         handleOptimizationOption(RUNTIME_GROOVYDOC, getSystemPropertySafe("groovy.attach.runtime.groovydoc"));
         handleOptimizationOption(ERROR_RECOVERY,    getSystemPropertySafe("groovy.parser.error.recovery"   ));
+        handleOptimizationOption(RUNTIME_PACKAGE_CHECK, getSystemPropertySafe("groovy.runtime.package.check"));
+        handleOptimizationOption(DEFAULT_PACKAGE_FIRST, getSystemPropertySafe("groovy.resolve.default.package.first"));
+        handleOptimizationOption(DEFAULT_PACKAGE_SOURCES, getSystemPropertySafe("groovy.resolve.default.package.sources"));
 
         if (getBooleanSafe("groovy.mem.stub")) {
             jointCompilationOptions = new HashMap<>(2);
@@ -647,6 +737,8 @@ public class CompilerConfiguration {
         setTargetPhase(configuration.getTargetPhase());
         setErrorFormat(configuration.getErrorFormat());
         setPreviewFeatures(configuration.isPreviewFeatures());
+        setFrameComputationMaxBytes(configuration.getFrameComputationMaxBytes());
+        setFrameComputationMaxOperations(configuration.getFrameComputationMaxOperations());
         setDefaultScriptExtension(configuration.getDefaultScriptExtension());
         setSourceEncoding(configuration.getSourceEncoding());
         setPluginFactory(configuration.getPluginFactory());
@@ -712,6 +804,8 @@ public class CompilerConfiguration {
      *   <tr><td><code>groovy.recompile.minimumInterval</code></td><td>{@link #getMinimumRecompilationInterval}</td></tr>
      *   <tr><td><code>groovy.disabled.global.ast.transformations</code></td><td>{@link #getDisabledGlobalASTTransformations}</td></tr>
      *   <tr><td><code>groovy.forin.per.iteration.capture</code></td><td>{@link #isForInPerIterationCaptureEnabled}</td></tr>
+     *   <tr><td><code>groovy.frame.computation.max.bytes</code></td><td>{@link #getFrameComputationMaxBytes}</td></tr>
+     *   <tr><td><code>groovy.frame.computation.max.operations</code></td><td>{@link #getFrameComputationMaxOperations}</td></tr>
      * </table>
      * </blockquote>
      *
@@ -725,6 +819,7 @@ public class CompilerConfiguration {
     /**
      * Method to configure a CompilerConfiguration by using Properties.
      * For a list of available properties look at {@link #CompilerConfiguration(Properties)}.
+     *
      * @param configuration The properties to get flag values from.
      */
     public void configure(final Properties configuration) throws ConfigurationException {
@@ -771,6 +866,16 @@ public class CompilerConfiguration {
 
         text = configuration.getProperty("groovy.preview.features");
         if (text != null) setPreviewFeatures(Boolean.parseBoolean(text));
+
+        try {
+            text = configuration.getProperty("groovy.frame.computation.max.bytes");
+            if (text != null) setFrameComputationMaxBytes(Integer.parseInt(text));
+
+            text = configuration.getProperty("groovy.frame.computation.max.operations");
+            if (text != null) setFrameComputationMaxOperations(Long.parseLong(text));
+        } catch (IllegalArgumentException e) {
+            throw new ConfigurationException(e);
+        }
 
         text = configuration.getProperty("groovy.classpath");
         if (text != null) setClasspath(text);
@@ -854,6 +959,7 @@ public class CompilerConfiguration {
 
     /**
      * Gets the currently configured output writer.
+     *
      * @deprecated not used anymore
      */
     @Deprecated
@@ -863,6 +969,7 @@ public class CompilerConfiguration {
 
     /**
      * Sets the output writer.
+     *
      * @deprecated not used anymore, has no effect
      */
     @Deprecated
@@ -919,6 +1026,7 @@ public class CompilerConfiguration {
 
     /**
      * sets the classpath using a list of Strings
+     *
      * @param parts list of strings containing the classpath parts
      */
     public void setClasspathList(final List<String> parts) {
@@ -1212,7 +1320,67 @@ public class CompilerConfiguration {
     }
 
     /**
+     * Returns the maximum number of bytes that may be allocated while computing
+     * the maximum stack size, maximum locals and stack map frames of a method.
+     * The default, {@link Integer#MAX_VALUE}, imposes no practical limit.
+     *
+     * @return the per-method frame computation memory limit in bytes
+     *
+     * @since 6.0.1
+     */
+    public int getFrameComputationMaxBytes() {
+        return frameComputationMaxBytes;
+    }
+
+    /**
+     * Sets the maximum number of bytes that may be allocated while computing
+     * the maximum stack size, maximum locals and stack map frames of a method.
+     * A method exceeding the limit fails compilation. Lowering it bounds the
+     * resources one method of untrusted source can consume.
+     *
+     * @param maxBytes the per-method frame computation memory limit in bytes
+     * @throws IllegalArgumentException if {@code maxBytes} is less than 1
+     *
+     * @since 6.0.1
+     */
+    public void setFrameComputationMaxBytes(final int maxBytes) {
+        if (maxBytes < 1) throw new IllegalArgumentException("frame computation max bytes must be positive: " + maxBytes);
+        this.frameComputationMaxBytes = maxBytes;
+    }
+
+    /**
+     * Returns the maximum number of operations that may be performed while computing
+     * the maximum stack size, maximum locals and stack map frames of a method.
+     * The default, {@link Long#MAX_VALUE}, imposes no practical limit.
+     *
+     * @return the per-method frame computation operation limit
+     *
+     * @since 6.0.1
+     */
+    public long getFrameComputationMaxOperations() {
+        return frameComputationMaxOperations;
+    }
+
+    /**
+     * Sets the maximum number of operations that may be performed while computing
+     * the maximum stack size, maximum locals and stack map frames of a method.
+     * The operation count is deterministic and roughly proportional to computation
+     * time. A method exceeding the limit fails compilation. Lowering it bounds the
+     * resources one method of untrusted source can consume.
+     *
+     * @param maxOperations the per-method frame computation operation limit
+     * @throws IllegalArgumentException if {@code maxOperations} is less than 1
+     *
+     * @since 6.0.1
+     */
+    public void setFrameComputationMaxOperations(final long maxOperations) {
+        if (maxOperations < 1) throw new IllegalArgumentException("frame computation max operations must be positive: " + maxOperations);
+        this.frameComputationMaxOperations = maxOperations;
+    }
+
+    /**
      * Gets the joint compilation options for this configuration.
+     *
      * @return the options
      */
     public Map<String, Object> getJointCompilationOptions() {
@@ -1222,6 +1390,7 @@ public class CompilerConfiguration {
     /**
      * Sets the joint compilation options for this configuration.
      * Using null will disable joint compilation.
+     *
      * @param options the options
      */
     public void setJointCompilationOptions(final Map<String, Object> options) {
@@ -1230,6 +1399,7 @@ public class CompilerConfiguration {
 
     /**
      * Gets the optimization options for this configuration.
+     *
      * @return the options (always not null)
      */
     public Map<String, Boolean> getOptimizationOptions() {
@@ -1240,8 +1410,14 @@ public class CompilerConfiguration {
      * Sets the optimization options for this configuration.
      * No entry or a true for that entry means to enable that optimization,
      * a false means the optimization is disabled.
+     * {@link #DEFAULT_PACKAGE_FIRST} and {@link #DEFAULT_PACKAGE_SOURCES} are opt-in:
+     * no entry leaves them disabled, and only {@code true} enables them.
      * Valid keys include {@code "all"}, {@code "int"}, {@link #INVOKEDYNAMIC},
-     * {@link #GROOVYDOC}, and {@link #RUNTIME_GROOVYDOC}.
+     * {@link #GROOVYDOC}, {@link #RUNTIME_GROOVYDOC}, {@link #DEFAULT_PACKAGE_FIRST},
+     * and {@link #DEFAULT_PACKAGE_SOURCES}.
+     * For-in per-iteration capture (GROOVY-11792) is not an optimization option; use
+     * {@link #setForInPerIterationCaptureEnabled(boolean)} instead.
+     *
      * @param options the options.
      * @throws IllegalArgumentException if the options are null
      */
@@ -1253,6 +1429,7 @@ public class CompilerConfiguration {
     /**
      * Adds compilation customizers to the compilation process. A compilation customizer is a class node
      * operation which performs various operations going from adding imports to access control.
+     *
      * @param customizers the list of customizers to be added
      * @return this configuration instance
      */
@@ -1264,6 +1441,7 @@ public class CompilerConfiguration {
 
     /**
      * Returns the list of compilation customizers.
+     *
      * @return the customizers (always not null)
      */
     public List<CompilationCustomizer> getCompilationCustomizers() {
@@ -1272,6 +1450,7 @@ public class CompilerConfiguration {
 
     /**
      * Returns the list of disabled global AST transformation class names.
+     *
      * @return a list of global AST transformation fully qualified class names
      */
     public Set<String> getDisabledGlobalASTTransformations() {

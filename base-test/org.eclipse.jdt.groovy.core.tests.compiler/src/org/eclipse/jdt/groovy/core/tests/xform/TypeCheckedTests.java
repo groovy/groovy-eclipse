@@ -5506,6 +5506,8 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked10253() {
+        assumeTrue(isAtLeastGroovy(60));
+
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -5516,8 +5518,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources);
-        /*
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 3)\n" +
@@ -5525,7 +5525,6 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "\t                     ^^^^\n" +
             "Groovy:[Static type checking] - Incompatible generic argument types. Cannot assign java.util.List<N> to: java.util.List<java.lang.Integer>\n" +
             "----------\n");
-        */
     }
 
     @Test

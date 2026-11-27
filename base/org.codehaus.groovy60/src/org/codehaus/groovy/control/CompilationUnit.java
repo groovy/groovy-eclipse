@@ -89,6 +89,10 @@ public class CompilationUnit extends ProcessingUnit {
 
     /** The source units from which this unit is built. */
     protected Map<String, SourceUnit> sources = new LinkedHashMap<>();
+    /**
+     * Sources passed to {@link #addSource(SourceUnit)} that have not yet been
+     * copied into {@link #sources}. {@link #dequeued()} polls this queue.
+     */
     protected Queue<SourceUnit> queuedSources = new LinkedList<>();
 
     /** The classes generated during classgen. */
@@ -116,7 +120,15 @@ public class CompilationUnit extends ProcessingUnit {
     /** A callback for use during {@link #compile()} */
     protected ProgressCallback progressCallback;
 
+    /**
+     * Resolver handed to {@link #resolveVisitor} for on-demand class lookup.
+     * Replaced through {@link #setClassNodeResolver(ClassNodeResolver)}.
+     */
     protected ClassNodeResolver classNodeResolver = new ClassNodeResolver();
+    /**
+     * Visitor that resolves types. The unit runs it once over class headers
+     * and once over class bodies.
+     */
     protected ResolveVisitor resolveVisitor = new ResolveVisitor(this);
 
     /** The AST transformations state data. */
@@ -203,10 +215,6 @@ public class CompilationUnit extends ProcessingUnit {
 
         addPhaseOperation((final SourceUnit source, final GeneratorContext context, final ClassNode classNode) -> {
             GroovyClassVisitor visitor = new EnumVisitor(this, source);
-            visitor.visitClass(classNode);
-        }, Phases.CONVERSION);
-        addPhaseOperation((final SourceUnit source, final GeneratorContext context, final ClassNode classNode) -> {
-            GroovyClassVisitor visitor = new PlaceholderVisitor(this, source);
             visitor.visitClass(classNode);
         }, Phases.CONVERSION);
 
@@ -739,9 +747,11 @@ public class CompilationUnit extends ProcessingUnit {
         while (throughPhase >= phase && phase <= Phases.ALL) {
             if (phase == Phases.CONVERSION) {
                 /* GRECLIPSE edit
-                (sources.size() > 1 && Boolean.TRUE.equals(configuration.getOptimizationOptions().get(CompilerConfiguration.PARALLEL_PARSE))
-                        ? sources.values().parallelStream() : sources.values().stream()
-                ).forEach(SourceUnit::buildAST);
+                if (sources.size() > 1 && Boolean.TRUE.equals(configuration.getOptimizationOptions().get(CompilerConfiguration.PARALLEL_PARSE))) {
+                    buildASTsInParallel();
+                } else {
+                    sources.values().forEach(SourceUnit::buildAST);
+                }
                 */
                 for (SourceUnit source : sources.values()) {
                     source.buildAST();
@@ -939,6 +949,8 @@ public class CompilationUnit extends ProcessingUnit {
      * Per-class {@link ClassWriter} that memoizes {@link #getCommonSuperClass}.
      * {@code COMPUTE_FRAMES} repeats the same internal-name pairs at merge points;
      * the writer (and its maps) live for one generated class and are then discarded.
+     * Frame computation is bounded by the configured limits, which ASM's defaults
+     * would otherwise set too low for large Groovy methods.
      */
     private final class CachingClassWriter extends ClassWriter {
         private final Map<String, ClassNode> classNodeByInternalName = new HashMap<>(8);
@@ -946,6 +958,8 @@ public class CompilationUnit extends ProcessingUnit {
 
         private CachingClassWriter() {
             super(COMPUTE_MAXS | COMPUTE_FRAMES);
+            CompilerConfiguration config = getConfiguration();
+            setComputeLimits(config.getFrameComputationMaxBytes(), config.getFrameComputationMaxOperations());
         }
 
         @Override

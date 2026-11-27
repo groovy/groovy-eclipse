@@ -180,10 +180,19 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     @Override
     public void visitDeclarationExpression(final DeclarationExpression expression) {
         visitAnnotations(expression, LOCAL_VARIABLE_TARGET);
+        // GROOVY-12540: use the declared (origin) type: getType() may be a shared, boxed ClassHelper node for a primitive local
         if (expression.isMultipleAssignmentDeclaration()) {
-            expression.getTupleExpression().forEach(e -> visitTypeAnnotations(e.getType()));
+            // GROOVY-12702: a TYPE_USE annotation in declaration position applies to every
+            // variable. Annotations that target only TYPE_USE are removed from the declaration once.
+            List<ClassNode> declaredTypes = new ArrayList<>();
+            for (Expression element : expression.getTupleExpression().getExpressions()) {
+                ClassNode type = ((VariableExpression) element).getOriginType();
+                visitTypeAnnotations(type);
+                declaredTypes.add(type);
+            }
+            extractTypeUseAnnotations(expression.getAnnotations(), declaredTypes, LOCAL_VARIABLE_TARGET);
         } else {
-            ClassNode type = expression.getLeftExpression().getType();
+            ClassNode type = expression.getVariableExpression().getOriginType();
             visitTypeAnnotations(type);
             extractTypeUseAnnotations(expression.getAnnotations(), type, LOCAL_VARIABLE_TARGET);
         }
@@ -332,7 +341,16 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
         }
     }
 
-    private void extractTypeUseAnnotations(final List<AnnotationNode> mixed, ClassNode targetType, final int keepTarget) {
+    private void extractTypeUseAnnotations(final List<AnnotationNode> mixed, final ClassNode targetType, final int keepTarget) {
+        extractTypeUseAnnotations(mixed, List.of(targetType), keepTarget);
+    }
+
+    /**
+     * Moves TYPE_USE annotations from a declaration onto each declared type.
+     * Annotations that are not also allowed on {@code keepTarget} are then removed
+     * from the declaration once, after every type has received them.
+     */
+    private void extractTypeUseAnnotations(final List<AnnotationNode> mixed, final List<ClassNode> targetTypes, final int keepTarget) {
         List<AnnotationNode> typeUseAnnos = new ArrayList<>();
         for (AnnotationNode anno : mixed) {
             // GRECLIPSE add
@@ -344,14 +362,41 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             }
         }
         if (!typeUseAnnos.isEmpty()) {
-            while (targetType.isArray()) targetType = targetType.getComponentType();
-            targetType.addTypeAnnotations(typeUseAnnos);
+            for (ClassNode targetType : targetTypes) {
+                ClassNode type = targetType;
+                while (type.isArray()) type = type.getComponentType();
+                // GROOVY-12434: a type node shared with a copied member (e.g. a trait method and
+                // its helper or forwarder), or with another variable of this declaration, may
+                // already hold the same annotation or a copy of it
+                List<AnnotationNode> existing = type.getTypeAnnotations();
+                for (AnnotationNode anno : typeUseAnnos) {
+                    if (existing.stream().noneMatch(e -> isSameAnnotation(e, anno))) {
+                        type.addTypeAnnotation(anno);
+                    }
+                }
+            }
             for (AnnotationNode anno : typeUseAnnos) {
                 if (!anno.isTargetAllowed(keepTarget)) {
                     mixed.remove(anno);
                 }
             }
         }
+    }
+
+    /**
+     * Duplicates are already rejected or collected into a container for each member, so an
+     * annotation of the same type with the same member values is the same annotation or a copy
+     * of it, as made by {@code GeneralUtils#copyAnnotatedNodeAnnotations}.
+     */
+    private static boolean isSameAnnotation(final AnnotationNode a, final AnnotationNode b) {
+        if (a == b) return true;
+        if (!a.getClassNode().equals(b.getClassNode())) return false;
+        Map<String, Expression> aMembers = a.getMembers(), bMembers = b.getMembers();
+        if (aMembers.size() != bMembers.size()) return false;
+        for (Map.Entry<String, Expression> member : aMembers.entrySet()) {
+            if (bMembers.get(member.getKey()) != member.getValue()) return false;
+        }
+        return true;
     }
 
     /**
@@ -415,7 +460,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     }
 
     private boolean shouldSkip(final AnnotatedNode node, final AnnotationNode visited) {
-        return (node instanceof ClassNode && !visited.isTargetAllowed(TYPE_TARGET) && !visited.isTargetAllowed(TYPE_USE_TARGET) && visited.isTargetAllowed(CONSTRUCTOR_TARGET))
+        return (node instanceof ClassNode && !visited.isTargetAllowed(TYPE_TARGET) && !visited.isTargetAllowed(TYPE_USE_TARGET) && (visited.isTargetAllowed(CONSTRUCTOR_TARGET) || visited.isTargetAllowed(METHOD_TARGET)))
                 || (node instanceof ConstructorNode && !visited.isTargetAllowed(CONSTRUCTOR_TARGET) && visited.isTargetAllowed(TYPE_TARGET))
                 || (node instanceof FieldNode && !visited.isTargetAllowed(FIELD_TARGET) && !visited.isTargetAllowed(TYPE_USE_TARGET))
                 || (node instanceof Parameter && !visited.isTargetAllowed(PARAMETER_TARGET) && !visited.isTargetAllowed(TYPE_USE_TARGET))

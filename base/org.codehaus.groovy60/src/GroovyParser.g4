@@ -325,6 +325,7 @@ variableDeclarator[boolean arrayType]
 
 variableDeclaratorId
     :   identifier
+    |   builtInType // accepted here so that AstBuilder can name the mistake, e.g. `def long = 1`
     ;
 
 variableInitializer
@@ -676,7 +677,7 @@ statement
     ;
 
 catchClause
-    :   CATCH LPAREN variableModifiersOpt catchType? identifier RPAREN NL* block
+    :   CATCH LPAREN variableModifiersOpt catchType? variableDeclaratorId RPAREN NL* block
     ;
 
 catchType
@@ -701,11 +702,17 @@ resource
     ;
 
 
-/** Matches cases then statements, both of which are mandatory.
- *  To handle empty cases at the end, we add switchLabel* to statement.
+/** Matches one or more labels, then their statements.
+ *  The statements are required, except when the next token is the
+ *  closing brace: a final case or default may have no body. The
+ *  predicate keeps that alternative LL(1) and out of the way of a
+ *  following label that does have statements.
  */
 switchBlockStatementGroup
-    :   switchLabel (NL* switchLabel)* NL* blockStatements
+    :   switchLabel (NL* switchLabel)* NL*
+        (   blockStatements
+        |   { _input.LT(1).getType() == RBRACE }?
+        )
     ;
 
 switchLabel
@@ -719,7 +726,7 @@ forControl
     ;
 
 enhancedForControl
-    :   (indexVariable COMMA)? variableModifiersOpt type? identifier (COLON | IN) expression
+    :   (indexVariable COMMA)? variableModifiersOpt type? variableDeclaratorId (COLON | IN) expression
     ;
 
 indexVariable
@@ -816,10 +823,9 @@ expression
     // async closure/lambda must come before postfixExpression to resolve ambiguity with method call, e.g. async { ... }
     |   ASYNC NL* { inAsyncClosureLevel++; } closureOrLambdaExpression { inAsyncClosureLevel--; }   #asyncClosureExprAlt
 
-    // await expression: single-arg or multi-arg (parenthesized or unparenthesized)
-    |   AWAIT NL* ( LPAREN expression (COMMA NL* expression)* RPAREN
-                  | expression (COMMA NL* expression)*
-                  )                                                                         #awaitExprAlt
+    // unparenthesized await expression, single-arg or multi-arg, e.g. await a or await a, b;
+    // the parenthesized form is a primary, see awaitPrmrAlt
+    |   { _input.LA(2) != LPAREN }? AWAIT expression (COMMA NL* expression)*               #awaitExprAlt
 
     // qualified names, array expressions, method invocation, post inc/dec
     |   postfixExpression                                                                   #postfixExprAlt
@@ -926,6 +932,12 @@ expression
 castOperandExpression
 options { baseContext = expression; }
     :   castParExpression castOperandExpression                                             #castExprAlt
+
+    // GROOVY-12715: the operand of a cast may be an async closure or an await, as in `(Awaitable<Integer>) async { 7 }`
+    // and `(BigDecimal) await price`; without these alternatives `async` and `await` parse as names of called methods
+    |   ASYNC NL* { inAsyncClosureLevel++; } closureOrLambdaExpression { inAsyncClosureLevel--; }   #asyncClosureExprAlt
+
+    |   { _input.LA(2) != LPAREN }? AWAIT expression (COMMA NL* expression)*               #awaitExprAlt
 
     |   postfixExpression                                                                   #postfixExprAlt
 
@@ -1086,6 +1098,10 @@ namedPropertyArgs
 
 primary
     :
+        // parenthesized await, single-arg or multi-arg; as a primary, a following method call, property or index
+        // applies to the awaited value, e.g. await(task).toString(). It must come before identifierPrmrAlt.
+        AWAIT LPAREN expression (COMMA NL* expression)* RPAREN                              #awaitPrmrAlt
+    |
         // Append `typeArguments?` to `identifier` to support constructor reference with generics, e.g. HashMap<String, Integer>::new
         // Though this is not a graceful solution, it is much faster than replacing `builtInType` with `type`
         identifier typeArguments?                                                           #identifierPrmrAlt

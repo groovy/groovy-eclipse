@@ -1,4 +1,4 @@
-// Generated from GroovyParser.g4 by ANTLR 4.13.2.16
+// Generated from GroovyParser.g4 by ANTLR 4.13.2.20
 package org.apache.groovy.parser.antlr4;
 
     import java.util.Map;
@@ -16,6 +16,13 @@ import groovyjarjarantlr4.v4.runtime.tree.ParseTreeVisitor;
  * operations with no return type.
  */
 public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
+	/**
+	 * Visit a parse tree produced by the {@code awaitPrmrAlt}
+	 * labeled alternative in {@link GroovyParser#primary}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitAwaitPrmrAlt(@NotNull GroovyParser.AwaitPrmrAltContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code identifierPrmrAlt}
 	 * labeled alternative in {@link GroovyParser#commandPrimary}.
@@ -137,14 +144,14 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	Result visitCastExprAlt(@NotNull GroovyParser.CastExprAltContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code asyncClosureExprAlt}
-	 * labeled alternative in {@link GroovyParser#expression}.
+	 * labeled alternative in {@link GroovyParser#castOperandExpression}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	Result visitAsyncClosureExprAlt(@NotNull GroovyParser.AsyncClosureExprAltContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code awaitExprAlt}
-	 * labeled alternative in {@link GroovyParser#expression}.
+	 * labeled alternative in {@link GroovyParser#castOperandExpression}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */

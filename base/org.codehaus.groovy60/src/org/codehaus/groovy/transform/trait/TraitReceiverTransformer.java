@@ -26,36 +26,45 @@ import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.LambdaExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.hasAnnotation;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isSuperExpression;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isThisExpression;
+import static org.apache.groovy.util.BeanUtils.capitalize;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.ternaryX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 
 /**
@@ -70,14 +79,19 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
  */
 class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
 
+    private static final ClassNode TRAITS_TYPE = ClassHelper.make(Traits.class);
+
     private final VariableExpression weaved;
     private final SourceUnit unit;
     private final ClassNode traitClass;
     private final ClassNode traitHelper;
     private final ClassNode fieldHelper;
     private final Collection<String> knownFields;
+    private final boolean staticallyCompiled;
 
     private boolean inClosure;
+    private boolean inLambdaOnly; // in a lambda that is not in a closure
+    private boolean inLambda; // directly in a lambda, not in a closure within one
 
     /**
      * Creates a transformer that rewrites trait receiver access against the woven receiver.
@@ -88,15 +102,18 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
      * @param traitHelper the helper class generated for the trait
      * @param fieldHelper the helper class generated for trait field access
      * @param knownFields the trait field names that require remapping
+     * @param staticallyCompiled whether the code is statically compiled
      */
     public TraitReceiverTransformer(final VariableExpression thisObject, final SourceUnit unit, final ClassNode traitClass,
-                                    final ClassNode traitHelper, final ClassNode fieldHelper, final Collection<String> knownFields) {
+                                    final ClassNode traitHelper, final ClassNode fieldHelper, final Collection<String> knownFields,
+                                    final boolean staticallyCompiled) {
         this.weaved = thisObject;
         this.unit = unit;
         this.traitClass = traitClass;
         this.traitHelper = traitHelper;
         this.fieldHelper = fieldHelper;
         this.knownFields = knownFields;
+        this.staticallyCompiled = staticallyCompiled;
     }
 
     /**
@@ -176,7 +193,12 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
                     propertyExpression.getProperty().setSourcePosition(exp);
                     return propertyExpression;
                 }
-            } else if (accessedVariable instanceof DynamicVariable && !inClosure) { // GROOVY-8049, GROOVY-9386
+            } else if (accessedVariable instanceof DynamicVariable && (!inClosure // GROOVY-8049, GROOVY-9386
+                    // GROOVY-12608: a statically compiled lambda has no delegate or thisObject to resolve
+                    // a static accessor of a super trait through, so it captures $self or $static$self;
+                    // otherwise a lambda is a closure, whose delegate may provide the name
+                    || (inLambdaOnly && staticallyCompiled && isSuperTraitStaticProperty(vexp.getName()))
+                    || isSuperTraitFieldName(vexp.getName()))) { // GROOVY-12609
                 PropertyExpression propertyExpression = propX(varX(weaved), vexp.getName());
                 propertyExpression.getProperty().setSourcePosition(exp);
                 return propertyExpression;
@@ -205,8 +227,8 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
             if (pexp.isImplicitThis() || "this".equals(obj)) {
                 String propName = pexp.getPropertyAsString();
                 if (knownFields.contains(propName)) {
-                    FieldNode fn = new FieldNode(propName, 0, ClassHelper.OBJECT_TYPE, weaved.getOriginType(), null);
-                    return transformFieldReference(exp, fn, null);
+                    // GROOVY-12587: use the declared field, so a static one is read through the implementing class
+                    return transformFieldReference(exp, traitClass.getDeclaredField(propName), null);
                 }
             }
         } else if (exp instanceof ClosureExpression) {
@@ -218,10 +240,14 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
             mce.setImplicitThis(false);
             mce.setMethodTarget(ClassHelper.CLOSURE_TYPE.getMethods("rehydrate").get(0));
             mce.setSourcePosition(exp);
-            boolean oldInClosure = inClosure;
+            boolean oldInClosure = inClosure, oldInLambdaOnly = inLambdaOnly, oldInLambda = inLambda;
+            inLambdaOnly = exp instanceof LambdaExpression && (!inClosure || inLambdaOnly);
+            inLambda = exp instanceof LambdaExpression; // the innermost construct decides
             inClosure = true;
             ((ClosureExpression) exp).getCode().visit(this);
             inClosure = oldInClosure;
+            inLambdaOnly = oldInLambdaOnly;
+            inLambda = oldInLambda;
             // The rewrite we do is causing some troubles with type checking, which will
             // not be able to perform closure parameter type inference
             // so we store the replacement, which will be done *after* type checking.
@@ -270,12 +296,10 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
     private Expression transformFieldReference(final Expression exp, final FieldNode fn, final Expression value) {
         Expression receiver;
         if (ClassHelper.isClassType(weaved.getOriginType())) {
-            receiver = varX(weaved); // $static$self
+            // GROOVY-12597: (Class) $static$self, so static compilation does not bind to the trait interface's accessor
+            receiver = castX(ClassHelper.CLASS_Type.getPlainNodeReference(), varX(weaved));
         } else if (fn.isStatic()) {
-            var call = callX(varX(weaved), "getClass"); // $self.getClass()
-            call.setImplicitThis(false);
-            call.setMethodTarget(ClassHelper.OBJECT_TYPE.getGetterMethod("getClass", false));
-            receiver = call;
+            receiver = selfGetClass();
         } else {
             receiver = castX(fieldHelper, varX(weaved)); // (<trait class>$Trait$FieldHelper) $self
         }
@@ -284,7 +308,16 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
         if (value == null) {
             mce = callX(receiver, Traits.helperGetterName(fn));
         } else {
-            mce = callX(receiver, Traits.helperSetterName(fn), transform(value));
+            Expression newValue = transform(value);
+            ClassNode type = fn.getOriginType();
+            if (!ClassHelper.isDynamicTyped(type) && !type.isGenericsPlaceHolder() && !GenericsUtils.hasUnresolvedGenerics(type)) {
+                // GROOVY-12639: convert the value as an assignment to the field would
+                CastExpression cast = castX(type, newValue);
+                cast.setSourcePosition(value);
+                cast.putNodeMetaData(TraitASTTransformation.FIELD_ASSIGNMENT, Boolean.TRUE);
+                newValue = cast;
+            }
+            mce = callX(receiver, Traits.helperSetterName(fn), newValue);
         }
         mce.setImplicitThis(false);
         /* GRECLIPSE edit
@@ -300,16 +333,63 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
         return mce;
     }
 
-    private static FieldNode tryGetFieldNode(final ClassNode weavedType, final String fieldName) {
-        FieldNode fn = weavedType.getDeclaredField(fieldName);
-        if (fn == null && ClassHelper.isClassType(weavedType)) {
-            GenericsType[] genericsTypes = weavedType.getGenericsTypes();
-            if (genericsTypes != null && genericsTypes.length == 1) {
-                // for static properties
-                fn = genericsTypes[0].getType().getDeclaredField(fieldName);
+    /**
+     * Returns {@code $self.getClass()} as an explicit call, so that inside a closure it
+     * is not resolved against the closure's delegate.
+     */
+    private MethodCallExpression selfGetClass() {
+        MethodCallExpression call = callX(varX(weaved), "getClass");
+        call.setImplicitThis(false);
+        call.setMethodTarget(ClassHelper.OBJECT_TYPE.getGetterMethod("getClass", false));
+        return call;
+    }
+
+    /**
+     * Checks if a name is the remapped name ("pack_Type__name") of
+     * a field of a super trait, which refers to the implementing class also in a
+     * closure.
+     */
+    private boolean isSuperTraitFieldName(final String name) {
+        if (!name.contains("__")) return false;
+        Set<ClassNode> traits = new LinkedHashSet<>();
+        collectSuperTraits(traitClass, traits);
+        for (ClassNode trait : traits) {
+            String prefix = trait.getName().replace('.', '_') + "__";
+            if (name.startsWith(prefix)) {
+                if (trait.getDeclaredField(name.substring(prefix.length())) != null) {
+                    return true; // trait not transformed yet
+                }
+                TraitHelpersTuple helpers = Traits.findHelpers(trait);
+                for (ClassNode fieldHelper : new ClassNode[]{helpers.getFieldHelper(), helpers.getStaticFieldHelper()}) {
+                    if (fieldHelper != null && fieldHelper.getDeclaredMethod(name + Traits.DIRECT_GETTER_SUFFIX, Parameter.EMPTY_ARRAY) != null) {
+                        return true;
+                    }
+                }
             }
         }
-        return fn;
+        return false;
+    }
+
+    private static void collectSuperTraits(final ClassNode cNode, final Set<ClassNode> traits) {
+        for (ClassNode face : cNode.getInterfaces()) {
+            if (Traits.isTrait(face) && traits.add(face)) collectSuperTraits(face, traits);
+        }
+        ClassNode superClass = cNode.getUnresolvedSuperClass();
+        if (Traits.isTrait(superClass) && traits.add(superClass)) { // trait not transformed yet
+            collectSuperTraits(superClass, traits);
+        }
+    }
+
+    private static FieldNode tryGetFieldNode(final ClassNode weavedType, final String fieldName) {
+        if (ClassHelper.isClassType(weavedType)) {
+            // GROOVY-12593: for static properties look in the trait, not in java.lang.Class (name, module, ...)
+            GenericsType[] genericsTypes = weavedType.getGenericsTypes();
+            if (genericsTypes != null && genericsTypes.length == 1) {
+                return genericsTypes[0].getType().getDeclaredField(fieldName);
+            }
+            return null;
+        }
+        return weavedType.getDeclaredField(fieldName);
     }
 
     private void throwSuperError(final ASTNode node) {
@@ -372,29 +452,71 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
             MethodNode methodNode = findConcreteMethod(traitClass, call.getMethodAsString());
             if (methodNode != null) {
                 MethodCallExpression newCall;
+                MethodCallExpression helperCall = null;
                 if (methodNode.isStatic() && !methodNode.isPrivate() && !inClosure && hasAnnotation(methodNode, new ClassNode(groovy.transform.Virtual.class))) {
-                    // GROOVY-11985: this.m(x) --> ($static$self or (Class)$self.getClass()).m(x)
-                    Expression selfClass = ClassHelper.isClassType(weaved.getOriginType()) ? varX(weaved) : castX(ClassHelper.CLASS_Type.getPlainNodeReference(), callX(varX(weaved), "getClass"));
-                    newCall = callX(selfClass, method, transform(arguments));
+                    // this.m(x) --> ($static$self or (Class)$self.getClass()).m(x)
+                    boolean staticSelf = ClassHelper.isClassType(weaved.getOriginType());
+                    Expression selfClass = staticSelf ? varX(weaved) : castX(ClassHelper.CLASS_Type.getPlainNodeReference(), selfGetClass());
+                    Expression newArgs = transform(arguments);
+                    newCall = callX(selfClass, method, newArgs);
                     newCall.setImplicitThis(false);
                     newCall.putNodeMetaData(TraitASTTransformation.DO_DYNAMIC, methodNode.getReturnType());
+                    if (staticSelf) {
+                        // GROOVY-12604: a promoted static called through the trait (T.m())
+                        // has the trait interface as $static$self, which does not carry
+                        // @Virtual statics; there is no implementing class to dispatch to
+                        ClassNode helper = traitClass.equals(methodNode.getDeclaringClass()) ? traitHelper : methodNode.getDeclaringClass();
+                        Expression self = traitClass.equals(methodNode.getDeclaringClass()) ? varX(weaved) : castX(ClassHelper.CLASS_Type.getPlainNodeReference(), varX(weaved)); // Class<U> to Class<T>
+                        helperCall = callX(classX(helper), method, createArgumentList(self, newArgs, false));
+                        helperCall.setImplicitThis(false);
+                        helperCall.setGenericsTypes(call.getGenericsTypes());
+                        helperCall.setSpreadSafe(call.isSpreadSafe());
+                        helperCall.setSourcePosition(call);
+                    }
                 } else {
                     // this.m(x) --> (this or T$Trait$Helper).m($self or $static$self or (Class)$self.getClass(), x)
-                    Expression selfClassOrObject = methodNode.isStatic() && !ClassHelper.isClassType(weaved.getOriginType()) ? castX(ClassHelper.CLASS_Type.getPlainNodeReference(), callX(weaved, "getClass")) : weaved;
+                    Expression selfClassOrObject = methodNode.isStatic() && !ClassHelper.isClassType(weaved.getOriginType()) ? castX(ClassHelper.CLASS_Type.getPlainNodeReference(), selfGetClass()) : weaved;
                     newCall = callX(!inClosure ? thisExpr : classX(traitHelper), method, createArgumentList(selfClassOrObject, arguments));
+                    // GROOVY-12611: T$Trait$Helper.m($self, x) is not checked against the closure's delegate
+                    if (inClosure) newCall.setImplicitThis(false);
+                    if (inClosure && !inLambda && call.isImplicitThis()) {
+                        // GROOVY-12611, GROOVY-12618: m(x) in a closure may target the closure's delegate; the type
+                        // checker of statically compiled code keeps T$Trait$Helper.m($self, x) or
+                        // selects m(x) on the delegate, otherwise the closure resolves m(x) and its
+                        // metaclass falls back to the trait helper for the owner
+                        List<Expression> args = ((ArgumentListExpression) newCall.getArguments()).getExpressions();
+                        MethodCallExpression closureCall = callX(thisExpr, method, args(args.subList(1, args.size()).toArray(Expression[]::new)));
+                        closureCall.setGenericsTypes(call.getGenericsTypes());
+                        closureCall.setImplicitThis(true);
+                        closureCall.setSafe(call.isSafe());
+                        closureCall.setSpreadSafe(call.isSpreadSafe());
+                        closureCall.setSourcePosition(call);
+                        newCall.putNodeMetaData(TraitASTTransformation.POST_TYPECHECKING_REPLACEMENT, closureCall);
+                    }
                 }
                 newCall.setGenericsTypes(call.getGenericsTypes());
                 newCall.setSpreadSafe(call.isSpreadSafe());
                 newCall.setSourcePosition(call);
+                if (helperCall != null) {
+                    // (Traits.isTrait($static$self) ? T$Trait$Helper.m($static$self, x) : $static$self.m(x));
+                    // a dynamic $static$self.isInterface() would call a static isInterface() of the class
+                    Expression dispatch = ternaryX(callX(TRAITS_TYPE, "isTrait", args(varX(weaved))), helperCall, newCall);
+                    dispatch.setSourcePosition(call);
+                    return dispatch;
+                }
                 return newCall;
             }
         }
 
+        // GROOVY-12612: an explicit this.m(x) in a closure or lambda targets the
+        // implementing instance, never the delegate; only m(x) keeps the receiver
+        boolean implicitThisInClosure = inClosure && call.isImplicitThis();
+
         // this.m(x) --> (this or $self or $static$self).m(x)
-        MethodCallExpression newCall = callX(inClosure ? thisExpr : weaved, method, transform(arguments));
+        MethodCallExpression newCall = callX(implicitThisInClosure ? thisExpr : weaved, method, transform(arguments));
         newCall.setGenericsTypes(call.getGenericsTypes()); // GROOVY-11302: this.<T>m(x)
-        newCall.setImplicitThis(inClosure ? call.isImplicitThis() : false);
-        newCall.setSafe(inClosure ? call.isSafe() : false);
+        newCall.setImplicitThis(implicitThisInClosure);
+        newCall.setSafe(implicitThisInClosure ? call.isSafe() : false);
         newCall.setSpreadSafe(call.isSpreadSafe());
         newCall.setSourcePosition(call);
         return newCall;
@@ -424,15 +546,45 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
         return null;
     }
 
+    /**
+     * Indicates whether a super trait has a public static getter or setter for the
+     * named property.
+     */
+    private boolean isSuperTraitStaticProperty(final String name) {
+        String suffix = capitalize(name);
+        var traits = Traits.findTraits(traitClass); traits.remove(traitClass);
+
+        for (ClassNode superTrait : traits) {
+            for (MethodNode methodNode : Traits.findHelper(superTrait).getMethods()) {
+                Parameter[] parameters = methodNode.getParameters();
+                if (methodNode.isPublic() && methodNode.isStatic() && parameters.length > 0
+                        && ClassHelper.isClassType(parameters[0].getType())) {
+                    String methodName = methodNode.getName();
+                    if (parameters.length == 1 ? methodName.equals("get" + suffix)
+                            || (methodName.equals("is" + suffix) && ClassHelper.isPrimitiveBoolean(methodNode.getReturnType()))
+                            : parameters.length == 2 && methodName.equals("set" + suffix)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
     private ArgumentListExpression createArgumentList(final Expression self, final Expression arguments) {
+        return createArgumentList(self, arguments, true);
+    }
+
+    private ArgumentListExpression createArgumentList(final Expression self, final Expression arguments, final boolean transform) {
         ArgumentListExpression newArgs = new ArgumentListExpression();
         newArgs.addExpression(self);
         if (arguments instanceof TupleExpression) {
             for (Expression argument : (TupleExpression) arguments) {
-                newArgs.addExpression(transform(argument));
+                newArgs.addExpression(transform ? transform(argument) : argument);
             }
         } else {
-            newArgs.addExpression(transform(arguments));
+            newArgs.addExpression(transform ? transform(arguments) : arguments);
         }
         return newArgs;
     }

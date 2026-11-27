@@ -18,7 +18,19 @@
  */
 package org.codehaus.groovy.classgen.asm.sc;
 
-import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.EnumConstantClassNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GroovyCodeVisitor;
+import org.codehaus.groovy.ast.ImmutableClassNode;
+import org.codehaus.groovy.ast.InnerClassNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.decompiled.DecompiledClassNode;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
@@ -34,9 +46,15 @@ import org.codehaus.groovy.ast.expr.SpreadExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.ForStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.tools.ParameterUtils;
+import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.classgen.AsmClassGenerator;
+import org.codehaus.groovy.classgen.BytecodeInstruction;
+import org.codehaus.groovy.classgen.BytecodeSequence;
 import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.classgen.asm.BytecodeHelper;
+import org.codehaus.groovy.classgen.asm.BytecodeVariable;
 import org.codehaus.groovy.classgen.asm.CompileStack;
 import org.codehaus.groovy.classgen.asm.ExpressionAsVariableSlot;
 import org.codehaus.groovy.classgen.asm.InvocationWriter;
@@ -53,42 +71,58 @@ import org.codehaus.groovy.transform.stc.ExtensionMethodNode;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
+import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Label;
 import groovyjarjarasm.asm.MethodVisitor;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.apache.groovy.ast.tools.ClassNodeUtils.formatTypeName;
 import static org.apache.groovy.ast.tools.ClassNodeUtils.isSubtype;
+import static org.apache.groovy.ast.tools.ClassNodeUtils.samePackageName;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isNullConstant;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isSuperExpression;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isThisExpression;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isThisOrSuper;
+import static org.apache.groovy.ast.tools.ExpressionUtils.mayHaveSideEffects;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.attrX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.bytecodeX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.inSamePackage;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
+import static org.codehaus.groovy.ast.tools.GenericsUtils.erasure;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe0;
 import static org.codehaus.groovy.transform.trait.Traits.isTrait;
 import static groovyjarjarasm.asm.Opcodes.ACONST_NULL;
 import static groovyjarjarasm.asm.Opcodes.ALOAD;
 import static groovyjarjarasm.asm.Opcodes.CHECKCAST;
+import static groovyjarjarasm.asm.Opcodes.DUP;
+import static groovyjarjarasm.asm.Opcodes.GETFIELD;
 import static groovyjarjarasm.asm.Opcodes.GOTO;
+import static groovyjarjarasm.asm.Opcodes.IFEQ;
+import static groovyjarjarasm.asm.Opcodes.IFNE;
 import static groovyjarjarasm.asm.Opcodes.IFNONNULL;
 import static groovyjarjarasm.asm.Opcodes.IFNULL;
+import static groovyjarjarasm.asm.Opcodes.INSTANCEOF;
 import static groovyjarjarasm.asm.Opcodes.INVOKESTATIC;
+import static groovyjarjarasm.asm.Opcodes.INVOKEVIRTUAL;
+import static groovyjarjarasm.asm.Opcodes.POP;
 
 /**
  * Invocation writer for statically compiled code paths.
@@ -119,6 +153,7 @@ public class StaticInvocationWriter extends InvocationWriter {
             super.writeInvokeConstructor(call);
             return;
         }
+        if (call.isUsingAnonymousInnerClass()) RuntimePackageCheck.checkAnonymousClass(controller, call);
         if (writeAICCall(call)) return;
         ConstructorNode cn;
         if (mn instanceof ConstructorNode) {
@@ -129,6 +164,16 @@ public class StaticInvocationWriter extends InvocationWriter {
         }
         ClassNode declaringClass = cn.getDeclaringClass();
         ClassNode enclosingClass = controller.getClassNode();
+        if (!cn.isPrivate() && !isDirectlyAccessible(cn, enclosingClass) && !samePackageName(declaringClass, enclosingClass)) {
+            // JLS 6.6.2.2: outside its package, only super(...) or an anonymous inner class can call a protected constructor;
+            // reported here, while the class is generated, so @TypeChecked code is not checked for it and works dynamically
+            controller.getSourceUnit().addError(new SyntaxException(
+                    "Cannot call " + (cn.isProtected() ? "protected" : "package-private") + " constructor for "
+                            + declaringClass.toString(false) + " from class " + enclosingClass.toString(false),
+                    call
+            ));
+        }
+        RuntimePackageCheck.checkConstructor(controller, cn, false, call);
         List<Expression> argList = call.getArguments() instanceof TupleExpression
                 ? ((TupleExpression) call.getArguments()).getExpressions() : List.of(call.getArguments());
         if (!AsmClassGenerator.isMemberDirectlyAccessible(cn.getModifiers(), declaringClass, enclosingClass)) {
@@ -155,6 +200,29 @@ public class StaticInvocationWriter extends InvocationWriter {
         finnishConstructorCall(cn, ownerDescriptor, controller.getOperandStack().getStackLength() - before);
     }
 
+    /**
+     * Determines if the bytecode of the accessing class can call the constructor
+     * with {@code NEW} and {@code INVOKESPECIAL}.
+     * <p>
+     * A protected or package-private constructor needs the same run-time package
+     * (see {@link AsmClassGenerator#isInSameRuntimePackage}). Outside its package,
+     * a protected constructor can only be called by {@code super(...)} or an
+     * anonymous inner class.
+     * <p>
+     * Unlike {@link AsmClassGenerator#isMemberDirectlyAccessible}, there is no
+     * subclass rule: the verifier rejects {@code NEW} and {@code INVOKESPECIAL}
+     * of a protected constructor of another package in a subclass too, so a
+     * constructor reference to it creates the object through the meta-class.
+     */
+    static boolean isDirectlyAccessible(final ConstructorNode ctor, final ClassNode accessingClass) {
+        if (ctor.isPublic()) return true;
+        ClassNode declaringClass = ctor.getDeclaringClass();
+        if (ctor.isPrivate()) { // nestmates can call a private constructor
+            return AsmClassGenerator.isMemberDirectlyAccessible(ctor.getModifiers(), declaringClass, accessingClass);
+        }
+        return AsmClassGenerator.isInSameRuntimePackage(declaringClass, accessingClass);
+    }
+
     /** {@inheritDoc} */
     @Override
     public void writeSpecialConstructorCall(final ConstructorCallExpression call) {
@@ -171,6 +239,7 @@ public class StaticInvocationWriter extends InvocationWriter {
             cn = new ConstructorNode(mn.getModifiers(), mn.getParameters(), mn.getExceptions(), mn.getCode());
             cn.setDeclaringClass(mn.getDeclaringClass());
         }
+        RuntimePackageCheck.checkConstructor(controller, cn, true, call);
         // load "this"
         controller.getMethodVisitor().visitVarInsn(ALOAD, 0);
         String ownerDescriptor = BytecodeHelper.getClassInternalName(cn.getDeclaringClass());
@@ -182,6 +251,44 @@ public class StaticInvocationWriter extends InvocationWriter {
         controller.getOperandStack().remove(1);
         controller.getCompileStack().pop();
     }
+
+    /**
+     * Returns the public instance method of {@code Object} that the given
+     * method is or overrides, like {@code toString()}, or {@code null}.
+     */
+    private static MethodNode getObjectMethod(final MethodNode method) {
+        if (method.isStatic() || !method.isPublic()) return null;
+        MethodNode objectMethod = ClassHelper.OBJECT_TYPE.getDeclaredMethod(method.getName(), method.getParameters());
+        return objectMethod != null && objectMethod.isPublic() && !objectMethod.isStatic() ? objectMethod : null;
+    }
+
+    /**
+     * Tells whether the closure or lambda being generated can run without a this object,
+     * as a closure can after {@code dehydrate()} or {@code rehydrate()}. That includes a
+     * lambda inside such a closure, but not a lambda written directly in a class.
+     */
+    private boolean mayLackThisObject(final ClassNode function) {
+        if (!function.implementsInterface(ClassHelper.GENERATED_LAMBDA_TYPE)) return true;
+        ClassNode outer = function.getOuterClass();
+        return outer != null && ClassHelper.isGeneratedFunction(outer) && !controller.isStaticMethod();
+    }
+
+    /**
+     * Tells whether an implicit call of the given method in a closure goes to the closure's
+     * this object, owner or the closure itself, whichever {@code rehydrate()} left: a public
+     * method of {@code Object}, or an instance extension method of {@code Object}. The print
+     * methods are left out, as what they print does not depend on the receiver in practice.
+     */
+    static boolean isCalledOnClosureContext(final MethodNode target) {
+        if (target instanceof ExtensionMethodNode emn) {
+            if (emn.isStaticExtension() || PRINT_METHODS.contains(target.getName())) return false;
+            Parameter[] parameters = emn.getExtensionMethodNode().getParameters();
+            return parameters.length > 0 && ClassHelper.isObjectType(parameters[0].getType());
+        }
+        return target != null && getObjectMethod(target) != null;
+    }
+
+    private static final Set<String> PRINT_METHODS = Set.of("print", "printf", "println", "sprintf");
 
     private Expression thisObjectExpression(final ClassNode source, final ClassNode target) {
         ClassNode thisType = source;
@@ -260,6 +367,41 @@ public class StaticInvocationWriter extends InvocationWriter {
     protected boolean writeDirectMethodCall(final MethodNode target, final boolean implicitThis, final Expression receiver, final TupleExpression args) {
         if (target == null) return false;
 
+        // GROOVY-12608: "name" in a closure in trait code, which the type checker resolved to
+        // a static accessor of a (super) trait through the closure's owner, is the same call
+        boolean closureThis = implicitThis && isThisExpression(receiver) && isInTraitClosure();
+        MethodNode helperMethod = closureThis || isTraitSelf(receiver) ? findTraitHelperMethod(target) : null;
+        if (helperMethod != null) {
+            // GROOVY-12590: "$static$self.name" or "$self.name" in trait code, which is how
+            // a trait's static accessor is read or written with property syntax, goes to the
+            // trait helper with the implementing class, as "getName()" does, not to the trait
+            // interface's forwarder, which passes the trait itself as the receiver class
+            Expression selfClass = receiver;
+            if (closureThis) {
+                // the closure's thisObject is $self, or $static$self in a static trait method
+                selfClass = bytecodeX(ClassHelper.CLASS_Type, mv -> {
+                    Label isClass = new Label();
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "groovy/lang/Closure", "getThisObject", "()Ljava/lang/Object;", false);
+                    mv.visitInsn(DUP);
+                    mv.visitTypeInsn(INSTANCEOF, "java/lang/Class");
+                    mv.visitJumpInsn(IFNE, isClass);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false);
+                    mv.visitLabel(isClass);
+                    mv.visitTypeInsn(CHECKCAST, "java/lang/Class");
+                });
+            } else if (!ClassHelper.isClassType(receiver.getType())) { // $self.getClass()
+                MethodCallExpression getClass = callX(receiver, "getClass");
+                getClass.setImplicitThis(false);
+                getClass.setMethodTarget(ClassHelper.OBJECT_TYPE.getDeclaredMethod("getClass", Parameter.EMPTY_ARRAY));
+                selfClass = getClass;
+            }
+            List<Expression> argumentList = new ArrayList<>();
+            argumentList.add(selfClass);
+            argumentList.addAll(args.getExpressions());
+            return writeDirectMethodCall(helperMethod, false, classX(helperMethod.getDeclaringClass()), args(argumentList));
+        }
+
         ClassNode enclosingClass = controller.getClassNode();
         ClassNode declaringClass = target.getDeclaringClass();
 
@@ -271,11 +413,22 @@ public class StaticInvocationWriter extends InvocationWriter {
 
             List<Expression> argumentList = new ArrayList<>();
             if (emn.isStaticExtension()) {
+                if (!implicitThis && mayHaveSideEffects(receiver)) {
+                    // a static member reached through an expression still evaluates it (JLS 15.12.4.1)
+                    receiver.visit(controller.getAcg());
+                    controller.getOperandStack().pop();
+                }
                 argumentList.add(nullX());
             } else if (!isThisOrSuper(receiver) || !controller.isInGeneratedFunction()) {
                 argumentList.add(receiver);
             } else {
-                argumentList.add(thisObjectExpression(enclosingClass, declaringClass));
+                Expression thisObject = thisObjectExpression(enclosingClass, declaringClass);
+                if (ClassHelper.isObjectType(parameters[0].getType()) && mayLackThisObject(enclosingClass)) {
+                    // a closure without a this object, e.g. after rehydrate(), passes its owner,
+                    // or itself when it has no owner either, e.g. after dehydrate()
+                    thisObject = new ThisObjectOwnerOrClosureExpression(thisObject);
+                }
+                argumentList.add(thisObject);
             }
             argumentList.addAll(args.getExpressions());
             loadArguments(argumentList, parameters);
@@ -306,28 +459,59 @@ public class StaticInvocationWriter extends InvocationWriter {
             receiverType = receiverType.getGenericsTypes()[0].getType(); // GROOVY-11694
         }
 
+        RuntimePackageCheck.checkMethod(controller, target, receiver == null || isSuperExpression(receiver) ? null : receiverType, currentCall != null ? currentCall : receiver != null ? receiver : args);
+
         if (AsmClassGenerator.isMemberDirectlyAccessible(target.getModifiers(), declaringClass, enclosingClass)
-                && !(target.isProtected() && !inSamePackage(declaringClass, enclosingClass) && !isSubtype(receiverType, enclosingClass))) { // GROOVY-7325
+                // GROOVY-7325, JVMS 4.10.1.8: outside its package, a protected instance method needs a receiver of the current class
+                && !(target.isProtected() && !target.isStatic() && !inSamePackage(declaringClass, enclosingClass) && receiver != null
+                        && !isSuperExpression(receiver) && !isClassWithSuper(receiver) && !isSubtype(enclosingClass, receiverType))) {
             boolean isThisImplicit = implicitThis;
             Expression theReceiver = receiver;
+            MethodNode theTarget = target;
             if (implicitThis && isThisExpression(receiver)
-                    && !isSubtype(declaringClass, enclosingClass)) {
+                    && (!isSubtype(declaringClass, enclosingClass)
+                        // a method of Object called in a closure or lambda is not called on it,
+                        // unless it was resolved against the closure itself (TO_SELF)
+                        || (ClassHelper.isObjectType(declaringClass) && controller.isInGeneratedFunction()
+                            && !isSubtype(ClassHelper.CLOSURE_TYPE, receiverType)))) {
                 if (target.isStatic()) {
                     theReceiver = classX(declaringClass);
+                } else if (controller.isStaticMethod() && !controller.isInGeneratedFunction()) {
+                    theReceiver = classX(enclosingClass); // method of the Class object, like getName()
                 } else if (!controller.isInGeneratedFunction()) {
-                    theReceiver = propX(classX(declaringClass), "this");
+                    ClassNode outerType = getImplicitReceiverType(enclosingClass, declaringClass);
+                    theReceiver = propX(classX(outerType != null ? outerType : declaringClass), "this");
                 } else {
-                    theReceiver = thisObjectExpression(enclosingClass, declaringClass);
+                    MethodNode objectMethod = getObjectMethod(target);
+                    if (objectMethod != null) {
+                        // every object has this method, so it is the this object's, even in an
+                        // inner class where the type checker found an override in the outer class
+                        theReceiver = thisObjectExpression(enclosingClass, ClassHelper.OBJECT_TYPE);
+                        theTarget = objectMethod;
+                        if (mayLackThisObject(enclosingClass)) {
+                            // a closure without a this object, e.g. after rehydrate(), uses its owner's method,
+                            // or its own method when it has no owner either, e.g. after dehydrate()
+                            theReceiver = new ThisObjectOwnerOrClosureExpression(theReceiver);
+                        }
+                    } else {
+                        theReceiver = thisObjectExpression(enclosingClass, declaringClass);
+                    }
                 }
                 if (!(theReceiver instanceof VariableExpression)) isThisImplicit = false;
-                theReceiver.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, declaringClass);
+                theReceiver.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, theTarget.getDeclaringClass());
             }
-            if (theReceiver != null && !isSuperExpression(receiver) && !isClassWithSuper(receiver)
+            if (theReceiver != null && !target.isStatic() && !isSuperExpression(receiver) && !isClassWithSuper(receiver)
                     && currentCall.getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER) == null) {
                 // call CHECKCAST in order to avoid calls to castToType (aka dynamic behaviour)
-                theReceiver = new CheckcastReceiverExpression(theReceiver, target);
+                // an array clone must be called on the array type, never on a wider stored type (GROOVY-12595)
+                ClassNode storedType = isArrayClone(receiverType, theTarget) ? null : storedTypeIfWiderThanInferred(theReceiver, receiverType);
+                MethodNode storedTypeTarget = storedType != null ? findSameMethodOf(storedType, theTarget) : null;
+                if (storedTypeTarget != null) theTarget = storedTypeTarget;
+                CheckcastReceiverExpression checkcastReceiver = new CheckcastReceiverExpression(theReceiver, theTarget);
+                if (storedTypeTarget != null) checkcastReceiver.setType(storedType); // no cast to the narrower type
+                theReceiver = checkcastReceiver;
             }
-            return super.writeDirectMethodCall(target, isThisImplicit, theReceiver, args);
+            return super.writeDirectMethodCall(theTarget, isThisImplicit, theReceiver, args);
 
         } else if (tryBridgeMethod(target, receiver, implicitThis, args, enclosingClass)) {
             return true;
@@ -335,6 +519,103 @@ public class StaticInvocationWriter extends InvocationWriter {
             writeMethodAccessError(target, receiver != null ? receiver : args);
             return false;
         }
+    }
+
+    /**
+     * Returns the trait helper method behind {@code target} when {@code target} is a
+     * static method of a trait, which the trait interface forwards to its helper with
+     * the trait as the receiver class.
+     */
+    private static MethodNode findTraitHelperMethod(final MethodNode target) {
+        if (target.isStatic() && isTrait(target.getDeclaringClass())) {
+            Parameter[] parameters = target.getParameters();
+            for (MethodNode method : Traits.findHelper(target.getDeclaringClass()).getDeclaredMethods(target.getName())) {
+                Parameter[] helperParameters = method.getParameters();
+                if (method.isStatic() && helperParameters.length == parameters.length + 1
+                        && ClassHelper.isClassType(helperParameters[0].getType())
+                        && ParameterUtils.parametersEqual(Arrays.copyOfRange(helperParameters, 1, helperParameters.length), parameters)) {
+                    return method;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Indicates whether the code being written is in a closure, not a lambda, in trait
+     * code. The trait transformation rehydrates such a closure, so that its thisObject
+     * is the trait helper's {@code $self} or {@code $static$self} parameter.
+     */
+    private boolean isInTraitClosure() {
+        ClassNode type = controller.getClassNode();
+        if (controller.isStaticMethod() || !type.implementsInterface(ClassHelper.GENERATED_CLOSURE_Type)) {
+            return false;
+        }
+        while (ClassHelper.isGeneratedFunction(type)) {
+            type = type.getOuterClass();
+        }
+        return isTrait(type.getOuterClass());
+    }
+
+    /**
+     * Indicates whether {@code expression} is the {@code $self} or {@code $static$self}
+     * parameter of a trait helper method, which is the implementing instance or class.
+     */
+    static boolean isTraitSelf(final Expression expression) {
+        return expression instanceof VariableExpression ve && ve.getAccessedVariable() instanceof Parameter
+                && (Traits.THIS_OBJECT.equals(ve.getName()) || Traits.STATIC_THIS_OBJECT.equals(ve.getName()));
+    }
+
+    /**
+     * A local variable may be stored as its declared type while the type checker
+     * knows a narrower type for it (flow typing). Returns the stored type when
+     * that is the case for the receiver, else {@code null}.
+     */
+    private ClassNode storedTypeIfWiderThanInferred(final Expression receiver, final ClassNode inferredType) {
+        if (!(receiver instanceof VariableExpression ve) || ve.isThisExpression() || ve.isSuperExpression()) return null;
+        Variable accessedVariable = ve.getAccessedVariable();
+        if (!(accessedVariable instanceof VariableExpression || accessedVariable instanceof Parameter)) return null;
+        BytecodeVariable variable = controller.getCompileStack().getVariable(ve.getName(), false);
+        if (variable == null) return null;
+        ClassNode storedType = variable.getType();
+        if (storedType == null || ClassHelper.isPrimitiveType(storedType) || ClassHelper.isPrimitiveType(inferredType)
+                || storedType.equals(inferredType) || !StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(inferredType, storedType)) {
+            return null;
+        }
+        return storedType;
+    }
+
+    /**
+     * Finds the method that {@code target} implements or overrides as seen from
+     * {@code type}, so that it can be called without casting a receiver of that
+     * type to the narrower type that declares {@code target}. Like javac, the call
+     * is then bound to the type the receiver is held as; virtual dispatch selects
+     * the same implementation.
+     * <p>
+     * A protected target is never matched: from another package, the verifier
+     * only allows a protected call on a receiver of the calling class (or a
+     * subclass), which the wider type need not be, e.g. {@code ArrayList#removeRange}
+     * on a subclass instance held as {@code ArrayList}.
+     */
+    static MethodNode findSameMethodOf(final ClassNode type, final MethodNode target) {
+        if (target.isStatic() || target.isPrivate() || target.isProtected() || target instanceof ExtensionMethodNode) return null;
+        if (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(type, target.getDeclaringClass())) return target;
+
+        String descriptor = BytecodeHelper.getMethodDescriptor(target.getReturnType(), target.getParameters());
+        Set<ClassNode> candidates = new LinkedHashSet<>();
+        for (ClassNode c = type; c != null; c = c.getSuperClass()) candidates.add(c);
+        candidates.addAll(type.getAllInterfaces());
+        candidates.add(ClassHelper.OBJECT_TYPE);
+        for (ClassNode candidate : candidates) {
+            if (!Modifier.isPublic(candidate.getModifiers())) continue;
+            for (MethodNode method : candidate.getDeclaredMethods(target.getName())) {
+                if (method.isPublic() && !method.isStatic()
+                        && descriptor.equals(BytecodeHelper.getMethodDescriptor(method.getReturnType(), method.getParameters()))) {
+                    return method;
+                }
+            }
+        }
+        return null;
     }
 
     private void writeMethodAccessError(final MethodNode target, final Expression origin) {
@@ -526,7 +807,12 @@ public class StaticInvocationWriter extends InvocationWriter {
             cce.putNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET,
                     StaticCompilationVisitor.ARRAYLIST_CONSTRUCTOR);
             var result = new TemporaryVariableExpression(cce);
-            if (produceResultList) result.visit(controller.getAcg());
+            if (produceResultList) {
+                // keep the list only in its slot while looping: a loop entered with
+                // a non-empty operand stack cannot be compiled on-stack by HotSpot
+                result.visit(controller.getAcg());
+                operandStack.pop();
+            }
 
             ClassNode elementType = StaticTypeCheckingVisitor.inferLoopElementType(controller.getTypeChooser().resolveType(receiver, controller.getClassNode()));
             Parameter element = new Parameter(elementType, "for$it$" + labelCounter.incrementAndGet());
@@ -570,6 +856,7 @@ public class StaticInvocationWriter extends InvocationWriter {
             loop.setVariableScope(varScope); // GROOVY-11816
             loop.visit(controller.getAcg());
             if (produceResultList) {
+                result.visit(controller.getAcg());
                 result.remove(controller);
             }
             // end of if/else
@@ -624,14 +911,8 @@ public class StaticInvocationWriter extends InvocationWriter {
             implicitReceiver = ((MethodCallExpression) origin).getObjectExpression().getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER);
         }
         if (implicitReceiver != null) {
-            String[] path = ((String) implicitReceiver).split("\\.");
             // GROOVY-6021
-            PropertyExpression pexp = propX(varX("this", ClassHelper.CLOSURE_TYPE), path[0]);
-            pexp.setImplicitThis(true);
-            for (int i = 1, n = path.length; i < n; i += 1) {
-                pexp.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, ClassHelper.CLOSURE_TYPE);
-                pexp = propX(pexp, path[i]);
-            }
+            PropertyExpression pexp = implicitReceiverX(controller, (String) implicitReceiver, varX("this", ClassHelper.CLOSURE_TYPE), false);
             pexp.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, implicitReceiver);
             origin.removeNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER);
             if (origin instanceof PropertyExpression) {
@@ -648,6 +929,58 @@ public class StaticInvocationWriter extends InvocationWriter {
         return false;
     }
 
+    /**
+     * Name of the field of a native lambda that holds the closure around the lambda.
+     * The lambda has the field only if a name in it is resolved through that closure.
+     */
+    static final String ENCLOSING_CLOSURE = "$enclosingClosure";
+
+    /**
+     * Returns the receiver that a path like {@code owner.delegate} leads to from
+     * the closure or lambda being generated. The owner of a native lambda is the
+     * enclosing instance, not the closure around the lambda, so a step from such
+     * a lambda to its owner reads the closure that the lambda captured instead.
+     *
+     * @param function loads the closure or lambda being generated
+     */
+    static PropertyExpression implicitReceiverX(final WriterController controller, final String path, final Expression function, final boolean safe) {
+        String[] names = path.split("\\.");
+        Expression receiver = function;
+        PropertyExpression pexp = null;
+        ClassNode type = controller.getClassNode();
+        for (int i = 0, n = names.length; i < n; i += 1) {
+            if (i < n - 1 && type != null && type.getDeclaredField(ENCLOSING_CLOSURE) != null) {
+                receiver = enclosingClosureX(controller, i == 0 ? null : receiver, type);
+            } else {
+                pexp = propX(receiver, constX(names[i]), safe && i == 0);
+                if (i == 0) pexp.setImplicitThis(isThisExpression(function));
+                if (i < n - 1) pexp.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, ClassHelper.CLOSURE_TYPE);
+                receiver = pexp;
+            }
+            if (type != null) type = type.getOuterClass();
+        }
+        return pexp;
+    }
+
+    /**
+     * Loads the closure that the given native lambda captured.
+     *
+     * @param lambda loads the lambda; {@code null} for the lambda being generated
+     */
+    private static Expression enclosingClosureX(final WriterController controller, final Expression lambda, final ClassNode lambdaClass) {
+        String lambdaClassInternalName = BytecodeHelper.getClassInternalName(lambdaClass);
+        return bytecodeX(ClassHelper.CLOSURE_TYPE, mv -> {
+            if (lambda == null) {
+                mv.visitVarInsn(ALOAD, 0);
+            } else {
+                lambda.visit(controller.getAcg());
+                controller.getOperandStack().remove(1);
+                mv.visitTypeInsn(CHECKCAST, lambdaClassInternalName);
+            }
+            mv.visitFieldInsn(GETFIELD, lambdaClassInternalName, ENCLOSING_CLOSURE, BytecodeHelper.getTypeDescription(ClassHelper.CLOSURE_TYPE));
+        });
+    }
+
     private boolean makeGetField(final Expression origin, final Expression receiver, final boolean safe) {
         if (origin instanceof AttributeExpression && controller.getCallSiteWriter() instanceof StaticTypesCallSiteWriter) {
             String fieldName = ((AttributeExpression) origin).getPropertyAsString();
@@ -662,10 +995,202 @@ public class StaticInvocationWriter extends InvocationWriter {
         return false;
     }
 
+    /**
+     * Whether a receiver held as the given type and used as a {@code String} could be a
+     * {@code GString}. A {@code List<String>} filled by dynamic code may hold a {@code GString},
+     * so a type derived from generics is not a guarantee; a type check such as {@code instanceof}
+     * that narrowed a variable to {@code String} is.
+     */
+    static boolean mayHoldGString(final Expression receiver, final ClassNode heldType) {
+        // a value held as the common type of several types is only checked against its class part
+        ClassNode checkedType = heldType instanceof WideningCategories.LowestUpperBoundClassNode ? heldType.getUnresolvedSuperClass() : heldType;
+        if (!StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(ClassHelper.GSTRING_TYPE, checkedType)) return false;
+        Variable variable = receiver instanceof VariableExpression ve ? ve.getAccessedVariable() : null;
+        if (variable instanceof VariableExpression || variable instanceof Parameter) {
+            ClassNode variableType = ((ASTNode) variable).getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+            if (variableType == null) variableType = variable.getOriginType();
+            // a variable not typed as String itself is only String in this scope because of a type check
+            return StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(variableType, ClassHelper.STRING_TYPE);
+        }
+        return true;
+    }
+
+    /**
+     * Casts the value on top of the stack to {@code String}, converting a {@code GString}
+     * to its text first, as Groovy does wherever a {@code String} is required.
+     */
+    static void castToStringConvertingGString(final MethodVisitor mv) {
+        Label isString = new Label();
+        mv.visitInsn(DUP);
+        mv.visitTypeInsn(INSTANCEOF, "groovy/lang/GString");
+        mv.visitJumpInsn(IFEQ, isString);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "toString", "()Ljava/lang/String;", false);
+        mv.visitLabel(isString);
+        mv.visitTypeInsn(CHECKCAST, "java/lang/String");
+    }
+
+    /**
+     * Loads the receiver of a method of {@code Object} for the closure being generated, or for
+     * the closure that the lambda being generated captured: the closure itself when it has
+     * neither an owner nor a delegate, else its this object, or its owner when that is
+     * {@code null}, or the closure itself when both are.
+     */
+    private class ThisObjectOwnerOrClosureExpression extends Expression {
+        private final Expression thisObject;
+
+        ThisObjectOwnerOrClosureExpression(final Expression thisObject) {
+            this.thisObject = thisObject;
+            setType(ClassHelper.OBJECT_TYPE);
+        }
+
+        @Override
+        public Expression transformExpression(final ExpressionTransformer transformer) {
+            return this;
+        }
+
+        @Override
+        public void visit(final GroovyCodeVisitor visitor) {
+            if (!(visitor instanceof AsmClassGenerator)) {
+                thisObject.visit(visitor);
+                return;
+            }
+            MethodVisitor mv = controller.getMethodVisitor();
+            boolean captured = controller.getClassNode().getDeclaredField(ENCLOSING_CLOSURE) != null;
+            Label hasCandidate = new Label(), done = new Label();
+            loadClosure(mv);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "groovy/lang/Closure", "getOwner", "()Ljava/lang/Object;", false);
+            mv.visitJumpInsn(IFNONNULL, hasCandidate);
+            loadClosure(mv);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "groovy/lang/Closure", "getDelegate", "()Ljava/lang/Object;", false);
+            mv.visitJumpInsn(IFNONNULL, hasCandidate);
+            loadClosure(mv);
+            mv.visitJumpInsn(GOTO, done);
+            mv.visitLabel(hasCandidate);
+            if (captured) {
+                loadClosure(mv);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "groovy/lang/Closure", "getThisObject", "()Ljava/lang/Object;", false);
+                controller.getOperandStack().push(ClassHelper.OBJECT_TYPE);
+            } else {
+                thisObject.visit(visitor);
+            }
+            mv.visitInsn(DUP);
+            mv.visitJumpInsn(IFNONNULL, done);
+            mv.visitInsn(POP);
+            loadClosure(mv);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "groovy/lang/Closure", "getOwner", "()Ljava/lang/Object;", false);
+            mv.visitInsn(DUP);
+            mv.visitJumpInsn(IFNONNULL, done);
+            mv.visitInsn(POP);
+            loadClosure(mv);
+            mv.visitLabel(done);
+            controller.getOperandStack().replace(ClassHelper.OBJECT_TYPE);
+        }
+
+        /** Loads the closure being generated, or the closure around the lambda being generated. */
+        private void loadClosure(final MethodVisitor mv) {
+            mv.visitVarInsn(ALOAD, 0);
+            ClassNode function = controller.getClassNode();
+            for (ClassNode type = function; type != null && type.getDeclaredField(ENCLOSING_CLOSURE) != null; type = type.getOuterClass()) {
+                String internalName = BytecodeHelper.getClassInternalName(type);
+                if (type != function) mv.visitTypeInsn(CHECKCAST, internalName);
+                mv.visitFieldInsn(GETFIELD, internalName, ENCLOSING_CLOSURE, BytecodeHelper.getTypeDescription(ClassHelper.CLOSURE_TYPE));
+            }
+        }
+    }
+
+    /**
+     * Marker on a functional-interface parameter whose instantiated type is {@code String}
+     * but whose erased type is wider, so a {@code GString} may arrive at the call.
+     */
+    static final String GSTRING_BRIDGE = StaticInvocationWriter.class.getName() + ".gstringBridge";
+
+    /**
+     * Erased type to use for a parameter instantiated to {@code String} from a type variable,
+     * when a {@code GString} can still be passed through that erasure. {@code LambdaMetafactory}
+     * otherwise check-casts to {@code String} before Groovy can convert the value.
+     * Returns {@code null} when the parameter should keep its instantiated type.
+     */
+    static ClassNode gstringBridgeErasure(final ClassNode exactType, final ClassNode samType) {
+        if (exactType == null || samType == null || !ClassHelper.isStringType(exactType)) return null;
+        ClassNode erased = erasure(samType);
+        if (erased == null || ClassHelper.isStringType(erased)) return null;
+        if (!StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(ClassHelper.GSTRING_TYPE, erased)) return null;
+        return erased;
+    }
+
+    /**
+     * Receives {@code parameter} as {@code erased}. A prologue converts a {@code GString} to {@code String}
+     * before the body uses the value. The origin type is the erasure, so later casts are plain check-casts.
+     */
+    static void markGStringBridge(final Parameter parameter, final ClassNode erased) {
+        parameter.setOriginType(erased);
+        parameter.putNodeMetaData(GSTRING_BRIDGE, Boolean.TRUE);
+        parameter.setType(erased);
+    }
+
+    /**
+     * A new parameter received as {@code erased}, converted from {@code GString} to {@code String} by the prologue.
+     */
+    static Parameter newGStringBridgeParameter(final String name, final ClassNode erased) {
+        Parameter parameter = new Parameter(erased, name);
+        parameter.putNodeMetaData(GSTRING_BRIDGE, Boolean.TRUE);
+        return parameter;
+    }
+
+    /**
+     * Statement that converts each bridged parameter from {@code GString} to {@code String}
+     * in place, so the rest of the method sees a {@code String}. Non-{@code GString} values
+     * are still check-cast to {@code String}.
+     */
+    static Statement gstringBridgePrologue(final WriterController controller, final Parameter[] parameters) {
+        boolean any = false;
+        if (parameters != null) {
+            for (Parameter parameter : parameters) {
+                if (Boolean.TRUE.equals(parameter.getNodeMetaData(GSTRING_BRIDGE))) {
+                    any = true;
+                    break;
+                }
+            }
+        }
+        if (!any) return null;
+        return new BytecodeSequence(new BytecodeInstruction() {
+            @Override
+            public void visit(final MethodVisitor mv) {
+                for (Parameter parameter : parameters) {
+                    if (!Boolean.TRUE.equals(parameter.getNodeMetaData(GSTRING_BRIDGE))) continue;
+                    BytecodeVariable variable = controller.getCompileStack().getVariable(parameter.getName());
+                    convertBridgedParameter(controller, mv, variable);
+                }
+            }
+        });
+    }
+
+    private static void convertBridgedParameter(final WriterController controller, final MethodVisitor mv, final BytecodeVariable variable) {
+        OperandStack operandStack = controller.getOperandStack();
+        if (variable.isHolder()) {
+            mv.visitVarInsn(ALOAD, variable.getIndex());
+            mv.visitMethodInsn(INVOKEVIRTUAL, "groovy/lang/Reference", "get", "()Ljava/lang/Object;", false);
+            operandStack.push(ClassHelper.OBJECT_TYPE);
+        } else {
+            operandStack.load(variable.getType(), variable.getIndex());
+        }
+        castToStringConvertingGString(mv);
+        operandStack.replace(ClassHelper.STRING_TYPE);
+        operandStack.storeVar(variable);
+    }
+
     private class CheckcastReceiverExpression extends Expression {
         private final Expression receiver;
         private final MethodNode target;
 
+        /**
+         * Stores {@code receiver} and {@code target} and leaves the expression type
+         * unset until the expression is visited. Visiting then checkcasts the
+         * receiver to the type chosen from {@code target}.
+         *
+         * @param receiver the receiver to visit
+         * @param target the method used to choose the checkcast type
+         */
         public CheckcastReceiverExpression(final Expression receiver, final MethodNode target) {
             this.receiver = receiver;
             this.target = target;
@@ -694,6 +1219,11 @@ public class StaticInvocationWriter extends InvocationWriter {
                     controller.getOperandStack().doGroovyCast(type);
                 }
                 if (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(topOperand, type)) return;
+                if (ClassHelper.isStringType(type) && mayHoldGString(receiver, topOperand)) {
+                    castToStringConvertingGString(controller.getMethodVisitor());
+                    controller.getOperandStack().replace(type);
+                    return;
+                }
                 controller.getMethodVisitor().visitTypeInsn(CHECKCAST, type.isArray()
                         ? BytecodeHelper.getTypeDescription(type)
                         : BytecodeHelper.getClassInternalName(type.getName()));
@@ -722,7 +1252,7 @@ public class StaticInvocationWriter extends InvocationWriter {
                             && !"JDTClassNode".equals(typeClass.getSimpleName())) {
                         type = declaringClass; // ex: LUB type
                     }
-                    if (ClassHelper.isObjectType(declaringClass)) {
+                    if (ClassHelper.isObjectType(declaringClass) && !isArrayClone(type, target)) {
                         // checkcast not necessary because Object never evolves
                         // and it prevents a potential ClassCastException if the
                         // delegate of a closure is changed in an SC closure
@@ -736,5 +1266,13 @@ public class StaticInvocationWriter extends InvocationWriter {
             }
             return type;
         }
+    }
+
+    /**
+     * Array clone is called as {@code Object#clone()}, which is protected, so the
+     * verifier requires the receiver to be typed as the array.
+     */
+    private static boolean isArrayClone(final ClassNode type, final MethodNode target) {
+        return type.isArray() && "clone".equals(target.getName()) && target.getParameters().length == 0;
     }
 }

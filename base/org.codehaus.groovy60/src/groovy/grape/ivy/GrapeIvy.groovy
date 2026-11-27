@@ -61,11 +61,16 @@ import java.util.regex.Pattern
 
 /**
  * Implementation supporting {@code @Grape} and {@code @Grab} annotations based on Ivy.
+ * The shipped Ivy settings give the Maven Central resolver a connection timeout of
+ * 30 seconds and a read timeout of 60 seconds. {@code -Dgrape.config} selects
+ * {@code default}, {@code relaxed}, a {@code classpath:} resource, or a file.
  */
 @AutoFinal @CompileStatic
 class GrapeIvy implements GrapeEngine {
 
     private static final List<String> DEFAULT_CONF = Collections.singletonList('default')
+    /** Name of the timeout constraint, if the Ivy settings define one, used by resolvers added with addResolver. */
+    private static final String GRAPE_TIMEOUT_CONSTRAINT = 'grape'
     private static final Map<String, Set<String>> MUTUALLY_EXCLUSIVE_KEYS = processGrabArgs([
             ['group', 'groupId', 'organisation', 'organization', 'org'],
             ['module', 'artifactId', 'artifact'],
@@ -303,6 +308,14 @@ class GrapeIvy implements GrapeEngine {
         }
     }
 
+    /**
+     * Returns {@code url} as a file when it is a {@code file:} URL of a regular
+     * file. A null URL, any other protocol, a directory, or a URL that is not
+     * a URI yields null.
+     *
+     * @param url the settings location
+     * @return the file, or null
+     */
     @PackageScope static File urlAsLocalFile(URL url) {
         if (url?.getProtocol() != 'file') return null
         try {
@@ -321,6 +334,10 @@ class GrapeIvy implements GrapeEngine {
      */
     ClassLoader chooseClassLoader(Map args) {
         ClassLoader loader = (ClassLoader) args.classLoader
+        // a loader defined below a GroovyClassLoader (e.g. by a host) grabs into that ancestor
+        while (loader && !isValidTargetClassLoader(loader)) {
+            loader = loader.getParent()
+        }
         if (!isValidTargetClassLoader(loader)) {
             int calleeDepth = (int) (args.calleeDepth ?: 1)
             Class caller = args.refObject?.getClass() ?: ReflectionUtils.getCallingClass(calleeDepth)
@@ -980,6 +997,11 @@ class GrapeIvy implements GrapeEngine {
         resolver.setSettings((ResolverSettings) settings)
         resolver.setM2compatible((boolean) args.getOrDefault('m2Compatible',true))
         // GRECLIPSE end
+        // GROOVY-12640: use the timeouts of the configured resolvers, if any
+        if (settings.getTimeoutConstraint(GRAPE_TIMEOUT_CONSTRAINT) != null) {
+            resolver.setTimeoutConstraint(GRAPE_TIMEOUT_CONSTRAINT)
+            resolver.validate()
+        }
 
         def chainResolver = (ChainResolver) settings.getResolver('downloadGrapes')
         chainResolver.resolvers.add(0, resolver)
