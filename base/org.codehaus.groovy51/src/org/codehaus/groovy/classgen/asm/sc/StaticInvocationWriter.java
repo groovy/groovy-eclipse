@@ -18,7 +18,19 @@
  */
 package org.codehaus.groovy.classgen.asm.sc;
 
-import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.EnumConstantClassNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GroovyCodeVisitor;
+import org.codehaus.groovy.ast.ImmutableClassNode;
+import org.codehaus.groovy.ast.InnerClassNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.decompiled.DecompiledClassNode;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
@@ -34,9 +46,11 @@ import org.codehaus.groovy.ast.expr.SpreadExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.ForStatement;
+import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.classgen.AsmClassGenerator;
 import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.classgen.asm.BytecodeHelper;
+import org.codehaus.groovy.classgen.asm.BytecodeVariable;
 import org.codehaus.groovy.classgen.asm.CompileStack;
 import org.codehaus.groovy.classgen.asm.ExpressionAsVariableSlot;
 import org.codehaus.groovy.classgen.asm.InvocationWriter;
@@ -56,10 +70,13 @@ import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import groovyjarjarasm.asm.Label;
 import groovyjarjarasm.asm.MethodVisitor;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -69,6 +86,7 @@ import static org.apache.groovy.ast.tools.ExpressionUtils.isNullConstant;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isSuperExpression;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isThisExpression;
 import static org.apache.groovy.ast.tools.ExpressionUtils.isThisOrSuper;
+import static org.apache.groovy.ast.tools.ExpressionUtils.mayHaveSideEffects;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.attrX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
@@ -84,10 +102,14 @@ import static org.codehaus.groovy.transform.trait.Traits.isTrait;
 import static groovyjarjarasm.asm.Opcodes.ACONST_NULL;
 import static groovyjarjarasm.asm.Opcodes.ALOAD;
 import static groovyjarjarasm.asm.Opcodes.CHECKCAST;
+import static groovyjarjarasm.asm.Opcodes.DUP;
 import static groovyjarjarasm.asm.Opcodes.GOTO;
+import static groovyjarjarasm.asm.Opcodes.IFEQ;
 import static groovyjarjarasm.asm.Opcodes.IFNONNULL;
 import static groovyjarjarasm.asm.Opcodes.IFNULL;
+import static groovyjarjarasm.asm.Opcodes.INSTANCEOF;
 import static groovyjarjarasm.asm.Opcodes.INVOKESTATIC;
+import static groovyjarjarasm.asm.Opcodes.INVOKEVIRTUAL;
 
 public class StaticInvocationWriter extends InvocationWriter {
 
@@ -259,6 +281,11 @@ public class StaticInvocationWriter extends InvocationWriter {
 
             List<Expression> argumentList = new ArrayList<>();
             if (emn.isStaticExtension()) {
+                if (!implicitThis && mayHaveSideEffects(receiver)) {
+                    // a static member reached through an expression still evaluates it (JLS 15.12.4.1)
+                    receiver.visit(controller.getAcg());
+                    controller.getOperandStack().pop();
+                }
                 argumentList.add(nullX());
             } else if (!isThisOrSuper(receiver) || !controller.isInGeneratedFunction()) {
                 argumentList.add(receiver);
@@ -310,12 +337,18 @@ public class StaticInvocationWriter extends InvocationWriter {
                 if (!(theReceiver instanceof VariableExpression)) isThisImplicit = false;
                 theReceiver.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, declaringClass);
             }
-            if (theReceiver != null && !isSuperExpression(receiver) && !isClassWithSuper(receiver)
+            MethodNode theTarget = target;
+            if (theReceiver != null && !target.isStatic() && !isSuperExpression(receiver) && !isClassWithSuper(receiver)
                     && currentCall.getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER) == null) {
                 // call CHECKCAST in order to avoid calls to castToType (aka dynamic behaviour)
-                theReceiver = new CheckcastReceiverExpression(theReceiver, target);
+                ClassNode storedType = storedTypeIfWiderThanInferred(theReceiver, receiverType);
+                MethodNode storedTypeTarget = storedType != null ? findSameMethodOf(storedType, target) : null;
+                if (storedTypeTarget != null) theTarget = storedTypeTarget;
+                CheckcastReceiverExpression checkcastReceiver = new CheckcastReceiverExpression(theReceiver, theTarget);
+                if (storedTypeTarget != null) checkcastReceiver.setType(storedType); // no cast to the narrower type
+                theReceiver = checkcastReceiver;
             }
-            return super.writeDirectMethodCall(target, isThisImplicit, theReceiver, args);
+            return super.writeDirectMethodCall(theTarget, isThisImplicit, theReceiver, args);
 
         } else if (tryBridgeMethod(target, receiver, implicitThis, args, enclosingClass)) {
             return true;
@@ -323,6 +356,55 @@ public class StaticInvocationWriter extends InvocationWriter {
             writeMethodAccessError(target, receiver != null ? receiver : args);
             return false;
         }
+    }
+
+    /**
+     * A local variable may be stored as its declared type while the type checker
+     * knows a narrower type for it (flow typing). Returns the stored type when
+     * that is the case for the receiver, else {@code null}.
+     */
+    private ClassNode storedTypeIfWiderThanInferred(final Expression receiver, final ClassNode inferredType) {
+        if (!(receiver instanceof VariableExpression)) return null;
+        VariableExpression ve = (VariableExpression) receiver;
+        if (ve.isThisExpression() || ve.isSuperExpression()) return null;
+        Variable accessedVariable = ve.getAccessedVariable();
+        if (!(accessedVariable instanceof VariableExpression || accessedVariable instanceof Parameter)) return null;
+        BytecodeVariable variable = controller.getCompileStack().getVariable(ve.getName(), false);
+        if (variable == null) return null;
+        ClassNode storedType = variable.getType();
+        if (storedType == null || ClassHelper.isPrimitiveType(storedType) || ClassHelper.isPrimitiveType(inferredType)
+                || storedType.equals(inferredType) || !StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(inferredType, storedType)) {
+            return null;
+        }
+        return storedType;
+    }
+
+    /**
+     * Finds the method that {@code target} implements or overrides as seen from
+     * {@code type}, so that it can be called without casting a receiver of that
+     * type to the narrower type that declares {@code target}. Like javac, the call
+     * is then bound to the type the receiver is held as; virtual dispatch selects
+     * the same implementation.
+     */
+    static MethodNode findSameMethodOf(final ClassNode type, final MethodNode target) {
+        if (target.isStatic() || target.isPrivate() || target instanceof ExtensionMethodNode) return null;
+        if (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(type, target.getDeclaringClass())) return target;
+
+        String descriptor = BytecodeHelper.getMethodDescriptor(target.getReturnType(), target.getParameters());
+        Set<ClassNode> candidates = new LinkedHashSet<>();
+        for (ClassNode c = type; c != null; c = c.getSuperClass()) candidates.add(c);
+        candidates.addAll(type.getAllInterfaces());
+        candidates.add(ClassHelper.OBJECT_TYPE);
+        for (ClassNode candidate : candidates) {
+            if (!Modifier.isPublic(candidate.getModifiers())) continue;
+            for (MethodNode method : candidate.getDeclaredMethods(target.getName())) {
+                if (method.isPublic() && !method.isStatic()
+                        && descriptor.equals(BytecodeHelper.getMethodDescriptor(method.getReturnType(), method.getParameters()))) {
+                    return method;
+                }
+            }
+        }
+        return null;
     }
 
     private void writeMethodAccessError(final MethodNode target, final Expression origin) {
@@ -645,6 +727,40 @@ public class StaticInvocationWriter extends InvocationWriter {
         return false;
     }
 
+    /**
+     * Whether a receiver held as the given type and used as a {@code String} could be a
+     * {@code GString}. A {@code List<String>} filled by dynamic code may hold a {@code GString},
+     * so a type derived from generics is not a guarantee; a type check such as {@code instanceof}
+     * that narrowed a variable to {@code String} is.
+     */
+    static boolean mayHoldGString(final Expression receiver, final ClassNode heldType) {
+        // a value held as the common type of several types is only checked against its class part
+        ClassNode checkedType = heldType instanceof WideningCategories.LowestUpperBoundClassNode ? heldType.getUnresolvedSuperClass() : heldType;
+        if (!StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(ClassHelper.GSTRING_TYPE, checkedType)) return false;
+        Variable variable = receiver instanceof VariableExpression ? ((VariableExpression) receiver).getAccessedVariable() : null;
+        if (variable instanceof VariableExpression || variable instanceof Parameter) {
+            ClassNode variableType = ((ASTNode) variable).getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+            if (variableType == null) variableType = variable.getOriginType();
+            // a variable not typed as String itself is only String in this scope because of a type check
+            return StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(variableType, ClassHelper.STRING_TYPE);
+        }
+        return true;
+    }
+
+    /**
+     * Casts the value on top of the stack to {@code String}, converting a {@code GString}
+     * to its text first, as Groovy does wherever a {@code String} is required.
+     */
+    static void castToStringConvertingGString(final MethodVisitor mv) {
+        Label isString = new Label();
+        mv.visitInsn(DUP);
+        mv.visitTypeInsn(INSTANCEOF, "groovy/lang/GString");
+        mv.visitJumpInsn(IFEQ, isString);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "toString", "()Ljava/lang/String;", false);
+        mv.visitLabel(isString);
+        mv.visitTypeInsn(CHECKCAST, "java/lang/String");
+    }
+
     private class CheckcastReceiverExpression extends Expression {
         private final Expression receiver;
         private final MethodNode target;
@@ -677,6 +793,11 @@ public class StaticInvocationWriter extends InvocationWriter {
                     controller.getOperandStack().doGroovyCast(type);
                 }
                 if (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(topOperand, type)) return;
+                if (ClassHelper.isStringType(type) && mayHoldGString(receiver, topOperand)) {
+                    castToStringConvertingGString(controller.getMethodVisitor());
+                    controller.getOperandStack().replace(type);
+                    return;
+                }
                 controller.getMethodVisitor().visitTypeInsn(CHECKCAST, type.isArray()
                         ? BytecodeHelper.getTypeDescription(type)
                         : BytecodeHelper.getClassInternalName(type.getName()));

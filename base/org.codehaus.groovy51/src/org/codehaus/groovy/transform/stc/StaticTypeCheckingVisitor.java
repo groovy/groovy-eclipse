@@ -117,6 +117,7 @@ import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.TokenUtil;
 import org.codehaus.groovy.transform.RecordTypeASTTransformation;
 import org.codehaus.groovy.transform.StaticTypesTransformation;
+import org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys;
 import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
 
@@ -1376,16 +1377,60 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
         }
 
         for (int i = 0, n = tupleExpressions.size(); i < n; i += 1) {
+            Expression tupleExpression = tupleExpressions.get(i);
             ClassNode valueType = getType(valueExpressions.get(i));
-            ClassNode targetType = getType(tupleExpressions.get(i));
+            // GROOVY-12455: assign a property through its setter, not its getter
+            Boolean setterError = ensureValidSetterForMultipleAssignmentTarget(tupleExpression, valueType);
+            if (setterError != null) {
+                if (setterError) return false;
+                continue;
+            }
+            ClassNode targetType = getType(tupleExpression);
             if (!isAssignableTo(valueType, targetType)) {
                 addStaticTypeError("Cannot assign value of type " + prettyPrintType(valueType) + " to variable of type " + prettyPrintType(targetType), rightExpression);
                 return false;
             }
-            storeType(tupleExpressions.get(i), valueType);
+            storeType(tupleExpression, valueType);
         }
 
         return true;
+    }
+
+    /**
+     * A multiple-assignment target was visited as part of the tuple, so a property reached
+     * through its accessors was resolved for reading (it carries the getter). Resolve it
+     * again as the target of an assignment of the given value type, as for a single assignment,
+     * so that it records the setter.
+     *
+     * @return {@code null} if the target still needs the usual assignment checks, otherwise whether an error was reported
+     */
+    private Boolean ensureValidSetterForMultipleAssignmentTarget(final Expression target, final ClassNode valueType) {
+        MethodNode getter = target.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
+        if (!(target instanceof VariableExpression) || getter == null || getter.getParameters().length != 0) {
+            return null;
+        }
+        int errorCount = typeCheckingContext.getErrorCollector().getErrorCount();
+        Expression value = varX("%", valueType);
+        BinaryExpression assignment = assignX(target, value, target);
+        typeCheckingContext.pushEnclosingBinaryExpression(assignment);
+        try {
+            target.visit(this); // a property node target checks its setter here
+        } finally {
+            typeCheckingContext.popEnclosingBinaryExpression();
+        }
+        SetterInfo setterInfo = removeSetterInfo(target);
+        if (setterInfo != null) {
+            return ensureValidSetter(assignment, target, value, setterInfo);
+        }
+        if (typeCheckingContext.getErrorCollector().getErrorCount() > errorCount || addedReadOnlyPropertyError(target)) {
+            return true;
+        }
+        MethodNode setter = target.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
+        if (setter == null || setter.getParameters().length != 1) {
+            addStaticTypeError("Cannot set read-only property: " + ((VariableExpression) target).getName(), target);
+            return true;
+        }
+        return null; // the setter of a property node: check the value type as for a field
     }
 
     private ClassNode adjustTypeForSpreading(final ClassNode rightExpressionType, final Expression leftExpression) {
@@ -1742,7 +1787,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
 
                 // skip property/accessor checks for "x.@field"
                 if (pexp instanceof AttributeExpression) {
-                    if (field != null && storeField(field, pexp, receiverType, visitor, receiver.getData(), !readMode)) {
+                    if (field != null && storeField(field, pexp, receiver, visitor, !readMode)) {
                         return true;
                     }
                     continue;
@@ -1754,7 +1799,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                     field = null;
                 }
                 // skip property/accessor checks for "field", "this.field", "this.with { field }", etc. within the declaring class of the field
-                else if (field != null && enclosingTypes.contains(current) && storeField(field, pexp, receiverType, visitor, receiver.getData(), !readMode)) {
+                else if (field != null && enclosingTypes.contains(current) && storeField(field, pexp, receiver, visitor, !readMode)) {
                     return true;
                 }
                 // GROOVY-8283: accessible field shadows getter of super class; GROOVY-11381: inaccessible field stops the loop, so search supers for getter
@@ -1782,11 +1827,8 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                         if (getter != null) {
                             ClassNode returnType = inferReturnTypeGenerics(receiverType, getter, ArgumentListExpression.EMPTY_ARGUMENTS);
                             storeInferredTypeForPropertyExpression(pexp, returnType);
+                            storeReceiverData(pexp, receiver);
                             storeTargetMethod(pexp, getter);
-                            String delegationData = receiver.getData();
-                            if (delegationData != null) {
-                                pexp.putNodeMetaData(IMPLICIT_RECEIVER, delegationData);
-                            }
                             return true;
                         }
                     } else {
@@ -1803,10 +1845,7 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                             if (enclosingBinaryExpression != null) {
                                 putSetterInfo(enclosingBinaryExpression.getLeftExpression(), new SetterInfo(receiverType, setterName, setters));
                             }
-                            String delegationData = receiver.getData();
-                            if (delegationData != null) {
-                                pexp.putNodeMetaData(IMPLICIT_RECEIVER, delegationData);
-                            }
+                            storeReceiverData(pexp, receiver);
                             pexp.removeNodeMetaData(READONLY_PROPERTY);
                             return true;
                         } else if (getter != null && (field == null || field.isFinal()) && setters.isEmpty()) {
@@ -1843,9 +1882,9 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                     }
                 }
 
-                if (property != null && storeProperty(property, pexp, receiverType, visitor, receiver.getData(), !readMode)) return true;
+                if (property != null && storeProperty(property, pexp, receiver, visitor, !readMode)) return true;
 
-                if (field != null && storeField(field, pexp, receiverType, visitor, receiver.getData(), !readMode)) return true;
+                if (field != null && storeField(field, pexp, receiver, visitor, !readMode)) return true;
 
                 foundGetterOrSetter = (foundGetterOrSetter || getter != null || !setters.isEmpty());
             }
@@ -1925,9 +1964,8 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                     node.setDeclaringClass(receiverType);
                     visitor.visitProperty(node);
                 }
+                storeReceiverData(pexp, receiver);
                 storeType(pexp, propertyType);
-                String delegationData = receiver.getData();
-                if (delegationData != null) pexp.putNodeMetaData(IMPLICIT_RECEIVER, delegationData);
                 return true;
             }
         }
@@ -2078,43 +2116,40 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
         return method instanceof ExtensionMethodNode ? ((ExtensionMethodNode) method).isStaticExtension() : method.isStatic();
     }
 
-    private boolean storeField(final FieldNode field, final PropertyExpression expressionToStoreOn, final ClassNode receiver, final ClassCodeVisitorSupport visitor, final String delegationData, final boolean lhsOfAssignment) {
-        boolean superField = isSuperExpression(expressionToStoreOn.getObjectExpression());
-        boolean accessible = (!superField && receiver.equals(field.getDeclaringClass()) && !field.getDeclaringClass().isAbstract()) // GROOVY-7300, GROOVY-11358
+    private boolean storeField(final FieldNode field, final PropertyExpression expression, final Receiver<String> receiver, final ClassCodeVisitorSupport visitor, final boolean lhsOfAssignment) {
+        boolean superField = isSuperExpression(expression.getObjectExpression());
+        boolean accessible = (!superField && receiver.getType().equals(field.getDeclaringClass()) && !field.getDeclaringClass().isAbstract()) // GROOVY-7300, GROOVY-11358
                 || hasAccessToMember(typeCheckingContext.getEnclosingClassNode(), field.getDeclaringClass(), field.getModifiers());
         if (!accessible) {
-            if (expressionToStoreOn instanceof AttributeExpression) {
-                addStaticTypeError("Cannot access field: " + field.getName() + " of class: " + prettyPrintTypeName(field.getDeclaringClass()), expressionToStoreOn.getProperty());
+            if (expression instanceof AttributeExpression) {
+                addStaticTypeError("Cannot access field: " + field.getName() + " of class: " + prettyPrintTypeName(field.getDeclaringClass()), expression.getProperty());
             } else if (!field.isProtected()) { // private or package-private
                 return false;
             }
         }
 
         if (visitor != null) visitor.visitField(field);
-        checkOrMarkPrivateAccess(expressionToStoreOn, field, lhsOfAssignment);
-        storeWithResolve(field.getOriginType(), receiver, field.getDeclaringClass(), field.isStatic(), expressionToStoreOn);
-        if (delegationData != null) {
-            expressionToStoreOn.putNodeMetaData(IMPLICIT_RECEIVER, delegationData);
-        }
+        checkOrMarkPrivateAccess(expression, field, lhsOfAssignment);
+        storeReceiverData(expression, receiver); // sets IMPLICIT_RECIEVER and PROPERTY_OWNER
+        storeWithResolve(field.getOriginType(), receiver.getType(), field.getDeclaringClass(), field.isStatic(), expression);
         if (field.isFinal()) {
             MethodNode enclosing = typeCheckingContext.getEnclosingMethod();
             if (enclosing == null || !enclosing.getName().endsWith("init>"))
-                expressionToStoreOn.putNodeMetaData(READONLY_PROPERTY, Boolean.TRUE); // GROOVY-5450
+                expression.putNodeMetaData(READONLY_PROPERTY, Boolean.TRUE); // GROOVY-5450
         } else if (accessible) {
-            expressionToStoreOn.removeNodeMetaData(READONLY_PROPERTY); // GROOVY-9127
+            expression.removeNodeMetaData(READONLY_PROPERTY); // GROOVY-9127
         }
         return true;
     }
 
-    private boolean storeProperty(final PropertyNode property, final PropertyExpression expression, final ClassNode receiver, final ClassCodeVisitorSupport visitor, final String delegationData, final boolean lhsOfAssignment) {
+    private boolean storeProperty(final PropertyNode property, final PropertyExpression expression, final Receiver<String> receiver, final ClassCodeVisitorSupport visitor, final boolean lhsOfAssignment) {
         if (visitor != null) visitor.visitProperty(property);
 
         ClassNode propertyType = property.getOriginType();
-        storeWithResolve(propertyType, receiver, property.getDeclaringClass(), property.isStatic(), expression);
+        storeWithResolve(propertyType, receiver.getType(), property.getDeclaringClass(), property.isStatic(), expression);
 
-        if (delegationData != null) {
-            expression.putNodeMetaData(IMPLICIT_RECEIVER, delegationData);
-        }
+        storeReceiverData(expression, receiver);
+
         if (property.isFinal()) {
             expression.putNodeMetaData(READONLY_PROPERTY, Boolean.TRUE);
         } else {
@@ -2163,6 +2198,26 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
             storeType(pexp, extension.buildListType(type));
         } else {
             storeType(pexp, type);
+        }
+    }
+
+    /**
+     * Updates expression if delegation metadata is present for delegate, owner,
+     * or any other implicit-receiver scenario.
+     *
+     * @param exp a method call or property access expression
+     * @param receiver the receiver type and delegation metadata
+     */
+    private void storeReceiverData(final Expression exp, final Receiver<?> receiver) {
+        var delegationData = receiver.getData();
+        if (delegationData != null) {
+            exp.putNodeMetaData(IMPLICIT_RECEIVER, delegationData);
+            Expression objectExpression = getObjectExpression(exp);
+            if (objectExpression != null && receiver.getType().redirect().getGenericsTypes() != null) {
+                // when the receiver class is parameterized, the declaring class of a field, method or property
+                // is not enough to propagate type arguments to the static compiler -- so save type information
+                objectExpression.putNodeMetaData(StaticCompilationMetadataKeys.PROPERTY_OWNER, receiver.getType());
+            }
         }
     }
 
@@ -2639,13 +2694,13 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                 if (expression instanceof MapExpression) {
                     MapExpression argList = (MapExpression) expression;
                     checkGroovyConstructorMap(call, receiver, argList);
-                    Parameter[] params = expressions.size() == 1
-                            ? new Parameter[]{new Parameter(MAP_TYPE, "map")}
-                            : new Parameter[]{new Parameter(receiver.redirect().getOuterClass(), "$p$"), new Parameter(MAP_TYPE, "map")};
-                    node = new ConstructorNode(Opcodes.ACC_PUBLIC, params, ClassNode.EMPTY_ARRAY, GENERATED_EMPTY_STATEMENT);
-                    node.setDeclaringClass(receiver);
-                    node.setSynthetic(true);
-                }
+                } // else entries are known only at runtime
+                Parameter[] params = expressions.size() == 1
+                        ? new Parameter[]{new Parameter(MAP_TYPE, "map")}
+                        : new Parameter[]{new Parameter(receiver.redirect().getOuterClass(), "$p$"), new Parameter(MAP_TYPE, "map")};
+                node = new ConstructorNode(Opcodes.ACC_PUBLIC, params, ClassNode.EMPTY_ARRAY, GENERATED_EMPTY_STATEMENT);
+                node.setDeclaringClass(receiver);
+                node.setSynthetic(true);
             }
         }
         return node;
@@ -3922,6 +3977,14 @@ out:    if ((samParameterTypes.length == 1 && isOrImplements(samParameterTypes[0
                             mn = disambiguateMethods(mn, obj, args, call);
                         }
                     }
+                    if (mn.size() == 1 && mn.get(0) instanceof ExtensionMethodNode && chosenReceiver != null
+                            && isSuperExpression(objectExpression)) { // GROOVY-12470: super.m() invokes the superclass method
+                        List<MethodNode> superMethods = new ArrayList<>(findMethodsWithGenerated(chosenReceiver.getType(), name));
+                        superMethods.removeIf(MethodNode::isAbstract);
+                        superMethods = chooseBestMethod(chosenReceiver.getType(),
+                                filterMethodsByVisibility(superMethods, typeCheckingContext.getEnclosingClassNode()), args);
+                        if (superMethods.size() == 1) mn = superMethods;
+                    }
 
 out:                if (mn.size() != 1) {
                         addAmbiguousErrorMessage(mn, name, args, call);
@@ -3987,12 +4050,10 @@ out:                if (mn.size() != 1) {
                         resolvePlaceholdersFromImplicitTypeHints(args, argumentList, parameters);
 
                         if (typeCheckMethodsWithGenericsOrFail(chosenReceiver.getType(), args, targetMethod, call)) {
-                            String data = chosenReceiver.getData();
-                            if (data != null) {
-                                // the method which has been chosen is supposed to be a call on delegate or owner
-                                // so we store the information so that the static compiler may reuse it
-                                call.putNodeMetaData(IMPLICIT_RECEIVER, data);
-                            }
+                            // the chosen method is supposed to be a call on delegate, owner, or thisObject
+                            // so store the delegation information for the static compiler
+                            storeReceiverData(call, chosenReceiver);
+
                             receiver = chosenReceiver.getType();
                             if (mergeType || call.getNodeMetaData(INFERRED_TYPE) == null)
                                 storeType(call, adjustWithTraits(targetMethod, receiver, args, returnType));
@@ -5237,7 +5298,11 @@ trying: for (ClassNode[] signature : signatures) {
                 PropertyNode property = null;
                 if (pname != null) {
                     property = findProperty(receiver, pname);
-                } else {
+                    if (property != null && property.getGetterName() != null && !name.equals(property.getGetterName())) {
+                        property = null; // explicit getter name, e.g. record component accessor
+                    }
+                }
+                if (property == null) {
                     out: // look for property via getGetterName() for non-canonical case
                     for (ClassNode cn = receiver; cn != null; cn = cn.getSuperClass()) {
                         for (PropertyNode pn : cn.getProperties()) {
